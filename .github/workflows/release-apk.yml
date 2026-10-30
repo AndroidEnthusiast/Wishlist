@@ -1,0 +1,43 @@
+name: Publish APK
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-apk
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack project zip (if you uploaded the zip)
+        run: |
+          if [ -f wishlist-android.zip ]; then unzip -q -o wishlist-android.zip; fi
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Build debug APK
+        run: gradle assembleDebug --no-daemon --stacktrace
+      - name: Publish the APK as the latest download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          cp app/build/outputs/apk/debug/app-debug.apk Wishlist.apk
+          NOTES="Wishlist app, version $VERSION. This is always the newest build, made from the latest upload."
+          if gh release view apk-latest > /dev/null 2>&1; then
+            gh release upload apk-latest Wishlist.apk --clobber
+            gh release edit apk-latest --title "Wishlist app $VERSION" --notes "$NOTES" --latest
+          else
+            gh release create apk-latest Wishlist.apk --title "Wishlist app $VERSION" --notes "$NOTES" --latest
+          fi
