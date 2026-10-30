@@ -26,24 +26,16 @@ jobs:
         with:
           name: wishlist-apk
           path: app/build/outputs/apk/debug/app-debug.apk
-      # main -> release "latest" (the link friends use). Any other branch -> release "test" (for trying changes first).
       - name: Publish APK to Releases
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: |
           cp app/build/outputs/apk/debug/app-debug.apk Wishlist.apk
-          if [ "${{ github.ref_name }}" = "main" ]; then
-            gh release delete latest --cleanup-tag --yes || true
-            gh release create latest Wishlist.apk --latest --title "Latest Wishlist app" --notes "Newest build. Download Wishlist.apk below." --target "${{ github.sha }}"
-          else
-            gh release delete test --cleanup-tag --yes || true
-            gh release create test Wishlist.apk --prerelease --title "Test version (not for friends)" --notes "Test build from branch ${{ github.ref_name }}. Installing it replaces the Wishlist app on your phone; your wishes stay." --target "${{ github.sha }}"
-          fi
+          gh release delete latest --cleanup-tag --yes || true
+          gh release create latest Wishlist.apk --title "Latest Wishlist app" --notes "Newest build. Download Wishlist.apk below." --target "${{ github.sha }}"
 
   pages:
-    # The web page is only published from main.
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       pages: write
