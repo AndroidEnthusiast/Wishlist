@@ -1,15 +1,16 @@
-name: Build APK
+name: Build APK and publish page
 on:
   push:
   workflow_dispatch:
-permissions:
-  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Unpack project zip (if you uploaded the zip)
+      - name: Unpack project zip
         run: |
           if [ -f wishlist-android.zip ]; then unzip -q -o wishlist-android.zip; fi
       - uses: actions/setup-java@v4
@@ -33,3 +34,33 @@ jobs:
           cp app/build/outputs/apk/debug/app-debug.apk Wishlist.apk
           gh release delete latest --cleanup-tag --yes || true
           gh release create latest Wishlist.apk --title "Latest Wishlist app" --notes "Newest build. Download Wishlist.apk below." --target "${{ github.sha }}"
+
+  pages:
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack project zip
+        run: |
+          if [ -f wishlist-android.zip ]; then unzip -q -o wishlist-android.zip; fi
+      - name: Look for the web page files
+        id: web
+        run: |
+          if [ -f web/index.html ]; then echo "found=yes" >> "$GITHUB_OUTPUT"; else echo "found=no" >> "$GITHUB_OUTPUT"; fi
+      - name: Package the web page
+        if: steps.web.outputs.found == 'yes'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+      - name: Publish the web page
+        id: deployment
+        if: steps.web.outputs.found == 'yes'
+        uses: actions/deploy-pages@v4
