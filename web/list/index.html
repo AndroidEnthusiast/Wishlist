@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Wishlist</title>
+<link rel="icon" href="../icon.png">
+<!-- The friends’ link of a shared wishlist: …/list/?c=CODE. Link previews (WhatsApp, Messages...) read these lines without running the page, so each kind of link has its own page. -->
+<meta name="description" content="Open the list and tap Reserve on a gift you plan to buy, so nobody gives the same gift twice.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Check out this wishlist 🎁">
+<meta property="og:description" content="Open the list and tap Reserve on a gift you plan to buy, so nobody gives the same gift twice.">
+<meta property="og:image" content="https://androidenthusiast.github.io/Wishlist/og-list.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Check out this wishlist 🎁">
+<meta name="twitter:description" content="Open the list and tap Reserve on a gift you plan to buy, so nobody gives the same gift twice.">
+<meta name="twitter:image" content="https://androidenthusiast.github.io/Wishlist/og-list.png">
+<script>
+// Straight on to the real page, keeping the code or key from the link.
+location.replace("../" + location.search + (location.search ? "&" : "?") + "s=1");
+</script>
+</head>
+<body>
+<p><a id="go" href="../">Open the wishlist</a></p>
+<script>document.getElementById("go").href = "../" + location.search + (location.search ? "&" : "?") + "s=1";</script>
+</body>
+</html>

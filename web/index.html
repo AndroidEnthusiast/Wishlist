@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<script>
+// Light or dark as chosen with the switch at the bottom (this browser only); otherwise the device decides.
+try { var wlt = localStorage.getItem("wl_theme"); if (wlt === "light" || wlt === "dark") document.documentElement.setAttribute("data-theme", wlt); } catch (e) { }
+</script>
+<meta name="robots" content="noindex, nofollow">
+<title>Wishlist</title>
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="description" content="Open the list and tap Reserve on a gift so nobody gives the same gift twice.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Check out my wishes 🎁">
+<meta property="og:description" content="Open the list and tap Reserve on a gift so nobody gives the same gift twice.">
+<meta property="og:image" content="https://androidenthusiast.github.io/Wishlist/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Check out my wishes 🎁">
+<meta name="twitter:description" content="Open the list and tap Reserve on a gift so nobody gives the same gift twice.">
+<meta name="twitter:image" content="https://androidenthusiast.github.io/Wishlist/og.png">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&amp;display=swap">
+<link rel="stylesheet" href="wishlist.css">
+<!-- The same building blocks as the browser editor (top bar, drop-down, sort button, cards), so both look like the app. -->
+<link rel="stylesheet" href="edit.css">
+</head>
+<body>
+<header class="topbar friends">
+  <h1 id="name">Wishlist</h1>
+</header>
+<main>
+  <p class="sub" id="sub" hidden></p>
+  <p class="about" id="about" hidden></p>
+  <div class="bar" id="bar" hidden>
+    <div class="pick">
+      <div id="chips" class="menuwrap" hidden>
+        <button type="button" class="catbtn" id="catBtn" aria-haspopup="menu" aria-expanded="false" aria-label="Choose category">
+          <span id="catName">All</span>
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M7 10l5 5 5-5z"/></svg>
+        </button>
+      </div>
+      <button type="button" class="vbtn" id="filterBtn" title="Sort and filter" aria-label="Sort and filter" aria-expanded="false" aria-controls="tools">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 7h16M4 12h11M4 17h6"/></svg>
+        <span class="dot" id="filterDot" hidden></span>
+      </button>
+    </div>
+    <div id="views" class="views" role="group" aria-label="View"></div>
+  </div>
+  <div class="tools" id="tools" hidden>
+    <label class="fld"><span>Sort</span>
+      <select id="sort">
+        <option value="star">Most wanted first</option>
+        <option value="asis">As listed</option>
+        <option value="low">Price: low to high</option>
+        <option value="high">Price: high to low</option>
+      </select>
+    </label>
+    <label class="fld"><span>Max price</span>
+      <input id="maxp" type="number" inputmode="decimal" min="0" step="any" placeholder="No limit">
+    </label>
+    <label class="chk"><input id="avail" type="checkbox"> Only gifts still available</label>
+    <button type="button" class="act outline" id="clearF">Clear filters</button>
+  </div>
+  <div id="view"><div class="center">Loading…</div></div>
+  <p class="note" id="note" hidden>Tap Reserve on a gift you plan to buy so nobody gives the same gift twice. The list owner can’t see what’s reserved.</p>
+</main>
+<div id="toast" role="status"></div>
+<div id="langs"></div>
+
+<script src="nl.js"></script>
+<script src="i18n.js"></script>
+<script>
+"use strict";
+var SUPABASE_URL = "https://aspnmvmsvwbezdltykgx.supabase.co";
+var SUPABASE_KEY = "sb_publishable_2RpbWlDJBB3yV2TO-h68xA_i-gXfd_t";
+
+var CODE_RE = /^[A-HJ-NP-Z2-9]{8}$/;
+
+// The newest app. GitHub redirects this address straight to the file, so the download starts at once.
+// The release (tag "latest") is remade after every build by the step "Publish APK to Releases"
+// in .github/workflows/build.yml.
+var APK_URL = "https://github.com/AndroidEnthusiast/Wishlist/releases/download/latest/Wishlist.apk";
+var $ = function (id) { return document.getElementById(id); };
+
+var code = null, list = null, res = {}, cat = "All", busy = false, state = "loading", memDevice = null;
+
+// How the list is laid out for this visitor: "list" (large cards), "grid" (two per row) or "gallery" (images only).
+var VIEWS = ["list", "grid", "gallery"];
+var VIEW_LABELS = { list: T("Large cards"), grid: T("Two per row"), gallery: T("Images only") };
+var view = loadView(), openId = null, modalOpen = false;
+
+// The friends' link of a shared wishlist goes through list/, which adds s=1. Such a list is put together by several
+// givers for someone else: there is no "most wanted" (nobody can say that for the person), and the givers see what's reserved.
+var SHARED_LIST = new URLSearchParams(location.search).get("s") === "1";
+var DEFAULT_SORT = SHARED_LIST ? "asis" : "star";
+
+// Sorting and filtering, only for this visitor. The sort is remembered, the filters are not.
+var SORTS = SHARED_LIST ? ["asis", "low", "high"] : ["star", "asis", "low", "high"];
+var sortBy = loadSort(), maxPrice = null, onlyAvail = false, toolsOpen = false;
+
+function loadSort() {
+  try {
+    var v = localStorage.getItem("wl_sort");
+    if (SORTS.indexOf(v) >= 0) return v;
+  } catch (e) { }
+  return DEFAULT_SORT;
+}
+
+function saveSort(v) {
+  try { localStorage.setItem("wl_sort", v); } catch (e) { }
+}
+
+function loadView() {
+  try {
+    var v = localStorage.getItem("wl_view");
+    if (VIEWS.indexOf(v) >= 0) return v;
+  } catch (e) { }
+  return "list";
+}
+
+function saveView(v) {
+  try { localStorage.setItem("wl_view", v); } catch (e) { }
+}
+
+function deviceId() {
+  try {
+    var d = localStorage.getItem("wl_device");
+    if (!d) {
+      d = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+        : "d" + Date.now().toString(36) + Math.random().toString(36).slice(2);
+      localStorage.setItem("wl_device", d);
+    }
+    return d;
+  } catch (e) {
+    if (!memDevice) memDevice = "m" + Date.now().toString(36) + Math.random().toString(36).slice(2);
+    return memDevice;
+  }
+}
+
+function parseCode(s) {
+  s = String(s || "").toUpperCase();
+  var m = /WL-([A-Z0-9]{8})/.exec(s);
+  var c = m ? m[1] : s.replace(/[^A-Z0-9]/g, "");
+  if (c.indexOf("WL") === 0 && c.length === 10) c = c.slice(2);
+  return CODE_RE.test(c) ? c : null;
+}
+
+// An invitation link (?j=KEY) is for editing a shared wishlist together. The key is 20 safe letters and digits.
+var INVITE_RE = /^[A-HJ-NP-Z2-9]{20}$/;
+
+// null: this is not an invitation link. "": it is one, but the key is not valid.
+function readInvite() {
+  var raw = new URLSearchParams(location.search).get("j");
+  if (raw === null) return null;
+  var k = String(raw).toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return INVITE_RE.test(k) ? k : "";
+}
+
+function readCode() {
+  var q = new URLSearchParams(location.search);
+  var raw = q.get("c") || q.get("code") || location.hash.replace(/^#/, "");
+  return parseCode(raw);
+}
+
+async function rpc(fn, body) {
+  var h = { "Content-Type": "application/json", "apikey": SUPABASE_KEY };
+  if (SUPABASE_KEY.indexOf("eyJ") === 0) h["Authorization"] = "Bearer " + SUPABASE_KEY;
+  var r = await fetch(SUPABASE_URL + "/rest/v1/rpc/" + fn, { method: "POST", headers: h, body: JSON.stringify(body) });
+  var t = await r.text();
+  if (!r.ok) throw new Error("Server said " + r.status);
+  return t ? JSON.parse(t) : null;
+}
+
+function safeUrl(u) {
+  try {
+    var x = new URL(u);
+    return (x.protocol === "http:" || x.protocol === "https:") ? x.href : "";
+  } catch (e) { return ""; }
+}
+
+function hostOf(u) {
+  try { return new URL(u).hostname.replace(/^www\./, ""); } catch (e) { return ""; }
+}
+
+function money(p, cur) {
+  try { return new Intl.NumberFormat(undefined, { style: "currency", currency: cur || "USD" }).format(p); }
+  catch (e) { return Number(p).toFixed(2); }
+}
+
+function el(tag, cls, text) {
+  var e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined && text !== null) e.textContent = text;
+  return e;
+}
+
+var toastTimer = null;
+function toast(msg) {
+  var t = $("toast");
+  t.textContent = msg;
+  t.className = "show";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { t.className = ""; }, 3500);
+}
+
+function showCodeForm(msg) {
+  var v = $("view");
+  v.textContent = "";
+  var box = el("div", "center");
+  box.appendChild(el("p", null, msg));
+  var f = el("form", "code");
+  var i = el("input");
+  i.placeholder = T("Enter list code");
+  i.setAttribute("aria-label", T("List code"));
+  i.autocapitalize = "characters";
+  var b = el("button", "act", T("Open"));
+  b.type = "submit";
+  f.appendChild(i); f.appendChild(b);
+  f.addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var c = parseCode(i.value);
+    if (!c) { toast(T("That doesn’t look like a list code.")); return; }
+    location.search = "?c=" + c;
+  });
+  box.appendChild(f);
+  v.appendChild(box);
+  $("bar").hidden = true;
+  $("chips").hidden = true;
+  $("tools").hidden = true;
+  $("about").hidden = true;
+  $("note").hidden = true;
+  openId = null; renderModal();
+}
+
+// The page someone sees when they open an invitation link.
+// The link to this invitation, the same one the app shares.
+function inviteUrl(key) {
+  return location.origin + location.pathname + "?j=" + key;
+}
+
+// The editor in the browser (edit.html) sits next to this page. Works on any phone or computer.
+function editorUrl(key) {
+  return location.origin + location.pathname.replace(/[^\/]*$/, "") + "edit.html?j=" + key;
+}
+
+// Only Android phones can install the app. Everyone else goes straight to the editor in the browser.
+function isAndroid() {
+  return /Android/i.test(navigator.userAgent || "");
+}
+
+// Puts text on the clipboard. Only works from a tap. Failing is fine: the download goes on anyway.
+function copyText(text) {
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).catch(function () { legacyCopy(text); });
+      return;
+    }
+  } catch (e) { /* fall through */ }
+  legacyCopy(text);
+}
+
+function legacyCopy(text) {
+  try {
+    var t = document.createElement("textarea");
+    t.value = text;
+    t.setAttribute("readonly", "");
+    t.style.position = "fixed";
+    t.style.opacity = "0";
+    document.body.appendChild(t);
+    t.select();
+    document.execCommand("copy");
+    document.body.removeChild(t);
+  } catch (e) { /* nothing more to try */ }
+}
+
+async function showInvite(key) {
+  if (key && !isAndroid()) {
+    // iPhone, iPad, computer: there is no app for you, so open the editor right away.
+    location.replace(editorUrl(key));
+    return;
+  }
+  var v = $("view");
+  ["bar", "chips", "tools", "about", "note"].forEach(function (id) { $(id).hidden = true; });
+  $("name").textContent = T("Wishlist invitation");
+  $("sub").textContent = "";
+  v.textContent = "";
+  v.appendChild(el("div", "center", T("Loading…")));
+  var info = null;
+  if (key) {
+    try {
+      info = await rpc("wl_sh_info", { p_key: key });
+    } catch (e) {
+      v.textContent = "";
+      var off = el("div", "center");
+      off.appendChild(el("p", null, T("Couldn’t check the invitation. Check your connection.")));
+      var again = el("button", "act", T("Try again"));
+      again.type = "button";
+      again.addEventListener("click", function () { showInvite(key); });
+      off.appendChild(again);
+      v.appendChild(off);
+      return;
+    }
+  }
+  v.textContent = "";
+  var box = el("div", "inv");
+  if (!info) {
+    box.appendChild(el("h2", null, T("This invitation doesn’t work")));
+    box.appendChild(el("p", null, T("The link may be incomplete, or the person who sent it made a new one. Ask them for a new invite link.")));
+    v.appendChild(box);
+    return;
+  }
+  box.classList.add("invite"); // centred on the screen
+  var nm = String(info.name || "a wishlist");
+  document.title = T("Invitation: {0}", nm);
+  var head = el("h2", null, T("You’re invited to add gifts for:"));
+  box.appendChild(head);
+  // Same size as the heading, bolder. Also set here, so a browser with an old copy of wishlist.css shows it right.
+  var ln = el("p", "listname", nm + " 🎁");
+  ln.style.cssText = "margin:0 0 12px;font-size:1.25rem;line-height:1.3;font-weight:800;color:var(--fg);overflow-wrap:anywhere";
+  box.appendChild(ln);
+  box.appendChild(el("p", null, T("Accept the invitation to add gift ideas, reserve gifts so nobody buys the same one twice, and leave notes for the other givers.")));
+  var n = Number(info.count) || 0;
+  box.appendChild(el("p", null, n === 1 ? T("1 wish so far") : T("{0} wishes so far", n)));
+
+  var btns = el("div", "btns");
+  var open = el("a", "act", T("Open in the app"));
+  open.href = "wishlist://join?j=" + key;
+  btns.appendChild(open);
+  var dl = el("a", "act outline", T("Download app"));
+  dl.href = APK_URL;
+  dl.setAttribute("download", "Wishlist.apk");
+  dl.rel = "noopener";
+  // The app can't be told which list you came for through an install, so the invitation goes on the clipboard.
+  // The app looks for it the first time it starts. The download itself carries on whatever happens here.
+  dl.addEventListener("click", function () {
+    copyText(inviteUrl(key));
+    done.textContent = T("Invitation copied. Install the app and open it: it will offer to join “{0}”.", nm);
+    done.hidden = false;
+  });
+  btns.appendChild(dl);
+  var web = el("a", "act outline", T("Edit in the browser"));
+  web.href = editorUrl(key);
+  btns.appendChild(web);
+  box.appendChild(btns);
+  var done = el("p", "copied", "");
+  done.hidden = true;
+  done.setAttribute("role", "status");
+  box.appendChild(done);
+
+  v.appendChild(box);
+  confetti(box, head);
+}
+
+// A short burst of colourful confetti above the invitation's heading. Skipped when the phone asks for less motion.
+function confetti(box, head) {
+  if (!window.requestAnimationFrame) return;
+  try { if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return; } catch (e) { }
+  var cv = document.createElement("canvas");
+  var g = cv.getContext && cv.getContext("2d");
+  if (!g) return;
+  var dpr = window.devicePixelRatio || 1;
+  var W = box.clientWidth, H = head.offsetTop + head.offsetHeight / 2 + 40;
+  cv.className = "confetti";
+  cv.setAttribute("aria-hidden", "true");
+  // Placed on top of the page, never in it, so nothing moves (also with an old copy of wishlist.css in the browser).
+  cv.style.cssText = "position:absolute;left:0;top:0;pointer-events:none;z-index:0";
+  for (var c = box.firstChild; c; c = c.nextSibling) { if (c.style) { c.style.position = "relative"; c.style.zIndex = "1"; } }
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + "px"; cv.style.height = H + "px";
+  box.insertBefore(cv, box.firstChild);
+  g.scale(dpr, dpr);
+  var COLORS = ["#4355b9", "#ffc83d", "#ff6b8a", "#2ec4b6", "#8fa2ff", "#ff9f43"];
+  var ox = W / 2, oy = head.offsetTop - 4, bits = [];
+  for (var i = 0; i < 90; i++) {
+    var a = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 0.9, sp = 4 + Math.random() * 7;
+    bits.push({ x: ox + (Math.random() - 0.5) * 60, y: oy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+      w: 5 + Math.random() * 5, h: 8 + Math.random() * 6, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4,
+      c: COLORS[i % COLORS.length] });
+  }
+  var start = null, LIFE = 1700;
+  function frame(t) {
+    if (start === null) start = t;
+    var k = (t - start) / LIFE;
+    g.clearRect(0, 0, W, H);
+    if (k >= 1) { cv.remove(); return; }
+    g.globalAlpha = k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3;
+    bits.forEach(function (b) {
+      b.vy += 0.22; b.vx *= 0.985; b.x += b.vx; b.y += b.vy; b.r += b.vr;
+      g.save(); g.translate(b.x, b.y); g.rotate(b.r); g.fillStyle = b.c;
+      g.fillRect(-b.w / 2, -b.h / 2, b.w, b.h * Math.abs(Math.cos(b.r * 1.7)) + 1);
+      g.restore();
+    });
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+// The category drop-down ("All ▾"), like the app and the editor.
+function renderChips() {
+  var box = $("chips");
+  var cats = (list && list.cats) || [];
+  if (!cats.length) { box.hidden = true; return; }
+  if (cat !== "All" && cats.indexOf(cat) < 0) cat = "All";
+  box.hidden = false;
+  $("catName").textContent = cat === "All" ? T("All") : cat;
+}
+
+var menuBox = null;
+function closeMenu() {
+  if (!menuBox) return;
+  menuBox.remove(); menuBox = null;
+  $("catBtn").setAttribute("aria-expanded", "false");
+}
+function openCatMenu() {
+  if (menuBox) { closeMenu(); return; }
+  var items = (list && list.items) || [];
+  var box = el("div", "menu");
+  box.setAttribute("role", "menu");
+  ["All"].concat(list.cats || []).forEach(function (c) {
+    var n = c === "All" ? items.length : items.filter(function (w) { return w.cat === c; }).length;
+    var b = el("button", "mitem" + (c === cat ? " b" : ""), (c === "All" ? T("All") : c) + " (" + n + ")");
+    b.type = "button";
+    b.setAttribute("role", "menuitem");
+    b.setAttribute("data-cat", c);
+    b.addEventListener("click", function (ev) { ev.stopPropagation(); closeMenu(); cat = c; render(); });
+    box.appendChild(b);
+  });
+  document.body.appendChild(box);
+  var r = $("catBtn").getBoundingClientRect();
+  box.style.position = "fixed";
+  box.style.top = Math.round(r.bottom + 2) + "px";
+  box.style.left = Math.round(Math.max(8, r.left)) + "px";
+  menuBox = box;
+  $("catBtn").setAttribute("aria-expanded", "true");
+}
+
+function isDrop(w) {
+  return typeof w.price === "number" && typeof w.old === "number" && w.old > w.price;
+}
+// A price check found a higher price: shown with "↑ +12%" in red, the opposite of a drop.
+function isRise(w) {
+  return typeof w.price === "number" && typeof w.old === "number" && w.old > 0 && w.price > w.old + 0.005;
+}
+function changeClass(w) { return isDrop(w) ? " drop" : isRise(w) ? " rise" : ""; }
+
+// The gold T("Most wanted") label. Small cards show just the star.
+function starBadge() {
+  var b = el("span", "badge star");
+  b.setAttribute("role", "img");
+  b.setAttribute("aria-label", T("Most wanted"));
+  b.title = T("Most wanted");
+  b.appendChild(el("span", "ico", "★"));
+  b.appendChild(el("span", "lbl", T("Most wanted")));
+  return b;
+}
+
+function viewIcon(kind) {
+  var NS = "http://www.w3.org/2000/svg";
+  var s = document.createElementNS(NS, "svg");
+  s.setAttribute("viewBox", "0 0 24 24");
+  s.setAttribute("aria-hidden", "true");
+  function box(x, y, w, h) {
+    var q = document.createElementNS(NS, "rect");
+    q.setAttribute("x", x); q.setAttribute("y", y);
+    q.setAttribute("width", w); q.setAttribute("height", h);
+    q.setAttribute("rx", 1.6);
+    s.appendChild(q);
+  }
+  if (kind === "list") { box(3, 4, 18, 7); box(3, 13, 18, 7); }
+  else if (kind === "grid") { box(3, 3, 8, 8); box(13, 3, 8, 8); box(3, 13, 8, 8); box(13, 13, 8, 8); }
+  else { for (var i = 0; i < 3; i++) for (var j = 0; j < 3; j++) box(3 + j * 6.8, 3 + i * 6.8, 5.2, 5.2); }
+  return s;
+}
+
+function renderViews() {
+  var box = $("views");
+  box.textContent = "";
+  VIEWS.forEach(function (k) {
+    var b = el("button", "vbtn" + (k === view ? " on" : ""));
+    b.type = "button";
+    b.title = VIEW_LABELS[k];
+    b.setAttribute("aria-label", VIEW_LABELS[k]);
+    b.setAttribute("aria-pressed", k === view ? "true" : "false");
+    b.appendChild(viewIcon(k));
+    b.addEventListener("click", function () { view = k; saveView(k); openId = null; render(); });
+    box.appendChild(b);
+  });
+}
+
+// T("Images only"): a square picture with the price on top. Tap it to open the full card.
+function tile(w) {
+  var r = res[w.id];
+  var got = !!w.got;
+  var dim = got || r === false;
+  var img = safeUrl(w.image);
+  var said = got ? T("Got it") : r === true ? T("Reserved by you") : r === false ? T("Reserved") : "";
+  var t = el("button", "tile" + (dim ? " dim" : "") + (img ? "" : " empty"));
+  t.type = "button";
+  if (img) {
+    var im = el("img");
+    im.src = img; im.alt = ""; im.loading = "lazy"; im.referrerPolicy = "no-referrer";
+    im.addEventListener("error", function () { im.remove(); t.classList.add("empty"); t.appendChild(el("span", "emoji", "🎁")); });
+    t.appendChild(im);
+  } else {
+    t.appendChild(el("span", "emoji", "🎁"));
+  }
+  t.appendChild(el("span", "tag" + changeClass(w), typeof w.price === "number" ? money(w.price, w.cur) : T("No price")));
+  var bx = el("div", "badges");
+  if (w.star && !got && !SHARED_LIST) bx.appendChild(starBadge());
+  if (said) {
+    var bd = el("span", "badge status", r === true && !got ? T("Reserved ✓") : said);
+    bd.title = said;
+    bx.appendChild(bd);
+  }
+  if (bx.childNodes.length) t.appendChild(bx);
+  t.setAttribute("aria-label", (w.title || T("Wish")) + (w.star && !got && !SHARED_LIST ? ", " + T("most wanted") : "") + (said ? " (" + said.toLowerCase() + ")" : ""));
+  t.addEventListener("click", function () { openId = w.id; render(); });
+  return t;
+}
+
+function closeModal() { openId = null; renderModal(); }
+
+// The full card of the picture you tapped in "images only", so you can still reserve it.
+function renderModal() {
+  var old = $("modal");
+  if (old) old.remove();
+  var w = null;
+  if (openId !== null && list) {
+    (list.items || []).forEach(function (x) { if (x.id === openId) w = x; });
+  }
+  document.body.style.overflow = w ? "hidden" : "";
+  if (!w) { openId = null; modalOpen = false; return; }
+  var m = el("div");
+  m.id = "modal";
+  m.setAttribute("role", "dialog");
+  m.setAttribute("aria-modal", "true");
+  m.setAttribute("aria-label", w.title || "Wish");
+  m.addEventListener("click", function (ev) { if (ev.target === m) closeModal(); });
+  var sheet = el("div", "sheet");
+  sheet.appendChild(card(w, false));
+  var foot = el("div", "foot");
+  var b = el("button", "act outline", T("Close"));
+  b.type = "button";
+  b.addEventListener("click", closeModal);
+  foot.appendChild(b);
+  sheet.appendChild(foot);
+  m.appendChild(sheet);
+  document.body.appendChild(m);
+  if (!modalOpen) b.focus();
+  modalOpen = true;
+}
+
+function card(w, compact) {
+  var r = res[w.id];
+  var got = !!w.got;
+  var dim = got || r === false;
+  var c = el("div", "card" + (compact ? " compact" : "") + (dim ? " dim" : ""));
+
+  var link = safeUrl(w.url);
+  var pic = el(link ? "a" : "div", "pic" + (w.image && safeUrl(w.image) ? "" : " empty"));
+  if (link) { pic.href = link; pic.target = "_blank"; pic.rel = "noopener noreferrer"; }
+  var img = safeUrl(w.image);
+  if (img) {
+    var im = el("img");
+    im.src = img; im.alt = w.title || ""; im.loading = "lazy"; im.referrerPolicy = "no-referrer";
+    im.addEventListener("error", function () { im.remove(); pic.classList.add("empty"); pic.appendChild(el("span", null, "🎁")); });
+    pic.appendChild(im);
+  } else {
+    pic.appendChild(el("span", null, "🎁"));
+  }
+  var drop = isDrop(w), rise = isRise(w);
+  if (drop) pic.appendChild(el("span", "badge drop", "↓ " + T("{0}% off", Math.round((1 - w.price / w.old) * 100))));
+  else if (rise) pic.appendChild(el("span", "badge drop rise", "↑ +" + Math.round((w.price / w.old - 1) * 100) + "%"));
+  var status = got ? T("Got it") : r === true ? T("Reserved by you") : r === false ? T("Reserved") : "";
+  var bx = el("div", "badges");
+  if (w.star && !got && !SHARED_LIST) bx.appendChild(starBadge());
+  if (status) bx.appendChild(el("span", "badge status", status));
+  if (bx.childNodes.length) pic.appendChild(bx);
+  c.appendChild(pic);
+
+  var body = el("div", "body");
+  var meta = [hostOf(w.url), w.cat].filter(Boolean).join(" · ");
+  if (!compact) body.appendChild(el("div", "meta", meta));
+  body.appendChild(el("h2", "title", w.title || ""));
+  if (w.desc && !compact) body.appendChild(el("p", "desc", w.desc));
+  if (w.size) body.appendChild(el("span", "sizetag", T("Size {0}", String(w.size).slice(0, 8))));
+  if (w.note) body.appendChild(el("p", "wnote", T("Note: {0}", w.note)));
+
+  var row = el("div", "row");
+  var pr = el("div", "price" + changeClass(w), typeof w.price === "number" ? money(w.price, w.cur) : T("No price"));
+  if (drop || rise) pr.appendChild(el("span", "old", money(w.old, w.cur)));
+  row.appendChild(pr);
+
+  if (!got) {
+    if (r === undefined) {
+      var b = el("button", "act small", T("Reserve"));
+      b.type = "button"; b.disabled = busy;
+      b.addEventListener("click", function () { toggle(w, true); });
+      row.appendChild(b);
+    } else if (r === true) {
+      var u = el("button", "act outline small", T("Undo"));
+      u.type = "button"; u.disabled = busy;
+      u.addEventListener("click", function () { toggle(w, false); });
+      row.appendChild(u);
+    }
+  }
+  body.appendChild(row);
+
+  c.appendChild(body);
+  return c;
+}
+
+function filtersOn() { return maxPrice !== null || onlyAvail; }
+
+function clearFilters() {
+  maxPrice = null; onlyAvail = false;
+  $("maxp").value = ""; $("avail").checked = false;
+  render();
+}
+
+// The wishes to show: category, budget and availability filters, then the order.
+function visibleItems() {
+  var items = (list.items || []).filter(function (w) { return cat === "All" || w.cat === cat; });
+  if (maxPrice !== null) {
+    items = items.filter(function (w) { return typeof w.price !== "number" || w.price <= maxPrice; });
+  }
+  if (onlyAvail) items = items.filter(function (w) { return !w.got && res[w.id] !== false; });
+  var rows = items.map(function (w, i) { return { w: w, i: i }; });
+  var price = function (w) { return typeof w.price === "number" ? w.price : null; };
+  rows.sort(function (a, b) {
+    var d = 0;
+    if (sortBy === "star") {
+      d = (a.w.star && !a.w.got ? 0 : 1) - (b.w.star && !b.w.got ? 0 : 1);
+    } else if (sortBy === "low" || sortBy === "high") {
+      var pa = price(a.w), pb = price(b.w);
+      if (pa === null || pb === null) d = (pa === null ? 1 : 0) - (pb === null ? 1 : 0);
+      else d = sortBy === "low" ? pa - pb : pb - pa;
+    }
+    return d || a.i - b.i;
+  });
+  return rows.map(function (r) { return r.w; });
+}
+
+function renderTools() {
+  $("tools").hidden = !toolsOpen;
+  var btn = $("filterBtn");
+  btn.classList.toggle("on", toolsOpen);
+  btn.setAttribute("aria-expanded", toolsOpen ? "true" : "false");
+  $("filterDot").hidden = !(filtersOn() || sortBy !== DEFAULT_SORT);
+  $("sort").value = sortBy;
+}
+
+function render() {
+  var v = $("view");
+  if (state === "gone") { showCodeForm(T("This list isn’t shared any more.")); return; }
+  if (state === "offline" && !list) {
+    v.textContent = "";
+    var box = el("div", "center");
+    box.appendChild(el("p", null, T("Couldn’t load the list. Check your connection.")));
+    var b = el("button", "act", T("Try again"));
+    b.type = "button";
+    b.addEventListener("click", function () { state = "loading"; refresh(); });
+    box.appendChild(b);
+    v.appendChild(box);
+    $("bar").hidden = true;
+    $("chips").hidden = true;
+    $("tools").hidden = true;
+    return;
+  }
+  if (!list) { v.textContent = ""; v.appendChild(el("div", "center", T("Loading…"))); return; }
+
+  $("name").textContent = list.name || "Wishlist";
+  document.title = list.name || "Wishlist";
+  $("sub").textContent = T("Reserve a gift so nobody gives the same gift twice.");
+  var ab = $("about");
+  ab.textContent = list.about || "";
+  ab.hidden = !list.about;
+  $("bar").hidden = false;
+  renderChips();
+  renderViews();
+  renderTools();
+  var shown = visibleItems();
+  v.textContent = "";
+  if (!shown.length) {
+    var empty = el("div", "center");
+    if (filtersOn()) {
+      empty.appendChild(el("p", null, T("No wishes match your filters.")));
+      var cf = el("button", "act outline", T("Clear filters"));
+      cf.type = "button";
+      cf.addEventListener("click", clearFilters);
+      empty.appendChild(cf);
+    } else {
+      empty.textContent = T("Nothing here yet.");
+    }
+    v.appendChild(empty);
+  } else {
+    var g = el("div", "grid" + (view === "grid" ? " two" : view === "gallery" ? " tiles" : ""));
+    shown.forEach(function (w) { g.appendChild(view === "gallery" ? tile(w) : card(w, view === "grid")); });
+    v.appendChild(g);
+  }
+  renderModal();
+  $("note").hidden = false;
+}
+
+async function refresh() {
+  if (!code || busy) return;
+  try {
+    var l = await rpc("wl_get_list", { p_code: code });
+    if (l === null) { state = "gone"; list = null; render(); return; }
+    var rs = await rpc("wl_get_reservations", { p_code: code, p_device: deviceId() });
+    var m = {};
+    (rs || []).forEach(function (x) { m[x.id] = x.mine; });
+    // The note for friends travels as one extra item of kind "about". It is not a wish.
+    var about = "";
+    l.items = (l.items || []).filter(function (w) {
+      if (w && w.kind === "about") { about = String(w.about || ""); return false; }
+      return true;
+    });
+    l.about = about;
+    list = l; res = m; state = "ok";
+  } catch (e) {
+    if (!list) state = "offline";
+  }
+  render();
+}
+
+async function toggle(w, reserve) {
+  busy = true; render();
+  var msg = null;
+  try {
+    if (reserve) {
+      var ok = await rpc("wl_reserve_item", { p_code: code, p_item: w.id, p_device: deviceId() });
+      if (ok !== true) msg = T("Someone else just reserved that one.");
+    } else {
+      await rpc("wl_unreserve_item", { p_code: code, p_item: w.id, p_device: deviceId() });
+    }
+    busy = false;
+    await refresh();
+  } catch (e) {
+    busy = false;
+    msg = T("No connection. Try again.");
+    render();
+  }
+  if (msg) toast(msg);
+}
+
+document.addEventListener("keydown", function (e) {
+  if (e.key !== "Escape") return;
+  if (menuBox) closeMenu();
+  else if (openId !== null) closeModal();
+});
+
+$("filterBtn").addEventListener("click", function () { toolsOpen = !toolsOpen; render(); });
+$("catBtn").addEventListener("click", function (ev) { ev.stopPropagation(); openCatMenu(); });
+document.addEventListener("click", function (ev) { if (menuBox && !menuBox.contains(ev.target)) closeMenu(); });
+$("sort").addEventListener("change", function () { sortBy = this.value; saveSort(sortBy); render(); });
+$("maxp").addEventListener("input", function () {
+  var n = parseFloat(this.value.replace(",", "."));
+  maxPrice = isFinite(n) && n >= 0 ? n : null;
+  render();
+});
+$("avail").addEventListener("change", function () { onlyAvail = this.checked; render(); });
+$("clearF").addEventListener("click", clearFilters);
+
+var invite = readInvite();
+$("langs").appendChild(langSwitch());
+$("langs").appendChild(themeSwitch());
+if (invite !== null) {
+  showInvite(invite);
+} else {
+  if (SHARED_LIST) {
+    var starOpt = $("sort").querySelector('option[value="star"]');
+    if (starOpt) starOpt.remove();
+    $("note").textContent = T("Tap Reserve on a gift you plan to buy. Everyone who puts this list together sees what’s reserved, so nobody gives the same gift twice.");
+  }
+  code = readCode();
+  if (!code) {
+    showCodeForm(T("Open the link your friend sent you, or enter their list code."));
+  } else {
+    refresh();
+    setInterval(function () { if (!document.hidden) refresh(); }, 20000);
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) refresh(); });
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# Build output and local tools
+.gradle/
+build/
+local.properties
+node_modules/
+package-lock.json
+# Never commit a signing key
+*.jks
+*.keystore
