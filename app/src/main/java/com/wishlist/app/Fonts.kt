@@ -19,7 +19,7 @@ private val provider = GoogleFont.Provider(
     certificates = R.array.com_google_android_gms_fonts_certs
 )
 
-private fun google(name: String): FontFamily = FontFamily(
+internal fun google(name: String): FontFamily = FontFamily(
     listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold).map {
         Font(googleFont = GoogleFont(name), fontProvider = provider, weight = it)
     }

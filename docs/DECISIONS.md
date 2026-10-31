@@ -14,7 +14,8 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **UK English everywhere, and everything also in Dutch.** App: App settings > Language (English (UK) / Nederlands). Web pages: a language switch. Wishes themselves are never translated.
 
 ## Look and feel
-- **Themes apply to the app only.** App settings > Theme has only System, Light, Dark and AMOLED black. The colour choices are gone: the wallpaper colours (Material You) in 2.44, the six palettes (indigo, sage, rose, ocean, amber, lavender) in 2.50. The app always uses the original indigo until the new theme designs come (see Open ideas). `PALETTES` is still in `Theme.kt` for that work.
+- **Themes apply to the app only.** App settings > Theme has a "Themer" button (since 2.51) and the light/dark choice (System, Light, Dark, AMOLED black). The wallpaper colours (Material You) were removed in 2.44 and the loose colour choices in 2.50; colours now come only as part of a design.
+- **Four theme designs, each with its own colour sets** (owner's request, October 2026, from reference pictures): Material 3 (the original look, Indigo default), Organic, Neobrutalism and Claymorphism, 6 colour sets each. Picked in the Themer, which shows a sample wishlist; every choice applies at once. A design changes shapes, lines, shadows, the background behind the list and the font of names and prices (the font from App settings stays for the rest). See `Design.kt`.
 - **Web pages only offer light and dark** (plus following the device), as a bare minimum. No palettes on the web.
 - **Font choice in the app**: a library of 14 popular fonts, Google Sans is the default and is built in.
 - **The friends' page looks the same as the app and the browser editor**, for both "My wishlist" and shared lists.
@@ -72,5 +73,4 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Free Supabase plan** (500 MB database). Usage is small (estimated 20–30 MB in October 2026). SQL scripts are run by the owner by hand; give exact steps.
 
 ## Open ideas (not decided)
-- **Theme designs (next session's topic)**: a few distinct, really nice-looking designs to choose from (like the "organic" one, which the owner liked: see `docs/designs/organic/README.md`), each with its own colour combinations. See HANDOFF.md, "Next session".
 - Personal recovery key: an encrypted online backup of your lists, keys, creator rights and settings, restored with a key (optionally saved in Google Password Manager), plus automatic clean-up of lists nobody uses. Ask the owner before building.

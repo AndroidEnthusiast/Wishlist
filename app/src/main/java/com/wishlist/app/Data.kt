@@ -88,6 +88,11 @@ object Repo {
     /** The palette picked before 2.50 (one of PALETTES in Theme.kt). No longer chosen or used: the app is always indigo. */
     var palette by mutableStateOf("indigo")
         private set
+    /** The theme design (one of DESIGNS in Design.kt: "material", "organic", "neo", "clay") and its colour set. */
+    var design by mutableStateOf("material")
+        private set
+    var colours by mutableStateOf("indigo")
+        private set
     /** The font of the app: one of FONTS in Fonts.kt. Google Sans is the original. */
     var font by mutableStateOf("google_sans")
         private set
@@ -162,6 +167,9 @@ object Repo {
         }
         theme = p.getString("theme", "system") ?: "system"
         palette = p.getString("palette", "indigo") ?: "indigo"
+        design = p.getString("design", "material")?.takeIf { d -> DESIGNS.any { it.key == d } } ?: "material"
+        colours = p.getString("colours", null)?.takeIf { k -> designFor(design).sets.any { it.key == k } }
+            ?: designFor(design).sets[0].key
         font = p.getString("font", "google_sans") ?: "google_sans"
         instantDelete = p.getBoolean("instant_delete", false)
         notifyDrops = p.getBoolean("notify_drops", true)
@@ -198,6 +206,8 @@ object Repo {
             .putString("cats", myCats.joinToString("\n"))
             .putString("theme", theme)
             .putString("palette", palette)
+            .putString("design", design)
+            .putString("colours", colours)
             .putString("font", font)
             .putString("view", view)
             .putString("sort", sort)
@@ -386,6 +396,14 @@ object Repo {
     @Synchronized
     fun setTheme(c: Context, t: String) { theme = t; persist(c) }
     fun setPalette(c: Context, p: String) { palette = p; persist(c) }
+    /** A new design keeps its colour set when the design has one with that name, otherwise it takes its first. */
+    fun setDesign(c: Context, d: String) {
+        val ds = designFor(d)
+        design = ds.key
+        if (ds.sets.none { it.key == colours }) colours = ds.sets[0].key
+        persist(c)
+    }
+    fun setColours(c: Context, k: String) { colours = k; persist(c) }
     fun setFont(c: Context, f: String) { font = f; persist(c) }
 
     @Synchronized

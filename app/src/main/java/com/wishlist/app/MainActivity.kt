@@ -89,6 +89,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -633,6 +635,7 @@ fun HomeScreen(
         sortMode
     )
     val view = Repo.view
+    val look = LocalLook.current
 
     Scaffold(
         containerColor = cs.background,
@@ -655,18 +658,11 @@ fun HomeScreen(
                 }
             )
         },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = onAdd,
-                icon = { Icon(Icons.Default.Add, null) },
-                text = { Text(tr("Add wish")) },
-                containerColor = cs.primaryContainer,
-                contentColor = cs.onPrimaryContainer
-            )
-        },
+        floatingActionButton = { AddWishButton(onAdd) },
         snackbarHost = { SnackbarHost(snack) }
     ) { pad ->
-        Column(Modifier.padding(pad)) {
+        // Behind the list: the blobs, glows or dots of the design (nothing in Material 3).
+        Column(Modifier.padding(pad).lookBackdrop(look)) {
             if (inShared && Shared.gone) SharedGoneNotice()
             if (searching) SearchField(query, { query = it }) { searching = false; query = "" }
             Row(
@@ -677,7 +673,7 @@ fun HomeScreen(
                 Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.weight(1f, fill = false)) {
                         Row(
-                            Modifier.clip(RoundedCornerShape(12.dp)).clickable { catMenu = true }
+                            Modifier.lookChip(look).clickable { catMenu = true }
                                 .padding(start = 12.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -711,7 +707,7 @@ fun HomeScreen(
                     }
                     SortButton(sortMode, withStar = !inShared) { Repo.setSort(ctx, it) }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(if (look.design == "material") 2.dp else 6.dp)) {
                     ViewButton("list", tr("Large cards"), view == "list") { Repo.setView(ctx, "list") }
                     ViewButton("grid", tr("Two per row"), view == "grid") { Repo.setView(ctx, "grid") }
                 }
@@ -814,22 +810,24 @@ fun HomeScreen(
 
 /** One of the three view buttons in the row above the wishes. */
 @Composable
-private fun ViewButton(kind: String, label: String, selected: Boolean, onClick: () -> Unit) {
-    val cs = MaterialTheme.colorScheme
+fun ViewButton(kind: String, label: String, selected: Boolean, onClick: () -> Unit) {
+    val look = LocalLook.current
+    // Material 3 shows only the chosen one filled; the other designs frame both, as buttons.
+    val framed = look.design != "material" || selected
     Box(
-        Modifier.size(44.dp).clip(RoundedCornerShape(12.dp))
-            .background(if (selected) cs.primaryContainer else Color.Transparent)
+        Modifier.size(if (look.design == "material") 44.dp else 40.dp)
+            .then(if (framed) Modifier.lookChip(look, on = selected) else Modifier.clip(look.chipShape))
             .semantics { contentDescription = label }
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        ViewIcon(kind, if (selected) cs.onPrimaryContainer else cs.onSurfaceVariant)
+        ViewIcon(kind, look.chipContent(selected))
     }
 }
 
 /** Tiny drawn icons: two wide bars, a 2x2 grid, a 3x3 grid. */
 @Composable
-private fun ViewIcon(kind: String, tint: Color) {
+fun ViewIcon(kind: String, tint: Color) {
     Canvas(Modifier.size(22.dp)) {
         val u = size.width / 24f
         fun box(x: Float, y: Float, w: Float, h: Float) = drawRoundRect(
@@ -862,9 +860,11 @@ fun reservedLabel(r: Boolean?): String? = when (r) {
 @Composable
 fun CompactCard(
     w: Wish, onLongPress: (() -> Unit)? = null, onStar: (() -> Unit)? = null, reserve: Reserving? = null,
-    onPrivate: (() -> Unit)? = null, onEdit: () -> Unit
+    onPrivate: (() -> Unit)? = null, emoji: String = "🎁", inert: Boolean = false, onEdit: () -> Unit
 ) {
     val ctx = LocalContext.current
+    // inert: a sample card (the Themer's preview) that does nothing when tapped.
+    val look = LocalLook.current
     val ui = LocalUriHandler.current
     // Tapping the picture shows it big (ImageViewer); tapping the words opens the shop page.
     var viewing by remember { mutableStateOf(false) }
@@ -876,17 +876,18 @@ fun CompactCard(
     val drop = newP != null && oldP != null && oldP > newP
     val rise = priceRose(w)
 
-    Card(
-        colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant),
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth().alpha(if (w.got || reserve?.state == false) 0.6f else 1f).then(
+    // The frame comes from the design (Design.kt): shape, colour, lines and shadow.
+    Column(
+        Modifier.fillMaxWidth().alpha(if (w.got || reserve?.state == false) 0.6f else 1f).then(
             if (onLongPress != null) Modifier.pointerInput(w.id) { detectTapGestures(onLongPress = { onLongPress() }) }
             else Modifier
-        )
+        ).lookCard(look, w.id, look.cardShape(w.id, small = true))
     ) {
+        CompositionLocalProvider(LocalContentColor provides cs.onSurface) {
         Box(
-            Modifier.fillMaxWidth().height(130.dp)
-                .background(if (w.image.isEmpty()) cs.primaryContainer else Color.White)
+            Modifier.padding(look.inset(small = true)).fillMaxWidth().height(130.dp)
+                .clip(look.pictureShape(w.id, small = true))
+                .background(look.pictureBg(w.id, w.image.isNotEmpty()))
                 .combinedClickable(
                     enabled = w.image.isNotEmpty() || w.url.isNotBlank() || onLongPress != null,
                     onClickLabel = if (w.image.isNotEmpty()) tr("View picture") else null,
@@ -903,7 +904,7 @@ fun CompactCard(
                     model = w.image, contentDescription = w.title,
                     contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().padding(6.dp)
                 )
-            } else Text("🎁", fontSize = 36.sp)
+            } else Text(emoji, fontSize = 36.sp)
             // Top left: the eye of a private wish, then the price change.
             Row(
                 Modifier.align(Alignment.TopStart).padding(8.dp),
@@ -911,7 +912,7 @@ fun CompactCard(
             ) {
                 if (w.priv) PrivateBadge(size = 14.dp, onClick = onPrivate)
                 if ((drop || rise) && newP != null && oldP != null) {
-                    Surface(color = if (rise) Rise else Green, shape = RoundedCornerShape(6.dp)) {
+                    Surface(color = if (rise) Rise else Green, shape = look.badgeShape) {
                         Text(
                             if (rise) "↑ +${Math.round((newP / oldP - 1) * 100)}%" else "↓ ${Math.round((1 - newP / oldP) * 100)}%",
                             color = Color.White,
@@ -928,7 +929,7 @@ fun CompactCard(
             val status = if (w.got) tr("Got it") else reservedLabel(reserve?.state)
             if (status != null) {
                 Surface(
-                    color = cs.background, shape = RoundedCornerShape(6.dp),
+                    color = cs.background, shape = look.badgeShape,
                     modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
                 ) {
                     Text(
@@ -938,6 +939,7 @@ fun CompactCard(
                 }
             }
         }
+        if (look.pictureLine > 0.dp) Box(Modifier.fillMaxWidth().height(look.pictureLine).background(look.line))
         Row(Modifier.padding(start = 12.dp, top = 8.dp, bottom = 4.dp), verticalAlignment = Alignment.Top) {
             // The name and price lead to the shop page.
             Column(
@@ -954,13 +956,13 @@ fun CompactCard(
                 )
                 Text(
                     if (newP != null) money(newP, w.currency) else tr("No price"),
-                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, fontFamily = look.display,
                     maxLines = 1, color = if (drop) Green else if (rise) Rise else cs.onSurface,
                     modifier = Modifier.padding(top = 2.dp, bottom = 6.dp)
                 )
             }
             Box {
-                IconButton(onClick = { menu = true }) {
+                IconButton(onClick = { if (!inert) menu = true }) {
                     Icon(Icons.Default.MoreVert, tr("More"), tint = cs.onSurfaceVariant)
                 }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
@@ -989,6 +991,7 @@ fun CompactCard(
                 }
             }
         }
+        }
     }
 }
 
@@ -997,9 +1000,10 @@ fun CompactCard(
 @Composable
 fun WishCard(
     w: Wish, badge: String? = null, dim: Boolean = false, onLongPress: (() -> Unit)? = null,
-    onStar: (() -> Unit)? = null, onPrivate: (() -> Unit)? = null,
+    onStar: (() -> Unit)? = null, onPrivate: (() -> Unit)? = null, emoji: String = "🎁",
     actions: @Composable RowScope.() -> Unit
 ) {
+    val look = LocalLook.current
     val ui = LocalUriHandler.current
     // Tapping the picture shows it big (ImageViewer); tapping the words opens the shop page.
     var viewing by remember { mutableStateOf(false) }
@@ -1012,17 +1016,18 @@ fun WishCard(
     val label = listOf(host(w.url), w.category.takeIf { it.isNotBlank() && it != "All" })
         .filter { !it.isNullOrBlank() }.joinToString(" · ")
 
-    Card(
-        colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant),
-        shape = RoundedCornerShape(20.dp),
-        modifier = Modifier.fillMaxWidth().alpha(if (dim) 0.6f else 1f).then(
+    // The frame comes from the design (Design.kt): shape, colour, lines and shadow.
+    Column(
+        Modifier.fillMaxWidth().alpha(if (dim) 0.6f else 1f).then(
             if (onLongPress != null) Modifier.pointerInput(w.id) { detectTapGestures(onLongPress = { onLongPress() }) }
             else Modifier
-        )
+        ).lookCard(look, w.id, look.cardShape(w.id, small = false))
     ) {
+        CompositionLocalProvider(LocalContentColor provides cs.onSurface) {
         Box(
-            Modifier.fillMaxWidth().height(160.dp)
-                .background(if (w.image.isEmpty()) cs.primaryContainer else Color.White)
+            Modifier.padding(look.inset(small = false)).fillMaxWidth().height(160.dp)
+                .clip(look.pictureShape(w.id, small = false))
+                .background(look.pictureBg(w.id, w.image.isNotEmpty()))
                 .combinedClickable(
                     enabled = w.image.isNotEmpty() || w.url.isNotBlank() || onLongPress != null,
                     onClickLabel = if (w.image.isNotEmpty()) tr("View picture") else null,
@@ -1039,7 +1044,7 @@ fun WishCard(
                     model = w.image, contentDescription = w.title,
                     contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().padding(8.dp)
                 )
-            } else Text("🎁", fontSize = 48.sp)
+            } else Text(emoji, fontSize = 48.sp)
             // Top left: the eye of a private wish, then the price change.
             Row(
                 Modifier.align(Alignment.TopStart).padding(12.dp),
@@ -1047,7 +1052,7 @@ fun WishCard(
             ) {
                 if (w.priv) PrivateBadge(onClick = onPrivate)
                 if ((drop || rise) && newP != null && oldP != null) {
-                    Surface(color = if (rise) Rise else Green, shape = RoundedCornerShape(8.dp)) {
+                    Surface(color = if (rise) Rise else Green, shape = look.badgeShape) {
                         Text(
                             if (rise) "↑ +${Math.round((newP / oldP - 1) * 100)}%" else "↓ " + tr("%d%% off", Math.round((1 - newP / oldP) * 100)),
                             color = Color.White,
@@ -1065,7 +1070,7 @@ fun WishCard(
             ) {
                 StarCorner(w, onStar)
                 if (badge != null) {
-                    Surface(color = cs.background, shape = RoundedCornerShape(8.dp)) {
+                    Surface(color = cs.background, shape = look.badgeShape) {
                         Text(
                             badge, color = cs.onBackground, style = MaterialTheme.typography.labelMedium,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
@@ -1074,6 +1079,7 @@ fun WishCard(
                 }
             }
         }
+        if (look.pictureLine > 0.dp) Box(Modifier.fillMaxWidth().height(look.pictureLine).background(look.line))
         Column(Modifier.padding(16.dp)) {
             // The name and details lead to the shop page.
             Column(
@@ -1125,6 +1131,7 @@ fun WishCard(
                 }
                 actions()
             }
+        }
         }
     }
 }

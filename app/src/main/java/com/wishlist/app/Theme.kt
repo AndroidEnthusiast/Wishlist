@@ -1,7 +1,6 @@
 package com.wishlist.app
 
 import android.app.Activity
-import android.content.Context
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -9,10 +8,10 @@ import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.font.Font
@@ -29,13 +28,15 @@ val GoogleSans = FontFamily(
     Font(R.font.google_sans, FontWeight.Bold, variationSettings = FontVariation.Settings(FontVariation.weight(700)))
 )
 
-private fun typo(f: FontFamily): Typography {
+/** [f]: the font chosen in App settings. [display]: the design's font for list names, headings and prices, if it has one. */
+private fun typo(f: FontFamily, display: FontFamily? = null): Typography {
     val d = Typography()
+    val h = display ?: f
     return Typography(
-        displayLarge = d.displayLarge.copy(fontFamily = f), displayMedium = d.displayMedium.copy(fontFamily = f),
-        displaySmall = d.displaySmall.copy(fontFamily = f), headlineLarge = d.headlineLarge.copy(fontFamily = f),
-        headlineMedium = d.headlineMedium.copy(fontFamily = f), headlineSmall = d.headlineSmall.copy(fontFamily = f),
-        titleLarge = d.titleLarge.copy(fontFamily = f), titleMedium = d.titleMedium.copy(fontFamily = f),
+        displayLarge = d.displayLarge.copy(fontFamily = h), displayMedium = d.displayMedium.copy(fontFamily = h),
+        displaySmall = d.displaySmall.copy(fontFamily = h), headlineLarge = d.headlineLarge.copy(fontFamily = h),
+        headlineMedium = d.headlineMedium.copy(fontFamily = h), headlineSmall = d.headlineSmall.copy(fontFamily = h),
+        titleLarge = d.titleLarge.copy(fontFamily = h), titleMedium = d.titleMedium.copy(fontFamily = f),
         titleSmall = d.titleSmall.copy(fontFamily = f), bodyLarge = d.bodyLarge.copy(fontFamily = f),
         bodyMedium = d.bodyMedium.copy(fontFamily = f), bodySmall = d.bodySmall.copy(fontFamily = f),
         labelLarge = d.labelLarge.copy(fontFamily = f), labelMedium = d.labelMedium.copy(fontFamily = f),
@@ -70,7 +71,8 @@ private fun dark(primary: Long, onPrimary: Long, container: Long, onContainer: L
 
 /**
  * The colour choices in App settings, each with Material contrast (tones 40/90/10 in light, 80/30/90 in dark).
- * Indigo is the original look. (The wallpaper colours of Material You were removed in 2.44: they didn't look nice.)
+ * Indigo is the original look. Since 2.51 these are the colour sets of the Material 3 design (Design.kt).
+ * (The wallpaper colours of Material You were removed in 2.44: they didn't look nice.)
  */
 val PALETTES: List<Palette> = listOf(
     Palette(
@@ -105,16 +107,6 @@ val PALETTES: List<Palette> = listOf(
     )
 )
 
-/** The colour scheme for a palette key and mode ("light", "dark" or "amoled"). */
-fun schemeFor(c: Context, palette: String, mode: String): ColorScheme {
-    val darkMode = mode != "light"
-    // An unknown key (also "wallpaper" from before 2.44) gives the original indigo.
-    val p = PALETTES.firstOrNull { it.key == palette } ?: PALETTES[0]
-    val base = if (darkMode) p.dark else p.light
-    // AMOLED black: the dark colours on pure black, with the cards just off black.
-    return if (mode == "amoled") base.copy(background = Color.Black, surface = Color.Black, surfaceVariant = Color(0xFF0E0E11)) else base
-}
-
 @Composable
 fun isDarkMode(): Boolean {
     val sys = isSystemInDarkTheme()
@@ -131,10 +123,9 @@ fun effectiveTheme(): String {
 @Composable
 fun WishTheme(content: @Composable () -> Unit) {
     val mode = effectiveTheme()
-    val ctx = LocalContext.current
-    // The colour choices left App settings in 2.50 (the owner wants only the theme modes, until new theme designs
-    // come): every phone uses the original indigo, whatever palette it picked before.
-    val scheme = schemeFor(ctx, "indigo", mode)
+    // The design and colour set from the Themer (App settings > Theme). Material 3 with Indigo is the original look.
+    val look = lookFor(Repo.design, Repo.colours, mode)
+    val scheme = look.scheme
     val view = LocalView.current
     SideEffect {
         (view.context as? Activity)?.window?.let { w ->
@@ -146,5 +137,12 @@ fun WishTheme(content: @Composable () -> Unit) {
             }
         }
     }
-    MaterialTheme(colorScheme = scheme, typography = typo(fontFor(Repo.font).family), content = content)
+    CompositionLocalProvider(LocalLook provides look) {
+        MaterialTheme(
+            colorScheme = scheme,
+            typography = typo(fontFor(Repo.font).family, look.display),
+            shapes = shapesFor(look.design),
+            content = content
+        )
+    }
 }

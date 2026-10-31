@@ -57,6 +57,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.launch
 
 @Composable
@@ -79,6 +80,12 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     var me by remember { mutableStateOf(Shared.lastName) }
     var fontDlg by remember { mutableStateOf(false) }
+    // The Themer: its own screen, opened from the Theme section. Back returns here.
+    var themer by remember { mutableStateOf(false) }
+    if (themer) {
+        ThemerScreen { themer = false }
+        return
+    }
 
     Scaffold(
         containerColor = cs.background,
@@ -138,6 +145,28 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
             }
 
             SectionTitle(tr("Theme"))
+            // The design and its colours are picked in the Themer, which shows a sample wishlist.
+            val design = designFor(Repo.design)
+            val set = colourSetFor(design, Repo.colours)
+            Row(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { themer = true }.padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(Modifier.padding(end = 12.dp)) {
+                    listOf(set.main, set.a2, set.a3).forEachIndexed { i, col ->
+                        Box(
+                            Modifier.padding(start = if (i == 0) 0.dp else 2.dp).size(18.dp).clip(CircleShape)
+                                .background(Color(col)).border(1.dp, cs.outlineVariant, CircleShape)
+                        )
+                    }
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(tr(design.name), style = MaterialTheme.typography.bodyLarge)
+                    Text(tr(set.name), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                }
+                Button(onClick = { themer = true }) { Text(tr("Themer")) }
+            }
+            Text(tr("Light or dark"), style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 8.dp))
             listOf(
                 "system" to tr("System default"), "light" to tr("Light"),
                 "dark" to tr("Dark"), "amoled" to tr("AMOLED black")
