@@ -281,6 +281,29 @@ object Repo {
         commit(c)
     }
 
+    /** Takes a wish out of the bin and puts it back at the top of My wishlist. */
+    @Synchronized
+    fun restoreMine(c: Context, id: Long): Boolean {
+        val w = myBin.firstOrNull { it.id == id } ?: return false
+        myBin = myBin.filter { it.id != id }
+        if (myWishes.none { it.id == id }) myWishes = listOf(w.copy(bin = 0L, binBy = "")) + myWishes
+        commit(c)
+        return true
+    }
+
+    /** Deletes wishes from the bin for good, with their pictures and price history. */
+    @Synchronized
+    fun dropFromBin(c: Context, ids: Set<Long>) {
+        val gone = myBin.filter { it.id in ids }
+        if (gone.isEmpty()) return
+        myBin = myBin.filter { it.id !in ids }
+        commit(c)
+        gone.forEach {
+            ImageStore.delete(c, it.image)
+            History.remove(c, it.id)
+        }
+    }
+
     // ---- deleting with Undo (end) ----
 
     /** A category name without line breaks or doubled spaces. */
