@@ -70,5 +70,5 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Free Supabase plan** (500 MB database). Usage is small (estimated 20–30 MB in October 2026). SQL scripts are run by the owner by hand; give exact steps.
 
 ## Open ideas (not decided)
-- **Theme designs (next session's topic)**: a few distinct, really nice-looking designs to choose from (like the "organic" one from an earlier claude.ai chat, which the owner liked), each with its own colour combinations. See HANDOFF.md, "Next session".
+- **Theme designs (next session's topic)**: a few distinct, really nice-looking designs to choose from (like the "organic" one, which the owner liked: see `docs/designs/organic/README.md`), each with its own colour combinations. See HANDOFF.md, "Next session".
 - Personal recovery key: an encrypted online backup of your lists, keys, creator rights and settings, restored with a key (optionally saved in Google Password Manager), plus automatic clean-up of lists nobody uses. Ask the owner before building.
