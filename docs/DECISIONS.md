@@ -7,7 +7,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **One Claude Code session per feature or topic.** Long sessions get summarised and lose detail; this file and `CLAUDE.md` are what a new session reads. Before ending a topic, write any new decision here.
 - **The project lives as normal files in the repository**, not in `wishlist-android.zip`, so every session reads `CLAUDE.md` and this file automatically. Never bring the zip back.
 - **Explain plainly, in UK English, tap by tap.** Say what you are changing before or as you change it, and be honest about what was and wasn't tested.
-- **When a new app build is ready to download, say so explicitly in bold: "App available for download".** (October 2026)
+- **When a new app build is ready to download, say so explicitly in bold: "App available for download", as the very last line of the message** (under everything else, so the owner sees it without scrolling up). (October 2026)
 - **Show previews of visible changes** (an HTML mock-up or simulation) when the owner asks to see something before it is built.
 
 ## Language
