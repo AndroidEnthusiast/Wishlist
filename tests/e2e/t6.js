@@ -63,6 +63,7 @@ const IOS = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/
   check("Android: three buttons", JSON.stringify(await t.page.locator(".inv .btns a").allInnerTexts()) === JSON.stringify(["Open in the app", "Download app", "Edit in the browser"]));
   const before = await t.page.locator(".inv h2").boundingBox();
   check("invite: confetti bursts above the heading", (await t.page.locator(".inv canvas.confetti").count()) === 1);
+  check("invite: the confetti may use the whole screen, up to the top", await t.page.locator(".inv canvas.confetti").evaluate(c => { const r = c.getBoundingClientRect(); return r.top === 0 && r.height === innerHeight && getComputedStyle(c).position === "fixed"; }));
   const vh = t.page.viewportSize().height;
   check("invite: heading and buttons in the middle of the screen", before.y > vh * 0.25 && before.y < vh * 0.6, before);
   await sleep(350);
@@ -70,7 +71,7 @@ const IOS = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/
   check("invite: heading, then the list name in bigger letters, no long help text", (await t.page.locator(".inv h2").innerText()).trim() === "You’re invited to add gifts for:" && (await t.page.locator(".inv .listname").innerText()).trim() === "Our home 🎁" && (await t.page.locator(".inv .listname").evaluate(e => getComputedStyle(e).fontSize)) === (await t.page.locator(".inv h2").evaluate(e => getComputedStyle(e).fontSize)) && Number(await t.page.locator(".inv .listname").evaluate(e => getComputedStyle(e).fontWeight)) > Number(await t.page.locator(".inv h2").evaluate(e => getComputedStyle(e).fontWeight)) && !/Already have/.test(await t.page.locator(".inv").innerText()));
   const during = await t.page.locator(".inv h2").boundingBox();
   check("invite: the confetti doesn't move the words", Math.abs(during.y - before.y) < 1, [before.y, during.y]);
-  await sleep(1800);
+  await sleep(2100);
   check("invite: confetti is gone afterwards", (await t.page.locator(".inv canvas.confetti").count()) === 0);
   const after = await t.page.locator(".inv h2").boundingBox();
   check("invite: nothing jumps when it's gone", Math.abs(after.y - before.y) < 1, [before.y, after.y]);

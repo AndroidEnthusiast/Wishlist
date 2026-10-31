@@ -375,25 +375,32 @@ function confetti(box, head) {
   var g = cv.getContext && cv.getContext("2d");
   if (!g) return;
   var dpr = window.devicePixelRatio || 1;
-  var W = box.clientWidth, H = head.offsetTop + head.offsetHeight / 2 + 40;
+  // The whole screen, so the burst can fly up to the top of the screen without being cut off.
+  var W = window.innerWidth, H = window.innerHeight;
   cv.className = "confetti";
   cv.setAttribute("aria-hidden", "true");
   // Placed on top of the page, never in it, so nothing moves (also with an old copy of wishlist.css in the browser).
-  cv.style.cssText = "position:absolute;left:0;top:0;pointer-events:none;z-index:0";
-  for (var c = box.firstChild; c; c = c.nextSibling) { if (c.style) { c.style.position = "relative"; c.style.zIndex = "1"; } }
+  // Over the title bar, but behind the invitation's words (they sit above it, see below).
+  cv.style.cssText = "position:fixed;left:0;top:0;pointer-events:none;z-index:7";
+  var bar = document.querySelector(".topbar");
+  if (bar) bar.style.zIndex = "0"; // nothing scrolls under it on the invitation
+  for (var c = box.firstChild; c; c = c.nextSibling) { if (c.style) { c.style.position = "relative"; c.style.zIndex = "8"; } }
   cv.width = W * dpr; cv.height = H * dpr;
   cv.style.width = W + "px"; cv.style.height = H + "px";
   box.insertBefore(cv, box.firstChild);
   g.scale(dpr, dpr);
   var COLORS = ["#4355b9", "#ffc83d", "#ff6b8a", "#2ec4b6", "#8fa2ff", "#ff9f43"];
-  var ox = W / 2, oy = head.offsetTop - 4, bits = [];
-  for (var i = 0; i < 90; i++) {
-    var a = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 0.9, sp = 4 + Math.random() * 7;
+  var hr = head.getBoundingClientRect();
+  var ox = hr.left + hr.width / 2, oy = hr.top - 4, bits = [];
+  // Fast enough for the highest bits to reach the top part of the screen, then everything falls and fades.
+  var top = Math.max(120, oy), reach = Math.sqrt(2 * 0.22 * top * 0.95);
+  for (var i = 0; i < 110; i++) {
+    var a = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 0.9, sp = reach * (0.35 + Math.random() * 0.65);
     bits.push({ x: ox + (Math.random() - 0.5) * 60, y: oy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
       w: 5 + Math.random() * 5, h: 8 + Math.random() * 6, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4,
       c: COLORS[i % COLORS.length] });
   }
-  var start = null, LIFE = 1700;
+  var start = null, LIFE = 2000;
   function frame(t) {
     if (start === null) start = t;
     var k = (t - start) / LIFE;

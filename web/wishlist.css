@@ -164,8 +164,8 @@ a.act {
 }
 a.act.outline { background: transparent; color: var(--primary); border-color: var(--outline); }
 .inv { position: relative; max-width: 520px; margin: 0 auto; text-align: center; padding: 40px 16px; }
-.inv .confetti { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 0; }
-.inv > :not(.confetti) { position: relative; z-index: 1; } /* the confetti flies behind the words */
+.inv .confetti { position: fixed; left: 0; top: 0; pointer-events: none; z-index: 7; } /* the whole screen, over the title bar */
+.inv > :not(.confetti) { position: relative; z-index: 8; } /* the confetti flies behind the words */
 /* the invitation sits in the middle of the screen, under the page title */
 .inv.invite {
   display: flex; flex-direction: column; justify-content: center;
