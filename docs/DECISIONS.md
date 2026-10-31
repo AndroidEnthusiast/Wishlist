@@ -33,6 +33,12 @@ What the owner has decided, and why. Follow these unless the owner changes their
 ## Top wish
 - **"Most wanted" is now "Top wish"** (October 2026): for the wish maker "my number one", for the giver "a safe bet that makes them happy". Gold label with a star, as before, with bolder words. (A heart with "Love it" in pink was tried in 2.38 and dropped.) Sort: "Top wishes first". Still stored as `star`.
 
+## Wishes on screen and the wish form (October 2026)
+- **Tapping a picture opens it full screen** on a dark background (pinch or double-tap to zoom, drag to look around, X or Back to close), with the name and "View in shop" at the bottom. Chosen over an enlarged picture on a blurred screen, which leaves too little room to zoom. Tapping the name and details opens the shop page.
+- **Wish form order**: link, picture, Name (not "Title"), price, Category (one drop-down, not a row of chips), Top wish ("Shows you *really* want this"), Private wish ("Private wishes are only visible to you, even when you share your wishlist"), then "Product information" folded away (description, size, note for givers).
+- **Tapping the eye on a private wish makes it visible**: "Wish is now visible to friends" with Undo, for 5 seconds (also "Wish is now private" from the menus).
+- **Delete question**: "Deleting this wish moves "…" to the bin. After 10 days it's permanently deleted."
+
 ## Prices
 - **Price rises are shown too**: the old price stays visible, with a red ↑ and the percentage. Price drops as before.
 

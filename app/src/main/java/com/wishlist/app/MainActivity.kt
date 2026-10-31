@@ -539,6 +539,7 @@ fun App(
     }
     if (inviteDlg) SharedShareDialog { inviteDlg = false }
     DeleteHost(snack)
+    PrivateHost(snack)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -739,14 +740,16 @@ fun HomeScreen(
                             "grid" -> CompactCard(
                                 w, onLongPress = { openMenu(w) },
                                 onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
-                                reserve = if (inShared) Reserving(r) { on -> Shared.reserve(w, on) } else null
+                                reserve = if (inShared) Reserving(r) { on -> Shared.reserve(w, on) } else null,
+                                onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) })
                             ) { editing = w }
                             else -> WishCard(
                                 w,
                                 badge = if (inShared) reservedLabel(r) else if (w.got) tr("Got it") else null,
                                 dim = if (inShared) r == false else w.got,
                                 onLongPress = { openMenu(w) },
-                                onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) })
+                                onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
+                                onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) })
                             ) {
                                 IconButton(onClick = { editing = w }) {
                                     Icon(Icons.Default.Edit, tr("Edit"), tint = cs.onSurfaceVariant)
@@ -855,10 +858,14 @@ fun reservedLabel(r: Boolean?): String? = when (r) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CompactCard(
-    w: Wish, onLongPress: (() -> Unit)? = null, onStar: (() -> Unit)? = null, reserve: Reserving? = null, onEdit: () -> Unit
+    w: Wish, onLongPress: (() -> Unit)? = null, onStar: (() -> Unit)? = null, reserve: Reserving? = null,
+    onPrivate: (() -> Unit)? = null, onEdit: () -> Unit
 ) {
     val ctx = LocalContext.current
     val ui = LocalUriHandler.current
+    // Tapping the picture shows it big (ImageViewer); tapping the words opens the shop page.
+    var viewing by remember { mutableStateOf(false) }
+    if (viewing) ImageViewer(w) { viewing = false }
     val cs = MaterialTheme.colorScheme
     var menu by remember { mutableStateOf(false) }
     val oldP = w.oldPrice
@@ -878,8 +885,12 @@ fun CompactCard(
             Modifier.fillMaxWidth().height(130.dp)
                 .background(if (w.image.isEmpty()) cs.primaryContainer else Color.White)
                 .combinedClickable(
-                    enabled = w.url.isNotBlank() || onLongPress != null,
-                    onClick = { if (w.url.isNotBlank()) { try { ui.openUri(w.url) } catch (e: Exception) { } } },
+                    enabled = w.image.isNotEmpty() || w.url.isNotBlank() || onLongPress != null,
+                    onClickLabel = if (w.image.isNotEmpty()) tr("View picture") else null,
+                    onClick = {
+                        if (w.image.isNotEmpty()) viewing = true
+                        else if (w.url.isNotBlank()) { try { ui.openUri(w.url) } catch (e: Exception) { } }
+                    },
                     onLongClick = onLongPress
                 ),
             contentAlignment = Alignment.Center
@@ -895,7 +906,7 @@ fun CompactCard(
                 Modifier.align(Alignment.TopStart).padding(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically
             ) {
-                if (w.priv) PrivateBadge(size = 14.dp)
+                if (w.priv) PrivateBadge(size = 14.dp, onClick = onPrivate)
                 if ((drop || rise) && newP != null && oldP != null) {
                     Surface(color = if (rise) Rise else Green, shape = RoundedCornerShape(6.dp)) {
                         Text(
@@ -925,7 +936,15 @@ fun CompactCard(
             }
         }
         Row(Modifier.padding(start = 12.dp, top = 8.dp, bottom = 4.dp), verticalAlignment = Alignment.Top) {
-            Column(Modifier.weight(1f)) {
+            // The name and price lead to the shop page.
+            Column(
+                Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).combinedClickable(
+                    enabled = w.url.isNotBlank() || onLongPress != null,
+                    onClickLabel = if (w.url.isNotBlank()) tr("View in shop") else null,
+                    onClick = { if (w.url.isNotBlank()) { try { ui.openUri(w.url) } catch (e: Exception) { } } },
+                    onLongClick = onLongPress
+                )
+            ) {
                 Text(
                     w.title, style = MaterialTheme.typography.titleSmall,
                     maxLines = 2, overflow = TextOverflow.Ellipsis, color = cs.onSurface
@@ -975,10 +994,13 @@ fun CompactCard(
 @Composable
 fun WishCard(
     w: Wish, badge: String? = null, dim: Boolean = false, onLongPress: (() -> Unit)? = null,
-    onStar: (() -> Unit)? = null,
+    onStar: (() -> Unit)? = null, onPrivate: (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit
 ) {
     val ui = LocalUriHandler.current
+    // Tapping the picture shows it big (ImageViewer); tapping the words opens the shop page.
+    var viewing by remember { mutableStateOf(false) }
+    if (viewing) ImageViewer(w) { viewing = false }
     val cs = MaterialTheme.colorScheme
     val oldP = w.oldPrice
     val newP = w.price
@@ -999,8 +1021,12 @@ fun WishCard(
             Modifier.fillMaxWidth().height(160.dp)
                 .background(if (w.image.isEmpty()) cs.primaryContainer else Color.White)
                 .combinedClickable(
-                    enabled = w.url.isNotBlank() || onLongPress != null,
-                    onClick = { if (w.url.isNotBlank()) { try { ui.openUri(w.url) } catch (e: Exception) { } } },
+                    enabled = w.image.isNotEmpty() || w.url.isNotBlank() || onLongPress != null,
+                    onClickLabel = if (w.image.isNotEmpty()) tr("View picture") else null,
+                    onClick = {
+                        if (w.image.isNotEmpty()) viewing = true
+                        else if (w.url.isNotBlank()) { try { ui.openUri(w.url) } catch (e: Exception) { } }
+                    },
                     onLongClick = onLongPress
                 ),
             contentAlignment = Alignment.Center
@@ -1016,7 +1042,7 @@ fun WishCard(
                 Modifier.align(Alignment.TopStart).padding(12.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically
             ) {
-                if (w.priv) PrivateBadge()
+                if (w.priv) PrivateBadge(onClick = onPrivate)
                 if ((drop || rise) && newP != null && oldP != null) {
                     Surface(color = if (rise) Rise else Green, shape = RoundedCornerShape(8.dp)) {
                         Text(
@@ -1046,28 +1072,38 @@ fun WishCard(
             }
         }
         Column(Modifier.padding(16.dp)) {
-            if (label.isNotEmpty()) {
-                Text(label, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
-            }
-            Text(
-                w.title, style = MaterialTheme.typography.titleMedium,
-                maxLines = 2, overflow = TextOverflow.Ellipsis, color = cs.onSurface
-            )
-            if (w.desc.isNotBlank()) {
-                Text(
-                    w.desc, style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 2, overflow = TextOverflow.Ellipsis, color = cs.onSurfaceVariant
+            // The name and details lead to the shop page.
+            Column(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).combinedClickable(
+                    enabled = w.url.isNotBlank() || onLongPress != null,
+                    onClickLabel = if (w.url.isNotBlank()) tr("View in shop") else null,
+                    onClick = { if (w.url.isNotBlank()) { try { ui.openUri(w.url) } catch (e: Exception) { } } },
+                    onLongClick = onLongPress
                 )
-            }
-            if (w.size.isNotBlank()) SizeTag(w.size, Modifier.padding(top = 4.dp))
-            if (w.note.isNotBlank()) {
+            ) {
+                if (label.isNotEmpty()) {
+                    Text(label, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
+                }
                 Text(
-                    tr("Note: %s", w.note), style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 3, overflow = TextOverflow.Ellipsis, color = cs.onSurface
+                    w.title, style = MaterialTheme.typography.titleMedium,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis, color = cs.onSurface
                 )
-            }
-            if (w.by.isNotBlank()) {
-                Text(tr("Added by %s", w.by), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
+                if (w.desc.isNotBlank()) {
+                    Text(
+                        w.desc, style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 2, overflow = TextOverflow.Ellipsis, color = cs.onSurfaceVariant
+                    )
+                }
+                if (w.size.isNotBlank()) SizeTag(w.size, Modifier.padding(top = 4.dp))
+                if (w.note.isNotBlank()) {
+                    Text(
+                        tr("Note: %s", w.note), style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 3, overflow = TextOverflow.Ellipsis, color = cs.onSurface
+                    )
+                }
+                if (w.by.isNotBlank()) {
+                    Text(tr("Added by %s", w.by), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
+                }
             }
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Row(Modifier.weight(1f), verticalAlignment = Alignment.Bottom) {
@@ -1114,7 +1150,6 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
     var busy by remember { mutableStateOf(false) }
     var err by remember { mutableStateOf("") }
     var newCatDlg by remember { mutableStateOf(false) }
-    var catAction by remember { mutableStateOf<String?>(null) }
     // A picture picked in this dialog but not saved yet. It is deleted again if you cancel or replace it.
     var picked by remember { mutableStateOf("") }
 
@@ -1211,22 +1246,15 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
                     if (picked.isNotEmpty() && picked == image) { ImageStore.delete(ctx, picked); picked = "" }
                     image = ""
                 })
-                OutlinedTextField(title, { title = it }, label = { Text(tr("Title")) }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(title, { title = it }, label = { Text(tr("Name")) }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(
                     price, { price = it }, label = { Text(tr("Price (%s)", cur)) }, singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth()
                 )
-                OutlinedTextField(
-                    desc, { desc = it }, label = { Text(tr("Description")) },
-                    maxLines = 3, modifier = Modifier.fillMaxWidth()
-                )
-                SizeField(sizeSel, { sizeSel = it }, Modifier.fillMaxWidth())
-                OutlinedTextField(
-                    note, { note = it }, label = { Text(tr("Note for givers (colour, details, …)")) },
-                    maxLines = 3, modifier = Modifier.fillMaxWidth()
-                )
-                // No "most wanted" on a shared list: nobody can say that for the person the gifts are for.
+                // One line, however many categories there are (a row of chips got too long).
+                CategoryField(cat, Repo.cats, onPick = { cat = it }, onNew = { newCatDlg = true }, modifier = Modifier.fillMaxWidth())
+                // No "Top wish" on a shared list: nobody can say that for the person the gifts are for.
                 if (Shared.active == null) Row(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { if (!star) starFx.play(); star = !star }.padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -1235,7 +1263,7 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
                     Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                         Text(tr("Top wish"), style = MaterialTheme.typography.bodyLarge)
                         Text(
-                            tr("Shown with a star, so givers know this one would make you happiest"),
+                            italics(tr("Shows you _really_ want this")),
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -1250,32 +1278,22 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
                     Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                         Text(tr("Private wish"), style = MaterialTheme.typography.bodyLarge)
                         Text(
-                            tr("Only you can see it. Friends won’t."),
+                            tr("Private wishes are only visible to you, even when you share your wishlist"),
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Switch(checked = priv, onCheckedChange = { priv = it })
                 }
-                Text(tr("Category"), style = MaterialTheme.typography.labelMedium)
-                Row(
-                    Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Same chip as the categories, so they line up exactly.
-                    CatChip(label = tr("New"), selected = false, onClick = { newCatDlg = true }, icon = Icons.Default.Add)
-                    Repo.cats.forEach { c ->
-                        CatChip(
-                            label = c, selected = c == cat,
-                            onClick = { cat = if (cat == c) "" else c },
-                            onLongClick = { catAction = c }
-                        )
-                    }
-                }
-                if (Repo.cats.isNotEmpty()) {
-                    Text(
-                        tr("Long press a category to edit or delete it."),
-                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
+                // Description, size and the note for givers fold away, so the switches above stay in sight.
+                ProductInfo(desc, sizeSel, note) {
+                    OutlinedTextField(
+                        desc, { desc = it }, label = { Text(tr("Description")) },
+                        maxLines = 3, modifier = Modifier.fillMaxWidth()
+                    )
+                    SizeField(sizeSel, { sizeSel = it }, Modifier.fillMaxWidth())
+                    OutlinedTextField(
+                        note, { note = it }, label = { Text(tr("Note for givers (colour, details, …)")) },
+                        maxLines = 3, modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
@@ -1320,14 +1338,6 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
 
     // A category made here is chosen for this wish straight away.
     if (newCatDlg) CategoryDialog(onAdded = { cat = it }) { newCatDlg = false }
-    catAction?.let { ca ->
-        CategoryActionsDialog(
-            name = ca,
-            onRenamed = { n -> if (cat == ca) cat = n },
-            onDeleted = { if (cat == ca) cat = "" },
-            onClose = { catAction = null }
-        )
-    }
 }
 
 /** The picture of a wish. Empty: a dashed block with a plus and "Add image". Filled: the picture, tap to change, X to remove. */

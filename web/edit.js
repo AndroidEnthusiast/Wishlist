@@ -514,7 +514,7 @@
     if (instant) { deleteWish(w); return; }
     dialog({
       title: T("Delete this wish?"),
-      body: function (b) { b.appendChild(el("p", null, T("“{0}” goes to the bin. Everyone on the list can restore it from the bin in the app for 10 days.", w.title))); },
+      body: function (b) { b.appendChild(el("p", null, T("Deleting this wish moves “{0}” to the bin. After 10 days it’s permanently deleted.", w.title))); },
       actions: [
         { label: T("Cancel"), cls: "outline" },
         { label: T("Delete"), cls: "danger", onClick: function () { deleteWish(w); } }

@@ -44,52 +44,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
-/** One category as a chip. Tap to pick it. Long press (when [onLongClick] is set) to edit or delete it. */
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun CatChip(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    onLongClick: (() -> Unit)? = null,
-    icon: ImageVector? = null
-) {
-    val cs = MaterialTheme.colorScheme
-    val shape = RoundedCornerShape(8.dp)
-    val haptic = LocalHapticFeedback.current
-    Row(
-        Modifier.height(32.dp).clip(shape)
-            .background(if (selected) cs.secondaryContainer else Color.Transparent)
-            .border(1.dp, if (selected) Color.Transparent else cs.outline, shape)
-            .combinedClickable(
-                role = Role.Button,
-                onLongClickLabel = tr("Edit or delete"),
-                onLongClick = onLongClick?.let { f ->
-                    {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        f()
-                    }
-                },
-                onClick = onClick
-            )
-            .padding(horizontal = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // A tick on the chosen category, or the icon you gave (the "New" chip has a plus).
-        if (selected) {
-            Icon(Icons.Default.Check, null, Modifier.size(18.dp), tint = cs.onSecondaryContainer)
-            Spacer(Modifier.width(6.dp))
-        } else if (icon != null) {
-            Icon(icon, null, Modifier.size(18.dp), tint = cs.onSurfaceVariant)
-            Spacer(Modifier.width(6.dp))
-        }
-        Text(
-            label, style = MaterialTheme.typography.labelLarge, maxLines = 1,
-            color = if (selected) cs.onSecondaryContainer else cs.onSurfaceVariant
-        )
-    }
-}
-
 /** One row of the category drop-down on the home screen. Long press (when [onLongClick] is set) edits or deletes it. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

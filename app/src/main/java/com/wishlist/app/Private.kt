@@ -9,6 +9,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -37,9 +50,10 @@ val PrivateIcon: ImageVector by lazy {
 
 /** The round badge in the top left corner of a private wish, in both views. */
 @Composable
-fun PrivateBadge(modifier: Modifier = Modifier, size: Dp = 18.dp) {
-    // A light shadow keeps it visible on a white product picture.
-    Surface(color = MaterialTheme.colorScheme.background, shape = CircleShape, shadowElevation = 2.dp, modifier = modifier) {
+fun PrivateBadge(modifier: Modifier = Modifier, size: Dp = 18.dp, onClick: (() -> Unit)? = null) {
+    // A light shadow keeps it visible on a white product picture. Tapping it (the owner) makes the wish visible again.
+    val m = if (onClick != null) modifier.clip(CircleShape).clickable(onClickLabel = tr("Visible to friends"), role = Role.Button, onClick = onClick) else modifier
+    Surface(color = MaterialTheme.colorScheme.background, shape = CircleShape, shadowElevation = 2.dp, modifier = m) {
         Icon(
             PrivateIcon, tr("Private wish"), tint = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(5.dp).size(size)
@@ -47,9 +61,50 @@ fun PrivateBadge(modifier: Modifier = Modifier, size: Dp = 18.dp) {
     }
 }
 
-/** "Make private" / "Visible to friends" on a wish of My wishlist, with a short message about what it means. */
-fun togglePrivate(c: Context, w: Wish) {
-    val on = !w.priv
-    Repo.setPrivate(c, w.id, on)
-    toast(c, if (on) tr("Private: friends can’t see this wish any more.") else tr("Friends can see this wish again."))
+/**
+ * "Make private" / "Visible to friends" on a wish of My wishlist (the menus, or tapping the eye). The main screen
+ * then shows "Wish is now private" / "Wish is now visible to friends" for 5 seconds, with Undo ([PrivateHost]).
+ */
+object PrivateFlow {
+    /** The latest change that can still be undone: the wish and whether it became private. */
+    var changed by mutableStateOf<Pair<Long, Boolean>?>(null)
+        private set
+
+    fun set(c: Context, w: Wish, on: Boolean) {
+        if (w.priv == on) return
+        Repo.setPrivate(c, w.id, on)
+        changed = w.id to on
+    }
+
+    fun undo(c: Context) {
+        val (id, on) = changed ?: return
+        changed = null
+        Repo.setPrivate(c, id, !on)
+    }
+
+    fun done() {
+        changed = null
+    }
+}
+
+fun togglePrivate(c: Context, w: Wish) = PrivateFlow.set(c, w, !w.priv)
+
+/** The message with Undo after a wish was made private or visible. Placed once, in the main screen, like DeleteHost. */
+@Composable
+fun PrivateHost(snack: SnackbarHostState) {
+    val ctx = LocalContext.current
+    val ch = PrivateFlow.changed
+    LaunchedEffect(ch) {
+        if (ch == null) return@LaunchedEffect
+        snack.currentSnackbarData?.dismiss()
+        // Material only has 4 or 10 seconds: this one stays 5.
+        val timer = launch { delay(5000); snack.currentSnackbarData?.dismiss() }
+        val r = snack.showSnackbar(
+            message = if (ch.second) tr("Wish is now private") else tr("Wish is now visible to friends"),
+            actionLabel = tr("Undo"),
+            duration = SnackbarDuration.Indefinite
+        )
+        timer.cancel()
+        if (r == SnackbarResult.ActionPerformed) PrivateFlow.undo(ctx) else if (PrivateFlow.changed === ch) PrivateFlow.done()
+    }
 }
