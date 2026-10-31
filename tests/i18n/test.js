@@ -14,7 +14,7 @@ for (const f of ["web/edit.js", "web/index.html"]) {
   const s = fs.readFileSync(path.join(ROOT, f), "utf8");
   for (const m of s.matchAll(/(?<![A-Za-z_.])T\("((?:[^"\\]|\\.)*)"/g)) webKeys.add(m[1]);
 }
-for (const k of ["Newest first", "Price: low to high", "Price: high to low", "Name A–Z", "Price: low", "Price: high", "A–Z", "Large cards", "Two per row", "Images only", "All"]) webKeys.add(k);
+for (const k of ["Newest first", "Price: low to high", "Price: high to low", "Name A–Z", "Price: low", "Price: high", "A–Z", "Large cards", "Two per row", "All"]) webKeys.add(k);
 const missingWeb = [...webKeys].filter(k => !(k in NLW));
 check("web: every text has a Dutch version", missingWeb.length === 0, missingWeb);
 const ph = s => (s.match(/\{\d\}/g) || []).sort().join();

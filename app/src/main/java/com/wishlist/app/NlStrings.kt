@@ -118,7 +118,6 @@ val NL: Map<String, String> = mapOf(
     "New category…" to "Nieuwe categorie…",
     "Large cards" to "Grote kaarten",
     "Two per row" to "Twee per rij",
-    "Images only" to "Alleen afbeeldingen",
     "No wishes match “%1\$s” in %2\$s." to "Geen wensen gevonden voor “%1\$s” in %2\$s.",
     "No wishes match “%s”." to "Geen wensen gevonden voor “%s”.",
     "Nothing here yet. Tap Add wish, or share a product link to Wishlist from your browser." to "Hier staat nog niets. Tik op Wens toevoegen, of deel een productlink vanuit je browser met Wishlist.",

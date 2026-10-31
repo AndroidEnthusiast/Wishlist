@@ -95,7 +95,7 @@ object Repo {
         private set
     var myName by mutableStateOf("My wishlist")
         private set
-    /** How the wishes are shown: "list" (large cards), "grid" (two per row) or "gallery" (images only). */
+    /** How the wishes are shown: "list" (large cards) or "grid" (two per row). */
     var view by mutableStateOf("list")
         private set
     /** How the wishes are ordered: "new", "star", "low", "high" or "az" (see Sorting.kt). */
@@ -157,7 +157,8 @@ object Repo {
         instantDelete = p.getBoolean("instant_delete", false)
         notifyDrops = p.getBoolean("notify_drops", true)
         notifyRises = p.getBoolean("notify_rises", false)
-        view = p.getString("view", "list") ?: "list"
+        // "gallery" (images only) was removed in 2.34: it falls back to the large cards.
+        view = p.getString("view", "list")?.takeIf { it == "grid" } ?: "list"
         sort = p.getString("sort", "new")?.takeIf { s -> SORT_OPTIONS.any { it.first == s } } ?: "new"
         myAbout = p.getString("about", "") ?: ""
         intervalHours = p.getInt("interval", 6).let { if (it in listOf(1, 3, 6, 12, 24)) it else 6 }

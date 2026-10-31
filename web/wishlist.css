@@ -66,7 +66,7 @@ main { max-width: 1100px; margin: 0 auto; padding: 8px 16px 48px; }
 .price { font-size: 1.3rem; font-weight: 600; }
 .price.drop { color: var(--green); }
 /* a price that went up: the opposite of a drop */
-.badge.drop.rise, .tile .tag.rise { background: #ba1a1a; }
+.badge.drop.rise { background: #ba1a1a; }
 .price.rise { color: var(--error); }
 .old { color: var(--muted); text-decoration: line-through; font-size: .9rem; margin-left: 8px; font-weight: 400; }
 .store { color: var(--primary); font-size: .85rem; text-decoration: none; }
@@ -96,7 +96,7 @@ form.code input {
 }
 .vbtn.on { background: var(--container); color: var(--on-container); }
 .vbtn svg { width: 22px; height: 22px; fill: currentColor; }
-.vbtn:focus-visible, .tile:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.vbtn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 /* view: two per row */
 .grid.two { gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -115,40 +115,12 @@ form.code input {
 .card.compact .old { display: block; margin: 0; font-size: .8rem; }
 .card.compact button.act { width: 100%; padding: 8px 12px; }
 
-/* view: images only */
-.grid.tiles { gap: 8px; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
-.tile {
-  position: relative; display: block; width: 100%; aspect-ratio: 1 / 1; padding: 0; border: 0;
-  border-radius: 14px; overflow: hidden; background: #fff; cursor: pointer; font: inherit;
-}
-.tile.empty { display: flex; align-items: center; justify-content: center; background: var(--container); font-size: 2rem; }
-.tile img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.tile.dim img, .tile.dim .emoji { opacity: .55; }
-.tile .tag {
-  position: absolute; left: 6px; bottom: 6px; max-width: calc(100% - 12px); padding: 3px 8px; border-radius: 8px;
-  background: rgba(0, 0, 0, .72); color: #fff; font-size: .78rem; font-weight: 600;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.tile .tag.drop { background: var(--green); }
-.tile .badge { top: 6px; padding: 2px 6px; font-size: .68rem; white-space: nowrap; }
-.tile .badge.status { right: 6px; }
-
-/* tapping a picture in "images only" opens the full card here */
-#modal {
-  position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center;
-  padding: 16px; background: rgba(0, 0, 0, .5);
-}
-#modal .sheet { width: 100%; max-width: 420px; max-height: 100%; overflow-y: auto; border-radius: 20px; background: var(--bg); }
-#modal .foot { padding: 12px; text-align: center; }
-
 /* most wanted, and the badges in the top right corner of a picture */
 .badges { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .badges .badge { position: static; }
 .badge.star { display: inline-flex; align-items: center; gap: 3px; background: #ffc83d; color: #3b2a00; }
 .card.compact .badges { top: 8px; right: 8px; }
-.card.compact .badge.star .lbl, .tile .badge.star .lbl { display: none; }
-.tile .badges { top: 6px; right: 6px; }
-.tile .badge.star { padding: 2px 5px; }
+.card.compact .badge.star .lbl { display: none; }
 
 /* notes: one for the whole list, one per wish */
 .about {

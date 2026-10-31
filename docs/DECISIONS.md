@@ -20,6 +20,8 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **List settings vs App settings**: each list has its own settings (opened with the settings button where the refresh button used to be); things that are about the whole app sit in "App settings". Pull down to refresh; the refresh circle is hidden when idle.
 - **Wording settled by the owner**: "+ Add wish"; "Instant delete wishes" ("Turn on to delete wishes without warning"); "Notifications for price drops" (on by default) and "Notifications for price surges" (off by default).
 
+- **Two views only: large cards and two per row** (app, editor and friends' page). The "Images only" view was removed (October 2026): it didn't look good and showed too little about a wish.
+
 ## Prices
 - **Price rises are shown too**: the old price stays visible, with a red ↑ and the percentage. Price drops as before.
 

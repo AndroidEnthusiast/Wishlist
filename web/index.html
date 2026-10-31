@@ -89,10 +89,10 @@ var $ = function (id) { return document.getElementById(id); };
 
 var code = null, list = null, res = {}, cat = "All", busy = false, state = "loading", memDevice = null;
 
-// How the list is laid out for this visitor: "list" (large cards), "grid" (two per row) or "gallery" (images only).
-var VIEWS = ["list", "grid", "gallery"];
-var VIEW_LABELS = { list: T("Large cards"), grid: T("Two per row"), gallery: T("Images only") };
-var view = loadView(), openId = null, modalOpen = false;
+// How the list is laid out for this visitor: "list" (large cards) or "grid" (two per row).
+var VIEWS = ["list", "grid"];
+var VIEW_LABELS = { list: T("Large cards"), grid: T("Two per row") };
+var view = loadView();
 
 // The friends' link of a shared wishlist goes through list/, which adds s=1. Such a list is put together by several
 // givers for someone else: there is no "most wanted" (nobody can say that for the person), and the givers see what's reserved.
@@ -234,7 +234,6 @@ function showCodeForm(msg) {
   $("tools").hidden = true;
   $("about").hidden = true;
   $("note").hidden = true;
-  openId = null; renderModal();
 }
 
 // The page someone sees when they open an invitation link.
@@ -472,8 +471,7 @@ function viewIcon(kind) {
     s.appendChild(q);
   }
   if (kind === "list") { box(3, 4, 18, 7); box(3, 13, 18, 7); }
-  else if (kind === "grid") { box(3, 3, 8, 8); box(13, 3, 8, 8); box(3, 13, 8, 8); box(13, 13, 8, 8); }
-  else { for (var i = 0; i < 3; i++) for (var j = 0; j < 3; j++) box(3 + j * 6.8, 3 + i * 6.8, 5.2, 5.2); }
+  else { box(3, 3, 8, 8); box(13, 3, 8, 8); box(3, 13, 8, 8); box(13, 13, 8, 8); }
   return s;
 }
 
@@ -487,72 +485,9 @@ function renderViews() {
     b.setAttribute("aria-label", VIEW_LABELS[k]);
     b.setAttribute("aria-pressed", k === view ? "true" : "false");
     b.appendChild(viewIcon(k));
-    b.addEventListener("click", function () { view = k; saveView(k); openId = null; render(); });
+    b.addEventListener("click", function () { view = k; saveView(k); render(); });
     box.appendChild(b);
   });
-}
-
-// T("Images only"): a square picture with the price on top. Tap it to open the full card.
-function tile(w) {
-  var r = res[w.id];
-  var got = !!w.got;
-  var dim = got || r === false;
-  var img = safeUrl(w.image);
-  var said = got ? T("Got it") : r === true ? T("Reserved by you") : r === false ? T("Reserved") : "";
-  var t = el("button", "tile" + (dim ? " dim" : "") + (img ? "" : " empty"));
-  t.type = "button";
-  if (img) {
-    var im = el("img");
-    im.src = img; im.alt = ""; im.loading = "lazy"; im.referrerPolicy = "no-referrer";
-    im.addEventListener("error", function () { im.remove(); t.classList.add("empty"); t.appendChild(el("span", "emoji", "🎁")); });
-    t.appendChild(im);
-  } else {
-    t.appendChild(el("span", "emoji", "🎁"));
-  }
-  t.appendChild(el("span", "tag" + changeClass(w), typeof w.price === "number" ? money(w.price, w.cur) : T("No price")));
-  var bx = el("div", "badges");
-  if (w.star && !got && !SHARED_LIST) bx.appendChild(starBadge());
-  if (said) {
-    var bd = el("span", "badge status", r === true && !got ? T("Reserved ✓") : said);
-    bd.title = said;
-    bx.appendChild(bd);
-  }
-  if (bx.childNodes.length) t.appendChild(bx);
-  t.setAttribute("aria-label", (w.title || T("Wish")) + (w.star && !got && !SHARED_LIST ? ", " + T("most wanted") : "") + (said ? " (" + said.toLowerCase() + ")" : ""));
-  t.addEventListener("click", function () { openId = w.id; render(); });
-  return t;
-}
-
-function closeModal() { openId = null; renderModal(); }
-
-// The full card of the picture you tapped in "images only", so you can still reserve it.
-function renderModal() {
-  var old = $("modal");
-  if (old) old.remove();
-  var w = null;
-  if (openId !== null && list) {
-    (list.items || []).forEach(function (x) { if (x.id === openId) w = x; });
-  }
-  document.body.style.overflow = w ? "hidden" : "";
-  if (!w) { openId = null; modalOpen = false; return; }
-  var m = el("div");
-  m.id = "modal";
-  m.setAttribute("role", "dialog");
-  m.setAttribute("aria-modal", "true");
-  m.setAttribute("aria-label", w.title || "Wish");
-  m.addEventListener("click", function (ev) { if (ev.target === m) closeModal(); });
-  var sheet = el("div", "sheet");
-  sheet.appendChild(card(w, false));
-  var foot = el("div", "foot");
-  var b = el("button", "act outline", T("Close"));
-  b.type = "button";
-  b.addEventListener("click", closeModal);
-  foot.appendChild(b);
-  sheet.appendChild(foot);
-  m.appendChild(sheet);
-  document.body.appendChild(m);
-  if (!modalOpen) b.focus();
-  modalOpen = true;
 }
 
 function card(w, compact) {
@@ -699,11 +634,10 @@ function render() {
     }
     v.appendChild(empty);
   } else {
-    var g = el("div", "grid" + (view === "grid" ? " two" : view === "gallery" ? " tiles" : ""));
-    shown.forEach(function (w) { g.appendChild(view === "gallery" ? tile(w) : card(w, view === "grid")); });
+    var g = el("div", "grid" + (view === "grid" ? " two" : ""));
+    shown.forEach(function (w) { g.appendChild(card(w, view === "grid")); });
     v.appendChild(g);
   }
-  renderModal();
   $("note").hidden = false;
 }
 
@@ -753,7 +687,6 @@ async function toggle(w, reserve) {
 document.addEventListener("keydown", function (e) {
   if (e.key !== "Escape") return;
   if (menuBox) closeMenu();
-  else if (openId !== null) closeModal();
 });
 
 $("filterBtn").addEventListener("click", function () { toolsOpen = !toolsOpen; render(); });

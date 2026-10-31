@@ -550,7 +550,6 @@ fun HomeScreen(
     var query by remember { mutableStateOf("") }
     BackHandler(enabled = searching) { searching = false; query = "" }
     var editing by remember { mutableStateOf<Wish?>(null) }
-    var detailId by remember { mutableStateOf<Long?>(null) }
     var menuId by remember { mutableStateOf<Long?>(null) }
     var historyId by remember { mutableStateOf<Long?>(null) }
     val haptic = LocalHapticFeedback.current
@@ -704,7 +703,6 @@ fun HomeScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                     ViewButton("list", tr("Large cards"), view == "list") { Repo.setView(ctx, "list") }
                     ViewButton("grid", tr("Two per row"), view == "grid") { Repo.setView(ctx, "grid") }
-                    ViewButton("gallery", tr("Images only"), view == "gallery") { Repo.setView(ctx, "gallery") }
                 }
             }
             // Pull down on the list to refresh it: the shops are asked for their prices now (and a shared list is
@@ -721,13 +719,9 @@ fun HomeScreen(
                     )
                 }
             } else {
-                val gap = when (view) { "gallery" -> 8.dp; "grid" -> 12.dp; else -> 16.dp }
+                val gap = if (view == "grid") 12.dp else 16.dp
                 LazyVerticalGrid(
-                    columns = when (view) {
-                        "gallery" -> GridCells.Adaptive(100.dp)
-                        "grid" -> GridCells.Fixed(2)
-                        else -> GridCells.Adaptive(300.dp)
-                    },
+                    columns = if (view == "grid") GridCells.Fixed(2) else GridCells.Adaptive(300.dp),
                     contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 96.dp),
                     horizontalArrangement = Arrangement.spacedBy(gap),
                     verticalArrangement = Arrangement.spacedBy(gap)
@@ -735,9 +729,6 @@ fun HomeScreen(
                     gridItems(list, key = { it.id }) { w ->
                         val r = res[w.id]
                         when (view) {
-                            "gallery" -> ImageTile(
-                                w, onLongPress = { openMenu(w) }, status = reservedLabel(r), dimmed = r == false
-                            ) { detailId = w.id }
                             "grid" -> CompactCard(
                                 w, onLongPress = { openMenu(w) },
                                 onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
@@ -785,12 +776,6 @@ fun HomeScreen(
     }
 
     editing?.let { w -> key(w.id) { WishDialog(w, "") { editing = null } } }
-    detailId?.let { id -> source.firstOrNull { it.id == id } }?.let { w ->
-        WishDetailDialog(
-            w, onEdit = { editing = w },
-            reserve = if (inShared) Reserving(res[w.id]) { on -> Shared.reserve(w, on) } else null
-        ) { detailId = null }
-    }
     menuId?.let { id -> source.firstOrNull { it.id == id } }?.let { w ->
         ItemMenuDialog(
             w,
@@ -839,8 +824,7 @@ private fun ViewIcon(kind: String, tint: Color) {
         )
         when (kind) {
             "list" -> { box(3f, 4f, 18f, 7f); box(3f, 13f, 18f, 7f) }
-            "grid" -> { box(3f, 3f, 8f, 8f); box(13f, 3f, 8f, 8f); box(3f, 13f, 8f, 8f); box(13f, 13f, 8f, 8f) }
-            else -> repeat(3) { r -> repeat(3) { c -> box(3f + c * 6.8f, 3f + r * 6.8f, 5.2f, 5.2f) } }
+            else -> { box(3f, 3f, 8f, 8f); box(13f, 3f, 8f, 8f); box(3f, 13f, 8f, 8f); box(13f, 13f, 8f, 8f) }
         }
     }
 }
@@ -968,143 +952,6 @@ fun CompactCard(
             }
         }
     }
-}
-
-/** Images-only tile: the picture fills the square and the price sits in a tag on top of it. */
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun ImageTile(
-    w: Wish, onLongPress: (() -> Unit)? = null, status: String? = null, dimmed: Boolean = false, onClick: () -> Unit
-) {
-    val cs = MaterialTheme.colorScheme
-    val oldP = w.oldPrice
-    val newP = w.price
-    val drop = newP != null && oldP != null && oldP > newP
-    val rise = priceRose(w)
-
-    Box(
-        Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(14.dp))
-            .background(if (w.image.isEmpty()) cs.primaryContainer else Color.White)
-            .alpha(if (w.got || dimmed) 0.55f else 1f)
-            .combinedClickable(onClick = onClick, onLongClick = onLongPress),
-        contentAlignment = Alignment.Center
-    ) {
-        if (w.image.isNotEmpty()) {
-            AsyncImage(
-                model = w.image, contentDescription = w.title,
-                contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()
-            )
-        } else Text("🎁", fontSize = 32.sp)
-        Surface(
-            color = if (drop) Green else if (rise) Rise else Color.Black.copy(alpha = 0.72f),
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier.align(Alignment.BottomStart).padding(6.dp)
-        ) {
-            Text(
-                if (newP != null) money(newP, w.currency) else tr("No price"),
-                color = Color.White, style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.SemiBold, maxLines = 1,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-            )
-        }
-        if (w.star && !w.got) MostWantedBadge(false, Modifier.align(Alignment.TopEnd).padding(6.dp))
-        val label = if (w.got) tr("Got it") else status
-        if (label != null) {
-            Surface(
-                color = cs.background, shape = RoundedCornerShape(6.dp),
-                modifier = Modifier.align(Alignment.TopEnd).padding(6.dp)
-            ) {
-                Text(
-                    label, color = cs.onBackground, style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                )
-            }
-        }
-    }
-}
-
-/** Opens when you tap an images-only tile: the details, plus everything the cards have as buttons. */
-@Composable
-fun WishDetailDialog(w: Wish, onEdit: () -> Unit, reserve: Reserving? = null, onClose: () -> Unit) {
-    val ctx = LocalContext.current
-    val starFx = rememberStarFx()
-    val ui = LocalUriHandler.current
-    val cs = MaterialTheme.colorScheme
-    val label = listOf(host(w.url), w.category.takeIf { it.isNotBlank() })
-        .filter { !it.isNullOrBlank() }.joinToString(" · ")
-    AlertDialog(
-        onDismissRequest = onClose,
-        title = { Text(w.title, maxLines = 3, overflow = TextOverflow.Ellipsis) },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (w.image.isNotEmpty()) {
-                    AsyncImage(
-                        model = w.image, contentDescription = null, contentScale = ContentScale.Fit,
-                        modifier = Modifier.fillMaxWidth().height(200.dp)
-                            .clip(RoundedCornerShape(12.dp)).background(Color.White)
-                    )
-                }
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    val p = w.price
-                    val o = w.oldPrice
-                    Text(
-                        if (p != null) money(p, w.currency) else tr("No price"),
-                        style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold
-                    )
-                    if (p != null && o != null && (o > p || priceRose(w))) {
-                        Text(
-                            money(o, w.currency), style = MaterialTheme.typography.bodyMedium,
-                            textDecoration = TextDecoration.LineThrough, color = cs.onSurfaceVariant,
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
-                    }
-                    Spacer(Modifier.weight(1f))
-                    if (reserve == null) Box(Modifier.starSparkles(starFx)) {
-                        IconButton(onClick = { if (!w.star) starFx.play(); Repo.replace(ctx, w.copy(star = !w.star)) }) {
-                            StarIcon(
-                                w.star, if (w.star) StarGold else cs.onSurfaceVariant, 26.dp,
-                                Modifier.starPulse(starFx)
-                                    .semantics { contentDescription = if (w.star) tr("Remove from most wanted") else tr("Mark as most wanted") }
-                            )
-                        }
-                    }
-                }
-                if (label.isNotEmpty()) {
-                    Text(label, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
-                }
-                if (w.desc.isNotBlank()) {
-                    Text(w.desc, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
-                }
-                if (w.size.isNotBlank()) SizeTag(w.size)
-                if (w.note.isNotBlank()) {
-                    Text(tr("Note: %s", w.note), style = MaterialTheme.typography.bodyMedium, color = cs.onSurface)
-                }
-                if (w.by.isNotBlank()) {
-                    Text(tr("Added by %s", w.by), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
-                }
-                reservedLabel(reserve?.state)?.let { Text(it, style = MaterialTheme.typography.labelLarge, color = cs.primary) }
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    TextButton(onClick = { onClose(); onEdit() }) { Text(tr("Edit")) }
-                    if (reserve != null) {
-                        when (reserve.state) {
-                            true -> TextButton(onClick = { reserve.set(false); onClose() }) { Text(tr("Undo reservation")) }
-                            null -> TextButton(onClick = { reserve.set(true); onClose() }) { Text(tr("Reserve")) }
-                            else -> {}
-                        }
-                    } else TextButton(onClick = { Repo.replace(ctx, w.copy(got = !w.got)); onClose() }) {
-                        Text(if (w.got) tr("Not got") else tr("Got it"))
-                    }
-                    TextButton(onClick = { DeleteFlow.request(ctx, w); onClose() }) { Text(tr("Delete")) }
-                }
-            }
-        },
-        confirmButton = {
-            if (w.url.isNotBlank()) {
-                TextButton(onClick = { try { ui.openUri(w.url) } catch (e: Exception) { } }) { Text(tr("Open in store")) }
-            }
-        },
-        dismissButton = { TextButton(onClick = onClose) { Text(tr("Close")) } }
-    )
 }
 
 /** One wish. [actions] are the buttons at the bottom right, which differ for the owner and for friends. */

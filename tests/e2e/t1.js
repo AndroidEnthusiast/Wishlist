@@ -60,14 +60,7 @@ const { boot, done, check, summary, KEY, CODE, sleep, openDrawer, catItems } = r
   await t.page.waitForFunction(() => /Reserved by you/.test(document.querySelector(".card.compact[data-id='1002']").innerText));
   check("grid: ⋮ Reserve works", Object.keys(t.fake.res[CODE] || {}).join() === "1002");
   await t.page.screenshot({ path: "shot_grid.png" });
-  await t.page.getByLabel("Images only").click();
-  check("tiles", (await t.page.locator(".tile").count()) === 3);
-  await t.page.locator(".tile").first().click();
-  check("modal opens with actions", (await t.page.locator("#modal .card .actions .ibtn").count()) === 2 && (await t.page.locator("#modal .card .actions button.act").count()) === 1);
-  await t.page.screenshot({ path: "shot_modal.png" });
-  await t.page.keyboard.press("Escape");
-  check("escape closes modal", (await t.page.locator("#modal").count()) === 0);
-  await t.page.screenshot({ path: "shot_tiles.png" });
+  check("only two view buttons (Large cards, Two per row)", JSON.stringify(await t.page.locator("#views .vbtn").evaluateAll(bs => bs.map(b => b.getAttribute("aria-label")))) === JSON.stringify(["Large cards", "Two per row"]));
   await t.ctx.close();
 
   // D. first-run name dialog

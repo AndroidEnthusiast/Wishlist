@@ -128,9 +128,9 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   store.reservations = { 2: "someone-else" };
   const D = x => x.window.document;
   let v = await load("?c=ABCD2345");
-  check("bar visible with 3 view buttons", !D(v).getElementById("bar").hidden && D(v).querySelectorAll("#views .vbtn").length === 3);
+  check("bar visible with 2 view buttons", !D(v).getElementById("bar").hidden && D(v).querySelectorAll("#views .vbtn").length === 2);
   check("default view: large cards selected", D(v).querySelectorAll("#views .vbtn")[0].classList.contains("on") && D(v).querySelector(".grid").className === "grid");
-  check("view buttons have labels", [...D(v).querySelectorAll("#views .vbtn")].map(b => b.getAttribute("aria-label")).join("|") === "Large cards|Two per row|Images only");
+  check("view buttons have labels", [...D(v).querySelectorAll("#views .vbtn")].map(b => b.getAttribute("aria-label")).join("|") === "Large cards|Two per row");
   check("default cards are not compact, keep desc/meta", !D(v).querySelector(".card.compact") && !!D(v).querySelector(".card .meta"));
 
   D(v).querySelectorAll("#views .vbtn")[1].click();
@@ -155,57 +155,15 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   let junk = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_view", "<b>x</b>"));
   check("junk stored value falls back to large cards", D(junk).querySelector(".grid").className === "grid");
 
-  // images only
-  store.reservations = { 2: "someone-else" };
+  // the removed "images only" view falls back to large cards
   let g2 = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_view", "gallery"));
-  check("gallery: .grid.tiles with 3 tiles and no cards", !!D(g2).querySelector(".grid.tiles") && D(g2).querySelectorAll(".tile").length === 3 && D(g2).querySelectorAll(".card").length === 0);
-  const tl = [...D(g2).querySelectorAll(".tile")];
-  check("gallery: price tag inside each tile", tl[0].querySelector(".tag").textContent.includes("80") && tl[2].querySelector(".tag").textContent.includes("20"));
-  check("gallery: price drop tag is green", tl[0].querySelector(".tag").classList.contains("drop") && !tl[2].querySelector(".tag").classList.contains("drop"));
-  check("gallery: bad image/link not used", !tl[1].querySelector("img") && tl[1].classList.contains("empty"));
-  check("gallery: status badges", !tl[0].querySelector(".badge") && tl[1].querySelector(".badge").textContent === "Reserved" && tl[2].querySelector(".badge").textContent === "Got it");
-  check("gallery: no modal before a tap", !D(g2).getElementById("modal"));
-
-  tl[0].click();
-  let modal = D(g2).getElementById("modal");
-  check("tap tile: modal with the full card opens", !!modal && modal.querySelectorAll(".card").length === 1 && modal.querySelector(".title").textContent.includes("Headphones"));
-  check("modal: full card has desc, and its picture links to the shop (like the app)", !!modal.querySelector(".desc") && !!modal.querySelector("a.pic[href^='https://']") && !modal.querySelector(".store"));
-  check("modal: page scroll locked", D(g2).body.style.overflow === "hidden");
-  modal.querySelector("button.act").click();
-  await sleep(100);
-  modal = D(g2).getElementById("modal");
-  check("modal: Reserve works, modal stays open, shows Undo", !!modal && modal.querySelector(".badge.status").textContent === "Reserved by you" && modal.querySelector("button.act").textContent === "Undo");
-  check("modal: tile behind shows it is reserved", D(g2).querySelectorAll(".tile")[0].querySelector(".badge").textContent === "Reserved ✓");
-  [...modal.querySelectorAll("button")].find(b => b.textContent === "Close").click();
-  check("Close button closes modal and unlocks scroll", !D(g2).getElementById("modal") && D(g2).body.style.overflow === "");
-
-  D(g2).querySelectorAll(".tile")[1].click();
-  check("tile of a reserved wish: modal has no Reserve button", !!D(g2).getElementById("modal") && ![...D(g2).getElementById("modal").querySelectorAll("button.act")].some(b => b.textContent === "Reserve" || b.textContent === "Undo"));
-  D(g2).dispatchEvent(new g2.window.KeyboardEvent("keydown", {key: "Escape"}));
-  check("Escape closes modal", !D(g2).getElementById("modal"));
-  D(g2).querySelectorAll(".tile")[2].click();
-  D(g2).getElementById("modal").click();
-  check("tap on dark backdrop closes modal", !D(g2).getElementById("modal"));
-  D(g2).querySelectorAll(".tile")[2].click();
-  D(g2).getElementById("modal").querySelector(".sheet").click();
-  check("tap inside the card does not close modal", !!D(g2).getElementById("modal"));
-  D(g2).querySelectorAll("#views .vbtn")[0].click();
-  check("switching view closes modal and shows large cards", !D(g2).getElementById("modal") && D(g2).querySelectorAll(".card").length === 3 && D(g2).body.style.overflow === "");
-  check("... and remembers it", g2.window.localStorage.getItem("wl_view") === "list");
-
-  // the list changes while a card is open (owner removes it): modal closes cleanly
-  let g3 = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_view", "gallery"));
-  D(g3).querySelectorAll(".tile")[0].click();
-  const keep = items.shift();
-  await g3.window.eval("refresh()");
-  check("wish removed while open: modal closes, no error", !D(g3).getElementById("modal") && D(g3).querySelectorAll(".tile").length === 2);
-  items.unshift(keep);
+  check("old images-only choice opens as large cards", D(g2).querySelector(".grid").className === "grid" && D(g2).querySelectorAll(".card").length === 3 && !D(g2).querySelector(".tile"));
 
   // no categories: drop-down hidden, view buttons still there
   store.noCats = true;
   let nc = await load("?c=ABCD2345");
   store.noCats = false;
-  check("no categories: drop-down hidden, view buttons visible", D(nc).getElementById("chips").hidden && !D(nc).getElementById("bar").hidden && D(nc).querySelectorAll("#views .vbtn").length === 3);
+  check("no categories: drop-down hidden, view buttons visible", D(nc).getElementById("chips").hidden && !D(nc).getElementById("bar").hidden && D(nc).querySelectorAll("#views .vbtn").length === 2);
 
   // entry form / unshared list: no view buttons
   let ef = await load("");
@@ -221,10 +179,10 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   D(blocked).querySelectorAll("#views .vbtn")[1].click();
   check("storage blocked: page still works and view still switches", D(blocked).querySelectorAll(".card.compact").length === 3);
 
-  // empty category in gallery
+  // empty list
   items.length = 0;
-  let em = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_view", "gallery"));
-  check("empty list in gallery: friendly message", D(em).getElementById("view").textContent.includes("Nothing here yet"));
+  let em = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_view", "grid"));
+  check("empty list: friendly message", D(em).getElementById("view").textContent.includes("Nothing here yet"));
 
   // ---------- most wanted, notes, sort and filters ----------
   const saved = items.slice();
@@ -296,16 +254,9 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   check("junk sort falls back to most wanted first", titles(sj)[0] === "Fancy watch");
 
   // other views
-  D(ms).querySelectorAll("#views .vbtn")[2];
   let cv = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_view", "grid"));
   const cc2 = [...D(cv).querySelectorAll(".card.compact")];
   check("compact: star badge + note shown", !!cc2[0].querySelector(".badge.star") && [...D(cv).querySelectorAll(".card.compact .wnote")].length === 2);
-  let gv = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_view", "gallery"));
-  const tt = [...D(gv).querySelectorAll(".tile")];
-  check("tiles follow the sort and show the star", tt.length === 6 && !!tt[0].querySelector(".badge.star") && tt[0].getAttribute("aria-label").includes("most wanted"));
-  check("tile: star and Reserved stacked, star first", tt[0].querySelectorAll(".badges > .badge").length === 2 && tt[0].querySelector(".badges").firstChild.classList.contains("star"));
-  tt[1].click();
-  check("modal card shows the star and note", !!D(gv).querySelector("#modal .badge.star") && !!D(gv).querySelector("#modal .wnote"));
 
   // no note, no about
   items.splice(items.findIndex(i => i.kind === "about"), 1);
@@ -332,9 +283,6 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   check("size tag comes before the note", szc[0].querySelector(".sizetag").nextElementSibling.classList.contains("wnote"));
   let szg = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_view", "grid"));
   check("two per row: size tag shown too", [...D(szg).querySelectorAll(".card.compact .sizetag")].length === 2);
-  let szt = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_view", "gallery"));
-  D(szt).querySelectorAll(".tile")[0].click();
-  check("images only: size tag in the opened card", !!D(szt).querySelector("#modal .sizetag") && D(szt).querySelector("#modal .sizetag").textContent === "Size M");
 
   // ---------- invitation page (?j=KEY) ----------
   {

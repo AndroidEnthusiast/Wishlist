@@ -115,7 +115,6 @@ window.WL_NL = {
   "Got it": "Gekregen",
   "Large cards": "Grote kaarten",
   "Two per row": "Twee per rij",
-  "Images only": "Alleen afbeeldingen",
   "Enter list code": "Vul de lijstcode in",
   "List code": "Lijstcode",
   "Open": "Openen",

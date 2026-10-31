@@ -30,8 +30,8 @@
     ["high", "Price: high to low"], ["az", "Name A–Z"]];
   // Short names for the sort button when a sort is active (same as sortShortName in the app).
   var SORT_SHORT = { low: "Price: low", high: "Price: high", az: "A–Z" };
-  var VIEWS = ["list", "grid", "gallery"];
-  var VIEW_LABELS = { list: "Large cards", grid: "Two per row", gallery: "Images only" };
+  var VIEWS = ["list", "grid"];
+  var VIEW_LABELS = { list: "Large cards", grid: "Two per row" };
 
   var P = window.WLParse;
   var $ = function (id) { return document.getElementById(id); };
@@ -105,8 +105,7 @@
       s.appendChild(q);
     }
     if (kind === "list") { box(3, 4, 18, 7); box(3, 13, 18, 7); }
-    else if (kind === "grid") { box(3, 3, 8, 8); box(13, 3, 8, 8); box(3, 13, 8, 8); box(13, 13, 8, 8); }
-    else { for (var i = 0; i < 3; i++) for (var j = 0; j < 3; j++) box(3 + j * 6.8, 3 + i * 6.8, 5.2, 5.2); }
+    else { box(3, 3, 8, 8); box(13, 3, 8, 8); box(3, 13, 8, 8); box(13, 13, 8, 8); }
     return s;
   }
 
@@ -293,7 +292,7 @@
 
   var view = VIEWS.indexOf(lsGet("wl_view")) >= 0 ? lsGet("wl_view") : "list";
   var sortBy = (SORTS.map(function (s) { return s[0]; }).indexOf(lsGet("wl_sort_ed")) >= 0) ? lsGet("wl_sort_ed") : "new";
-  var cat = "All", query = "", openId = null;
+  var cat = "All", query = "";
   var me = lsGet("wl_name") || "";
   var instant = lsGet("wl_instant") === "1";
   // Reservations: wish id -> true (reserved here) or false (by someone else). Everyone on the list sees them.
@@ -507,7 +506,6 @@
     var t = trash(w.id);
     if (!t) return;
     trashed = t;
-    openId = null;
     render();
     showUndo(t);
   }
@@ -775,7 +773,7 @@
       b.setAttribute("aria-label", T(VIEW_LABELS[k]));
       b.setAttribute("aria-pressed", k === view ? "true" : "false");
       b.appendChild(viewIcon(k));
-      b.addEventListener("click", function () { view = k; lsSet("wl_view", k); openId = null; render(); });
+      b.addEventListener("click", function () { view = k; lsSet("wl_view", k); render(); });
       box.appendChild(b);
     });
   }
@@ -861,54 +859,6 @@
     return c;
   }
 
-  // "Images only": a square picture with the price on top. Tap it to open the full card.
-  function tile(w) {
-    var img = safeUrl(w.image) || (w.image.indexOf("blob:") === 0 ? w.image : "");
-    var t = el("button", "tile" + (res[w.id] === false ? " dim" : "") + (img ? "" : " empty"));
-    t.type = "button";
-    t.setAttribute("data-id", String(w.id));
-    if (img) {
-      var im = el("img");
-      im.src = img; im.alt = ""; im.loading = "lazy"; im.referrerPolicy = "no-referrer";
-      im.addEventListener("error", function () { im.remove(); t.classList.add("empty"); t.appendChild(el("span", "emoji", "🎁")); });
-      t.appendChild(im);
-    } else {
-      t.appendChild(el("span", "emoji", "🎁"));
-    }
-    t.appendChild(el("span", "tag" + changeClass(w), w.price !== null ? money(w.price, w.cur) : T("No price")));
-    var bx = el("div", "badges");
-    if (resLabel(w)) bx.appendChild(el("span", "badge status", resLabel(w)));
-    if (bx.childNodes.length) t.appendChild(bx);
-    t.setAttribute("aria-label", w.title + (resLabel(w) ? " (" + resLabel(w).toLowerCase() + ")" : ""));
-    t.addEventListener("click", function () { openId = w.id; render(); });
-    return t;
-  }
-
-  function closeModal() { openId = null; renderModal(); }
-
-  // The full card of the picture you tapped in "images only", with all the buttons.
-  function renderModal() {
-    var old = $("modal");
-    if (old) old.remove();
-    var w = openId !== null && content ? findWish(openId) : null;
-    updateScrollLock();
-    if (!w) { openId = null; return; }
-    var m = el("div", "backdrop");
-    m.id = "modal";
-    m.setAttribute("role", "dialog");
-    m.setAttribute("aria-modal", "true");
-    m.setAttribute("aria-label", w.title);
-    m.addEventListener("click", function (ev) { if (ev.target === m) closeModal(); });
-    var sheet = el("div", "sheet");
-    sheet.appendChild(card(w, false));
-    var foot = el("div", "foot");
-    foot.appendChild(textBtn(T("Close"), "outline", closeModal));
-    sheet.appendChild(foot);
-    m.appendChild(sheet);
-    document.body.appendChild(m);
-    updateScrollLock();
-  }
-
   function render() {
     var v = $("view");
     var head = $("head"), tools = $("toolbar");
@@ -963,11 +913,10 @@
       }
       v.appendChild(empty);
     } else {
-      var grid = el("div", "grid" + (view === "grid" ? " two" : view === "gallery" ? " tiles" : ""));
-      shown.forEach(function (w) { grid.appendChild(view === "gallery" ? tile(w) : card(w, view === "grid")); });
+      var grid = el("div", "grid" + (view === "grid" ? " two" : ""));
+      shown.forEach(function (w) { grid.appendChild(card(w, view === "grid")); });
       v.appendChild(grid);
     }
-    renderModal();
   }
 
   // ---------- dialogs ----------
@@ -975,7 +924,7 @@
   var dialogs = [];
 
   function updateScrollLock() {
-    document.body.style.overflow = (dialogs.length || $("modal")) ? "hidden" : "";
+    document.body.style.overflow = dialogs.length ? "hidden" : "";
   }
 
   // spec: { title, body(container, api), actions: [{label, cls, onClick(api) -> false keeps it open, id}], cancelable }
@@ -1030,8 +979,6 @@
     if (dialogs.length) {
       var top = dialogs[dialogs.length - 1];
       if (top.spec.cancelable !== false) top.api.close();
-    } else if (openId !== null) {
-      closeModal();
     }
   });
 
