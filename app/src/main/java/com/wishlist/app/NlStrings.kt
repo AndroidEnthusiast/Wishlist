@@ -276,7 +276,7 @@ val NL: Map<String, String> = mapOf(
     "Product information" to "Productinformatie",
     "Description, size and a note for givers" to "Beschrijving, maat en een notitie voor gevers",
     "Shows you _really_ like this" to "Laat zien dat je dit _echt_ leuk vindt",
-    "Private wishes are only visible to you, even when you share your wishlist" to "Privéwensen zie alleen jij, ook als je je verlanglijstje deelt",
+    "Only you can see this wish" to "Alleen jij kunt deze wens zien",
     "Wish is now private" to "Wens is nu privé",
     "Wish is now visible to friends" to "Wens is nu zichtbaar voor vrienden",
     "Deleting this wish moves “%1\$s” to the bin. After %2\$d days it’s permanently deleted." to "Als je deze wens verwijdert, gaat “%1\$s” naar de prullenbak. Na %2\$d dagen wordt hij definitief verwijderd.",

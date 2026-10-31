@@ -35,7 +35,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 
 ## Wishes on screen and the wish form (October 2026)
 - **Tapping a picture opens it full screen** on a dark background (pinch or double-tap to zoom, drag to look around, X or Back to close), with the name and "View in shop" at the bottom. Chosen over an enlarged picture on a blurred screen, which leaves too little room to zoom. Tapping the name and details opens the shop page.
-- **Wish form order**: link, picture, Name (not "Title"), price, Category (one drop-down, not a row of chips), Top wish ("Shows you *really* like this"), Private wish ("Private wishes are only visible to you, even when you share your wishlist"), then "Product information" folded away (description, size, note for givers).
+- **Wish form order**: link, picture, Name (not "Title"), price, Category (one drop-down, not a row of chips), Top wish ("Shows you *really* like this"), Private wish ("Only you can see this wish"), then "Product information" folded away (description, size, note for givers).
 - **Tapping the eye on a private wish makes it visible**: "Wish is now visible to friends" with Undo, for 5 seconds (also "Wish is now private" from the menus).
 - **Delete question**: "Deleting this wish moves "…" to the bin. After 10 days it's permanently deleted."
 
