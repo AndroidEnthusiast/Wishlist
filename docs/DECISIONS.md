@@ -14,7 +14,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **UK English everywhere, and everything also in Dutch.** App: App settings > Language (English (UK) / Nederlands). Web pages: a language switch. Wishes themselves are never translated.
 
 ## Look and feel
-- **Colours and themes apply to the app only.** The app has palettes (indigo by default, plus sage, rose, ocean, amber, lavender), the phone's wallpaper colours (Android 12+), light/dark/system and AMOLED black.
+- **Colours and themes apply to the app only.** The app has palettes (indigo by default, plus sage, rose, ocean, amber, lavender), light/dark/system and AMOLED black. The phone's wallpaper colours (Material You) were removed in 2.44: they didn't look nice.
 - **Web pages only offer light and dark** (plus following the device), as a bare minimum. No palettes on the web.
 - **Font choice in the app**: a library of 14 popular fonts, Google Sans is the default and is built in.
 - **The friends' page looks the same as the app and the browser editor**, for both "My wishlist" and shared lists.
@@ -38,6 +38,8 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Wish form order**: link, picture, Name (not "Title"), price, Category (one drop-down, not a row of chips), Top wish ("Shows you *really* like this"), Private wish ("Hides this wish from everyone you share your wishlist with"), then "Product information" folded away (description, size, note for givers).
 - **Tapping the eye on a private wish makes it visible**: "Wish is now visible to friends" with Undo, for 5 seconds (also "Wish is now private" from the menus).
 - **Delete question**: "Deleting this wish moves "…" to the bin. After 10 days it's permanently deleted."
+
+- **Wish form, later tweaks**: the folded section is called "Other information" ("Description, size, notes"); the price field shows the currency's symbol (€ for EUR) in front of the amount, label "Price (EUR)"; no "Fetch details" button (pasting a link reads the page; the keyboard's Done key does too).
 
 ## Prices
 - **Price rises are shown too**: the old price stays visible, with a red ↑ and the percentage. Price drops as before.
@@ -68,4 +70,5 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Free Supabase plan** (500 MB database). Usage is small (estimated 20–30 MB in October 2026). SQL scripts are run by the owner by hand; give exact steps.
 
 ## Open ideas (not decided)
+- **Theme designs (next session's topic)**: a few distinct, really nice-looking designs to choose from (like the "organic" one from an earlier claude.ai chat, which the owner liked), each with its own colour combinations. See HANDOFF.md, "Next session".
 - Personal recovery key: an encrypted online backup of your lists, keys, creator rights and settings, restored with a key (optionally saved in Google Password Manager), plus automatic clean-up of lists nobody uses. Ask the owner before building.

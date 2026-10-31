@@ -86,19 +86,14 @@ fun CategoryField(selected: String, cats: List<String>, onPick: (String) -> Unit
 }
 
 /**
- * "Product information": description, size and the note for givers, folded away under one heading so the switches
- * of the form stay in sight. Closed, it says what is filled in.
+ * "Other information": description, size and the note for givers, folded away under one heading so the switches
+ * of the form stay in sight.
  */
 @Composable
-fun ProductInfo(desc: String, size: String, note: String, content: @Composable ColumnScope.() -> Unit) {
+fun ProductInfo(content: @Composable ColumnScope.() -> Unit) {
     var open by rememberSaveable { mutableStateOf(false) }
     val turn by animateFloatAsState(if (open) 180f else 0f, label = "productInfoArrow")
     val cs = MaterialTheme.colorScheme
-    val filled = listOfNotNull(
-        tr("Description").takeIf { desc.isNotBlank() },
-        tr("Size %s", size).takeIf { size.isNotBlank() },
-        tr("Note").takeIf { note.isNotBlank() }
-    )
     Surface(color = cs.surfaceVariant, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
         Column {
             Row(
@@ -108,9 +103,9 @@ fun ProductInfo(desc: String, size: String, note: String, content: @Composable C
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text(tr("Product information"), style = MaterialTheme.typography.bodyLarge)
+                    Text(tr("Other information"), style = MaterialTheme.typography.bodyLarge)
                     Text(
-                        if (filled.isEmpty()) tr("Description, size and a note for givers") else filled.joinToString(" · "),
+                        tr("Description, size, notes"),
                         style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
                     )
                 }
@@ -125,4 +120,11 @@ fun ProductInfo(desc: String, size: String, note: String, content: @Composable C
             }
         }
     }
+}
+
+/** The symbol of a currency code for the price field: € for EUR, $ for USD, £ for GBP. The code itself if it has none. */
+fun currencySymbol(code: String): String = try {
+    java.util.Currency.getInstance(code).getSymbol(java.util.Locale.US)
+} catch (e: Exception) {
+    code
 }

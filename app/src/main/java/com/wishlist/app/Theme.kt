@@ -2,12 +2,9 @@ package com.wishlist.app
 
 import android.app.Activity
 import android.content.Context
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -73,7 +70,7 @@ private fun dark(primary: Long, onPrimary: Long, container: Long, onContainer: L
 
 /**
  * The colour choices in App settings, each with Material contrast (tones 40/90/10 in light, 80/30/90 in dark).
- * Indigo is the original look. "wallpaper" (Material You, Android 12+) is not in this list: it comes from the phone.
+ * Indigo is the original look. (The wallpaper colours of Material You were removed in 2.44: they didn't look nice.)
  */
 val PALETTES: List<Palette> = listOf(
     Palette(
@@ -108,18 +105,12 @@ val PALETTES: List<Palette> = listOf(
     )
 )
 
-/** Material You (colours from the wallpaper) exists from Android 12 on. */
-val wallpaperColours: Boolean get() = Build.VERSION.SDK_INT >= 31
-
 /** The colour scheme for a palette key and mode ("light", "dark" or "amoled"). */
 fun schemeFor(c: Context, palette: String, mode: String): ColorScheme {
     val darkMode = mode != "light"
-    val base = if (palette == "wallpaper" && Build.VERSION.SDK_INT >= 31) {
-        if (darkMode) dynamicDarkColorScheme(c) else dynamicLightColorScheme(c)
-    } else {
-        val p = PALETTES.firstOrNull { it.key == palette } ?: PALETTES[0]
-        if (darkMode) p.dark else p.light
-    }
+    // An unknown key (also "wallpaper" from before 2.44) gives the original indigo.
+    val p = PALETTES.firstOrNull { it.key == palette } ?: PALETTES[0]
+    val base = if (darkMode) p.dark else p.light
     // AMOLED black: the dark colours on pure black, with the cards just off black.
     return if (mode == "amoled") base.copy(background = Color.Black, surface = Color.Black, surfaceVariant = Color(0xFF0E0E11)) else base
 }

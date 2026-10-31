@@ -67,7 +67,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -85,6 +87,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -1234,11 +1237,13 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
                         if (pasted) go(new)
                     },
                     label = { Text(tr("Product link (optional)")) },
+                    // No "Fetch details" button any more: pasting a link reads the page, and so does the keyboard's
+                    // Done key after typing or changing one. A small circle shows while the page is being read.
+                    trailingIcon = if (busy) ({ CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp) }) else null,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { if (!busy && url.isNotBlank()) go(url) }),
                     singleLine = true, modifier = Modifier.fillMaxWidth()
                 )
-                Button(onClick = { go(url) }, enabled = !busy && url.isNotBlank()) {
-                    Text(if (busy) tr("Reading…") else tr("Fetch details"))
-                }
                 if (err.isNotEmpty()) {
                     Text(err, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 }
@@ -1249,6 +1254,8 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
                 OutlinedTextField(title, { title = it }, label = { Text(tr("Name")) }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(
                     price, { price = it }, label = { Text(tr("Price (%s)", cur)) }, singleLine = true,
+                    // The symbol of the currency in the label: € for EUR, $ for USD, £ for GBP, …
+                    prefix = { Text(currencySymbol(cur)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -1284,8 +1291,8 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
                     }
                     Switch(checked = priv, onCheckedChange = { priv = it })
                 }
-                // Description, size and the note for givers fold away, so the switches above stay in sight.
-                ProductInfo(desc, sizeSel, note) {
+                // "Other information" (description, size, note for givers) folds away, so the switches above stay in sight.
+                ProductInfo {
                     OutlinedTextField(
                         desc, { desc = it }, label = { Text(tr("Description")) },
                         maxLines = 3, modifier = Modifier.fillMaxWidth()

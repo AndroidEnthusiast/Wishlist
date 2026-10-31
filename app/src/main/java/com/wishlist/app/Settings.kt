@@ -163,16 +163,16 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
             }
 
             SectionTitle(tr("Colours"))
-            // A row of round swatches. The colours work with every mode above. Wallpaper colours need Android 12.
+            // A row of round swatches. The colours work with every mode above.
             val mode = effectiveTheme()
-            val choices = (if (wallpaperColours) listOf("wallpaper" to tr("Wallpaper")) else emptyList()) +
-                PALETTES.map { it.key to tr(it.name) }
+            val choices = PALETTES.map { it.key to tr(it.name) }
             Row(
                 Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 choices.forEach { (k, n) ->
-                    val on = Repo.palette == k || (k == "indigo" && Repo.palette == "wallpaper" && !wallpaperColours)
+                    // "wallpaper" (removed in 2.44) shows as indigo, which is what it now looks like.
+                    val on = Repo.palette == k || (k == "indigo" && PALETTES.none { it.key == Repo.palette })
                     val sch = schemeFor(ctx, k, mode)
                     Column(
                         Modifier.clip(RoundedCornerShape(12.dp)).clickable { Repo.setPalette(ctx, k) }

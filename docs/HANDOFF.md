@@ -15,6 +15,19 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 - v2.19: tap on the star plays a pulse and seven tiny sparkles; in the two-per-row view the owner gets a tappable star button on the picture.
 - v2.20 (web only, app unchanged at 2.19): the browser editor `web/edit.html` for people without Android. The invite page sends non-Android visitors straight to it. A Supabase edge function `fetch-page` loads shop pages for it. 170 browser checks + others in `tests/`.
 
+- v2.21 to v2.31 (claude.ai chats and the first Claude Code session): App settings vs list settings, price rises shown, Dutch, colour palettes, 14 fonts, friends' page restyled, private signing key.
+
+## Session of 30–31 October 2026 (Claude Code, one long session; details per version in README.md, choices in DECISIONS.md)
+- v2.32–2.33: the bin (Menu > Bin, 10 days, everyone on a shared list sees its bin; delete moves to the bin at once, short "Wish moved to the bin" + Undo; alert "Your reserved gift has been moved to the bin" opens the bin at that gift with a glow). Safer loading (`SafeStore`). Shared price checks split between phones (`chk`). "Download app" button in App settings (2.37).
+- v2.34: "Images only" view removed. v2.35: a shared list has one link, the invite. Web: invitation page also on iPhone/computers (only "Edit in the browser"), fits on one screen, confetti up to the top, language/theme carried to the editor, `?v=` cache-busting after a browser mixed old and new files.
+- v2.36: private wishes (switch, eye icon, never online; "Save to" option; a friend who reserved a gift that disappears is nudged to pick another, `FriendWatch` / friends' page note).
+- v2.38–2.39: "Most wanted" → "Love it" (pink heart) → undone → "Top wish" (gold star, bold words).
+- v2.40–2.44: full-screen picture viewer, tap words → shop page, wish form reordered (Name, Category drop-down, Top wish, Private wish, then "Other information" folded away), tappable private eye with 5 s Undo, new delete wording, form texts tuned with the owner, price field shows the currency symbol, "Fetch details" button removed, wallpaper colours (Monet) removed.
+- Working style settled this session: push straight to `main`; end every message about a finished build with **App available for download** on the last line.
+
+## Next session: theme designs (the owner's next topic)
+The owner wants a few really nice-looking, clearly different designs to pick from (not just colours), each with a choice of colour combinations. Start point: an "organic" design that an earlier chat on claude.ai once made and the owner liked. It is NOT in this repository (nothing called organic exists here), so ask the owner for a screenshot or a description of it first. Show previews (HTML mock-ups) before building, as DECISIONS asks. Today the app has: palettes (indigo, sage, rose, ocean, amber, lavender) in `Theme.kt`, light/dark/system/AMOLED, 14 fonts (`Fonts.kt`); the web pages only have light/dark. Material You wallpaper colours were removed in 2.44 because they didn't look nice: don't bring them back.
+
 ## Decisions and why
 - Lists are link-only, never listed publicly. Reservations are hidden from the owner and from editors so gifts stay a surprise.
 - Shared lists are online-first: no internet means the change is undone with a message (simple and safe). Same field changed by two people at the same moment: the later save wins.
@@ -23,7 +36,7 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 - The Supabase URL and publishable key are public on purpose.
 - The browser editor reads shop pages via the helper function, because browsers may not load other sites. The page itself parses the HTML (`web/parse.js`).
 
-## State on 30 October 2026
+## State on 30 October 2026 (start of the Claude Code work; see the session above for what followed)
 - Owner deployed the edge function `fetch-page` in the Supabase dashboard (editor, function named `fetch-page`) and switched OFF "Verify JWT with legacy secret" in its Settings, saved. NOT yet confirmed working with a real shop link.
 - The owner was about to upload the zip with the browser editor to GitHub (and had said they might not have done so yet). Check that `web/edit.html` exists on `main` and that the Actions run is green before anything else.
 - From now on work happens here in Claude Code; the zip upload routine is retired.
