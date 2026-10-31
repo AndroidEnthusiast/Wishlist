@@ -8,7 +8,7 @@ const val ABOUT_MAX = 300
 /** The ways to order the wishes: key to the name shown in the menu. "new" is the normal order. */
 val SORT_OPTIONS: List<Pair<String, String>> = listOf(
     "new" to "Newest first",
-    "star" to "Loved first",
+    "star" to "Top wishes first",
     "low" to "Price: low to high",
     "high" to "Price: high to low",
     "az" to "Name A–Z"
@@ -16,7 +16,7 @@ val SORT_OPTIONS: List<Pair<String, String>> = listOf(
 
 /** Short names for the sort button when a sort is active. */
 fun sortShortName(mode: String): String = when (mode) {
-    "star" -> "Loved"
+    "star" -> "Top wishes"
     "low" -> "Price: low"
     "high" -> "Price: high"
     "az" -> "A–Z"

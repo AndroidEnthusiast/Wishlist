@@ -60,7 +60,7 @@ fun shareItem(c: Context, w: Wish) {
 
 /** What a long press on a wish opens. */
 @Composable
-/** The long-press menu. On a shared list there is no Love it and no price history: leave those out (null). */
+/** The long-press menu. On a shared list there is no most wanted and no price history: leave those out (null). */
 fun ItemMenuDialog(
     w: Wish, onHistory: (() -> Unit)?, onShare: () -> Unit, onStar: (() -> Unit)?, onPrivate: (() -> Unit)? = null, onClose: () -> Unit
 ) {
@@ -70,8 +70,8 @@ fun ItemMenuDialog(
         title = { Text(w.title, maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = {
             Column {
-                if (onStar != null) MenuRow(if (w.star) tr("Remove the heart") else tr("Love it"), onStar) {
-                    HeartIcon(w.star, if (w.star) LoveRose else cs.onSurfaceVariant, 24.dp)
+                if (onStar != null) MenuRow(if (w.star) tr("Remove top wish") else tr("Top wish"), onStar) {
+                    StarIcon(w.star, if (w.star) StarGold else cs.onSurfaceVariant, 24.dp)
                 }
                 if (onPrivate != null) MenuRow(if (w.priv) tr("Visible to friends") else tr("Make private"), onPrivate) {
                     Icon(PrivateIcon, null, tint = cs.onSurfaceVariant)

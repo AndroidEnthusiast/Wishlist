@@ -220,7 +220,7 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   check("default order: most wanted first, then as listed", titles(ms).join("|") === "Fancy watch|Book|Cheap mug|Mystery|Reserved lamp|Old star got");
   const mc = [...D(ms).querySelectorAll(".card")];
   check("star badge on starred, not on others or on got ones", !!mc[0].querySelector(".badge.star") && !!mc[1].querySelector(".badge.star") && !mc[2].querySelector(".badge.star") && !mc[5].querySelector(".badge.star"));
-  check("Love it label: text and a heart icon", mc[0].querySelector(".badge.star .lbl").textContent === "Love it" && mc[0].querySelector(".badge.star").getAttribute("aria-label") === "Love it" && !!mc[0].querySelector(".badge.star svg path") && !/★/.test(mc[0].querySelector(".badge.star").textContent));
+  check("star label text", mc[0].querySelector(".badge.star .lbl").textContent === "Top wish" && mc[0].querySelector(".badge.star").getAttribute("aria-label") === "Top wish");
   check("star + reserved: both badges in one corner stack, star first", mc[0].querySelectorAll(".badges > .badge").length === 2 && mc[0].querySelector(".badges").firstChild.classList.contains("star") && mc[0].querySelector(".badge.status").textContent === "Reserved");
   check("reserved without star: status badge only", mc[4].querySelectorAll(".badges > .badge").length === 1 && mc[4].querySelector(".badge.status").textContent === "Reserved");
   check("no badges container when nothing to show", !mc[3].querySelector(".badges"));

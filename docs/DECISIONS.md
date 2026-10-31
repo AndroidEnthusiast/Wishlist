@@ -7,6 +7,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **One Claude Code session per feature or topic.** Long sessions get summarised and lose detail; this file and `CLAUDE.md` are what a new session reads. Before ending a topic, write any new decision here.
 - **The project lives as normal files in the repository**, not in `wishlist-android.zip`, so every session reads `CLAUDE.md` and this file automatically. Never bring the zip back.
 - **Explain plainly, in UK English, tap by tap.** Say what you are changing before or as you change it, and be honest about what was and wasn't tested.
+- **When a new app build is ready to download, say so explicitly in bold: "App available for download".** (October 2026)
 - **Show previews of visible changes** (an HTML mock-up or simulation) when the owner asks to see something before it is built.
 
 ## Language
@@ -29,8 +30,8 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Private wishes keep getting price-drop notifications.**
 - **If a reserved gift is taken off the list** (made private or deleted), the person who reserved it is nudged to pick another gift: a notification on their phone when they use the app, a note on the friends' page when they use the browser. The owner still never learns it was reserved.
 
-## Love it
-- **"Most wanted" is now "Love it", with a heart instead of a star** (October 2026): people say they love the things they really want. A soft, muted rose pink (label #F6D9E1 with deep rose #8C3A56 heart and words), never a loud pink. Still stored as `star`, so earlier wishes kept it. Sort: "Loved first".
+## Top wish
+- **"Most wanted" is now "Top wish"** (October 2026): for the wish maker "my number one", for the giver "a safe bet that makes them happy". Gold label with a star, as before, with bolder words. (A heart with "Love it" in pink was tried in 2.38 and dropped.) Sort: "Top wishes first". Still stored as `star`.
 
 ## Prices
 - **Price rises are shown too**: the old price stays visible, with a red ↑ and the percentage. Price drops as before.

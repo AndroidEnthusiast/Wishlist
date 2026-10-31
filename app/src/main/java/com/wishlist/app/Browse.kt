@@ -91,7 +91,7 @@ fun SortButton(mode: String, withStar: Boolean = true, onPick: (String) -> Unit)
             }
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            // A shared list has no "Love it", so it can't be sorted by it either.
+            // A shared list has no "most wanted", so it can't be sorted by it either.
             SORT_OPTIONS.filter { withStar || it.first != "star" }.forEach { (key, label) ->
                 DropdownMenuItem(
                     text = { Text(tr(label), fontWeight = if (key == mode) FontWeight.Bold else FontWeight.Normal) },
