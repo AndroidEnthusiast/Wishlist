@@ -79,9 +79,6 @@ object Shared {
     /** Goes up with every change made on this phone, so a refresh that started before a change can't overwrite it. */
     private val stamp = AtomicInteger(0)
 
-    /** Wishes that were just deleted here but can still be undone. They are still online, so they stay hidden from refreshes. */
-    private val hidden = java.util.concurrent.ConcurrentHashMap.newKeySet<Long>()
-
     val current: SharedList? get() = lists.firstOrNull { it.code == active }
     val me: String get() = current?.me.orEmpty()
     val isCreator: Boolean get() = current?.owner?.isNotEmpty() == true
@@ -91,17 +88,12 @@ object Shared {
     fun load(c: Context) {
         val p = prefs(c)
         lastName = p.getString("sh_me", "") ?: ""
-        lists = try {
-            val a = JSONArray(p.getString("shared", null) ?: "[]")
-            (0 until a.length()).map { i ->
-                val o = a.getJSONObject(i)
-                SharedList(
-                    o.getString("code"), o.getString("key"), o.optString("name", "Shared wishlist"),
-                    o.optString("owner", ""), o.optString("me", "")
-                )
-            }
-        } catch (e: Exception) {
-            emptyList()
+        // Read carefully: these hold the keys (and creator rights) of the lists, which exist nowhere else.
+        lists = SafeStore.readList(p, "shared") { o ->
+            SharedList(
+                o.getString("code"), o.getString("key"), o.optString("name", "Shared wishlist"),
+                o.optString("owner", ""), o.optString("me", "")
+            )
         }
         active = null
         gone = false
@@ -210,7 +202,7 @@ object Shared {
         }
         gone = false
         // Wishes in the bin are not on the list (the Bin screen shows them, see Bin.kt).
-        val nc = SharedContent(r.list.name, r.list.cats, r.list.about, r.list.wishes.filter { it.id !in hidden && it.bin == 0L })
+        val nc = SharedContent(r.list.name, r.list.cats, r.list.about, r.list.wishes.filter { it.bin == 0L })
         if (nc != content) content = nc
         writeCache(c, l.code, nc)
         if (r.list.name != l.name) {
@@ -388,60 +380,49 @@ object Shared {
         }
     }
 
-    // ---- deleting with Undo: hidden at once, removed online only when the undo time is over ----
-
-    /** Hides a wish of the open list. It stays online (with any reservation on it) until [finishTrash]. */
-    fun trash(id: Long): Trashed? {
-        val l = current ?: return null
-        val i = content.wishes.indexOfFirst { it.id == id }
-        if (i < 0) return null
-        val w = content.wishes[i]
-        hidden.add(id)
-        stamp.incrementAndGet()
-        content = content.copy(wishes = content.wishes.filter { it.id != id })
-        return Trashed(w, i, l.code)
-    }
-
-    /** Undo: the wish is shown again where it was. It never left the online copy. */
-    fun untrash(t: Trashed) {
-        hidden.remove(t.wish.id)
-        if (active == t.listCode && content.wishes.none { it.id == t.wish.id }) {
-            stamp.incrementAndGet()
-            content = content.copy(
-                wishes = content.wishes.toMutableList().also { it.add(t.index.coerceIn(0, it.size), t.wish) }
-            )
-        }
-    }
+    // ---- deleting: the wish goes to the bin at once (for everyone); Undo takes it out again ----
 
     /**
-     * The undo time is over: the wish goes to the list's bin online, for everyone (only the fields "bin" and "binBy"
-     * are written; its picture and any reservation on it stay). If that fails it comes back with a message.
+     * Moves a wish of the open list to the bin: it leaves the list at once and is marked online (only the fields
+     * "bin" and "binBy" are written; its picture and any reservation stay). If that fails it comes back with a message.
      */
-    fun finishTrash(c: Context, t: Trashed) {
-        val l = lists.firstOrNull { it.code == t.listCode }
-        if (l == null) {
-            hidden.remove(t.wish.id)
-            return
-        }
+    fun trash(c: Context, id: Long): Trashed? {
+        val l = current ?: return null
+        val before = content
+        val i = before.wishes.indexOfFirst { it.id == id }
+        if (i < 0) return null
         val at = System.currentTimeMillis()
-        Bin.binnedHere(c, l.code, t.wish.id, at)
-        val remove: suspend () -> Unit = {
+        val binned = before.wishes[i].copy(bin = at, binBy = l.me)
+        Bin.binnedHere(c, l.code, id, at)
+        Bin.added(BinEntry(binned, l.code, before.name.ifBlank { l.name }, reserved[id]))
+        write(c, l, before, before.copy(wishes = before.wishes.filter { it.id != id })) {
             try {
-                Cloud.shPut(l.key, t.wish.copy(bin = at, binBy = l.me), listOf("bin", "binBy"))
-            } finally {
-                hidden.remove(t.wish.id)
+                Cloud.shPut(l.key, binned, listOf("bin", "binBy"))
+            } catch (e: Exception) {
+                Bin.removed(l.code, id)
+                throw e
             }
         }
-        if (active == l.code) {
-            val shown = content
-            val before = shown.copy(wishes = shown.wishes.toMutableList().also { it.add(t.index.coerceIn(0, it.size), t.wish) })
-            write(c, l, before, shown, remove)
+        return Trashed(binned, i, l.code)
+    }
+
+    /** Undo: the wish comes out of the bin and back where it was. */
+    fun untrash(c: Context, t: Trashed) {
+        val l = lists.firstOrNull { it.code == t.listCode } ?: return
+        Bin.removed(l.code, t.wish.id)
+        val back = t.wish.copy(bin = 0L, binBy = "")
+        // Only the bin fields are written (left out = cleared). The lock makes sure this goes after the move to the bin.
+        val job: suspend () -> Unit = { Cloud.shPut(l.key, back, listOf("bin", "binBy")) }
+        if (active == l.code && content.wishes.none { it.id == back.id }) {
+            val before = content
+            val after = before.copy(wishes = before.wishes.toMutableList().also { it.add(t.index.coerceIn(0, it.size), back) })
+            write(c, l, before, after, job)
         } else {
-            // Another list is open now: just move it to the bin online. A failure shows up as the wish still being there next time.
             scope.launch {
                 try {
-                    lock.withLock { remove() }
+                    lock.withLock { job() }
                 } catch (e: Exception) {
+                    notice = tr("Couldn’t save that. Check your connection and try again.")
                 }
             }
         }

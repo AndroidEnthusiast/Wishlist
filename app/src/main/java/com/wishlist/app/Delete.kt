@@ -9,15 +9,14 @@ import androidx.compose.runtime.setValue
  * Deleting a wish, the careful way. Every Delete button calls [request]:
  *  - normally the person is asked "Delete this wish?" first;
  *  - with "Instant delete" on in Settings it is deleted at once;
- *  - either way a message with Undo shows for a few seconds. Only when that time is over (or a next wish is
- *    deleted, or the app is left) does the wish go to the bin (Bin.kt), where it stays for 10 days.
+ *  - either way the wish goes to the bin at once (Bin.kt, 10 days), and a short message with Undo takes it out again.
  */
 object DeleteFlow {
     /** The wish the person is being asked about, or null. */
     var asking by mutableStateOf<Wish?>(null)
         private set
 
-    /** The latest delete that can still be undone. The screen shows "Deleted ... Undo" for it. */
+    /** The latest delete that can still be undone from the message. */
     var undoable by mutableStateOf<Trashed?>(null)
         private set
 
@@ -36,29 +35,19 @@ object DeleteFlow {
     }
 
     private fun delete(c: Context, w: Wish) {
-        // A delete that could still be undone becomes final: only the latest one can be undone.
-        finishNow(c)
+        // Only the latest delete can be undone from the message; earlier ones can still be restored from the bin.
         undoable = Repo.trash(c, w.id)
     }
 
-    /** Brings the last deleted wish back, where it was. */
+    /** Takes the last deleted wish out of the bin and puts it back where it was. */
     fun undo(c: Context) {
         val t = undoable ?: return
         undoable = null
         Repo.untrash(c, t)
     }
 
-    /** The undo time of [t] is over. */
-    fun finish(c: Context, t: Trashed) {
-        if (undoable !== t) return
-        undoable = null
-        Repo.finishTrash(c, t)
-    }
-
-    /** Makes a delete that is still waiting final (the app is left, or another wish is deleted). */
-    fun finishNow(c: Context) {
-        val t = undoable ?: return
-        undoable = null
-        Repo.finishTrash(c, t)
+    /** The message for [t] is gone: it can only be restored from the bin now. */
+    fun finish(t: Trashed) {
+        if (undoable === t) undoable = null
     }
 }

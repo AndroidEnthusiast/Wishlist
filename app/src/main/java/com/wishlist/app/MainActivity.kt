@@ -193,12 +193,6 @@ class MainActivity : ComponentActivity() {
         if (hasFocus) checkClipboardInvite()
     }
 
-    override fun onStop() {
-        super.onStop()
-        // Leaving the app (not turning the screen) ends the time for Undo: the delete becomes final.
-        if (!isChangingConfigurations) DeleteFlow.finishNow(this)
-    }
-
     private fun checkClipboardInvite() {
         try {
             val stamp = packageManager.getPackageInfo(packageName, 0).lastUpdateTime

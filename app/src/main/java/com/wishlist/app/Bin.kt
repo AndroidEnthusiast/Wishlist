@@ -18,7 +18,7 @@ data class BinEntry(val wish: Wish, val listCode: String?, val listName: String,
 }
 
 /**
- * The bin (menu > Bin). A deleted wish goes here when its 10 seconds of Undo are over, and stays [BIN_DAYS] days.
+ * The bin (menu > Bin). A deleted wish goes here at once (Undo in the message takes it out again) and stays [BIN_DAYS] days.
  *  - My wishlist: the bin is kept on this phone ([Repo.myBin]). It also goes online marked "bin", so a friend's
  *    reservation stays if the wish is restored; friends never see it.
  *  - A shared wishlist: the wish stays online with the fields "bin" (when) and "binBy" (who), so everyone on the
@@ -30,9 +30,15 @@ data class BinEntry(val wish: Wish, val listCode: String?, val listName: String,
  * bin at that gift ([focus]).
  */
 object Bin {
-    /** Everything in the bin, newest first. Filled by [load]. */
-    var entries by mutableStateOf(listOf<BinEntry>())
-        private set
+    /** The bins of the shared wishlists, as last loaded, plus what was moved to them on this phone since. */
+    private var shared by mutableStateOf(listOf<BinEntry>())
+    /** Goes up with every change made here, so a load that started before it can't undo it on screen. */
+    @Volatile
+    private var changes = 0
+
+    /** Everything in the bin, newest first: My wishlist's bin straight from the phone, and the shared bins. */
+    val entries: List<BinEntry>
+        get() = (Repo.myBin.map { BinEntry(it, null, myListName()) } + shared).sortedByDescending { it.wish.bin }
     var loading by mutableStateOf(false)
         private set
     /** True when the bin of a shared wishlist couldn't be loaded (no internet). */
@@ -114,13 +120,25 @@ object Bin {
         return keep
     }
 
-    /** Fills [entries]: the bin of My wishlist and of every shared wishlist on this phone. */
+    /** A wish of a shared list was moved to the bin on this phone: it shows in the bin at once. */
+    fun added(e: BinEntry) {
+        changes++
+        shared = listOf(e) + shared.filter { it.key != e.key }
+    }
+
+    /** A wish of a shared list came out of the bin on this phone (Undo, or saving the move failed). */
+    fun removed(code: String, id: Long) {
+        changes++
+        shared = shared.filter { !(it.listCode == code && it.wish.id == id) }
+    }
+
+    /** Fetches the bins of every shared wishlist on this phone (My wishlist's bin is on the phone already). */
     suspend fun load(c: Context) {
         loading = true
+        val start = changes
         try {
             purgeMine(c)
             val out = ArrayList<BinEntry>()
-            Repo.myBin.forEach { out.add(BinEntry(it, null, myListName())) }
             var failed = false
             for (l in Shared.lists.toList()) {
                 try {
@@ -131,11 +149,12 @@ object Bin {
                 } catch (e: Exception) {
                     failed = true
                     // Keep showing what was there before for this list.
-                    entries.filter { it.listCode == l.code }.forEach { out.add(it) }
+                    shared.filter { it.listCode == l.code }.forEach { out.add(it) }
                 }
             }
             offline = failed
-            entries = out.sortedByDescending { it.wish.bin }
+            // Something was moved to or out of the bin here while loading: this answer is already old.
+            if (changes == start) shared = out
         } finally {
             loading = false
         }
@@ -150,8 +169,8 @@ object Bin {
             // Only the bin fields are written (left out = cleared), so nothing else anyone changed is undone.
             Cloud.shPut(l.key, e.wish.copy(bin = 0L, binBy = ""), listOf("bin", "binBy"))
             if (Shared.active == l.code) Shared.refresh(c)
+            removed(l.code, e.wish.id)
         }
-        entries = entries.filter { it.key != e.key }
     }
 
     /** Deletes the wish for good (with its picture and any reservation). Throws when that failed. */
@@ -164,8 +183,8 @@ object Bin {
                 Cloud.shDelete(l.key, e.wish.id)
                 Shared.dropPhoto(l, e.wish.image)
             }
+            removed(e.listCode, e.wish.id)
         }
-        entries = entries.filter { it.key != e.key }
     }
 
     /** Deletes everything in the bin for good. Returns false when something couldn't be deleted (it stays in the bin). */
@@ -199,7 +218,9 @@ object Bin {
             val mine = readSet(c, "shbh_${l.code}")
             val told = readSet(c, "shbn_${l.code}")
             val marks = inBin.map { mark(it) }.toSet()
-            val fresh = inBin.filter { mark(it) !in mine && mark(it) !in told }
+            // A wish moved to the bin a moment ago may still be taken out with Undo: it is looked at next time.
+            val settled = System.currentTimeMillis() - 30_000
+            val fresh = inBin.filter { mark(it) !in mine && mark(it) !in told && it.bin < settled }
             if (fresh.isNotEmpty()) {
                 val res = try {
                     Cloud.fetchReservations(l.code, Repo.deviceId)

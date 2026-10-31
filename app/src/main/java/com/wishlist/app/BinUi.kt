@@ -17,16 +17,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -70,6 +66,7 @@ fun BinScreen(snack: SnackbarHostState) {
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
     val listState = rememberLazyListState()
+    val entries = Bin.entries
     // The wish being restored or deleted (its key), so its buttons can't be tapped twice.
     var busy by remember { mutableStateOf<String?>(null) }
     var askDelete by remember { mutableStateOf<BinEntry?>(null) }
@@ -77,8 +74,12 @@ fun BinScreen(snack: SnackbarHostState) {
     // The wish that glows, with a counter so the same wish can glow again after a second alert.
     var lit by remember { mutableStateOf<Pair<String, Int>?>(null) }
 
+    // Kept up to date while it is open, like a shared list: what someone else deletes shows up by itself.
     LaunchedEffect(Unit) {
-        if (Bin.focus == null) Bin.load(ctx)
+        while (true) {
+            if (Bin.focus == null) Bin.load(ctx)
+            delay(20_000)
+        }
     }
     val focus = Bin.focus
     LaunchedEffect(focus) {
@@ -135,10 +136,7 @@ fun BinScreen(snack: SnackbarHostState) {
                 navigationIcon = { MenuSlot() },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
                 actions = {
-                    IconButton(onClick = { scope.launch { Bin.load(ctx) } }, enabled = !Bin.loading) {
-                        Icon(Icons.Default.Refresh, tr("Refresh"))
-                    }
-                    if (Bin.entries.isNotEmpty()) {
+                    if (entries.isNotEmpty()) {
                         TextButton(onClick = { askEmpty = true }, enabled = busy == null) { Text(tr("Empty bin")) }
                     }
                 }
@@ -147,7 +145,7 @@ fun BinScreen(snack: SnackbarHostState) {
         snackbarHost = { SnackbarHost(snack) }
     ) { pad ->
         Box(Modifier.padding(pad).fillMaxSize()) {
-            if (Bin.entries.isEmpty() && Bin.loading) {
+            if (entries.isEmpty() && Bin.loading && Shared.lists.isNotEmpty()) {
                 CircularProgressIndicator(Modifier.align(Alignment.Center))
             } else {
                 LazyColumn(
@@ -173,7 +171,7 @@ fun BinScreen(snack: SnackbarHostState) {
                                     style = MaterialTheme.typography.bodyMedium, color = cs.error
                                 )
                             }
-                            if (Bin.entries.isEmpty()) {
+                            if (entries.isEmpty()) {
                                 Text(
                                     tr("The bin is empty."),
                                     style = MaterialTheme.typography.titleMedium, color = cs.onSurfaceVariant,
@@ -183,7 +181,7 @@ fun BinScreen(snack: SnackbarHostState) {
                             }
                         }
                     }
-                    items(Bin.entries, key = { it.key }) { e ->
+                    items(entries, key = { it.key }) { e ->
                         BinRow(
                             e, enabled = busy == null,
                             glow = lit?.takeIf { it.first == e.key }?.second ?: 0,
@@ -217,14 +215,14 @@ fun BinScreen(snack: SnackbarHostState) {
     }
 
     if (askEmpty) {
-        val n = Bin.entries.size
+        val n = entries.size
         AlertDialog(
             onDismissRequest = { askEmpty = false },
             title = { Text(tr("Empty the bin?")) },
             text = {
                 Text(
                     (if (n == 1) tr("1 wish will be deleted for good.") else tr("%d wishes will be deleted for good.", n)) +
-                        (if (Bin.entries.any { it.listCode != null }) " " + tr("Wishes from shared wishlists are gone for everyone on them.") else "") +
+                        (if (entries.any { it.listCode != null }) " " + tr("Wishes from shared wishlists are gone for everyone on them.") else "") +
                         " " + tr("This can’t be undone.")
                 )
             },

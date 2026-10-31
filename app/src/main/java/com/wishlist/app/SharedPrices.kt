@@ -7,8 +7,9 @@ import kotlin.math.abs
 /**
  * Price-drop checks for shared wishlists, run by [PriceWorker] next to the check of My wishlist.
  *
- * Every phone on a shared list checks the shops itself. A new price is written online (only the fields price and old,
- * so nobody's edit is undone), so the list shows it for everyone. Each phone then compares the prices online with the
+ * The phones on a shared list share the work: a phone that asks a shop for a price writes the time online ("chk", with
+ * the new price and old price when it changed; only those fields, so nobody's edit is undone), and the other phones
+ * skip that wish until it is due again. So each shop is asked about once per check time, not once per phone. Each phone then compares the prices online with the
  * prices it saw last time (kept on the phone, "shp_<code>"), so every person on the list gets the alert once, also
  * when another phone found the drop first. A price someone typed in by hand has no old price and gives no alert.
  */
@@ -17,9 +18,14 @@ object SharedPrices {
     private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
     private fun seenKey(code: String) = "shp_$code"
 
-    /** Checks every shared list, or only the one with code [only]. Returns how many prices dropped. */
+    /**
+     * Checks every shared list (the background check), or only the one with code [only] (pulling down on the list).
+     * A wish another phone checked recently is skipped: within this phone's check interval in the background, within
+     * 15 minutes when pulling down. Returns how many prices dropped.
+     */
     suspend fun check(c: Context, only: String? = null): Int {
         var dropped = 0
+        val fresh = if (only != null) 15L * 60 * 1000 else Repo.intervalHours * 60L * 60 * 1000 * 9 / 10
         for (l in Shared.lists.toList()) {
             if (only != null && l.code != only) continue
             val r = try {
@@ -31,10 +37,13 @@ object SharedPrices {
             var wishes = r.list.wishes.filter { it.bin == 0L }
             for (w in wishes.toList()) {
                 if (w.url.isBlank()) continue
+                if (System.currentTimeMillis() - w.checked < fresh) continue
+                // A shop that couldn't be read is not marked: another phone may have more luck.
                 val np = fetchMeta(w.url, c, w.price != null)?.price ?: continue
-                val upd = newPrice(w, np) ?: continue
+                val changed = newPrice(w, np)
+                val upd = (changed ?: w).copy(checked = System.currentTimeMillis())
                 try {
-                    Cloud.shPut(l.key, upd, listOf("price", "old"))
+                    Cloud.shPut(l.key, upd, if (changed != null) listOf("price", "old", "chk") else listOf("chk"))
                     wishes = wishes.map { if (it.id == w.id) upd else it }
                 } catch (e: Exception) {
                 }

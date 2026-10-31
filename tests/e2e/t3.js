@@ -42,9 +42,10 @@ const settle = (t) => t.page.waitForFunction(() => window.__wl.pending() === 0);
   check("no js errors", t.errors.length === 0, t.errors);
   await t.ctx.close();
 
-  // ---- delete with confirmation and Undo: after 10 s the wish goes to the bin online (marked, not deleted) ----
+  // ---- delete with confirmation: the wish goes to the bin online at once (marked, not deleted); Undo takes it out ----
   const inBin = (t, id) => { const w = t.fake.lists[CODE].items[id]; return !!w && w.bin > 0; };
   const binCalls = t => t.fake.calls("wl_sh_put_item").map(c => c.body).filter(b => JSON.stringify(b.p_fields) === JSON.stringify(["bin", "binBy"]));
+  const settle = async t => { await t.page.waitForFunction(() => window.__wl.pending() === 0); await sleep(100); };
   t = await boot({ clock: true });
   await t.page.waitForSelector(".card");
   await t.page.locator(".card[data-id='1001']").getByLabel("Delete", { exact: true }).click();
@@ -56,37 +57,39 @@ const settle = (t) => t.page.waitForFunction(() => window.__wl.pending() === 0);
   await t.page.locator(".card[data-id='1001']").getByLabel("Delete", { exact: true }).click();
   await t.page.locator(".dlg").getByRole("button", { name: "Delete" }).click();
   check("gone at once", (await t.page.locator(".card[data-id='1001']").count()) === 0);
-  check("undo message", /Moved “Novel” to the bin/.test(await t.page.locator("#snack").innerText()));
-  check("still on the list online during undo time", !!t.fake.lists[CODE].items[1001] && !inBin(t, 1001) && binCalls(t).length === 0);
+  check("short message", (await t.page.locator("#snack .stext").innerText()) === "Wish moved to the bin");
+  await settle(t);
+  check("in the bin online at once", binCalls(t).length === 1 && inBin(t, 1001) && t.fake.calls("wl_sh_del_item").length === 0);
+  check("bin: only the bin fields were sent", binCalls(t)[0].p_item.title === "Novel" && typeof binCalls(t)[0].p_item.bin === "number");
+  check("bin: the rest of the wish is kept online", t.fake.lists[CODE].items[1001].title === "Novel");
   await t.page.screenshot({ path: "shot_undo.png" });
   await t.page.locator("#snack").getByRole("button", { name: "Undo" }).click();
   check("undo brings it back, same place", (await t.page.locator(".card").nth(2).getAttribute("data-id")) === "1001");
-  check("undo: never binned online", binCalls(t).length === 0 && !inBin(t, 1001));
+  await settle(t);
+  check("undo: out of the bin online", binCalls(t).length === 2 && !inBin(t, 1001) && !("bin" in binCalls(t)[1].p_item));
   check("snack gone", await t.page.locator("#snack").isHidden());
-  // really delete: wait out the 10 seconds
+  // the message goes after 4 seconds; the wish stays in the bin
   await t.page.locator(".card[data-id='1001']").getByLabel("Delete", { exact: true }).click();
   await t.page.locator(".dlg").getByRole("button", { name: "Delete" }).click();
-  await t.page.clock.fastForward(9000);
-  check("not yet at 9 s", binCalls(t).length === 0);
+  await t.page.clock.fastForward(3000);
+  check("message still there at 3 s", !(await t.page.locator("#snack").isHidden()));
   await t.page.clock.fastForward(1500);
-  await t.page.waitForFunction(() => window.__wl.pending() === 0);
-  await sleep(100);
-  check("in the bin online after 10 s", binCalls(t).length === 1 && inBin(t, 1001) && t.fake.calls("wl_sh_del_item").length === 0);
-  check("bin: only the bin fields were sent", binCalls(t)[0].p_item.title === "Novel" && typeof binCalls(t)[0].p_item.bin === "number");
-  check("bin: the rest of the wish is kept online", t.fake.lists[CODE].items[1001].title === "Novel");
-  check("still gone on screen", (await t.page.locator(".card[data-id='1001']").count()) === 0);
+  check("message gone after 4 s", await t.page.locator("#snack").isHidden());
+  await settle(t);
+  check("still in the bin", inBin(t, 1001));
   await t.page.evaluate(() => window.__wl.refresh && window.__wl.refresh());
   await sleep(200);
   check("a wish in the bin stays off the list after a refresh", (await t.page.locator(".card[data-id='1001']").count()) === 0);
-  // a second delete finishes the first at once
+  // two deletes in a row: both in the bin, the message is for the last one
   await t.page.locator(".card[data-id='1002']").getByLabel("Delete", { exact: true }).click();
   await t.page.locator(".dlg").getByRole("button", { name: "Delete" }).click();
   await t.page.locator(".card[data-id='1003']").getByLabel("Delete", { exact: true }).click();
   await t.page.locator(".dlg").getByRole("button", { name: "Delete" }).click();
-  await t.page.waitForFunction(() => window.__wl.pending() === 0);
-  await sleep(100);
-  check("first delete is final when the next starts", inBin(t, 1002) && !inBin(t, 1003));
-  check("the second can still be undone", /Lamp|Desk lamp/.test(await t.page.locator("#snack").innerText()));
+  await settle(t);
+  check("both in the bin", inBin(t, 1002) && inBin(t, 1003));
+  await t.page.locator("#snack").getByRole("button", { name: "Undo" }).click();
+  await settle(t);
+  check("undo takes out only the last one", inBin(t, 1002) && !inBin(t, 1003) && (await t.page.locator(".card[data-id='1003']").count()) === 1);
   check("no js errors", t.errors.length === 0, t.errors);
   await t.ctx.close();
 
@@ -104,14 +107,5 @@ const settle = (t) => t.page.waitForFunction(() => window.__wl.pending() === 0);
   check("instant delete remembered", await t.page.evaluate(() => localStorage.getItem("wl_instant")) === "1");
   await t.ctx.close();
 
-  // closing the page during the undo time still deletes (sent so it survives the page closing)
-  t = await boot({ clock: true });
-  await t.page.waitForSelector(".card");
-  await t.page.locator(".card[data-id='1001']").getByLabel("Delete", { exact: true }).click();
-  await t.page.locator(".dlg").getByRole("button", { name: "Delete" }).click();
-  await t.page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
-  await sleep(300);
-  check("pagehide moves it to the bin", binCalls(t).length === 1 && inBin(t, 1001));
-  await t.ctx.close();
   const failed = summary(); await done(); process.exit(failed ? 1 : 0);
 })().catch(async e => { console.log("CRASH", e); await done(); process.exit(1); });

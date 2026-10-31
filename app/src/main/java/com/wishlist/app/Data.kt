@@ -12,7 +12,7 @@ import java.util.UUID
 
 // A new field here must ALSO be added to wishToJson / wishFromJson below and to changedFields / applyFields in
 // Shared.kt (and to the web pages), or it won't be saved when someone edits a shared wish. (Like "by", the bin fields
-// are not edited in the form: only moving to the bin and restoring write them.)
+// and "chk" are not edited in the form: only moving to the bin, restoring and the price check write them.)
 data class Wish(
     val id: Long,
     val url: String,
@@ -35,7 +35,9 @@ data class Wish(
     /** In the bin since this moment (milliseconds), or 0 when it is on the list. See Bin.kt. */
     val bin: Long = 0L,
     /** On a shared wishlist: the name of the person who moved it to the bin. */
-    val binBy: String = ""
+    val binBy: String = "",
+    /** On a shared wishlist: when a phone last asked the shop for its price (ms), so the other phones can skip it. */
+    val checked: Long = 0L
 )
 
 /** A wishlist that someone else shared with you. */
@@ -53,6 +55,7 @@ fun wishToJson(w: Wish): JSONObject = JSONObject().apply {
     if (w.by.isNotBlank()) put("by", w.by)
     if (w.bin > 0L) put("bin", w.bin)
     if (w.binBy.isNotBlank()) put("binBy", w.binBy)
+    if (w.checked > 0L) put("chk", w.checked)
 }
 
 fun wishFromJson(o: JSONObject): Wish = Wish(
@@ -62,7 +65,7 @@ fun wishFromJson(o: JSONObject): Wish = Wish(
     if (o.isNull("old")) null else o.getDouble("old"),
     o.optString("cur", "USD"), o.optString("cat", ""), o.optBoolean("got"),
     o.optBoolean("star"), o.optString("note", ""), o.optString("size", ""), o.optString("by", ""),
-    o.optLong("bin", 0L), o.optString("binBy", "")
+    o.optLong("bin", 0L), o.optString("binBy", ""), o.optLong("chk", 0L)
 )
 
 object Repo {
@@ -141,20 +144,8 @@ object Repo {
         if (loaded) return
         loaded = true
         val p = prefs(c)
-        p.getString("wishes", null)?.let { s ->
-            try {
-                val a = JSONArray(s)
-                myWishes = (0 until a.length()).map { i -> wishFromJson(a.getJSONObject(i)) }
-            } catch (e: Exception) {
-            }
-        }
-        p.getString("bin", null)?.let { s ->
-            try {
-                val a = JSONArray(s)
-                myBin = (0 until a.length()).map { i -> wishFromJson(a.getJSONObject(i)) }
-            } catch (e: Exception) {
-            }
-        }
+        myWishes = SafeStore.readList(p, "wishes") { wishFromJson(it) }
+        myBin = SafeStore.readList(p, "bin") { wishFromJson(it) }
         History.load(c)
         History.seed(c, myWishes)
         p.getString("cats", null)?.let { s ->
@@ -178,16 +169,7 @@ object Repo {
         Lang.load(c)
         Sync.attach(c)
         Shared.load(c)
-        p.getString("friends", null)?.let { s ->
-            try {
-                val a = JSONArray(s)
-                friends = (0 until a.length()).map { i ->
-                    val o = a.getJSONObject(i)
-                    Friend(o.getString("code"), o.optString("name", "Wishlist"))
-                }
-            } catch (e: Exception) {
-            }
-        }
+        friends = SafeStore.readList(p, "friends") { o -> Friend(o.getString("code"), o.optString("name", "Wishlist")) }
         deviceId = p.getString("device", null)
             ?: UUID.randomUUID().toString().also { p.edit().putString("device", it).apply() }
     }
@@ -269,82 +251,34 @@ object Repo {
 
     // ---- deleting with Undo (begin) ----
 
-    /** The wish of My wishlist that was just deleted. Friends keep seeing it online until the undo time is over. */
-    @Volatile
-    private var heldMine: Trashed? = null
+    /** My wishlist as it goes online for friends. The bin goes along too (marked "bin", so friends don't see it), so a reservation on it stays when it is restored. */
+    fun syncWishes(): List<Wish> = myWishes + myBin
 
-    /**
-     * My wishlist as it goes online for friends: a wish that was just deleted is still in it until the undo time is
-     * over. The bin goes along too (marked "bin", so friends don't see it), so a reservation on it stays when it is restored.
-     */
-    fun syncWishes(): List<Wish> {
-        val h = heldMine ?: return myWishes + myBin
-        return myWishes.toMutableList().also { it.add(h.index.coerceIn(0, it.size), h.wish) } + myBin
-    }
-
-    /**
-     * Takes a wish off the open list at once, but keeps everything of it (online copy and reservations, picture,
-     * price history) until [finishTrash]. Null if the wish isn't there.
-     */
+    /** Moves a wish of the open list to the bin at once. Null if the wish isn't there. */
     @Synchronized
     fun trash(c: Context, id: Long): Trashed? {
-        if (Shared.active != null) return Shared.trash(id)
+        if (Shared.active != null) return Shared.trash(c, id)
         val i = myWishes.indexOfFirst { it.id == id }
         if (i < 0) return null
-        val t = Trashed(myWishes[i], i, null)
-        heldMine = t
+        val w = myWishes[i].copy(bin = System.currentTimeMillis())
         myWishes = myWishes.filter { it.id != id }
-        persist(c) // no online push: friends still see it, with any reservation on it
-        return t
+        myBin = listOf(w) + myBin.filter { it.id != id }
+        commit(c)
+        return Trashed(w, i, null)
     }
 
-    /** Undo: the wish comes back where it was. */
+    /** Undo: the wish comes out of the bin and back where it was. */
     @Synchronized
     fun untrash(c: Context, t: Trashed) {
         if (t.listCode != null) {
-            Shared.untrash(t)
+            Shared.untrash(c, t)
             return
         }
-        if (heldMine === t) heldMine = null
+        myBin = myBin.filter { it.id != t.wish.id }
         if (myWishes.none { it.id == t.wish.id }) {
-            myWishes = myWishes.toMutableList().also { it.add(t.index.coerceIn(0, it.size), t.wish) }
+            myWishes = myWishes.toMutableList().also { it.add(t.index.coerceIn(0, it.size), t.wish.copy(bin = 0L, binBy = "")) }
         }
         commit(c)
-    }
-
-    /** The undo time is over: the wish goes to the bin. Its picture and price history stay until it leaves the bin. */
-    @Synchronized
-    fun finishTrash(c: Context, t: Trashed) {
-        if (t.listCode != null) {
-            Shared.finishTrash(c, t)
-            return
-        }
-        if (heldMine === t) heldMine = null
-        if (myBin.none { it.id == t.wish.id }) myBin = listOf(t.wish.copy(bin = System.currentTimeMillis())) + myBin
-        commit(c)
-    }
-
-    /** Takes a wish out of the bin and puts it back at the top of My wishlist. */
-    @Synchronized
-    fun restoreMine(c: Context, id: Long): Boolean {
-        val w = myBin.firstOrNull { it.id == id } ?: return false
-        myBin = myBin.filter { it.id != id }
-        if (myWishes.none { it.id == id }) myWishes = listOf(w.copy(bin = 0L, binBy = "")) + myWishes
-        commit(c)
-        return true
-    }
-
-    /** Deletes wishes from the bin for good, with their pictures and price history. */
-    @Synchronized
-    fun dropFromBin(c: Context, ids: Set<Long>) {
-        val gone = myBin.filter { it.id in ids }
-        if (gone.isEmpty()) return
-        myBin = myBin.filter { it.id !in ids }
-        commit(c)
-        gone.forEach {
-            ImageStore.delete(c, it.image)
-            History.remove(c, it.id)
-        }
     }
 
     // ---- deleting with Undo (end) ----

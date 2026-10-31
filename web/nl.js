@@ -4,7 +4,7 @@ window.WL_NL = {
   "Couldn’t save that. Check your connection and try again.": "Kan dat niet opslaan. Controleer je verbinding en probeer het opnieuw.",
   "Saved without the picture: it couldn’t be uploaded.": "Opgeslagen zonder afbeelding: die kon niet worden geüpload.",
   "Couldn’t delete that wish. Check your connection and try again.": "Kan die wens niet verwijderen. Controleer je verbinding en probeer het opnieuw.",
-  "Moved “{0}” to the bin": "“{0}” naar de prullenbak verplaatst",
+  "Wish moved to the bin": "Wens naar de prullenbak verplaatst",
   "“{0}” goes to the bin. Everyone on the list can restore it from the bin in the app for 10 days.": "“{0}” gaat naar de prullenbak. Iedereen op de lijst kan hem 10 dagen lang terugzetten vanuit de prullenbak in de app.",
   "Undo": "Ongedaan maken",
   "Delete this wish?": "Deze wens verwijderen?",

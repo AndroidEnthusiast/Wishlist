@@ -285,7 +285,7 @@ val NL: Map<String, String> = mapOf(
     "%s (default)" to "%s (standaard)",
     "“%1\$s” goes to the bin. You can restore it from there for %2\$d days." to "“%1\$s” gaat naar de prullenbak. Je kunt hem daar nog %2\$d dagen terugzetten.",
     "Everyone on the list can see it in the bin." to "Iedereen op de lijst kan hem in de prullenbak zien.",
-    "Moved “%s” to the bin" to "“%s” naar de prullenbak verplaatst",
+    "Wish moved to the bin" to "Wens naar de prullenbak verplaatst",
     "Bin" to "Prullenbak",
     "Couldn’t delete that wish. Check your connection and try again." to "Kan die wens niet verwijderen. Controleer je verbinding en probeer het opnieuw.",
     "Empty bin" to "Prullenbak legen",

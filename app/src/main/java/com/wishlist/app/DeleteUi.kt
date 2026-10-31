@@ -40,11 +40,11 @@ fun DeleteHost(snack: SnackbarHostState) {
         if (t == null) return@LaunchedEffect
         snack.currentSnackbarData?.dismiss()
         val r = snack.showSnackbar(
-            message = tr("Moved “%s” to the bin", shorten(t.wish.title)),
+            message = tr("Wish moved to the bin"),
             actionLabel = tr("Undo"),
-            duration = SnackbarDuration.Long
+            duration = SnackbarDuration.Short
         )
-        if (r == SnackbarResult.ActionPerformed) DeleteFlow.undo(ctx) else DeleteFlow.finish(ctx, t)
+        if (r == SnackbarResult.ActionPerformed) DeleteFlow.undo(ctx) else DeleteFlow.finish(t)
     }
 }
 

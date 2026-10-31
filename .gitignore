@@ -7,3 +7,6 @@ package-lock.json
 # Never commit a signing key
 *.jks
 *.keystore
+# Screenshots the tests make
+tests/s_*.png
+tests/shot_*.png

@@ -21,7 +21,7 @@
   var CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "NZD", "JPY", "CNY", "KRW", "INR", "MXN", "BRL", "CHF", "SEK",
     "NOK", "DKK", "PLN", "CZK", "HUF", "TRY", "ZAR", "SGD", "HKD", "AED"];
   var ABOUT_MAX = 300;
-  var UNDO_MS = 10000;
+  var UNDO_MS = 4000;     // how long "Wish moved to the bin · Undo" shows
   var PHOTO_SIDE = 600;
   var REFRESH_MS = 20000;
   var INVITE_RE = /^[A-HJ-NP-Z2-9]{20}$/;
@@ -234,7 +234,7 @@
       image: String(o.image || ""), price: num(o.price), old: num(o.old), cur: String(o.cur || "USD"),
       cat: String(o.cat || ""), got: !!o.got, star: !!o.star, note: String(o.note || ""),
       size: String(o.size || ""), by: String(o.by || ""),
-      bin: num(o.bin) || 0, binBy: String(o.binBy || "")
+      bin: num(o.bin) || 0, binBy: String(o.binBy || ""), chk: num(o.chk) || 0
     };
   }
 
@@ -251,13 +251,14 @@
     if (w.by) o.by = w.by;
     if (w.bin) o.bin = w.bin;
     if (w.binBy) o.binBy = w.binBy;
+    if (w.chk) o.chk = w.chk;
     return o;
   }
 
   var FIELDS = ["url", "title", "desc", "image", "price", "old", "cur", "cat", "got", "star", "note", "size"];
 
   // The names of the fields that differ between two versions of a wish. ("by" is only set when a wish is made; "bin"
-  // and "binBy" only when a wish goes to the bin or comes back.)
+  // and "binBy" only when a wish goes to the bin or comes back; "chk" only by the app's price check.)
   function changedFields(a, b) {
     return FIELDS.filter(function (f) { return a[f] !== b[f]; });
   }
@@ -285,8 +286,7 @@
   var pending = 0;          // saves in progress
   var stamp = 0;            // goes up with every local change, so an older refresh can't overwrite it
   var queue = Promise.resolve(); // saves run one after another (the lock)
-  var hidden = {};          // wishes just deleted here that can still be undone
-  var trashed = null;       // the one delete that can still be undone
+  var trashed = null;       // the latest wish moved to the bin, while Undo is shown
   var blobs = {};           // pictures picked here but not uploaded yet: blob URL -> Blob
   var refreshing = false;
   var offlineSaid = false;
@@ -318,7 +318,7 @@
       name: String(r.name || "Wishlist"),
       cats: (r.cats || []).map(String),
       about: about,
-      items: items.filter(function (w) { return !hidden[w.id]; })
+      items: items
     };
   }
 
@@ -446,86 +446,64 @@
 
   function quick(w, patch) { putWish(copyWish(w, patch)); }
 
-  // ---- deleting with Undo: hidden at once, removed online only when the undo time is over ----
+  // ---- deleting: the wish goes to the bin at once (for everyone); Undo takes it out again ----
+  // Only "bin" and "binBy" are written, so the picture and any reservation stay. Everyone on the list can restore it
+  // from the bin in the app for 10 days.
+
+  function binArgs(w, inBin) {
+    return { p_key: key, p_item: wishJson(copyWish(w, inBin ? { bin: Date.now(), binBy: me } : { bin: 0, binBy: "" })), p_fields: ["bin", "binBy"] };
+  }
 
   function trash(id) {
     var i = -1;
     content.items.forEach(function (x, n) { if (x.id === id) i = n; });
     if (i < 0) return null;
     var w = content.items[i];
-    hidden[id] = true;
-    stamp++;
-    content = copyWish(content, { items: content.items.filter(function (x) { return x.id !== id; }) });
+    var before = content;
+    write(before, copyWish(before, { items: before.items.filter(function (x) { return x.id !== id; }) }), async function () {
+      await rpc("wl_sh_put_item", binArgs(w, true));
+    }, T("Couldn’t delete that wish. Check your connection and try again."));
     return { wish: w, index: i };
   }
 
+  // Undo: out of the bin and back where it was. The saves run in order, so this goes after the move to the bin.
   function untrash(t) {
-    delete hidden[t.wish.id];
-    if (!findWish(t.wish.id)) {
-      stamp++;
-      var items = content.items.slice();
-      items.splice(Math.min(Math.max(t.index, 0), items.length), 0, t.wish);
-      content = copyWish(content, { items: items });
-    }
-  }
-
-  // The undo time is over: the wish goes to the list's bin online, for everyone (only "bin" and "binBy" are written;
-  // its picture and any reservation stay). Everyone on the list can restore it from the bin in the app for 10 days.
-  // If that fails it comes back.
-  function finishTrash(t, unloading) {
-    var shown = content;
-    var items = shown.items.slice();
+    var before = content;
+    var items = before.items.filter(function (x) { return x.id !== t.wish.id; });
     items.splice(Math.min(Math.max(t.index, 0), items.length), 0, t.wish);
-    var before = copyWish(shown, { items: items });
-    var args = { p_key: key, p_item: wishJson(copyWish(t.wish, { bin: Date.now(), binBy: me })), p_fields: ["bin", "binBy"] };
-    if (unloading) {
-      // The page is closing: send it in a way that survives that.
-      rpc("wl_sh_put_item", args, true).catch(function () { /* still on the list: fine */ });
-      return;
-    }
-    write(before, shown, async function () {
-      try {
-        await rpc("wl_sh_put_item", args);
-      } finally {
-        delete hidden[t.wish.id];
-      }
-    }, T("Couldn’t delete that wish. Check your connection and try again."));
+    write(before, copyWish(before, { items: items }), async function () {
+      await rpc("wl_sh_put_item", binArgs(t.wish, false));
+    });
   }
 
   var undoTimer = null;
 
-  function endUndo(unloading) {
+  function endUndo() {
     clearTimeout(undoTimer);
     undoTimer = null;
-    var t = trashed;
     trashed = null;
     $("snack").hidden = true;
-    if (t) finishTrash(t, unloading);
   }
 
   function showUndo(t) {
     var s = $("snack");
     s.textContent = "";
-    s.appendChild(el("span", "stext", T("Moved “{0}” to the bin", t.wish.title.length > 40 ? t.wish.title.slice(0, 40) + "…" : t.wish.title)));
+    s.appendChild(el("span", "stext", T("Wish moved to the bin")));
     var u = el("button", "sbtn", T("Undo"));
     u.type = "button";
     u.addEventListener("click", function () {
-      clearTimeout(undoTimer);
-      undoTimer = null;
       var x = trashed;
-      trashed = null;
-      s.hidden = true;
-      if (x) { untrash(x); render(); }
+      endUndo();
+      if (x) untrash(x);
     });
     s.appendChild(u);
     s.hidden = false;
     clearTimeout(undoTimer);
-    undoTimer = setTimeout(function () { endUndo(false); }, UNDO_MS);
+    undoTimer = setTimeout(endUndo, UNDO_MS);
   }
 
-  // Hides the wish, then lets the person undo for 10 seconds.
+  // Moves the wish to the bin, then offers Undo for a few seconds.
   function deleteWish(w) {
-    if (trashed) endUndo(false); // only the latest delete can be undone
     var t = trash(w.id);
     if (!t) return;
     trashed = t;
@@ -1671,10 +1649,7 @@
     }
     $("shareBtn").addEventListener("click", openShare);
     $("meBtn").addEventListener("click", fromDrawer(openSettings));
-    window.addEventListener("pagehide", function () { if (trashed) endUndo(true); });
-    document.addEventListener("visibilitychange", function () {
-      if (document.hidden) { if (trashed) endUndo(true); } else refresh();
-    });
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) refresh(); });
     window.addEventListener("online", refresh);
     setInterval(function () { if (!document.hidden) refresh(); }, REFRESH_MS);
   }

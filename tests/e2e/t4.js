@@ -135,7 +135,6 @@ const q = (t, sel) => t.page.locator(sel);
   t.fake.hooks.wl_sh_put_item = async () => { throw Object.assign(new Error("down"), { status: 500 }); };
   await q(t, ".card[data-id='1001']").getByLabel("Delete", { exact: true }).click();
   await q(t, ".dlg").getByRole("button", { name: "Delete", exact: true }).click();
-  await t.page.clock.fastForward(10500);
   await settle(t);
   await sleep(100);
   check("failed delete: wish is back with a message", (await q(t, ".card[data-id='1001']").count()) === 1 && /Couldn’t delete/.test(await q(t, "#toast").innerText()));
