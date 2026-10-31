@@ -167,8 +167,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onBack: () -> Unit) {
             if (shared != null) {
                 val title = Repo.listName
                 val invite = inviteLink(shared.key)
-                val friends = sharedListLink(shared.code)
-                SectionTitle(tr("Invite to edit"))
+                SectionTitle(tr("Invite people"))
                 Text(
                     tr("They can add and change wishes and reserve gifts. Only send it to people you trust."),
                     style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
@@ -178,18 +177,6 @@ fun ListSettingsScreen(snack: SnackbarHostState, onBack: () -> Unit) {
                     OutlinedButton(onClick = {
                         clip.setText(AnnotatedString(invite))
                         scope.launch { snack.showSnackbar(tr("Invite link copied")) }
-                    }) { Text(tr("Copy link")) }
-                }
-                SectionTitle(tr("Link for givers who don’t edit"))
-                Text(
-                    tr("They can only look and reserve a gift. Everyone on this list sees what’s reserved."),
-                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = { scope.launch { ShareCard.share(ctx, ShareCard.Kind.FRIENDS, title, friends) } }) { Text(tr("Send link")) }
-                    OutlinedButton(onClick = {
-                        clip.setText(AnnotatedString(friends))
-                        scope.launch { snack.showSnackbar(tr("Link copied")) }
                     }) { Text(tr("Copy link")) }
                 }
                 SectionTitle(tr("Manage"))

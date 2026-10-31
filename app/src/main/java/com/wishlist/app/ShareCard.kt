@@ -24,23 +24,20 @@ import java.io.File
  * web/edit.js: change both together.
  */
 object ShareCard {
-    enum class Kind { INVITE, FRIENDS }
+    enum class Kind { INVITE }
 
     private const val GROUP = "M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"
-    private const val GIFT = "M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"
 
     /** "Join Jakim's B'day wishlist". A name that already ends in "wishlist" doesn't get it twice. */
     fun headline(kind: Kind, listName: String): String {
         val n = listName.trim().replace(Regex("(?i)\\s*(wish\\s?list|verlanglijst(je)?)$"), "").trim()
         return when (kind) {
             Kind.INVITE -> if (n.isEmpty()) tr("Join our wishlist") else tr("Join %s wishlist", n)
-            Kind.FRIENDS -> if (n.isEmpty()) tr("Check out this wishlist") else tr("Check out %s wishlist", n)
         }
     }
 
     private fun subline(kind: Kind) = when (kind) {
         Kind.INVITE -> tr("Add gift ideas together and see what’s already reserved.")
-        Kind.FRIENDS -> tr("Reserve a gift so nobody gives the same gift twice.")
     }
 
     /** The picture: 1200 x 630, like the link previews. */
@@ -48,7 +45,7 @@ object ShareCard {
         val bmp = Bitmap.createBitmap(1200, 630, Bitmap.Config.ARGB_8888)
         val cv = Canvas(bmp)
         cv.drawColor(0xFF4355B9.toInt())
-        val icon = PathParser.createPathFromPathData(if (kind == Kind.INVITE) GROUP else GIFT)
+        val icon = PathParser.createPathFromPathData(GROUP)
         cv.save()
         cv.translate(120f, 165f)
         cv.scale(12.5f, 12.5f)

@@ -186,15 +186,10 @@ fun JoinDialog(key: String, onJoined: (String) -> Unit, onClose: () -> Unit) {
     )
 }
 
-@Composable
-private fun ShareSectionTitle(t: String) {
-    Text(
-        t, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(top = 8.dp)
-    )
-}
-
-/** The share screen of the open shared wishlist: invite link and friends link. Managing the list is in its settings. */
+/**
+ * The share screen of the open shared wishlist: the invite link, the only link of a shared list (since 2.35: whoever has
+ * it can add wishes and reserve gifts). Managing the list is in its settings.
+ */
 @Composable
 fun SharedShareDialog(onClose: () -> Unit) {
     val ctx = LocalContext.current
@@ -204,16 +199,14 @@ fun SharedShareDialog(onClose: () -> Unit) {
     val l = Shared.current ?: return
     val title = Repo.listName
     val invite = inviteLink(l.key)
-    val friends = sharedListLink(l.code)
 
     AlertDialog(
         onDismissRequest = onClose,
         title = { Text(tr("Share “%s”", title)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                ShareSectionTitle(tr("Invite someone to edit"))
                 Text(
-                    tr("They can add, change and remove wishes. Anyone who gets this link can, so only send it to people you trust."),
+                    tr("They can add and change wishes and reserve gifts. Only send it to people you trust."),
                     style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
                 )
                 Text(invite, style = MaterialTheme.typography.bodySmall, color = cs.onSurface)
@@ -222,20 +215,6 @@ fun SharedShareDialog(onClose: () -> Unit) {
                     OutlinedButton(onClick = {
                         clip.setText(AnnotatedString(invite))
                         toast(ctx, tr("Invite link copied"))
-                    }) { Text(tr("Copy")) }
-                }
-
-                ShareSectionTitle(tr("Share with friends"))
-                Text(
-                    tr("For givers who don’t need to edit. They open this link and tap Reserve on a gift. Everyone on this list sees what’s reserved, so nobody buys the same gift twice."),
-                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
-                )
-                Text(friends, style = MaterialTheme.typography.bodySmall, color = cs.onSurface)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = { scope.launch { ShareCard.share(ctx, ShareCard.Kind.FRIENDS, title, friends) } }) { Text(tr("Send link")) }
-                    OutlinedButton(onClick = {
-                        clip.setText(AnnotatedString(friends))
-                        toast(ctx, tr("Link copied"))
                     }) { Text(tr("Copy")) }
                 }
             }
@@ -260,7 +239,7 @@ fun SharedManageDialog(confirm: String, onClose: () -> Unit, onGone: () -> Unit)
             title = { Text(tr("Make a new invite link?")) },
             text = {
                 Text(
-                    tr("The old invite link stops working. People who already joined must open the new link to get back in. The link for friends stays the same.")
+                    tr("The old invite link stops working. People who already joined must open the new link to get back in.")
                 )
             },
             confirmButton = {

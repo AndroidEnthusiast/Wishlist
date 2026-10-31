@@ -30,6 +30,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Lists are link-only, never public.**
 - **"My wishlist"**: friends reserve gifts; the owner never sees reservations (surprise).
 - **Shared wishlists are only for the givers** (the person the gifts are for is not on it). So everyone on it sees and makes reservations. Shared lists have no "most wanted", no "got it" and no price history, but every phone on the list gets price-change checks and alerts.
+- **A shared wishlist has one link: the invite** (October 2026). Whoever gets it can add wishes and reserve gifts. The separate friends' link for shared lists was dropped: since shared lists are only for givers, it was an unnecessary second kind of link. Links sent earlier keep working. My wishlist keeps its friends' link.
 - **Only the phone that created a list can make a new invite link or delete the list.** Consequence: uninstalling the app loses those rights (it happened once; the old list had to be deleted by hand in Supabase). A recovery key backup was suggested to avoid this; not decided yet.
 - **Invitation page**: title "You're invited to add gifts for:" with the list name centred, bigger and bold in the same font; gift emoji; confetti that never moves the text; no "Already have the Wishlist app?" line.
 - **Link previews**: invites use `web/join/` and friends' links use `web/list/`, each with its own preview picture; sharing from the app also sends a picture with the list name.

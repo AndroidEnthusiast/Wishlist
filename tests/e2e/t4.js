@@ -90,15 +90,15 @@ const q = (t, sel) => t.page.locator(sel);
   await q(t, "#shareBtn").click();
   const links = await q(t, ".shareblock input").evaluateAll(a => a.map(i => i.value));
   check("invite link (through join/ for its preview)", links[0] === t.base + "join/?j=" + KEY, links);
-  check("friends link has the list code (through list/)", links[1] === t.base + "list/?c=" + CODE, links);
+  check("only the invite link: no separate friends' link any more", links.length === 1 && !/list\/\?c=/.test(await q(t, ".dlg").innerText()), links);
   await q(t, ".shareblock").first().getByRole("button", { name: "Copy link" }).click();
   check("copied to clipboard", (await t.page.evaluate(() => navigator.clipboard.readText())) === t.base + "join/?j=" + KEY);
   await t.page.screenshot({ path: "shot_share.png" });
   // sharing sends a picture with the list's name (link previews can't show it)
   const heads = await t.page.evaluate(() => [
-    window.__wl.cardHeadline("invite", "Jakim's B'day"), window.__wl.cardHeadline("friends", "Jakim's B'day"),
+    window.__wl.cardHeadline("invite", "Jakim's B'day"),
     window.__wl.cardHeadline("invite", "Family wishlist"), window.__wl.cardHeadline("invite", "  ")]);
-  check("picture words with the list name", JSON.stringify(heads) === JSON.stringify(["Join Jakim's B'day wishlist", "Check out Jakim's B'day wishlist", "Join Family wishlist", "Join our wishlist"]), heads);
+  check("picture words with the list name", JSON.stringify(heads) === JSON.stringify(["Join Jakim's B'day wishlist", "Join Family wishlist", "Join our wishlist"]), heads);
   const png = await t.page.evaluate(async () => {
     const f = await window.__wl.cardFile("invite", "A very long name for a wishlist of a whole family at Christmas");
     const b = new Uint8Array(await f.arrayBuffer());

@@ -12,7 +12,7 @@ Read this first, then `docs/DECISIONS.md` (what the owner has decided and why: f
 An Android wishlist app (Kotlin, Jetpack Compose, Material 3, package `com.wishlist.app`) plus web pages on GitHub Pages plus a free Supabase backend.
 - Repo `AndroidEnthusiast/Wishlist`; site `https://androidenthusiast.github.io/Wishlist/`; Supabase URL and the public publishable key are in `app/src/main/java/com/wishlist/app/Config.kt` and at the top of `web/index.html` and `web/edit.js` (they are meant to be public).
 - Lists are link-only (never public). Friends open `?c=CODE` and can reserve gifts. The owner and invited editors never see who reserved what.
-- Shared lists: an invite link `?j=KEY` lets people edit together, in the app or in the browser (`web/edit.html`).
+- Shared lists: an invite link `?j=KEY` lets people edit together and reserve gifts, in the app or in the browser (`web/edit.html`). It is the only link of a shared list (since 2.35).
 
 ## How it is built and published
 - ONE workflow, `.github/workflows/build.yml`, runs on every push: job `build` (Gradle assembleRelease, signed, then replaces the GitHub release `latest` with `Wishlist.apk`) and job `pages` (publishes the `web/` folder; Settings > Pages > Source must be "GitHub Actions"). The invite page links to that APK.
@@ -24,7 +24,7 @@ An Android wishlist app (Kotlin, Jetpack Compose, Material 3, package `com.wishl
 
 ## Where things are
 - `app/src/main/java/com/wishlist/app/`: `MainActivity.kt` (screens), `Data.kt` (`Wish`, `Repo`), `ListSettings.kt` (list settings and App settings screens), `I18n.kt` + `NlStrings.kt` (language), `Fonts.kt` (font choice), `Shared.kt` + `SharedUi.kt` (shared lists, online saving), `SharedPrices.kt` (price checks for shared lists), `ShareCard.kt` (share picture), `Cloud.kt` (my own list online), `Fetch.kt` + `Browser.kt` (reading product pages), `MostWanted.kt` (star and its effect), `Delete.kt` + `DeleteUi.kt` + `Trash.kt` (delete with Undo), `Bin.kt` + `BinUi.kt` (the bin, 10 days, and the "reserved gift moved to the bin" alert), `Sorting.kt` + `Browse.kt`, `Categories.kt`, `Sizes.kt`, `History.kt` + `PriceHistory.kt` + `ChartMath.kt`, `PriceWorker.kt` + `Alerts.kt`, `Settings.kt`, `Theme.kt`.
-- `web/index.html`: the friends' page and the invite page (styled with `edit.css` plus `wishlist.css`, same look as the editor and the app). `web/edit.html`, `edit.js`, `edit.css`: the browser editor. `web/parse.js`: reads a product page. `web/i18n.js` + `web/nl.js`: language and light/dark switch. `web/join/` and `web/list/`: link pages with their own preview pictures for invites and friends' links.
+- `web/index.html`: the friends' page and the invite page (styled with `edit.css` plus `wishlist.css`, same look as the editor and the app). `web/edit.html`, `edit.js`, `edit.css`: the browser editor. `web/parse.js`: reads a product page. `web/i18n.js` + `web/nl.js`: language and light/dark switch. `web/join/` and `web/list/`: link pages with their own preview pictures for invites and (older) friends' links of shared lists.
 - `supabase/functions/fetch-page/index.ts`: the helper that loads a shop page for the browser editor (the browser may not load other sites itself).
 - `tests/`: automated checks for everything under `web/` and the helper (see below).
 

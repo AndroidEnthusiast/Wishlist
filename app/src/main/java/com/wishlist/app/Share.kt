@@ -185,9 +185,6 @@ fun shareLink(code: String): String = Config.SHARE_URL.trimEnd('/') + "/?c=" + c
  */
 fun inviteLink(key: String): String = Config.SHARE_URL.trimEnd('/') + "/join/?j=" + key
 
-/** The friends' link of a shared wishlist: through the page list/ for its own link preview ("Check out this wishlist"). */
-fun sharedListLink(code: String): String = Config.SHARE_URL.trimEnd('/') + "/list/?c=" + code
-
 /** What gets sent when you share your list: only the link, so it is easy to copy, paste and forward. */
 fun inviteText(code: String): String = shareLink(code)
 

@@ -1157,14 +1157,12 @@
 
   var CARD_ICONS = {
     invite: "M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z",
-    friends: "M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"
   };
 
   // "Join Jakim's B'day wishlist". A name that already ends in "wishlist" doesn't get it twice.
   function cardHeadline(kind, name) {
     var n = String(name || "").trim().replace(/\s*(wish\s?list|verlanglijst(je)?)$/i, "").trim();
-    if (kind === "invite") return n ? T("Join {0} wishlist", n) : T("Join our wishlist");
-    return n ? T("Check out {0} wishlist", n) : T("Check out this wishlist");
+    return n ? T("Join {0} wishlist", n) : T("Join our wishlist");
   }
 
   function wrapLines(g, text, width) {
@@ -1192,7 +1190,7 @@
       if (lines.length <= 3 || size <= 48) break;
       size -= 4;
     }
-    var sub = kind === "invite" ? T("Add gift ideas together and see what’s already reserved.") : T("Reserve a gift so nobody gives the same gift twice.");
+    var sub = T("Add gift ideas together and see what’s already reserved.");
     g.font = "400 31px " + font;
     var subLines = wrapLines(g, sub, W);
     var lh = size * 1.1, sh = 31 * 1.4, total = lines.length * lh + 22 + subLines.length * sh;
@@ -1209,14 +1207,12 @@
   function pageBase() { return location.origin + location.pathname.replace(/[^\/]*$/, ""); }
 
   function openShare() {
-    // Through join/ and list/: those pages only exist for their own link previews, then open the normal pages.
+    // Through join/: that page only exists for its own link preview, then opens the normal invite page. The invite is
+    // the only link of a shared list (since 2.35): whoever has it can add wishes and reserve gifts.
     var inviteLink = pageBase() + "join/?j=" + key;
-    var friendLink = pageBase() + "list/?c=" + code;
     // The pictures are drawn as soon as the window opens: sharing must start straight from the tap.
     var cards = {};
-    ["invite", "friends"].forEach(function (k) {
-      cardFile(k, content.name).then(function (f) { cards[k] = f; }, function () { /* share the link alone */ });
-    });
+    cardFile("invite", content.name).then(function (f) { cards.invite = f; }, function () { /* share the link alone */ });
     dialog({
       title: T("Share this list"),
       body: function (b) {
@@ -1247,8 +1243,7 @@
           s.appendChild(r);
           b.appendChild(s);
         }
-        block(T("Invite link"), T("Whoever opens it can add and change wishes, like you. Only send it to people you trust."), inviteLink, "invite");
-        block(T("Friends’ link"), T("For givers who don’t need to edit: they can look at the list and reserve gifts, nothing else. Everyone on this list sees what’s reserved."), friendLink, "friends");
+        block(T("Invite link"), T("Whoever opens it can add wishes and reserve gifts, like you. Only send it to people you trust."), inviteLink, "invite");
       },
       actions: [{ label: T("Done") }]
     });
