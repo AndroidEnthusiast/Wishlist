@@ -1,0 +1,344 @@
+package com.wishlist.app
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.automirrored.outlined.*
+import androidx.compose.material.icons.automirrored.rounded.*
+import androidx.compose.material.icons.automirrored.sharp.*
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.sharp.*
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarColors
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.material3.AlertDialog as M3AlertDialog
+import androidx.compose.material3.Button as M3Button
+import androidx.compose.material3.FilledTonalButton as M3FilledTonalButton
+import androidx.compose.material3.OutlinedButton as M3OutlinedButton
+import androidx.compose.material3.Switch as M3Switch
+import androidx.compose.material3.TextButton as M3TextButton
+import androidx.compose.material3.TopAppBar as M3TopAppBar
+
+/*
+ * The app's own Button, OutlinedButton, TextButton, FilledTonalButton, Switch, AlertDialog and TopAppBar. The screens
+ * use these (they don't import the Material ones), so every screen takes the style of the chosen theme. In the classic
+ * themes they are exactly the Material components, as before.
+ */
+
+/** The Themer is open (App settings > Theme): the menu button is hidden, it has its own back arrow. */
+object ThemerNav {
+    var open by mutableStateOf(false)
+}
+
+@Composable
+fun Button(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) {
+    val look = LocalLook.current
+    val cs = MaterialTheme.colorScheme
+    val shape = look.buttonShape
+    when (look.design) {
+        "neo" -> M3Button(
+            onClick, modifier.then(if (enabled) Modifier.hardShadow(look.line, shape, 3.dp) else Modifier), enabled,
+            shape = shape, colors = ButtonDefaults.buttonColors(containerColor = cs.primary, contentColor = cs.onPrimary),
+            elevation = null, border = BorderStroke(2.dp, look.line), content = content
+        )
+        "clay" -> M3Button(
+            onClick,
+            modifier.then(
+                if (enabled) Modifier.shadow(8.dp, shape, clip = false, ambientColor = cs.primary, spotColor = cs.primary).clayEdge(look, shape, 1.dp)
+                else Modifier
+            ),
+            enabled, shape = shape, elevation = null, content = content
+        )
+        "organic" -> M3Button(onClick, modifier, enabled, shape = shape, content = content)
+        "material" -> M3Button(
+            onClick, modifier.heightIn(min = 48.dp), enabled, shape = shape,
+            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp), content = content
+        )
+        else -> M3Button(onClick, modifier, enabled, content = content)
+    }
+}
+
+@Composable
+fun OutlinedButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) {
+    val look = LocalLook.current
+    val cs = MaterialTheme.colorScheme
+    val shape = look.buttonShape
+    when (look.design) {
+        "neo" -> M3OutlinedButton(
+            onClick, modifier.then(if (enabled) Modifier.hardShadow(look.line, shape, 3.dp) else Modifier), enabled,
+            shape = shape, colors = ButtonDefaults.outlinedButtonColors(containerColor = cs.surface, contentColor = cs.onSurface),
+            border = BorderStroke(2.dp, look.line), content = content
+        )
+        // Clay and Material 3 have soft "secondary" buttons filled with the light container colour.
+        "clay" -> M3Button(
+            onClick,
+            modifier.then(
+                if (enabled) Modifier.shadow(4.dp, shape, clip = false, ambientColor = look.shadows[0], spotColor = look.shadows[0]).clayEdge(look, shape, 1.dp)
+                else Modifier
+            ),
+            enabled, shape = shape, elevation = null,
+            colors = ButtonDefaults.buttonColors(containerColor = cs.primaryContainer, contentColor = cs.onPrimaryContainer),
+            content = content
+        )
+        "material" -> M3FilledTonalButton(
+            onClick, modifier.heightIn(min = 48.dp), enabled, shape = shape,
+            colors = ButtonDefaults.filledTonalButtonColors(containerColor = cs.primaryContainer, contentColor = cs.onPrimaryContainer),
+            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp), content = content
+        )
+        "organic" -> M3OutlinedButton(onClick, modifier, enabled, shape = shape, border = BorderStroke(1.dp, look.line), content = content)
+        else -> M3OutlinedButton(onClick, modifier, enabled, content = content)
+    }
+}
+
+@Composable
+fun FilledTonalButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) {
+    val look = LocalLook.current
+    if (look.classic) M3FilledTonalButton(onClick, modifier, enabled, content = content)
+    else OutlinedButton(onClick, modifier, enabled, content)
+}
+
+@Composable
+fun TextButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) {
+    val look = LocalLook.current
+    val cs = MaterialTheme.colorScheme
+    when (look.design) {
+        "classic" -> M3TextButton(onClick, modifier, enabled, content = content)
+        // Neobrutalism: ink text (the bright main colour is unreadable as text on white).
+        "neo" -> M3TextButton(
+            onClick, modifier, enabled, shape = look.buttonShape,
+            colors = ButtonDefaults.textButtonColors(contentColor = cs.onSurface), content = content
+        )
+        else -> M3TextButton(onClick, modifier, enabled, shape = look.buttonShape, content = content)
+    }
+}
+
+@Composable
+fun Switch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    val look = LocalLook.current
+    val cs = MaterialTheme.colorScheme
+    when (look.design) {
+        "neo" -> M3Switch(
+            checked, onCheckedChange, modifier, enabled = enabled,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = cs.onPrimary, checkedTrackColor = cs.primary, checkedBorderColor = look.line,
+                uncheckedThumbColor = look.line, uncheckedTrackColor = cs.surface, uncheckedBorderColor = look.line
+            )
+        )
+        "clay" -> M3Switch(
+            checked, onCheckedChange,
+            modifier.shadow(4.dp, CircleShape, clip = false, ambientColor = look.shadows[0], spotColor = look.shadows[0]),
+            enabled = enabled,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White, checkedTrackColor = cs.primary, checkedBorderColor = Color.Transparent,
+                uncheckedThumbColor = Color.White, uncheckedTrackColor = cs.primaryContainer, uncheckedBorderColor = Color.Transparent
+            )
+        )
+        "organic" -> M3Switch(
+            checked, onCheckedChange, modifier, enabled = enabled,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = cs.onPrimary, checkedTrackColor = cs.primary,
+                uncheckedThumbColor = cs.outline, uncheckedTrackColor = cs.surfaceVariant, uncheckedBorderColor = look.line
+            )
+        )
+        // Material 3 Expressive: a tick in the thumb when on.
+        "material" -> M3Switch(
+            checked, onCheckedChange, modifier,
+            thumbContent = if (checked) ({ Icon(AppIcons.Check, null, Modifier.size(SwitchDefaults.IconSize)) }) else null,
+            enabled = enabled
+        )
+        else -> M3Switch(checked, onCheckedChange, modifier, enabled = enabled)
+    }
+}
+
+@Composable
+fun AlertDialog(
+    onDismissRequest: () -> Unit,
+    confirmButton: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    dismissButton: (@Composable () -> Unit)? = null,
+    title: (@Composable () -> Unit)? = null,
+    text: (@Composable () -> Unit)? = null,
+    properties: DialogProperties = DialogProperties()
+) {
+    val look = LocalLook.current
+    val cs = MaterialTheme.colorScheme
+    val shape = MaterialTheme.shapes.extraLarge
+    when (look.design) {
+        "classic" -> M3AlertDialog(
+            onDismissRequest, confirmButton, modifier, dismissButton, title = title, text = text, properties = properties
+        )
+        else -> {
+            val frame = when (look.design) {
+                "neo" -> Modifier.hardShadow(look.line, shape, 6.dp).border2(look, shape)
+                "organic" -> Modifier.border1(look, shape)
+                "clay" -> Modifier.clayEdge(look, shape)
+                else -> Modifier
+            }
+            M3AlertDialog(
+                onDismissRequest, confirmButton, modifier.then(frame), dismissButton, title = title, text = text,
+                shape = shape, containerColor = cs.surfaceContainerHigh, tonalElevation = 0.dp, properties = properties
+            )
+        }
+    }
+}
+
+private fun Modifier.border2(look: Look, shape: Shape) = border(2.dp, look.line, shape)
+private fun Modifier.border1(look: Look, shape: Shape) = border(1.dp, look.line, shape)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TopAppBar(
+    title: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    navigationIcon: @Composable () -> Unit = {},
+    actions: @Composable RowScope.() -> Unit = {},
+    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors()
+) {
+    val look = LocalLook.current
+    // Neobrutalism: a thick ink line under the top bar.
+    val line = if (look.design == "neo") Modifier.drawWithContent {
+        drawContent()
+        val h = 2.dp.toPx()
+        drawRect(look.line, Offset(0f, size.height - h), Size(size.width, h))
+    } else Modifier
+    M3TopAppBar(title, modifier.then(line), navigationIcon, actions, colors = colors)
+}
+
+/** The name of a list in its top bar. Organic puts a small spaced-out line above it ("7 WISHES"). */
+@Composable
+fun ListTitle(name: String, count: Int) {
+    val look = LocalLook.current
+    if (look.design == "organic") {
+        Column {
+            Text(
+                tr("%d wishes", count).uppercase(), style = MaterialTheme.typography.labelSmall, letterSpacing = 1.6.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1
+            )
+            Text(name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    } else {
+        Text(name, fontWeight = look.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+/** The price change on a wish ("↓ 20% off"). Classic: white on green or red, as before. */
+@Composable
+fun PriceBadge(text: String, rise: Boolean, small: Boolean) {
+    val look = LocalLook.current
+    val col = if (rise) look.rise else look.drop
+    val bg: Color
+    val fg: Color
+    when (look.design) {
+        "classic" -> { bg = col; fg = Color.White }
+        "neo" -> { bg = if (rise) Color(0xFFFFB3B3) else Color(0xFFB8F5C8); fg = Color(0xFF111111) }
+        else -> { bg = lerp(col, look.scheme.surface, if (look.dark) 0.72f else 0.86f); fg = col }
+    }
+    Surface(
+        color = bg, shape = look.badgeShape(small),
+        border = if (look.design == "neo") BorderStroke(1.5.dp, Color(0xFF111111)) else null
+    ) {
+        Text(
+            text, color = fg,
+            style = if (small) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
+            fontWeight = if (look.classic) null else FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = if (small) 6.dp else 10.dp, vertical = if (small) 2.dp else 4.dp)
+        )
+    }
+}
+
+/** A status on a wish ("Got it", "Reserved"). Classic: on the background colour, as before. */
+@Composable
+fun StatusBadge(text: String, small: Boolean, modifier: Modifier = Modifier) {
+    val look = LocalLook.current
+    val cs = MaterialTheme.colorScheme
+    val bg = when (look.design) {
+        "classic" -> cs.background
+        "neo" -> cs.surface
+        else -> cs.primaryContainer
+    }
+    val fg = when (look.design) {
+        "classic" -> cs.onBackground
+        "neo" -> cs.onSurface
+        else -> cs.onPrimaryContainer
+    }
+    Surface(
+        color = bg, shape = look.badgeShape(small), modifier = modifier,
+        border = if (look.design == "neo") BorderStroke(1.5.dp, look.line) else null
+    ) {
+        Text(
+            text, color = fg,
+            style = if (small) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
+            fontWeight = if (look.classic) null else FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = if (small) 6.dp else 10.dp, vertical = if (small) 2.dp else 4.dp)
+        )
+    }
+}
+
+/**
+ * The icons of the app, in the style of the theme: filled (classic, as before), rounded (Material 3, clay),
+ * thin outlined (organic) or sharp (neobrutalism). All from Google's free Material icons.
+ */
+object AppIcons {
+    @Composable
+    private fun v(f: ImageVector, o: ImageVector, r: ImageVector, s: ImageVector): ImageVector =
+        when (LocalLook.current.iconStyle) {
+            "outlined" -> o
+            "rounded" -> r
+            "sharp" -> s
+            else -> f
+        }
+
+    val Add: ImageVector @Composable get() = v(Icons.Filled.Add, Icons.Outlined.Add, Icons.Rounded.Add, Icons.Sharp.Add)
+    val ArrowBack: ImageVector @Composable get() = v(
+        Icons.AutoMirrored.Filled.ArrowBack, Icons.AutoMirrored.Outlined.ArrowBack,
+        Icons.AutoMirrored.Rounded.ArrowBack, Icons.AutoMirrored.Sharp.ArrowBack
+    )
+    val ArrowDropDown: ImageVector @Composable get() =
+        v(Icons.Filled.ArrowDropDown, Icons.Outlined.ArrowDropDown, Icons.Rounded.ArrowDropDown, Icons.Sharp.ArrowDropDown)
+    val Check: ImageVector @Composable get() = v(Icons.Filled.Check, Icons.Outlined.Check, Icons.Rounded.Check, Icons.Sharp.Check)
+    val Close: ImageVector @Composable get() = v(Icons.Filled.Close, Icons.Outlined.Close, Icons.Rounded.Close, Icons.Sharp.Close)
+    val Delete: ImageVector @Composable get() = v(Icons.Filled.Delete, Icons.Outlined.Delete, Icons.Rounded.Delete, Icons.Sharp.Delete)
+    val Edit: ImageVector @Composable get() = v(Icons.Filled.Edit, Icons.Outlined.Edit, Icons.Rounded.Edit, Icons.Sharp.Edit)
+    val Favorite: ImageVector @Composable get() =
+        v(Icons.Filled.Favorite, Icons.Outlined.FavoriteBorder, Icons.Rounded.Favorite, Icons.Sharp.Favorite)
+    val MoreVert: ImageVector @Composable get() = v(Icons.Filled.MoreVert, Icons.Outlined.MoreVert, Icons.Rounded.MoreVert, Icons.Sharp.MoreVert)
+    val Person: ImageVector @Composable get() = v(Icons.Filled.Person, Icons.Outlined.Person, Icons.Rounded.Person, Icons.Sharp.Person)
+    val Refresh: ImageVector @Composable get() = v(Icons.Filled.Refresh, Icons.Outlined.Refresh, Icons.Rounded.Refresh, Icons.Sharp.Refresh)
+    val Search: ImageVector @Composable get() = v(Icons.Filled.Search, Icons.Outlined.Search, Icons.Rounded.Search, Icons.Sharp.Search)
+    val Settings: ImageVector @Composable get() = v(Icons.Filled.Settings, Icons.Outlined.Settings, Icons.Rounded.Settings, Icons.Sharp.Settings)
+    val Share: ImageVector @Composable get() = v(Icons.Filled.Share, Icons.Outlined.Share, Icons.Rounded.Share, Icons.Sharp.Share)
+}

@@ -95,7 +95,7 @@ fun SortButton(mode: String, withStar: Boolean = true, onPick: (String) -> Unit)
             SORT_OPTIONS.filter { withStar || it.first != "star" }.forEach { (key, label) ->
                 DropdownMenuItem(
                     text = { Text(tr(label), fontWeight = if (key == mode) FontWeight.Bold else FontWeight.Normal) },
-                    trailingIcon = if (key == mode) ({ Icon(Icons.Default.Check, null) }) else null,
+                    trailingIcon = if (key == mode) ({ Icon(AppIcons.Check, null) }) else null,
                     onClick = { open = false; onPick(key) }
                 )
             }
@@ -117,10 +117,10 @@ fun SearchField(query: String, onQuery: (String) -> Unit, onClose: () -> Unit) {
     OutlinedTextField(
         value = query, onValueChange = onQuery, singleLine = true,
         placeholder = { Text(tr("Search your wishes")) },
-        leadingIcon = { Icon(Icons.Default.Search, null) },
+        leadingIcon = { Icon(AppIcons.Search, null) },
         trailingIcon = {
             IconButton(onClick = { if (query.isNotEmpty()) onQuery("") else onClose() }) {
-                Icon(Icons.Default.Close, if (query.isEmpty()) tr("Close search") else tr("Clear search"))
+                Icon(AppIcons.Close, if (query.isEmpty()) tr("Close search") else tr("Clear search"))
             }
         },
         shape = RoundedCornerShape(28.dp),

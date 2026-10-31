@@ -28,10 +28,10 @@ val GoogleSans = FontFamily(
     Font(R.font.google_sans, FontWeight.Bold, variationSettings = FontVariation.Settings(FontVariation.weight(700)))
 )
 
-/** [f]: the font chosen in App settings. [display]: the design's font for list names, headings and prices, if it has one. */
-private fun typo(f: FontFamily, display: FontFamily? = null): Typography {
+/** The type of the classic themes: everything in [f], the font chosen in App settings. */
+private fun typo(f: FontFamily): Typography {
     val d = Typography()
-    val h = display ?: f
+    val h = f
     return Typography(
         displayLarge = d.displayLarge.copy(fontFamily = h), displayMedium = d.displayMedium.copy(fontFamily = h),
         displaySmall = d.displaySmall.copy(fontFamily = h), headlineLarge = d.headlineLarge.copy(fontFamily = h),
@@ -107,13 +107,7 @@ val PALETTES: List<Palette> = listOf(
     )
 )
 
-@Composable
-fun isDarkMode(): Boolean {
-    val sys = isSystemInDarkTheme()
-    return when (Repo.theme) { "light" -> false; "dark", "amoled" -> true; else -> sys }
-}
-
-/** The theme actually in use: "light", "dark" or "amoled". */
+/** The classic theme actually in use: "light", "dark" or "amoled" (System default follows the phone). */
 @Composable
 fun effectiveTheme(): String {
     val sys = isSystemInDarkTheme()
@@ -122,9 +116,9 @@ fun effectiveTheme(): String {
 
 @Composable
 fun WishTheme(content: @Composable () -> Unit) {
-    val mode = effectiveTheme()
-    // The design and colour set from the Themer (App settings > Theme). Material 3 with Indigo is the original look.
-    val look = lookFor(Repo.design, Repo.colours, mode)
+    // A classic theme (System default, Light, Dark, AMOLED black: indigo, the font from App settings, as always),
+    // or one of the four designs with its own colour set, fonts, icons and shapes (Design.kt, picked in the Themer).
+    val look = lookFor(Repo.design, Repo.colours, effectiveTheme())
     val scheme = look.scheme
     val view = LocalView.current
     SideEffect {
@@ -132,15 +126,15 @@ fun WishTheme(content: @Composable () -> Unit) {
             w.statusBarColor = scheme.background.toArgb()
             w.navigationBarColor = scheme.background.toArgb()
             WindowCompat.getInsetsController(w, view).apply {
-                isAppearanceLightStatusBars = mode == "light"
-                isAppearanceLightNavigationBars = mode == "light"
+                isAppearanceLightStatusBars = !look.dark
+                isAppearanceLightNavigationBars = !look.dark
             }
         }
     }
     CompositionLocalProvider(LocalLook provides look) {
         MaterialTheme(
             colorScheme = scheme,
-            typography = typo(fontFor(Repo.font).family, look.display),
+            typography = typographyFor(look.design, typo(fontFor(Repo.font).family)),
             shapes = shapesFor(look.design),
             content = content
         )

@@ -20,6 +20,9 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.foundation.border
 import androidx.activity.result.PickVisualMediaRequest
@@ -83,15 +86,14 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.DrawerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
@@ -102,16 +104,12 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.ui.draw.clipToBounds
@@ -312,12 +310,41 @@ fun AnimatedMenuIcon(open: Boolean, tint: Color) {
 
 @Composable
 private fun DrawerItem(label: String, icon: ImageVector, selected: Boolean, onClick: () -> Unit) {
+    val look = LocalLook.current
+    val cs = MaterialTheme.colorScheme
+    if (look.classic) {
+        NavigationDrawerItem(
+            label = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            selected = selected,
+            onClick = onClick,
+            icon = { Icon(icon, null) },
+            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+        )
+        return
+    }
+    // The designs: the chosen item looks like the design's chosen button (filled, with its lines or shadow).
+    val shape = look.chipShape
+    val frame = if (!selected) Modifier else when (look.design) {
+        "neo" -> Modifier.hardShadow(look.line, shape, 3.dp).border(2.dp, look.line, shape)
+        "clay" -> Modifier.shadow(6.dp, shape, clip = false, ambientColor = cs.primary, spotColor = cs.primary).clayEdge(look, shape, 1.dp)
+        else -> Modifier
+    }
+    val on = look.design == "neo" || look.design == "clay"
     NavigationDrawerItem(
-        label = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        label = {
+            Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = if (selected) FontWeight.Bold else null)
+        },
         selected = selected,
         onClick = onClick,
         icon = { Icon(icon, null) },
-        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+        shape = shape,
+        colors = NavigationDrawerItemDefaults.colors(
+            selectedContainerColor = if (on) cs.primary else cs.primaryContainer,
+            selectedTextColor = if (on) cs.onPrimary else cs.onPrimaryContainer,
+            selectedIconColor = if (on) cs.onPrimary else cs.onPrimaryContainer,
+            unselectedTextColor = cs.onSurface, unselectedIconColor = cs.onSurfaceVariant
+        ),
+        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding).then(frame)
     )
 }
 
@@ -422,11 +449,24 @@ fun App(
     Box(Modifier.fillMaxSize()) {
     // A list's settings screen has only its back arrow: no menu button and no swiping the menu open.
     val inListSettings = listSettings && !settings && !binOpen && friendCode == null
+    // The Themer (App settings > Theme) has only its back arrow too.
+    val inThemer = settings && ThemerNav.open
     ModalNavigationDrawer(
         drawerState = drawer,
-        gesturesEnabled = !inListSettings,
+        gesturesEnabled = !inListSettings && !inThemer,
         drawerContent = {
-            ModalDrawerSheet(modifier = Modifier.width(sheetWidth)) {
+            val look = LocalLook.current
+            ModalDrawerSheet(
+                modifier = Modifier.width(sheetWidth).then(
+                    // Neobrutalism: a thick ink line along the edge of the menu.
+                    if (look.design == "neo") Modifier.drawWithContent {
+                        drawContent()
+                        val w = 2.dp.toPx()
+                        drawRect(look.line, Offset(size.width - w, 0f), Size(w, size.height))
+                    } else Modifier
+                ),
+                drawerContainerColor = if (look.classic) DrawerDefaults.modalContainerColor else MaterialTheme.colorScheme.surface
+            ) {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
                     // Same height as the top bar; the menu button (now an X) sits at the left of this row.
                     Box(
@@ -438,7 +478,7 @@ fun App(
                             maxLines = 1, overflow = TextOverflow.Ellipsis
                         )
                     }
-                    DrawerItem(tr("My wishlist"), Icons.Default.Favorite, !settings && !binOpen && friendCode == null && Shared.active == null) {
+                    DrawerItem(tr("My wishlist"), AppIcons.Favorite, !settings && !binOpen && friendCode == null && Shared.active == null) {
                         Shared.close(); settings = false; binOpen = false; friendCode = null; listSettings = false
                         scope.launch { drawer.close() }
                     }
@@ -450,14 +490,14 @@ fun App(
                         modifier = Modifier.padding(start = 28.dp, top = 8.dp, bottom = 8.dp)
                     )
                     Shared.lists.forEach { sl ->
-                        DrawerItem(sl.name, Icons.Default.Share, !settings && !binOpen && friendCode == null && Shared.active == sl.code) {
+                        DrawerItem(sl.name, AppIcons.Share, !settings && !binOpen && friendCode == null && Shared.active == sl.code) {
                             Shared.open(ctx, sl.code); settings = false; binOpen = false; friendCode = null; listSettings = false
                             scope.launch { drawer.close() }
                         }
                     }
                     // A line between the wishlists above and the action below: one is a list, the other makes a list.
                     DrawerDivider()
-                    DrawerItem(tr("New shared wishlist"), Icons.Default.Add, false) {
+                    DrawerItem(tr("New shared wishlist"), AppIcons.Add, false) {
                         newShared = true
                         scope.launch { drawer.close() }
                     }
@@ -468,18 +508,18 @@ fun App(
                             modifier = Modifier.padding(start = 28.dp, top = 16.dp, bottom = 8.dp)
                         )
                         Repo.friends.forEach { f ->
-                            DrawerItem(f.name, Icons.Default.Person, !settings && !binOpen && friendCode == f.code) {
+                            DrawerItem(f.name, AppIcons.Person, !settings && !binOpen && friendCode == f.code) {
                                 friendCode = f.code; settings = false; binOpen = false
                                 scope.launch { drawer.close() }
                             }
                         }
                         Spacer(Modifier.height(8.dp))
                     }
-                    DrawerItem(tr("Bin"), Icons.Default.Delete, binOpen) {
+                    DrawerItem(tr("Bin"), AppIcons.Delete, binOpen) {
                         binOpen = true; settings = false; friendCode = null; listSettings = false
                         scope.launch { drawer.close() }
                     }
-                    DrawerItem(tr("App settings"), Icons.Default.Settings, settings) {
+                    DrawerItem(tr("App settings"), AppIcons.Settings, settings) {
                         settings = true; binOpen = false; friendCode = null; listSettings = false
                         scope.launch { drawer.close() }
                     }
@@ -509,7 +549,7 @@ fun App(
     }
 
     // The menu button lives above the menu so it can spin into an X and close it.
-    if (!inListSettings) Box(
+    if (!inListSettings && !inThemer) Box(
         Modifier.windowInsetsPadding(TopAppBarDefaults.windowInsets).height(64.dp).padding(start = 4.dp),
         contentAlignment = Alignment.CenterStart
     ) {
@@ -642,18 +682,18 @@ fun HomeScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(Repo.listName, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    ListTitle(Repo.listName, Repo.wishes.size)
                 },
                 navigationIcon = { MenuSlot() },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
                 actions = {
                     IconButton(onClick = { if (searching) { searching = false; query = "" } else searching = true }) {
-                        Icon(Icons.Default.Search, if (searching) tr("Close search") else tr("Search"))
+                        Icon(AppIcons.Search, if (searching) tr("Close search") else tr("Search"))
                     }
                     // The settings of this list. Refreshing is pulling down on the list.
-                    IconButton(onClick = onListSettings) { Icon(Icons.Default.Settings, tr("Wishlist settings")) }
+                    IconButton(onClick = onListSettings) { Icon(AppIcons.Settings, tr("Wishlist settings")) }
                     IconButton(onClick = { if (inShared) onInvite() else startShare(ctx, scope, snack) }) {
-                        Icon(Icons.Default.Share, if (inShared) tr("Invite or share") else tr("Share wishlist"))
+                        Icon(AppIcons.Share, if (inShared) tr("Invite or share") else tr("Share wishlist"))
                     }
                 }
             )
@@ -682,7 +722,7 @@ fun HomeScreen(
                                 maxLines = 1, overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f, fill = false).widthIn(max = 200.dp)
                             )
-                            Icon(Icons.Default.ArrowDropDown, tr("Choose category"))
+                            Icon(AppIcons.ArrowDropDown, tr("Choose category"))
                         }
                         DropdownMenu(expanded = catMenu, onDismissRequest = { catMenu = false }) {
                             (listOf("All") + Repo.cats).forEach { c ->
@@ -700,14 +740,14 @@ fun HomeScreen(
                             }
                             DropdownMenuItem(
                                 text = { Text(tr("New category…")) },
-                                leadingIcon = { Icon(Icons.Default.Add, null) },
+                                leadingIcon = { Icon(AppIcons.Add, null) },
                                 onClick = { catMenu = false; onNewCat() }
                             )
                         }
                     }
                     SortButton(sortMode, withStar = !inShared) { Repo.setSort(ctx, it) }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(if (look.design == "material") 2.dp else 6.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(if (look.classic) 2.dp else 6.dp)) {
                     ViewButton("list", tr("Large cards"), view == "list") { Repo.setView(ctx, "list") }
                     ViewButton("grid", tr("Two per row"), view == "grid") { Repo.setView(ctx, "grid") }
                 }
@@ -751,7 +791,7 @@ fun HomeScreen(
                                 onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) })
                             ) {
                                 IconButton(onClick = { editing = w }) {
-                                    Icon(Icons.Default.Edit, tr("Edit"), tint = cs.onSurfaceVariant)
+                                    Icon(AppIcons.Edit, tr("Edit"), tint = cs.onSurfaceVariant)
                                 }
                                 if (inShared) {
                                     // Reserving takes the place of "got it" on a shared list.
@@ -763,13 +803,13 @@ fun HomeScreen(
                                 } else {
                                     IconButton(onClick = { Repo.replace(ctx, w.copy(got = !w.got)) }) {
                                         Icon(
-                                            Icons.Default.Check, tr("Mark as got"),
+                                            AppIcons.Check, tr("Mark as got"),
                                             tint = if (w.got) cs.primary else cs.onSurfaceVariant
                                         )
                                     }
                                 }
                                 IconButton(onClick = { DeleteFlow.request(ctx, w) }) {
-                                    Icon(Icons.Default.Delete, tr("Delete"), tint = cs.onSurfaceVariant)
+                                    Icon(AppIcons.Delete, tr("Delete"), tint = cs.onSurfaceVariant)
                                 }
                             }
                         }
@@ -812,10 +852,10 @@ fun HomeScreen(
 @Composable
 fun ViewButton(kind: String, label: String, selected: Boolean, onClick: () -> Unit) {
     val look = LocalLook.current
-    // Material 3 shows only the chosen one filled; the other designs frame both, as buttons.
-    val framed = look.design != "material" || selected
+    // The classic themes show only the chosen one filled (as before); the designs frame both, as buttons.
+    val framed = !look.classic || selected
     Box(
-        Modifier.size(if (look.design == "material") 44.dp else 40.dp)
+        Modifier.size(if (look.classic) 44.dp else 40.dp)
             .then(if (framed) Modifier.lookChip(look, on = selected) else Modifier.clip(look.chipShape))
             .semantics { contentDescription = label }
             .clickable(onClick = onClick),
@@ -912,14 +952,10 @@ fun CompactCard(
             ) {
                 if (w.priv) PrivateBadge(size = 14.dp, onClick = onPrivate)
                 if ((drop || rise) && newP != null && oldP != null) {
-                    Surface(color = if (rise) Rise else Green, shape = look.badgeShape) {
-                        Text(
-                            if (rise) "↑ +${Math.round((newP / oldP - 1) * 100)}%" else "↓ ${Math.round((1 - newP / oldP) * 100)}%",
-                            color = Color.White,
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
-                    }
+                    PriceBadge(
+                        if (rise) "↑ +${Math.round((newP / oldP - 1) * 100)}%" else "↓ ${Math.round((1 - newP / oldP) * 100)}%",
+                        rise, small = true
+                    )
                 }
             }
             if (!w.got) {
@@ -928,15 +964,7 @@ fun CompactCard(
             }
             val status = if (w.got) tr("Got it") else reservedLabel(reserve?.state)
             if (status != null) {
-                Surface(
-                    color = cs.background, shape = look.badgeShape,
-                    modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
-                ) {
-                    Text(
-                        status, color = cs.onBackground, style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
-                }
+                StatusBadge(status, small = true, modifier = Modifier.align(Alignment.TopEnd).padding(8.dp))
             }
         }
         if (look.pictureLine > 0.dp) Box(Modifier.fillMaxWidth().height(look.pictureLine).background(look.line))
@@ -956,14 +984,14 @@ fun CompactCard(
                 )
                 Text(
                     if (newP != null) money(newP, w.currency) else tr("No price"),
-                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, fontFamily = look.display,
-                    maxLines = 1, color = if (drop) Green else if (rise) Rise else cs.onSurface,
+                    style = MaterialTheme.typography.titleMedium, fontWeight = look.priceWeight, fontFamily = look.display,
+                    maxLines = 1, color = if (drop) look.drop else if (rise) look.rise else cs.onSurface,
                     modifier = Modifier.padding(top = 2.dp, bottom = 6.dp)
                 )
             }
             Box {
                 IconButton(onClick = { if (!inert) menu = true }) {
-                    Icon(Icons.Default.MoreVert, tr("More"), tint = cs.onSurfaceVariant)
+                    Icon(AppIcons.MoreVert, tr("More"), tint = cs.onSurfaceVariant)
                 }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                     DropdownMenuItem(text = { Text(tr("Edit")) }, onClick = { menu = false; onEdit() })
@@ -1052,14 +1080,10 @@ fun WishCard(
             ) {
                 if (w.priv) PrivateBadge(onClick = onPrivate)
                 if ((drop || rise) && newP != null && oldP != null) {
-                    Surface(color = if (rise) Rise else Green, shape = look.badgeShape) {
-                        Text(
-                            if (rise) "↑ +${Math.round((newP / oldP - 1) * 100)}%" else "↓ " + tr("%d%% off", Math.round((1 - newP / oldP) * 100)),
-                            color = Color.White,
-                            style = MaterialTheme.typography.labelMedium,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                        )
-                    }
+                    PriceBadge(
+                        if (rise) "↑ +${Math.round((newP / oldP - 1) * 100)}%" else "↓ " + tr("%d%% off", Math.round((1 - newP / oldP) * 100)),
+                        rise, small = false
+                    )
                 }
             }
             // Top right: the star (the owner can tap it), and below it the status such as "Got it".
@@ -1070,12 +1094,7 @@ fun WishCard(
             ) {
                 StarCorner(w, onStar)
                 if (badge != null) {
-                    Surface(color = cs.background, shape = look.badgeShape) {
-                        Text(
-                            badge, color = cs.onBackground, style = MaterialTheme.typography.labelMedium,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                        )
-                    }
+                    StatusBadge(badge, small = false)
                 }
             }
         }
@@ -1091,7 +1110,12 @@ fun WishCard(
                 )
             ) {
                 if (label.isNotEmpty()) {
-                    Text(label, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
+                    // Organic shows it as a small spaced-out line in capitals, like its list title.
+                    Text(
+                        if (look.design == "organic") label.uppercase() else label,
+                        style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant,
+                        letterSpacing = if (look.design == "organic") 1.2.sp else TextUnit.Unspecified
+                    )
                 }
                 Text(
                     w.title, style = MaterialTheme.typography.titleMedium,
@@ -1118,8 +1142,8 @@ fun WishCard(
                 Row(Modifier.weight(1f), verticalAlignment = Alignment.Bottom) {
                     Text(
                         if (newP != null) money(newP, w.currency) else tr("No price"),
-                        style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold,
-                        color = if (drop) Green else if (rise) Rise else cs.onSurface
+                        style = MaterialTheme.typography.titleLarge, fontWeight = look.priceWeight,
+                        color = if (drop) look.drop else if (rise) look.rise else cs.onSurface
                     )
                     if ((drop || rise) && oldP != null) {
                         Text(
@@ -1388,7 +1412,7 @@ fun ImageBlock(image: String, onPick: () -> Unit, onRemove: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(Icons.Default.Add, null, Modifier.size(32.dp), tint = cs.onSurfaceVariant)
+            Icon(AppIcons.Add, null, Modifier.size(32.dp), tint = cs.onSurfaceVariant)
             Text(tr("Add image"), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
         }
     } else {
@@ -1409,7 +1433,7 @@ fun ImageBlock(image: String, onPick: () -> Unit, onRemove: () -> Unit) {
                     .clickable(onClick = onRemove),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Close, null, Modifier.size(18.dp), tint = Color.White)
+                Icon(AppIcons.Close, null, Modifier.size(18.dp), tint = Color.White)
             }
         }
     }

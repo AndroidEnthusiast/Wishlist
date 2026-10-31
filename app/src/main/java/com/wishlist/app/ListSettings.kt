@@ -12,20 +12,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -79,7 +74,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onBack: () -> Unit) {
             TopAppBar(
                 title = {
                     Column {
-                        Text(Repo.listName, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(Repo.listName, fontWeight = LocalLook.current.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(
                             if (shared != null) tr("Shared wishlist settings") else tr("Wishlist settings"),
                             style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
@@ -87,7 +82,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onBack: () -> Unit) {
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, tr("Back")) }
+                    IconButton(onClick = onBack) { Icon(AppIcons.ArrowBack, tr("Back")) }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
@@ -149,10 +144,10 @@ fun ListSettingsScreen(snack: SnackbarHostState, onBack: () -> Unit) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(c, Modifier.weight(1f))
                     IconButton(onClick = { renCat = c }) {
-                        Icon(Icons.Default.Edit, tr("Edit %s", c), tint = cs.onSurfaceVariant)
+                        Icon(AppIcons.Edit, tr("Edit %s", c), tint = cs.onSurfaceVariant)
                     }
                     IconButton(onClick = { delCat = c }) {
-                        Icon(Icons.Default.Delete, tr("Remove %s", c), tint = cs.onSurfaceVariant)
+                        Icon(AppIcons.Delete, tr("Remove %s", c), tint = cs.onSurfaceVariant)
                     }
                 }
             }

@@ -20,12 +20,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -162,8 +160,8 @@ fun CategoryActionsDialog(name: String, onRenamed: (String) -> Unit, onDeleted: 
             title = { Text(name, maxLines = 2, overflow = TextOverflow.Ellipsis) },
             text = {
                 Column {
-                    MenuRow(tr("Edit"), { mode = "edit" }) { Icon(Icons.Default.Edit, null, tint = cs.onSurfaceVariant) }
-                    MenuRow(tr("Delete"), { mode = "delete" }) { Icon(Icons.Default.Delete, null, tint = cs.onSurfaceVariant) }
+                    MenuRow(tr("Edit"), { mode = "edit" }) { Icon(AppIcons.Edit, null, tint = cs.onSurfaceVariant) }
+                    MenuRow(tr("Delete"), { mode = "delete" }) { Icon(AppIcons.Delete, null, tint = cs.onSurfaceVariant) }
                 }
             },
             confirmButton = {},

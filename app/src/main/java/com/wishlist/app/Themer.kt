@@ -5,6 +5,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,25 +21,19 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,7 +44,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
@@ -57,7 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
-/** The Add wish button, drawn in the chosen design. */
+/** The Add wish button, drawn in the chosen theme (classic: as it always was). */
 @Composable
 fun AddWishButton(onClick: () -> Unit) {
     val look = LocalLook.current
@@ -65,9 +59,9 @@ fun AddWishButton(onClick: () -> Unit) {
     val shape = look.fabShape
     val flat = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)
     val text: @Composable () -> Unit = {
-        Text(tr("Add wish"), fontWeight = if (look.design == "neo") FontWeight.Bold else null)
+        Text(tr("Add wish"), fontWeight = if (look.classic) null else FontWeight.Bold)
     }
-    val icon: @Composable () -> Unit = { Icon(Icons.Default.Add, null) }
+    val icon: @Composable () -> Unit = { Icon(AppIcons.Add, null) }
     when (look.design) {
         "neo" -> ExtendedFloatingActionButton(
             text = text, icon = icon, onClick = onClick,
@@ -78,17 +72,19 @@ fun AddWishButton(onClick: () -> Unit) {
             text = text, icon = icon, onClick = onClick,
             modifier = Modifier
                 .shadow(16.dp, shape, clip = false, ambientColor = cs.primary, spotColor = cs.primary)
-                .border(
-                    1.5.dp,
-                    Brush.verticalGradient(listOf(Color.White.copy(alpha = if (look.dark) 0.25f else 0.55f), Color.Transparent)),
-                    shape
-                ),
+                .clayEdge(look, shape),
             shape = shape, containerColor = cs.primary, contentColor = cs.onPrimary, elevation = flat
         )
         "organic" -> ExtendedFloatingActionButton(
             text = text, icon = icon, onClick = onClick, shape = shape,
             containerColor = cs.primary, contentColor = cs.onPrimary,
             elevation = FloatingActionButtonDefaults.elevation(3.dp, 4.dp, 3.dp, 3.dp)
+        )
+        // Material 3 Expressive: a big squircle in the strong container colour.
+        "material" -> ExtendedFloatingActionButton(
+            text = text, icon = icon, onClick = onClick, shape = shape,
+            modifier = Modifier.height(64.dp),
+            containerColor = cs.primary, contentColor = cs.onPrimary
         )
         else -> ExtendedFloatingActionButton(
             text = text, icon = icon, onClick = onClick,
@@ -105,25 +101,37 @@ private fun SectionTitle(t: String) {
     )
 }
 
+/** One theme in the list: the classic ones by their mode, the designs by their key. */
+private class ThemeOption(val classicMode: String?, val design: String?, val name: String, val about: String)
+
+@Composable
+private fun themeOptions(): List<ThemeOption> = listOf(
+    ThemeOption("system", null, tr("System default"), tr("The original look, light or dark like your phone.")),
+    ThemeOption("light", null, tr("Light"), tr("The original look, light.")),
+    ThemeOption("dark", null, tr("Dark"), tr("The original look, dark.")),
+    ThemeOption("amoled", null, tr("AMOLED black"), tr("The original look on pure black.")),
+) + DESIGNS.map { ThemeOption(null, it.key, tr(it.name), tr(it.about)) }
+
 /**
- * The Themer (App settings > Theme > Themer): pick a design and one of its colour sets, and light or dark.
- * Every choice is used at once; the sample wishlist at the top shows how wishes look with it.
+ * The Themer (App settings > Theme > Themer): the four classic themes and the four designs, and the colour sets of
+ * the chosen design. Every choice is used at once; the sample wishlist at the top shows how it looks.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThemerScreen(onBack: () -> Unit) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
-    val mode = effectiveTheme()
+    val sysDark = isSystemInDarkTheme()
     val design = designFor(Repo.design)
     BackHandler(onBack = onBack)
+    DisposableEffect(Unit) { onDispose { ThemerNav.open = false } }
 
     Scaffold(
         containerColor = cs.background,
         topBar = {
             TopAppBar(
-                title = { Text(tr("Themer"), fontWeight = FontWeight.Medium) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, tr("Back")) } },
+                title = { Text(tr("Themer"), fontWeight = LocalLook.current.titleWeight) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(AppIcons.ArrowBack, tr("Back")) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
         }
@@ -135,57 +143,50 @@ fun ThemerScreen(onBack: () -> Unit) {
                     .padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                SectionTitle(tr("Design"))
-                DESIGNS.forEach { d ->
-                    val chosen = d.key == design.key
+                SectionTitle(tr("Theme"))
+                themeOptions().forEach { o ->
+                    val chosen = if (o.classicMode != null) Repo.design == "classic" && Repo.theme == o.classicMode
+                    else Repo.design == o.design
+                    val pick = {
+                        if (o.classicMode != null) Repo.setClassic(ctx, o.classicMode) else Repo.setDesign(ctx, o.design ?: "classic")
+                    }
+                    val sample = if (o.classicMode != null) {
+                        lookFor("classic", "", if (o.classicMode == "system") (if (sysDark) "dark" else "light") else o.classicMode)
+                    } else {
+                        lookFor(o.design ?: "classic", if (Repo.design == o.design) Repo.colours else "", "light")
+                    }
                     val box = RoundedCornerShape(16.dp)
                     Row(
                         Modifier.fillMaxWidth().clip(box)
                             .border(if (chosen) 2.dp else 1.dp, if (chosen) cs.primary else cs.outlineVariant, box)
-                            .clickable { Repo.setDesign(ctx, d.key) }
+                            .clickable { pick() }
                             .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        DesignSample(d, mode)
+                        ThemeSample(sample)
                         Column(Modifier.weight(1f).padding(start = 14.dp, end = 4.dp)) {
-                            Text(tr(d.name), style = MaterialTheme.typography.titleMedium, color = cs.onSurface)
-                            Text(tr(d.about), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                            Text(o.name, style = MaterialTheme.typography.titleMedium, color = cs.onSurface)
+                            Text(o.about, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
                         }
-                        RadioButton(selected = chosen, onClick = { Repo.setDesign(ctx, d.key) })
+                        RadioButton(selected = chosen, onClick = { pick() })
                     }
-                }
-
-                SectionTitle(tr("Colours"))
-                Text(
-                    tr("Colour combinations made for %s.", tr(design.name)),
-                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
-                )
-                design.sets.chunked(3).forEach { row ->
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        row.forEach { set ->
-                            ColourOption(set, set.key == Repo.colours, Modifier.weight(1f)) { Repo.setColours(ctx, set.key) }
+                    // The colour sets of a design appear right under it once it is chosen.
+                    if (chosen && design != null) {
+                        Text(
+                            tr("Colour combinations made for %s.", tr(design.name)),
+                            style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                        design.sets.chunked(3).forEach { row ->
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                row.forEach { set ->
+                                    ColourOption(set, set.key == colourSetFor(design, Repo.colours).key, Modifier.weight(1f)) {
+                                        Repo.setColours(ctx, set.key)
+                                    }
+                                }
+                                repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+                            }
                         }
-                        repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
-                    }
-                }
-
-                SectionTitle(tr("Light or dark"))
-                listOf(
-                    "system" to tr("System default"), "light" to tr("Light"),
-                    "dark" to tr("Dark"), "amoled" to tr("AMOLED black")
-                ).forEach { (k, n) ->
-                    Row(
-                        Modifier.fillMaxWidth().clickable { Repo.setTheme(ctx, k) },
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(selected = Repo.theme == k, onClick = { Repo.setTheme(ctx, k) })
-                        Text(n)
-                    }
-                }
-
-                if (Repo.design != "material" || Repo.colours != "indigo") {
-                    TextButton(onClick = { Repo.setDesign(ctx, "material"); Repo.setColours(ctx, "indigo") }) {
-                        Text(tr("Back to the original look"))
                     }
                 }
             }
@@ -193,12 +194,12 @@ fun ThemerScreen(onBack: () -> Unit) {
     }
 }
 
-/** A little card drawn in a design, with its current (or first) colour set, so the four designs can be told apart. */
+/** A little card drawn in a theme, on its own background, so the themes can be told apart. */
 @Composable
-private fun DesignSample(d: Design, mode: String) {
-    val look = lookFor(d.key, Repo.colours, mode)
+private fun ThemeSample(look: Look) {
     Box(
-        Modifier.size(64.dp).clip(RoundedCornerShape(14.dp)).background(look.scheme.background).padding(10.dp),
+        Modifier.size(64.dp).clip(RoundedCornerShape(14.dp)).background(look.scheme.background)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp)).padding(10.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(Modifier.fillMaxSize().lookCard(look, 4L, look.cardShape(4L, small = true))) {
@@ -214,7 +215,7 @@ private fun DesignSample(d: Design, mode: String) {
     }
 }
 
-/** One colour set: a round swatch (main colour and the two accents) with its name. */
+/** One colour set: a round swatch (background, main colour and the two accents) with its name. */
 @Composable
 private fun ColourOption(set: ColourSet, chosen: Boolean, modifier: Modifier, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
@@ -227,15 +228,18 @@ private fun ColourOption(set: ColourSet, chosen: Boolean, modifier: Modifier, on
                 val r = size.minDimension / 2 - 5.dp.toPx()
                 val tl = Offset(center.x - r, center.y - r)
                 val sz = Size(r * 2, r * 2)
+                drawCircle(Color(set.paper), r, center)
                 drawArc(Color(set.main), 90f, 180f, true, tl, sz)
                 drawArc(Color(set.a2), 270f, 90f, true, tl, sz)
                 drawArc(Color(set.a3), 0f, 90f, true, tl, sz)
-                drawCircle(Color(set.ink).copy(alpha = 0.25f), r, center, style = Stroke(1.dp.toPx()))
+                // The background of the set as a ring, so a dark set shows it is dark.
+                drawCircle(Color(set.paper), r - 1.5f.dp.toPx(), center, style = Stroke(3.dp.toPx()))
+                drawCircle(Color(set.ink).copy(alpha = 0.35f), r, center, style = Stroke(1.dp.toPx()))
                 if (chosen) drawCircle(cs.primary, r + 3.5f.dp.toPx(), center, style = Stroke(2.5f.dp.toPx()))
             }
             if (chosen) {
                 Box(Modifier.size(20.dp).clip(CircleShape).background(cs.primary), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Default.Check, null, tint = cs.onPrimary, modifier = Modifier.size(14.dp))
+                    Icon(AppIcons.Check, null, tint = cs.onPrimary, modifier = Modifier.size(14.dp))
                 }
             }
         }
@@ -248,7 +252,7 @@ private fun ColourOption(set: ColourSet, chosen: Boolean, modifier: Modifier, on
 }
 
 /**
- * A sample wishlist in the chosen design: the list name, the category and view buttons, wishes and Add wish.
+ * A sample wishlist in the chosen theme: the list name, the category and view buttons, wishes and Add wish.
  * The view buttons switch the sample between two per row and large cards; nothing else reacts to a tap.
  */
 @Composable
@@ -269,14 +273,16 @@ private fun ThemePreview(modifier: Modifier) {
             Modifier.fillMaxSize().lookBackdrop(look).verticalScroll(rememberScrollState()).padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Text(tr("My wishlist"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Medium, color = cs.onBackground)
+            ProvideTextStyle(MaterialTheme.typography.titleLarge.copy(color = cs.onBackground)) {
+                ListTitle(tr("My wishlist"), sample.size)
+            }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Row(
                     Modifier.lookChip(look).padding(start = 12.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(catLabel("All"), style = MaterialTheme.typography.titleSmall, color = cs.onSurface)
-                    Icon(Icons.Default.ArrowDropDown, null, tint = cs.onSurface)
+                    Icon(AppIcons.ArrowDropDown, null, tint = cs.onSurface)
                 }
                 Spacer(Modifier.weight(1f))
                 ViewButton("list", tr("Large cards"), !grid) { grid = false }
@@ -295,8 +301,8 @@ private fun ThemePreview(modifier: Modifier) {
             } else {
                 sample.forEachIndexed { i, w ->
                     WishCard(w, emoji = emojis[i]) {
-                        Icon(Icons.Default.Edit, null, tint = cs.onSurfaceVariant, modifier = Modifier.padding(12.dp))
-                        Icon(Icons.Default.Check, null, tint = cs.onSurfaceVariant, modifier = Modifier.padding(12.dp))
+                        Icon(AppIcons.Edit, null, tint = cs.onSurfaceVariant, modifier = Modifier.padding(12.dp))
+                        Icon(AppIcons.Check, null, tint = cs.onSurfaceVariant, modifier = Modifier.padding(12.dp))
                     }
                 }
             }

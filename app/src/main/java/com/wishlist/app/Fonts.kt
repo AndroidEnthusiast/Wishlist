@@ -20,7 +20,7 @@ private val provider = GoogleFont.Provider(
 )
 
 internal fun google(name: String): FontFamily = FontFamily(
-    listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold).map {
+    listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold, FontWeight.ExtraBold).map {
         Font(googleFont = GoogleFont(name), fontProvider = provider, weight = it)
     }
 )

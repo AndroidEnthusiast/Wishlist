@@ -31,8 +31,10 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 - What changes per design: wish card frames (shape, lines, hard or soft shadows, card colours in turn), picture mats, badges, the Add wish button, the category and view buttons, the background behind the list (organic blobs, clay glows, neo dot grid), dialog/menu shapes and the font of list names, headings and prices. Not yet styled per design: the side menu, the wish form's fields and the other screens' own buttons (they do take the colours and shapes).
 - Not checked: the Android code was not compiled here (no Android SDK in the sandbox); how it looks on a real phone.
 
+- v2.52, same day, after the owner's feedback: the menu button overlapped the Themer's back arrow (fixed: the Themer has only a back arrow). The owner wanted the classic themes (System/Light/Dark/AMOLED, font) kept exactly as before and the four designs as extra themes with their own colours, and much more of each style (fonts, icons, everything, the whole app). Done with `Styled.kt` (themed buttons, switches, dialogs, top bars, icons, labels) and a fuller `Design.kt` (fonts, a dark colour set per design). Not compiled here (no Android SDK); checked on GitHub.
+
 ## Next session
-Ask the owner how the four designs look on the phone and which colour sets or details to change. Ideas if they want more: style the side menu and the wish form per design; the organic "small uppercase label" above the list; offer the designs on the web pages (DECISIONS says web stays light/dark only, so ask first).
+Ask the owner how the four designs look on the phone and what to change. Not yet styled per design: text fields (only their shape and colours change), drop-down menus, the bin's cards, the picture viewer, the star and private-eye badges, the menu (hamburger) icon. The web pages still only have light/dark (DECISIONS: ask before adding designs there).
 
 ## Decisions and why
 - Lists are link-only, never listed publicly. Reservations are hidden from the owner and from editors so gifts stay a surprise.

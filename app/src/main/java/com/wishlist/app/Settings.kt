@@ -27,22 +27,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -81,9 +75,9 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
     var me by remember { mutableStateOf(Shared.lastName) }
     var fontDlg by remember { mutableStateOf(false) }
     // The Themer: its own screen, opened from the Theme section. Back returns here.
-    var themer by remember { mutableStateOf(false) }
-    if (themer) {
-        ThemerScreen { themer = false }
+    // The Themer: its own screen, opened from the Theme section. Back returns here. (The menu button hides meanwhile.)
+    if (ThemerNav.open) {
+        ThemerScreen { ThemerNav.open = false }
         return
     }
 
@@ -91,7 +85,7 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
         containerColor = cs.background,
         topBar = {
             TopAppBar(
-                title = { Text(tr("App settings"), fontWeight = FontWeight.Medium) },
+                title = { Text(tr("App settings"), fontWeight = LocalLook.current.titleWeight) },
                 navigationIcon = { MenuSlot() },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
@@ -145,42 +139,69 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
             }
 
             SectionTitle(tr("Theme"))
-            // The design and its colours are picked in the Themer, which shows a sample wishlist.
-            val design = designFor(Repo.design)
-            val set = colourSetFor(design, Repo.colours)
-            Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { themer = true }.padding(vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(Modifier.padding(end = 12.dp)) {
-                    listOf(set.main, set.a2, set.a3).forEachIndexed { i, col ->
-                        Box(
-                            Modifier.padding(start = if (i == 0) 0.dp else 2.dp).size(18.dp).clip(CircleShape)
-                                .background(Color(col)).border(1.dp, cs.outlineVariant, CircleShape)
-                        )
-                    }
-                }
-                Column(Modifier.weight(1f)) {
-                    Text(tr(design.name), style = MaterialTheme.typography.bodyLarge)
-                    Text(tr(set.name), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
-                }
-                Button(onClick = { themer = true }) { Text(tr("Themer")) }
-            }
-            Text(tr("Light or dark"), style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 8.dp))
+            // The classic themes (as the app always looked, with the font below) and the four designs, which have
+            // their own colours and fonts. The Themer shows them on a sample wishlist and has the designs' colour sets.
             listOf(
                 "system" to tr("System default"), "light" to tr("Light"),
                 "dark" to tr("Dark"), "amoled" to tr("AMOLED black")
             ).forEach { (k, n) ->
+                val chosen = Repo.design == "classic" && Repo.theme == k
                 Row(
-                    Modifier.fillMaxWidth().clickable { Repo.setTheme(ctx, k) },
+                    Modifier.fillMaxWidth().clickable { Repo.setClassic(ctx, k) },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    RadioButton(selected = Repo.theme == k, onClick = { Repo.setTheme(ctx, k) })
+                    RadioButton(selected = chosen, onClick = { Repo.setClassic(ctx, k) })
                     Text(n)
                 }
             }
+            DESIGNS.forEach { d ->
+                val chosen = Repo.design == d.key
+                Row(
+                    Modifier.fillMaxWidth().clickable { Repo.setDesign(ctx, d.key) },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(selected = chosen, onClick = { Repo.setDesign(ctx, d.key) })
+                    Column(Modifier.weight(1f)) {
+                        Text(tr(d.name))
+                        if (chosen) {
+                            Text(
+                                tr(colourSetFor(d, Repo.colours).name), style = MaterialTheme.typography.bodySmall,
+                                color = cs.onSurfaceVariant
+                            )
+                        }
+                    }
+                    if (chosen) {
+                        val set = colourSetFor(d, Repo.colours)
+                        Row(Modifier.padding(end = 8.dp)) {
+                            listOf(set.main, set.a2, set.a3).forEachIndexed { i, col ->
+                                Box(
+                                    Modifier.padding(start = if (i == 0) 0.dp else 2.dp).size(16.dp).clip(CircleShape)
+                                        .background(Color(col)).border(1.dp, cs.outlineVariant, CircleShape)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            Row(
+                Modifier.fillMaxWidth().padding(top = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    tr("See every theme on a sample wishlist and choose colours."),
+                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
+                    modifier = Modifier.weight(1f).padding(end = 12.dp)
+                )
+                Button(onClick = { ThemerNav.open = true }) { Text(tr("Themer")) }
+            }
 
             SectionTitle(tr("Font"))
+            designFor(Repo.design)?.let { d ->
+                Text(
+                    tr("%s has its own fonts. This font is used by System default, Light, Dark and AMOLED black.", tr(d.name)),
+                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
+                )
+            }
             // The font for the whole app. Each name is shown in its own font.
             val current = fontFor(Repo.font)
             Row(

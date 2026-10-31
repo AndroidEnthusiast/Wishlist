@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -99,7 +98,7 @@ fun ImageViewer(w: Wish, onClose: () -> Unit) {
                 onClick = onClose,
                 modifier = Modifier.align(Alignment.TopStart).windowInsetsPadding(WindowInsets.statusBars).padding(8.dp)
                     .clip(CircleShape).background(Color.White.copy(alpha = 0.15f))
-            ) { Icon(Icons.Default.Close, tr("Close"), tint = Color.White, modifier = Modifier.size(24.dp)) }
+            ) { Icon(AppIcons.Close, tr("Close"), tint = Color.White, modifier = Modifier.size(24.dp)) }
             Column(
                 Modifier.align(Alignment.BottomCenter).fillMaxWidth()
                     .windowInsetsPadding(WindowInsets.navigationBars).padding(16.dp),

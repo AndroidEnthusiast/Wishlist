@@ -19,11 +19,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -77,7 +75,7 @@ fun ItemMenuDialog(
                     Icon(PrivateIcon, null, tint = cs.onSurfaceVariant)
                 }
                 if (onHistory != null) MenuRow(tr("Price history"), onHistory) { HistoryIcon(cs.onSurfaceVariant) }
-                MenuRow(tr("Share item"), onShare) { Icon(Icons.Default.Share, null, tint = cs.onSurfaceVariant) }
+                MenuRow(tr("Share item"), onShare) { Icon(AppIcons.Share, null, tint = cs.onSurfaceVariant) }
             }
         },
         confirmButton = {},

@@ -6,6 +6,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Shapes
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -24,39 +25,51 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlin.math.cos
 import kotlin.math.sin
 
 /*
- * Theme designs (App settings > Theme > Themer). A design is a whole look: shapes, lines, shadows, the font of names
- * and prices, and what is drawn behind the list. Each design has its own colour sets. The light, dark and AMOLED black
- * modes (Repo.theme) work with every design and every colour set.
+ * Themes (App settings > Theme, and the Themer).
  *
- *  - material: Google's Material 3 (the original look of the app; Indigo is the default).
- *  - organic:  warm paper, pebble-shaped cards, soft blobs, Fraunces for names and prices (docs/designs/organic).
- *  - neo:      neobrutalism: thick black lines, hard offset shadows, bright blocks of colour, Space Grotesk.
- *  - clay:     claymorphism: puffy rounded cards with soft coloured shadows and a light edge, pastels, Plus Jakarta Sans.
+ * The classic themes are the app as it always looked: System default, Light, Dark and AMOLED black (Repo.theme), indigo,
+ * with the font chosen in App settings. Their look is "classic" below and must stay exactly as it was.
+ *
+ * Next to them are four designs, each a complete style of its own with its own colour sets (one of them dark), fonts,
+ * icons, buttons, switches, dialogs, top bar, side menu, labels and wish cards. The font from App settings is not used:
+ *  - material: Material 3 Expressive (Android 16): tonal colour blocks, big round shapes, Google Sans, rounded icons.
+ *  - organic:  warm paper, pebble shapes, blobs, Fraunces + Nunito, thin outlined icons (docs/designs/organic).
+ *  - neo:      neobrutalism: thick ink lines, hard offset shadows, bright blocks, dot grid, Lexend, sharp icons.
+ *  - clay:     claymorphism: puffy cards with soft coloured shadows and a light top edge, pastel glows,
+ *              Plus Jakarta Sans + Inter, rounded icons.
  */
 
-/** A colour set: the main colour (buttons, highlights), two accents, the paper (light background) and the ink (text). */
-class ColourSet(val key: String, val name: String, val main: Long, val a2: Long, val a3: Long, val paper: Long, val ink: Long)
+/**
+ * A colour set: the main colour (buttons, highlights), two accents, the paper (background) and the ink (text).
+ * A dark set gives the dark background as paper and light text as ink.
+ */
+class ColourSet(
+    val key: String, val name: String, val main: Long, val a2: Long, val a3: Long, val paper: Long, val ink: Long,
+    val dark: Boolean = false
+)
 
 class Design(val key: String, val name: String, val about: String, val sets: List<ColourSet>)
 
 val DESIGNS: List<Design> = listOf(
     Design(
-        "material", "Material 3", "Google’s Android look: calm, rounded and tonal.",
+        "material", "Material 3", "Android 16’s expressive look: tonal colour blocks, big round shapes, bold numbers.",
         listOf(
-            // The Material sets use the tonal schemes in PALETTES (Theme.kt); main/a2/a3 are for the swatches and tints.
-            ColourSet("indigo", "Indigo", 0xFF4355B9, 0xFF5C5D72, 0xFF78536B, 0xFFFBF8FF, 0xFF1B1B21),
-            ColourSet("lavender", "Lavender", 0xFF6750A4, 0xFF625B71, 0xFF7D5260, 0xFFFEF7FF, 0xFF1D1B20),
-            ColourSet("rose", "Rose", 0xFF8C4A5D, 0xFF74565C, 0xFF7B5733, 0xFFFFF8F8, 0xFF22191B),
-            ColourSet("ocean", "Ocean", 0xFF006A6A, 0xFF4A6363, 0xFF4B607C, 0xFFF4FBFA, 0xFF161D1D),
-            ColourSet("sage", "Sage", 0xFF4A6741, 0xFF54634D, 0xFF386568, 0xFFF8FAF0, 0xFF1A1C18),
-            ColourSet("amber", "Amber", 0xFF7C5800, 0xFF6C5D3F, 0xFF4A6547, 0xFFFFF8F2, 0xFF1F1B13)
+            ColourSet("lilac", "Lilac", 0xFF7B52C9, 0xFFF07B6B, 0xFFE6A6F2, 0xFFFCF3FD, 0xFF1F1424),
+            ColourSet("coral", "Coral", 0xFFB8473A, 0xFFFFB59E, 0xFF8C6BD6, 0xFFFFF5F2, 0xFF2B1512),
+            ColourSet("ocean", "Ocean", 0xFF1F6FB2, 0xFF8FD3F0, 0xFFFFC27A, 0xFFF3F8FD, 0xFF0E1C2B),
+            ColourSet("forest", "Forest", 0xFF2E7D4F, 0xFFB7E4A8, 0xFFF2C14E, 0xFFF3F9F3, 0xFF10241A),
+            ColourSet("sunshine", "Sunshine", 0xFF8A5A00, 0xFFFFD66B, 0xFFF07B6B, 0xFFFFF8EC, 0xFF261A00),
+            ColourSet("plum", "Plum night", 0xFFD7B4FF, 0xFFFF9C8F, 0xFFF2B8F5, 0xFF1A111D, 0xFFF3E8F5, dark = true)
         )
     ),
     Design(
@@ -67,7 +80,7 @@ val DESIGNS: List<Design> = listOf(
             ColourSet("lavender", "Lavender", 0xFF6B5B8E, 0xFF8FA383, 0xFFD3A67A, 0xFFF2EFF2, 0xFF29262F),
             ColourSet("seaglass", "Sea glass", 0xFF3D6E73, 0xFFC6A27A, 0xFF8DAE9B, 0xFFEEF1EC, 0xFF1F2A2B),
             ColourSet("berry", "Berry", 0xFF8A4560, 0xFFB98A62, 0xFF7E9171, 0xFFF6EEEC, 0xFF2E2226),
-            ColourSet("walnut", "Walnut", 0xFF6F5236, 0xFFA7B08A, 0xFFD8B27A, 0xFFF4EEE5, 0xFF2B241D)
+            ColourSet("night", "Forest night", 0xFFA9C59E, 0xFFD7B98A, 0xFFB9A6D3, 0xFF191A15, 0xFFECE7DB, dark = true)
         )
     ),
     Design(
@@ -78,7 +91,7 @@ val DESIGNS: List<Design> = listOf(
             ColourSet("tangerine", "Tangerine", 0xFFFFA552, 0xFF7FE3CF, 0xFFFFE9A8, 0xFFFFF6E9, 0xFF1A1A1A),
             ColourSet("electric", "Electric", 0xFF7AA2FF, 0xFFD4FF5C, 0xFFFFB8B8, 0xFFF4F6FF, 0xFF0B0B1A),
             ColourSet("mint", "Mint and coral", 0xFF7EEDC0, 0xFFFF9C8A, 0xFFFFF0A6, 0xFFF2FFF8, 0xFF102018),
-            ColourSet("mono", "Black and yellow", 0xFFFFE14D, 0xFFFFFFFF, 0xFFE6E6E6, 0xFFF5F5F0, 0xFF000000)
+            ColourSet("midnight", "Midnight", 0xFFF2F98E, 0xFF9BD7FF, 0xFFFF9BD2, 0xFF141416, 0xFFF4F4EE, dark = true)
         )
     ),
     Design(
@@ -89,17 +102,19 @@ val DESIGNS: List<Design> = listOf(
             ColourSet("peach", "Peach", 0xFFE0663A, 0xFFB7A7F7, 0xFF9FE3D0, 0xFFFFF4EE, 0xFF3A1E14),
             ColourSet("sky", "Sky", 0xFF3D8BF2, 0xFFFFD27A, 0xFFF7A8C8, 0xFFEFF5FF, 0xFF12264A),
             ColourSet("bubblegum", "Bubblegum", 0xFFE35D9C, 0xFF9ED8F5, 0xFFFFE08A, 0xFFFFF0F6, 0xFF3D1229),
-            ColourSet("lime", "Lime", 0xFF5E9E25, 0xFFFFB98A, 0xFFC1B2FF, 0xFFF5FBEC, 0xFF1F3311)
+            ColourSet("dusk", "Dusk", 0xFF9D8CFF, 0xFF7FD6A8, 0xFFFFB199, 0xFF1B1830, 0xFFECE9FF, dark = true)
         )
     )
 )
 
-fun designFor(key: String): Design = DESIGNS.firstOrNull { it.key == key } ?: DESIGNS[0]
+/** The design with this key, or null for the classic themes. */
+fun designFor(key: String): Design? = DESIGNS.firstOrNull { it.key == key }
 
 fun colourSetFor(d: Design, key: String): ColourSet = d.sets.firstOrNull { it.key == key } ?: d.sets[0]
 
-/** Everything the screens need to draw the chosen design. Get it with LocalLook.current. */
+/** Everything the screens need to draw the chosen theme. Get it with LocalLook.current. */
 class Look(
+    /** "classic", "material", "organic", "neo" or "clay". */
     val design: String,
     val dark: Boolean,
     val scheme: ColorScheme,
@@ -111,13 +126,18 @@ class Look(
     val line: Color,
     /** Hard shadow colours of neobrutalism, used in turn; the soft shadow colour of clay is the first. */
     val shadows: List<Color>,
-    /** The two shapes or glows drawn behind the list. */
+    /** The shapes, glows or dots drawn behind the list. */
     val blobs: List<Color>,
-    /** The font for list names, headings and prices, or null for the font chosen in App settings. */
-    val display: FontFamily?
-)
+    /** The font of names, headings and prices, or null for the font chosen in App settings (classic themes). */
+    val display: FontFamily?,
+    /** A cheaper and a dearer price. */
+    val drop: Color,
+    val rise: Color
+) {
+    val classic: Boolean get() = design == "classic"
+}
 
-val LocalLook = staticCompositionLocalOf { lookFor("material", "indigo", "light") }
+val LocalLook = staticCompositionLocalOf { lookFor("classic", "", "light") }
 
 private fun c(v: Long) = Color(v)
 private fun mix(a: Color, b: Color, t: Float) = lerp(a, b, t)
@@ -126,8 +146,10 @@ private fun on(bg: Color, ink: Color) = if (bg.luminance() > 0.4f) ink else Colo
 private fun pick(id: Long, n: Int) = Math.floorMod(id, n.toLong()).toInt()
 
 private val fraunces by lazy { google("Fraunces") }
-private val spaceGrotesk by lazy { google("Space Grotesk") }
+private val nunito by lazy { google("Nunito") }
+private val lexend by lazy { google("Lexend") }
 private val jakarta by lazy { google("Plus Jakarta Sans") }
+private val inter by lazy { google("Inter") }
 
 /** All the colours of a scheme from a few, plus the surface container steps that menus and dialogs use. */
 private fun scheme(
@@ -144,7 +166,7 @@ private fun scheme(
         surfaceTint = primary, inverseSurface = text, inverseOnSurface = bg, inversePrimary = container,
         surfaceBright = surface, surfaceDim = step(0.08f),
         surfaceContainerLowest = surface, surfaceContainerLow = mix(bg, surface, 0.5f), surfaceContainer = step(0.03f),
-        surfaceContainerHigh = step(0.05f), surfaceContainerHighest = step(0.08f)
+        surfaceContainerHigh = surface, surfaceContainerHighest = step(0.08f)
     ) else darkColorScheme(
         primary = primary, onPrimary = onPrimary, primaryContainer = container, onPrimaryContainer = onContainer,
         secondary = primary, onSecondary = onPrimary, secondaryContainer = container, onSecondaryContainer = onContainer,
@@ -154,119 +176,184 @@ private fun scheme(
         surfaceTint = primary, inverseSurface = text, inverseOnSurface = bg, inversePrimary = container,
         surfaceBright = step(0.16f), surfaceDim = bg,
         surfaceContainerLowest = mix(bg, Color.Black, 0.5f), surfaceContainerLow = step(0.04f), surfaceContainer = step(0.06f),
-        surfaceContainerHigh = step(0.09f), surfaceContainerHighest = step(0.12f)
+        surfaceContainerHigh = surface, surfaceContainerHighest = step(0.12f)
     )
 }
 
-/** The look for a design, colour set and mode ("light", "dark" or "amoled"). */
-fun lookFor(designKey: String, setKey: String, mode: String): Look {
-    val d = designFor(designKey)
+/**
+ * The look for a theme. [style]: "classic" or a design key. [setKey]: the design's colour set.
+ * [classicMode]: for the classic themes, "light", "dark" or "amoled".
+ */
+fun lookFor(style: String, setKey: String, classicMode: String): Look {
+    val d = designFor(style) ?: return classicLook(classicMode)
     val s = colourSetFor(d, setKey)
-    val dark = mode != "light"
-    val amoled = mode == "amoled"
+    val dark = s.dark
     val main = c(s.main); val a2 = c(s.a2); val a3 = c(s.a3); val paper = c(s.paper); val ink = c(s.ink)
-    val black = Color.Black; val white = Color.White
+    val white = Color.White; val black = Color.Black
+    val greenL = c(0xFF1E7B45); val redL = c(0xFFB3261E)
+    val greenD = c(0xFF6FD39A); val redD = c(0xFFFF8A80)
+    val drop = if (dark) greenD else greenL
+    val rise = if (dark) redD else redL
     return when (d.key) {
         "organic" -> {
-            val night = c(0xFF121210)
-            val bg = if (amoled) black else if (dark) mix(main, night, 0.88f) else paper
-            val surface = if (amoled) mix(main, black, 0.93f) else if (dark) mix(main, night, 0.81f) else mix(paper, c(0xFFFFFDF8), 0.75f)
-            val text = if (dark) mix(paper, white, 0.2f) else ink
-            val muted = if (dark) mix(text, bg, 0.3f) else mix(ink, paper, 0.32f)
-            val line = if (dark) mix(main, if (amoled) black else night, if (amoled) 0.8f else 0.68f) else mix(paper, ink, 0.12f)
-            val primary = if (dark) mix(main, white, 0.45f) else main
-            val container = if (dark) mix(main, black, if (amoled) 0.55f else 0.45f) else mix(main, white, 0.76f)
-            val onContainer = if (dark) mix(main, white, 0.8f) else mix(main, ink, 0.6f)
-            val tints = listOf(main, a2, a3).map { if (dark) mix(it, bg, if (amoled) 0.86f else 0.8f) else mix(it, white, 0.78f) }
+            val bg = paper
+            val surface = if (dark) mix(paper, main, 0.06f) else mix(paper, c(0xFFFFFDF8), 0.75f)
+            val text = ink
+            val muted = mix(ink, paper, if (dark) 0.3f else 0.32f)
+            val line = if (dark) mix(paper, main, 0.18f) else mix(paper, ink, 0.12f)
+            val onPrimary = if (dark) mix(main, black, 0.75f) else on(main, ink)
+            val container = if (dark) mix(main, paper, 0.72f) else mix(main, white, 0.76f)
+            val onContainer = if (dark) mix(main, white, 0.6f) else mix(main, ink, 0.6f)
+            val tints = listOf(main, a2, a3).map { if (dark) mix(it, paper, 0.82f) else mix(it, white, 0.78f) }
             Look(
                 "organic", dark,
-                scheme(dark, primary, if (dark) mix(main, black, 0.65f) else on(main, ink), container, onContainer, a2,
-                    bg, surface, text, muted, surface, mix(line, text, 0.35f), line),
+                scheme(dark, main, onPrimary, container, onContainer, a2, bg, surface, text, muted, surface, mix(line, text, 0.35f), line),
                 listOf(surface), tints, line, listOf(line),
-                listOf(
-                    if (dark) mix(main, bg, if (amoled) 0.9f else 0.82f) else mix(main, paper, 0.84f),
-                    if (dark) mix(a2, bg, if (amoled) 0.92f else 0.85f) else mix(a2, paper, 0.78f)
-                ),
-                fraunces
+                listOf(mix(main, paper, if (dark) 0.85f else 0.84f), mix(a2, paper, if (dark) 0.88f else 0.78f)),
+                fraunces, drop, rise
             )
         }
         "neo" -> {
-            val bg = if (amoled) black else if (dark) c(0xFF141416) else paper
-            val surface = if (amoled) c(0xFF0D0D0F) else if (dark) c(0xFF1F1F23) else white
-            val text = if (dark) c(0xFFF4F4EE) else ink
-            val muted = if (dark) c(0xFFB9B9B0) else mix(ink, white, 0.28f)
+            val bg = paper
+            val surface = if (dark) c(0xFF1F1F23) else white
+            val muted = if (dark) mix(ink, bg, 0.3f) else mix(ink, white, 0.28f)
             val accents = listOf(main, a2, a3)
+            // The neobrutalist colours are all bright, so the text on them is always the dark ink.
+            val inkOnBright = if (dark) c(0xFF111111) else ink
             Look(
                 "neo", dark,
-                // The neobrutalist colours are all bright, so the text on them is always the dark ink.
-                scheme(dark, main, if (dark) c(0xFF111111) else ink, a2, if (dark) c(0xFF111111) else ink, a3,
-                    bg, surface, text, muted, surface, text, mix(text, bg, 0.7f)),
+                scheme(dark, main, inkOnBright, a2, inkOnBright, a3, bg, surface, ink, muted, surface, ink, mix(ink, bg, 0.7f)),
                 if (dark) listOf(surface) else listOf(main, white, a2, a3),
                 accents.map { if (dark) mix(it, surface, 0.15f) else mix(it, white, 0.35f) },
-                text,
+                ink,
                 if (dark) accents else listOf(ink),
-                listOf(mix(text, bg, if (dark) 0.88f else 0.9f)),
-                spaceGrotesk
+                listOf(mix(ink, bg, if (dark) 0.86f else 0.9f)),
+                lexend,
+                if (dark) greenD else c(0xFF00873C), if (dark) redD else c(0xFFD62828)
             )
         }
         "clay" -> {
-            val night = c(0xFF0E0E14)
-            val bg = if (amoled) black else if (dark) mix(main, night, 0.87f) else paper
-            val surface = if (amoled) mix(main, black, 0.88f) else if (dark) mix(main, night, 0.76f) else mix(paper, white, 0.78f)
-            val text = if (dark) mix(paper, white, 0.3f) else ink
-            val muted = if (dark) mix(text, bg, 0.32f) else mix(ink, paper, 0.38f)
-            val primary = if (dark) mix(main, white, 0.3f) else main
-            val container = if (dark) mix(main, black, 0.42f) else mix(main, white, 0.8f)
-            val onContainer = if (dark) mix(main, white, 0.82f) else mix(main, ink, 0.55f)
-            val tints = listOf(a2, main, a3).map { if (dark) mix(it, bg, 0.72f) else mix(it, white, if (it == main) 0.78f else 0.55f) }
+            val bg = paper
+            val surface = if (dark) mix(paper, main, 0.12f) else mix(paper, white, 0.78f)
+            val muted = mix(ink, paper, if (dark) 0.32f else 0.38f)
+            val onPrimary = if (dark) mix(main, black, 0.75f) else on(main, ink)
+            val container = if (dark) mix(main, paper, 0.62f) else mix(main, white, 0.82f)
+            val onContainer = if (dark) mix(main, white, 0.7f) else mix(main, ink, 0.5f)
+            val tints = listOf(a2, main, a3).map { if (dark) mix(it, paper, 0.72f) else mix(it, white, if (it == main) 0.8f else 0.55f) }
             Look(
                 "clay", dark,
-                scheme(dark, primary, on(primary, ink), container, onContainer, a2,
-                    bg, surface, text, muted, surface, mix(text, bg, 0.6f), mix(text, bg, 0.85f)),
-                listOf(surface), tints, mix(text, bg, 0.85f),
-                listOf(if (dark) black.copy(alpha = 0.6f) else mix(main, ink, 0.35f).copy(alpha = 0.35f)),
-                listOf(
-                    if (dark) mix(main, bg, 0.7f) else mix(main, white, 0.72f),
-                    if (dark) mix(a2, bg, 0.75f) else mix(a2, white, 0.45f)
-                ),
-                jakarta
+                scheme(dark, main, onPrimary, container, onContainer, a2, bg, surface, ink, muted, surface, mix(ink, bg, 0.6f), mix(ink, bg, 0.85f)),
+                listOf(surface), tints, mix(ink, bg, 0.85f),
+                listOf(if (dark) black.copy(alpha = 0.65f) else mix(main, ink, 0.35f).copy(alpha = 0.35f)),
+                listOf(mix(main, if (dark) paper else white, if (dark) 0.7f else 0.72f), mix(a2, if (dark) paper else white, if (dark) 0.75f else 0.45f)),
+                jakarta, drop, rise
             )
         }
         else -> {
-            // Material 3: the tonal schemes of PALETTES, with the surface container steps for menus and dialogs.
-            val p = PALETTES.firstOrNull { it.key == s.key } ?: PALETTES[0]
-            var base = if (dark) p.dark else p.light
-            if (amoled) base = base.copy(background = black, surface = black, surfaceVariant = c(0xFF0E0E11))
-            val bg = base.background; val text = base.onBackground
-            val sc = base.copy(
-                outlineVariant = mix(base.outline, bg, 0.55f),
-                surfaceContainerLowest = if (dark) mix(bg, black, 0.5f) else white,
-                surfaceContainerLow = mix(bg, base.primary, 0.03f),
-                surfaceContainer = mix(mix(bg, text, 0.03f), base.primary, 0.03f),
-                surfaceContainerHigh = mix(mix(bg, text, if (dark) 0.08f else 0.05f), base.primary, 0.04f),
-                surfaceContainerHighest = mix(mix(bg, text, if (dark) 0.12f else 0.08f), base.primary, 0.04f),
-                surfaceBright = if (dark) mix(bg, text, 0.16f) else bg, surfaceDim = if (dark) bg else mix(bg, text, 0.08f)
-            )
+            // Material 3 Expressive: tonal surfaces made from the main colour, a strong container colour.
+            val bg = paper
+            val surface = if (dark) mix(paper, main, 0.1f) else mix(paper, white, 0.6f)
+            val card = if (dark) mix(paper, main, 0.14f) else mix(paper, main, 0.09f)
+            val muted = mix(ink, paper, if (dark) 0.3f else 0.35f)
+            val onPrimary = if (dark) mix(main, black, 0.75f) else on(main, ink)
+            val container = if (dark) mix(main, paper, 0.55f) else mix(main, white, 0.7f)
+            val onContainer = if (dark) mix(main, white, 0.75f) else mix(main, ink, 0.65f)
+            val tints = listOf(a2, main, a3).map { if (dark) mix(it, paper, 0.7f) else mix(it, white, if (it == main) 0.78f else 0.62f) }
             Look(
-                "material", dark, sc,
-                listOf(sc.surfaceVariant), listOf(sc.primaryContainer), sc.outlineVariant, listOf(sc.outline), emptyList(), null
+                "material", dark,
+                scheme(dark, main, onPrimary, container, onContainer, a2, bg, surface, ink, muted, card, mix(ink, bg, 0.5f), mix(ink, bg, 0.82f)),
+                listOf(card), tints, mix(ink, bg, 0.82f), listOf(mix(ink, bg, 0.5f)), emptyList(),
+                GoogleSans, drop, rise
             )
         }
     }
 }
 
-/** The Material shapes (dialogs, menus, text fields, buttons that use them) of each design. */
+/** The classic themes, exactly as before: indigo (PALETTES[0]) in light, dark or AMOLED black. */
+private fun classicLook(mode: String): Look {
+    val p = PALETTES[0]
+    var scheme = if (mode == "light") p.light else p.dark
+    // AMOLED black: the dark colours on pure black, with the cards just off black.
+    if (mode == "amoled") scheme = scheme.copy(background = Color.Black, surface = Color.Black, surfaceVariant = Color(0xFF0E0E11))
+    return Look(
+        "classic", mode != "light", scheme,
+        listOf(scheme.surfaceVariant), listOf(scheme.primaryContainer), scheme.outline, listOf(scheme.outline), emptyList(),
+        null, Color(0xFF0B7A3E), Color(0xFFBA1A1A)
+    )
+}
+
+private fun TextStyle.styled(f: FontFamily, w: FontWeight, extraSpacing: Float = 0f) =
+    copy(fontFamily = f, fontWeight = w, letterSpacing = if (extraSpacing == 0f) letterSpacing else (letterSpacing.value + extraSpacing).sp)
+
+/** The type of a design: a heading font (display, headlines, big titles, prices) and a text font. */
+private fun designType(
+    head: FontFamily, body: FontFamily, headW: FontWeight, titleW: FontWeight, smallTitleFont: FontFamily,
+    smallTitleW: FontWeight, bodyW: FontWeight, labelW: FontWeight, labelSpacing: Float = 0f
+): Typography {
+    val d = Typography()
+    return Typography(
+        displayLarge = d.displayLarge.styled(head, headW), displayMedium = d.displayMedium.styled(head, headW),
+        displaySmall = d.displaySmall.styled(head, headW), headlineLarge = d.headlineLarge.styled(head, headW),
+        headlineMedium = d.headlineMedium.styled(head, headW), headlineSmall = d.headlineSmall.styled(head, headW),
+        titleLarge = d.titleLarge.styled(head, titleW),
+        titleMedium = d.titleMedium.styled(smallTitleFont, smallTitleW), titleSmall = d.titleSmall.styled(smallTitleFont, smallTitleW),
+        bodyLarge = d.bodyLarge.styled(body, bodyW), bodyMedium = d.bodyMedium.styled(body, bodyW), bodySmall = d.bodySmall.styled(body, bodyW),
+        labelLarge = d.labelLarge.styled(body, labelW, labelSpacing), labelMedium = d.labelMedium.styled(body, labelW, labelSpacing),
+        labelSmall = d.labelSmall.styled(body, labelW, labelSpacing)
+    )
+}
+
+/** The fonts of a design. The classic themes use [classic] (the font chosen in App settings). */
+fun typographyFor(design: String, classic: Typography): Typography = when (design) {
+    "material" -> designType(GoogleSans, GoogleSans, FontWeight.Medium, FontWeight.Medium, GoogleSans, FontWeight.SemiBold, FontWeight.Normal, FontWeight.Medium)
+    "organic" -> designType(fraunces, nunito, FontWeight.SemiBold, FontWeight.SemiBold, nunito, FontWeight.Bold, FontWeight.Normal, FontWeight.SemiBold, 0.2f)
+    "neo" -> designType(lexend, lexend, FontWeight.ExtraBold, FontWeight.Bold, lexend, FontWeight.SemiBold, FontWeight.Normal, FontWeight.SemiBold)
+    "clay" -> designType(jakarta, inter, FontWeight.ExtraBold, FontWeight.ExtraBold, jakarta, FontWeight.Bold, FontWeight.Normal, FontWeight.Medium)
+    else -> classic
+}
+
+/** The weight of screen titles in the top bar (classic: Medium, as before). */
+val Look.titleWeight: FontWeight
+    get() = when (design) {
+        "neo" -> FontWeight.Bold
+        "clay" -> FontWeight.ExtraBold
+        "organic" -> FontWeight.SemiBold
+        else -> FontWeight.Medium
+    }
+
+/** The weight of prices. */
+val Look.priceWeight: FontWeight
+    get() = when (design) {
+        "material", "neo" -> FontWeight.Bold
+        "clay" -> FontWeight.ExtraBold
+        else -> FontWeight.SemiBold
+    }
+
+/** Icon style: "filled" (classic), "rounded", "outlined" or "sharp". */
+val Look.iconStyle: String
+    get() = when (design) {
+        "material", "clay" -> "rounded"
+        "organic" -> "outlined"
+        "neo" -> "sharp"
+        else -> "filled"
+    }
+
+/** The Material shapes (dialogs, menus, text fields, snackbars) of each design. */
 fun shapesFor(design: String): Shapes = when (design) {
+    "material" -> Shapes(
+        extraSmall = RoundedCornerShape(12.dp), small = RoundedCornerShape(14.dp), medium = RoundedCornerShape(20.dp),
+        large = RoundedCornerShape(28.dp), extraLarge = RoundedCornerShape(36.dp)
+    )
     "organic" -> Shapes(
-        extraSmall = RoundedCornerShape(8.dp), small = RoundedCornerShape(12.dp), medium = RoundedCornerShape(18.dp),
+        extraSmall = RoundedCornerShape(14.dp, 14.dp, 14.dp, 6.dp), small = RoundedCornerShape(14.dp), medium = RoundedCornerShape(18.dp),
         large = RoundedCornerShape(24.dp), extraLarge = RoundedCornerShape(30.dp, 30.dp, 30.dp, 12.dp)
     )
     "neo" -> Shapes(
-        extraSmall = RoundedCornerShape(4.dp), small = RoundedCornerShape(6.dp), medium = RoundedCornerShape(8.dp),
+        extraSmall = RoundedCornerShape(6.dp), small = RoundedCornerShape(8.dp), medium = RoundedCornerShape(10.dp),
         large = RoundedCornerShape(12.dp), extraLarge = RoundedCornerShape(14.dp)
     )
     "clay" -> Shapes(
-        extraSmall = RoundedCornerShape(10.dp), small = RoundedCornerShape(14.dp), medium = RoundedCornerShape(20.dp),
+        extraSmall = RoundedCornerShape(16.dp), small = RoundedCornerShape(18.dp), medium = RoundedCornerShape(22.dp),
         large = RoundedCornerShape(28.dp), extraLarge = RoundedCornerShape(32.dp)
     )
     else -> Shapes()
@@ -281,12 +368,14 @@ fun Look.cardShape(id: Long, small: Boolean): Shape = when (design) {
     }
     "neo" -> RoundedCornerShape(if (small) 12.dp else 14.dp)
     "clay" -> RoundedCornerShape(if (small) 24.dp else 28.dp)
-    else -> RoundedCornerShape(if (small) 18.dp else 24.dp)
+    "material" -> RoundedCornerShape(if (small) 24.dp else 28.dp)
+    else -> RoundedCornerShape(if (small) 16.dp else 20.dp)
 }
 
-/** Space around the picture inside a card: organic and clay pictures sit on a mat, the others fill the top. */
+/** Space around the picture inside a card: pictures sit on a mat, except in classic and neobrutalism. */
 fun Look.inset(small: Boolean): Dp = when (design) {
     "organic", "clay" -> if (small) 8.dp else 10.dp
+    "material" -> if (small) 6.dp else 8.dp
     else -> 0.dp
 }
 
@@ -297,12 +386,13 @@ fun Look.pictureShape(id: Long, small: Boolean): Shape = when (design) {
         if (pick(id, 2) == 0) RoundedCornerShape(r, r, r, k) else RoundedCornerShape(r, k, r, r)
     }
     "clay" -> RoundedCornerShape(if (small) 18.dp else 22.dp)
+    "material" -> RoundedCornerShape(if (small) 18.dp else 22.dp)
     else -> RectangleShape
 }
 
-/** Behind a picture: white for shop photos in Material and neobrutalism, a soft tint otherwise and when there is none. */
+/** Behind a picture: white for shop photos (except organic and clay, which use soft mats), a tint when there is none. */
 fun Look.pictureBg(id: Long, hasImage: Boolean): Color = when {
-    hasImage && (design == "material" || design == "neo") -> Color.White
+    hasImage && design != "organic" && design != "clay" -> Color.White
     else -> tints[pick(id, tints.size)]
 }
 
@@ -312,18 +402,17 @@ val Look.pictureLine: Dp get() = if (design == "neo") 2.dp else 0.dp
 fun Look.cardFill(id: Long): Color = fills[pick(id, fills.size)]
 
 /** Small labels on a card (price change, "Got it"). */
-val Look.badgeShape: Shape
-    get() = when (design) {
-        "organic" -> RoundedCornerShape(14.dp, 14.dp, 14.dp, 4.dp)
-        "neo" -> RoundedCornerShape(6.dp)
-        "clay" -> RoundedCornerShape(12.dp)
-        else -> RoundedCornerShape(8.dp)
-    }
+fun Look.badgeShape(small: Boolean): Shape = when (design) {
+    "organic" -> RoundedCornerShape(14.dp, 14.dp, 14.dp, 4.dp)
+    "neo" -> RoundedCornerShape(6.dp)
+    "clay", "material" -> CircleShape
+    else -> RoundedCornerShape(if (small) 6.dp else 8.dp)
+}
 
 /** Buttons such as the category button and the view switch. */
 val Look.chipShape: Shape
     get() = when (design) {
-        "organic", "clay" -> CircleShape
+        "organic", "clay", "material" -> CircleShape
         "neo" -> RoundedCornerShape(10.dp)
         else -> RoundedCornerShape(12.dp)
     }
@@ -334,7 +423,16 @@ val Look.fabShape: Shape
         "organic" -> RoundedCornerShape(22.dp, 30.dp, 26.dp, 30.dp)
         "neo" -> RoundedCornerShape(12.dp)
         "clay" -> RoundedCornerShape(26.dp)
+        "material" -> RoundedCornerShape(20.dp)
         else -> RoundedCornerShape(16.dp)
+    }
+
+/** The shape of ordinary buttons. */
+val Look.buttonShape: Shape
+    get() = when (design) {
+        "organic" -> RoundedCornerShape(18.dp, 22.dp, 20.dp, 22.dp)
+        "neo" -> RoundedCornerShape(10.dp)
+        else -> CircleShape
     }
 
 /** A hard shadow: the shape again, moved down and to the right, in one flat colour. */
@@ -344,7 +442,14 @@ fun Modifier.hardShadow(color: Color, shape: Shape, offset: Dp = 4.dp): Modifier
     translate(o, o) { drawOutline(outline, color) }
 }
 
-/** The frame of a wish card in the chosen design: its colour, lines, shadow and shape. */
+/** The soft light edge at the top of a clay shape. */
+fun Modifier.clayEdge(look: Look, shape: Shape, width: Dp = 1.5.dp): Modifier = border(
+    width,
+    Brush.verticalGradient(listOf(Color.White.copy(alpha = if (look.dark) 0.16f else 0.95f), Color.Transparent)),
+    shape
+)
+
+/** The frame of a wish card in the chosen theme: its colour, lines, shadow and shape. */
 fun Modifier.lookCard(look: Look, id: Long, shape: Shape): Modifier = when (look.design) {
     "neo" -> hardShadow(look.shadows[pick(id, look.shadows.size)], shape, 5.dp)
         .clip(shape).background(look.cardFill(id)).border(2.dp, look.line, shape)
@@ -355,38 +460,34 @@ fun Modifier.lookCard(look: Look, id: Long, shape: Shape): Modifier = when (look
         shadow(14.dp, shape, clip = false, ambientColor = glow, spotColor = glow)
             .clip(shape)
             .background(Brush.verticalGradient(listOf(lerp(fill, Color.White, if (look.dark) 0.06f else 0.6f), fill)))
-            .border(
-                1.5.dp,
-                Brush.verticalGradient(listOf(Color.White.copy(alpha = if (look.dark) 0.16f else 0.95f), Color.Transparent)),
-                shape
-            )
+            .clayEdge(look, shape)
     }
     else -> clip(shape).background(look.cardFill(id))
 }
 
-/** The frame of a small button (category, view switch). [on] = chosen, filled with the container colour. */
+/** The frame of a small button (category, view switch). [on] = chosen. */
 fun Modifier.lookChip(look: Look, on: Boolean = false): Modifier {
     val cs = look.scheme
     val shape = look.chipShape
-    val fill = if (on) cs.primaryContainer else Color.Transparent
     return when (look.design) {
         "neo" -> (if (on) hardShadow(look.line, shape, 3.dp) else this)
             .clip(shape).background(if (on) cs.primary else cs.surface).border(2.dp, look.line, shape)
-        "organic" -> clip(shape).background(if (on) cs.primary else fill).border(1.dp, look.line, shape)
+        "organic" -> clip(shape).background(if (on) cs.primary else Color.Transparent).border(1.dp, look.line, shape)
         "clay" -> shadow(if (on) 6.dp else 4.dp, shape, clip = false, ambientColor = look.shadows[0], spotColor = look.shadows[0])
-            .clip(shape).background(if (on) cs.primary else look.cardFill(0))
-        else -> clip(shape).background(fill)
+            .clip(shape).background(if (on) cs.primary else look.cardFill(0)).clayEdge(look, shape, 1.dp)
+        "material" -> clip(shape).background(if (on) cs.primary else cs.surfaceVariant)
+        else -> clip(shape).background(if (on) cs.primaryContainer else Color.Transparent)
     }
 }
 
 /** The colour of the text and icons on a chip made with [lookChip]. */
 fun Look.chipContent(on: Boolean): Color = when {
-    !on -> scheme.onSurfaceVariant
-    design == "material" -> scheme.onPrimaryContainer
+    !on -> if (design == "classic") scheme.onSurfaceVariant else scheme.onSurface
+    design == "classic" -> scheme.onPrimaryContainer
     else -> scheme.onPrimary
 }
 
-/** What is drawn behind the list: organic blobs, clay glows, a neobrutalist dot grid. Material keeps it plain. */
+/** What is drawn behind the list: organic blobs, clay glows, a neobrutalist dot grid. Classic and Material stay plain. */
 fun Modifier.lookBackdrop(look: Look): Modifier = when (look.design) {
     "organic" -> drawBehind {
         blob(Offset(size.width * 0.86f, 34.dp.toPx()), 110.dp.toPx(), look.blobs[0], 0.4f)

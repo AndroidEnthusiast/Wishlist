@@ -88,10 +88,13 @@ object Repo {
     /** The palette picked before 2.50 (one of PALETTES in Theme.kt). No longer chosen or used: the app is always indigo. */
     var palette by mutableStateOf("indigo")
         private set
-    /** The theme design (one of DESIGNS in Design.kt: "material", "organic", "neo", "clay") and its colour set. */
-    var design by mutableStateOf("material")
+    /**
+     * "classic" (the themes System default / Light / Dark / AMOLED black in [theme], as the app always looked) or one
+     * of the four designs in Design.kt ("material", "organic", "neo", "clay"), with its colour set in [colours].
+     */
+    var design by mutableStateOf("classic")
         private set
-    var colours by mutableStateOf("indigo")
+    var colours by mutableStateOf("")
         private set
     /** The font of the app: one of FONTS in Fonts.kt. Google Sans is the original. */
     var font by mutableStateOf("google_sans")
@@ -167,9 +170,9 @@ object Repo {
         }
         theme = p.getString("theme", "system") ?: "system"
         palette = p.getString("palette", "indigo") ?: "indigo"
-        design = p.getString("design", "material")?.takeIf { d -> DESIGNS.any { it.key == d } } ?: "material"
-        colours = p.getString("colours", null)?.takeIf { k -> designFor(design).sets.any { it.key == k } }
-            ?: designFor(design).sets[0].key
+        // Stored as "style" since 2.52 ("design" of 2.51 is ignored: everyone starts on the classic themes again).
+        design = p.getString("style", "classic")?.takeIf { d -> designFor(d) != null } ?: "classic"
+        colours = p.getString("style_colours", "") ?: ""
         font = p.getString("font", "google_sans") ?: "google_sans"
         instantDelete = p.getBoolean("instant_delete", false)
         notifyDrops = p.getBoolean("notify_drops", true)
@@ -206,8 +209,8 @@ object Repo {
             .putString("cats", myCats.joinToString("\n"))
             .putString("theme", theme)
             .putString("palette", palette)
-            .putString("design", design)
-            .putString("colours", colours)
+            .putString("style", design)
+            .putString("style_colours", colours)
             .putString("font", font)
             .putString("view", view)
             .putString("sort", sort)
@@ -396,9 +399,11 @@ object Repo {
     @Synchronized
     fun setTheme(c: Context, t: String) { theme = t; persist(c) }
     fun setPalette(c: Context, p: String) { palette = p; persist(c) }
-    /** A new design keeps its colour set when the design has one with that name, otherwise it takes its first. */
+    /** One of the classic themes: "system", "light", "dark" or "amoled". */
+    fun setClassic(c: Context, t: String) { design = "classic"; theme = t; persist(c) }
+    /** A design keeps its colour set when it has one with that name, otherwise it takes its first. */
     fun setDesign(c: Context, d: String) {
-        val ds = designFor(d)
+        val ds = designFor(d) ?: return setClassic(c, theme)
         design = ds.key
         if (ds.sets.none { it.key == colours }) colours = ds.sets[0].key
         persist(c)

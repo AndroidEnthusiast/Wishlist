@@ -64,7 +64,7 @@ fun CategoryField(selected: String, cats: List<String>, onPick: (String) -> Unit
         OutlinedTextField(
             value = selected.ifEmpty { tr("No category") }, onValueChange = {}, readOnly = true, singleLine = true,
             label = { Text(tr("Category")) },
-            trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
+            trailingIcon = { Icon(AppIcons.ArrowDropDown, null) },
             modifier = Modifier.fillMaxWidth()
         )
         // A text field would pop up the keyboard. This invisible layer opens the menu instead.
@@ -86,7 +86,7 @@ fun CategoryField(selected: String, cats: List<String>, onPick: (String) -> Unit
             HorizontalDivider()
             DropdownMenuItem(
                 text = { Text(tr("New category")) },
-                leadingIcon = { Icon(Icons.Default.Add, null) },
+                leadingIcon = { Icon(AppIcons.Add, null) },
                 onClick = { open = false; onNew() }
             )
         }
@@ -130,7 +130,7 @@ fun ProductInfo(content: @Composable ColumnScope.() -> Unit) {
                         style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
                     )
                 }
-                Icon(Icons.Default.ArrowDropDown, null, modifier = Modifier.rotate(turn))
+                Icon(AppIcons.ArrowDropDown, null, modifier = Modifier.rotate(turn))
             }
             AnimatedVisibility(open, enter = fadeIn(tween(220)), exit = fadeOut(tween(120))) {
                 Column(

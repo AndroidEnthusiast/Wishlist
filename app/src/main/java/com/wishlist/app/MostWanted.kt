@@ -199,7 +199,7 @@ fun MostWantedBadge(showLabel: Boolean, modifier: Modifier = Modifier, onClick: 
         // A small cross when you can tap the label to take it away again.
         if (onClick != null) {
             Spacer(Modifier.width(6.dp))
-            Icon(Icons.Default.Close, null, Modifier.size(14.dp), tint = StarInk)
+            Icon(AppIcons.Close, null, Modifier.size(14.dp), tint = StarInk)
         }
     }
 }

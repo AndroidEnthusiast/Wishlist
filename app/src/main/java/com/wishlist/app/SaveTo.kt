@@ -47,7 +47,7 @@ fun SaveToField(targets: List<SaveTarget>, selected: String, onPick: (String) ->
         OutlinedTextField(
             value = current.name, onValueChange = {}, readOnly = true, singleLine = true,
             label = { Text(tr("Save to")) },
-            trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
+            trailingIcon = { Icon(AppIcons.ArrowDropDown, null) },
             modifier = Modifier.fillMaxWidth()
         )
         // A text field would pop up the keyboard. This invisible layer opens the menu instead.
