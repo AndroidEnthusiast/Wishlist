@@ -25,9 +25,9 @@ try { var wlt = localStorage.getItem("wl_theme"); if (wlt === "light" || wlt ===
 <meta name="twitter:image" content="https://androidenthusiast.github.io/Wishlist/og.png">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&amp;display=swap">
-<link rel="stylesheet" href="wishlist.css">
+<link rel="stylesheet" href="wishlist.css?v=dev">
 <!-- The same building blocks as the browser editor (top bar, drop-down, sort button, cards), so both look like the app. -->
-<link rel="stylesheet" href="edit.css">
+<link rel="stylesheet" href="edit.css?v=dev">
 </head>
 <body>
 <header class="topbar friends">
@@ -72,8 +72,8 @@ try { var wlt = localStorage.getItem("wl_theme"); if (wlt === "light" || wlt ===
 <div id="toast" role="status"></div>
 <div id="langs"></div>
 
-<script src="nl.js"></script>
-<script src="i18n.js"></script>
+<script src="nl.js?v=dev"></script>
+<script src="i18n.js?v=dev"></script>
 <script>
 "use strict";
 var SUPABASE_URL = "https://aspnmvmsvwbezdltykgx.supabase.co";
@@ -246,7 +246,7 @@ function inviteUrl(key) {
 // The language and light/dark chosen here go along in the link, so the editor looks the same even when it opens in
 // another browser (or later from an iPhone home-screen icon), which can't see what this page remembered.
 function editorUrl(key) {
-  return location.origin + location.pathname.replace(/[^\/]*$/, "") + "edit.html?j=" + key + prefsQuery();
+  return location.origin + location.pathname.replace(/[^\/]*$/, "") + "edit.html?j=" + key + (typeof prefsQuery === "function" ? prefsQuery() : "");
 }
 
 // Only Android phones can install the app. Everyone else gets only "Edit in the browser" on the invitation.

@@ -37,7 +37,16 @@ const IOS = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/
   t = await boot({ goto: false, ua: IOS });
   await t.page.goto(t.base + "edit.html?j=" + KEY + "&l=nl&t=dark");
   await t.page.waitForSelector(".card");
+  check("scripts and styles carry ?v= so a release reloads them", (await t.page.evaluate(() => [...document.querySelectorAll("script[src], link[rel=stylesheet]")].filter(e => !/fonts\.googleapis/.test(e.src || e.href)).every(e => /\?v=/.test(e.src || e.href)))));
   check("fresh browser: editor in Dutch and dark from the link, and remembered", await t.page.evaluate(() => document.documentElement.lang === "nl" && document.documentElement.getAttribute("data-theme") === "dark" && localStorage.getItem("wl_lang") === "nl" && localStorage.getItem("wl_theme") === "dark") && /Wens toevoegen/.test(await t.page.locator("body").innerText()));
+  await t.ctx.close();
+
+  // a browser that still has an old saved i18n.js (without prefsQuery) next to the new page: the invitation still shows
+  t = await boot({ goto: false, ua: ANDROID });
+  await t.page.route(/i18n\.js/, r => r.fulfill({ contentType: "text/javascript", body: require("fs").readFileSync(require("path").join(__dirname, "old_i18n.js"), "utf8") }));
+  await t.page.goto(t.base + "?j=" + KEY);
+  await t.page.waitForSelector(".inv .btns");
+  check("old saved i18n.js: invitation still complete", (await t.page.locator(".inv .btns a").count()) === 3 && t.errors.length === 0, t.errors);
   await t.ctx.close();
 
   // a small Android phone: the invitation with three buttons still fits on one screen

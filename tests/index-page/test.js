@@ -4,8 +4,8 @@ const path = require("path");
 const WEB = path.join(__dirname, "..", "..", "web");
 // jsdom doesn't load script files here: put nl.js and i18n.js into the page, as a browser would load them.
 const html = fs.readFileSync(process.argv[2] || path.join(WEB, "index.html"), "utf8")
-  .replace('<script src="nl.js"></script>', () => "<script>" + fs.readFileSync(path.join(WEB, "nl.js"), "utf8") + "</script>")
-  .replace('<script src="i18n.js"></script>', () => "<script>" + fs.readFileSync(path.join(WEB, "i18n.js"), "utf8") + "</script>");
+  .replace('<script src="nl.js?v=dev"></script>', () => "<script>" + fs.readFileSync(path.join(WEB, "nl.js"), "utf8") + "</script>")
+  .replace('<script src="i18n.js?v=dev"></script>', () => "<script>" + fs.readFileSync(path.join(WEB, "i18n.js"), "utf8") + "</script>");
 
 const items = [
   {id: 1, url: "https://www.amazon.com/dp/B000000001", title: "Headphones <b>X</b>", desc: "Nice", image: "https://img.example/a.jpg", price: 80, old: 100, cur: "USD", cat: "Tech", got: false},

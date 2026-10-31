@@ -69,6 +69,14 @@ jobs:
         id: web
         run: |
           if [ -f web/index.html ]; then echo "found=yes" >> "$GITHUB_OUTPUT"; else echo "found=no" >> "$GITHUB_OUTPUT"; fi
+      # Every release gets its own "?v=..." on the scripts and styles, so browsers fetch the new files instead of
+      # mixing an old saved copy with the new page.
+      - name: Make browsers load the new files
+        if: steps.web.outputs.found == 'yes'
+        run: |
+          v="${GITHUB_SHA:0:7}"
+          sed -i "s/?v=dev\"/?v=$v\"/g" web/*.html
+          grep -c "?v=$v" web/index.html web/edit.html
       - name: Package the web page
         if: steps.web.outputs.found == 'yes'
         uses: actions/upload-pages-artifact@v3
