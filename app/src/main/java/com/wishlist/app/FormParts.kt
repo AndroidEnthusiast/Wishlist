@@ -11,6 +11,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,7 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 
-/** Text with the words between underscores in italics: "Shows you _really_ like this". */
+/** Text with the words between underscores in italics: "Shows people you _really_ like this". */
 fun italics(s: String): AnnotatedString = buildAnnotatedString {
     s.split('_').forEachIndexed { i, part ->
         if (i % 2 == 1) withStyle(SpanStyle(fontStyle = FontStyle.Italic)) { append(part) } else append(part)
@@ -119,7 +120,11 @@ fun ProductInfo(content: @Composable ColumnScope.() -> Unit) {
         Column {
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                    .clickable(role = Role.Button, onClickLabel = if (open) tr("Close") else tr("Open")) { open = !open }
+                    // No ripple (the bar flashing distracted): only the arrow turns to show it opens or closes.
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() }, indication = null,
+                        role = Role.Button, onClickLabel = if (open) tr("Close") else tr("Open")
+                    ) { open = !open }
                     .padding(horizontal = 12.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {

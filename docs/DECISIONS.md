@@ -41,10 +41,11 @@ What the owner has decided, and why. Follow these unless the owner changes their
 
 ## Wishes on screen and the wish form (October 2026)
 - **Tapping a picture opens it full screen** on a dark background (pinch or double-tap to zoom, drag to look around, X or Back to close), with the name and "View in shop" at the bottom. Chosen over an enlarged picture on a blurred screen, which leaves too little room to zoom. Tapping the name and details opens the shop page.
-- **Wish form order**: link, picture, Name (not "Title"), price, Category (one drop-down, not a row of chips), Top wish ("Shows you *really* like this"), Private wish ("Hides this wish from everyone you share your wishlist with"), then "Product information" folded away (description, size, note for givers).
+- **Wish form order**: link, picture, Name (not "Title"), price, Category (one drop-down, not a row of chips), Top wish ("Shows people you *really* like this", since 2.57), Private wish ("Hides this wish from everyone you share your wishlist with"), then "Product information" folded away (description, size, note for givers).
 - **Tapping the eye on a private wish makes it visible**: "Wish is now visible to friends" with Undo, for 5 seconds (also "Wish is now private" from the menus).
 - **Delete question**: "Deleting this wish moves "…" to the bin. After 10 days it's permanently deleted."
 
+- **Tapping "Other information" only turns its arrow** (2.57): no flash on the bar, it distracted from the arrow.
 - **Name and price on one line in the wish form**: the price field is just wide enough for "9999,99" but takes any amount (a longer one scrolls inside the field); the name gets the rest and stays on one line. Opening "Other information" scrolls down so all of it is in sight.
 - **No "(optional)" in the wish form; the name is "Name*"**: saving without a name turns the field red with "What are you wishing for?" (kind, and it leads to the answer; the label stays "Name*").
 - **Wish form, later tweaks**: the folded section is called "Other information" ("Description, size, notes"); the price field shows the currency's symbol (€ for EUR) in front of the amount, label "Price (EUR)"; no "Fetch details" button (pasting a link reads the page; the keyboard's Done key does too).

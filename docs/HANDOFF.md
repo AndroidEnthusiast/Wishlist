@@ -41,6 +41,8 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - v2.56: the Themer only previews; an "Apply" button top right makes the choice the app's theme.
 
+- v2.57: wish form wording under Top wish; no flash when opening "Other information".
+
 ## Next session
 Ask the owner how the four designs look on the phone and what to change. Not yet styled per design: text fields (only their shape and colours change), drop-down menus, the bin's cards, the picture viewer, the star and private-eye badges, the menu (hamburger) icon. The web pages still only have light/dark (DECISIONS: ask before adding designs there).
 

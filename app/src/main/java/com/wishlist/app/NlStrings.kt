@@ -266,7 +266,7 @@ val NL: Map<String, String> = mapOf(
     "View picture" to "Afbeelding bekijken",
     "No category" to "Geen categorie",
     "Choose a category" to "Kies een categorie",
-    "Shows you _really_ like this" to "Laat zien dat je dit _echt_ leuk vindt",
+    "Shows people you _really_ like this" to "Laat mensen zien dat je dit _echt_ leuk vindt",
     "Hides this wish from everyone you share your wishlist with" to "Verbergt deze wens voor iedereen met wie je je verlanglijstje deelt",
     "Wish is now private" to "Wens is nu privé",
     "Wish is now visible to friends" to "Wens is nu zichtbaar voor vrienden",
