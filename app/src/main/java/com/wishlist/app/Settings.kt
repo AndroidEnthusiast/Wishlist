@@ -1,5 +1,7 @@
 package com.wishlist.app
 
+import android.net.Uri
+import android.content.Intent
 import android.text.format.DateUtils
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
@@ -252,6 +254,23 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                 tr("Turn off battery optimisation for Wishlist in Battery settings if your prices aren’t updated automatically."),
                 color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall
             )
+
+            SectionTitle(tr("Update the app"))
+            val version = remember {
+                try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName.orEmpty() } catch (e: Exception) { "" }
+            }
+            Text(
+                tr("You have version %s. Download the newest version and install it over this one: your wishes stay.", version),
+                color = cs.onSurfaceVariant
+            )
+            // The browser downloads it straight away; open the download to install it.
+            Button(onClick = {
+                try {
+                    ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(Config.APK_URL)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                } catch (e: Exception) {
+                    scope.launch { snack.showSnackbar(tr("Couldn’t open the download. Check your connection.")) }
+                }
+            }) { Text(tr("Download app")) }
 
             SectionTitle(tr("Share the app"))
             Text(

@@ -12,6 +12,9 @@ object Config {
     /** Friends open this page to see your list. It is the web page in the repo, served by GitHub Pages. */
     const val SHARE_URL = "https://androidenthusiast.github.io/Wishlist/"
 
+    /** The newest app, rebuilt by GitHub on every change (the release "latest"). Also linked from the invite page. */
+    const val APK_URL = "https://github.com/AndroidEnthusiast/Wishlist/releases/download/latest/Wishlist.apk"
+
     /** The Supabase storage bucket for pictures you add yourself (created by supabase-photos.sql). */
     const val PHOTO_BUCKET = "wish-photos"
 
