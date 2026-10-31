@@ -243,8 +243,10 @@ function inviteUrl(key) {
 }
 
 // The editor in the browser (edit.html) sits next to this page. Works on any phone or computer.
+// The language and light/dark chosen here go along in the link, so the editor looks the same even when it opens in
+// another browser (or later from an iPhone home-screen icon), which can't see what this page remembered.
 function editorUrl(key) {
-  return location.origin + location.pathname.replace(/[^\/]*$/, "") + "edit.html?j=" + key;
+  return location.origin + location.pathname.replace(/[^\/]*$/, "") + "edit.html?j=" + key + prefsQuery();
 }
 
 // Only Android phones can install the app. Everyone else gets only "Edit in the browser" on the invitation.
@@ -309,6 +311,7 @@ async function showInvite(key) {
     return;
   }
   box.classList.add("invite"); // centred on the screen
+  document.body.classList.add("inviting"); // one screen, no scrolling (see wishlist.css)
   var nm = String(info.name || "a wishlist");
   document.title = T("Invitation: {0}", nm);
   var head = el("h2", null, T("You’re invited to add gifts for:"));
@@ -327,6 +330,8 @@ async function showInvite(key) {
     // it's clear what you are invited to.
     var only = el("a", "act", T("Edit in the browser"));
     only.href = editorUrl(key);
+    // Light/dark can change on this page without a reload: take the latest choice along.
+    only.addEventListener("click", function () { only.href = editorUrl(key); });
     btns.appendChild(only);
     box.appendChild(btns);
     v.appendChild(box);
@@ -350,6 +355,7 @@ async function showInvite(key) {
   btns.appendChild(dl);
   var web = el("a", "act outline", T("Edit in the browser"));
   web.href = editorUrl(key);
+  web.addEventListener("click", function () { web.href = editorUrl(key); });
   btns.appendChild(web);
   box.appendChild(btns);
   var done = el("p", "copied", "");

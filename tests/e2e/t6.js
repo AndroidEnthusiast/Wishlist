@@ -20,11 +20,31 @@ const IOS = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/
   check("iPhone: only Edit in the browser", JSON.stringify(await t.page.locator(".inv .btns a").allInnerTexts()) === JSON.stringify(["Edit in the browser"]));
   check("iPhone: confetti too", (await t.page.locator(".inv canvas.confetti").count()) === 1);
   await t.page.screenshot({ path: "s_invite_iphone.png" });
+  check("iPhone: the invitation fits on one screen (no scrolling), language and theme included", await t.page.evaluate(() => document.documentElement.scrollHeight <= innerHeight && document.documentElement.scrollWidth <= innerWidth) && await t.page.locator("#langs .themes").isVisible());
+  // the language and light/dark picked here go along to the editor, also into a browser that can't see them
+  await t.page.locator("#langs button", { hasText: "Nederlands" }).click();
+  await t.page.waitForSelector(".inv .btns");
+  await t.page.locator("#langs button", { hasText: "Donker" }).click();
+  check("the editor link carries the language at once", /edit\.html\?j=[A-Z0-9]+&l=nl$/.test(await t.page.locator(".inv .btns a").getAttribute("href")));
   await t.page.locator(".inv .btns a").click();
   await t.page.waitForURL(u => /edit\.html\?j=/.test(u.toString()));
   await t.page.waitForSelector(".card");
-  check("iPhone: the button opens the editor with the list", (await t.page.locator("#name").innerText()) === "Our home" && t.page.url() === t.base + "edit.html?j=" + KEY);
+  check("iPhone: the button opens the editor with the list, in Dutch and dark", (await t.page.locator("#name").innerText()) === "Our home" && t.page.url() === t.base + "edit.html?j=" + KEY + "&l=nl&t=dark" && await t.page.evaluate(() => document.documentElement.lang === "nl" && document.documentElement.getAttribute("data-theme") === "dark"));
   check("iPhone: no js errors", t.errors.length === 0, t.errors);
+  await t.ctx.close();
+
+  // a browser that never saw the invitation (another app's browser, a home-screen icon) follows the link
+  t = await boot({ goto: false, ua: IOS });
+  await t.page.goto(t.base + "edit.html?j=" + KEY + "&l=nl&t=dark");
+  await t.page.waitForSelector(".card");
+  check("fresh browser: editor in Dutch and dark from the link, and remembered", await t.page.evaluate(() => document.documentElement.lang === "nl" && document.documentElement.getAttribute("data-theme") === "dark" && localStorage.getItem("wl_lang") === "nl" && localStorage.getItem("wl_theme") === "dark") && /Wens toevoegen/.test(await t.page.locator("body").innerText()));
+  await t.ctx.close();
+
+  // a small Android phone: the invitation with three buttons still fits on one screen
+  t = await boot({ goto: false, ua: ANDROID, viewport: { width: 360, height: 640 } });
+  await t.page.goto(t.base + "?j=" + KEY);
+  await t.page.waitForSelector(".inv .btns");
+  check("small phone: invitation fits on one screen", await t.page.evaluate(() => document.documentElement.scrollHeight <= innerHeight && document.documentElement.scrollWidth <= innerWidth));
   await t.ctx.close();
 
   // Android: invitation page with the three buttons; the browser one opens the editor

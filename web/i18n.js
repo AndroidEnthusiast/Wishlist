@@ -9,7 +9,19 @@
 (function () {
   "use strict";
   var NL = window.WL_NL || {};
+  // A link from the invitation can carry the choices made there: "l" (en / nl) and "t" (light / dark). They are
+  // remembered in this browser, as if picked here.
+  (function fromLink() {
+    var q = /[?&]l=(en|nl)\b/.exec(location.search), t = /[?&]t=(light|dark)\b/.exec(location.search);
+    try {
+      if (q) localStorage.setItem("wl_lang", q[1]);
+      if (t) localStorage.setItem("wl_theme", t[1]);
+    } catch (e) { /* private mode: the page still follows the link below */ }
+    if (q) window.WL_LINK_LANG = q[1];
+    if (t) document.documentElement.setAttribute("data-theme", t[1]);
+  })();
   function pick() {
+    if (window.WL_LINK_LANG) return window.WL_LINK_LANG;
     try { var v = localStorage.getItem("wl_lang"); if (v === "nl" || v === "en") return v; } catch (e) { /* private mode */ }
     return /^nl\b/i.test(navigator.language || "") ? "nl" : "en";
   }
@@ -79,6 +91,16 @@
     });
     mark();
     return p;
+  };
+  // "&l=nl&t=dark": the choices made in this browser, for a link to another page of the site. Empty when nothing was picked.
+  window.prefsQuery = function () {
+    var out = "";
+    try {
+      var l = localStorage.getItem("wl_lang"), t = localStorage.getItem("wl_theme");
+      if (l === "en" || l === "nl") out += "&l=" + l;
+      if (t === "light" || t === "dark") out += "&t=" + t;
+    } catch (e) { /* nothing remembered */ }
+    return out;
   };
   // The small "English · Nederlands" switch.
   window.langSwitch = function () {
