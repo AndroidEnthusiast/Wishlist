@@ -134,7 +134,8 @@ fun FriendScreen(f: Friend, snack: SnackbarHostState, onMenu: () -> Unit, onRemo
                             FilterChip(selected = c == cat, onClick = { cat = c }, label = { Text(catLabel(c)) })
                         }
                     }
-                    val shown = r0.wishes.filter { cat == "All" || it.category == cat }
+                    // Wishes in the owner's bin are not on the list.
+                    val shown = r0.wishes.filter { it.bin == 0L && (cat == "All" || it.category == cat) }
                     if (shown.isEmpty()) {
                         Box(Modifier.fillMaxSize().padding(32.dp), Alignment.Center) {
                             Text(tr("Nothing here yet."), color = MaterialTheme.colorScheme.onSurfaceVariant)

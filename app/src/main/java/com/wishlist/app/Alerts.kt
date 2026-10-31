@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit
 /** Everything about price-drop alerts: the background schedule, the notification and the settings shortcuts. */
 object Alerts {
     private const val CHANNEL = "price_drops"
+    private const val BIN_CHANNEL = "reserved_bin"
 
     /** Creates the notification channel (high importance, so the alert pops up). Safe to call again and again. */
     fun ensureChannel(c: Context) {
@@ -86,6 +87,44 @@ object Alerts {
             .setAutoCancel(true)
             .build()
         (c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(id, n)
+    }
+
+    /** Checks the bins every half hour, for "your reserved gift has been moved to the bin" (see Bin.kt), and once now. */
+    fun scheduleBin(c: Context) {
+        val net = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+        val wm = WorkManager.getInstance(c)
+        wm.enqueueUniquePeriodicWork(
+            "bin", ExistingPeriodicWorkPolicy.KEEP,
+            PeriodicWorkRequestBuilder<BinWorker>(30, TimeUnit.MINUTES).setConstraints(net).build()
+        )
+        wm.enqueue(OneTimeWorkRequestBuilder<BinWorker>().setConstraints(net).build())
+    }
+
+    /** Someone else moved a gift this phone reserved to the bin. Tapping the alert opens the bin at that gift. */
+    fun notifyBinned(c: Context, code: String, w: Wish, listName: String) {
+        val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        nm.createNotificationChannel(
+            NotificationChannel(BIN_CHANNEL, tr("Reserved gifts"), NotificationManager.IMPORTANCE_HIGH).apply {
+                description = tr("Tells you when a gift you reserved is moved to the bin")
+            }
+        )
+        val id = code.hashCode() * 31 + w.id.hashCode() + 7
+        val text = if (w.binBy.isNotBlank()) tr("“%1\$s” on %2\$s was moved to the bin by %3\$s.", w.title, listName, w.binBy)
+        else tr("“%1\$s” on %2\$s was moved to the bin.", w.title, listName)
+        val open = Intent(c, MainActivity::class.java)
+            .putExtra(MainActivity.BIN_CODE, code).putExtra(MainActivity.BIN_ID, w.id)
+            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        val pi = PendingIntent.getActivity(c, id, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val n = NotificationCompat.Builder(c, BIN_CHANNEL)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle(tr("Your reserved gift has been moved to the bin"))
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+        nm.notify(id, n)
     }
 
     /** Shows an example alert. Returns false if notifications are switched off for the app. */

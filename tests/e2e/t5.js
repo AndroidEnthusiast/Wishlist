@@ -45,7 +45,7 @@ const delayPuts = (fake, ms) => { fake.hooks.wl_sh_put_item = async () => { awai
   await b.page.evaluate(() => document.dispatchEvent(new Event("pagehide")));
   await b.page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
   await sleep(600);
-  const titles = a.fake.items(CODE).filter(i => i.id > 0).map(i => i.title).sort();
+  const titles = a.fake.items(CODE).filter(i => i.id > 0 && !i.bin).map(i => i.title).sort();
   check("added wish and deleted wish: both applied", JSON.stringify(titles) === JSON.stringify(["Blue shirt", "Desk lamp", "Robot"]), titles);
   a.fake.hooks = {};
   delayPuts(a.fake, 300);
@@ -152,7 +152,8 @@ const delayPuts = (fake, ms) => { fake.hooks.wl_sh_put_item = async () => { awai
   check("picture kept during undo time", Object.keys(t.fake.photos).length === 1);
   await t.page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
   await sleep(800);
-  check("deleting the wish deletes its picture online", Object.keys(t.fake.photos).length === 0 && !t.fake.items(CODE).some(i => i.title === "Poster"), t.fake.photos);
+  // The wish is in the bin now (it can be restored for 10 days), so its picture stays online until it is deleted for good.
+  check("deleted wish goes to the bin with its picture", Object.keys(t.fake.photos).length === 1 && t.fake.items(CODE).some(i => i.title === "Poster" && i.bin > 0), t.fake.photos);
   check("no js errors (pictures)", t.errors.length === 0, t.errors);
   await t.ctx.close();
 

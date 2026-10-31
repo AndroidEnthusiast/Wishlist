@@ -129,10 +129,10 @@ const q = (t, sel) => t.page.locator(sel);
   await settle(t);
   check("category add undone", !(await t.page.evaluate(() => window.__wl.content().cats)).includes("Nope"));
   await t.page.getByRole("button", { name: "Done", exact: true }).click();
-  // a failing final delete brings the wish back
+  // a failing move to the bin brings the wish back
   t = await boot({ clock: true });
   await t.page.waitForSelector(".card");
-  t.fake.hooks.wl_sh_del_item = async () => { throw Object.assign(new Error("down"), { status: 500 }); };
+  t.fake.hooks.wl_sh_put_item = async () => { throw Object.assign(new Error("down"), { status: 500 }); };
   await q(t, ".card[data-id='1001']").getByLabel("Delete", { exact: true }).click();
   await q(t, ".dlg").getByRole("button", { name: "Delete", exact: true }).click();
   await t.page.clock.fastForward(10500);

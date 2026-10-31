@@ -27,8 +27,9 @@ object SharedPrices {
             } catch (e: Exception) {
                 null
             } ?: continue
-            var wishes = r.list.wishes
-            for (w in r.list.wishes) {
+            // Wishes in the bin get no price checks and no alerts.
+            var wishes = r.list.wishes.filter { it.bin == 0L }
+            for (w in wishes.toList()) {
                 if (w.url.isBlank()) continue
                 val np = fetchMeta(w.url, c, w.price != null)?.price ?: continue
                 val upd = newPrice(w, np) ?: continue

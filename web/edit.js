@@ -233,7 +233,8 @@
       id: Number(o.id), url: String(o.url || ""), title: String(o.title || ""), desc: String(o.desc || ""),
       image: String(o.image || ""), price: num(o.price), old: num(o.old), cur: String(o.cur || "USD"),
       cat: String(o.cat || ""), got: !!o.got, star: !!o.star, note: String(o.note || ""),
-      size: String(o.size || ""), by: String(o.by || "")
+      size: String(o.size || ""), by: String(o.by || ""),
+      bin: num(o.bin) || 0, binBy: String(o.binBy || "")
     };
   }
 
@@ -248,12 +249,15 @@
     if (w.note) o.note = w.note;
     if (w.size) o.size = w.size;
     if (w.by) o.by = w.by;
+    if (w.bin) o.bin = w.bin;
+    if (w.binBy) o.binBy = w.binBy;
     return o;
   }
 
   var FIELDS = ["url", "title", "desc", "image", "price", "old", "cur", "cat", "got", "star", "note", "size"];
 
-  // The names of the fields that differ between two versions of a wish. ("by" is only set when a wish is made.)
+  // The names of the fields that differ between two versions of a wish. ("by" is only set when a wish is made; "bin"
+  // and "binBy" only when a wish goes to the bin or comes back.)
   function changedFields(a, b) {
     return FIELDS.filter(function (f) { return a[f] !== b[f]; });
   }
@@ -307,7 +311,8 @@
     var items = [], about = "";
     (r.items || []).forEach(function (o) {
       if (o && o.kind === "about") about = String(o.about || "");
-      else if (o && Number(o.id) > 0) items.push(normWish(o));
+      // Wishes in the bin are not on the list (the app shows them in its Bin for 10 days).
+      else if (o && Number(o.id) > 0 && !o.bin) items.push(normWish(o));
     });
     return {
       name: String(r.name || "Wishlist"),
@@ -464,22 +469,23 @@
     }
   }
 
-  // The undo time is over: delete the wish online for everyone, with its picture. If that fails it comes back.
+  // The undo time is over: the wish goes to the list's bin online, for everyone (only "bin" and "binBy" are written;
+  // its picture and any reservation stay). Everyone on the list can restore it from the bin in the app for 10 days.
+  // If that fails it comes back.
   function finishTrash(t, unloading) {
     var shown = content;
     var items = shown.items.slice();
     items.splice(Math.min(Math.max(t.index, 0), items.length), 0, t.wish);
     var before = copyWish(shown, { items: items });
+    var args = { p_key: key, p_item: wishJson(copyWish(t.wish, { bin: Date.now(), binBy: me })), p_fields: ["bin", "binBy"] };
     if (unloading) {
-      // The page is closing: send the delete in a way that survives that.
-      rpc("wl_sh_del_item", { p_key: key, p_id: t.wish.id }, true).catch(function () { /* still online: fine */ });
-      dropPhoto(t.wish.image, true);
+      // The page is closing: send it in a way that survives that.
+      rpc("wl_sh_put_item", args, true).catch(function () { /* still on the list: fine */ });
       return;
     }
     write(before, shown, async function () {
       try {
-        await rpc("wl_sh_del_item", { p_key: key, p_id: t.wish.id });
-        await dropPhoto(t.wish.image);
+        await rpc("wl_sh_put_item", args);
       } finally {
         delete hidden[t.wish.id];
       }
@@ -500,7 +506,7 @@
   function showUndo(t) {
     var s = $("snack");
     s.textContent = "";
-    s.appendChild(el("span", "stext", T("Deleted “{0}”", t.wish.title.length > 40 ? t.wish.title.slice(0, 40) + "…" : t.wish.title)));
+    s.appendChild(el("span", "stext", T("Moved “{0}” to the bin", t.wish.title.length > 40 ? t.wish.title.slice(0, 40) + "…" : t.wish.title)));
     var u = el("button", "sbtn", T("Undo"));
     u.type = "button";
     u.addEventListener("click", function () {
@@ -532,7 +538,7 @@
     if (instant) { deleteWish(w); return; }
     dialog({
       title: T("Delete this wish?"),
-      body: function (b) { b.appendChild(el("p", null, T("“{0}” will be removed from the list for everyone.", w.title))); },
+      body: function (b) { b.appendChild(el("p", null, T("“{0}” goes to the bin. Everyone on the list can restore it from the bin in the app for 10 days.", w.title))); },
       actions: [
         { label: T("Cancel"), cls: "outline" },
         { label: T("Delete"), cls: "danger", onClick: function () { deleteWish(w); } }

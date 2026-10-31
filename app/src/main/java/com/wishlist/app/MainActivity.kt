@@ -157,6 +157,13 @@ class MainActivity : ComponentActivity() {
     private var sharedUrl by mutableStateOf<String?>(null)
     private var sharedCode by mutableStateOf<String?>(null)
     private var sharedInvite by mutableStateOf<String?>(null)
+    /** A "your reserved gift has been moved to the bin" alert was tapped: the list code and the wish to show in the bin. */
+    private var binTarget by mutableStateOf<Pair<String, Long>?>(null)
+
+    companion object {
+        const val BIN_CODE = "bin_code"
+        const val BIN_ID = "bin_id"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -165,10 +172,13 @@ class MainActivity : ComponentActivity() {
         addOnNewIntentListener { handle(it) }
         Alerts.ensureChannel(this)
         Alerts.schedule(this, Repo.intervalHours, false)
+        Alerts.scheduleBin(this)
         Sync.push()
         setContent {
             WishTheme {
-                App(sharedUrl, sharedCode, sharedInvite) { sharedUrl = null; sharedCode = null; sharedInvite = null }
+                App(sharedUrl, sharedCode, sharedInvite, binTarget, { binTarget = null }) {
+                    sharedUrl = null; sharedCode = null; sharedInvite = null
+                }
             }
         }
     }
@@ -213,6 +223,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handle(i: Intent?) {
+        if (i != null && i.hasExtra(BIN_ID)) {
+            binTarget = (i.getStringExtra(BIN_CODE) ?: "") to i.getLongExtra(BIN_ID, 0L)
+            // Handled once: turning the phone must not open the bin again.
+            i.removeExtra(BIN_ID)
+            return
+        }
         // An invite link that was opened (wishlist://join?j=KEY), for example from the button on the invite web page.
         if (i?.action == Intent.ACTION_VIEW) {
             i.dataString?.let { Sync.parseInvite(it) }?.let { sharedInvite = it }
@@ -301,7 +317,10 @@ private fun DrawerItem(label: String, icon: ImageVector, selected: Boolean, onCl
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun App(sharedUrl: String?, sharedCode: String?, sharedInvite: String?, onSharedUsed: () -> Unit) {
+fun App(
+    sharedUrl: String?, sharedCode: String?, sharedInvite: String?,
+    binTarget: Pair<String, Long>?, onBinUsed: () -> Unit, onSharedUsed: () -> Unit
+) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val snack = remember { SnackbarHostState() }
@@ -310,6 +329,8 @@ fun App(sharedUrl: String?, sharedCode: String?, sharedInvite: String?, onShared
     var prefill by remember { mutableStateOf("") }
     var catDlg by remember { mutableStateOf(false) }
     var settings by remember { mutableStateOf(false) }
+    // The bin (menu > Bin): deleted wishes of every list, for 10 days.
+    var binOpen by remember { mutableStateOf(false) }
     // The settings of the open list (its ⚙), apart from the app's Settings in the menu.
     var listSettings by remember { mutableStateOf(false) }
     var friendCode by remember { mutableStateOf<String?>(null) }
@@ -325,7 +346,7 @@ fun App(sharedUrl: String?, sharedCode: String?, sharedInvite: String?, onShared
             return
         }
         if (Repo.friends.any { it.code == code }) {
-            friendCode = code; settings = false
+            friendCode = code; settings = false; binOpen = false
             return
         }
         scope.launch {
@@ -335,7 +356,7 @@ fun App(sharedUrl: String?, sharedCode: String?, sharedInvite: String?, onShared
                     snack.showSnackbar(tr("No list found for that code."))
                 } else {
                     Repo.addFriend(ctx, Friend(code, r.name))
-                    friendCode = code; settings = false
+                    friendCode = code; settings = false; binOpen = false
                 }
             } catch (e: Exception) {
                 snack.showSnackbar(tr("Couldn’t reach the server. Check your connection."))
@@ -350,7 +371,7 @@ fun App(sharedUrl: String?, sharedCode: String?, sharedInvite: String?, onShared
     }
     LaunchedEffect(sharedUrl) {
         if (sharedUrl != null) {
-            prefill = sharedUrl; adding = true; settings = false; friendCode = null; listSettings = false
+            prefill = sharedUrl; adding = true; settings = false; binOpen = false; friendCode = null; listSettings = false
             onSharedUsed()
         }
     }
@@ -360,19 +381,27 @@ fun App(sharedUrl: String?, sharedCode: String?, sharedInvite: String?, onShared
             onSharedUsed()
         }
     }
+    LaunchedEffect(binTarget) {
+        if (binTarget != null) {
+            Bin.focus = binTarget
+            binOpen = true; settings = false; friendCode = null; listSettings = false
+            scope.launch { drawer.close() }
+            onBinUsed()
+        }
+    }
     LaunchedEffect(sharedInvite) {
         if (sharedInvite != null) {
-            joinDlg = sharedInvite; settings = false; friendCode = null; listSettings = false
+            joinDlg = sharedInvite; settings = false; binOpen = false; friendCode = null; listSettings = false
             onSharedUsed()
         }
     }
 
     BackHandler(enabled = drawer.isOpen) { scope.launch { drawer.close() } }
-    BackHandler(enabled = !drawer.isOpen && (settings || friendCode != null)) {
-        settings = false; friendCode = null; listSettings = false
+    BackHandler(enabled = !drawer.isOpen && (settings || binOpen || friendCode != null)) {
+        settings = false; binOpen = false; friendCode = null; listSettings = false
     }
     // Back from a shared wishlist goes to My wishlist.
-    BackHandler(enabled = !drawer.isOpen && !settings && friendCode == null && Shared.active != null) {
+    BackHandler(enabled = !drawer.isOpen && !settings && !binOpen && friendCode == null && Shared.active != null) {
         Shared.close()
     }
 
@@ -386,7 +415,7 @@ fun App(sharedUrl: String?, sharedCode: String?, sharedInvite: String?, onShared
 
     Box(Modifier.fillMaxSize()) {
     // A list's settings screen has only its back arrow: no menu button and no swiping the menu open.
-    val inListSettings = listSettings && !settings && friendCode == null
+    val inListSettings = listSettings && !settings && !binOpen && friendCode == null
     ModalNavigationDrawer(
         drawerState = drawer,
         gesturesEnabled = !inListSettings,
@@ -403,8 +432,8 @@ fun App(sharedUrl: String?, sharedCode: String?, sharedInvite: String?, onShared
                             maxLines = 1, overflow = TextOverflow.Ellipsis
                         )
                     }
-                    DrawerItem(tr("My wishlist"), Icons.Default.Favorite, !settings && friendCode == null && Shared.active == null) {
-                        Shared.close(); settings = false; friendCode = null; listSettings = false
+                    DrawerItem(tr("My wishlist"), Icons.Default.Favorite, !settings && !binOpen && friendCode == null && Shared.active == null) {
+                        Shared.close(); settings = false; binOpen = false; friendCode = null; listSettings = false
                         scope.launch { drawer.close() }
                     }
                     // A thin line, then the wishlists you edit together with other people.
@@ -415,8 +444,8 @@ fun App(sharedUrl: String?, sharedCode: String?, sharedInvite: String?, onShared
                         modifier = Modifier.padding(start = 28.dp, top = 8.dp, bottom = 8.dp)
                     )
                     Shared.lists.forEach { sl ->
-                        DrawerItem(sl.name, Icons.Default.Share, !settings && friendCode == null && Shared.active == sl.code) {
-                            Shared.open(ctx, sl.code); settings = false; friendCode = null; listSettings = false
+                        DrawerItem(sl.name, Icons.Default.Share, !settings && !binOpen && friendCode == null && Shared.active == sl.code) {
+                            Shared.open(ctx, sl.code); settings = false; binOpen = false; friendCode = null; listSettings = false
                             scope.launch { drawer.close() }
                         }
                     }
@@ -433,15 +462,19 @@ fun App(sharedUrl: String?, sharedCode: String?, sharedInvite: String?, onShared
                             modifier = Modifier.padding(start = 28.dp, top = 16.dp, bottom = 8.dp)
                         )
                         Repo.friends.forEach { f ->
-                            DrawerItem(f.name, Icons.Default.Person, !settings && friendCode == f.code) {
-                                friendCode = f.code; settings = false
+                            DrawerItem(f.name, Icons.Default.Person, !settings && !binOpen && friendCode == f.code) {
+                                friendCode = f.code; settings = false; binOpen = false
                                 scope.launch { drawer.close() }
                             }
                         }
                         Spacer(Modifier.height(8.dp))
                     }
+                    DrawerItem(tr("Bin"), Icons.Default.Delete, binOpen) {
+                        binOpen = true; settings = false; friendCode = null; listSettings = false
+                        scope.launch { drawer.close() }
+                    }
                     DrawerItem(tr("App settings"), Icons.Default.Settings, settings) {
-                        settings = true; friendCode = null; listSettings = false
+                        settings = true; binOpen = false; friendCode = null; listSettings = false
                         scope.launch { drawer.close() }
                     }
                 }
@@ -453,6 +486,7 @@ fun App(sharedUrl: String?, sharedCode: String?, sharedInvite: String?, onShared
             val fr = Repo.friends.firstOrNull { it.code == friendCode }
             when {
                 settings -> SettingsScreen(snack, openMenu)
+                binOpen -> BinScreen(snack)
                 fr != null -> FriendScreen(fr, snack, openMenu) { friendCode = null }
                 listSettings -> key(Shared.active) { ListSettingsScreen(snack) { listSettings = false } }
                 else -> key(Shared.active) {
@@ -486,7 +520,7 @@ fun App(sharedUrl: String?, sharedCode: String?, sharedInvite: String?, onShared
         NewSharedDialog(
             onCreated = { code ->
                 newShared = false
-                Shared.open(ctx, code); settings = false; friendCode = null; listSettings = false
+                Shared.open(ctx, code); settings = false; binOpen = false; friendCode = null; listSettings = false
                 inviteDlg = true
             },
             onClose = { newShared = false }
@@ -497,7 +531,7 @@ fun App(sharedUrl: String?, sharedCode: String?, sharedInvite: String?, onShared
             key = inviteKey,
             onJoined = { code ->
                 joinDlg = null
-                Shared.open(ctx, code); settings = false; friendCode = null; listSettings = false
+                Shared.open(ctx, code); settings = false; binOpen = false; friendCode = null; listSettings = false
             },
             onClose = { joinDlg = null }
         )

@@ -83,6 +83,11 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   check("no-link item: shown, meta has no leading dot", !!nl && nl.querySelector(".meta").textContent === "Home");
   check("no-link item: no store link", !!nl && !nl.querySelector("a"));
   items.pop();
+  // A wish in the owner's bin (deleted, kept 10 days) travels along marked "bin": friends never see it.
+  items.push({id: 10, url: "", title: "Binned gift", desc: "", image: "", price: 5, old: null, cur: "USD", cat: "Home", got: false, bin: Date.now(), binBy: "Ann"});
+  const db = await load("?c=abcd2345");
+  check("a wish in the bin is not shown to friends", ![...db.window.document.querySelectorAll(".card")].some(c => c.textContent.includes("Binned gift")) && db.window.document.querySelectorAll(".card").length === 3);
+  items.pop();
   check("category drop-down: All + 3", (doc.getElementById("catBtn").click(), doc.querySelectorAll(".menu .mitem").length === 4));
   doc.body.click();
   check("apikey header, no Authorization for sb_publishable", store.calls[0][2].apikey.startsWith("sb_publishable_") && !store.calls[0][2].Authorization);

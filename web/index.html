@@ -717,9 +717,10 @@ async function refresh() {
     (rs || []).forEach(function (x) { m[x.id] = x.mine; });
     // The note for friends travels as one extra item of kind "about". It is not a wish.
     var about = "";
+    // Wishes in the bin (deleted, kept 10 days so they can be restored) are not on the list.
     l.items = (l.items || []).filter(function (w) {
       if (w && w.kind === "about") { about = String(w.about || ""); return false; }
-      return true;
+      return !(w && w.bin);
     });
     l.about = about;
     list = l; res = m; state = "ok";

@@ -10,7 +10,7 @@ import androidx.compose.runtime.setValue
  *  - normally the person is asked "Delete this wish?" first;
  *  - with "Instant delete" on in Settings it is deleted at once;
  *  - either way a message with Undo shows for a few seconds. Only when that time is over (or a next wish is
- *    deleted, or the app is left) is the delete made final: online copies, pictures and price history go then.
+ *    deleted, or the app is left) does the wish go to the bin (Bin.kt), where it stays for 10 days.
  */
 object DeleteFlow {
     /** The wish the person is being asked about, or null. */

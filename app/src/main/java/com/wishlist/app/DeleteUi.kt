@@ -17,14 +17,13 @@ fun DeleteHost(snack: SnackbarHostState) {
     val ctx = LocalContext.current
     val ask = DeleteFlow.asking
     if (ask != null) {
-        val where = if (Shared.active != null) tr("the shared wishlist “%s”", Repo.listName) else tr("your wishlist")
         AlertDialog(
             onDismissRequest = { DeleteFlow.cancel() },
             title = { Text(tr("Delete this wish?")) },
             text = {
                 Text(
-                    tr("“%1\$s” will be deleted from %2\$s.", shorten(ask.title), where) +
-                        if (Shared.active != null) " " + tr("Everyone on the list will no longer see it.") else ""
+                    tr("“%1\$s” goes to the bin. You can restore it from there for %2\$d days.", shorten(ask.title), BIN_DAYS) +
+                        if (Shared.active != null) " " + tr("Everyone on the list can see it in the bin.") else ""
                 )
             },
             confirmButton = {
@@ -41,7 +40,7 @@ fun DeleteHost(snack: SnackbarHostState) {
         if (t == null) return@LaunchedEffect
         snack.currentSnackbarData?.dismiss()
         val r = snack.showSnackbar(
-            message = tr("Deleted “%s”", shorten(t.wish.title)),
+            message = tr("Moved “%s” to the bin", shorten(t.wish.title)),
             actionLabel = tr("Undo"),
             duration = SnackbarDuration.Long
         )

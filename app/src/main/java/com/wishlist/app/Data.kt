@@ -11,7 +11,8 @@ import java.util.Currency
 import java.util.UUID
 
 // A new field here must ALSO be added to wishToJson / wishFromJson below and to changedFields / applyFields in
-// Shared.kt (and to the web pages), or it won't be saved when someone edits a shared wish.
+// Shared.kt (and to the web pages), or it won't be saved when someone edits a shared wish. (Like "by", the bin fields
+// are not edited in the form: only moving to the bin and restoring write them.)
 data class Wish(
     val id: Long,
     val url: String,
@@ -30,7 +31,11 @@ data class Wish(
     /** One of SIZES ("XS" to "XL"), or empty for no size. */
     val size: String = "",
     /** On a shared wishlist: the name of the person who added it. Empty on My wishlist. */
-    val by: String = ""
+    val by: String = "",
+    /** In the bin since this moment (milliseconds), or 0 when it is on the list. See Bin.kt. */
+    val bin: Long = 0L,
+    /** On a shared wishlist: the name of the person who moved it to the bin. */
+    val binBy: String = ""
 )
 
 /** A wishlist that someone else shared with you. */
@@ -46,6 +51,8 @@ fun wishToJson(w: Wish): JSONObject = JSONObject().apply {
     if (w.note.isNotBlank()) put("note", w.note)
     if (w.size.isNotBlank()) put("size", w.size)
     if (w.by.isNotBlank()) put("by", w.by)
+    if (w.bin > 0L) put("bin", w.bin)
+    if (w.binBy.isNotBlank()) put("binBy", w.binBy)
 }
 
 fun wishFromJson(o: JSONObject): Wish = Wish(
@@ -54,12 +61,16 @@ fun wishFromJson(o: JSONObject): Wish = Wish(
     if (o.isNull("price")) null else o.getDouble("price"),
     if (o.isNull("old")) null else o.getDouble("old"),
     o.optString("cur", "USD"), o.optString("cat", ""), o.optBoolean("got"),
-    o.optBoolean("star"), o.optString("note", ""), o.optString("size", ""), o.optString("by", "")
+    o.optBoolean("star"), o.optString("note", ""), o.optString("size", ""), o.optString("by", ""),
+    o.optLong("bin", 0L), o.optString("binBy", "")
 )
 
 object Repo {
     /** My wishlist (stored on this phone, mirrored online for friends when shared). */
     var myWishes by mutableStateOf(listOf<Wish>())
+        private set
+    /** The bin of My wishlist: deleted wishes, kept for [BIN_DAYS] days (newest first). Not on the list and never price-checked. */
+    var myBin by mutableStateOf(listOf<Wish>())
         private set
     var myCats by mutableStateOf(listOf("Tech", "Home", "Fashion", "Books"))
         private set
@@ -137,6 +148,13 @@ object Repo {
             } catch (e: Exception) {
             }
         }
+        p.getString("bin", null)?.let { s ->
+            try {
+                val a = JSONArray(s)
+                myBin = (0 until a.length()).map { i -> wishFromJson(a.getJSONObject(i)) }
+            } catch (e: Exception) {
+            }
+        }
         History.load(c)
         History.seed(c, myWishes)
         p.getString("cats", null)?.let { s ->
@@ -177,10 +195,13 @@ object Repo {
     private fun persist(c: Context) {
         val arr = JSONArray()
         myWishes.forEach { arr.put(wishToJson(it)) }
+        val binArr = JSONArray()
+        myBin.forEach { binArr.put(wishToJson(it)) }
         val fr = JSONArray()
         friends.forEach { fr.put(JSONObject().put("code", it.code).put("name", it.name)) }
         prefs(c).edit()
             .putString("wishes", arr.toString())
+            .putString("bin", binArr.toString())
             .putString("cats", myCats.joinToString("\n"))
             .putString("theme", theme)
             .putString("palette", palette)
@@ -252,10 +273,13 @@ object Repo {
     @Volatile
     private var heldMine: Trashed? = null
 
-    /** My wishlist as it goes online for friends: a wish that was just deleted is still in it until the delete is final. */
+    /**
+     * My wishlist as it goes online for friends: a wish that was just deleted is still in it until the undo time is
+     * over. The bin goes along too (marked "bin", so friends don't see it), so a reservation on it stays when it is restored.
+     */
     fun syncWishes(): List<Wish> {
-        val h = heldMine ?: return myWishes
-        return myWishes.toMutableList().also { it.add(h.index.coerceIn(0, it.size), h.wish) }
+        val h = heldMine ?: return myWishes + myBin
+        return myWishes.toMutableList().also { it.add(h.index.coerceIn(0, it.size), h.wish) } + myBin
     }
 
     /**
@@ -288,7 +312,7 @@ object Repo {
         commit(c)
     }
 
-    /** The undo time is over: now the wish goes from the online copies too, and its picture and price history are removed. */
+    /** The undo time is over: the wish goes to the bin. Its picture and price history stay until it leaves the bin. */
     @Synchronized
     fun finishTrash(c: Context, t: Trashed) {
         if (t.listCode != null) {
@@ -296,9 +320,31 @@ object Repo {
             return
         }
         if (heldMine === t) heldMine = null
+        if (myBin.none { it.id == t.wish.id }) myBin = listOf(t.wish.copy(bin = System.currentTimeMillis())) + myBin
         commit(c)
-        ImageStore.delete(c, t.wish.image)
-        History.remove(c, t.wish.id)
+    }
+
+    /** Takes a wish out of the bin and puts it back at the top of My wishlist. */
+    @Synchronized
+    fun restoreMine(c: Context, id: Long): Boolean {
+        val w = myBin.firstOrNull { it.id == id } ?: return false
+        myBin = myBin.filter { it.id != id }
+        if (myWishes.none { it.id == id }) myWishes = listOf(w.copy(bin = 0L, binBy = "")) + myWishes
+        commit(c)
+        return true
+    }
+
+    /** Deletes wishes from the bin for good, with their pictures and price history. */
+    @Synchronized
+    fun dropFromBin(c: Context, ids: Set<Long>) {
+        val gone = myBin.filter { it.id in ids }
+        if (gone.isEmpty()) return
+        myBin = myBin.filter { it.id !in ids }
+        commit(c)
+        gone.forEach {
+            ImageStore.delete(c, it.image)
+            History.remove(c, it.id)
+        }
     }
 
     // ---- deleting with Undo (end) ----
@@ -329,6 +375,7 @@ object Repo {
         if (Shared.active != null) return Shared.renameCat(c, old, n)
         myCats = myCats.map { if (it == old) n else it }
         myWishes = myWishes.map { if (it.category == old) it.copy(category = n) else it }
+        myBin = myBin.map { if (it.category == old) it.copy(category = n) else it }
         commit(c)
         return true
     }
@@ -342,6 +389,7 @@ object Repo {
         }
         myCats = myCats.filter { it != name }
         myWishes = myWishes.map { if (it.category == name) it.copy(category = "") else it }
+        myBin = myBin.map { if (it.category == name) it.copy(category = "") else it }
         commit(c)
     }
 

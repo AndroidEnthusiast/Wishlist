@@ -209,7 +209,8 @@ object Shared {
             return true
         }
         gone = false
-        val nc = SharedContent(r.list.name, r.list.cats, r.list.about, r.list.wishes.filter { it.id !in hidden })
+        // Wishes in the bin are not on the list (the Bin screen shows them, see Bin.kt).
+        val nc = SharedContent(r.list.name, r.list.cats, r.list.about, r.list.wishes.filter { it.id !in hidden && it.bin == 0L })
         if (nc != content) content = nc
         writeCache(c, l.code, nc)
         if (r.list.name != l.name) {
@@ -289,7 +290,7 @@ object Shared {
         return url.removePrefix(prefix).takeIf { it.isNotEmpty() && !it.contains('/') }
     }
 
-    private suspend fun dropPhoto(l: SharedList, url: String) {
+    suspend fun dropPhoto(l: SharedList, url: String) {
         val n = photoNameOf(l.code, url) ?: return
         try {
             Cloud.deletePhoto(l.code, l.key, n, "x-edit-key")
@@ -412,18 +413,21 @@ object Shared {
         }
     }
 
-    /** The undo time is over: delete the wish online for everyone, with its picture. If that fails it comes back with a message. */
+    /**
+     * The undo time is over: the wish goes to the list's bin online, for everyone (only the fields "bin" and "binBy"
+     * are written; its picture and any reservation on it stay). If that fails it comes back with a message.
+     */
     fun finishTrash(c: Context, t: Trashed) {
         val l = lists.firstOrNull { it.code == t.listCode }
         if (l == null) {
             hidden.remove(t.wish.id)
             return
         }
+        val at = System.currentTimeMillis()
+        Bin.binnedHere(c, l.code, t.wish.id, at)
         val remove: suspend () -> Unit = {
             try {
-                Cloud.shDelete(l.key, t.wish.id)
-                ImageStore.delete(c, t.wish.image)
-                dropPhoto(l, t.wish.image)
+                Cloud.shPut(l.key, t.wish.copy(bin = at, binBy = l.me), listOf("bin", "binBy"))
             } finally {
                 hidden.remove(t.wish.id)
             }
@@ -433,7 +437,7 @@ object Shared {
             val before = shown.copy(wishes = shown.wishes.toMutableList().also { it.add(t.index.coerceIn(0, it.size), t.wish) })
             write(c, l, before, shown, remove)
         } else {
-            // Another list is open now: just delete online. A failure shows up as the wish still being there next time.
+            // Another list is open now: just move it to the bin online. A failure shows up as the wish still being there next time.
             scope.launch {
                 try {
                     lock.withLock { remove() }
@@ -555,6 +559,7 @@ object Shared {
         lists = lists.filter { it.code != code }
         saveLists(c)
         prefs(c).edit().remove(cacheKey(code)).remove("shp_$code").apply()
+        Bin.forget(c, code)
     }
 
     /** Creator only: deletes the list online for everyone (wishes, reservations, pictures). */
