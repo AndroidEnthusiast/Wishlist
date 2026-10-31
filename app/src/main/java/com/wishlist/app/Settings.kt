@@ -51,6 +51,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.launch
 
@@ -66,14 +75,17 @@ private fun SectionTitle(t: String) {
  * Settings for the whole app (menu > Settings): your name, theme, price alerts, deleting, sharing the app.
  * What belongs to one list (name, note, categories, sharing) is in [ListSettingsScreen], the ⚙ on that list.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
     var me by remember { mutableStateOf(Shared.lastName) }
-    // The Themer: its own screen, opened from the Theme section. Back returns here.
+    // Shown as a green tick with "Saved" once the name is confirmed with the keyboard's tick (Done) key.
+    var nameSaved by remember { mutableStateOf(false) }
+    val focus = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
     // The Themer: its own screen, opened from the Theme section. Back returns here. (The menu button hides meanwhile.)
     if (ThemerNav.open) {
         ThemerScreen { ThemerNav.open = false }
@@ -109,13 +121,30 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
             }
 
             SectionTitle(tr("Your name"))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(me, { me = it.take(30) }, singleLine = true, label = { Text(tr("Name")) }, modifier = Modifier.weight(1f))
-                Button(enabled = me.isNotBlank(), onClick = {
-                    Shared.setAppName(ctx, me)
-                    me = Shared.lastName
-                    scope.launch { snack.showSnackbar(tr("Name saved")) }
-                }) { Text(tr("Save")) }
+            // No Save button: the keyboard's tick saves the name and closes the keyboard. (An empty name isn't saved:
+            // the old one comes back.)
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    me, { me = it.take(30); nameSaved = false }, singleLine = true, label = { Text(tr("Name")) },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = {
+                        if (me.isNotBlank()) {
+                            Shared.setAppName(ctx, me)
+                            nameSaved = true
+                        }
+                        me = Shared.lastName
+                        keyboard?.hide()
+                        focus.clearFocus()
+                    }),
+                    modifier = Modifier.weight(1f)
+                )
+                if (nameSaved) {
+                    val green = if (LocalLook.current.dark) Color(0xFF6FD39A) else Color(0xFF1E7B45)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(AppIcons.Check, null, tint = green, modifier = Modifier.size(20.dp))
+                        Text(tr("Saved"), color = green, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(start = 4.dp))
+                    }
+                }
             }
             Text(
                 tr("Shown as “Added by” on the shared wishlists you’re on. You can use a different name on one list in its ⚙."),
@@ -158,13 +187,9 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
             )
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                    val d = designFor(Repo.design)
-                    if (d != null) {
-                        Text(tr(d.name) + " · " + tr(colourSetFor(d, Repo.colours).name), style = MaterialTheme.typography.bodyLarge)
-                    }
                     Text(
-                        tr("Material 3, Organic, Neobrutalism and Claymorphism, each with its own colours."),
-                        style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
+                        tr("Special themes to personalise your wishlist"),
+                        style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
                     )
                 }
                 Button(onClick = { ThemerNav.open = true }) { Text(tr("Themer")) }
@@ -173,62 +198,60 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
             SectionTitle(tr("Price alerts"))
             Text(
                 tr("Choose how often the app refreshes the prices of your wishes, to show any price drops or increases."),
-                color = cs.onSurfaceVariant
+                style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
             )
-            Text(tr("Check every"), style = MaterialTheme.typography.labelMedium)
-            listOf(1, 3, 6, 12, 24).forEach { h ->
-                val pick = {
-                    Repo.setInterval(ctx, h)
-                    Alerts.schedule(ctx, h, true)
-                }
-                Row(Modifier.fillMaxWidth().clickable { pick() }, verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(selected = Repo.intervalHours == h, onClick = { pick() })
-                    Text(if (h == 1) tr("Every hour") else tr("Every %d hours", h))
+            // "Check every" with the choices next to each other, as boxes that finish the sentence.
+            Text(tr("Check every"), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+            val look = LocalLook.current
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf(1, 3, 6, 12, 24).forEach { h ->
+                    val on = Repo.intervalHours == h
+                    val shape = RoundedCornerShape(12.dp)
+                    Box(
+                        Modifier.weight(1f).height(44.dp)
+                            .then(
+                                if (look.classic) Modifier.clip(shape)
+                                    .background(if (on) cs.primaryContainer else Color.Transparent)
+                                    .border(1.dp, if (on) cs.primary else cs.outlineVariant, shape)
+                                else Modifier.lookChip(look, on)
+                            )
+                            .selectable(selected = on, role = Role.RadioButton) {
+                                Repo.setInterval(ctx, h)
+                                Alerts.schedule(ctx, h, true)
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            if (h == 1) tr("Hour") else tr("%d hours", h),
+                            style = MaterialTheme.typography.labelMedium, maxLines = 1,
+                            fontWeight = if (on) FontWeight.Bold else null,
+                            color = if (look.classic) (if (on) cs.onPrimaryContainer else cs.onSurfaceVariant) else look.chipContent(on)
+                        )
+                    }
                 }
             }
             Text(
                 if (Repo.lastCheck == 0L) tr("No background check has finished yet.")
                 else tr("Last check: %s", DateUtils.getRelativeTimeSpanString(Repo.lastCheck)),
-                color = cs.onSurfaceVariant
+                style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
             )
-            // Which price changes send a notification. Drops are on unless switched off; increases only when switched on.
+            // A sub-heading, as in Android's own settings: the switches below are about notifications.
+            Text(tr("Notifications"), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
+            // Drops are on unless switched off; increases only when switched on.
             Row(
                 Modifier.fillMaxWidth().clickable { Repo.setNotifyDrops(ctx, !Repo.notifyDrops) },
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(tr("Notifications for price drops"), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f).padding(end = 12.dp))
+                Text(tr("Price drops"), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f).padding(end = 12.dp))
                 Switch(checked = Repo.notifyDrops, onCheckedChange = { Repo.setNotifyDrops(ctx, it) })
             }
             Row(
                 Modifier.fillMaxWidth().clickable { Repo.setNotifyRises(ctx, !Repo.notifyRises) },
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(tr("Notifications for price surges"), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f).padding(end = 12.dp))
+                Text(tr("Price surges"), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f).padding(end = 12.dp))
                 Switch(checked = Repo.notifyRises, onCheckedChange = { Repo.setNotifyRises(ctx, it) })
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = {
-                    Alerts.checkNow(ctx)
-                    scope.launch { snack.showSnackbar(tr("Checking prices…")) }
-                }) { Text(tr("Check now")) }
-                OutlinedButton(onClick = {
-                    val ok = Alerts.sendTest(ctx)
-                    scope.launch {
-                        snack.showSnackbar(
-                            if (ok) tr("Test notification sent")
-                            else tr("Notifications are off for Wishlist. Open Notification settings.")
-                        )
-                    }
-                }) { Text(tr("Test notification")) }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = { Alerts.openNotificationSettings(ctx) }) { Text(tr("Notification settings")) }
-                OutlinedButton(onClick = { Alerts.openAppSettings(ctx) }) { Text(tr("Battery settings")) }
-            }
-            Text(
-                tr("Turn off battery optimisation for Wishlist in Battery settings if your prices aren’t updated automatically."),
-                color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall
-            )
 
             SectionTitle(tr("Update the app"))
             val version = remember {

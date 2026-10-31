@@ -22,7 +22,10 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Web pages only offer light and dark** (plus following the device), as a bare minimum. No palettes on the web.
 - **The friends' page looks the same as the app and the browser editor**, for both "My wishlist" and shared lists.
 - **List settings vs App settings**: each list has its own settings (opened with the settings button where the refresh button used to be); things that are about the whole app sit in "App settings". Pull down to refresh; the refresh circle is hidden when idle.
-- **Wording settled by the owner**: "+ Add wish"; "Instant delete wishes" ("Turn on to delete wishes without warning"); "Notifications for price drops" (on by default) and "Notifications for price surges" (off by default).
+- **Wording settled by the owner**: "+ Add wish"; "Instant delete wishes" ("Turn on to delete wishes without warning"); under Price alerts a sub-heading "Notifications" with "Price drops" (on by default) and "Price surges" (off by default) (2.54).
+
+- **App settings, Price alerts (2.54)**: "Check every" with the choices as boxes in one row (Hour, 3 hours, 6, 12, 24); no Check now / Test notification / Notification settings / Battery settings buttons.
+- **Saving your name (2.54)**: no Save button; the keyboard's tick saves it and closes the keyboard, then a small green tick with "Saved".
 
 - **Two views only: large cards and two per row** (app, editor and friends' page). The "Images only" view was removed (October 2026): it didn't look good and showed too little about a wish.
 

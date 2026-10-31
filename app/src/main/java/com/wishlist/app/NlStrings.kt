@@ -365,5 +365,12 @@ val NL: Map<String, String> = mapOf(
     "Board game" to "Bordspel",
     "For two to six players." to "Voor twee tot zes spelers.",
     "Scented candle" to "Geurkaars",
-    "Fig and cedar, burns for 50 hours." to "Vijg en ceder, brandt 50 uur."
+    "Fig and cedar, burns for 50 hours." to "Vijg en ceder, brandt 50 uur.",
+    "Saved" to "Opgeslagen",
+    "Special themes to personalise your wishlist" to "Speciale thema's om je verlanglijstje persoonlijk te maken",
+    "Notifications" to "Meldingen",
+    "Price drops" to "Prijsdalingen",
+    "Price surges" to "Prijsstijgingen",
+    "Hour" to "Uur",
+    "%d hours" to "%d uur"
 )
