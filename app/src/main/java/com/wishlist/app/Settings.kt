@@ -162,39 +162,6 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                 OutlinedButton(onClick = { fontDlg = true }) { Text(tr("Change")) }
             }
 
-            SectionTitle(tr("Colours"))
-            // A row of round swatches. The colours work with every mode above.
-            val mode = effectiveTheme()
-            val choices = PALETTES.map { it.key to tr(it.name) }
-            Row(
-                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                choices.forEach { (k, n) ->
-                    // "wallpaper" (removed in 2.44) shows as indigo, which is what it now looks like.
-                    val on = Repo.palette == k || (k == "indigo" && PALETTES.none { it.key == Repo.palette })
-                    val sch = schemeFor(ctx, k, mode)
-                    Column(
-                        Modifier.clip(RoundedCornerShape(12.dp)).clickable { Repo.setPalette(ctx, k) }
-                            .semantics { contentDescription = n; selected = on }
-                            .padding(4.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Box(
-                            Modifier.size(48.dp).clip(CircleShape).background(sch.primaryContainer)
-                                .border(if (on) 3.dp else 1.dp, if (on) cs.onSurface else cs.outline, CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Box(Modifier.size(26.dp).clip(CircleShape).background(sch.primary), contentAlignment = Alignment.Center) {
-                                if (on) Icon(Icons.Default.Check, null, tint = sch.onPrimary, modifier = Modifier.size(16.dp))
-                            }
-                        }
-                        Text(n, style = MaterialTheme.typography.labelMedium, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal)
-                    }
-                }
-            }
-
             SectionTitle(tr("Price alerts"))
             Text(
                 tr("Choose how often the app refreshes the prices of your wishes, to show any price drops or increases."),

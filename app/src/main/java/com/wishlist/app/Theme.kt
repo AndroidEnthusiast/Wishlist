@@ -132,7 +132,9 @@ fun effectiveTheme(): String {
 fun WishTheme(content: @Composable () -> Unit) {
     val mode = effectiveTheme()
     val ctx = LocalContext.current
-    val scheme = schemeFor(ctx, Repo.palette, mode)
+    // The colour choices left App settings in 2.50 (the owner wants only the theme modes, until new theme designs
+    // come): every phone uses the original indigo, whatever palette it picked before.
+    val scheme = schemeFor(ctx, "indigo", mode)
     val view = LocalView.current
     SideEffect {
         (view.context as? Activity)?.window?.let { w ->

@@ -14,7 +14,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **UK English everywhere, and everything also in Dutch.** App: App settings > Language (English (UK) / Nederlands). Web pages: a language switch. Wishes themselves are never translated.
 
 ## Look and feel
-- **Colours and themes apply to the app only.** The app has palettes (indigo by default, plus sage, rose, ocean, amber, lavender), light/dark/system and AMOLED black. The phone's wallpaper colours (Material You) were removed in 2.44: they didn't look nice.
+- **Themes apply to the app only.** App settings > Theme has only System, Light, Dark and AMOLED black. The colour choices are gone: the wallpaper colours (Material You) in 2.44, the six palettes (indigo, sage, rose, ocean, amber, lavender) in 2.50. The app always uses the original indigo until the new theme designs come (see Open ideas). `PALETTES` is still in `Theme.kt` for that work.
 - **Web pages only offer light and dark** (plus following the device), as a bare minimum. No palettes on the web.
 - **Font choice in the app**: a library of 14 popular fonts, Google Sans is the default and is built in.
 - **The friends' page looks the same as the app and the browser editor**, for both "My wishlist" and shared lists.

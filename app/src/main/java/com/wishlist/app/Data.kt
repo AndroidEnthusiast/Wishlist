@@ -85,7 +85,7 @@ object Repo {
         private set
     var theme by mutableStateOf("system")
         private set
-    /** The colours of the app: one of PALETTES in Theme.kt. Indigo is the original. */
+    /** The palette picked before 2.50 (one of PALETTES in Theme.kt). No longer chosen or used: the app is always indigo. */
     var palette by mutableStateOf("indigo")
         private set
     /** The font of the app: one of FONTS in Fonts.kt. Google Sans is the original. */
