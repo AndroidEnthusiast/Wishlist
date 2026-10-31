@@ -247,7 +247,7 @@ function editorUrl(key) {
   return location.origin + location.pathname.replace(/[^\/]*$/, "") + "edit.html?j=" + key;
 }
 
-// Only Android phones can install the app. Everyone else goes straight to the editor in the browser.
+// Only Android phones can install the app. Everyone else gets only "Edit in the browser" on the invitation.
 function isAndroid() {
   return /Android/i.test(navigator.userAgent || "");
 }
@@ -278,11 +278,6 @@ function legacyCopy(text) {
 }
 
 async function showInvite(key) {
-  if (key && !isAndroid()) {
-    // iPhone, iPad, computer: there is no app for you, so open the editor right away.
-    location.replace(editorUrl(key));
-    return;
-  }
   var v = $("view");
   ["bar", "chips", "tools", "about", "note"].forEach(function (id) { $(id).hidden = true; });
   $("name").textContent = T("Wishlist invitation");
@@ -327,6 +322,17 @@ async function showInvite(key) {
   box.appendChild(el("p", null, n === 1 ? T("1 wish so far") : T("{0} wishes so far", n)));
 
   var btns = el("div", "btns");
+  if (!isAndroid()) {
+    // iPhone, iPad, computer: there is no app for you, only the editor in the browser. The page itself stays, so
+    // it's clear what you are invited to.
+    var only = el("a", "act", T("Edit in the browser"));
+    only.href = editorUrl(key);
+    btns.appendChild(only);
+    box.appendChild(btns);
+    v.appendChild(box);
+    confetti(box, head);
+    return;
+  }
   var open = el("a", "act", T("Open in the app"));
   open.href = "wishlist://join?j=" + key;
   btns.appendChild(open);

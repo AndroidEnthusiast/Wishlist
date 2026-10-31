@@ -380,13 +380,17 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
     check("invite: malformed key is refused without asking the server", ib.window.document.querySelector(".inv h2").textContent === "This invitation doesn’t work" && store.calls.length === 0);
     let ie = await load("?j=");
     check("invite: empty key is refused", ie.window.document.querySelector(".inv h2").textContent === "This invitation doesn’t work");
-    // iPhone / computer: straight to the editor, no app page, no server question
+    // iPhone / computer: the invitation page, with only "Edit in the browser" (no app for them)
     store.calls.length = 0;
     let ip = await load("?j=" + KEY, null, IPHONE_UA);
-    check("invite (iPhone): goes straight to the editor", ip.navs.length === 1 && !ip.window.document.querySelector(".inv a.act") && store.calls.length === 0, ip.navs);
+    await sleep(100);
+    const ipBtns = [...ip.window.document.querySelectorAll(".inv a.act")];
+    check("invite (iPhone): shows the invitation, not redirected", ip.navs.length === 0 && ip.window.document.querySelector(".inv h2").textContent === "You’re invited to add gifts for:" && /🎁/.test(ip.window.document.querySelector(".inv .listname").textContent), ip.navs);
+    check("invite (iPhone): only the Edit in the browser button, to the editor", ipBtns.length === 1 && ipBtns[0].textContent === "Edit in the browser" && ipBtns[0].getAttribute("href") === "https://androidenthusiast.github.io/Wishlist/edit.html?j=" + KEY, ipBtns.map(b => b.textContent));
     check("invite: editorUrl points at edit.html next to this page", ip.window.editorUrl(KEY) === "https://androidenthusiast.github.io/Wishlist/edit.html?j=" + KEY);
     let ic = await load("?j=" + KEY, null, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36");
-    check("invite (computer): goes straight to the editor", ic.navs.length === 1);
+    await sleep(100);
+    check("invite (computer): invitation with only Edit in the browser", ic.navs.length === 0 && [...ic.window.document.querySelectorAll(".inv a.act")].map(b => b.textContent).join() === "Edit in the browser");
     let ibad = await load("?j=short", null, IPHONE_UA);
     check("invite (iPhone): a broken link is explained, not redirected", ibad.navs.length === 0 && ibad.window.document.querySelector(".inv h2").textContent === "This invitation doesn’t work");
     // a friends link keeps working next to it

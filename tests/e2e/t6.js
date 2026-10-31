@@ -12,13 +12,19 @@ const IOS = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/
   check("friends page: no js errors", t.errors.length === 0, t.errors);
   await t.ctx.close();
 
-  // iPhone: invitation link -> editor
+  // iPhone: the invitation page (so it's clear what they're invited to), with only "Edit in the browser"
   t = await boot({ goto: false, ua: IOS });
   await t.page.goto(t.base + "?j=" + KEY);
+  await t.page.waitForSelector(".inv .btns");
+  check("iPhone: invitation page with the list name", (await t.page.locator(".inv .listname").innerText()).trim() === "Our home 🎁");
+  check("iPhone: only Edit in the browser", JSON.stringify(await t.page.locator(".inv .btns a").allInnerTexts()) === JSON.stringify(["Edit in the browser"]));
+  check("iPhone: confetti too", (await t.page.locator(".inv canvas.confetti").count()) === 1);
+  await t.page.screenshot({ path: "s_invite_iphone.png" });
+  await t.page.locator(".inv .btns a").click();
   await t.page.waitForURL(u => /edit\.html\?j=/.test(u.toString()));
   await t.page.waitForSelector(".card");
-  check("iPhone: the invite link ends in the editor with the list", (await t.page.locator("#name").innerText()) === "Our home" && t.page.url() === t.base + "edit.html?j=" + KEY);
-  check("iPhone: back button doesn't trap (history has no invite entry)", await t.page.evaluate(() => history.length) <= 2);
+  check("iPhone: the button opens the editor with the list", (await t.page.locator("#name").innerText()) === "Our home" && t.page.url() === t.base + "edit.html?j=" + KEY);
+  check("iPhone: no js errors", t.errors.length === 0, t.errors);
   await t.ctx.close();
 
   // Android: invitation page with the three buttons; the browser one opens the editor
