@@ -326,7 +326,7 @@ private fun DrawerItem(label: String, icon: ImageVector, selected: Boolean, onCl
     val shape = look.chipShape
     val frame = if (!selected) Modifier else when (look.design) {
         "neo" -> Modifier.hardShadow(look.line, shape, 3.dp).border(2.dp, look.line, shape)
-        "clay" -> Modifier.shadow(6.dp, shape, clip = false, ambientColor = cs.primary, spotColor = cs.primary).clayEdge(look, shape, 1.dp)
+        "clay" -> Modifier.clay(look, shape, cs.primary, 6.dp)
         else -> Modifier
     }
     val on = look.design == "neo" || look.design == "clay"
@@ -339,7 +339,7 @@ private fun DrawerItem(label: String, icon: ImageVector, selected: Boolean, onCl
         icon = { Icon(icon, null) },
         shape = shape,
         colors = NavigationDrawerItemDefaults.colors(
-            selectedContainerColor = if (on) cs.primary else cs.primaryContainer,
+            selectedContainerColor = if (look.design == "clay") Color.Transparent else if (on) cs.primary else cs.primaryContainer,
             selectedTextColor = if (on) cs.onPrimary else cs.onPrimaryContainer,
             selectedIconColor = if (on) cs.onPrimary else cs.onPrimaryContainer,
             unselectedTextColor = cs.onSurface, unselectedIconColor = cs.onSurfaceVariant
@@ -926,8 +926,7 @@ fun CompactCard(
         CompositionLocalProvider(LocalContentColor provides cs.onSurface) {
         Box(
             Modifier.padding(look.inset(small = true)).fillMaxWidth().height(130.dp)
-                .clip(look.pictureShape(w.id, small = true))
-                .background(look.pictureBg(w.id, w.image.isNotEmpty()))
+                .lookMat(look, look.pictureShape(w.id, small = true), look.pictureBg(w.id, w.image.isNotEmpty()))
                 .combinedClickable(
                     enabled = w.image.isNotEmpty() || w.url.isNotBlank() || onLongPress != null,
                     onClickLabel = if (w.image.isNotEmpty()) tr("View picture") else null,
@@ -1054,8 +1053,7 @@ fun WishCard(
         CompositionLocalProvider(LocalContentColor provides cs.onSurface) {
         Box(
             Modifier.padding(look.inset(small = false)).fillMaxWidth().height(160.dp)
-                .clip(look.pictureShape(w.id, small = false))
-                .background(look.pictureBg(w.id, w.image.isNotEmpty()))
+                .lookMat(look, look.pictureShape(w.id, small = false), look.pictureBg(w.id, w.image.isNotEmpty()))
                 .combinedClickable(
                     enabled = w.image.isNotEmpty() || w.url.isNotBlank() || onLongPress != null,
                     onClickLabel = if (w.image.isNotEmpty()) tr("View picture") else null,

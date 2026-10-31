@@ -94,13 +94,12 @@ fun Button(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean 
             shape = shape, colors = ButtonDefaults.buttonColors(containerColor = cs.primary, contentColor = cs.onPrimary),
             elevation = null, border = BorderStroke(2.dp, look.line), content = content
         )
+        // Clay: a puffy pillow in the main colour (the button itself is see-through on top of it).
         "clay" -> M3Button(
-            onClick,
-            modifier.then(
-                if (enabled) Modifier.shadow(8.dp, shape, clip = false, ambientColor = cs.primary, spotColor = cs.primary).clayEdge(look, shape, 1.dp)
-                else Modifier
-            ),
-            enabled, shape = shape, elevation = null, content = content
+            onClick, modifier.then(if (enabled) Modifier.clay(look, shape, cs.primary, 6.dp) else Modifier), enabled,
+            shape = shape, elevation = null,
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = cs.onPrimary),
+            content = content
         )
         "organic" -> M3Button(onClick, modifier, enabled, shape = shape, content = content)
         "material" -> M3Button(
@@ -124,13 +123,9 @@ fun OutlinedButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: 
         )
         // Clay and Material 3 have soft "secondary" buttons filled with the light container colour.
         "clay" -> M3Button(
-            onClick,
-            modifier.then(
-                if (enabled) Modifier.shadow(4.dp, shape, clip = false, ambientColor = look.shadows[0], spotColor = look.shadows[0]).clayEdge(look, shape, 1.dp)
-                else Modifier
-            ),
-            enabled, shape = shape, elevation = null,
-            colors = ButtonDefaults.buttonColors(containerColor = cs.primaryContainer, contentColor = cs.onPrimaryContainer),
+            onClick, modifier.then(if (enabled) Modifier.clay(look, shape, cs.primaryContainer, 5.dp) else Modifier), enabled,
+            shape = shape, elevation = null,
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = cs.onPrimaryContainer),
             content = content
         )
         "material" -> M3FilledTonalButton(
@@ -224,12 +219,13 @@ fun AlertDialog(
             val frame = when (look.design) {
                 "neo" -> Modifier.hardShadow(look.line, shape, 6.dp).border2(look, shape)
                 "organic" -> Modifier.border1(look, shape)
-                "clay" -> Modifier.clayEdge(look, shape)
+                "clay" -> Modifier.clay(look, shape, cs.surfaceContainerHigh, 16.dp)
                 else -> Modifier
             }
             M3AlertDialog(
                 onDismissRequest, confirmButton, modifier.then(frame), dismissButton, title = title, text = text,
-                shape = shape, containerColor = cs.surfaceContainerHigh, tonalElevation = 0.dp, properties = properties
+                shape = shape, containerColor = if (look.design == "clay") Color.Transparent else cs.surfaceContainerHigh,
+                tonalElevation = 0.dp, properties = properties
             )
         }
     }
@@ -286,8 +282,10 @@ fun PriceBadge(text: String, rise: Boolean, small: Boolean) {
         "neo" -> { bg = if (rise) Color(0xFFFFB3B3) else Color(0xFFB8F5C8); fg = Color(0xFF111111) }
         else -> { bg = lerp(col, look.scheme.surface, if (look.dark) 0.72f else 0.86f); fg = col }
     }
+    val clay = look.design == "clay"
     Surface(
-        color = bg, shape = look.badgeShape(small),
+        color = if (clay) Color.Transparent else bg, shape = look.badgeShape(small),
+        modifier = if (clay) Modifier.clay(look, look.badgeShape(small), bg, 3.dp) else Modifier,
         border = if (look.design == "neo") BorderStroke(1.5.dp, Color(0xFF111111)) else null
     ) {
         Text(
@@ -314,8 +312,10 @@ fun StatusBadge(text: String, small: Boolean, modifier: Modifier = Modifier) {
         "neo" -> cs.onSurface
         else -> cs.onPrimaryContainer
     }
+    val clay = look.design == "clay"
     Surface(
-        color = bg, shape = look.badgeShape(small), modifier = modifier,
+        color = if (clay) Color.Transparent else bg, shape = look.badgeShape(small),
+        modifier = if (clay) modifier.clay(look, look.badgeShape(small), bg, 3.dp) else modifier,
         border = if (look.design == "neo") BorderStroke(1.5.dp, look.line) else null
     ) {
         Text(

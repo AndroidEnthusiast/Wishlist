@@ -325,7 +325,7 @@ val NL: Map<String, String> = mapOf(
     "Neobrutalism" to "Neobrutalisme",
     "Bold and playful: thick lines, hard shadows and bright blocks of colour." to "Stoer en speels: dikke lijnen, harde schaduwen en felle kleurvlakken.",
     "Claymorphism" to "Klei",
-    "Soft and puffy: rounded clay shapes, gentle shadows and pastels." to "Zacht en bol: ronde kleivormen, zachte schaduwen en pasteltinten.",
+    "Soft and puffy: inflated clay shapes with inner glows, soft shadows and pastels." to "Zacht en bol: opgeblazen kleivormen met een gloed van binnen, zachte schaduwen en pasteltinten.",
     "Lavender" to "Lavendel",
     "Ocean" to "Oceaan",
     "Terracotta" to "Terracotta",

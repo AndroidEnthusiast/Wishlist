@@ -1,5 +1,7 @@
 package com.wishlist.app
 
+import android.graphics.BlurMaskFilter
+import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.CircleShape
@@ -13,11 +15,17 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.addOutline
+import androidx.compose.ui.graphics.asAndroidPath
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
@@ -95,7 +103,7 @@ val DESIGNS: List<Design> = listOf(
         )
     ),
     Design(
-        "clay", "Claymorphism", "Soft and puffy: rounded clay shapes, gentle shadows and pastels.",
+        "clay", "Claymorphism", "Soft and puffy: inflated clay shapes with inner glows, soft shadows and pastels.",
         listOf(
             ColourSet("lavender", "Lavender", 0xFF7C6AED, 0xFFA7EFC2, 0xFFFFC4AE, 0xFFF4F1FF, 0xFF1E1B4B),
             ColourSet("mint", "Mint", 0xFF2FA37A, 0xFFFFD39E, 0xFFB9C6FF, 0xFFEFFAF5, 0xFF12332A),
@@ -233,7 +241,8 @@ fun lookFor(style: String, setKey: String, classicMode: String): Look {
             )
         }
         "clay" -> {
-            val bg = paper
+            // A slightly deeper pastel background, so the pale clay pillows stand out from it.
+            val bg = if (dark) paper else mix(paper, main, 0.06f)
             val surface = if (dark) mix(paper, main, 0.12f) else mix(paper, white, 0.78f)
             val muted = mix(ink, paper, if (dark) 0.32f else 0.38f)
             val onPrimary = if (dark) mix(main, black, 0.75f) else on(main, ink)
@@ -367,7 +376,7 @@ fun Look.cardShape(id: Long, small: Boolean): Shape = when (design) {
         if (pick(id, 2) == 0) RoundedCornerShape(r, r, r, k) else RoundedCornerShape(r, k, r, r)
     }
     "neo" -> RoundedCornerShape(if (small) 12.dp else 14.dp)
-    "clay" -> RoundedCornerShape(if (small) 24.dp else 28.dp)
+    "clay" -> RoundedCornerShape(if (small) 26.dp else 32.dp)
     "material" -> RoundedCornerShape(if (small) 24.dp else 28.dp)
     else -> RoundedCornerShape(if (small) 16.dp else 20.dp)
 }
@@ -385,7 +394,7 @@ fun Look.pictureShape(id: Long, small: Boolean): Shape = when (design) {
         val k = if (small) 6.dp else 8.dp
         if (pick(id, 2) == 0) RoundedCornerShape(r, r, r, k) else RoundedCornerShape(r, k, r, r)
     }
-    "clay" -> RoundedCornerShape(if (small) 18.dp else 22.dp)
+    "clay" -> RoundedCornerShape(if (small) 20.dp else 24.dp)
     "material" -> RoundedCornerShape(if (small) 18.dp else 22.dp)
     else -> RectangleShape
 }
@@ -422,7 +431,7 @@ val Look.fabShape: Shape
     get() = when (design) {
         "organic" -> RoundedCornerShape(22.dp, 30.dp, 26.dp, 30.dp)
         "neo" -> RoundedCornerShape(12.dp)
-        "clay" -> RoundedCornerShape(26.dp)
+        "clay" -> RoundedCornerShape(28.dp)
         "material" -> RoundedCornerShape(20.dp)
         else -> RoundedCornerShape(16.dp)
     }
@@ -454,15 +463,75 @@ fun Modifier.lookCard(look: Look, id: Long, shape: Shape): Modifier = when (look
     "neo" -> hardShadow(look.shadows[pick(id, look.shadows.size)], shape, 5.dp)
         .clip(shape).background(look.cardFill(id)).border(2.dp, look.line, shape)
     "organic" -> clip(shape).background(look.cardFill(id)).border(1.dp, look.line, shape)
-    "clay" -> {
-        val fill = look.cardFill(id)
-        val glow = look.shadows[0]
-        shadow(14.dp, shape, clip = false, ambientColor = glow, spotColor = glow)
-            .clip(shape)
-            .background(Brush.verticalGradient(listOf(lerp(fill, Color.White, if (look.dark) 0.06f else 0.6f), fill)))
-            .clayEdge(look, shape)
-    }
+    "clay" -> clay(look, shape, look.cardFill(id), 12.dp)
     else -> clip(shape).background(look.cardFill(id))
+}
+
+/** The mat a picture sits on inside a card. Clay presses it in; the others simply fill it. */
+fun Modifier.lookMat(look: Look, shape: Shape, fill: Color): Modifier =
+    if (look.design == "clay") clay(look, shape, fill, 8.dp, pressed = true) else clip(shape).background(fill)
+
+/** Android 9 and newer can blur the clay shadows; Android 8 gets the flatter clay of 2.52. */
+private val clayBlur = Build.VERSION.SDK_INT >= 28
+
+/**
+ * Claymorphism: a puffy clay pillow. A soft, coloured shadow below it, a light glow inside its top-left edge and a
+ * soft shade inside its bottom-right edge, on a gently shaded fill. [depth] sets how puffy it is. [pressed]: pressed
+ * in instead (picture mats): the shade top-left, the light bottom-right and no shadow below. The content is clipped
+ * to [shape]. Material components on top should have a transparent container.
+ */
+fun Modifier.clay(look: Look, shape: Shape, fill: Color, depth: Dp = 10.dp, pressed: Boolean = false): Modifier {
+    if (!clayBlur) {
+        val glow = look.shadows[0]
+        return (if (pressed) this else shadow(depth, shape, clip = false, ambientColor = glow, spotColor = glow))
+            .clip(shape)
+            .background(Brush.verticalGradient(listOf(lerp(fill, Color.White, if (look.dark) 0.06f else 0.5f), fill)))
+            .then(if (pressed) Modifier else Modifier.clayEdge(look, shape))
+    }
+    val light = Color.White.copy(alpha = if (look.dark) 0.14f else 0.85f)
+    val shade = if (look.dark) Color.Black.copy(alpha = 0.6f) else look.shadows[0]
+    val drop = look.shadows[0]
+    return drawWithCache {
+        val d = depth.toPx()
+        val outline = shape.createOutline(size, layoutDirection, this)
+        val shapePath = Path().apply { addOutline(outline) }.asAndroidPath()
+        fun paint(col: Color, blur: Float) = android.graphics.Paint().apply {
+            isAntiAlias = true
+            color = col.toArgb()
+            maskFilter = BlurMaskFilter(blur.coerceAtLeast(1f), BlurMaskFilter.Blur.NORMAL)
+        }
+        // Everything outside the shape moved by (dx, dy): drawn blurred inside the shape it becomes an inner shadow
+        // along the opposite edges.
+        fun frame(dx: Float, dy: Float) = android.graphics.Path().apply {
+            val m = d * 4
+            addRect(-m, -m, size.width + m, size.height + m, android.graphics.Path.Direction.CW)
+            addPath(shapePath, dx, dy)
+            fillType = android.graphics.Path.FillType.EVEN_ODD
+        }
+        val o = d * 0.5f
+        val lightFrame = if (pressed) frame(-o, -o) else frame(o, o)
+        val shadeFrame = if (pressed) frame(o, o) else frame(-o, -o)
+        val lightPaint = paint(light, d * 0.8f)
+        val shadePaint = paint(shade, d * 0.9f)
+        val dropPaint = paint(drop, d * 1.4f)
+        val dropPath = android.graphics.Path(shapePath).apply { offset(d * 0.3f, d * 0.75f) }
+        val fillBrush = if (pressed) SolidColor(lerp(fill, Color.Black, if (look.dark) 0.08f else 0.03f))
+        else Brush.linearGradient(
+            listOf(lerp(fill, Color.White, if (look.dark) 0.05f else 0.4f), fill, lerp(fill, Color.Black, if (look.dark) 0.08f else 0.03f)),
+            Offset.Zero, Offset(size.width, size.height)
+        )
+        onDrawWithContent {
+            val canvas = drawContext.canvas.nativeCanvas
+            if (!pressed) canvas.drawPath(dropPath, dropPaint)
+            canvas.save()
+            canvas.clipPath(shapePath)
+            drawRect(fillBrush)
+            canvas.drawPath(lightFrame, lightPaint)
+            canvas.drawPath(shadeFrame, shadePaint)
+            canvas.restore()
+            drawContent()
+        }
+    }.clip(shape)
 }
 
 /** The frame of a small button (category, view switch). [on] = chosen. */
@@ -473,8 +542,7 @@ fun Modifier.lookChip(look: Look, on: Boolean = false): Modifier {
         "neo" -> (if (on) hardShadow(look.line, shape, 3.dp) else this)
             .clip(shape).background(if (on) cs.primary else cs.surface).border(2.dp, look.line, shape)
         "organic" -> clip(shape).background(if (on) cs.primary else Color.Transparent).border(1.dp, look.line, shape)
-        "clay" -> shadow(if (on) 6.dp else 4.dp, shape, clip = false, ambientColor = look.shadows[0], spotColor = look.shadows[0])
-            .clip(shape).background(if (on) cs.primary else look.cardFill(0)).clayEdge(look, shape, 1.dp)
+        "clay" -> clay(look, shape, if (on) cs.primary else look.cardFill(0), if (on) 6.dp else 5.dp)
         "material" -> clip(shape).background(if (on) cs.primary else cs.surfaceVariant)
         else -> clip(shape).background(if (on) cs.primaryContainer else Color.Transparent)
     }
@@ -494,6 +562,8 @@ fun Modifier.lookBackdrop(look: Look): Modifier = when (look.design) {
         blob(Offset(size.width * 0.08f, 190.dp.toPx()), 80.dp.toPx(), look.blobs[1], 2.1f)
     }
     "clay" -> drawBehind {
+        // A soft pastel gradient from top to bottom, with two glows.
+        drawRect(Brush.verticalGradient(listOf(Color.Transparent, look.blobs[0].copy(alpha = 0.7f))))
         fun glow(center: Offset, r: Float, col: Color) =
             drawCircle(Brush.radialGradient(listOf(col, col.copy(alpha = 0f)), center, r), r, center)
         glow(Offset(size.width * 0.92f, 20.dp.toPx()), 150.dp.toPx(), look.blobs[0])

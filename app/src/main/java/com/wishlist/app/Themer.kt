@@ -77,10 +77,8 @@ fun AddWishButton(onClick: () -> Unit) {
         )
         "clay" -> ExtendedFloatingActionButton(
             text = text, icon = icon, onClick = onClick,
-            modifier = Modifier
-                .shadow(16.dp, shape, clip = false, ambientColor = cs.primary, spotColor = cs.primary)
-                .clayEdge(look, shape),
-            shape = shape, containerColor = cs.primary, contentColor = cs.onPrimary, elevation = flat
+            modifier = Modifier.clay(look, shape, cs.primary, 12.dp),
+            shape = shape, containerColor = Color.Transparent, contentColor = cs.onPrimary, elevation = flat
         )
         "organic" -> ExtendedFloatingActionButton(
             text = text, icon = icon, onClick = onClick, shape = shape,
