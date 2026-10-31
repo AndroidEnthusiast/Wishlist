@@ -265,7 +265,7 @@ val NL: Map<String, String> = mapOf(
     "Product link" to "Productlink",
     "Size" to "Maat",
     "Name*" to "Naam*",
-    "Please enter a product name" to "Vul een productnaam in",
+    "What are you wishing for?" to "Wat wens je je?",
     "Other information" to "Overige informatie",
     "Description, size, notes" to "Beschrijving, maat, notities",
     "Open" to "Openen",

@@ -1260,7 +1260,7 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
                     OutlinedTextField(
                         title, { title = it; if (it.isNotBlank()) nameErr = false }, label = { Text(tr("Name*")) }, singleLine = true,
                         isError = nameErr,
-                        supportingText = if (nameErr) ({ Text(tr("Please enter a product name")) }) else null,
+                        supportingText = if (nameErr) ({ Text(tr("What are you wishing for?")) }) else null,
                         modifier = Modifier.weight(1f)
                     )
                     OutlinedTextField(
