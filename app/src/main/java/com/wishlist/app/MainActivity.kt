@@ -1278,7 +1278,7 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
                     Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                         Text(tr("Private wish"), style = MaterialTheme.typography.bodyLarge)
                         Text(
-                            tr("Only you can see this wish"),
+                            tr("Hides this wish from everyone you share your wishlist with"),
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
