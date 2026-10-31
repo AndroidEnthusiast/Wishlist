@@ -102,8 +102,9 @@ fun AddWishButton(onClick: () -> Unit) {
 
 /**
  * The Themer (App settings > Theme > Themer): a big sample wishlist, and below it the designs side by side. Tapping a
- * design uses it at once and pops up its colour sets; tapping a colour set uses that at once too. "Standard" goes back
- * to the standard theme last used (Light, Dark or AMOLED black, chosen in App settings).
+ * design shows it in the preview and pops up its colour sets ("Standard" pops up Light, Dark and AMOLED black).
+ * Nothing changes in the app until "Apply" (top right, shown once the choice differs from the theme in use).
+ * Back without Apply keeps the theme in use.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -112,6 +113,20 @@ fun ThemerScreen(onBack: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     BackHandler(onBack = onBack)
     DisposableEffect(Unit) { onDispose { ThemerNav.open = false } }
+    // The choice being tried out: a design (or "classic"), its colour set, and the standard theme for "classic".
+    val inUseMode = effectiveTheme()
+    var tryDesign by remember { mutableStateOf(Repo.design) }
+    var tryColours by remember { mutableStateOf(Repo.colours) }
+    var tryMode by remember { mutableStateOf(inUseMode) }
+    val tryD = designFor(tryDesign)
+    val changed = tryDesign != Repo.design || (
+        if (tryD == null) tryMode != inUseMode
+        else colourSetFor(tryD, tryColours).key != colourSetFor(tryD, Repo.colours).key
+    )
+    val apply = {
+        if (tryD == null) Repo.setClassic(ctx, tryMode)
+        else { Repo.setDesign(ctx, tryD.key); Repo.setColours(ctx, colourSetFor(tryD, tryColours).key) }
+    }
 
     Scaffold(
         containerColor = cs.background,
@@ -119,21 +134,28 @@ fun ThemerScreen(onBack: () -> Unit) {
             TopAppBar(
                 title = { Text(tr("Themer"), fontWeight = LocalLook.current.titleWeight) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(AppIcons.ArrowBack, tr("Back")) } },
+                actions = {
+                    if (changed) Button(onClick = apply, modifier = Modifier.padding(end = 8.dp)) { Text(tr("Apply")) }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
         }
     ) { pad ->
         Column(Modifier.padding(pad).fillMaxSize()) {
             Spacer(Modifier.height(16.dp))
-            ThemePreview(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp))
+            // The preview is drawn in the theme being tried out; the rest of the screen keeps the theme in use.
+            LookTheme(lookFor(tryDesign, tryColours, tryMode)) {
+                ThemePreview(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp))
+            }
             // The colour sets of the chosen design pop up between the preview and the designs.
             AnimatedContent(
-                targetState = Repo.design,
+                targetState = tryDesign,
                 transitionSpec = { (fadeIn() + slideInVertically { it / 2 }) togetherWith fadeOut() },
                 label = "colourSets"
             ) { key ->
                 val d = designFor(key)
-                if (d != null) ColourSets(d) else StandardThemes()
+                if (d != null) ColourSets(d, colourSetFor(d, tryColours).key) { tryColours = it }
+                else StandardThemes(tryMode) { tryMode = it }
             }
             // The designs, side by side; swipe to see them all.
             // All tiles have the same fixed height, so the row never changes height (and nothing jumps) while swiping.
@@ -144,16 +166,17 @@ fun ThemerScreen(onBack: () -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 item {
-                    val standard = effectiveTheme()
-                    DesignTile(tr("Standard"), lookFor("classic", "", standard), Repo.design == "classic") {
-                        Repo.setClassic(ctx, standard)
+                    DesignTile(tr("Standard"), lookFor("classic", "", tryMode), tryDesign == "classic") {
+                        tryDesign = "classic"
                     }
                 }
                 items(DESIGNS.size) { i ->
                     val d = DESIGNS[i]
-                    val chosen = Repo.design == d.key
-                    DesignTile(tr(d.name), lookFor(d.key, if (chosen) Repo.colours else "", "light"), chosen) {
-                        Repo.setDesign(ctx, d.key)
+                    val chosen = tryDesign == d.key
+                    DesignTile(tr(d.name), lookFor(d.key, if (chosen) tryColours else "", "light"), chosen) {
+                        // A design keeps the colour set when it has one with that name, otherwise its first.
+                        if (d.sets.none { it.key == tryColours }) tryColours = d.sets[0].key
+                        tryDesign = d.key
                     }
                 }
             }
@@ -185,8 +208,7 @@ private fun DesignTile(name: String, sample: Look, chosen: Boolean, onClick: () 
 
 /** The standard themes (Light, Dark, AMOLED black), in a card that pops up above the tiles when Standard is chosen. */
 @Composable
-private fun StandardThemes() {
-    val ctx = LocalContext.current
+private fun StandardThemes(chosen: String, onPick: (String) -> Unit) {
     val cs = MaterialTheme.colorScheme
     val card = RoundedCornerShape(24.dp)
     Column(
@@ -209,9 +231,7 @@ private fun StandardThemes() {
                     look.scheme.background.toArgb().toLong() and 0xFFFFFFFFL,
                     look.scheme.onBackground.toArgb().toLong() and 0xFFFFFFFFL
                 )
-                ColourOption(set, Repo.design == "classic" && Repo.theme == k, Modifier.weight(1f), translate = false) {
-                    Repo.setClassic(ctx, k)
-                }
+                ColourOption(set, chosen == k, Modifier.weight(1f), translate = false) { onPick(k) }
             }
         }
     }
@@ -219,8 +239,7 @@ private fun StandardThemes() {
 
 /** The colour sets of a design, in a card that pops up above the designs. */
 @Composable
-private fun ColourSets(d: Design) {
-    val ctx = LocalContext.current
+private fun ColourSets(d: Design, chosen: String, onPick: (String) -> Unit) {
     val cs = MaterialTheme.colorScheme
     val card = RoundedCornerShape(24.dp)
     Column(
@@ -236,9 +255,7 @@ private fun ColourSets(d: Design) {
         LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
             items(d.sets.size) { i ->
                 val set = d.sets[i]
-                ColourOption(set, set.key == colourSetFor(d, Repo.colours).key, Modifier.width(80.dp)) {
-                    Repo.setColours(ctx, set.key)
-                }
+                ColourOption(set, set.key == chosen, Modifier.width(80.dp)) { onPick(set.key) }
             }
         }
     }

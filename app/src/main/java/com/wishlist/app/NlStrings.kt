@@ -372,5 +372,6 @@ val NL: Map<String, String> = mapOf(
     "Price drops" to "Prijsdalingen",
     "Price surges" to "Prijsstijgingen",
     "Hour" to "Uur",
-    "%d hours" to "%d uur"
+    "%d hours" to "%d uur",
+    "Apply" to "Toepassen"
 )

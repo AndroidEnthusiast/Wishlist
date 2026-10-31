@@ -131,9 +131,15 @@ fun WishTheme(content: @Composable () -> Unit) {
             }
         }
     }
+    LookTheme(look, content)
+}
+
+/** Everything inside drawn with [look]: its colours, fonts, shapes and LocalLook (the Themer's preview uses this too). */
+@Composable
+fun LookTheme(look: Look, content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalLook provides look) {
         MaterialTheme(
-            colorScheme = scheme,
+            colorScheme = look.scheme,
             typography = typographyFor(look.design, typo(GoogleSans)),
             shapes = shapesFor(look.design),
             content = content
