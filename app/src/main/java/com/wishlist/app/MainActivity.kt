@@ -1251,7 +1251,7 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
                     if (picked.isNotEmpty() && picked == image) { ImageStore.delete(ctx, picked); picked = "" }
                     image = ""
                 })
-                // Name and price side by side: the price only needs room for "€ 1000.00", the name gets the rest and
+                // Name and price side by side: the price only needs room for "€9999,99", the name gets the rest and
                 // stays on one line (a long name scrolls inside the field instead of taking three lines).
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
                     OutlinedTextField(
@@ -1259,11 +1259,14 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
                         modifier = Modifier.weight(1f)
                     )
                     OutlinedTextField(
-                        price, { price = it }, label = { Text(tr("Price (%s)", cur), maxLines = 1) }, singleLine = true,
+                        // At most 9999.99 (or 9999,99): 4 digits, then 2 behind the comma. Longer typing is ignored;
+                        // deleting always works (a price read from a shop can be longer).
+                        price, { if (PRICE_INPUT.matches(it) || it.length < price.length) price = it },
+                        label = { Text(tr("Price (%s)", cur), maxLines = 1) }, singleLine = true,
                         // The symbol of the currency in the label: € for EUR, $ for USD, £ for GBP, …
                         prefix = { Text(currencySymbol(cur)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.width(128.dp)
+                        modifier = Modifier.width(104.dp)
                     )
                 }
                 // One line, however many categories there are (a row of chips got too long).

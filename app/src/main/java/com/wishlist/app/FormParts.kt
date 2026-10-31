@@ -1,6 +1,11 @@
 package com.wishlist.app
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.delay
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -90,11 +95,23 @@ fun CategoryField(selected: String, cats: List<String>, onPick: (String) -> Unit
  * of the form stay in sight.
  */
 @Composable
+@OptIn(ExperimentalFoundationApi::class)
 fun ProductInfo(content: @Composable ColumnScope.() -> Unit) {
     var open by rememberSaveable { mutableStateOf(false) }
+    // Opening it scrolls the form down until all of it is in sight, once the fold-out has finished.
+    val reveal = remember { BringIntoViewRequester() }
+    LaunchedEffect(open) {
+        if (open) {
+            delay(320)
+            reveal.bringIntoView()
+        }
+    }
     val turn by animateFloatAsState(if (open) 180f else 0f, label = "productInfoArrow")
     val cs = MaterialTheme.colorScheme
-    Surface(color = cs.surfaceVariant, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
+    Surface(
+        color = cs.surfaceVariant, shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth().bringIntoViewRequester(reveal)
+    ) {
         Column {
             Row(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
@@ -128,3 +145,6 @@ fun currencySymbol(code: String): String = try {
 } catch (e: Exception) {
     code
 }
+
+/** What can be typed as a price: up to 4 digits, then a dot or comma and up to 2 digits ("9999,99" at most). */
+val PRICE_INPUT = Regex("^\\d{0,4}([.,]\\d{0,2})?$")
