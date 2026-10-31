@@ -37,6 +37,8 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - v2.54: App settings tidied for the owner (name saves with the keyboard's tick and shows "Saved"; Themer text; Price alerts as a row of boxes plus a "Notifications" sub-heading; the four buttons removed).
 
+- v2.55: "Saved" feedback with a drawn tick that fades after a second, a fixed-width name field; Standard in the Themer pops up the three standard themes; fixed the jumping design tiles (different heights).
+
 ## Next session
 Ask the owner how the four designs look on the phone and what to change. Not yet styled per design: text fields (only their shape and colours change), drop-down menus, the bin's cards, the picture viewer, the star and private-eye badges, the menu (hamburger) icon. The web pages still only have light/dark (DECISIONS: ask before adding designs there).
 

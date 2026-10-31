@@ -1,6 +1,25 @@
 package com.wishlist.app
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathMeasure
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -341,4 +360,47 @@ object AppIcons {
     val Search: ImageVector @Composable get() = v(Icons.Filled.Search, Icons.Outlined.Search, Icons.Rounded.Search, Icons.Sharp.Search)
     val Settings: ImageVector @Composable get() = v(Icons.Filled.Settings, Icons.Outlined.Settings, Icons.Rounded.Settings, Icons.Sharp.Settings)
     val Share: ImageVector @Composable get() = v(Icons.Filled.Share, Icons.Outlined.Share, Icons.Rounded.Share, Icons.Sharp.Share)
+}
+
+/**
+ * A green tick with "Saved" next to a field, for about a second after each save ([saves] goes up by one each time).
+ * The tick draws itself: from its short end down to the point, then up. It always takes its room, so the field next
+ * to it keeps its width.
+ */
+@Composable
+fun SavedFeedback(saves: Int, modifier: Modifier = Modifier) {
+    val green = if (LocalLook.current.dark) Color(0xFF6FD39A) else Color(0xFF1E7B45)
+    var visible by remember { mutableStateOf(false) }
+    val draw = remember { Animatable(0f) }
+    LaunchedEffect(saves) {
+        if (saves == 0) return@LaunchedEffect
+        draw.snapTo(0f)
+        visible = true
+        draw.animateTo(1f, tween(380, easing = FastOutSlowInEasing))
+        delay(1100)
+        visible = false
+    }
+    Box(modifier.width(88.dp), contentAlignment = Alignment.CenterStart) {
+        AnimatedVisibility(visible, enter = fadeIn(tween(120)), exit = fadeOut(tween(400))) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Canvas(Modifier.size(20.dp)) {
+                    val u = size.width / 24f
+                    val path = Path().apply {
+                        moveTo(4.5f * u, 12.5f * u)
+                        lineTo(9.5f * u, 17.5f * u)
+                        lineTo(19.5f * u, 6.5f * u)
+                    }
+                    val pm = PathMeasure()
+                    pm.setPath(path, false)
+                    val part = Path()
+                    pm.getSegment(0f, pm.length * draw.value, part, true)
+                    drawPath(part, green, style = Stroke(2.6f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                }
+                Text(
+                    tr("Saved"), color = green, style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.padding(start = 4.dp)
+                )
+            }
+        }
+    }
 }

@@ -51,6 +51,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -132,10 +133,13 @@ fun ThemerScreen(onBack: () -> Unit) {
                 label = "colourSets"
             ) { key ->
                 val d = designFor(key)
-                if (d != null) ColourSets(d) else Spacer(Modifier.height(4.dp))
+                if (d != null) ColourSets(d) else StandardThemes()
             }
             // The designs, side by side; swipe to see them all.
+            // All tiles have the same fixed height, so the row never changes height (and nothing jumps) while swiping.
             LazyRow(
+                modifier = Modifier.fillMaxWidth().height(132.dp),
+                verticalAlignment = Alignment.Top,
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
@@ -163,7 +167,7 @@ private fun DesignTile(name: String, sample: Look, chosen: Boolean, onClick: () 
     val cs = MaterialTheme.colorScheme
     val box = RoundedCornerShape(18.dp)
     Column(
-        Modifier.width(96.dp).clip(box)
+        Modifier.width(96.dp).height(112.dp).clip(box)
             .border(if (chosen) 2.dp else 1.dp, if (chosen) cs.primary else cs.outlineVariant, box)
             .background(if (chosen) cs.primaryContainer.copy(alpha = 0.35f) else Color.Transparent)
             .clickable(onClick = onClick)
@@ -172,10 +176,44 @@ private fun DesignTile(name: String, sample: Look, chosen: Boolean, onClick: () 
     ) {
         ThemeSample(sample)
         Text(
-            name, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, maxLines = 2,
+            name, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, maxLines = 1, softWrap = false,
             fontWeight = if (chosen) FontWeight.Bold else null, color = cs.onSurface,
             modifier = Modifier.padding(top = 6.dp)
         )
+    }
+}
+
+/** The standard themes (Light, Dark, AMOLED black), in a card that pops up above the tiles when Standard is chosen. */
+@Composable
+private fun StandardThemes() {
+    val ctx = LocalContext.current
+    val cs = MaterialTheme.colorScheme
+    val card = RoundedCornerShape(24.dp)
+    Column(
+        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp)
+            .clip(card).background(cs.surfaceContainerHigh).border(1.dp, cs.outlineVariant, card)
+            .padding(top = 10.dp, bottom = 4.dp)
+    ) {
+        Text(
+            tr("Standard themes"), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 14.dp)
+        )
+        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
+            listOf("light" to tr("Light"), "dark" to tr("Dark"), "amoled" to tr("AMOLED black")).forEach { (k, n) ->
+                val look = lookFor("classic", "", k)
+                // A swatch like the colour sets: the background with the indigo of that theme.
+                val set = ColourSet(
+                    k, n, look.scheme.primary.toArgb().toLong() and 0xFFFFFFFFL,
+                    look.scheme.primaryContainer.toArgb().toLong() and 0xFFFFFFFFL,
+                    look.scheme.surfaceVariant.toArgb().toLong() and 0xFFFFFFFFL,
+                    look.scheme.background.toArgb().toLong() and 0xFFFFFFFFL,
+                    look.scheme.onBackground.toArgb().toLong() and 0xFFFFFFFFL
+                )
+                ColourOption(set, Repo.design == "classic" && Repo.theme == k, Modifier.weight(1f), translate = false) {
+                    Repo.setClassic(ctx, k)
+                }
+            }
+        }
     }
 }
 
@@ -229,7 +267,7 @@ private fun ThemeSample(look: Look) {
 
 /** One colour set: a round swatch (background, main colour and the two accents) with its name. */
 @Composable
-private fun ColourOption(set: ColourSet, chosen: Boolean, modifier: Modifier, onClick: () -> Unit) {
+private fun ColourOption(set: ColourSet, chosen: Boolean, modifier: Modifier, translate: Boolean = true, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Column(
         modifier.clip(RoundedCornerShape(16.dp)).clickable(onClick = onClick).padding(vertical = 8.dp),
@@ -256,7 +294,7 @@ private fun ColourOption(set: ColourSet, chosen: Boolean, modifier: Modifier, on
             }
         }
         Text(
-            tr(set.name), style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center,
+            if (translate) tr(set.name) else set.name, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center,
             color = if (chosen) cs.onSurface else cs.onSurfaceVariant, maxLines = 2,
             modifier = Modifier.padding(top = 4.dp, start = 4.dp, end = 4.dp)
         )

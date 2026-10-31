@@ -82,8 +82,8 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
     var me by remember { mutableStateOf(Shared.lastName) }
-    // Shown as a green tick with "Saved" once the name is confirmed with the keyboard's tick (Done) key.
-    var nameSaved by remember { mutableStateOf(false) }
+    // Counts the saves: each one shows a green tick with "Saved" for a moment (SavedFeedback).
+    var nameSaved by remember { mutableStateOf(0) }
     val focus = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
     // The Themer: its own screen, opened from the Theme section. Back returns here. (The menu button hides meanwhile.)
@@ -125,12 +125,12 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
             // the old one comes back.)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(
-                    me, { me = it.take(30); nameSaved = false }, singleLine = true, label = { Text(tr("Name")) },
+                    me, { me = it.take(30) }, singleLine = true, label = { Text(tr("Name")) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = {
                         if (me.isNotBlank()) {
                             Shared.setAppName(ctx, me)
-                            nameSaved = true
+                            nameSaved++
                         }
                         me = Shared.lastName
                         keyboard?.hide()
@@ -138,13 +138,8 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                     }),
                     modifier = Modifier.weight(1f)
                 )
-                if (nameSaved) {
-                    val green = if (LocalLook.current.dark) Color(0xFF6FD39A) else Color(0xFF1E7B45)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(AppIcons.Check, null, tint = green, modifier = Modifier.size(20.dp))
-                        Text(tr("Saved"), color = green, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(start = 4.dp))
-                    }
-                }
+                // Always takes its room, so the field keeps the same width when "Saved" shows.
+                SavedFeedback(nameSaved)
             }
             Text(
                 tr("Shown as “Added by” on the shared wishlists you’re on. You can use a different name on one list in its ⚙."),

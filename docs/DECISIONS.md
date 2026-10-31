@@ -16,7 +16,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 ## Look and feel
 - **Themes apply to the app only.** App settings > Theme: "Standard themes" Light, Dark and AMOLED black (the original look, indigo, Google Sans), then the Themer button for the four designs. No "System default" (removed in 2.53 to save space): the first start quietly picks Light or Dark to match the phone.
 - **No font choice** (2.53): the standard themes use Google Sans, each design its own fonts. Choosing your own font is a "nice to have" for later.
-- **Themer layout** (2.53): a big preview titled "Preview" whose top (name, category, views) stays put while the wishes scroll; under it the designs side by side (swipe), tapping one uses it and pops up its colour sets.
+- **Themer layout** (2.53): a big preview titled "Preview" whose top (name, category, views) stays put while the wishes scroll; under it the designs side by side (swipe), tapping one uses it and pops up its colour sets; tapping "Standard" pops up Light, Dark and AMOLED black (2.55).
 - **The four designs are extra themes, complete styles of their own** (owner, 31 October 2026, after 2.51 only changed cards and colours): Material 3 (Expressive, Android 16), Organic, Neobrutalism and Claymorphism, from the owner's reference pictures. Each has its own colour sets (5 light, 1 dark), fonts, icon style and the look of buttons, switches, dialogs, top bar, side menu, labels and wishes, across the whole app. The standard theme settings don't apply to them. See `Design.kt` and `Styled.kt`.
 - **The Themer has only a back arrow** (no menu button); choices apply at once.
 - **Web pages only offer light and dark** (plus following the device), as a bare minimum. No palettes on the web.
@@ -25,7 +25,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Wording settled by the owner**: "+ Add wish"; "Instant delete wishes" ("Turn on to delete wishes without warning"); under Price alerts a sub-heading "Notifications" with "Price drops" (on by default) and "Price surges" (off by default) (2.54).
 
 - **App settings, Price alerts (2.54)**: "Check every" with the choices as boxes in one row (Hour, 3 hours, 6, 12, 24); no Check now / Test notification / Notification settings / Battery settings buttons.
-- **Saving your name (2.54)**: no Save button; the keyboard's tick saves it and closes the keyboard, then a small green tick with "Saved".
+- **Saving your name (2.54, 2.55)**: no Save button; the keyboard's tick saves it and closes the keyboard, then a small green tick that draws itself with "Saved", gone after about a second. The field is always the same (shorter) width.
 
 - **Two views only: large cards and two per row** (app, editor and friends' page). The "Images only" view was removed (October 2026): it didn't look good and showed too little about a wish.
 
