@@ -4,6 +4,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 
 ## Working together
 - **Changes go straight to `main`.** No pull requests, no test builds, no test release. The owner found branches, test APKs and two install links confusing ("app not installed") and wants to iterate on one app. (October 2026)
+- **Push only to `main`, never to any other branch** (owner, 31 October 2026), also when a Claude Code session starts on its own `claude/...` branch. Pushes to other branches made the workflow fail (Pages only deploys from main) and sent the owner "build failed" e-mails. Keep the GitHub repository clean: one branch, `main`. The old branch `claude/kind-fermat-ozfdx2` may still exist; the owner can delete it (Branches, bin icon).
 - **One Claude Code session per feature or topic.** Long sessions get summarised and lose detail; this file and `CLAUDE.md` are what a new session reads. Before ending a topic, write any new decision here.
 - **The project lives as normal files in the repository**, not in `wishlist-android.zip`, so every session reads `CLAUDE.md` and this file automatically. Never bring the zip back.
 - **Explain plainly, in UK English, tap by tap.** Say what you are changing before or as you change it, and be honest about what was and wasn't tested.
