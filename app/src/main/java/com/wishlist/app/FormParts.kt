@@ -5,7 +5,10 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.runtime.LaunchedEffect
-import kotlinx.coroutines.delay
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -98,11 +101,12 @@ fun CategoryField(selected: String, cats: List<String>, onPick: (String) -> Unit
 @OptIn(ExperimentalFoundationApi::class)
 fun ProductInfo(content: @Composable ColumnScope.() -> Unit) {
     var open by rememberSaveable { mutableStateOf(false) }
-    // Opening it scrolls the form down until all of it is in sight, once the fold-out has finished.
+    // Opening it scrolls the form down at once until all of it is in sight: the fields appear at full size (fading in)
+    // in the same moment, so the scroll starts with the tap instead of after a fold-out.
     val reveal = remember { BringIntoViewRequester() }
     LaunchedEffect(open) {
         if (open) {
-            delay(320)
+            withFrameNanos { } // the opened part is laid out by then
             reveal.bringIntoView()
         }
     }
@@ -128,7 +132,7 @@ fun ProductInfo(content: @Composable ColumnScope.() -> Unit) {
                 }
                 Icon(Icons.Default.ArrowDropDown, null, modifier = Modifier.rotate(turn))
             }
-            AnimatedVisibility(open) {
+            AnimatedVisibility(open, enter = fadeIn(tween(220)), exit = fadeOut(tween(120))) {
                 Column(
                     Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),

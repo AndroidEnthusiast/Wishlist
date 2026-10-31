@@ -34,7 +34,7 @@ fun SizeField(size: String, onPick: (String) -> Unit, modifier: Modifier = Modif
     Box(modifier) {
         OutlinedTextField(
             value = size, onValueChange = {}, readOnly = true, singleLine = true,
-            label = { Text(tr("Size (optional)")) },
+            label = { Text(tr("Size")) },
             trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
             modifier = Modifier.fillMaxWidth()
         )

@@ -1152,6 +1152,8 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
     val starFx = rememberStarFx()
     var busy by remember { mutableStateOf(false) }
     var err by remember { mutableStateOf("") }
+    // True after Save was tapped without a name: the name field turns red with a short message.
+    var nameErr by remember { mutableStateOf(false) }
     var newCatDlg by remember { mutableStateOf(false) }
     // A picture picked in this dialog but not saved yet. It is deleted again if you cancel or replace it.
     var picked by remember { mutableStateOf("") }
@@ -1236,7 +1238,7 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
                         url = new
                         if (pasted) go(new)
                     },
-                    label = { Text(tr("Product link (optional)")) },
+                    label = { Text(tr("Product link")) },
                     // No "Fetch details" button any more: pasting a link reads the page, and so does the keyboard's
                     // Done key after typing or changing one. A small circle shows while the page is being read.
                     trailingIcon = if (busy) ({ CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp) }) else null,
@@ -1254,8 +1256,11 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
                 // Name and price side by side: the price only needs room for "€9999,99", the name gets the rest and
                 // stays on one line (a long name scrolls inside the field instead of taking three lines).
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
+                    // The * shows the name is the one thing a wish needs. Saving without one marks the field red.
                     OutlinedTextField(
-                        title, { title = it }, label = { Text(tr("Name")) }, singleLine = true,
+                        title, { title = it; if (it.isNotBlank()) nameErr = false }, label = { Text(tr("Name*")) }, singleLine = true,
+                        isError = nameErr,
+                        supportingText = if (nameErr) ({ Text(tr("Please enter a product name")) }) else null,
                         modifier = Modifier.weight(1f)
                     )
                     OutlinedTextField(
@@ -1316,8 +1321,8 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
         },
         confirmButton = {
             TextButton(
-                enabled = title.isNotBlank(),
                 onClick = {
+                    if (title.isBlank()) { nameErr = true; return@TextButton }
                     val p = price.replace(',', '.').toDoubleOrNull()
                     val u = cleanUrl(url) ?: url.trim()
                     // A picture that was replaced or removed in this dialog is no longer needed.

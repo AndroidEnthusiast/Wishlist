@@ -40,6 +40,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Delete question**: "Deleting this wish moves "…" to the bin. After 10 days it's permanently deleted."
 
 - **Name and price on one line in the wish form**: the price field is just wide enough for "9999,99" but takes any amount (a longer one scrolls inside the field); the name gets the rest and stays on one line. Opening "Other information" scrolls down so all of it is in sight.
+- **No "(optional)" in the wish form; the name is "Name*"**: saving without a name turns the field red with "Please enter a product name".
 - **Wish form, later tweaks**: the folded section is called "Other information" ("Description, size, notes"); the price field shows the currency's symbol (€ for EUR) in front of the amount, label "Price (EUR)"; no "Fetch details" button (pasting a link reads the page; the keyboard's Done key does too).
 
 ## Prices
