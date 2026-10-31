@@ -465,7 +465,7 @@ fun App(
                         drawRect(look.line, Offset(size.width - w, 0f), Size(w, size.height))
                     } else Modifier
                 ),
-                drawerContainerColor = if (look.classic) DrawerDefaults.modalContainerColor else MaterialTheme.colorScheme.surface
+                drawerContainerColor = if (look.classic) DrawerDefaults.containerColor else MaterialTheme.colorScheme.surface
             ) {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
                     // Same height as the top bar; the menu button (now an X) sits at the left of this row.
