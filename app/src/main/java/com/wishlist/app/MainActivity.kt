@@ -1263,7 +1263,7 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
                     Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                         Text(tr("Top wish"), style = MaterialTheme.typography.bodyLarge)
                         Text(
-                            italics(tr("Shows you _really_ want this")),
+                            italics(tr("Shows you _really_ like this")),
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }

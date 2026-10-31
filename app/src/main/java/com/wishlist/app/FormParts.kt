@@ -41,7 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 
-/** Text with the words between underscores in italics: "Shows you _really_ want this". */
+/** Text with the words between underscores in italics: "Shows you _really_ like this". */
 fun italics(s: String): AnnotatedString = buildAnnotatedString {
     s.split('_').forEachIndexed { i, part ->
         if (i % 2 == 1) withStyle(SpanStyle(fontStyle = FontStyle.Italic)) { append(part) } else append(part)
