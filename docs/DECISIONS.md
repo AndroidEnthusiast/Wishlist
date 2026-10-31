@@ -29,6 +29,9 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Private wishes keep getting price-drop notifications.**
 - **If a reserved gift is taken off the list** (made private or deleted), the person who reserved it is nudged to pick another gift: a notification on their phone when they use the app, a note on the friends' page when they use the browser. The owner still never learns it was reserved.
 
+## Love it
+- **"Most wanted" is now "Love it", with a heart instead of a star** (October 2026): people say they love the things they really want. A soft, muted rose pink (label #F6D9E1 with deep rose #8C3A56 heart and words), never a loud pink. Still stored as `star`, so earlier wishes kept it. Sort: "Loved first".
+
 ## Prices
 - **Price rises are shown too**: the old price stays visible, with a red ↑ and the percentage. Price drops as before.
 

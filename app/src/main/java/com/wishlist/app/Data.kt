@@ -24,7 +24,7 @@ data class Wish(
     val currency: String,
     val category: String,
     val got: Boolean = false,
-    /** "Most wanted": shown with a star, so givers know where to look first. */
+    /** "Love it" (called "star" since the start): shown with a heart, so givers know you really want it. */
     val star: Boolean = false,
     /** A note for givers: colour, details, anything they should know. */
     val note: String = "",

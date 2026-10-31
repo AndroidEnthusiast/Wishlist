@@ -55,7 +55,7 @@ try { var wlt = localStorage.getItem("wl_theme"); if (wlt === "light" || wlt ===
   <div class="tools" id="tools" hidden>
     <label class="fld"><span>Sort</span>
       <select id="sort">
-        <option value="star">Most wanted first</option>
+        <option value="star">Loved first</option>
         <option value="asis">As listed</option>
         <option value="low">Price: low to high</option>
         <option value="high">Price: high to low</option>
@@ -96,7 +96,7 @@ var VIEW_LABELS = { list: T("Large cards"), grid: T("Two per row") };
 var view = loadView();
 
 // The friends' link of a shared wishlist goes through list/, which adds s=1. Such a list is put together by several
-// givers for someone else: there is no "most wanted" (nobody can say that for the person), and the givers see what's reserved.
+// givers for someone else: there is no "Love it" (nobody can say that for the person), and the givers see what's reserved.
 var SHARED_LIST = new URLSearchParams(location.search).get("s") === "1";
 var DEFAULT_SORT = SHARED_LIST ? "asis" : "star";
 
@@ -490,15 +490,30 @@ function isRise(w) {
 }
 function changeClass(w) { return isDrop(w) ? " drop" : isRise(w) ? " rise" : ""; }
 
-// The gold T("Most wanted") label. Small cards show just the star.
+// The soft pink T("Love it") label with a heart (stored as "star"). Small cards show just the heart.
 function starBadge() {
   var b = el("span", "badge star");
   b.setAttribute("role", "img");
-  b.setAttribute("aria-label", T("Most wanted"));
-  b.title = T("Most wanted");
-  b.appendChild(el("span", "ico", "★"));
-  b.appendChild(el("span", "lbl", T("Most wanted")));
+  b.setAttribute("aria-label", T("Love it"));
+  b.title = T("Love it");
+  b.appendChild(heartIcon());
+  b.appendChild(el("span", "lbl", T("Love it")));
   return b;
+}
+
+// Google's Material "favorite" heart (Apache 2.0), the same as in the app.
+function heartIcon() {
+  var NS = "http://www.w3.org/2000/svg";
+  var s = document.createElementNS(NS, "svg");
+  s.setAttribute("viewBox", "0 0 24 24");
+  s.setAttribute("width", "13"); s.setAttribute("height", "13");
+  s.setAttribute("aria-hidden", "true");
+  s.setAttribute("class", "ico");
+  var p = document.createElementNS(NS, "path");
+  p.setAttribute("fill", "currentColor");
+  p.setAttribute("d", "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z");
+  s.appendChild(p);
+  return s;
 }
 
 function viewIcon(kind) {

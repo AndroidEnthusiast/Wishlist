@@ -617,7 +617,7 @@ fun HomeScreen(
             snack.showSnackbar(msg)
         }
     }
-    // A shared wishlist is put together by the givers, for someone else: there is no "most wanted" (nobody can say
+    // A shared wishlist is put together by the givers, for someone else: there is no "Love it" (nobody can say
     // that for the person) and no "got it" (reserving is what counts). Wishes are shown without them.
     val sortMode = if (inShared && Repo.sort == "star") "new" else Repo.sort
     val res = if (inShared) Shared.reserved else emptyMap()
@@ -849,7 +849,7 @@ fun reservedLabel(r: Boolean?): String? = when (r) {
 
 /**
  * Two-per-row card: picture, title and price, with edit / got it / remove in a small menu.
- * On a shared list ([reserve] set) the menu has Reserve instead of most wanted and got it.
+ * On a shared list ([reserve] set) the menu has Reserve instead of Love it and got it.
  * The owner gets a round star on the picture to tap (no text, there is no room); friends only see it when it is set.
  */
 @OptIn(ExperimentalFoundationApi::class)
@@ -951,7 +951,7 @@ fun CompactCard(
                         }
                     } else {
                         DropdownMenuItem(
-                            text = { Text(if (w.star) tr("Remove from most wanted") else tr("Most wanted")) },
+                            text = { Text(if (w.star) tr("Remove the heart") else tr("Love it")) },
                             onClick = { menu = false; Repo.replace(ctx, w.copy(star = !w.star)) }
                         )
                         DropdownMenuItem(
@@ -1226,16 +1226,16 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
                     note, { note = it }, label = { Text(tr("Note for givers (colour, details, …)")) },
                     maxLines = 3, modifier = Modifier.fillMaxWidth()
                 )
-                // No "most wanted" on a shared list: nobody can say that for the person the gifts are for.
+                // No "Love it" on a shared list: nobody can say that for the person the gifts are for.
                 if (Shared.active == null) Row(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { if (!star) starFx.play(); star = !star }.padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    StarIcon(star, if (star) StarGold else MaterialTheme.colorScheme.onSurfaceVariant, 24.dp, Modifier.starPulse(starFx))
+                    HeartIcon(star, if (star) LoveRose else MaterialTheme.colorScheme.onSurfaceVariant, 24.dp, Modifier.starPulse(starFx))
                     Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                        Text(tr("Most wanted"), style = MaterialTheme.typography.bodyLarge)
+                        Text(tr("Love it"), style = MaterialTheme.typography.bodyLarge)
                         Text(
-                            tr("Shown with a star, so givers look here first"),
+                            tr("Shown with a heart, so givers know you really want it"),
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }

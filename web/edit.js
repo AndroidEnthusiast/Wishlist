@@ -25,7 +25,7 @@
   var PHOTO_SIDE = 600;
   var REFRESH_MS = 20000;
   var INVITE_RE = /^[A-HJ-NP-Z2-9]{20}$/;
-  // A shared wishlist is put together by several givers for someone else, so there is no "most wanted" here.
+  // A shared wishlist is put together by several givers for someone else, so there is no "Love it" here.
   var SORTS = [["new", "Newest first"], ["low", "Price: low to high"],
     ["high", "Price: high to low"], ["az", "Name A–Z"]];
   // Short names for the sort button when a sort is active (same as sortShortName in the app).

@@ -110,6 +110,8 @@ const IOS = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/
   t = await boot({ goto: false });
   await t.page.goto(t.base + "?c=" + CODE);
   await t.page.waitForSelector(".card");
+  await t.page.screenshot({ path: "s_loveit.png", clip: await t.page.locator(".card").first().boundingBox() });
+  check("Love it label is soft pink with deep rose words", await t.page.locator(".badge.star").evaluate(b => getComputedStyle(b).backgroundColor === "rgb(246, 217, 225)" && getComputedStyle(b).color === "rgb(140, 58, 86)"));
   check("own list's friends page keeps most wanted", (await t.page.locator(".badge.star").count()) === 1 && (await t.page.locator('#sort option[value="star"]').count()) === 1);
   await t.ctx.close();
 

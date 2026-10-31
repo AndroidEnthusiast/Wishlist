@@ -115,10 +115,10 @@ form.code input {
 .card.compact .old { display: block; margin: 0; font-size: .8rem; }
 .card.compact button.act { width: 100%; padding: 8px 12px; }
 
-/* most wanted, and the badges in the top right corner of a picture */
+/* "Love it" (a heart on soft pink), and the badges in the top right corner of a picture */
 .badges { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .badges .badge { position: static; }
-.badge.star { display: inline-flex; align-items: center; gap: 3px; background: #ffc83d; color: #3b2a00; }
+.badge.star { display: inline-flex; align-items: center; gap: 4px; background: #f6d9e1; color: #8c3a56; }
 .card.compact .badges { top: 8px; right: 8px; }
 .card.compact .badge.star .lbl { display: none; }
 

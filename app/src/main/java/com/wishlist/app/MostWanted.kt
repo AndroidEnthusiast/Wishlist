@@ -42,6 +42,8 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -53,35 +55,38 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
-/** The gold of the "Most wanted" label, and the dark brown text on it. Same in light and dark mode. */
-val StarGold = Color(0xFFFFC83D)
-val StarInk = Color(0xFF3B2A00)
+/*
+ * "Love it" (stored as "star", so wishes marked before keep it): a heart on a soft, muted rose pink, quiet enough
+ * to sit with the app's colours. Same in light and dark mode.
+ */
+/** The pale pink of the "Love it" label. */
+val LovePink = Color(0xFFF6D9E1)
+/** The deep rose of the heart and the words on the label. */
+val LoveInk = Color(0xFF8C3A56)
+/** A filled heart on the page itself (the form, the menu), between the two. */
+val LoveRose = Color(0xFFD27391)
 
-/** A five-pointed star: solid when [filled], an outline otherwise. */
+/** Google's Material "favorite" heart (Apache 2.0), on a 24 x 24 grid. */
+private val HeartPath: Path by lazy {
+    PathParser().parsePathString(
+        "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09" +
+            "C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+    ).toPath()
+}
+
+/** A heart: solid when [filled], an outline otherwise. */
 @Composable
-fun StarIcon(filled: Boolean, tint: Color, iconSize: Dp = 24.dp, modifier: Modifier = Modifier) {
+fun HeartIcon(filled: Boolean, tint: Color, iconSize: Dp = 24.dp, modifier: Modifier = Modifier) {
     Canvas(modifier.size(iconSize)) {
-        val w = this.size.width
-        val cx = w / 2f
-        val cy = this.size.height / 2f + w * 0.03f
-        val outer = w * 0.48f
-        val inner = outer * 0.42f
-        val p = Path()
-        for (i in 0 until 10) {
-            val a = (-90.0 + i * 36.0) * PI / 180.0
-            val r = if (i % 2 == 0) outer else inner
-            val x = (cx + r * cos(a)).toFloat()
-            val y = (cy + r * sin(a)).toFloat()
-            if (i == 0) p.moveTo(x, y) else p.lineTo(x, y)
+        scale(this.size.width / 24f, pivot = Offset.Zero) {
+            if (filled) drawPath(HeartPath, tint)
+            else drawPath(HeartPath, tint, style = Stroke(width = 2f, join = StrokeJoin.Round))
         }
-        p.close()
-        if (filled) drawPath(p, tint)
-        else drawPath(p, tint, style = Stroke(width = w * 0.09f, join = StrokeJoin.Round))
     }
 }
 
 /**
- * The little celebration when a wish becomes "most wanted": a quick pulse of the star and a few tiny sparkles.
+ * The little celebration when a wish gets "Love it": a quick pulse of the heart and a few tiny sparkles.
  * Call [play] when the person taps; use [starPulse] on the star and [starSparkles] on something around it.
  * A card that scrolls into view never plays it, only a tap does.
  */
@@ -136,13 +141,13 @@ fun Modifier.starSparkles(fx: StarFx, centerFromEnd: Dp? = null): Modifier = dra
     }
 }
 
-private val SparkleGold = StarGold
-private val SparkleCream = Color(0xFFFFF1B8)
-private val SparkleEdge = Color(0xFFC77A00)
+private val SparkleRose = LoveRose
+private val SparkleBlush = Color(0xFFFCE8EE)
+private val SparkleEdge = Color(0xFFA8486A)
 
 /**
  * Seven tiny four-point sparkles flying outwards from [center] and fading. [p] runs from 0 to 1.
- * They have a thin darker edge so they show up on the gold button, on white pictures and on dark ones.
+ * They have a thin darker edge so they show up on the pink button, on white pictures and on dark ones.
  */
 private fun DrawScope.drawSparkles(center: Offset, p: Float) {
     val out = 1f - (1f - p) * (1f - p)
@@ -167,58 +172,58 @@ private fun DrawScope.drawSparkles(center: Offset, p: Float) {
             if (k == 0) path.moveTo(px, py) else path.lineTo(px, py)
         }
         path.close()
-        drawPath(path, if (big) SparkleGold else SparkleCream, alpha = alpha)
+        drawPath(path, if (big) SparkleRose else SparkleBlush, alpha = alpha)
         drawPath(path, SparkleEdge, alpha = alpha, style = edge)
     }
 }
 
 /**
- * The gold "Most wanted" label for the corner of a picture. [showLabel] false gives just the star (small cards).
- * With [onClick] the owner can tap it to take the star away again.
+ * The pink "Love it" label for the corner of a picture. [showLabel] false gives just the heart (small cards).
+ * With [onClick] the owner can tap it to take the heart away again.
  */
 @Composable
 fun MostWantedBadge(showLabel: Boolean, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
     val shape = RoundedCornerShape(8.dp)
-    var m = modifier.clip(shape).background(StarGold)
+    var m = modifier.clip(shape).background(LovePink)
     m = if (onClick != null) {
-        m.clickable(onClickLabel = tr("Remove from most wanted"), role = Role.Button, onClick = onClick)
+        m.clickable(onClickLabel = tr("Remove the heart"), role = Role.Button, onClick = onClick)
     } else if (!showLabel) {
-        m.semantics { contentDescription = tr("Most wanted") }
+        m.semantics { contentDescription = tr("Love it") }
     } else m
     Row(
         m.padding(horizontal = if (showLabel) 8.dp else 5.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
-        StarIcon(true, StarInk, 14.dp)
+        HeartIcon(true, LoveInk, 14.dp)
         if (showLabel) {
             Spacer(Modifier.width(4.dp))
-            Text(tr("Most wanted"), style = MaterialTheme.typography.labelMedium, color = StarInk)
+            Text(tr("Love it"), style = MaterialTheme.typography.labelMedium, color = LoveInk)
         }
         // A small cross when you can tap the label to take it away again.
         if (onClick != null) {
             Spacer(Modifier.width(6.dp))
-            Icon(Icons.Default.Close, null, Modifier.size(14.dp), tint = StarInk)
+            Icon(Icons.Default.Close, null, Modifier.size(14.dp), tint = LoveInk)
         }
     }
 }
 
-/** A round outlined star on the picture: tap it to mark the wish as most wanted. */
+/** A round outlined heart on the picture: tap it to mark the wish "Love it". */
 @Composable
 fun MarkMostWantedButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
         modifier.size(34.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.45f))
-            .semantics { contentDescription = tr("Mark as most wanted") }
+            .semantics { contentDescription = tr("Love it") }
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        StarIcon(false, Color.White, 20.dp)
+        HeartIcon(false, Color.White, 20.dp)
     }
 }
 
 /**
- * What sits in the top right corner of a large card for the star. For the owner ([onToggle] set) it is the label
- * when the wish is most wanted, or an outlined star to tap when it is not. Friends only ever see the label.
+ * What sits in the top right corner of a large card for the heart. For the owner ([onToggle] set) it is the label
+ * when the wish has "Love it", or an outlined heart to tap when it has not. Friends only ever see the label.
  * Wishes you already got show nothing. Marking a wish plays the pulse and sparkles.
  */
 @Composable
@@ -238,9 +243,9 @@ fun StarCorner(w: Wish, onToggle: (() -> Unit)?) {
 }
 
 /**
- * The small round star on a two-per-row card, with no text because there is no room: an outlined star on a dark
- * circle when the wish is not most wanted, a solid one on gold when it is. Tapping switches it, with the pulse and
- * the sparkles when it becomes most wanted.
+ * The small round heart on a two-per-row card, with no text because there is no room: an outlined heart on a dark
+ * circle without "Love it", a solid one on pink with it. Tapping switches it, with the pulse and the sparkles when it
+ * gets "Love it".
  */
 @Composable
 fun StarToggle(starred: Boolean, onToggle: () -> Unit, modifier: Modifier = Modifier) {
@@ -248,12 +253,12 @@ fun StarToggle(starred: Boolean, onToggle: () -> Unit, modifier: Modifier = Modi
     Box(modifier.size(34.dp).starSparkles(fx), contentAlignment = Alignment.Center) {
         Box(
             Modifier.fillMaxSize().starPulse(fx).clip(CircleShape)
-                .background(if (starred) StarGold else Color.Black.copy(alpha = 0.45f))
-                .semantics { contentDescription = if (starred) tr("Remove from most wanted") else tr("Mark as most wanted") }
+                .background(if (starred) LovePink else Color.Black.copy(alpha = 0.45f))
+                .semantics { contentDescription = if (starred) tr("Remove the heart") else tr("Love it") }
                 .clickable(role = Role.Button) { if (!starred) fx.play(); onToggle() },
             contentAlignment = Alignment.Center
         ) {
-            StarIcon(starred, if (starred) StarInk else Color.White, 20.dp)
+            HeartIcon(starred, if (starred) LoveInk else Color.White, 20.dp)
         }
     }
 }

@@ -32,9 +32,9 @@ const settle = (t) => t.page.waitForFunction(() => window.__wl.pending() === 0);
   delete t.fake.hooks.wl_reserve_item;
   // the wish form has no "Most wanted" switch any more
   await t.page.locator("#fab").click();
-  check("no Most wanted in the wish form", (await t.page.locator(".dlg").getByLabel("Most wanted").count()) === 0);
+  check("no Love it in the wish form", (await t.page.locator(".dlg").getByLabel("Love it").count()) === 0);
   await t.page.locator(".dlg").getByRole("button", { name: "Cancel", exact: true }).click();
-  check("no Most wanted sort", !(await t.page.evaluate(() => document.body.innerText)).includes("Most wanted first"));
+  check("no Love it sort", !(await t.page.evaluate(() => document.body.innerText)).includes("Loved first"));
   await t.page.locator("#sortBtn").click();
   const sorts = (await t.page.locator(".menu .mitem").allInnerTexts()).map(x => x.trim());
   check("sort menu without Most wanted", JSON.stringify(sorts) === JSON.stringify(["Newest first", "Price: low to high", "Price: high to low", "Name A–Z"]), sorts);
