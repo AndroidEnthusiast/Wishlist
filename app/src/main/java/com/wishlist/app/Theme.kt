@@ -107,7 +107,7 @@ val PALETTES: List<Palette> = listOf(
     )
 )
 
-/** The classic theme actually in use: "light", "dark" or "amoled" (System default follows the phone). */
+/** The standard theme in use: "light", "dark" or "amoled" ("system", from before 2.53, follows the phone). */
 @Composable
 fun effectiveTheme(): String {
     val sys = isSystemInDarkTheme()
@@ -116,7 +116,7 @@ fun effectiveTheme(): String {
 
 @Composable
 fun WishTheme(content: @Composable () -> Unit) {
-    // A classic theme (System default, Light, Dark, AMOLED black: indigo, the font from App settings, as always),
+    // A standard theme (Light, Dark, AMOLED black: indigo and Google Sans, the original look),
     // or one of the four designs with its own colour set, fonts, icons and shapes (Design.kt, picked in the Themer).
     val look = lookFor(Repo.design, Repo.colours, effectiveTheme())
     val scheme = look.scheme
@@ -134,7 +134,7 @@ fun WishTheme(content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalLook provides look) {
         MaterialTheme(
             colorScheme = scheme,
-            typography = typographyFor(look.design, typo(fontFor(Repo.font).family)),
+            typography = typographyFor(look.design, typo(GoogleSans)),
             shapes = shapesFor(look.design),
             content = content
         )

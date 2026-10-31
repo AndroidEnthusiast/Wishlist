@@ -1,11 +1,18 @@
 package com.wishlist.app
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,7 +35,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -93,36 +99,16 @@ fun AddWishButton(onClick: () -> Unit) {
     }
 }
 
-@Composable
-private fun SectionTitle(t: String) {
-    Text(
-        t, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(top = 20.dp)
-    )
-}
-
-/** One theme in the list: the classic ones by their mode, the designs by their key. */
-private class ThemeOption(val classicMode: String?, val design: String?, val name: String, val about: String)
-
-@Composable
-private fun themeOptions(): List<ThemeOption> = listOf(
-    ThemeOption("system", null, tr("System default"), tr("The original look, light or dark like your phone.")),
-    ThemeOption("light", null, tr("Light"), tr("The original look, light.")),
-    ThemeOption("dark", null, tr("Dark"), tr("The original look, dark.")),
-    ThemeOption("amoled", null, tr("AMOLED black"), tr("The original look on pure black.")),
-) + DESIGNS.map { ThemeOption(null, it.key, tr(it.name), tr(it.about)) }
-
 /**
- * The Themer (App settings > Theme > Themer): the four classic themes and the four designs, and the colour sets of
- * the chosen design. Every choice is used at once; the sample wishlist at the top shows how it looks.
+ * The Themer (App settings > Theme > Themer): a big sample wishlist, and below it the designs side by side. Tapping a
+ * design uses it at once and pops up its colour sets; tapping a colour set uses that at once too. "Standard" goes back
+ * to the standard theme last used (Light, Dark or AMOLED black, chosen in App settings).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThemerScreen(onBack: () -> Unit) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
-    val sysDark = isSystemInDarkTheme()
-    val design = designFor(Repo.design)
     BackHandler(onBack = onBack)
     DisposableEffect(Unit) { onDispose { ThemerNav.open = false } }
 
@@ -137,57 +123,83 @@ fun ThemerScreen(onBack: () -> Unit) {
         }
     ) { pad ->
         Column(Modifier.padding(pad).fillMaxSize()) {
-            ThemePreview(Modifier.fillMaxWidth().height(330.dp).padding(horizontal = 16.dp))
-            Column(
-                Modifier.weight(1f).verticalScroll(rememberScrollState())
-                    .padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+            Spacer(Modifier.height(16.dp))
+            ThemePreview(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp))
+            // The colour sets of the chosen design pop up between the preview and the designs.
+            AnimatedContent(
+                targetState = Repo.design,
+                transitionSpec = { (fadeIn() + slideInVertically { it / 2 }) togetherWith fadeOut() },
+                label = "colourSets"
+            ) { key ->
+                val d = designFor(key)
+                if (d != null) ColourSets(d) else Spacer(Modifier.height(4.dp))
+            }
+            // The designs, side by side; swipe to see them all.
+            LazyRow(
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                SectionTitle(tr("Theme"))
-                themeOptions().forEach { o ->
-                    val chosen = if (o.classicMode != null) Repo.design == "classic" && Repo.theme == o.classicMode
-                    else Repo.design == o.design
-                    val pick = {
-                        if (o.classicMode != null) Repo.setClassic(ctx, o.classicMode) else Repo.setDesign(ctx, o.design ?: "classic")
+                item {
+                    val standard = effectiveTheme()
+                    DesignTile(tr("Standard"), lookFor("classic", "", standard), Repo.design == "classic") {
+                        Repo.setClassic(ctx, standard)
                     }
-                    val sample = if (o.classicMode != null) {
-                        lookFor("classic", "", if (o.classicMode == "system") (if (sysDark) "dark" else "light") else o.classicMode)
-                    } else {
-                        lookFor(o.design ?: "classic", if (Repo.design == o.design) Repo.colours else "", "light")
+                }
+                items(DESIGNS.size) { i ->
+                    val d = DESIGNS[i]
+                    val chosen = Repo.design == d.key
+                    DesignTile(tr(d.name), lookFor(d.key, if (chosen) Repo.colours else "", "light"), chosen) {
+                        Repo.setDesign(ctx, d.key)
                     }
-                    val box = RoundedCornerShape(16.dp)
-                    Row(
-                        Modifier.fillMaxWidth().clip(box)
-                            .border(if (chosen) 2.dp else 1.dp, if (chosen) cs.primary else cs.outlineVariant, box)
-                            .clickable { pick() }
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        ThemeSample(sample)
-                        Column(Modifier.weight(1f).padding(start = 14.dp, end = 4.dp)) {
-                            Text(o.name, style = MaterialTheme.typography.titleMedium, color = cs.onSurface)
-                            Text(o.about, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
-                        }
-                        RadioButton(selected = chosen, onClick = { pick() })
-                    }
-                    // The colour sets of a design appear right under it once it is chosen.
-                    if (chosen && design != null) {
-                        Text(
-                            tr("Colour combinations made for %s.", tr(design.name)),
-                            style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                        design.sets.chunked(3).forEach { row ->
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                row.forEach { set ->
-                                    ColourOption(set, set.key == colourSetFor(design, Repo.colours).key, Modifier.weight(1f)) {
-                                        Repo.setColours(ctx, set.key)
-                                    }
-                                }
-                                repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
-                            }
-                        }
-                    }
+                }
+            }
+        }
+    }
+}
+
+/** One design in the row under the preview: a small sample and its name. */
+@Composable
+private fun DesignTile(name: String, sample: Look, chosen: Boolean, onClick: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val box = RoundedCornerShape(18.dp)
+    Column(
+        Modifier.width(96.dp).clip(box)
+            .border(if (chosen) 2.dp else 1.dp, if (chosen) cs.primary else cs.outlineVariant, box)
+            .background(if (chosen) cs.primaryContainer.copy(alpha = 0.35f) else Color.Transparent)
+            .clickable(onClick = onClick)
+            .padding(vertical = 10.dp, horizontal = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        ThemeSample(sample)
+        Text(
+            name, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, maxLines = 2,
+            fontWeight = if (chosen) FontWeight.Bold else null, color = cs.onSurface,
+            modifier = Modifier.padding(top = 6.dp)
+        )
+    }
+}
+
+/** The colour sets of a design, in a card that pops up above the designs. */
+@Composable
+private fun ColourSets(d: Design) {
+    val ctx = LocalContext.current
+    val cs = MaterialTheme.colorScheme
+    val card = RoundedCornerShape(24.dp)
+    Column(
+        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp)
+            .clip(card).background(cs.surfaceContainerHigh).border(1.dp, cs.outlineVariant, card)
+            .padding(top = 10.dp, bottom = 4.dp)
+    ) {
+        Text(
+            tr("Colour combinations made for %s.", tr(d.name)),
+            style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 14.dp)
+        )
+        LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
+            items(d.sets.size) { i ->
+                val set = d.sets[i]
+                ColourOption(set, set.key == colourSetFor(d, Repo.colours).key, Modifier.width(80.dp)) {
+                    Repo.setColours(ctx, set.key)
                 }
             }
         }
@@ -252,8 +264,8 @@ private fun ColourOption(set: ColourSet, chosen: Boolean, modifier: Modifier, on
 }
 
 /**
- * A sample wishlist in the chosen theme: the list name, the category and view buttons, wishes and Add wish.
- * The view buttons switch the sample between two per row and large cards; nothing else reacts to a tap.
+ * A sample wishlist in the chosen theme, titled "Preview". Its name, category button and view buttons stay put while
+ * the wishes scroll, as on a real list. The view buttons switch between two per row and large cards.
  */
 @Composable
 private fun ThemePreview(modifier: Modifier) {
@@ -261,52 +273,64 @@ private fun ThemePreview(modifier: Modifier) {
     val cs = MaterialTheme.colorScheme
     var grid by remember { mutableStateOf(true) }
     val frame = RoundedCornerShape(28.dp)
-    // Ids 4, 5, 6 give each card a different colour, tint and pebble shape, as on a real list.
+    // Ids 4 to 9 give the cards different colours, tints and pebble shapes, as on a real list.
     val sample = listOf(
         Wish(4L, "", tr("Wireless headphones"), tr("Noise cancelling, 30 hours of music."), "", 129.0, 159.0, "EUR", "Tech", star = true),
         Wish(5L, "", tr("Plant pot"), tr("Glazed ceramic, about 20 cm."), "", 24.95, null, "EUR", "Home"),
-        Wish(6L, "", tr("Running shoes"), tr("Light, soft and made for long runs."), "", 89.0, 79.0, "EUR", "Fashion")
+        Wish(6L, "", tr("Running shoes"), tr("Light, soft and made for long runs."), "", 89.0, 79.0, "EUR", "Fashion"),
+        Wish(7L, "", tr("Cookbook"), tr("Simple recipes for every day."), "", 29.99, null, "EUR", "Books"),
+        Wish(8L, "", tr("Board game"), tr("For two to six players."), "", 44.5, 49.99, "EUR", "Home"),
+        Wish(9L, "", tr("Scented candle"), tr("Fig and cedar, burns for 50 hours."), "", 19.95, null, "EUR", "Home")
     )
-    val emojis = listOf("🎧", "🪴", "👟")
+    val emojis = listOf("🎧", "🪴", "👟", "📚", "🎲", "🕯️")
     Box(modifier.clip(frame).background(cs.background).border(1.dp, cs.outlineVariant, frame)) {
-        Column(
-            Modifier.fillMaxSize().lookBackdrop(look).verticalScroll(rememberScrollState()).padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            ProvideTextStyle(MaterialTheme.typography.titleLarge.copy(color = cs.onBackground)) {
-                ListTitle(tr("My wishlist"), sample.size)
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Row(
-                    Modifier.lookChip(look).padding(start = 12.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(catLabel("All"), style = MaterialTheme.typography.titleSmall, color = cs.onSurface)
-                    Icon(AppIcons.ArrowDropDown, null, tint = cs.onSurface)
+        Column(Modifier.fillMaxSize().lookBackdrop(look)) {
+            // Fixed at the top, like the top of a real list.
+            Column(
+                Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 14.dp, bottom = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                ProvideTextStyle(MaterialTheme.typography.titleLarge.copy(color = cs.onBackground)) {
+                    ListTitle(tr("Preview"), sample.size)
                 }
-                Spacer(Modifier.weight(1f))
-                ViewButton("list", tr("Large cards"), !grid) { grid = false }
-                Spacer(Modifier.width(6.dp))
-                ViewButton("grid", tr("Two per row"), grid) { grid = true }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        Modifier.lookChip(look).padding(start = 12.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(catLabel("All"), style = MaterialTheme.typography.titleSmall, color = cs.onSurface)
+                        Icon(AppIcons.ArrowDropDown, null, tint = cs.onSurface)
+                    }
+                    Spacer(Modifier.weight(1f))
+                    ViewButton("list", tr("Large cards"), !grid) { grid = false }
+                    Spacer(Modifier.width(6.dp))
+                    ViewButton("grid", tr("Two per row"), grid) { grid = true }
+                }
             }
-            if (grid) {
-                sample.chunked(2).forEachIndexed { r, pair ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        pair.forEachIndexed { i, w ->
-                            Box(Modifier.weight(1f)) { CompactCard(w, emoji = emojis[r * 2 + i], inert = true) {} }
+            // The wishes scroll underneath.
+            Column(
+                Modifier.weight(1f).fillMaxWidth().clipToBounds().verticalScroll(rememberScrollState())
+                    .padding(start = 14.dp, end = 14.dp, top = 4.dp, bottom = 88.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                if (grid) {
+                    sample.chunked(2).forEachIndexed { r, pair ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            pair.forEachIndexed { i, w ->
+                                Box(Modifier.weight(1f)) { CompactCard(w, emoji = emojis[r * 2 + i], inert = true) {} }
+                            }
+                            if (pair.size == 1) Spacer(Modifier.weight(1f))
                         }
-                        if (pair.size == 1) Spacer(Modifier.weight(1f))
                     }
-                }
-            } else {
-                sample.forEachIndexed { i, w ->
-                    WishCard(w, emoji = emojis[i]) {
-                        Icon(AppIcons.Edit, null, tint = cs.onSurfaceVariant, modifier = Modifier.padding(12.dp))
-                        Icon(AppIcons.Check, null, tint = cs.onSurfaceVariant, modifier = Modifier.padding(12.dp))
+                } else {
+                    sample.forEachIndexed { i, w ->
+                        WishCard(w, emoji = emojis[i]) {
+                            Icon(AppIcons.Edit, null, tint = cs.onSurfaceVariant, modifier = Modifier.padding(12.dp))
+                            Icon(AppIcons.Check, null, tint = cs.onSurfaceVariant, modifier = Modifier.padding(12.dp))
+                        }
                     }
                 }
             }
-            Spacer(Modifier.height(56.dp))
         }
         Box(Modifier.align(Alignment.BottomEnd).padding(14.dp)) { AddWishButton {} }
     }

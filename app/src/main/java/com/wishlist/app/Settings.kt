@@ -73,7 +73,6 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
     var me by remember { mutableStateOf(Shared.lastName) }
-    var fontDlg by remember { mutableStateOf(false) }
     // The Themer: its own screen, opened from the Theme section. Back returns here.
     // The Themer: its own screen, opened from the Theme section. Back returns here. (The menu button hides meanwhile.)
     if (ThemerNav.open) {
@@ -139,12 +138,11 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
             }
 
             SectionTitle(tr("Theme"))
-            // The classic themes (as the app always looked, with the font below) and the four designs, which have
-            // their own colours and fonts. The Themer shows them on a sample wishlist and has the designs' colour sets.
-            listOf(
-                "system" to tr("System default"), "light" to tr("Light"),
-                "dark" to tr("Dark"), "amoled" to tr("AMOLED black")
-            ).forEach { (k, n) ->
+            // The standard themes are the app's original look (indigo, Google Sans). The four designs, each with
+            // its own colours and fonts, are picked in the Themer. (No "System default": the first start picks
+            // Light or Dark to match the phone, see Repo.load.)
+            Text(tr("Standard themes"), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
+            listOf("light" to tr("Light"), "dark" to tr("Dark"), "amoled" to tr("AMOLED black")).forEach { (k, n) ->
                 val chosen = Repo.design == "classic" && Repo.theme == k
                 Row(
                     Modifier.fillMaxWidth().clickable { Repo.setClassic(ctx, k) },
@@ -154,62 +152,22 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                     Text(n)
                 }
             }
-            DESIGNS.forEach { d ->
-                val chosen = Repo.design == d.key
-                Row(
-                    Modifier.fillMaxWidth().clickable { Repo.setDesign(ctx, d.key) },
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(selected = chosen, onClick = { Repo.setDesign(ctx, d.key) })
-                    Column(Modifier.weight(1f)) {
-                        Text(tr(d.name))
-                        if (chosen) {
-                            Text(
-                                tr(colourSetFor(d, Repo.colours).name), style = MaterialTheme.typography.bodySmall,
-                                color = cs.onSurfaceVariant
-                            )
-                        }
+            Text(
+                tr("Themer"), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant,
+                modifier = Modifier.padding(top = 12.dp)
+            )
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                    val d = designFor(Repo.design)
+                    if (d != null) {
+                        Text(tr(d.name) + " · " + tr(colourSetFor(d, Repo.colours).name), style = MaterialTheme.typography.bodyLarge)
                     }
-                    if (chosen) {
-                        val set = colourSetFor(d, Repo.colours)
-                        Row(Modifier.padding(end = 8.dp)) {
-                            listOf(set.main, set.a2, set.a3).forEachIndexed { i, col ->
-                                Box(
-                                    Modifier.padding(start = if (i == 0) 0.dp else 2.dp).size(16.dp).clip(CircleShape)
-                                        .background(Color(col)).border(1.dp, cs.outlineVariant, CircleShape)
-                                )
-                            }
-                        }
-                    }
+                    Text(
+                        tr("Material 3, Organic, Neobrutalism and Claymorphism, each with its own colours."),
+                        style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
+                    )
                 }
-            }
-            Row(
-                Modifier.fillMaxWidth().padding(top = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    tr("See every theme on a sample wishlist and choose colours."),
-                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
-                    modifier = Modifier.weight(1f).padding(end = 12.dp)
-                )
                 Button(onClick = { ThemerNav.open = true }) { Text(tr("Themer")) }
-            }
-
-            SectionTitle(tr("Font"))
-            designFor(Repo.design)?.let { d ->
-                Text(
-                    tr("%s has its own fonts. This font is used by System default, Light, Dark and AMOLED black.", tr(d.name)),
-                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
-                )
-            }
-            // The font for the whole app. Each name is shown in its own font.
-            val current = fontFor(Repo.font)
-            Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { fontDlg = true }.padding(vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(current.name, fontFamily = current.family, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                OutlinedButton(onClick = { fontDlg = true }) { Text(tr("Change")) }
             }
 
             SectionTitle(tr("Price alerts"))
@@ -304,32 +262,5 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                 }
             }) { Text(tr("Share app (APK)")) }
         }
-    }
-
-
-    if (fontDlg) {
-        AlertDialog(
-            onDismissRequest = { fontDlg = false },
-            title = { Text(tr("Choose a font")) },
-            text = {
-                Column(Modifier.verticalScroll(rememberScrollState())) {
-                    FONTS.forEach { f ->
-                        Row(
-                            Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                                .clickable { Repo.setFont(ctx, f.key); fontDlg = false }
-                                .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(selected = Repo.font == f.key, onClick = { Repo.setFont(ctx, f.key); fontDlg = false })
-                            Text(
-                                if (f.key == "google_sans") tr("%s (default)", f.name) else f.name,
-                                fontFamily = f.family, style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
-                    }
-                }
-            },
-            confirmButton = { TextButton(onClick = { fontDlg = false }) { Text(tr("Close")) } }
-        )
     }
 }

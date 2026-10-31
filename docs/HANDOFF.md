@@ -33,6 +33,8 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - v2.52, same day, after the owner's feedback: the menu button overlapped the Themer's back arrow (fixed: the Themer has only a back arrow). The owner wanted the classic themes (System/Light/Dark/AMOLED, font) kept exactly as before and the four designs as extra themes with their own colours, and much more of each style (fonts, icons, everything, the whole app). Done with `Styled.kt` (themed buttons, switches, dialogs, top bars, icons, labels) and a fuller `Design.kt` (fonts, a dark colour set per design). Not compiled here (no Android SDK); checked on GitHub.
 
+- v2.53: the owner removed the Font setting and "System default" (the first start picks Light or Dark quietly), put "Standard themes" + the Themer button under Theme, and asked for a bigger Themer preview called "Preview" with a fixed top, and the designs in a sideways row whose colour sets pop up when tapped.
+
 ## Next session
 Ask the owner how the four designs look on the phone and what to change. Not yet styled per design: text fields (only their shape and colours change), drop-down menus, the bin's cards, the picture viewer, the star and private-eye badges, the menu (hamburger) icon. The web pages still only have light/dark (DECISIONS: ask before adding designs there).
 

@@ -83,13 +83,13 @@ object Repo {
         private set
     var myCats by mutableStateOf(listOf("Tech", "Home", "Fashion", "Books"))
         private set
-    var theme by mutableStateOf("system")
+    var theme by mutableStateOf("light")
         private set
     /** The palette picked before 2.50 (one of PALETTES in Theme.kt). No longer chosen or used: the app is always indigo. */
     var palette by mutableStateOf("indigo")
         private set
     /**
-     * "classic" (the themes System default / Light / Dark / AMOLED black in [theme], as the app always looked) or one
+     * "classic" (the standard themes Light / Dark / AMOLED black in [theme], the original look) or one
      * of the four designs in Design.kt ("material", "organic", "neo", "clay"), with its colour set in [colours].
      */
     var design by mutableStateOf("classic")
@@ -168,7 +168,11 @@ object Repo {
         p.getString("cats", null)?.let { s ->
             myCats = s.split("\n").filter { it.isNotBlank() }
         }
-        theme = p.getString("theme", "system") ?: "system"
+        // There is no "System default" any more (2.53): the first start (and a phone that had it) quietly takes
+        // Light or Dark to match the phone's setting at that moment.
+        theme = p.getString("theme", null)?.takeIf { it == "light" || it == "dark" || it == "amoled" }
+            ?: if ((c.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
+                android.content.res.Configuration.UI_MODE_NIGHT_YES) "dark" else "light"
         palette = p.getString("palette", "indigo") ?: "indigo"
         // Stored as "style" since 2.52 ("design" of 2.51 is ignored: everyone starts on the classic themes again).
         design = p.getString("style", "classic")?.takeIf { d -> designFor(d) != null } ?: "classic"

@@ -37,8 +37,8 @@ import kotlin.math.sin
 /*
  * Themes (App settings > Theme, and the Themer).
  *
- * The classic themes are the app as it always looked: System default, Light, Dark and AMOLED black (Repo.theme), indigo,
- * with the font chosen in App settings. Their look is "classic" below and must stay exactly as it was.
+ * The standard ("classic") themes are the original look: Light, Dark and AMOLED black (Repo.theme), indigo,
+ * with Google Sans. Their look is "classic" below and must stay exactly as it was.
  *
  * Next to them are four designs, each a complete style of its own with its own colour sets (one of them dark), fonts,
  * icons, buttons, switches, dialogs, top bar, side menu, labels and wish cards. The font from App settings is not used:
