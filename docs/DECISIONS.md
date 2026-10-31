@@ -39,7 +39,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Tapping the eye on a private wish makes it visible**: "Wish is now visible to friends" with Undo, for 5 seconds (also "Wish is now private" from the menus).
 - **Delete question**: "Deleting this wish moves "…" to the bin. After 10 days it's permanently deleted."
 
-- **Name and price on one line in the wish form**: the price takes at most 7 characters (9999,99) and is just wide enough for them; the name gets the rest and stays on one line. Opening "Other information" scrolls down so all of it is in sight.
+- **Name and price on one line in the wish form**: the price field is just wide enough for "9999,99" but takes any amount (a longer one scrolls inside the field); the name gets the rest and stays on one line. Opening "Other information" scrolls down so all of it is in sight.
 - **Wish form, later tweaks**: the folded section is called "Other information" ("Description, size, notes"); the price field shows the currency's symbol (€ for EUR) in front of the amount, label "Price (EUR)"; no "Fetch details" button (pasting a link reads the page; the keyboard's Done key does too).
 
 ## Prices

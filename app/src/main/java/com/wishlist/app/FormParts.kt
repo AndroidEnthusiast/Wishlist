@@ -145,6 +145,3 @@ fun currencySymbol(code: String): String = try {
 } catch (e: Exception) {
     code
 }
-
-/** What can be typed as a price: up to 4 digits, then a dot or comma and up to 2 digits ("9999,99" at most). */
-val PRICE_INPUT = Regex("^\\d{0,4}([.,]\\d{0,2})?$")

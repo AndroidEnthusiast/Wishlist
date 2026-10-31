@@ -1259,9 +1259,8 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
                         modifier = Modifier.weight(1f)
                     )
                     OutlinedTextField(
-                        // At most 9999.99 (or 9999,99): 4 digits, then 2 behind the comma. Longer typing is ignored;
-                        // deleting always works (a price read from a shop can be longer).
-                        price, { if (PRICE_INPUT.matches(it) || it.length < price.length) price = it },
+                        // Narrow, sized for "9999,99"; any amount can be typed, a longer one scrolls inside the field.
+                        price, { price = it },
                         label = { Text(tr("Price (%s)", cur), maxLines = 1) }, singleLine = true,
                         // The symbol of the currency in the label: € for EUR, $ for USD, £ for GBP, …
                         prefix = { Text(currencySymbol(cur)) },
