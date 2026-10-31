@@ -19,21 +19,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 
-/** A wishlist a new wish can be saved to. [code] is null for My wishlist, otherwise the code of a shared wishlist. */
-data class SaveTarget(val code: String?, val name: String)
+/**
+ * A wishlist a new wish can be saved to. [code] is null for My wishlist, otherwise the code of a shared wishlist.
+ * [priv]: My wishlist as a private wish (only on this phone).
+ */
+data class SaveTarget(val code: String?, val name: String, val priv: Boolean = false) {
+    /** "mine", "private" or the code of a shared list (also what Repo.lastSaveTo remembers). */
+    val key: String get() = code ?: if (priv) "private" else "mine"
+}
 
 /**
  * Every wishlist you can save to, My wishlist first. When you can make more wishlists of your own later,
  * this is the one place that has to list them too.
  */
-fun saveTargets(myName: String, shared: List<SharedList>): List<SaveTarget> =
-    listOf(SaveTarget(null, myName.ifBlank { "My wishlist" }.let { if (it == "My wishlist") tr(it) else it })) + shared.map { SaveTarget(it.code, it.name) }
+fun saveTargets(myName: String, shared: List<SharedList>): List<SaveTarget> {
+    val mine = myName.ifBlank { "My wishlist" }.let { if (it == "My wishlist") tr(it) else it }
+    return listOf(SaveTarget(null, mine), SaveTarget(null, tr("%s · Private wish", mine), priv = true)) +
+        shared.map { SaveTarget(it.code, it.name) }
+}
 
 /** A drop-down to choose which wishlist a wish is saved to. */
 @Composable
-fun SaveToField(targets: List<SaveTarget>, selected: String?, onPick: (String?) -> Unit, modifier: Modifier = Modifier) {
+fun SaveToField(targets: List<SaveTarget>, selected: String, onPick: (String) -> Unit, modifier: Modifier = Modifier) {
     var open by remember { mutableStateOf(false) }
-    val current = targets.firstOrNull { it.code == selected } ?: targets.first()
+    val current = targets.firstOrNull { it.key == selected } ?: targets.first()
     Box(modifier) {
         OutlinedTextField(
             value = current.name, onValueChange = {}, readOnly = true, singleLine = true,
@@ -49,8 +58,8 @@ fun SaveToField(targets: List<SaveTarget>, selected: String?, onPick: (String?) 
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             targets.forEach { t ->
                 DropdownMenuItem(
-                    text = { Text(t.name, fontWeight = if (t.code == current.code) FontWeight.Bold else FontWeight.Normal) },
-                    onClick = { open = false; onPick(t.code) }
+                    text = { Text(t.name, fontWeight = if (t.key == current.key) FontWeight.Bold else FontWeight.Normal) },
+                    onClick = { open = false; onPick(t.key) }
                 )
             }
         }

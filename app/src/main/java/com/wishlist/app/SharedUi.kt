@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.launch
 
-private fun toast(c: Context, message: String) {
+fun toast(c: Context, message: String) {
     Toast.makeText(c, message, Toast.LENGTH_SHORT).show()
 }
 

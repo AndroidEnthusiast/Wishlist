@@ -37,7 +37,12 @@ data class Wish(
     /** On a shared wishlist: the name of the person who moved it to the bin. */
     val binBy: String = "",
     /** On a shared wishlist: when a phone last asked the shop for its price (ms), so the other phones can skip it. */
-    val checked: Long = 0L
+    val checked: Long = 0L,
+    /**
+     * "Private wish" (My wishlist only): it stays on this phone and never goes online, so friends never see it. It is
+     * stored as "priv" on the phone only: [Cloud.pushList] leaves such wishes out, and shared lists never have them.
+     */
+    val priv: Boolean = false
 )
 
 /** A wishlist that someone else shared with you. */
@@ -56,6 +61,7 @@ fun wishToJson(w: Wish): JSONObject = JSONObject().apply {
     if (w.bin > 0L) put("bin", w.bin)
     if (w.binBy.isNotBlank()) put("binBy", w.binBy)
     if (w.checked > 0L) put("chk", w.checked)
+    if (w.priv) put("priv", true)
 }
 
 fun wishFromJson(o: JSONObject): Wish = Wish(
@@ -65,7 +71,7 @@ fun wishFromJson(o: JSONObject): Wish = Wish(
     if (o.isNull("old")) null else o.getDouble("old"),
     o.optString("cur", "USD"), o.optString("cat", ""), o.optBoolean("got"),
     o.optBoolean("star"), o.optString("note", ""), o.optString("size", ""), o.optString("by", ""),
-    o.optLong("bin", 0L), o.optString("binBy", ""), o.optLong("chk", 0L)
+    o.optLong("bin", 0L), o.optString("binBy", ""), o.optLong("chk", 0L), o.optBoolean("priv")
 )
 
 object Repo {
@@ -121,6 +127,9 @@ object Repo {
     /** When the last background price check finished (0 = never). */
     var lastCheck by mutableStateOf(0L)
         private set
+    /** Where the last wish shared in from the browser was saved: "mine", "private" or the code of a shared list. */
+    var lastSaveTo = "mine"
+        private set
 
     /** Set once the owner has shared the list online. */
     var shareCode by mutableStateOf<String?>(null)
@@ -163,6 +172,7 @@ object Repo {
         myAbout = p.getString("about", "") ?: ""
         intervalHours = p.getInt("interval", 6).let { if (it in listOf(1, 3, 6, 12, 24)) it else 6 }
         lastCheck = p.getLong("lastCheck", 0L)
+        lastSaveTo = p.getString("last_save_to", "mine") ?: "mine"
         myName = p.getString("name", null)?.takeIf { it.isNotBlank() } ?: "My wishlist"
         shareCode = p.getString("code", null)
         ownerToken = p.getString("token", null)
@@ -197,6 +207,7 @@ object Repo {
             .putBoolean("notify_drops", notifyDrops)
             .putBoolean("notify_rises", notifyRises)
             .putLong("lastCheck", lastCheck)
+            .putString("last_save_to", lastSaveTo)
             .putString("name", myName)
             .putString("code", shareCode)
             .putString("token", ownerToken)
@@ -252,8 +263,18 @@ object Repo {
 
     // ---- deleting with Undo (begin) ----
 
-    /** My wishlist as it goes online for friends. The bin goes along too (marked "bin", so friends don't see it), so a reservation on it stays when it is restored. */
-    fun syncWishes(): List<Wish> = myWishes + myBin
+    /**
+     * My wishlist as it goes online for friends. The bin goes along too (marked "bin", so friends don't see it), so a
+     * reservation on it stays when it is restored. Private wishes never go online.
+     */
+    fun syncWishes(): List<Wish> = (myWishes + myBin).filter { !it.priv }
+
+    /** Makes a wish of My wishlist private (it goes offline at the next push) or visible to friends again. */
+    @Synchronized
+    fun setPrivate(c: Context, id: Long, on: Boolean) {
+        val w = myWishes.firstOrNull { it.id == id } ?: return
+        if (w.priv != on) replaceMine(c, w.copy(priv = on))
+    }
 
     /** Moves a wish of the open list to the bin at once. Null if the wish isn't there. */
     @Synchronized
@@ -397,6 +418,9 @@ object Repo {
     fun setLastCheck(c: Context, t: Long) { lastCheck = t; persist(c) }
 
     @Synchronized
+    fun setLastSaveTo(c: Context, to: String) { lastSaveTo = to; persist(c) }
+
+    @Synchronized
     fun setShare(c: Context, code: String?, token: String?) {
         shareCode = code; ownerToken = token; persist(c)
     }
@@ -408,7 +432,7 @@ object Repo {
     fun addFriend(c: Context, f: Friend) { friends = friends.filter { it.code != f.code } + f; persist(c) }
 
     @Synchronized
-    fun removeFriend(c: Context, code: String) { friends = friends.filter { it.code != code }; persist(c) }
+    fun removeFriend(c: Context, code: String) { friends = friends.filter { it.code != code }; persist(c); FriendWatch.forget(c, code) }
 
     @Synchronized
     fun renameFriend(c: Context, code: String, name: String) {

@@ -61,7 +61,9 @@ fun shareItem(c: Context, w: Wish) {
 /** What a long press on a wish opens. */
 @Composable
 /** The long-press menu. On a shared list there is no most wanted and no price history: leave those out (null). */
-fun ItemMenuDialog(w: Wish, onHistory: (() -> Unit)?, onShare: () -> Unit, onStar: (() -> Unit)?, onClose: () -> Unit) {
+fun ItemMenuDialog(
+    w: Wish, onHistory: (() -> Unit)?, onShare: () -> Unit, onStar: (() -> Unit)?, onPrivate: (() -> Unit)? = null, onClose: () -> Unit
+) {
     val cs = MaterialTheme.colorScheme
     AlertDialog(
         onDismissRequest = onClose,
@@ -70,6 +72,9 @@ fun ItemMenuDialog(w: Wish, onHistory: (() -> Unit)?, onShare: () -> Unit, onSta
             Column {
                 if (onStar != null) MenuRow(if (w.star) tr("Remove from most wanted") else tr("Most wanted"), onStar) {
                     StarIcon(w.star, if (w.star) StarGold else cs.onSurfaceVariant, 24.dp)
+                }
+                if (onPrivate != null) MenuRow(if (w.priv) tr("Visible to friends") else tr("Make private"), onPrivate) {
+                    Icon(PrivateIcon, null, tint = cs.onSurfaceVariant)
                 }
                 if (onHistory != null) MenuRow(tr("Price history"), onHistory) { HistoryIcon(cs.onSurfaceVariant) }
                 MenuRow(tr("Share item"), onShare) { Icon(Icons.Default.Share, null, tint = cs.onSurfaceVariant) }

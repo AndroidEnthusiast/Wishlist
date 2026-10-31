@@ -72,6 +72,7 @@ fun FriendScreen(f: Friend, snack: SnackbarHostState, onMenu: () -> Unit, onRemo
                     val m = Cloud.fetchReservations(f.code, Repo.deviceId)
                     remote = r
                     res = m
+                    FriendWatch.check(ctx, f, r, m.filterValues { it }.keys)
                     state = "ok"
                     if (r.name != f.name) Repo.renameFriend(ctx, f.code, r.name)
                 }
@@ -89,8 +90,10 @@ fun FriendScreen(f: Friend, snack: SnackbarHostState, onMenu: () -> Unit, onRemo
             try {
                 if (reserve) {
                     if (!Cloud.reserve(f.code, w.id, Repo.deviceId)) msg = tr("Someone else just reserved that one.")
+                    else FriendWatch.reserved(ctx, f.code, w)
                 } else {
                     Cloud.unreserve(f.code, w.id, Repo.deviceId)
+                    FriendWatch.unreserved(ctx, f.code, w.id)
                 }
                 res = Cloud.fetchReservations(f.code, Repo.deviceId)
             } catch (e: Exception) {

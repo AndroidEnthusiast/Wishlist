@@ -114,7 +114,8 @@ object Cloud {
         code: String, token: String, name: String, cats: List<String>, wishes: List<Wish>, about: String = ""
     ) {
         val items = JSONArray()
-        wishes.forEach { items.put(wishToJson(if (ImageStore.isLocal(it.image)) it.copy(image = "") else it)) }
+        // A private wish never leaves the phone (Repo.syncWishes leaves them out already; this makes sure).
+        wishes.filter { !it.priv }.forEach { items.put(wishToJson(if (ImageStore.isLocal(it.image)) it.copy(image = "") else it)) }
         if (about.isNotBlank()) {
             items.put(
                 JSONObject().put("id", ABOUT_ITEM_ID).put("kind", "about").put("about", about)

@@ -236,13 +236,17 @@ object Bin {
     }
 }
 
-/** Runs [Bin.watch] every half hour (see [Alerts.scheduleBin]). */
+/** Runs [Bin.watch] and [FriendWatch.checkAll] every half hour (see [Alerts.scheduleBin]). */
 class BinWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {
     override suspend fun doWork(): Result {
         val c = applicationContext
         Repo.load(c)
         try {
             Bin.watch(c)
+        } catch (e: Exception) {
+        }
+        try {
+            FriendWatch.checkAll(c)
         } catch (e: Exception) {
         }
         return Result.success()

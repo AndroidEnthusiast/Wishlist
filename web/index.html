@@ -36,6 +36,7 @@ try { var wlt = localStorage.getItem("wl_theme"); if (wlt === "light" || wlt ===
 <main>
   <p class="sub" id="sub" hidden></p>
   <p class="about" id="about" hidden></p>
+  <p class="tip" id="gone" role="status" hidden></p>
   <div class="bar" id="bar" hidden>
     <div class="pick">
       <div id="chips" class="menuwrap" hidden>
@@ -125,6 +126,29 @@ function loadView() {
 
 function saveView(v) {
   try { localStorage.setItem("wl_view", v); } catch (e) { }
+}
+
+// Gifts reserved in this browser on this list (id -> title). If one is taken off the list later (deleted, or made a
+// private wish), the next visit says so and suggests another gift. The owner never learns it was reserved.
+function myResKey() { return "wl_res_" + code; }
+function readMyRes() {
+  try { var o = JSON.parse(localStorage.getItem(myResKey()) || "{}"); return o && typeof o === "object" ? o : {}; } catch (e) { return {}; }
+}
+function writeMyRes(o) {
+  try { localStorage.setItem(myResKey(), JSON.stringify(o)); } catch (e) { }
+}
+function noteGone(titles) {
+  var g = $("gone");
+  g.textContent = "";
+  titles.forEach(function (t) {
+    g.appendChild(el("span", null, T("“{0}” is no longer on the list. Have a look for another gift.", t || T("Wish"))));
+    g.appendChild(document.createTextNode(" "));
+  });
+  var ok = el("button", "link", "OK");
+  ok.type = "button";
+  ok.addEventListener("click", function () { g.hidden = true; });
+  g.appendChild(ok);
+  g.hidden = false;
 }
 
 function deviceId() {
@@ -676,6 +700,13 @@ async function refresh() {
       return !(w && w.bin);
     });
     l.about = about;
+    // Remember what this browser reserved, and say so when one of those gifts is no longer on the list.
+    var mine = readMyRes(), seen = {}, gone = [];
+    l.items.forEach(function (w) { seen[w.id] = w; });
+    Object.keys(m).forEach(function (id) { if (m[id] === true && seen[id]) mine[id] = String(seen[id].title || ""); });
+    Object.keys(mine).forEach(function (id) { if (!seen[id]) { gone.push(mine[id]); delete mine[id]; } });
+    writeMyRes(mine);
+    if (gone.length) noteGone(gone);
     list = l; res = m; state = "ok";
   } catch (e) {
     if (!list) state = "offline";
@@ -692,6 +723,9 @@ async function toggle(w, reserve) {
       if (ok !== true) msg = T("Someone else just reserved that one.");
     } else {
       await rpc("wl_unreserve_item", { p_code: code, p_item: w.id, p_device: deviceId() });
+      var mine = readMyRes();
+      delete mine[w.id];
+      writeMyRes(mine);
     }
     busy = false;
     await refresh();

@@ -198,7 +198,8 @@ fun shareText(c: Context, title: String, text: String) {
 
 /** Plain-text export of the whole list (works without any online setup). */
 fun shareList(c: Context, l: List<Wish>) {
-    val body = l.joinToString("\n\n") { w ->
+    // Private wishes are for you only: they are never in what you share.
+    val body = l.filter { !it.priv }.joinToString("\n\n") { w ->
         val p = if (w.price != null) " - " + money(w.price, w.currency) else ""
         w.title + p + "\n" + w.url
     }

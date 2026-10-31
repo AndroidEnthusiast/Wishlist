@@ -163,6 +163,8 @@ class MainActivity : ComponentActivity() {
     companion object {
         const val BIN_CODE = "bin_code"
         const val BIN_ID = "bin_id"
+        /** A "gift you reserved is no longer on the list" alert: the friend's list to open. */
+        const val FRIEND_CODE = "friend_code"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -217,6 +219,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handle(i: Intent?) {
+        if (i != null && i.hasExtra(FRIEND_CODE)) {
+            sharedCode = i.getStringExtra(FRIEND_CODE)
+            i.removeExtra(FRIEND_CODE)
+            return
+        }
         if (i != null && i.hasExtra(BIN_ID)) {
             binTarget = (i.getStringExtra(BIN_CODE) ?: "") to i.getLongExtra(BIN_ID, 0L)
             // Handled once: turning the phone must not open the bin again.
@@ -782,6 +789,7 @@ fun HomeScreen(
             onHistory = if (inShared) null else ({ menuId = null; historyId = w.id }),
             onShare = { menuId = null; shareItem(ctx, w) },
             onStar = if (inShared) null else ({ menuId = null; Repo.replace(ctx, w.copy(star = !w.star)) }),
+            onPrivate = if (inShared) null else ({ menuId = null; togglePrivate(ctx, w) }),
             onClose = { menuId = null }
         )
     }
@@ -882,17 +890,21 @@ fun CompactCard(
                     contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().padding(6.dp)
                 )
             } else Text("🎁", fontSize = 36.sp)
-            if ((drop || rise) && newP != null && oldP != null) {
-                Surface(
-                    color = if (rise) Rise else Green, shape = RoundedCornerShape(6.dp),
-                    modifier = Modifier.align(Alignment.TopStart).padding(8.dp)
-                ) {
-                    Text(
-                        if (rise) "↑ +${Math.round((newP / oldP - 1) * 100)}%" else "↓ ${Math.round((1 - newP / oldP) * 100)}%",
-                        color = Color.White,
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
+            // Top left: the eye of a private wish, then the price change.
+            Row(
+                Modifier.align(Alignment.TopStart).padding(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (w.priv) PrivateBadge(size = 14.dp)
+                if ((drop || rise) && newP != null && oldP != null) {
+                    Surface(color = if (rise) Rise else Green, shape = RoundedCornerShape(6.dp)) {
+                        Text(
+                            if (rise) "↑ +${Math.round((newP / oldP - 1) * 100)}%" else "↓ ${Math.round((1 - newP / oldP) * 100)}%",
+                            color = Color.White,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
                 }
             }
             if (!w.got) {
@@ -946,6 +958,10 @@ fun CompactCard(
                             text = { Text(if (w.got) tr("Mark as not got") else tr("Mark as got")) },
                             onClick = { menu = false; Repo.replace(ctx, w.copy(got = !w.got)) }
                         )
+                        DropdownMenuItem(
+                            text = { Text(if (w.priv) tr("Visible to friends") else tr("Make private")) },
+                            onClick = { menu = false; togglePrivate(ctx, w) }
+                        )
                     }
                     DropdownMenuItem(text = { Text(tr("Delete")) }, onClick = { menu = false; DeleteFlow.request(ctx, w) })
                 }
@@ -995,17 +1011,21 @@ fun WishCard(
                     contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().padding(8.dp)
                 )
             } else Text("🎁", fontSize = 48.sp)
-            if ((drop || rise) && newP != null && oldP != null) {
-                Surface(
-                    color = if (rise) Rise else Green, shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.align(Alignment.TopStart).padding(12.dp)
-                ) {
-                    Text(
-                        if (rise) "↑ +${Math.round((newP / oldP - 1) * 100)}%" else "↓ " + tr("%d%% off", Math.round((1 - newP / oldP) * 100)),
-                        color = Color.White,
-                        style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                    )
+            // Top left: the eye of a private wish, then the price change.
+            Row(
+                Modifier.align(Alignment.TopStart).padding(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (w.priv) PrivateBadge()
+                if ((drop || rise) && newP != null && oldP != null) {
+                    Surface(color = if (rise) Rise else Green, shape = RoundedCornerShape(8.dp)) {
+                        Text(
+                            if (rise) "↑ +${Math.round((newP / oldP - 1) * 100)}%" else "↓ " + tr("%d%% off", Math.round((1 - newP / oldP) * 100)),
+                            color = Color.White,
+                            style = MaterialTheme.typography.labelMedium,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                        )
+                    }
                 }
             }
             // Top right: the star (the owner can tap it), and below it the status such as "Got it".
@@ -1088,6 +1108,8 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
     var note by remember { mutableStateOf(edit?.note ?: "") }
     var sizeSel by remember { mutableStateOf(edit?.size ?: "") }
     var star by remember { mutableStateOf(edit?.star ?: false) }
+    // "Private wish": only on this phone, friends never see it (My wishlist only). Off unless chosen.
+    var priv by remember { mutableStateOf(edit?.priv ?: false) }
     val starFx = rememberStarFx()
     var busy by remember { mutableStateOf(false) }
     var err by remember { mutableStateOf("") }
@@ -1140,7 +1162,19 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
             }
         }
     }
-    LaunchedEffect(Unit) { if (edit == null && initialUrl.isNotEmpty()) go(initialUrl) }
+    // A wish shared in from the browser goes where the last one went (My wishlist, private, or a shared list).
+    fun pickTarget(key: String) {
+        when (key) {
+            "mine", "private" -> { Shared.close(); priv = key == "private" }
+            else -> if (Shared.lists.any { it.code == key }) { Shared.open(ctx, key); priv = false }
+        }
+        // Every wishlist has its own categories.
+        cat = Repo.cats.firstOrNull() ?: ""
+    }
+    LaunchedEffect(Unit) {
+        if (chooseList && edit == null) pickTarget(Repo.lastSaveTo)
+        if (edit == null && initialUrl.isNotEmpty()) go(initialUrl)
+    }
 
     AlertDialog(
         onDismissRequest = { close() },
@@ -1148,14 +1182,10 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
         title = { Text(if (edit == null) tr("Add a wish") else tr("Edit wish")) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (chooseList && edit == null && targets.size > 1) {
+                if (chooseList && edit == null) {
                     SaveToField(
-                        targets = targets, selected = Shared.active,
-                        onPick = { code ->
-                            if (code == null) Shared.close() else Shared.open(ctx, code)
-                            // Every wishlist has its own categories.
-                            cat = Repo.cats.firstOrNull() ?: ""
-                        },
+                        targets = targets, selected = Shared.active ?: if (priv) "private" else "mine",
+                        onPick = { pickTarget(it) },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -1211,6 +1241,21 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
                     }
                     Switch(checked = star, onCheckedChange = { star = it })
                 }
+                // Private wish: My wishlist only (a shared list is for the givers, there is nothing to hide there).
+                if (Shared.active == null) Row(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { priv = !priv }.padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(PrivateIcon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(24.dp))
+                    Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                        Text(tr("Private wish"), style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            tr("Only you can see it. Friends won’t."),
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(checked = priv, onCheckedChange = { priv = it })
+                }
                 Text(tr("Category"), style = MaterialTheme.typography.labelMedium)
                 Row(
                     Modifier.horizontalScroll(rememberScrollState()),
@@ -1249,16 +1294,19 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
                             ctx,
                             Wish(
                                 System.currentTimeMillis(), u, title.trim(), desc, image, p, null, cur, cat,
-                                star = star && Shared.active == null, note = note.trim(), size = sizeSel, by = Repo.authorName
+                                star = star && Shared.active == null, note = note.trim(), size = sizeSel, by = Repo.authorName,
+                                priv = priv && Shared.active == null
                             )
                         )
+                        if (chooseList) Repo.setLastSaveTo(ctx, Shared.active ?: if (priv) "private" else "mine")
                     } else {
                         Repo.replace(
                             ctx,
                             edit.copy(
                                 url = u, title = title.trim(), desc = desc, image = image, price = p,
                                 oldPrice = if (p == edit.price) edit.oldPrice else null,
-                                currency = cur, category = cat, star = star && Shared.active == null, note = note.trim(), size = sizeSel
+                                currency = cur, category = cat, star = star && Shared.active == null, note = note.trim(), size = sizeSel,
+                                priv = priv && Shared.active == null
                             ),
                             base = edit
                         )

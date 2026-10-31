@@ -105,7 +105,7 @@ object Alerts {
         val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         nm.createNotificationChannel(
             NotificationChannel(BIN_CHANNEL, tr("Reserved gifts"), NotificationManager.IMPORTANCE_HIGH).apply {
-                description = tr("Tells you when a gift you reserved is moved to the bin")
+                description = tr("Tells you when a gift you reserved is moved to the bin or taken off a list")
             }
         )
         val id = code.hashCode() * 31 + w.id.hashCode() + 7
@@ -125,6 +125,34 @@ object Alerts {
             .setAutoCancel(true)
             .build()
         nm.notify(id, n)
+    }
+
+    /**
+     * A gift this phone reserved on a friend's wishlist was taken off it (deleted, or made private). Nudges you to
+     * pick another one; tapping opens that friend's list.
+     */
+    fun notifyGiftGone(c: Context, code: String, id: Long, title: String, listName: String) {
+        val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        nm.createNotificationChannel(
+            NotificationChannel(BIN_CHANNEL, tr("Reserved gifts"), NotificationManager.IMPORTANCE_HIGH).apply {
+                description = tr("Tells you when a gift you reserved is moved to the bin or taken off a list")
+            }
+        )
+        val nid = code.hashCode() * 31 + id.hashCode() + 11
+        val text = tr("“%1\$s” was taken off %2\$s. Have a look for another gift.", title, listName)
+        val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.FRIEND_CODE, code)
+            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        val pi = PendingIntent.getActivity(c, nid, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val n = NotificationCompat.Builder(c, BIN_CHANNEL)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle(tr("A gift you reserved is no longer on the list"))
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+        nm.notify(nid, n)
     }
 
     /** Shows an example alert. Returns false if notifications are switched off for the app. */

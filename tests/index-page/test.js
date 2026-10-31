@@ -100,6 +100,20 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   const myDevice = d.window.localStorage.getItem("wl_device");
   check("device id stored and used", !!myDevice && store.reservations[1] === myDevice);
 
+  check("reserved gift remembered in this browser", JSON.parse(d.window.localStorage.getItem("wl_res_ABCD2345") || "{}")[1] !== undefined);
+
+  // a gift reserved here that is no longer on the list (deleted, or made a private wish): say so, once
+  const dg = await load("?c=ABCD2345", w => { w.localStorage.setItem("wl_device", myDevice); w.localStorage.setItem("wl_res_ABCD2345", JSON.stringify({ 1: "Headphones", 999: "Old <b>gift</b>" })); });
+  await sleep(100);
+  const goneNote = dg.window.document.getElementById("gone");
+  check("gone gift: note shown, as text, with OK", !goneNote.hidden && /“Old <b>gift<\/b>” is no longer on the list\. Have a look for another gift\./.test(goneNote.textContent) && !goneNote.querySelector("b") && !!goneNote.querySelector("button"));
+  check("gone gift: still-listed reservation kept, gone one forgotten", JSON.stringify(Object.keys(JSON.parse(dg.window.localStorage.getItem("wl_res_ABCD2345")))) === JSON.stringify(["1"]));
+  goneNote.querySelector("button").click();
+  check("gone gift: OK hides the note", goneNote.hidden);
+  const dg2 = await load("?c=ABCD2345", w => { w.localStorage.setItem("wl_device", myDevice); w.localStorage.setItem("wl_res_ABCD2345", JSON.stringify({ 1: "Headphones" })); });
+  await sleep(100);
+  check("nothing gone: no note", dg2.window.document.getElementById("gone").hidden);
+
   const d2 = await load("?c=ABCD2345");
   const c1b = d2.window.document.querySelectorAll(".card")[0];
   check("other visitor sees Reserved, no button", c1b.querySelector(".badge.status").textContent === "Reserved" && !c1b.querySelector("button.act"));

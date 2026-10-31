@@ -75,6 +75,7 @@ window.WL_NL = {
   "Copied ✓": "Gekopieerd ✓",
   "Share…": "Delen…",
   "Invite link": "Uitnodigingslink",
+  "“{0}” is no longer on the list. Have a look for another gift.": "“{0}” staat niet meer op de lijst. Kijk eens naar een ander cadeau.",
   "Reserve a gift so nobody gives the same gift twice.": "Reserveer een cadeau, zodat niemand hetzelfde cadeau twee keer geeft.",
   "Whoever opens it can add wishes and reserve gifts, like you. Only send it to people you trust.": "Wie hem opent, kan net als jij wensen toevoegen en cadeaus reserveren. Stuur hem alleen naar mensen die je vertrouwt.",
   "Picture of the wish": "Afbeelding van de wens",
