@@ -1,6 +1,11 @@
 package com.wishlist.app
 
 import android.content.Context
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.graphics.Shadow
@@ -120,9 +125,9 @@ private fun HistoryIcon(tint: Color) {
 fun targetGold(dark: Boolean): Color = if (dark) Color(0xFFFFC94D) else Color(0xFFA87400)
 
 /**
- * The price graph of one wish (long press a wish > Price history, or a wish on the Prices tab). Below it, "Set target
- * price" (see Targets.kt); a target that is reached shows in gold, bold, with a soft glow ([highlight]: opened from the
- * "Target price reached" alert). "View product" opens the shop's page.
+ * The price graph of one wish (long press a wish > Price history, or a wish on the Prices tab). Below it the target
+ * price (TargetRow, see Targets.kt); a target that is reached shows in gold, bold, with a soft glow ([highlight]: opened
+ * from the "Target price reached" alert). "View product" opens the shop's page.
  */
 @Composable
 fun PriceHistoryDialog(w: Wish, highlight: Boolean = false, onClose: () -> Unit) {
@@ -134,7 +139,6 @@ fun PriceHistoryDialog(w: Wish, highlight: Boolean = false, onClose: () -> Unit)
     val target = Targets.all[w.id]
     val reached = Targets.reached(w)
     val gold = targetGold(LocalLook.current.dark)
-    var setting by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = onClose,
         title = { Text(tr("Price history")) },
@@ -149,25 +153,8 @@ fun PriceHistoryDialog(w: Wish, highlight: Boolean = false, onClose: () -> Unit)
                 } else {
                     HistoryBody(points, w.currency, nowSec, if (reached) gold else null)
                 }
-                // The target price: gold, bold and softly glowing when the price is at or below it.
-                if (target != null && !setting) {
-                    Text(
-                        tr("Target price: %s", money(target, w.currency)),
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            shadow = if (reached) Shadow(gold.copy(alpha = if (highlight) 0.8f else 0.55f), Offset.Zero, 18f) else null
-                        ),
-                        fontWeight = if (reached) FontWeight.Bold else FontWeight.Medium,
-                        color = if (reached) gold else cs.onSurface
-                    )
-                }
-                if (setting) {
-                    TargetForm(w, points, target, onDone = { setting = false })
-                } else if (w.price != null) {
-                    // Bottom left: set (or change) the target price.
-                    TextButton(onClick = { setting = true }) {
-                        Text(if (target == null) tr("Set target price") else tr("Change target price"))
-                    }
-                }
+                // Under "Tracking since…": the target price, gold when the price is at or below it.
+                if (w.price != null) TargetRow(w, reached, gold, highlight)
             }
         },
         confirmButton = { TextButton(onClick = onClose) { Text(tr("Close")) } },
@@ -178,33 +165,65 @@ fun PriceHistoryDialog(w: Wish, highlight: Boolean = false, onClose: () -> Unit)
 }
 
 /**
- * Setting a target price: the price now and the lowest since the wish was added (to help pick a realistic target),
- * the field, and Save (or Remove when there is one).
+ * "Target price" in bold with the amount next to it. The keyboard's tick saves it (a green tick shows), the ✕ removes
+ * it. A target has to be below the price now (otherwise it would be reached already). When the price comes down to it
+ * (a price check), the words and the amount are gold, with a soft glow ([highlight]: opened from the alert).
  */
+@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
-private fun TargetForm(w: Wish, points: List<PricePoint>, target: Double?, onDone: () -> Unit) {
+private fun TargetRow(w: Wish, reached: Boolean, gold: Color, highlight: Boolean) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
-    var text by remember { mutableStateOf(target?.let { String.format(Locale.ROOT, "%.2f", it) } ?: "") }
-    val value = text.replace(',', '.').trim().toDoubleOrNull()
-    val low = points.minOfOrNull { it.p } ?: w.price
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(
-            tr("Now %1\$s · Lowest since added %2\$s", money(w.price ?: 0.0, w.currency), money(low ?: 0.0, w.currency)),
-            style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
-        )
-        OutlinedTextField(
-            text, { text = it.take(10) }, singleLine = true,
-            label = { Text(tr("Target price (%s)", w.currency)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            modifier = Modifier.fillMaxWidth()
-        )
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (target != null) TextButton(onClick = { Targets.set(ctx, w, null); onDone() }) { Text(tr("Remove"), color = cs.error) }
-            Spacer(Modifier.weight(1f))
-            TextButton(onClick = onDone) { Text(tr("Cancel")) }
-            Button(enabled = value != null && value > 0, onClick = { value?.let { Targets.set(ctx, w, it) }; onDone() }) { Text(tr("Save")) }
+    val keyboard = LocalSoftwareKeyboardController.current
+    val focus = LocalFocusManager.current
+    val target = Targets.all[w.id]
+    var text by remember(w.id) { mutableStateOf(target?.let { String.format(Locale.ROOT, "%.2f", it) } ?: "") }
+    var saves by remember { mutableStateOf(0) }
+    var err by remember { mutableStateOf<String?>(null) }
+    val glow = if (reached) Shadow(gold.copy(alpha = if (highlight) 0.8f else 0.55f), Offset.Zero, 18f) else null
+    fun save() {
+        val v = text.replace(',', '.').trim().toDoubleOrNull()
+        val now = w.price ?: return
+        when {
+            v == null || v <= 0 -> err = tr("Fill in an amount.")
+            v >= now - 0.005 -> err = tr("Choose an amount below the price now (%s).", money(now, w.currency))
+            else -> {
+                Targets.set(ctx, w, v)
+                text = String.format(Locale.ROOT, "%.2f", v)
+                err = null
+                saves++
+                keyboard?.hide()
+                focus.clearFocus()
+            }
         }
+    }
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                tr("Target price"), fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleSmall.copy(shadow = glow),
+                color = if (reached) gold else cs.onSurface, modifier = Modifier.padding(end = 10.dp)
+            )
+            OutlinedTextField(
+                text, { text = it.take(10); err = null }, singleLine = true,
+                prefix = { Text(currencySymbol(w.currency)) },
+                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = if (reached) FontWeight.Bold else FontWeight.Normal,
+                    color = if (reached) gold else cs.onSurface, shadow = glow
+                ),
+                isError = err != null,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { save() }),
+                modifier = Modifier.width(112.dp)
+            )
+            SavedFeedback(saves, Modifier.padding(start = 6.dp), compact = true)
+            if (target != null) {
+                IconButton(onClick = { Targets.set(ctx, w, null); text = ""; err = null }) {
+                    Icon(AppIcons.Close, tr("Remove the target price"), tint = cs.onSurfaceVariant)
+                }
+            }
+        }
+        err?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = cs.error) }
     }
 }
 

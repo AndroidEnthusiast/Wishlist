@@ -454,12 +454,7 @@ val NL: Map<String, String> = mapOf(
     "The icons, fonts and building blocks in Wishlist, and their licences." to "De pictogrammen, lettertypen en bouwstenen in Wishlist, en hun licenties.",
     "Choose wishes from your other lists to copy here." to "Kies wensen van je andere lijstjes om hierheen te kopiëren.",
     "reached your target price" to "heeft je streefprijs bereikt",
-    "Target price: %s" to "Streefprijs: %s",
-    "Set target price" to "Streefprijs instellen",
-    "Change target price" to "Streefprijs wijzigen",
     "View product" to "Product bekijken",
-    "Now %1\$s · Lowest since added %2\$s" to "Nu %1\$s · Laagste sinds toegevoegd %2\$s",
-    "Target price (%s)" to "Streefprijs (%s)",
     "%1\$s is now %2\$s. Your target was %3\$s." to "%1\$s kost nu %2\$s. Je streefprijs was %3\$s.",
     "Target price reached" to "Streefprijs bereikt",
     "Create a new personal wishlist" to "Maak een nieuw persoonlijk verlanglijstje",
@@ -479,5 +474,9 @@ val NL: Map<String, String> = mapOf(
     "Leave “%s”?" to "“%s” verlaten?",
     "It disappears from your lists. It stays for everyone else, and you can join again with the invite link." to "Het verdwijnt uit je lijstjes. Het blijft voor iedereen, en met de uitnodigingslink kun je weer meedoen.",
     "Old %s" to "Oud %s",
-    "New %s" to "Nieuw %s"
+    "New %s" to "Nieuw %s",
+    "Fill in an amount." to "Vul een bedrag in.",
+    "Choose an amount below the price now (%s)." to "Kies een bedrag onder de huidige prijs (%s).",
+    "Target price" to "Streefprijs",
+    "Remove the target price" to "Streefprijs verwijderen"
 )

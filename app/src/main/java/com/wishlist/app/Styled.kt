@@ -379,7 +379,7 @@ object AppIcons {
  * to it keeps its width.
  */
 @Composable
-fun SavedFeedback(saves: Int, modifier: Modifier = Modifier) {
+fun SavedFeedback(saves: Int, modifier: Modifier = Modifier, compact: Boolean = false) {
     val green = if (LocalLook.current.dark) Color(0xFF6FD39A) else Color(0xFF1E7B45)
     var visible by remember { mutableStateOf(false) }
     val draw = remember { Animatable(0f) }
@@ -391,7 +391,8 @@ fun SavedFeedback(saves: Int, modifier: Modifier = Modifier) {
         delay(1100)
         visible = false
     }
-    Box(modifier.width(88.dp), contentAlignment = Alignment.CenterStart) {
+    // compact: only the tick (where there is little room, like next to the target price).
+    Box(modifier.width(if (compact) 26.dp else 88.dp), contentAlignment = Alignment.CenterStart) {
         AnimatedVisibility(visible, enter = fadeIn(tween(120)), exit = fadeOut(tween(400))) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Canvas(Modifier.size(20.dp)) {
@@ -407,7 +408,7 @@ fun SavedFeedback(saves: Int, modifier: Modifier = Modifier) {
                     pm.getSegment(0f, pm.length * draw.value, part, true)
                     drawPath(part, green, style = Stroke(2.6f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
                 }
-                Text(
+                if (!compact) Text(
                     tr("Saved"), color = green, style = MaterialTheme.typography.labelLarge,
                     modifier = Modifier.padding(start = 4.dp)
                 )
