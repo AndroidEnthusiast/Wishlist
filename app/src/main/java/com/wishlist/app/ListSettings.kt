@@ -88,7 +88,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                     Column {
                         Text(Repo.listName, fontWeight = LocalLook.current.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(
-                            if (shared != null) tr("Group wishlist settings") else tr("Wishlist settings"),
+                            if (shared != null) tr("Wishlist for someone") else tr("Wishlist settings"),
                             style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
                         )
                     }
@@ -149,7 +149,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
             SectionTitle(tr("Note for friends"))
             Text(
                 if (shared != null) tr("Shown at the top of the list. For example sizes, or things the person already has.")
-                else tr("Shown at the top of your shared list. For example your sizes, or things you don’t want."),
+                else tr("Shown at the top of your wishlist. For example your sizes, or things you don’t want."),
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
             )
             OutlinedTextField(

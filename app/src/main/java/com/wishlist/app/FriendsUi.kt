@@ -684,7 +684,7 @@ fun ProfileScreen(snack: SnackbarHostState) {
                 SavedFeedback(nameSaved)
             }
             Text(
-                tr("Friends see your name and photo. Your name is also shown as “Added by” on group wishlists (you can use a different name on one list in its ⚙)."),
+                tr("Friends see your name and photo. Your name is also shown as “Added by” on wishlists for someone (you can use a different name on one list in its ⚙)."),
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
             )
 

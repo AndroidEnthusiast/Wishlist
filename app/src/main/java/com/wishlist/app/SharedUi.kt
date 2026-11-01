@@ -48,7 +48,7 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
     AlertDialog(
         onDismissRequest = { if (!busy) onClose() },
         properties = DialogProperties(dismissOnClickOutside = false),
-        title = { Text(tr("New group wishlist")) },
+        title = { Text(tr("New wishlist for someone")) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
@@ -141,7 +141,7 @@ fun JoinDialog(key: String, onJoined: (String) -> Unit, onClose: () -> Unit) {
         onDismissRequest = { if (!joining) onClose() },
         // Only the buttons close this, so a tap next to it doesn't lose the invitation.
         properties = DialogProperties(dismissOnClickOutside = false),
-        title = { Text(if (name != null) tr("Join “%s”?", name) else tr("Shared wishlist invitation")) },
+        title = { Text(if (name != null) tr("Join “%s”?", name) else tr("Invitation to a wishlist for someone")) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (name != null) {

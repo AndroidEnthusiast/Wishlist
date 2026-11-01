@@ -159,7 +159,7 @@ fun PriceHistoryDialog(w: Wish, highlight: Boolean = false, onClose: () -> Unit)
         },
         confirmButton = { TextButton(onClick = onClose) { Text(tr("Close")) } },
         dismissButton = if (w.url.isNotBlank()) ({
-            TextButton(onClick = { try { ui.openUri(w.url) } catch (e: Exception) { } }) { Text(tr("View product")) }
+            TextButton(onClick = { try { ui.openUri(w.url) } catch (e: Exception) { } }) { Text(tr("View in shop")) }
         }) else null
     )
 }

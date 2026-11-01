@@ -603,7 +603,7 @@ fun App(
                     // Then the wishlists you make together with other givers (group wishlists).
                     DrawerDivider()
                     Text(
-                        tr("Group wishlists"), style = MaterialTheme.typography.labelLarge,
+                        tr("Wishlists for someone"), style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 28.dp, top = 8.dp, bottom = 8.dp)
                     )
@@ -613,7 +613,7 @@ fun App(
                             scope.launch { drawer.close() }
                         }
                     }
-                    DrawerItem(tr("New group wishlist"), AppIcons.Add, false) {
+                    DrawerItem(tr("New wishlist for someone"), AppIcons.Add, false) {
                         newShared = true
                         scope.launch { drawer.close() }
                     }
@@ -1022,7 +1022,7 @@ fun HomeScreen(
                             ) { editing = w }
                             else -> WishCard(
                                 w,
-                                badge = if (inShared) reservedLabel(r) else if (w.got) tr("Got it") else null,
+                                badge = if (inShared) reservedLabel(r) else if (w.got) tr("Owned") else null,
                                 dim = if (inShared) r == false else w.got,
                                 onLongPress = { openMenu(w) },
                                 onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
@@ -1041,7 +1041,7 @@ fun HomeScreen(
                                 } else {
                                     IconButton(onClick = { Repo.replace(ctx, w.copy(got = !w.got)) }) {
                                         Icon(
-                                            AppIcons.Check, tr("Mark as got"),
+                                            AppIcons.Check, tr("Mark as owned"),
                                             tint = if (w.got) cs.primary else look.cardMuted(w.id)
                                         )
                                     }
@@ -1201,7 +1201,7 @@ fun CompactCard(
                 if (onStar != null) StarToggle(w.star, onStar, Modifier.align(Alignment.TopEnd).padding(6.dp))
                 else if (w.star) MostWantedBadge(false, Modifier.align(Alignment.TopEnd).padding(8.dp))
             }
-            val status = if (w.got) tr("Got it") else reservedLabel(reserve?.state)
+            val status = if (w.got) tr("Owned") else reservedLabel(reserve?.state)
             if (status != null) {
                 StatusBadge(status, small = true, modifier = Modifier.align(Alignment.TopEnd).padding(8.dp))
             }
@@ -1247,7 +1247,7 @@ fun CompactCard(
                             onClick = { menu = false; Repo.replace(ctx, w.copy(star = !w.star)) }
                         )
                         DropdownMenuItem(
-                            text = { Text(if (w.got) tr("Mark as not got") else tr("Mark as got")) },
+                            text = { Text(if (w.got) tr("Mark as not owned") else tr("Mark as owned")) },
                             onClick = { menu = false; Repo.replace(ctx, w.copy(got = !w.got)) }
                         )
                         DropdownMenuItem(

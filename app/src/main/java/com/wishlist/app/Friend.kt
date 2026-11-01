@@ -158,7 +158,7 @@ fun FriendScreen(
                                 WishCard(
                                     w,
                                     badge = when {
-                                        w.got -> tr("Got it")
+                                        w.got -> tr("Owned")
                                         r == true -> tr("Reserved by you")
                                         r == false -> tr("Reserved")
                                         else -> null

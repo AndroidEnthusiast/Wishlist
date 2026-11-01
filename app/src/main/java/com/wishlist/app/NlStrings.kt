@@ -589,5 +589,23 @@ val NL: Map<String, String> = mapOf(
     "Every wish from all your wishlists, in one place." to "Elke wens van al je verlanglijstjes, op één plek.",
     "Wish" to "Wens",
     "Wishlist" to "Verlanglijstje",
+    // App review wording (2.95)
+    "Everyone on a wishlist for someone sees its deleted wishes here and can restore them." to "Iedereen op een verlanglijstje voor iemand ziet de verwijderde wensen hier en kan ze terugzetten.",
+    "Couldn’t load the bin of every wishlist for someone. Check your connection." to "Kon de prullenbak van niet elk verlanglijstje voor iemand laden. Controleer je verbinding.",
+    "Wishes from wishlists for someone are gone for everyone on them." to "Wensen van verlanglijstjes voor iemand zijn weg voor iedereen erop.",
+    "New wishlist for someone" to "Nieuw verlanglijstje voor iemand",
+    "Make a wishlist with other gift givers and surprise someone with a gift they’ll love." to "Maak samen met andere gevers een verlanglijstje en verras iemand met een cadeau waar die blij van wordt.",
+    "Wishlist for someone" to "Verlanglijstje voor iemand",
+    "Owned" to "In bezit",
+    "Wishlists for someone" to "Verlanglijstjes voor iemand",
+    "Everyone on this wishlist for someone will lose it, with all its wishes and reservations. This can’t be undone." to "Iedereen op dit verlanglijstje voor iemand raakt het kwijt, met alle wensen en reserveringen. Dit kan niet ongedaan worden gemaakt.",
+    "Shown at the top of your wishlist. For example your sizes, or things you don’t want." to "Staat bovenaan je verlanglijstje. Bijvoorbeeld je maten, of dingen die je niet wilt.",
+    "Mark as owned" to "Markeren als in bezit",
+    "Mark as not owned" to "Markeren als niet in bezit",
+    "Price watch" to "Prijswacht",
+    "Price increases" to "Prijsstijgingen",
+    "No wishlist for someone is open." to "Er is geen verlanglijstje voor iemand open.",
+    "Invitation to a wishlist for someone" to "Uitnodiging voor een verlanglijstje voor iemand",
+    "Friends see your name and photo. Your name is also shown as “Added by” on wishlists for someone (you can use a different name on one list in its ⚙)." to "Vrienden zien je naam en foto. Je naam staat ook bij “Toegevoegd door” op verlanglijstjes voor iemand (op één lijstje kun je een andere naam gebruiken via ⚙).",
     "No" to "Nee"
 )

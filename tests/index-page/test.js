@@ -75,7 +75,7 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   const cards = [...doc.querySelectorAll(".card")];
   check("item1 Reserve button + 20% badge", cards[0].querySelector("button.act").textContent === "Reserve" && cards[0].querySelector(".badge.drop").textContent.includes("20%"));
   check("item2 Reserved by someone else, no button", cards[1].querySelector(".badge.status").textContent === "Reserved" && !cards[1].querySelector("button.act"));
-  check("item3 Got it, no button", cards[2].querySelector(".badge.status").textContent === "Got it" && !cards[2].querySelector("button.act"));
+  check("item3 Owned, no button", cards[2].querySelector(".badge.status").textContent === "Owned" && !cards[2].querySelector("button.act"));
   const noLink = {id: 9, url: "", title: "Custom gift", desc: "", image: "", price: null, old: null, cur: "USD", cat: "Home", got: false};
   items.push(noLink);
   const dn = await load("?c=abcd2345");
@@ -153,7 +153,7 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   const cc = [...D(v).querySelectorAll(".card.compact")];
   check("compact: no desc, meta or store link", !D(v).querySelector(".card.compact .desc") && !D(v).querySelector(".card.compact .meta") && !D(v).querySelector(".card.compact .store"));
   check("compact: Reserve button, price and 20% badge kept", cc[0].querySelector("button.act").textContent === "Reserve" && cc[0].querySelector(".price").textContent.includes("80") && cc[0].querySelector(".badge.drop").textContent.includes("20%"));
-  check("compact: statuses kept", cc[1].querySelector(".badge.status").textContent === "Reserved" && cc[2].querySelector(".badge.status").textContent === "Got it");
+  check("compact: statuses kept", cc[1].querySelector(".badge.status").textContent === "Reserved" && cc[2].querySelector(".badge.status").textContent === "Owned");
   check("compact: HTML still not injected", !D(v).querySelector(".title b"));
   check("choice saved in localStorage", v.window.localStorage.getItem("wl_view") === "grid");
   cc[0].querySelector("button.act").click();

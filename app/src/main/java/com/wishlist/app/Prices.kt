@@ -63,7 +63,7 @@ fun PricesScreen(snack: SnackbarHostState, onProfile: () -> Unit = {}) {
         containerColor = cs.background,
         topBar = {
             TopAppBar(
-                title = { Text(tr("Price history"), fontWeight = look.titleWeight) },
+                title = { Text(tr("Price watch"), fontWeight = look.titleWeight) },
                 navigationIcon = { MenuSlot() },
                 actions = { ProfileButton(onProfile) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)

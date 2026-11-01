@@ -555,7 +555,7 @@ function card(w, compact) {
   // Plus and minus, not arrows (it isn't a stock trade).
   if (drop) pic.appendChild(el("span", "badge drop", "−" + Math.round((1 - w.price / w.old) * 100) + "%"));
   else if (rise) pic.appendChild(el("span", "badge drop rise", "+" + Math.round((w.price / w.old - 1) * 100) + "%"));
-  var status = got ? T("Got it") : r === true ? T("Reserved by you") : r === false ? T("Reserved") : "";
+  var status = got ? T("Owned") : r === true ? T("Reserved by you") : r === false ? T("Reserved") : "";
   var bx = el("div", "badges");
   if (w.star && !got && !SHARED_LIST) bx.appendChild(starBadge());
   if (status) bx.appendChild(el("span", "badge status", status));
@@ -695,7 +695,7 @@ async function refresh() {
     (rs || []).forEach(function (x) { m[x.id] = x.mine; });
     // The note for friends travels as one extra item of kind "about". It is not a wish.
     var about = "";
-    // Wishes in the bin (deleted, kept 10 days so they can be restored) are not on the list.
+    // Wishes in the bin (deleted, kept 30 days so they can be restored) are not on the list.
     l.items = (l.items || []).filter(function (w) {
       if (w && w.kind === "about") { about = String(w.about || ""); return false; }
       return !(w && w.bin);

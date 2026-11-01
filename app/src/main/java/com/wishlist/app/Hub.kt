@@ -142,10 +142,10 @@ fun HubScreen(
         HubTitle(tr("My wishlists"), addLabel = tr("New wishlist"), onAdd = if (onHome) onNewMine else null)
         BlockGrid(mineItems, onHome, ::actionsOf, onAddTo)
 
-        HubTitle(tr("Group wishlists"), addLabel = tr("New group wishlist"), onAdd = if (onHome) onNewGroup else null)
+        HubTitle(tr("Wishlists for someone"), addLabel = tr("New wishlist for someone"), onAdd = if (onHome) onNewGroup else null)
         if (groupItems.isEmpty()) {
             Text(
-                tr("Collect gift ideas for someone together with other givers, and see who buys what."),
+                tr("Make a wishlist with other gift givers and surprise someone with a gift they’ll love."),
                 style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
@@ -241,7 +241,7 @@ fun HubScreen(
             title = { Text(if (group) tr("Delete “%s” for everyone?", item.name) else tr("Delete “%s”?", item.name)) },
             text = {
                 Text(
-                    if (group) tr("Everyone on this group wishlist will lose it, with all its wishes and reservations. This can’t be undone.")
+                    if (group) tr("Everyone on this wishlist for someone will lose it, with all its wishes and reservations. This can’t be undone.")
                     else tr("The wishlist will be deleted and its wishes moved to the bin. You can restore them there for 10 days.")
                 )
             },

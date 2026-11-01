@@ -310,7 +310,7 @@
     var items = [], about = "";
     (r.items || []).forEach(function (o) {
       if (o && o.kind === "about") about = String(o.about || "");
-      // Wishes in the bin are not on the list (the app shows them in its Bin for 10 days).
+      // Wishes in the bin are not on the list (the app shows them in its Bin for 30 days).
       else if (o && Number(o.id) > 0 && !o.bin) items.push(normWish(o));
     });
     return {
@@ -447,7 +447,7 @@
 
   // ---- deleting: the wish goes to the bin at once (for everyone); Undo takes it out again ----
   // Only "bin" and "binBy" are written, so the picture and any reservation stay. Everyone on the list can restore it
-  // from the bin in the app for 10 days.
+  // from the bin in the app for 30 days.
 
   function binArgs(w, inBin) {
     return { p_key: key, p_item: wishJson(copyWish(w, inBin ? { bin: Date.now(), binBy: me } : { bin: 0, binBy: "" })), p_fields: ["bin", "binBy"] };
@@ -514,7 +514,7 @@
     if (instant) { deleteWish(w); return; }
     dialog({
       title: T("Delete this wish?"),
-      body: function (b) { b.appendChild(el("p", null, T("Deleting this wish moves “{0}” to the bin. After 10 days it’s permanently deleted.", w.title))); },
+      body: function (b) { b.appendChild(el("p", null, T("Deleting this wish moves “{0}” to the bin. After 30 days it’s permanently deleted.", w.title))); },
       actions: [
         { label: T("Cancel"), cls: "outline" },
         { label: T("Delete"), cls: "danger", onClick: function () { deleteWish(w); } }
@@ -570,7 +570,7 @@
   }
 
   function setName(raw) {
-    var n = String(raw || "").trim().slice(0, 60) || "Shared wishlist";
+    var n = String(raw || "").trim().slice(0, 60) || "Wishlist for someone";
     var before = content;
     write(before, copyWish(before, { name: n }), function () { return rpc("wl_sh_set_name", { p_key: key, p_name: n }); });
   }

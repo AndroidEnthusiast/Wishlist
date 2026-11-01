@@ -204,7 +204,7 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                 Modifier.fillMaxWidth().clickable { Repo.setNotifyRises(ctx, !Repo.notifyRises) },
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(tr("Price surges"), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f).padding(end = 12.dp))
+                Text(tr("Price increases"), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f).padding(end = 12.dp))
                 Switch(checked = Repo.notifyRises, onCheckedChange = { Repo.setNotifyRises(ctx, it) })
             }
             // Only while Android may hold back the checks (not Unrestricted): a way to allow it after "Not now".
