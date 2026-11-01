@@ -582,8 +582,7 @@ private fun TextTool(edit: HeroEdit, onDark: Color, onChange: (HeroEdit) -> Unit
                 focusedTextColor = w, unfocusedTextColor = w, cursorColor = w,
                 focusedLabelColor = w, unfocusedLabelColor = w.copy(alpha = 0.7f),
                 focusedBorderColor = w, unfocusedBorderColor = w.copy(alpha = 0.5f)
-            )
-        )
+            ), keyboardOptions = Capitalised)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             val custom = TEXT_COLOURS.none { it == edit.color }
             TEXT_COLOURS.forEach { c ->

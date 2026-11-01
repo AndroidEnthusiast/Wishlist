@@ -175,6 +175,8 @@ class MainActivity : ComponentActivity() {
         const val BIN_ID = "bin_id"
         /** A "gift you reserved is no longer on the list" alert: the friend's list to open. */
         const val FRIEND_CODE = "friend_code"
+        /** A "Target price reached" alert: the wish whose price history to open. */
+        const val HISTORY_ID = "history_id"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -229,6 +231,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handle(i: Intent?) {
+        if (i != null && i.hasExtra(HISTORY_ID)) {
+            HistoryNav.open = i.getLongExtra(HISTORY_ID, 0L)
+            i.removeExtra(HISTORY_ID)
+            return
+        }
         if (i != null && i.hasExtra(FRIEND_CODE)) {
             sharedCode = i.getStringExtra(FRIEND_CODE)
             i.removeExtra(FRIEND_CODE)
@@ -713,6 +720,12 @@ fun App(
     DeleteHost(snack)
     PrivateHost(snack)
     if (askBackground) BackgroundQuestion()
+    // A "Target price reached" alert (or its entry in Notifications): that wish's price history, the target lit up.
+    HistoryNav.open?.let { id ->
+        val w = remember(id, Repo.mineVersion, Repo.myWishes) { Repo.allMine(ctx).flatMap { it.wishes }.firstOrNull { it.id == id } }
+        if (w != null) PriceHistoryDialog(w, highlight = true) { HistoryNav.open = null }
+        else LaunchedEffect(id) { HistoryNav.open = null }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1419,8 +1432,7 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, sta
                         title, { title = it; if (it.isNotBlank()) nameErr = false }, label = { Text(tr("Name*")) }, singleLine = true,
                         isError = nameErr,
                         supportingText = if (nameErr) ({ Text(tr("What are you wishing for?")) }) else null,
-                        modifier = Modifier.weight(1f)
-                    )
+                        modifier = Modifier.weight(1f), keyboardOptions = Capitalised)
                     OutlinedTextField(
                         // Narrow, sized for "9999,99"; any amount can be typed, a longer one scrolls inside the field.
                         price, { price = it },
@@ -1467,13 +1479,11 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, sta
                 ProductInfo {
                     OutlinedTextField(
                         desc, { desc = it }, label = { Text(tr("Description")) },
-                        maxLines = 3, modifier = Modifier.fillMaxWidth()
-                    )
+                        maxLines = 3, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                     SizeField(sizeSel, { sizeSel = it }, Modifier.fillMaxWidth())
                     OutlinedTextField(
                         note, { note = it }, label = { Text(tr("Note for givers (colour, details, …)")) },
-                        maxLines = 3, modifier = Modifier.fillMaxWidth()
-                    )
+                        maxLines = 3, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 }
             }
         },

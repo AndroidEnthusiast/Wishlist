@@ -87,6 +87,11 @@ import androidx.compose.material3.TopAppBar as M3TopAppBar
  * themes they are exactly the Material components, as before.
  */
 
+/** Text fields for names and notes start with a capital letter (the keyboard does it; you can still change it). */
+val Capitalised = androidx.compose.foundation.text.KeyboardOptions(
+    capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Sentences
+)
+
 /** The Themer is open (App settings > Theme): the menu button is hidden, it has its own back arrow. */
 object ThemerNav {
     var open by mutableStateOf(false)

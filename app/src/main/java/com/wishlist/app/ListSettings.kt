@@ -98,7 +98,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
         ) {
             SectionTitle(tr("Name of the wishlist"))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(name, { name = it }, singleLine = true, modifier = Modifier.weight(1f))
+                OutlinedTextField(name, { name = it }, singleLine = true, modifier = Modifier.weight(1f), keyboardOptions = Capitalised)
                 Button(onClick = {
                     Repo.setListName(ctx, name)
                     name = Repo.listName
@@ -130,8 +130,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
             )
             OutlinedTextField(
                 about, { about = it.take(ABOUT_MAX) }, maxLines = 5, modifier = Modifier.fillMaxWidth(),
-                supportingText = { Text("${about.length}/$ABOUT_MAX") }
-            )
+                supportingText = { Text("${about.length}/$ABOUT_MAX") }, keyboardOptions = Capitalised)
             Button(onClick = {
                 Repo.setAbout(ctx, about)
                 about = Repo.about
@@ -156,8 +155,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(
                     newCat, { newCat = it }, label = { Text(tr("New category")) },
-                    singleLine = true, modifier = Modifier.weight(1f)
-                )
+                    singleLine = true, modifier = Modifier.weight(1f), keyboardOptions = Capitalised)
                 Button(onClick = { Repo.addCat(ctx, newCat); newCat = "" }) { Text(tr("Add")) }
             }
 
@@ -245,7 +243,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                         tr("Only for “%s”. Leave it empty to use the name from App settings.", Repo.listName),
                         style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
                     )
-                    OutlinedTextField(n, { n = it.take(30) }, singleLine = true, label = { Text(tr("Your name")) })
+                    OutlinedTextField(n, { n = it.take(30) }, singleLine = true, label = { Text(tr("Your name")) }, keyboardOptions = Capitalised)
                 }
             },
             confirmButton = {

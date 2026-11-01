@@ -54,6 +54,8 @@ object PriceCheck {
                     else -> null
                 } ?: continue
                 Repo.updateMine(c, listId) { l -> l.map { if (it.id == nw.id) nw else it } }
+                // Came down to your target price? (see Targets.kt)
+                Targets.check(c, "m:$listId", nw)
                 // A changed price becomes a point in the price history.
                 History.record(c, nw.id, np)
                 // Kept for the Notifications page (drops and rises as switched on in App settings).

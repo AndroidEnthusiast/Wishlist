@@ -89,15 +89,16 @@ fun CopyWishesDialog(targetId: String?, onDone: (List<Wish>) -> Unit, onClose: (
                     Modifier.fillMaxWidth().padding(start = 4.dp, end = 12.dp, top = 8.dp, bottom = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = onClose) { Text(tr("Cancel")) }
+                    // The title on the left, Cancel on the right.
                     Text(
                         tr("Add wishes from your other lists"), style = MaterialTheme.typography.titleMedium,
                         fontWeight = LocalLook.current.titleWeight, maxLines = 2,
-                        modifier = Modifier.weight(1f).padding(start = 4.dp)
+                        modifier = Modifier.weight(1f).padding(start = 12.dp)
                     )
+                    TextButton(onClick = onClose) { Text(tr("Cancel")) }
                 }
                 Text(
-                    tr("They are copied: they stay on their own list too. If you remove a wish there, its copy goes as well."),
+                    tr("Choose wishes from your other lists to copy here."),
                     style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )

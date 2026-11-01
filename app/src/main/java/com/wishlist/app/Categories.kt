@@ -70,8 +70,7 @@ fun CategoryDialog(onAdded: (String) -> Unit = {}, onClose: () -> Unit) {
             Column {
                 OutlinedTextField(
                     name, { name = it }, label = { Text(tr("Name")) }, singleLine = true, isError = reserved,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 if (reserved) {
                     Text(tr("“All” is already used."), color = cs.error, style = MaterialTheme.typography.bodySmall)
                 }
@@ -106,8 +105,7 @@ fun RenameCategoryDialog(name: String, onRenamed: (String) -> Unit, onClose: () 
             Column {
                 OutlinedTextField(
                     text, { text = it }, label = { Text(tr("Name")) }, singleLine = true, isError = taken,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 if (taken) {
                     Text(tr("That name is already used."), color = cs.error, style = MaterialTheme.typography.bodySmall)
                 }

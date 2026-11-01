@@ -419,7 +419,6 @@ val NL: Map<String, String> = mapOf(
     "Rose" to "Roze",
     "Amber" to "Amber",
     "Add wishes from your other lists" to "Wensen van je andere lijstjes toevoegen",
-    "They are copied: they stay on their own list too. If you remove a wish there, its copy goes as well." to "Ze worden gekopieerd: ze blijven ook op hun eigen lijstje. Verwijder je een wens daar, dan gaat de kopie ook weg.",
     "Your other lists have no wishes to add yet." to "Je andere lijstjes hebben nog geen wensen om toe te voegen.",
     "Add 1 wish" to "1 wens toevoegen",
     "Add %d wishes" to "%d wensen toevoegen",
@@ -454,5 +453,15 @@ val NL: Map<String, String> = mapOf(
     "Apache License 2.0 (full text)" to "Apache License 2.0 (volledige tekst)",
     "SIL Open Font License 1.1 (full text)" to "SIL Open Font License 1.1 (volledige tekst)",
     "About" to "Over",
-    "The icons, fonts and building blocks in Wishlist, and their licences." to "De pictogrammen, lettertypen en bouwstenen in Wishlist, en hun licenties."
+    "The icons, fonts and building blocks in Wishlist, and their licences." to "De pictogrammen, lettertypen en bouwstenen in Wishlist, en hun licenties.",
+    "Choose wishes from your other lists to copy here." to "Kies wensen van je andere lijstjes om hierheen te kopiëren.",
+    "reached your target price" to "heeft je streefprijs bereikt",
+    "Target price: %s" to "Streefprijs: %s",
+    "Set target price" to "Streefprijs instellen",
+    "Change target price" to "Streefprijs wijzigen",
+    "View product" to "Product bekijken",
+    "Now %1\$s · Lowest since added %2\$s" to "Nu %1\$s · Laagste sinds toegevoegd %2\$s",
+    "Target price (%s)" to "Streefprijs (%s)",
+    "%1\$s is now %2\$s. Your target was %3\$s." to "%1\$s kost nu %2\$s. Je streefprijs was %3\$s.",
+    "Target price reached" to "Streefprijs bereikt"
 )

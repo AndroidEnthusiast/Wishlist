@@ -64,6 +64,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.launch
 
@@ -131,7 +132,7 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(
                     me, { me = it.take(30) }, singleLine = true, label = { Text(tr("Name")) },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done, capitalization = KeyboardCapitalization.Sentences),
                     keyboardActions = KeyboardActions(onDone = {
                         if (me.isNotBlank()) {
                             Shared.setAppName(ctx, me)

@@ -59,18 +59,15 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
                     name, { name = it.take(60); if (it.isNotBlank()) missing = false }, label = { Text(tr("Name*")) },
                     placeholder = { Text(tr("Baby registry")) }, singleLine = true, isError = missing,
                     supportingText = if (missing) ({ Text(tr("What is this wishlist called?")) }) else null,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 OutlinedTextField(
                     notes, { notes = it.take(ABOUT_MAX) },
                     label = { Text(tr("Notes")) }, placeholder = { Text(tr("What is this wishlist for?")) },
-                    maxLines = 4, modifier = Modifier.fillMaxWidth()
-                )
+                    maxLines = 4, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 OutlinedTextField(
                     me, { me = it.take(30) }, label = { Text(tr("Your name")) },
                     supportingText = { Text(tr("Shown on the wishes you add")) },
-                    singleLine = true, modifier = Modifier.fillMaxWidth()
-                )
+                    singleLine = true, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 if (err.isNotEmpty()) {
                     Text(err, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 }
@@ -155,8 +152,7 @@ fun JoinDialog(key: String, onJoined: (String) -> Unit, onClose: () -> Unit) {
                     OutlinedTextField(
                         me, { me = it.take(30) }, label = { Text(tr("Your name")) },
                         supportingText = { Text(tr("Shown on the wishes you add")) },
-                        singleLine = true, modifier = Modifier.fillMaxWidth()
-                    )
+                        singleLine = true, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 } else if (checking) {
                     Text(
                         tr("Checking the invitation…"),

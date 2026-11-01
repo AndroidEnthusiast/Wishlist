@@ -52,7 +52,11 @@ val NewDot = Color(0xFFE53935)
  * One price change in Notifications: which wish ([wishId], [title], [image]), on which list ([listKey]: "m:<id>" for
  * your own, "s:<code>" for a group wishlist), and by how much in percent ([pct]: below zero is cheaper).
  */
-data class PriceNote(val wishId: Long, val listKey: String, val title: String, val image: String, val pct: Double, val time: Long, val read: Boolean)
+data class PriceNote(
+    val wishId: Long, val listKey: String, val title: String, val image: String, val pct: Double, val time: Long, val read: Boolean,
+    /** "price" (a drop or rise) or "target" (your target price was reached: [amount] in [currency]). */
+    val kind: String = "price", val amount: Double = 0.0, val currency: String = ""
+)
 
 /**
  * The Notifications page in the menu (since 2.67): every price drop and rise the price checks found, newest first,
@@ -77,7 +81,8 @@ object Notifications {
                 val o = a.getJSONObject(i)
                 PriceNote(
                     o.getLong("id"), o.optString("list"), o.optString("title"), o.optString("image"),
-                    o.optDouble("pct", 0.0), o.optLong("time"), o.optBoolean("read")
+                    o.optDouble("pct", 0.0), o.optLong("time"), o.optBoolean("read"),
+                    o.optString("kind", "price"), o.optDouble("amount", 0.0), o.optString("cur", "")
                 )
             }
         } catch (e: Exception) {
@@ -91,6 +96,7 @@ object Notifications {
             a.put(
                 JSONObject().put("id", it.wishId).put("list", it.listKey).put("title", it.title).put("image", it.image)
                     .put("pct", it.pct).put("time", it.time).put("read", it.read)
+                    .put("kind", it.kind).put("amount", it.amount).put("cur", it.currency)
             )
         }
         prefs(c).edit().putString(KEY, a.toString()).apply()
@@ -98,7 +104,7 @@ object Notifications {
 
     /** What the page shows: drops and rises as switched on in App settings. */
     val shown: List<PriceNote>
-        get() = all.filter { if (it.pct < 0) Repo.notifyDrops else Repo.notifyRises }
+        get() = all.filter { it.kind == "target" || if (it.pct < 0) Repo.notifyDrops else Repo.notifyRises }
 
     /** True while there is something new to see (the red dots). */
     val unread: Boolean get() = shown.any { !it.read }
@@ -112,8 +118,17 @@ object Notifications {
         load(c)
         val pct = (now - was) / was * 100
         // The newest change of a wish on a list replaces an older one, so the page doesn't fill up with one wish.
-        val rest = all.filter { !(it.wishId == w.id && it.listKey == listKey) }
+        val rest = all.filter { !(it.wishId == w.id && it.listKey == listKey && it.kind == "price") }
         all = (listOf(PriceNote(w.id, listKey, w.title, w.image, pct, System.currentTimeMillis(), false)) + rest).take(100)
+        save(c)
+    }
+
+    /** Your target price for [w] was reached ([target]). */
+    @Synchronized
+    fun targetReached(c: Context, listKey: String, w: Wish, target: Double) {
+        load(c)
+        val rest = all.filter { !(it.wishId == w.id && it.kind == "target") }
+        all = (listOf(PriceNote(w.id, listKey, w.title, w.image, 0.0, System.currentTimeMillis(), false, "target", target, w.currency)) + rest).take(100)
         save(c)
     }
 
@@ -160,12 +175,14 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
             contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 24.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            items(notes, key = { it.listKey + "_" + it.wishId }) { n ->
+            items(notes, key = { it.kind + "_" + it.listKey + "_" + it.wishId }) { n ->
                 val id = n.wishId
                 val down = n.pct < 0
+                val target = n.kind == "target"
                 Row(
                     Modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true))
-                        .clickable { onOpen(n.listKey) }.padding(10.dp),
+                        // A reached target opens the wish's price history; a price change opens its list.
+                        .clickable { if (target) HistoryNav.open = n.wishId else onOpen(n.listKey) }.padding(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     val mat = RoundedCornerShape(10.dp)
@@ -183,16 +200,23 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                             maxLines = 2, overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            if (down) tr("decreased in price") else tr("increased in price"),
+                            if (target) tr("reached your target price") else if (down) tr("decreased in price") else tr("increased in price"),
                             style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id)
                         )
                     }
-                    val pct = abs(n.pct).roundToLong().coerceAtLeast(1)
-                    Text(
-                        (if (down) "−" else "+") + pct + "%",
-                        style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
-                        color = if (down) look.drop else look.rise
-                    )
+                    if (target) {
+                        Text(
+                            money(n.amount, n.currency), style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold, color = targetGold(look.dark)
+                        )
+                    } else {
+                        val pct = abs(n.pct).roundToLong().coerceAtLeast(1)
+                        Text(
+                            (if (down) "−" else "+") + pct + "%",
+                            style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
+                            color = if (down) look.drop else look.rise
+                        )
+                    }
                 }
             }
         }

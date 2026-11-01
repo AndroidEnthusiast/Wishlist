@@ -363,13 +363,11 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
                     name, { name = it.take(60); if (it.isNotBlank()) missing = false },
                     label = { Text(tr("Name*")) }, singleLine = true, isError = missing,
                     supportingText = if (missing) ({ Text(tr("What is this wishlist called?")) }) else null,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 OutlinedTextField(
                     notes, { notes = it.take(ABOUT_MAX) },
                     label = { Text(tr("Notes")) }, placeholder = { Text(tr("What is this wishlist for?")) },
-                    maxLines = 4, modifier = Modifier.fillMaxWidth()
-                )
+                    maxLines = 4, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 if (canCopy) {
                     Row(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { picking = true }

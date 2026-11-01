@@ -114,6 +114,14 @@ fun PricesScreen(snack: SnackbarHostState) {
                             )
                             val ch = r.change
                             val pct = if (ch == null) 0L else Math.round(ch)
+                            // Both prices: when it was added and now (only when it changed).
+                            val first = History.of(r.w.id).firstOrNull()?.p
+                            if (first != null && pct != 0L) {
+                                Text(
+                                    money(first, r.w.currency) + " → " + money(r.w.price ?: 0.0, r.w.currency),
+                                    style = MaterialTheme.typography.labelSmall, color = look.cardMuted(id)
+                                )
+                            }
                             Text(
                                 when {
                                     ch == null -> ""

@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit
 
 /** Everything about price-drop alerts: the background schedule, the notification and the settings shortcuts. */
 object Alerts {
-    private const val CHANNEL = "price_drops"
+    const val CHANNEL = "price_drops"
     private const val BIN_CHANNEL = "reserved_bin"
 
     /** Creates the notification channel (high importance, so the alert pops up). Safe to call again and again. */

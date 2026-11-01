@@ -1,6 +1,14 @@
 package com.wishlist.app
 
 import android.content.Context
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import java.util.Locale
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -108,17 +116,30 @@ private fun HistoryIcon(tint: Color) {
     }
 }
 
-/** The price graph of one wish. It is not always on screen: long press a wish and choose Price history. */
+/** Gold for a reached target price: deeper on light backgrounds, brighter on dark ones (readable on both). */
+fun targetGold(dark: Boolean): Color = if (dark) Color(0xFFFFC94D) else Color(0xFFA87400)
+
+/**
+ * The price graph of one wish (long press a wish > Price history, or a wish on the Prices tab). Below it, "Set target
+ * price" (see Targets.kt); a target that is reached shows in gold, bold, with a soft glow ([highlight]: opened from the
+ * "Target price reached" alert). "View product" opens the shop's page.
+ */
 @Composable
-fun PriceHistoryDialog(w: Wish, onClose: () -> Unit) {
+fun PriceHistoryDialog(w: Wish, highlight: Boolean = false, onClose: () -> Unit) {
+    val ctx = LocalContext.current
+    val ui = LocalUriHandler.current
     val cs = MaterialTheme.colorScheme
     val nowSec = remember { System.currentTimeMillis() / 1000 }
     val points = History.of(w.id)
+    val target = Targets.all[w.id]
+    val reached = Targets.reached(w)
+    val gold = targetGold(LocalLook.current.dark)
+    var setting by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = onClose,
         title = { Text(tr("Price history")) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
                     w.title, style = MaterialTheme.typography.titleSmall, color = cs.onSurfaceVariant,
                     maxLines = 2, overflow = TextOverflow.Ellipsis
@@ -126,16 +147,69 @@ fun PriceHistoryDialog(w: Wish, onClose: () -> Unit) {
                 if (points.isEmpty()) {
                     Text(tr("No price recorded yet. Add a price to this wish and the history starts from there."))
                 } else {
-                    HistoryBody(points, w.currency, nowSec)
+                    HistoryBody(points, w.currency, nowSec, if (reached) gold else null)
+                }
+                // The target price: gold, bold and softly glowing when the price is at or below it.
+                if (target != null && !setting) {
+                    Text(
+                        tr("Target price: %s", money(target, w.currency)),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            shadow = if (reached) Shadow(gold.copy(alpha = if (highlight) 0.8f else 0.55f), Offset.Zero, 18f) else null
+                        ),
+                        fontWeight = if (reached) FontWeight.Bold else FontWeight.Medium,
+                        color = if (reached) gold else cs.onSurface
+                    )
+                }
+                if (setting) {
+                    TargetForm(w, points, target, onDone = { setting = false })
+                } else if (w.price != null) {
+                    // Bottom left: set (or change) the target price.
+                    TextButton(onClick = { setting = true }) {
+                        Text(if (target == null) tr("Set target price") else tr("Change target price"))
+                    }
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onClose) { Text(tr("Close")) } }
+        confirmButton = { TextButton(onClick = onClose) { Text(tr("Close")) } },
+        dismissButton = if (w.url.isNotBlank()) ({
+            TextButton(onClick = { try { ui.openUri(w.url) } catch (e: Exception) { } }) { Text(tr("View product")) }
+        }) else null
     )
 }
 
+/**
+ * Setting a target price: the price now and the lowest since the wish was added (to help pick a realistic target),
+ * the field, and Save (or Remove when there is one).
+ */
 @Composable
-private fun HistoryBody(points: List<PricePoint>, currency: String, nowSec: Long) {
+private fun TargetForm(w: Wish, points: List<PricePoint>, target: Double?, onDone: () -> Unit) {
+    val ctx = LocalContext.current
+    val cs = MaterialTheme.colorScheme
+    var text by remember { mutableStateOf(target?.let { String.format(Locale.ROOT, "%.2f", it) } ?: "") }
+    val value = text.replace(',', '.').trim().toDoubleOrNull()
+    val low = points.minOfOrNull { it.p } ?: w.price
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(
+            tr("Now %1\$s · Lowest since added %2\$s", money(w.price ?: 0.0, w.currency), money(low ?: 0.0, w.currency)),
+            style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
+        )
+        OutlinedTextField(
+            text, { text = it.take(10) }, singleLine = true,
+            label = { Text(tr("Target price (%s)", w.currency)) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            modifier = Modifier.fillMaxWidth()
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (target != null) TextButton(onClick = { Targets.set(ctx, w, null); onDone() }) { Text(tr("Remove"), color = cs.error) }
+            Spacer(Modifier.weight(1f))
+            TextButton(onClick = onDone) { Text(tr("Cancel")) }
+            Button(enabled = value != null && value > 0, onClick = { value?.let { Targets.set(ctx, w, it) }; onDone() }) { Text(tr("Save")) }
+        }
+    }
+}
+
+@Composable
+private fun HistoryBody(points: List<PricePoint>, currency: String, nowSec: Long, gold: Color? = null) {
     val cs = MaterialTheme.colorScheme
     val range = remember(points, nowSec) { chartRange(points, nowSec) }
     var frac by remember(points) { mutableStateOf(1f) }
@@ -147,7 +221,13 @@ private fun HistoryBody(points: List<PricePoint>, currency: String, nowSec: Long
 
     // Price and date under your finger. Without touching: today's price.
     Row(verticalAlignment = Alignment.Bottom) {
-        Text(money(curP, currency), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
+        // At or below the target (gold given): the price in gold and bold.
+        val atTarget = gold != null && frac >= 0.995f
+        Text(
+            money(curP, currency), style = MaterialTheme.typography.headlineSmall,
+            fontWeight = if (atTarget) FontWeight.Bold else FontWeight.SemiBold,
+            color = if (atTarget) gold!! else Color.Unspecified
+        )
         Spacer(Modifier.weight(1f))
         Text(
             if (frac >= 0.995f) tr("Now") else day(curT),

@@ -7,6 +7,8 @@ import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.animation.core.animateFloatAsState
@@ -137,7 +139,12 @@ fun ProductInfo(content: @Composable ColumnScope.() -> Unit) {
                 }
                 Icon(AppIcons.ArrowDropDown, null, modifier = Modifier.rotate(turn))
             }
-            AnimatedVisibility(open, enter = fadeIn(tween(220)), exit = fadeOut(tween(120))) {
+            // Opens and closes with the same movement: it unfolds and fades in, and folds back while fading out.
+            AnimatedVisibility(
+                open,
+                enter = fadeIn(tween(220)) + expandVertically(tween(220)),
+                exit = fadeOut(tween(220)) + shrinkVertically(tween(220))
+            ) {
                 Column(
                     Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
