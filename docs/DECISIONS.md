@@ -143,8 +143,8 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - The bottom bar keeps "New wishlist".
 - One wording to open a shop page: "View in shop" (not "View product" / "Open in store").
 - "Price surges" becomes "Price increases" (with "Price drops").
-- The lists edited together need a new name, NOT "Group wishlist": the owner plans a future feature "Wishlist sharing group" (friends join a group and see each other's wishlists). "Gift list" is too close to "wishlist"; "Joint wishlist" is understood but not liked. Choosing from alternatives.
-- The Prices tab's page title: owner leans to "Price changes"; choosing from alternatives.
+- **The lists edited together are called "Wishlist for someone"** (NL "Verlanglijstje voor iemand"), not "Group wishlist" or "Shared wishlist": the owner plans a future feature "Wishlist sharing group" (friends in a group see each other's wishlists); "Gift list" was too close to "wishlist", "Joint wishlist" not liked, "Gift planner" sounded like a tool. Home heading: "Wishlists for someone" (NL "Verlanglijstjes voor iemand"). Explainer (in the "New wishlist" choice and under the empty heading): "Make a wishlist with other gift givers and surprise someone with a gift they’ll love." Renamed everywhere, app and web pages.
+- **The Prices tab is "Price watch"** (page title; owner).
 
 ## Open ideas (not decided)
 - Personal recovery key: an encrypted online backup of your lists, keys, creator rights and settings, restored with a key (optionally saved in Google Password Manager), plus automatic clean-up of lists nobody uses. Ask the owner before building.
