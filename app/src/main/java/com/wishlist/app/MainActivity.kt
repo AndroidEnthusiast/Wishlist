@@ -1065,12 +1065,11 @@ fun CompactCard(
             if (w.image.isNotEmpty()) {
                 PhotoCard(w.image, w.title, small = true)
             } else Text(emoji, fontSize = 36.sp)
-            // Top left: the eye of a private wish, then the price change.
+            // Top left: the price change.
             Row(
                 Modifier.align(Alignment.TopStart).padding(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically
             ) {
-                if (w.priv) PrivateBadge(size = 14.dp, onClick = onPrivate)
                 if ((drop || rise) && newP != null && oldP != null) {
                     PriceBadge(
                         if (rise) "↑ +${Math.round((newP / oldP - 1) * 100)}%" else "↓ ${Math.round((1 - newP / oldP) * 100)}%",
@@ -1078,6 +1077,8 @@ fun CompactCard(
                     )
                 }
             }
+            // Bottom left: the eye of a private wish (the price change has the top left to itself).
+            if (w.priv) PrivateBadge(Modifier.align(Alignment.BottomStart).padding(8.dp), size = 14.dp, onClick = onPrivate)
             if (!w.got) {
                 if (onStar != null) StarToggle(w.star, onStar, Modifier.align(Alignment.TopEnd).padding(6.dp))
                 else if (w.star) MostWantedBadge(false, Modifier.align(Alignment.TopEnd).padding(8.dp))
@@ -1193,12 +1194,11 @@ fun WishCard(
             if (w.image.isNotEmpty()) {
                 PhotoCard(w.image, w.title, small = false)
             } else Text(emoji, fontSize = 48.sp)
-            // Top left: the eye of a private wish, then the price change.
+            // Top left: the price change.
             Row(
                 Modifier.align(Alignment.TopStart).padding(12.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically
             ) {
-                if (w.priv) PrivateBadge(onClick = onPrivate)
                 if ((drop || rise) && newP != null && oldP != null) {
                     PriceBadge(
                         if (rise) "↑ +${Math.round((newP / oldP - 1) * 100)}%" else "↓ " + tr("%d%% off", Math.round((1 - newP / oldP) * 100)),
@@ -1206,6 +1206,8 @@ fun WishCard(
                     )
                 }
             }
+            // Bottom left: the eye of a private wish (the price change has the top left to itself).
+            if (w.priv) PrivateBadge(Modifier.align(Alignment.BottomStart).padding(12.dp), onClick = onPrivate)
             // Top right: the star (the owner can tap it), and below it the status such as "Got it".
             Column(
                 Modifier.align(Alignment.TopEnd).padding(12.dp),
@@ -1361,7 +1363,6 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, sta
         if (mineId != null) {
             Shared.close()
             Repo.openMine(ctx, mineId)
-            priv = key.startsWith("private")
         } else if (Shared.lists.any { it.code == key }) {
             Shared.open(ctx, key); priv = false
         }
@@ -1381,7 +1382,7 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, sta
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (chooseList && edit == null) {
                     SaveToField(
-                        targets = targets, selected = Shared.active ?: MyLists.saveKey(Repo.openMine, priv),
+                        targets = targets, selected = Shared.active ?: MyLists.saveKey(Repo.openMine, false),
                         onPick = { pickTarget(it) },
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -1494,7 +1495,7 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, sta
                                 priv = priv && Shared.active == null
                             )
                         )
-                        if (chooseList) Repo.setLastSaveTo(ctx, Shared.active ?: MyLists.saveKey(Repo.openMine, priv))
+                        if (chooseList) Repo.setLastSaveTo(ctx, Shared.active ?: MyLists.saveKey(Repo.openMine, false))
                     } else {
                         Repo.replace(
                             ctx,

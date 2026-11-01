@@ -26,14 +26,15 @@ import androidx.compose.ui.text.font.FontWeight
  */
 data class SaveTarget(val code: String?, val name: String, val key: String)
 
-/** Every wishlist you can save to: each of your own (also as a private wish), then the group wishlists. */
+/**
+ * Every wishlist you can save to: each of your own, then the group wishlists. (Until 2.76 each of your lists was
+ * also offered as "· Private wish"; that was confusing, as there is no private list: the form's "Private wish"
+ * switch does it.)
+ */
 fun saveTargets(mine: List<Pair<String, String>>, shared: List<SharedList>): List<SaveTarget> =
-    mine.flatMap { (id, raw) ->
+    mine.map { (id, raw) ->
         val name = raw.ifBlank { "My wishlist" }.let { if (it == "My wishlist") tr(it) else it }
-        listOf(
-            SaveTarget(null, name, MyLists.saveKey(id, false)),
-            SaveTarget(null, tr("%s · Private wish", name), MyLists.saveKey(id, true))
-        )
+        SaveTarget(null, name, MyLists.saveKey(id, false))
     } + shared.map { SaveTarget(it.code, it.name, it.code) }
 
 /** A drop-down to choose which wishlist a wish is saved to. */

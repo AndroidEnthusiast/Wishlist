@@ -30,7 +30,9 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 /*
  * The bar at the bottom (since 2.65): quick access to what matters most, next to the side menu.
@@ -58,11 +60,11 @@ fun AppBottomBar(
     ) {
         NavigationBarItem(
             selected = current == "home", onClick = onHome,
-            icon = { Icon(AppIcons.Home, null) }, label = { Text(tr("Home"), maxLines = 1, softWrap = false) }
+            icon = { Icon(AppIcons.Home, null) }, label = { BarLabel(tr("Home")) }
         )
         NavigationBarItem(
             selected = false, onClick = onCreate,
-            icon = { WishlistIcon(LocalContentColor.current) }, label = { Text(tr("New wishlist"), maxLines = 1, softWrap = false) }
+            icon = { WishlistIcon(LocalContentColor.current) }, label = { BarLabel(tr("New wishlist")) }
         )
         // Add wish: only a + in a filled circle, no words.
         NavigationBarItem(
@@ -81,13 +83,22 @@ fun AppBottomBar(
         )
         NavigationBarItem(
             selected = current == "prices", onClick = onPrices,
-            icon = { PriceIcon(LocalContentColor.current) }, label = { Text(tr("Prices"), maxLines = 1, softWrap = false) }
+            icon = { PriceIcon(LocalContentColor.current) }, label = { BarLabel(tr("Prices")) }
         )
         NavigationBarItem(
             selected = current == "friends", onClick = onFriends,
-            icon = { Icon(AppIcons.Person, null) }, label = { Text(tr("Friends"), maxLines = 1, softWrap = false) }
+            icon = { Icon(AppIcons.Person, null) }, label = { BarLabel(tr("Friends")) }
         )
     }
+}
+
+/** A bar label: one line, a little smaller, never cut off ("New wishlist" is the longest). */
+@Composable
+private fun BarLabel(text: String) {
+    Text(
+        text, maxLines = 1, softWrap = false, overflow = TextOverflow.Visible,
+        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.sp)
+    )
 }
 
 /** A wishlist: a page with a heart and two lines (drawn here, in one colour like the other icons). */

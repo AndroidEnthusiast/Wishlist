@@ -31,6 +31,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **The dashboard picture is the "cover photo"** (2.68) and is edited before saving, like on Marktplaats: rotate, crop (zoom and move), lighter/darker slider, a text box (colour, box behind it, position), and the arrow up for a new photo (no bin icon there). Then the tick. Since 2.75 (rebuilt simply, the owner: "this little feature needs to work flawlessly"): the frame stands still in the middle in the cover's shape; you move the photo behind it with one finger at any zoom and pinch to zoom; the photo always fills the frame; on saving, exactly the part in the frame is cut out and shown; what is inside the frame is the cover; no zoom slider; tap the text for corners that resize it. (2.69: the photo moved and zoomed straight away (the part outside the frame dimmed), no instruction text; text is only dragged freely (no Top/Middle/Bottom); a rainbow dot next to the six colours opens a colour ball; "Box" sits right after the colours.)
 - **Only icons and fonts we may use** (2.72, owner: "100% sure"): Google's Material Icons (Apache 2.0), icons drawn in our own code, the phone's emoji; fonts under the SIL Open Font License (Google Sans built in, the theme fonts from Google Fonts). Never copy an icon or picture from the internet: draw our own version. The licence texts are in App settings > About > Licences; a new open-source part must be added there.
 - **"New wishlist" icon** (2.72): a page with a heart and two lines (drawn by us after an example the owner liked), one colour like the other bar icons. Not a gift (the + in the middle is for adding a wish).
+- **Shared lists are live** (owner, 2.76): every change to a list with a friends' link goes online (friends see new wishes); private wishes never do.
 - **Readable colours** (2.71): text never uses a colour that is too light for its background (Neobrutalism's yellow etc. only fill blocks; text and small controls use the ink).
 - **Bottom bar** (2.65; "New wishlist" with a gift icon since 2.71): Home, New wishlist, Add wish (just a +), Prices (price history of all wishes), Friends (coming later). The side menu stays.
 - **No default category** (2.64): a new wish starts with "No category"; people pick one themselves if they want.
@@ -50,8 +51,8 @@ What the owner has decided, and why. Follow these unless the owner changes their
 
 ## Private wishes
 - **"Private wish" switch on each wish of My wishlist, off by default** (October 2026). A private wish stays on the phone and never goes online, so friends never see it. No separate private list.
-- **Shown with an eye with a line through it** (Google's free Material "visibility off" icon) in the top left corner of the wish, in both views. Menu wording: "Make private" / "Visible to friends".
-- **"Save to" offers "My wishlist · Private wish"** when a link is shared into the app, and remembers the last choice.
+- **Shown with an eye with a line through it** (Google's free Material "visibility off" icon) in the bottom left corner of the wish's picture, in both views (since 2.76; the top left is for the price change). Menu wording: "Make private" / "Visible to friends".
+- **"Save to" lists only real lists** (2.76): the "· Private wish" choices were removed (confusing: there is no private list); the form's "Private wish" switch, or later the menu, makes a wish private. It remembers the last list.
 - **Private wishes keep getting price-drop notifications.**
 - **If a reserved gift is taken off the list** (made private or deleted), the person who reserved it is nudged to pick another gift: a notification on their phone when they use the app, a note on the friends' page when they use the browser. The owner still never learns it was reserved.
 

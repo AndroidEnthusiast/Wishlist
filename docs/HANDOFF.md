@@ -78,6 +78,8 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - v2.75: cover editor rebuilt: fixed frame, move and zoom the photo; root cause of the mismatch found (the photo was drawn in a box limited to the screen size).
 
+- v2.76: "New wishlist" label in full, no "· Private wish" in Save to, private eye bottom left. The owner confirmed the cover editor of 2.75 works.
+
 ## Next session
 - **Remind the owner: build the Friends feature** (they asked to be reminded; the bottom bar has a "Friends is coming soon" page for now).
 - Ask how the dashboard, the bottom bar and the hero editor feel on the phone.
