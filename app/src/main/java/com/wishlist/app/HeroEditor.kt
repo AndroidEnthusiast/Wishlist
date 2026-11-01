@@ -10,6 +10,13 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -86,11 +93,13 @@ import kotlin.math.roundToInt
 data class HeroEdit(
     val scale: Float = 1f, val x: Float = 0f, val y: Float = 0f,
     val text: String = "", val tx: Float = 0.5f, val ty: Float = 0.75f,
-    val rotation: Int = 0, val bright: Float = 0f, val color: Long = 0xFFFFFFFF, val box: Boolean = false
+    val rotation: Int = 0, val bright: Float = 0f, val color: Long = 0xFFFFFFFF, val box: Boolean = false,
+    /** The text's height as a part of the frame's height (0.16 is about the size of a heading). */
+    val textSize: Float = 0.16f
 ) {
     fun toJson(): String = JSONObject().put("scale", scale.toDouble()).put("x", x.toDouble()).put("y", y.toDouble())
         .put("text", text).put("tx", tx.toDouble()).put("ty", ty.toDouble())
-        .put("rot", rotation).put("bright", bright.toDouble()).put("color", color).put("box", box).toString()
+        .put("rot", rotation).put("bright", bright.toDouble()).put("color", color).put("box", box).put("tsize", textSize.toDouble()).toString()
 
     companion object {
         fun fromJson(s: String?): HeroEdit = try {
@@ -98,7 +107,8 @@ data class HeroEdit(
             HeroEdit(
                 o.optDouble("scale", 1.0).toFloat(), o.optDouble("x", 0.0).toFloat(), o.optDouble("y", 0.0).toFloat(),
                 o.optString("text", ""), o.optDouble("tx", 0.5).toFloat(), o.optDouble("ty", 0.75).toFloat(),
-                o.optInt("rot", 0), o.optDouble("bright", 0.0).toFloat(), o.optLong("color", 0xFFFFFFFF), o.optBoolean("box")
+                o.optInt("rot", 0), o.optDouble("bright", 0.0).toFloat(), o.optLong("color", 0xFFFFFFFF), o.optBoolean("box"),
+                o.optDouble("tsize", 0.16).toFloat()
             )
         } catch (e: Exception) {
             HeroEdit()
@@ -122,10 +132,31 @@ private fun coverSize(w: Float, h: Float, raw: Float, rotation: Int): Pair<Float
 
 private fun clampEdit(e: HeroEdit, w: Float, h: Float, raw: Float): HeroEdit {
     val (bw, bh) = coverSize(w, h, raw, e.rotation)
-    val s = e.scale.coerceIn(1f, 5f)
+    val s = e.scale.coerceIn(1f, 8f)
     val mx = ((bw * s - w) / 2f).coerceAtLeast(0f) / w
     val my = ((bh * s - h) / 2f).coerceAtLeast(0f) / h
     return e.copy(scale = s, x = e.x.coerceIn(-mx, mx), y = e.y.coerceIn(-my, my))
+}
+
+/** The part of the photo that becomes the cover: centre ([cx], [cy]) and size ([cw], [ch]) as parts of the photo. */
+private data class Crop(val cx: Float, val cy: Float, val cw: Float, val ch: Float)
+
+/** The edit as a crop of the photo. [fa]: the frame's shape (width / height). */
+private fun toCrop(e: HeroEdit, fa: Float, raw: Float): Crop {
+    val (bw, bh) = coverSize(fa, 1f, raw, e.rotation)
+    val s = e.scale.coerceIn(1f, 8f)
+    return Crop(0.5f - e.x * fa / (bw * s), 0.5f - e.y / (bh * s), fa / (bw * s), 1f / (bh * s))
+}
+
+/** A crop of the photo as an edit, kept inside the photo (and at most 8 times zoomed in). */
+private fun fromCrop(e: HeroEdit, c: Crop, fa: Float, raw: Float): HeroEdit {
+    val (bw, bh) = coverSize(fa, 1f, raw, e.rotation)
+    val s = (fa / (bw * c.cw)).coerceIn(1f, 8f)
+    val cw = fa / (bw * s)
+    val ch = 1f / (bh * s)
+    val cx = c.cx.coerceIn(cw / 2f, 1f - cw / 2f)
+    val cy = c.cy.coerceIn(ch / 2f, 1f - ch / 2f)
+    return e.copy(scale = s, x = (0.5f - cx) * bw * s / fa, y = (0.5f - cy) * bh * s)
 }
 
 /** Lighter or darker: [b] from -1 to 1 adds or takes away up to 40% of white. */
@@ -183,7 +214,7 @@ fun HeroPicture(
             val m = ((bh * s - h) / 2f).coerceAtLeast(0f) / h
             return y.coerceIn(-m, m)
         }
-        val s = edit.scale.coerceIn(1f, 5f)
+        val s = edit.scale.coerceIn(1f, 8f)
         val tx = clampX(edit.x, s) * w
         val ty = clampY(edit.y, s) * h
         // Turned sideways, the picture is drawn with width and height swapped and then turned.
@@ -212,7 +243,7 @@ fun HeroPicture(
                 Modifier.matchParentSize().pointerInput(Unit) {
                     detectTransformGestures { _, pan, zoom, _ ->
                         val e = current
-                        val ns = (e.scale * zoom).coerceIn(1f, 5f)
+                        val ns = (e.scale * zoom).coerceIn(1f, 8f)
                         change?.invoke(e.copy(scale = ns, x = clampX(e.x + pan.x / w, ns), y = clampY(e.y + pan.y / h, ns)))
                     }
                 }
@@ -224,7 +255,10 @@ fun HeroPicture(
             val boxCol = if (col.luminance() > 0.5f) Color.Black.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.75f)
             Text(
                 edit.text, color = col, fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.headlineSmall.copy(shadow = if (edit.box) null else heroTextShadow),
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    shadow = if (edit.box) null else heroTextShadow,
+                    fontSize = with(density) { (h * edit.textSize).toSp() }
+                ),
                 modifier = Modifier
                     .onSizeChanged { size = it }
                     .offset {
@@ -268,6 +302,8 @@ fun HeroEditor(image: String, start: HeroEdit, onSave: (String, HeroEdit) -> Uni
     var img by remember { mutableStateOf(image) }
     var edit by remember { mutableStateOf(start) }
     var tool by remember { mutableStateOf("crop") }
+    // The text is selected (tapped): it shows corners to make it bigger or smaller.
+    var textOn by remember { mutableStateOf(false) }
     // Photos picked here with the arrow: the ones not kept are deleted again.
     var picked by remember { mutableStateOf(listOf<String>()) }
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -300,31 +336,138 @@ fun HeroEditor(image: String, start: HeroEdit, onSave: (String, HeroEdit) -> Uni
                         onSave(img, edit)
                     }) { Icon(AppIcons.Check, tr("Save"), tint = onDark) }
                 }
-                // The photo, in a frame the size of the one on the dashboard. Drag anywhere here to move it and pinch to
-                // zoom, straight away; the part outside the frame shows dimmed.
+                // The whole photo with the cover frame over it (the rest dimmed). Drag inside the frame to move it, drag a
+                // corner to make it bigger or smaller (it keeps the cover's shape), pinch to zoom into the photo and drag
+                // outside the frame to look around. What is inside the frame is the cover photo.
                 val painter = rememberAsyncImagePainter(img)
                 val d = (painter.state as? AsyncImagePainter.State.Success)?.result?.drawable
                 val raw = d?.let { if (it.intrinsicWidth > 0 && it.intrinsicHeight > 0) it.intrinsicWidth.toFloat() / it.intrinsicHeight else null }
                 val density = LocalDensity.current
-                val latest by rememberUpdatedState(edit)
-                val rawNow by rememberUpdatedState(raw)
-                BoxWithConstraints(Modifier.weight(1f).fillMaxWidth().clipToBounds(), contentAlignment = Alignment.Center) {
-                    val fw = constraints.maxWidth - with(density) { 32.dp.toPx() }
-                    val fh = with(density) { 150.dp.toPx() }
-                    Box(
-                        Modifier.matchParentSize().pointerInput(fw) {
-                            detectTransformGestures { _, pan, zoom, _ ->
-                                val r = rawNow ?: return@detectTransformGestures
-                                val e = latest
-                                edit = clampEdit(e.copy(scale = e.scale * zoom, x = e.x + pan.x / fw, y = e.y + pan.y / fh), fw, fh, r)
+                // The shape of the frame on the dashboard (16 dp from both sides, 150 dp high).
+                val fa = (LocalConfiguration.current.screenWidthDp - 32).coerceAtLeast(120) / 150f
+                var vz by remember(img) { mutableStateOf(1f) }
+                var vpan by remember(img) { mutableStateOf(Offset.Zero) }
+                BoxWithConstraints(Modifier.weight(1f).fillMaxWidth().clipToBounds()) {
+                    val aw = constraints.maxWidth.toFloat()
+                    val ah = constraints.maxHeight.toFloat()
+                    val r = raw
+                    if (r != null) {
+                        val sideways = edit.rotation % 180 != 0
+                        val ar = if (sideways) 1f / r else r
+                        val m = with(density) { 24.dp.toPx() }
+                        val fitW = if (ar > (aw - 2 * m) / (ah - 2 * m)) aw - 2 * m else (ah - 2 * m) * ar
+                        val fitH = fitW / ar
+                        fun imgRect(): Rect {
+                            val w = fitW * vz
+                            val h = fitH * vz
+                            return Rect(Offset(aw / 2f - w / 2f + vpan.x, ah / 2f - h / 2f + vpan.y), Size(w, h))
+                        }
+                        fun cropRect(): Rect {
+                            val ir = imgRect()
+                            val c = toCrop(edit, fa, r)
+                            return Rect(
+                                Offset(ir.left + (c.cx - c.cw / 2f) * ir.width, ir.top + (c.cy - c.ch / 2f) * ir.height),
+                                Size(c.cw * ir.width, c.ch * ir.height)
+                            )
+                        }
+                        val ir = imgRect()
+                        val cr = cropRect()
+                        fun dp(px: Float) = with(density) { px.toDp() }
+                        // The photo.
+                        Box(
+                            Modifier.offset { IntOffset(ir.left.roundToInt(), ir.top.roundToInt()) }.size(dp(ir.width), dp(ir.height)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter, null, contentScale = ContentScale.FillBounds, colorFilter = brightness(edit.bright),
+                                modifier = Modifier.requiredSize(dp(if (sideways) ir.height else ir.width), dp(if (sideways) ir.width else ir.height))
+                                    .graphicsLayer { rotationZ = edit.rotation.toFloat() }
+                            )
+                        }
+                        // The frame: the rest dimmed, a white line, thirds while cropping, and the four corners to drag.
+                        Canvas(Modifier.matchParentSize()) {
+                            val dim = Color.Black.copy(alpha = 0.6f)
+                            drawRect(dim, Offset.Zero, Size(size.width, cr.top))
+                            drawRect(dim, Offset(0f, cr.bottom), Size(size.width, size.height - cr.bottom))
+                            drawRect(dim, Offset(0f, cr.top), Size(cr.left, cr.height))
+                            drawRect(dim, Offset(cr.right, cr.top), Size(size.width - cr.right, cr.height))
+                            drawRect(Color.White, cr.topLeft, cr.size, style = Stroke(1.5.dp.toPx()))
+                            if (tool == "crop") {
+                                val g = Color.White.copy(alpha = 0.5f)
+                                for (i in 1..2) {
+                                    val x = cr.left + cr.width * i / 3f
+                                    val y = cr.top + cr.height * i / 3f
+                                    drawLine(g, Offset(x, cr.top), Offset(x, cr.bottom), 1.dp.toPx())
+                                    drawLine(g, Offset(cr.left, y), Offset(cr.right, y), 1.dp.toPx())
+                                }
+                            }
+                            val k = 18.dp.toPx()
+                            val t = 4.dp.toPx()
+                            listOf(cr.topLeft to Offset(1f, 1f), cr.topRight to Offset(-1f, 1f), cr.bottomLeft to Offset(1f, -1f), cr.bottomRight to Offset(-1f, -1f)).forEach { (p, dir) ->
+                                drawLine(Color.White, p, p + Offset(k * dir.x, 0f), t, StrokeCap.Round)
+                                drawLine(Color.White, p, p + Offset(0f, k * dir.y), t, StrokeCap.Round)
                             }
                         }
-                    )
-                    HeroPicture(
-                        img, edit,
-                        Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(150.dp),
-                        onChange = { edit = it }, grid = tool == "crop", showOutside = true
-                    )
+                        // Touch: a corner resizes the frame, inside the frame moves it, two fingers zoom the photo,
+                        // one finger outside the frame looks around the zoomed photo.
+                        Box(
+                            Modifier.matchParentSize().pointerInput(r, fa, aw, ah, edit.rotation) {
+                                val reach = 32.dp.toPx()
+                                awaitEachGesture {
+                                    val down = awaitFirstDown(requireUnconsumed = false)
+                                    val c0 = cropRect()
+                                    val corners = listOf(c0.topLeft, c0.topRight, c0.bottomLeft, c0.bottomRight)
+                                    val hi = corners.indexOfFirst { (it - down.position).getDistance() < reach }
+                                    val mode = when {
+                                        hi >= 0 -> 1
+                                        c0.contains(down.position) -> 2
+                                        else -> 3
+                                    }
+                                    textOn = false
+                                    while (true) {
+                                        val ev = awaitPointerEvent()
+                                        val pressed = ev.changes.filter { it.pressed }
+                                        if (pressed.isEmpty()) break
+                                        if (pressed.size >= 2) {
+                                            vz = (vz * ev.calculateZoom()).coerceIn(1f, 4f)
+                                            vpan += ev.calculatePan()
+                                            ev.changes.forEach { it.consume() }
+                                            continue
+                                        }
+                                        val ch = pressed.first()
+                                        if (ch.isConsumed) continue
+                                        val dl = ch.positionChange()
+                                        if (dl == Offset.Zero) continue
+                                        val irn = imgRect()
+                                        val c = toCrop(edit, fa, r)
+                                        when (mode) {
+                                            2 -> edit = fromCrop(edit, c.copy(cx = c.cx + dl.x / irn.width, cy = c.cy + dl.y / irn.height), fa, r)
+                                            1 -> {
+                                                val sx = if (hi == 1 || hi == 3) 1f else -1f
+                                                val sy = if (hi >= 2) 1f else -1f
+                                                val grow = dl.x * sx / irn.width + dl.y * sy / irn.height * (c.cw / c.ch)
+                                                edit = fromCrop(edit, c.copy(cw = c.cw + grow), fa, r)
+                                            }
+                                            else -> if (vz > 1f) vpan += dl
+                                        }
+                                        ch.consume()
+                                    }
+                                    // Keep the zoomed photo from wandering off the screen.
+                                    val lim = imgRect()
+                                    val mx = (lim.width / 2f).coerceAtLeast(0f)
+                                    val my = (lim.height / 2f).coerceAtLeast(0f)
+                                    vpan = Offset(vpan.x.coerceIn(-mx, mx), vpan.y.coerceIn(-my, my))
+                                    if (vz <= 1.01f) vpan = Offset.Zero
+                                }
+                            }
+                        )
+                        // The text, in the frame: drag it to move it; tap it for corners that make it bigger or smaller.
+                        if (edit.text.isNotBlank()) {
+                            Box(Modifier.offset { IntOffset(cr.left.roundToInt(), cr.top.roundToInt()) }.size(dp(cr.width), dp(cr.height))) {
+                                EditableText(edit, cr.width, cr.height, textOn, onSelect = { textOn = it }) { edit = it }
+                            }
+                        }
+                    }
                 }
                 // The tool that is open.
                 Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
@@ -334,28 +477,16 @@ fun HeroEditor(image: String, start: HeroEdit, onSave: (String, HeroEdit) -> Uni
                             Slider(value = edit.bright, onValueChange = { edit = edit.copy(bright = it) }, valueRange = -1f..1f)
                         }
                         "text" -> TextTool(edit, onDark) { edit = it }
-                        else -> {
-                            Text(tr("Zoom"), style = MaterialTheme.typography.labelLarge, color = onDark.copy(alpha = 0.8f))
-                            Slider(
-                                value = edit.scale, valueRange = 1f..5f,
-                                onValueChange = { v ->
-                                    val r = raw
-                                    edit = if (r == null) edit.copy(scale = v) else {
-                                        val fw = with(density) { (ctx.resources.displayMetrics.widthPixels - 32.dp.toPx()) }
-                                        clampEdit(edit.copy(scale = v), fw, with(density) { 150.dp.toPx() }, r)
-                                    }
-                                }
-                            )
-                        }
+                        else -> {}
                     }
                 }
                 // The tools.
                 Surface(color = Color.White, contentColor = Color(0xFF111111)) {
                     Row(Modifier.fillMaxWidth().height(64.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-                        ToolButton(tr("Rotate left"), false, { edit = edit.copy(rotation = (edit.rotation + 270) % 360) }) {
+                        ToolButton(tr("Rotate left"), false, { edit = edit.copy(rotation = (edit.rotation + 270) % 360, scale = 1f, x = 0f, y = 0f) }) {
                             Icon(AppIcons.Refresh, null, Modifier.graphicsLayer { scaleX = -1f })
                         }
-                        ToolButton(tr("Rotate right"), false, { edit = edit.copy(rotation = (edit.rotation + 90) % 360) }) {
+                        ToolButton(tr("Rotate right"), false, { edit = edit.copy(rotation = (edit.rotation + 90) % 360, scale = 1f, x = 0f, y = 0f) }) {
                             Icon(AppIcons.Refresh, null)
                         }
                         ToolButton(tr("Crop"), tool == "crop", { tool = "crop" }) { CropIcon(Color(0xFF111111)) }
@@ -368,6 +499,79 @@ fun HeroEditor(image: String, start: HeroEdit, onSave: (String, HeroEdit) -> Uni
                         }) { UploadIcon(Color(0xFF111111)) }
                     }
                 }
+            }
+        }
+    }
+}
+
+/**
+ * The text on the photo in the editor, inside the frame ([fw] x [fh] pixels on screen). Drag it to move it. Tapped
+ * ([selected]) it gets a line around it and four corners: drag one to make the text bigger or smaller.
+ */
+@Composable
+private fun EditableText(edit: HeroEdit, fw: Float, fh: Float, selected: Boolean, onSelect: (Boolean) -> Unit, onChange: (HeroEdit) -> Unit) {
+    val density = LocalDensity.current
+    val now by rememberUpdatedState(edit)
+    val frame by rememberUpdatedState(Size(fw, fh))
+    val sel by rememberUpdatedState(selected)
+    var size by remember { mutableStateOf(IntSize.Zero) }
+    val col = Color(edit.color)
+    val boxCol = if (col.luminance() > 0.5f) Color.Black.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.75f)
+    Box(
+        Modifier
+            .onSizeChanged { size = it }
+            .offset {
+                IntOffset((edit.tx * fw - size.width / 2f).roundToInt(), (edit.ty * fh - size.height / 2f).roundToInt())
+            }
+            .pointerInput(Unit) { detectTapGestures { onSelect(!sel) } }
+            .pointerInput(Unit) {
+                detectDragGestures(onDragStart = { onSelect(true) }) { ch, dr ->
+                    ch.consume()
+                    val e = now
+                    onChange(e.copy(tx = (e.tx + dr.x / frame.width).coerceIn(0f, 1f), ty = (e.ty + dr.y / frame.height).coerceIn(0f, 1f)))
+                }
+            }
+            // Room around the words for the corners, so they are inside and can be touched.
+            .padding(12.dp)
+    ) {
+        Text(
+            edit.text, color = col, fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.headlineSmall.copy(
+                shadow = if (edit.box) null else heroTextShadow,
+                fontSize = with(density) { (fh * edit.textSize).toSp() }
+            ),
+            modifier = Modifier
+                .then(if (selected) Modifier.border(1.dp, Color.White, RoundedCornerShape(4.dp)) else Modifier)
+                .then(
+                    if (edit.box) Modifier.clip(RoundedCornerShape(8.dp)).background(boxCol).padding(horizontal = 10.dp, vertical = 4.dp)
+                    else Modifier.padding(horizontal = 4.dp)
+                )
+        )
+    }
+    if (selected) {
+        // The four corners, placed on the text's corners.
+        val half = with(density) { 12.dp.toPx() }
+        listOf(-1f to -1f, 1f to -1f, -1f to 1f, 1f to 1f).forEach { (sx, sy) ->
+            Box(
+                Modifier
+                    .offset {
+                        val cx = edit.tx * fw + sx * (size.width / 2f - half)
+                        val cy = edit.ty * fh + sy * (size.height / 2f - half)
+                        IntOffset((cx - half).roundToInt(), (cy - half).roundToInt())
+                    }
+                    .size(24.dp)
+                    .pointerInput(sx, sy) {
+                        detectDragGestures { ch, dr ->
+                            ch.consume()
+                            val e = now
+                            val reach = (kotlin.math.hypot(size.width.toFloat(), size.height.toFloat()) / 2f).coerceAtLeast(1f)
+                            val grow = (dr.x * sx + dr.y * sy) / reach
+                            onChange(e.copy(textSize = (e.textSize * (1f + grow)).coerceIn(0.06f, 0.6f)))
+                        }
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Box(Modifier.size(14.dp).clip(CircleShape).background(Color.White).border(1.dp, Color.Black.copy(alpha = 0.4f), CircleShape))
             }
         }
     }
