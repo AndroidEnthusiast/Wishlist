@@ -57,9 +57,13 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - v2.64: dashboard (start screen) with hero picture, Recently opened, My wishlists and Group wishlists; several wishlists of your own; "Group wishlists" name; no default category.
 
-## Next session
-The owner said they will keep improving the dashboard and the new-list form. Ask how the dashboard feels on the phone. Ideas not built yet: deleting or renaming the original "My wishlist"; reordering lists; a cover picture per list; showing group wishlists' wish counts and pictures on the dashboard (they are not stored on the phone); friends' lists on the dashboard; the browser editor knows nothing about several lists (each list has its own friends' link, so friends' pages work as before).
+- v2.65: bottom bar (Home, New list, Add wish, Prices, Friends placeholder), Prices page, hero picture editor, colour sets for the standard themes, dashboard details. Proposed to the owner and waiting for an answer: the wording of the Notifications page (price drops and rises, with a red dot in the menu) and how "pick wishes from other wishlists" should work when making a new list.
 
+## Next session
+- **Remind the owner: build the Friends feature** (they asked to be reminded; the bottom bar has a "Friends is coming soon" page for now).
+- Build the Notifications page once the owner has chosen the wording (see the last session's proposal in the chat: menu item above Bin with a red dot; only price drops and/or rises as switched on in App settings).
+- Build "pick wishes from other wishlists" for new lists once the flow is agreed.
+- Ask how the dashboard, the bottom bar and the hero editor feel on the phone.
 ## Decisions and why
 - Lists are link-only, never listed publicly. Reservations are hidden from the owner and from editors so gifts stay a surprise.
 - Shared lists are online-first: no internet means the change is undone with a message (simple and safe). Same field changed by two people at the same moment: the later save wins.

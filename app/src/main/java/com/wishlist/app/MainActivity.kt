@@ -20,6 +20,10 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.TextUnit
@@ -350,7 +354,7 @@ private fun DrawerItem(label: String, icon: ImageVector, selected: Boolean, onCl
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun App(
     sharedUrl: String?, sharedCode: String?, sharedInvite: String?,
@@ -373,6 +377,12 @@ fun App(
     // The dashboard (Hub.kt) is the start screen; tapping a list opens it, Back returns to the dashboard.
     var hub by remember { mutableStateOf(true) }
     var newMine by remember { mutableStateOf(false) }
+    // The bottom bar's pages and actions (BottomBar.kt).
+    var pricesOpen by remember { mutableStateOf(false) }
+    var friendsOpen by remember { mutableStateOf(false) }
+    var createChoice by remember { mutableStateOf(false) }
+    // "Add wish" from the bottom bar: the form with "Save to", starting at the list on screen (or the last one used).
+    var addTarget by remember { mutableStateOf<String?>(null) }
     // null: closed, "": open and empty, otherwise opened with an invite that was sent to the app.
     var joinDlg by remember { mutableStateOf<String?>(null) }
     var inviteDlg by remember { mutableStateOf(false) }
@@ -384,13 +394,13 @@ fun App(
     fun openMine(id: String) {
         Shared.close()
         Repo.openMine(ctx, id)
-        settings = false; binOpen = false; friendCode = null; listSettings = false; hub = false
+        settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; hub = false
     }
 
     /** Opens a group wishlist. */
     fun openGroup(code: String) {
         Shared.open(ctx, code)
-        settings = false; binOpen = false; friendCode = null; listSettings = false; hub = false
+        settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; hub = false
     }
 
     fun openFriend(code: String) {
@@ -425,7 +435,7 @@ fun App(
     }
     LaunchedEffect(sharedUrl) {
         if (sharedUrl != null) {
-            prefill = sharedUrl; adding = true; settings = false; binOpen = false; friendCode = null; listSettings = false
+            prefill = sharedUrl; adding = true; settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false
             onSharedUsed()
         }
     }
@@ -438,26 +448,29 @@ fun App(
     LaunchedEffect(binTarget) {
         if (binTarget != null) {
             Bin.focus = binTarget
-            binOpen = true; settings = false; friendCode = null; listSettings = false
+            binOpen = true; settings = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false
             scope.launch { drawer.close() }
             onBinUsed()
         }
     }
     LaunchedEffect(sharedInvite) {
         if (sharedInvite != null) {
-            joinDlg = sharedInvite; settings = false; binOpen = false; friendCode = null; listSettings = false
+            joinDlg = sharedInvite; settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false
             onSharedUsed()
         }
     }
 
     BackHandler(enabled = drawer.isOpen) { scope.launch { drawer.close() } }
     BackHandler(enabled = !drawer.isOpen && (settings || binOpen || friendCode != null)) {
-        settings = false; binOpen = false; friendCode = null; listSettings = false
+        settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false
     }
     // Back from a shared wishlist goes to My wishlist.
-    // Back from a list goes to the dashboard.
-    BackHandler(enabled = !drawer.isOpen && !settings && !binOpen && friendCode == null && !listSettings && !hub) {
+    // Back from a list goes to the dashboard; back from Prices or Friends to where you were.
+    BackHandler(enabled = !drawer.isOpen && !settings && !binOpen && friendCode == null && !listSettings && !hub && !pricesOpen && !friendsOpen) {
         hub = true
+    }
+    BackHandler(enabled = !drawer.isOpen && !settings && !binOpen && friendCode == null && (pricesOpen || friendsOpen)) {
+        pricesOpen = false; friendsOpen = false
     }
 
     val openMenu: () -> Unit = { scope.launch { drawer.open() } }
@@ -502,7 +515,7 @@ fun App(
                     }
                     val onList = !settings && !binOpen && friendCode == null && !hub
                     DrawerItem(tr("Home"), AppIcons.Home, hub && !settings && !binOpen && friendCode == null) {
-                        settings = false; binOpen = false; friendCode = null; listSettings = false; hub = true
+                        settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; hub = true
                         scope.launch { drawer.close() }
                     }
                     // Your own wishlists, then a way to make a new one.
@@ -555,11 +568,11 @@ fun App(
                         Spacer(Modifier.height(8.dp))
                     }
                     DrawerItem(tr("Bin"), AppIcons.Delete, binOpen) {
-                        binOpen = true; settings = false; friendCode = null; listSettings = false
+                        binOpen = true; settings = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false
                         scope.launch { drawer.close() }
                     }
                     DrawerItem(tr("App settings"), AppIcons.Settings, settings) {
-                        settings = true; binOpen = false; friendCode = null; listSettings = false
+                        settings = true; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false
                         scope.launch { drawer.close() }
                     }
                 }
@@ -567,15 +580,20 @@ fun App(
         }
     ) {
         // The screen behind the menu blurs a little while the menu is open.
-        Box(Modifier.fillMaxSize().then(if (blurRadius > 0.dp) Modifier.blur(blurRadius) else Modifier)) {
-            val fr = Repo.friends.firstOrNull { it.code == friendCode }
+        val fr = Repo.friends.firstOrNull { it.code == friendCode }
+        val showBar = !settings && !binOpen && fr == null && !listSettings
+        Column(Modifier.fillMaxSize().then(if (blurRadius > 0.dp) Modifier.blur(blurRadius) else Modifier)) {
+        // With the bottom bar, the screens above it don't leave room for the phone's own navigation bar again.
+        Box(Modifier.weight(1f).then(if (showBar) Modifier.consumeWindowInsets(WindowInsets.navigationBars) else Modifier)) {
             when {
                 settings -> SettingsScreen(snack, openMenu)
                 binOpen -> BinScreen(snack)
                 fr != null -> FriendScreen(fr, snack, openMenu) { friendCode = null }
                 listSettings -> key(Shared.active, Repo.openMine) {
-                    ListSettingsScreen(snack, onDeleted = { listSettings = false; hub = true }) { listSettings = false }
+                    ListSettingsScreen(snack, onDeleted = { listSettings = false; pricesOpen = false; friendsOpen = false; hub = true }) { listSettings = false; pricesOpen = false; friendsOpen = false }
                 }
+                pricesOpen -> PricesScreen(snack)
+                friendsOpen -> FriendsSoonScreen(snack)
                 hub -> HubScreen(
                     snack,
                     onOpenMine = { openMine(it) },
@@ -594,6 +612,21 @@ fun App(
                 }
             }
         }
+        if (showBar) {
+            AppBottomBar(
+                current = when { pricesOpen -> "prices"; friendsOpen -> "friends"; hub -> "home"; else -> "" },
+                onHome = { settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; hub = true },
+                onCreate = { createChoice = true },
+                onAdd = {
+                    val onAList = !hub && !pricesOpen && !friendsOpen
+                    addTarget = if (onAList) (Shared.active ?: MyLists.saveKey(Repo.openMine, false)) else Repo.lastSaveTo
+                    prefill = ""; adding = true
+                },
+                onPrices = { pricesOpen = true; friendsOpen = false },
+                onFriends = { friendsOpen = true; pricesOpen = false }
+            )
+        }
+        }
     }
 
     // The menu button lives above the menu so it can spin into an X and close it.
@@ -608,14 +641,25 @@ fun App(
     }
     }
 
-    if (adding) key(prefill) { WishDialog(null, prefill, chooseList = prefill.isNotEmpty()) { adding = false } }
+    if (adding) key(prefill) {
+        WishDialog(null, prefill, chooseList = prefill.isNotEmpty() || addTarget != null, startTarget = addTarget) {
+            adding = false; addTarget = null
+        }
+    }
+    if (createChoice) {
+        CreateChoiceDialog(
+            onMine = { createChoice = false; newMine = true },
+            onGroup = { createChoice = false; newShared = true },
+            onClose = { createChoice = false }
+        )
+    }
     if (catDlg) CategoryDialog { catDlg = false }
     if (newShared) {
         NewSharedDialog(
             onCreated = { code ->
                 newShared = false
                 // It appears under Group wishlists on the dashboard; the invite comes up so you can ask people in.
-                Shared.open(ctx, code); settings = false; binOpen = false; friendCode = null; listSettings = false
+                Shared.open(ctx, code); settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false
                 hub = true
                 inviteDlg = true
             },
@@ -638,7 +682,7 @@ fun App(
             onCreated = { id ->
                 newMine = false
                 // It appears under My wishlists on the dashboard.
-                settings = false; binOpen = false; friendCode = null; listSettings = false; hub = true
+                settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; hub = true
                 scope.launch { snack.showSnackbar(tr("“%s” is ready", Repo.mineName(id))) }
             },
             onClose = { newMine = false }
@@ -1215,7 +1259,7 @@ fun WishCard(
 
 /** Adds a new wish, or edits [edit] when it is not null. */
 @Composable
-fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onClose: () -> Unit) {
+fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, startTarget: String? = null, onClose: () -> Unit) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     // Which wishlist was open when this dialog started. A wish shared in from the browser can be saved to another one.
@@ -1301,7 +1345,7 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
         cat = ""
     }
     LaunchedEffect(Unit) {
-        if (chooseList && edit == null) pickTarget(Repo.lastSaveTo)
+        if (chooseList && edit == null) pickTarget(startTarget ?: Repo.lastSaveTo)
         if (edit == null && initialUrl.isNotEmpty()) go(initialUrl)
     }
 

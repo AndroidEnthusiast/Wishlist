@@ -118,7 +118,8 @@ fun effectiveTheme(): String {
 fun WishTheme(content: @Composable () -> Unit) {
     // A standard theme (Light, Dark, AMOLED black: indigo and Google Sans, the original look),
     // or one of the four designs with its own colour set, fonts, icons and shapes (Design.kt, picked in the Themer).
-    val look = lookFor(Repo.design, Repo.colours, effectiveTheme())
+    // The standard themes take their colour set from Repo.palette, the designs from Repo.colours.
+    val look = lookFor(Repo.design, if (Repo.design == "classic") Repo.palette else Repo.colours, effectiveTheme())
     val scheme = look.scheme
     val view = LocalView.current
     SideEffect {

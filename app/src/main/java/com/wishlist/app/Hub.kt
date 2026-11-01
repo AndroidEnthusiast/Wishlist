@@ -81,8 +81,9 @@ fun HubScreen(
     val mineItems = mine.map { d ->
         val n = if (d.name == "My wishlist") tr(d.name) else d.name
         val count = d.wishes.size
+        val total = totalValue(d.wishes)
         val detail = (if (count == 1) tr("1 wish") else tr("%d wishes", count)) +
-            if (d.code != null) " · " + tr("Shared with friends") else ""
+            if (total != null) " · " + tr("Total value %s", total) else ""
         HubItem("m:" + d.id, n, detail, d.wishes.map { it.image }.filter { it.isNotBlank() }.take(3), false) { onOpenMine(d.id) }
     }
     val groupItems = Shared.lists.map { l ->
@@ -109,10 +110,10 @@ fun HubScreen(
             Hero(Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
 
             if (recentItems.isNotEmpty()) {
-                HubTitle(tr("Recently opened"))
+                HubTitle(tr("Recently opened"), small = true)
                 LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(recentItems.size) { i -> RecentCard(recentItems[i]) }
                 }
@@ -137,24 +138,36 @@ fun HubScreen(
     }
 }
 
-/** A section title, with a round + button when something can be added. */
+/**
+ * What all wishes with a price on a list add up to, for example "€245.50". Wishes in different currencies are added
+ * up per currency ("€120.00 + $30.00"). Null when no wish has a price.
+ */
+fun totalValue(wishes: List<Wish>): String? {
+    val sums = wishes.filter { it.price != null }.groupBy { it.currency }
+        .map { (cur, ws) -> cur to ws.sumOf { it.price ?: 0.0 } }
+    if (sums.isEmpty()) return null
+    return sums.sortedByDescending { it.second }.joinToString(" + ") { (cur, sum) -> money(sum, cur) }
+}
+
+/** A section title, with a small round + button when something can be added. */
 @Composable
-private fun HubTitle(text: String, addLabel: String? = null, onAdd: (() -> Unit)? = null) {
+private fun HubTitle(text: String, addLabel: String? = null, small: Boolean = false, onAdd: (() -> Unit)? = null) {
     val look = LocalLook.current
     Row(
-        Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 20.dp, bottom = 4.dp),
+        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = if (small) 12.dp else 20.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text, style = MaterialTheme.typography.titleLarge, fontWeight = look.titleWeight,
+            text, style = if (small) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleLarge,
+            fontWeight = look.titleWeight,
             color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.weight(1f)
         )
         if (onAdd != null) {
             Box(
-                Modifier.size(40.dp).lookChip(look, on = true).clickable(onClickLabel = addLabel, onClick = onAdd),
+                Modifier.size(30.dp).lookChip(look, on = true).clickable(onClickLabel = addLabel, onClick = onAdd),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(AppIcons.Add, addLabel, tint = look.chipContent(true))
+                Icon(AppIcons.Add, addLabel, tint = look.chipContent(true), modifier = Modifier.size(18.dp))
             }
         }
     }
@@ -187,13 +200,13 @@ private fun RecentCard(item: HubItem) {
     val look = LocalLook.current
     val id = item.key.hashCode().toLong()
     Column(
-        Modifier.width(150.dp).lookCard(look, id, look.cardShape(id, small = true)).clickable(onClick = item.open)
-            .padding(8.dp)
+        Modifier.width(112.dp).lookCard(look, id, look.cardShape(id, small = true)).clickable(onClick = item.open)
+            .padding(6.dp)
     ) {
-        ListThumb(item, id, Modifier.fillMaxWidth().height(96.dp))
+        ListThumb(item, id, Modifier.fillMaxWidth().height(64.dp))
         Text(
-            item.name, style = MaterialTheme.typography.titleSmall, color = look.cardInk(id),
-            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 8.dp, start = 4.dp, end = 4.dp)
+            item.name, style = MaterialTheme.typography.labelLarge, color = look.cardInk(id),
+            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp, start = 4.dp, end = 4.dp)
         )
         Text(
             item.detail, style = MaterialTheme.typography.labelSmall, color = look.cardMuted(id), maxLines = 1,
@@ -231,14 +244,17 @@ private fun Hero(modifier: Modifier) {
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
     var menu by remember { mutableStateOf(false) }
+    // A new photo is adjusted first (HeroEditor) and only becomes the picture after Save.
+    var pending by remember { mutableStateOf<String?>(null) }
+    var adjusting by remember { mutableStateOf(false) }
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) scope.launch { ImageStore.import(ctx, uri)?.let { Repo.setHero(ctx, it) } }
+        if (uri != null) scope.launch { ImageStore.import(ctx, uri)?.let { pending = it } }
     }
     // A photo from the camera goes to a temporary file first, then into the app like a chosen photo.
     val cameraFile = remember { File(File(ctx.cacheDir, "share").apply { mkdirs() }, "hero_camera.jpg") }
     val cameraUri: Uri = remember { FileProvider.getUriForFile(ctx, ctx.packageName + ".files", cameraFile) }
     val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
-        if (ok) scope.launch { ImageStore.import(ctx, cameraUri)?.let { Repo.setHero(ctx, it) } }
+        if (ok) scope.launch { ImageStore.import(ctx, cameraUri)?.let { pending = it } }
     }
     val shape = RoundedCornerShape(28.dp)
     Box(
@@ -247,20 +263,17 @@ private fun Hero(modifier: Modifier) {
             .background(Brush.linearGradient(listOf(cs.primaryContainer, cs.tertiaryContainer)))
     ) {
         if (Repo.hero.isNotEmpty()) {
-            AsyncImage(
-                model = Repo.hero, contentDescription = null, contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
+            HeroPicture(Repo.hero, Repo.heroEdit, Modifier.fillMaxSize())
         } else {
             Text("🎁", fontSize = 56.sp, modifier = Modifier.align(Alignment.Center))
         }
         Box(
-            Modifier.align(Alignment.BottomEnd).padding(12.dp).size(44.dp).clip(CircleShape)
-                .background(cs.surface.copy(alpha = 0.92f))
+            Modifier.align(Alignment.BottomEnd).padding(10.dp).size(32.dp).clip(CircleShape)
+                .background(cs.surface.copy(alpha = 0.85f))
                 .clickable(onClickLabel = tr("Change the picture")) { menu = true },
             contentAlignment = Alignment.Center
         ) {
-            Icon(AppIcons.Edit, tr("Change the picture"), tint = cs.onSurface)
+            Icon(AppIcons.Edit, tr("Change the picture"), tint = cs.onSurface, modifier = Modifier.size(16.dp))
         }
     }
     if (menu) {
@@ -281,11 +294,27 @@ private fun Hero(modifier: Modifier) {
                         }
                     }
                     if (Repo.hero.isNotEmpty()) {
+                        HeroChoice(tr("Adjust the picture")) { menu = false; adjusting = true }
                         HeroChoice(tr("Remove the photo")) { menu = false; Repo.setHero(ctx, "") }
                     }
                 }
             },
             confirmButton = { TextButton(onClick = { menu = false }) { Text(tr("Cancel")) } }
+        )
+    }
+    pending?.let { img ->
+        HeroEditor(
+            img, HeroEdit(),
+            onSave = { e -> pending = null; Repo.setHero(ctx, img, e) },
+            // Cancelled: the copied photo isn't needed.
+            onCancel = { pending = null; ImageStore.delete(ctx, img) }
+        )
+    }
+    if (adjusting && Repo.hero.isNotEmpty()) {
+        HeroEditor(
+            Repo.hero, Repo.heroEdit,
+            onSave = { e -> adjusting = false; Repo.setHero(ctx, Repo.hero, e) },
+            onCancel = { adjusting = false }
         )
     }
 }

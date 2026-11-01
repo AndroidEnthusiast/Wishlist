@@ -174,6 +174,9 @@ object Repo {
     /** The picture at the top of the dashboard (a file: address), or empty for the theme's own colours. */
     var hero by mutableStateOf("")
         private set
+    /** How that picture sits in its frame (zoom, position) and its optional text: see HeroEditor.kt. */
+    var heroEdit by mutableStateOf(HeroEdit())
+        private set
 
     private fun prefs(c: Context) =
         c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
@@ -234,6 +237,7 @@ object Repo {
             emptyMap()
         }
         hero = p.getString("hero", "") ?: ""
+        heroEdit = HeroEdit.fromJson(p.getString("hero_edit", null))
         val open = p.getString("mine_open", MAIN_LIST) ?: MAIN_LIST
         if (open != MAIN_LIST && open in mineIds) {
             applyMine(MyLists.read(p, open))
@@ -267,6 +271,7 @@ object Repo {
             .putString("bin_owner", owners.toString())
             .putString("recent", rec.toString())
             .putString("hero", hero)
+            .putString("hero_edit", heroEdit.toJson())
             .putString("theme", theme)
             .putString("palette", palette)
             .putString("style", design)
@@ -460,9 +465,10 @@ object Repo {
     }
 
     @Synchronized
-    fun setHero(c: Context, image: String) {
+    fun setHero(c: Context, image: String, edit: HeroEdit = HeroEdit()) {
         val old = hero
         hero = image
+        heroEdit = edit
         persist(c)
         if (old.isNotEmpty() && old != image) ImageStore.delete(c, old)
     }

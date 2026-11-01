@@ -116,13 +116,17 @@ fun ThemerScreen(onBack: () -> Unit) {
     var tryDesign by remember { mutableStateOf(Repo.design) }
     var tryColours by remember { mutableStateOf(Repo.colours) }
     var tryMode by remember { mutableStateOf(inUseMode) }
+    // The colour set of the standard themes (one of PALETTES).
+    var tryPalette by remember { mutableStateOf(Repo.palette) }
+    // Standard: first Light / Dark / AMOLED black, then (after picking one) the colour sets made for it.
+    var standardColours by remember { mutableStateOf(false) }
     val tryD = designFor(tryDesign)
     val changed = tryDesign != Repo.design || (
-        if (tryD == null) tryMode != inUseMode
+        if (tryD == null) tryMode != inUseMode || tryPalette != Repo.palette
         else colourSetFor(tryD, tryColours).key != colourSetFor(tryD, Repo.colours).key
     )
     val apply = {
-        if (tryD == null) Repo.setClassic(ctx, tryMode)
+        if (tryD == null) { Repo.setClassic(ctx, tryMode); Repo.setPalette(ctx, tryPalette) }
         else { Repo.setDesign(ctx, tryD.key); Repo.setColours(ctx, colourSetFor(tryD, tryColours).key) }
     }
 
@@ -142,7 +146,7 @@ fun ThemerScreen(onBack: () -> Unit) {
         Column(Modifier.padding(pad).fillMaxSize()) {
             Spacer(Modifier.height(16.dp))
             // The preview is drawn in the theme being tried out; the rest of the screen keeps the theme in use.
-            LookTheme(lookFor(tryDesign, tryColours, tryMode)) {
+            LookTheme(lookFor(tryDesign, if (tryD == null) tryPalette else tryColours, tryMode)) {
                 ThemePreview(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp))
             }
             // The colour sets of the chosen design pop up between the preview and the designs.
@@ -153,7 +157,8 @@ fun ThemerScreen(onBack: () -> Unit) {
             ) { key ->
                 val d = designFor(key)
                 if (d != null) ColourSets(d, colourSetFor(d, tryColours).key) { tryColours = it }
-                else StandardThemes(tryMode) { tryMode = it }
+                else if (!standardColours) StandardThemes(tryMode) { tryMode = it; standardColours = true }
+                else StandardColours(tryMode, tryPalette, onPick = { tryPalette = it }, onModes = { standardColours = false })
             }
             // The designs, side by side; swipe to see them all.
             // All tiles have the same fixed height, so the row never changes height (and nothing jumps) while swiping.
@@ -164,8 +169,9 @@ fun ThemerScreen(onBack: () -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 item {
-                    DesignTile(tr("Standard"), lookFor("classic", "", tryMode), tryDesign == "classic") {
+                    DesignTile(tr("Standard"), lookFor("classic", tryPalette, tryMode), tryDesign == "classic") {
                         tryDesign = "classic"
+                        standardColours = false
                     }
                 }
                 items(DESIGNS.size) { i ->
@@ -230,6 +236,43 @@ private fun StandardThemes(chosen: String, onPick: (String) -> Unit) {
                     look.scheme.onBackground.toArgb().toLong() and 0xFFFFFFFFL
                 )
                 ColourOption(set, chosen == k, Modifier.weight(1f), translate = false) { onPick(k) }
+            }
+        }
+    }
+}
+
+/**
+ * The colour sets of a standard theme, after Light, Dark or AMOLED black was picked: each set in the tones made for
+ * that mode. "Light, Dark or AMOLED black" goes back to the modes.
+ */
+@Composable
+private fun StandardColours(mode: String, chosen: String, onPick: (String) -> Unit, onModes: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val card = RoundedCornerShape(24.dp)
+    val modeName = when (mode) { "dark" -> tr("Dark"); "amoled" -> tr("AMOLED black"); else -> tr("Light") }
+    Column(
+        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp)
+            .clip(card).background(cs.surfaceContainerHigh).border(1.dp, cs.outlineVariant, card)
+            .padding(top = 4.dp, bottom = 4.dp)
+    ) {
+        Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                tr("Colours for %s", modeName), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant,
+                modifier = Modifier.weight(1f)
+            )
+            TextButton(onClick = onModes) { Text(tr("Light, dark or AMOLED")) }
+        }
+        LazyRow(
+            modifier = Modifier.fillMaxWidth().height(104.dp),
+            verticalAlignment = Alignment.Top,
+            contentPadding = PaddingValues(horizontal = 8.dp)
+        ) {
+            items(PALETTES.size) { i ->
+                val p = PALETTES[i]
+                val sc = lookFor("classic", p.key, mode).scheme
+                fun argb(c: Color) = c.toArgb().toLong() and 0xFFFFFFFFL
+                val set = ColourSet(p.key, p.name, argb(sc.primary), argb(sc.primaryContainer), argb(sc.surfaceVariant), argb(sc.background), argb(sc.onBackground))
+                ColourOption(set, p.key == chosen, Modifier.width(80.dp)) { onPick(p.key) }
             }
         }
     }

@@ -354,6 +354,10 @@ object AppIcons {
     val Favorite: ImageVector @Composable get() =
         v(Icons.Filled.Favorite, Icons.Outlined.FavoriteBorder, Icons.Rounded.Favorite, Icons.Sharp.Favorite)
     val Home: ImageVector @Composable get() = v(Icons.Filled.Home, Icons.Outlined.Home, Icons.Rounded.Home, Icons.Sharp.Home)
+    val ListIcon: ImageVector @Composable get() = v(
+        Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List,
+        Icons.AutoMirrored.Rounded.List, Icons.AutoMirrored.Sharp.List
+    )
     val MoreVert: ImageVector @Composable get() = v(Icons.Filled.MoreVert, Icons.Outlined.MoreVert, Icons.Rounded.MoreVert, Icons.Sharp.MoreVert)
     val Person: ImageVector @Composable get() = v(Icons.Filled.Person, Icons.Outlined.Person, Icons.Rounded.Person, Icons.Sharp.Person)
     val Refresh: ImageVector @Composable get() = v(Icons.Filled.Refresh, Icons.Outlined.Refresh, Icons.Rounded.Refresh, Icons.Sharp.Refresh)

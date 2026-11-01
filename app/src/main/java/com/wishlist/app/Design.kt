@@ -193,7 +193,7 @@ private fun scheme(
  * [classicMode]: for the classic themes, "light", "dark" or "amoled".
  */
 fun lookFor(style: String, setKey: String, classicMode: String): Look {
-    val d = designFor(style) ?: return classicLook(classicMode)
+    val d = designFor(style) ?: return classicLook(classicMode, setKey)
     val s = colourSetFor(d, setKey)
     val dark = s.dark
     val main = c(s.main); val a2 = c(s.a2); val a3 = c(s.a3); val paper = c(s.paper); val ink = c(s.ink)
@@ -281,14 +281,26 @@ fun lookFor(style: String, setKey: String, classicMode: String): Look {
 }
 
 /** The classic themes, exactly as before: indigo (PALETTES[0]) in light, dark or AMOLED black. */
-private fun classicLook(mode: String): Look {
-    val p = PALETTES[0]
+/**
+ * The standard themes: Light, Dark or AMOLED black with one of the colour sets in PALETTES (Indigo is the original;
+ * the sets are picked in the Themer since 2.65). Each set has tones made for light and for dark; AMOLED black uses the
+ * dark tones on pure black.
+ */
+private fun classicLook(mode: String, palette: String = "indigo"): Look {
+    val p = PALETTES.firstOrNull { it.key == palette } ?: PALETTES[0]
     var scheme = if (mode == "light") p.light else p.dark
     // AMOLED black: the dark colours on pure black, with the cards just off black.
     if (mode == "amoled") scheme = scheme.copy(background = Color.Black, surface = Color.Black, surfaceVariant = Color(0xFF0E0E11))
+    // Behind photos: the light container colour in Light; in Dark and AMOLED a quiet mix of the card colour with a
+    // little of it (the full container colour was too bright there).
+    val mat = when (mode) {
+        "light" -> scheme.primaryContainer
+        "amoled" -> lerp(Color(0xFF0E0E11), scheme.primaryContainer, 0.28f)
+        else -> lerp(scheme.surfaceVariant, scheme.primaryContainer, 0.38f)
+    }
     return Look(
         "classic", mode != "light", scheme,
-        listOf(scheme.surfaceVariant), listOf(scheme.primaryContainer), scheme.outline, listOf(scheme.outline), emptyList(),
+        listOf(scheme.surfaceVariant), listOf(mat), scheme.outline, listOf(scheme.outline), emptyList(),
         null, Color(0xFF0B7A3E), Color(0xFFBA1A1A)
     )
 }

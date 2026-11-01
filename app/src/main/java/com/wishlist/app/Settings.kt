@@ -166,28 +166,13 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
             }
 
             SectionTitle(tr("Theme"))
-            // The standard themes are the app's original look (indigo, Google Sans). The four designs, each with
-            // its own colours and fonts, are picked in the Themer. (No "System default": the first start picks
-            // Light or Dark to match the phone, see Repo.load.)
-            Text(tr("Standard themes"), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
-            listOf("light" to tr("Light"), "dark" to tr("Dark"), "amoled" to tr("AMOLED black")).forEach { (k, n) ->
-                val chosen = Repo.design == "classic" && Repo.theme == k
-                Row(
-                    Modifier.fillMaxWidth().clickable { Repo.setClassic(ctx, k) },
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(selected = chosen, onClick = { Repo.setClassic(ctx, k) })
-                    Text(n)
-                }
-            }
-            Text(
-                tr("Themer"), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant,
-                modifier = Modifier.padding(top = 12.dp)
-            )
+            // Everything about the look is in the Themer: the standard themes (Light, Dark, AMOLED black, each with
+            // colour sets) and the four designs. (No "System default": the first start picks Light or Dark to match
+            // the phone, see Repo.load.)
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f).padding(end = 12.dp)) {
                     Text(
-                        tr("Special themes to personalise your wishlist"),
+                        tr("Themes and colours to personalise your wishlist"),
                         style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
                     )
                 }
