@@ -334,7 +334,7 @@ private fun DrawerItem(label: String, icon: ImageVector, selected: Boolean, dot:
     val shape = look.chipShape
     val frame = if (!selected) Modifier else when (look.design) {
         "neo" -> Modifier.hardShadow(look.line, shape, 3.dp).border(2.dp, look.line, shape)
-        "clay" -> Modifier.clay(look, shape, cs.primary, 6.dp)
+        "clay" -> Modifier.clay(look, shape, look.accent, 6.dp)
         else -> Modifier
     }
     val on = look.design == "neo" || look.design == "clay"
@@ -348,9 +348,9 @@ private fun DrawerItem(label: String, icon: ImageVector, selected: Boolean, dot:
         badge = if (dot) ({ RedDot() }) else null,
         shape = shape,
         colors = NavigationDrawerItemDefaults.colors(
-            selectedContainerColor = if (look.design == "clay") Color.Transparent else if (on) cs.primary else cs.primaryContainer,
-            selectedTextColor = if (on) cs.onPrimary else cs.onPrimaryContainer,
-            selectedIconColor = if (on) cs.onPrimary else cs.onPrimaryContainer,
+            selectedContainerColor = if (look.design == "clay") Color.Transparent else if (on) look.accent else cs.primaryContainer,
+            selectedTextColor = if (on) look.onAccent else cs.onPrimaryContainer,
+            selectedIconColor = if (on) look.onAccent else cs.onPrimaryContainer,
             unselectedTextColor = cs.onSurface, unselectedIconColor = cs.onSurfaceVariant
         ),
         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding).then(frame)

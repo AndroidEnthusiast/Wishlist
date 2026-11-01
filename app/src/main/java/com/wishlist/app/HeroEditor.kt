@@ -351,6 +351,10 @@ fun HeroEditor(image: String, start: HeroEdit, onSave: (String, HeroEdit) -> Uni
                     val aw = constraints.maxWidth.toFloat()
                     val ah = constraints.maxHeight.toFloat()
                     val r = raw
+                    // The photo only starts loading once it is drawn: draw it (unseen) until its size is known.
+                    if (r == null) {
+                        Image(painter, null, Modifier.fillMaxSize().graphicsLayer { alpha = 0f }, contentScale = ContentScale.Fit)
+                    }
                     if (r != null) {
                         val sideways = edit.rotation % 180 != 0
                         val ar = if (sideways) 1f / r else r

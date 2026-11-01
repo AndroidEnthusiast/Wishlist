@@ -100,14 +100,14 @@ fun Button(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean 
     when (look.design) {
         "neo" -> M3Button(
             onClick, modifier.then(if (enabled) Modifier.hardShadow(look.line, shape, 3.dp) else Modifier), enabled,
-            shape = shape, colors = ButtonDefaults.buttonColors(containerColor = cs.primary, contentColor = cs.onPrimary),
+            shape = shape, colors = ButtonDefaults.buttonColors(containerColor = look.accent, contentColor = look.onAccent),
             elevation = null, border = BorderStroke(2.dp, look.line), content = content
         )
         // Clay: a puffy pillow in the main colour (the button itself is see-through on top of it).
         "clay" -> M3Button(
-            onClick, modifier.then(if (enabled) Modifier.clay(look, shape, cs.primary, 6.dp) else Modifier), enabled,
+            onClick, modifier.then(if (enabled) Modifier.clay(look, shape, look.accent, 6.dp) else Modifier), enabled,
             shape = shape, elevation = null,
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = cs.onPrimary),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = look.onAccent),
             content = content
         )
         "organic" -> M3Button(onClick, modifier, enabled, shape = shape, content = content)
@@ -177,7 +177,7 @@ fun Switch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifier: Mo
         "neo" -> M3Switch(
             checked, onCheckedChange, modifier, enabled = enabled,
             colors = SwitchDefaults.colors(
-                checkedThumbColor = cs.onPrimary, checkedTrackColor = cs.primary, checkedBorderColor = look.line,
+                checkedThumbColor = look.onAccent, checkedTrackColor = look.accent, checkedBorderColor = look.line,
                 uncheckedThumbColor = look.line, uncheckedTrackColor = cs.surface, uncheckedBorderColor = look.line
             )
         )

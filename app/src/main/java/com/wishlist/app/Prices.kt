@@ -119,7 +119,7 @@ fun PricesScreen(snack: SnackbarHostState) {
                                     ch == null -> ""
                                     pct < 0 -> tr("↓ %d%% since added", -pct)
                                     pct > 0 -> tr("↑ %d%% since added", pct)
-                                    else -> tr("Same as when added")
+                                    else -> tr("No price change yet")
                                 },
                                 style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold,
                                 color = when {

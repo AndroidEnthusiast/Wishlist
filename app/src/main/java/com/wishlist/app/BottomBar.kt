@@ -2,6 +2,7 @@ package com.wishlist.app
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -57,11 +58,11 @@ fun AppBottomBar(
     ) {
         NavigationBarItem(
             selected = current == "home", onClick = onHome,
-            icon = { Icon(AppIcons.Home, null) }, label = { Text(tr("Home"), maxLines = 1) }
+            icon = { Icon(AppIcons.Home, null) }, label = { Text(tr("Home"), maxLines = 1, softWrap = false) }
         )
         NavigationBarItem(
             selected = false, onClick = onCreate,
-            icon = { NewListIcon() }, label = { Text(tr("New list"), maxLines = 1) }
+            icon = { GiftIcon(LocalContentColor.current) }, label = { Text(tr("New wishlist"), maxLines = 1, softWrap = false) }
         )
         // Add wish: only a + in a filled circle, no words.
         NavigationBarItem(
@@ -69,36 +70,43 @@ fun AppBottomBar(
             icon = {
                 Box(
                     Modifier.size(40.dp).clip(if (look.design == "neo") RoundedCornerShape(10.dp) else CircleShape)
-                        .background(cs.primary),
+                        .background(look.accent)
+                        // Neobrutalism: an ink line, so the bright block stands out on the light bar.
+                        .then(if (look.design == "neo") Modifier.border(2.dp, look.line, RoundedCornerShape(10.dp)) else Modifier),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(AppIcons.Add, tr("Add wish"), tint = cs.onPrimary, modifier = Modifier.size(26.dp))
+                    Icon(AppIcons.Add, tr("Add wish"), tint = look.onAccent, modifier = Modifier.size(26.dp))
                 }
             }
         )
         NavigationBarItem(
             selected = current == "prices", onClick = onPrices,
-            icon = { PriceIcon(LocalContentColor.current) }, label = { Text(tr("Prices"), maxLines = 1) }
+            icon = { PriceIcon(LocalContentColor.current) }, label = { Text(tr("Prices"), maxLines = 1, softWrap = false) }
         )
         NavigationBarItem(
             selected = current == "friends", onClick = onFriends,
-            icon = { Icon(AppIcons.Person, null) }, label = { Text(tr("Friends"), maxLines = 1) }
+            icon = { Icon(AppIcons.Person, null) }, label = { Text(tr("Friends"), maxLines = 1, softWrap = false) }
         )
     }
 }
 
-/** A list with a small + on its corner. */
+/** A gift box: a wishlist. */
 @Composable
-private fun NewListIcon() {
-    val cs = MaterialTheme.colorScheme
-    Box(Modifier.size(24.dp)) {
-        Icon(AppIcons.ListIcon, tr("New list"), modifier = Modifier.size(24.dp))
-        Box(
-            Modifier.align(Alignment.BottomEnd).offset(5.dp, 4.dp).size(13.dp).clip(CircleShape).background(cs.primary),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(AppIcons.Add, null, tint = cs.onPrimary, modifier = Modifier.size(11.dp))
+private fun GiftIcon(tint: Color) {
+    Canvas(Modifier.size(24.dp)) {
+        val u = size.width / 24f
+        val st = Stroke(2f * u, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        // Lid, box, ribbon down the middle, and the bow.
+        drawRoundRect(tint, Offset(3f * u, 8f * u), Size(18f * u, 4.5f * u), androidx.compose.ui.geometry.CornerRadius(1.2f * u), style = st)
+        drawRoundRect(tint, Offset(4.5f * u, 12.5f * u), Size(15f * u, 8.5f * u), androidx.compose.ui.geometry.CornerRadius(1.2f * u), style = st)
+        drawLine(tint, Offset(12f * u, 8f * u), Offset(12f * u, 21f * u), 2f * u, StrokeCap.Round)
+        val bow = Path().apply {
+            moveTo(12f * u, 8f * u)
+            cubicTo(9f * u, 3f * u, 5.5f * u, 5.5f * u, 8.5f * u, 8f * u)
+            moveTo(12f * u, 8f * u)
+            cubicTo(15f * u, 3f * u, 18.5f * u, 5.5f * u, 15.5f * u, 8f * u)
         }
+        drawPath(bow, tint, style = st)
     }
 }
 

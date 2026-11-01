@@ -73,27 +73,27 @@ fun AddWishButton(onClick: () -> Unit) {
         "neo" -> ExtendedFloatingActionButton(
             text = text, icon = icon, onClick = onClick,
             modifier = Modifier.hardShadow(look.line, shape, 4.dp).border(2.dp, look.line, shape),
-            shape = shape, containerColor = cs.primary, contentColor = cs.onPrimary, elevation = flat
+            shape = shape, containerColor = look.accent, contentColor = look.onAccent, elevation = flat
         )
         "clay" -> ExtendedFloatingActionButton(
             text = text, icon = icon, onClick = onClick,
-            modifier = Modifier.clay(look, shape, cs.primary, 12.dp),
-            shape = shape, containerColor = Color.Transparent, contentColor = cs.onPrimary, elevation = flat
+            modifier = Modifier.clay(look, shape, look.accent, 12.dp),
+            shape = shape, containerColor = Color.Transparent, contentColor = look.onAccent, elevation = flat
         )
         "organic" -> ExtendedFloatingActionButton(
             text = text, icon = icon, onClick = onClick, shape = shape,
-            containerColor = cs.primary, contentColor = cs.onPrimary,
+            containerColor = look.accent, contentColor = look.onAccent,
             elevation = FloatingActionButtonDefaults.elevation(3.dp, 4.dp, 3.dp, 3.dp)
         )
         // Material 3 Expressive: a big squircle in the strong container colour.
         "material" -> ExtendedFloatingActionButton(
             text = text, icon = icon, onClick = onClick, shape = shape,
             modifier = Modifier.height(64.dp),
-            containerColor = cs.primary, contentColor = cs.onPrimary
+            containerColor = look.accent, contentColor = look.onAccent
         )
         else -> ExtendedFloatingActionButton(
             text = text, icon = icon, onClick = onClick,
-            containerColor = cs.primaryContainer, contentColor = cs.onPrimaryContainer
+            containerColor = look.accentContainer, contentColor = look.onAccentContainer
         )
     }
 }
@@ -322,7 +322,7 @@ private fun ThemeSample(look: Look) {
             )
             if (look.pictureLine > 0.dp) Box(Modifier.fillMaxWidth().height(look.pictureLine).background(look.line))
             Box(
-                Modifier.padding(5.dp).width(20.dp).height(5.dp).clip(CircleShape).background(look.scheme.primary)
+                Modifier.padding(5.dp).width(20.dp).height(5.dp).clip(CircleShape).background(look.accent)
             )
         }
     }

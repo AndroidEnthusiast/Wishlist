@@ -68,6 +68,8 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - v2.70: cover photo editor with a movable, resizable crop frame over the whole photo; text resizable by its corners.
 
+- v2.71: editor black screen fixed, "No price change yet", readable Neobrutalism text (accent colour only for blocks), "New wishlist" gift icon.
+
 ## Next session
 - **Remind the owner: build the Friends feature** (they asked to be reminded; the bottom bar has a "Friends is coming soon" page for now).
 - Ask how the dashboard, the bottom bar and the hero editor feel on the phone.

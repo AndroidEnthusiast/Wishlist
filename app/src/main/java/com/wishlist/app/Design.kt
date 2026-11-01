@@ -140,7 +140,14 @@ class Look(
     val display: FontFamily?,
     /** A cheaper and a dearer price. */
     val drop: Color,
-    val rise: Color
+    val rise: Color,
+    /**
+     * The colour of filled blocks (buttons, the chosen chip, Add wish, the + buttons) and what goes on them. Usually the
+     * main colour; in Neobrutalism's light sets the main colour is too light for text, so there the scheme's primary
+     * (used for text, titles, radio buttons, links) is the dark ink and the bright colour is only used here (2.71).
+     */
+    val accent: Color = scheme.primary,
+    val onAccent: Color = scheme.onPrimary
 ) {
     val classic: Boolean get() = design == "classic"
 }
@@ -230,7 +237,9 @@ fun lookFor(style: String, setKey: String, classicMode: String): Look {
             val inkOnBright = if (dark) c(0xFF111111) else ink
             Look(
                 "neo", dark,
-                scheme(dark, main, inkOnBright, a2, inkOnBright, a3, bg, surface, ink, muted, surface, ink, mix(ink, bg, 0.7f)),
+                // Light sets: text and small controls in ink (the bright colours are unreadable as text on white);
+                // the bright main colour fills the blocks (accent).
+                scheme(dark, if (dark) main else ink, if (dark) inkOnBright else white, a2, inkOnBright, a3, bg, surface, ink, muted, surface, ink, mix(ink, bg, 0.7f)),
                 // Midnight too has bright cards (with dark text, see cardInk) on the dark background, and light shadows.
                 if (dark) accents else listOf(main, white, a2, a3),
                 accents.map { if (dark) mix(it, surface, 0.15f) else mix(it, white, 0.35f) },
@@ -239,7 +248,8 @@ fun lookFor(style: String, setKey: String, classicMode: String): Look {
                 listOf(mix(ink, bg, if (dark) 0.86f else 0.9f)),
                 lexend,
                 // Prices are written on the bright cards, so they are dark green and red in Midnight too.
-                c(0xFF00873C), c(0xFFD62828)
+                c(0xFF00873C), c(0xFFD62828),
+                accent = main, onAccent = inkOnBright
             )
         }
         "clay" -> {
@@ -564,10 +574,10 @@ fun Modifier.lookChip(look: Look, on: Boolean = false): Modifier {
     val shape = look.chipShape
     return when (look.design) {
         "neo" -> (if (on) hardShadow(look.line, shape, 3.dp) else this)
-            .clip(shape).background(if (on) cs.primary else cs.surface).border(2.dp, look.line, shape)
-        "organic" -> clip(shape).background(if (on) cs.primary else Color.Transparent).border(1.dp, look.line, shape)
-        "clay" -> clay(look, shape, if (on) cs.primary else look.cardFill(0), if (on) 6.dp else 5.dp)
-        "material" -> clip(shape).background(if (on) cs.primary else cs.surfaceVariant)
+            .clip(shape).background(if (on) look.accent else cs.surface).border(2.dp, look.line, shape)
+        "organic" -> clip(shape).background(if (on) look.accent else Color.Transparent).border(1.dp, look.line, shape)
+        "clay" -> clay(look, shape, if (on) look.accent else look.cardFill(0), if (on) 6.dp else 5.dp)
+        "material" -> clip(shape).background(if (on) look.accent else cs.surfaceVariant)
         else -> clip(shape).background(if (on) cs.primaryContainer else Color.Transparent)
     }
 }
@@ -576,7 +586,7 @@ fun Modifier.lookChip(look: Look, on: Boolean = false): Modifier {
 fun Look.chipContent(on: Boolean): Color = when {
     !on -> if (design == "classic") scheme.onSurfaceVariant else scheme.onSurface
     design == "classic" -> scheme.onPrimaryContainer
-    else -> scheme.onPrimary
+    else -> onAccent
 }
 
 /** What is drawn behind the list: organic blobs, clay glows, a neobrutalist dot grid. Classic and Material stay plain. */

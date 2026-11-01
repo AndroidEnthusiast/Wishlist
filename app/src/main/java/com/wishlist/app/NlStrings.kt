@@ -401,7 +401,6 @@ val NL: Map<String, String> = mapOf(
     "Delete this wishlist?" to "Dit verlanglijstje verwijderen?",
     "“%s” and all its wishes are deleted for good. Friends’ links to it stop working." to "“%s” en alle wensen erop worden voorgoed verwijderd. Links van vrienden ernaar werken niet meer.",
     "“%s” is ready" to "“%s” is klaar",
-    "New list" to "Nieuwe lijst",
     "Prices" to "Prijzen",
     "Friends" to "Vrienden",
     "A wishlist of your own, to share with friends" to "Een eigen verlanglijstje, om met vrienden te delen",
@@ -411,7 +410,6 @@ val NL: Map<String, String> = mapOf(
     "No prices yet. Wishes with a price show up here, with how much they changed since you added them." to "Nog geen prijzen. Wensen met een prijs staan hier, met hoeveel ze veranderd zijn sinds je ze toevoegde.",
     "↓ %d%% since added" to "↓ %d%% sinds toegevoegd",
     "↑ %d%% since added" to "↑ %d%% sinds toegevoegd",
-    "Same as when added" to "Gelijk aan toen toegevoegd",
     "Friends is coming soon" to "Vrienden komt binnenkort",
     "Soon you’ll find your friends here, with their wishlists, so you always know what to give." to "Binnenkort vind je hier je vrienden, met hun verlanglijstjes, zodat je altijd weet wat je kunt geven.",
     "Themes and colours to personalise your wishlist" to "Thema's en kleuren om je verlanglijstje persoonlijk te maken",
@@ -445,5 +443,6 @@ val NL: Map<String, String> = mapOf(
     "Box" to "Vlak",
     "Change the cover photo" to "Omslagfoto wijzigen",
     "Cover photo" to "Omslagfoto",
-    "Zoom" to "Zoom"
+    "Zoom" to "Zoom",
+    "No price change yet" to "Nog geen prijswijziging"
 )
