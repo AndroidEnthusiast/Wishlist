@@ -358,6 +358,8 @@ object AppIcons {
         Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List,
         Icons.AutoMirrored.Rounded.List, Icons.AutoMirrored.Sharp.List
     )
+    val Notifications: ImageVector @Composable get() =
+        v(Icons.Filled.Notifications, Icons.Outlined.Notifications, Icons.Rounded.Notifications, Icons.Sharp.Notifications)
     val MoreVert: ImageVector @Composable get() = v(Icons.Filled.MoreVert, Icons.Outlined.MoreVert, Icons.Rounded.MoreVert, Icons.Sharp.MoreVert)
     val Person: ImageVector @Composable get() = v(Icons.Filled.Person, Icons.Outlined.Person, Icons.Rounded.Person, Icons.Sharp.Person)
     val Refresh: ImageVector @Composable get() = v(Icons.Filled.Refresh, Icons.Outlined.Refresh, Icons.Rounded.Refresh, Icons.Sharp.Refresh)

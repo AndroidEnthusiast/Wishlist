@@ -56,6 +56,8 @@ object PriceCheck {
                 Repo.updateMine(c, listId) { l -> l.map { if (it.id == nw.id) nw else it } }
                 // A changed price becomes a point in the price history.
                 History.record(c, nw.id, np)
+                // Kept for the Notifications page (drops and rises as switched on in App settings).
+                if (cur != null) Notifications.priceChanged(c, "m:$listId", cw, cur, np)
                 if (cur != null && np < cur - 0.005) {
                     if (Repo.notifyDrops) Alerts.notifyDrop(c, cw.id.toInt(), cw.title, cur, np, cw.currency)
                     dropped++

@@ -40,16 +40,18 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * "Wish added on 01/11/26": when a wish was added. A wish's id is the moment it was made, so that is the date
- * (a copy on another list keeps the date of the original). Null for an id that isn't a plausible moment.
+ * "Added on Thursday 01-12-26": when a wish was added (the day's name in the app's language). A wish's id is the moment
+ * it was made, so that is the date (a copy on another list keeps the date of the original). Null for an id that
+ * isn't a plausible moment.
  */
 fun addedOn(w: Wish): String? {
     val t = w.id
     if (t < 1_400_000_000_000L || t > System.currentTimeMillis() + 86_400_000L) return null
-    return tr("Wish added on %s", SimpleDateFormat("dd/MM/yy", Locale.ROOT).format(Date(t)))
+    val locale = if (Lang.code == "nl") Locale("nl", "NL") else Locale.UK
+    return tr("Added on %s", SimpleDateFormat("EEEE dd-MM-yy", locale).format(Date(t)))
 }
 
-/** The "Wish added on" line under a wish: small, quiet and in italics. */
+/** The "Added on" line under a wish: small, quiet and in italics. */
 @Composable
 fun AddedOnText(w: Wish, color: androidx.compose.ui.graphics.Color, modifier: Modifier = Modifier) {
     val s = addedOn(w) ?: return

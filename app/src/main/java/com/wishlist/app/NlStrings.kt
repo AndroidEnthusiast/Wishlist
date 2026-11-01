@@ -426,7 +426,6 @@ val NL: Map<String, String> = mapOf(
     "Indigo" to "Indigo",
     "Rose" to "Roze",
     "Amber" to "Amber",
-    "Wish added on %s" to "Wens toegevoegd op %s",
     "Add wishes from your other lists" to "Wensen van je andere lijstjes toevoegen",
     "They are copied: they stay on their own list too. If you remove a wish there, its copy goes as well." to "Ze worden gekopieerd: ze blijven ook op hun eigen lijstje. Verwijder je een wens daar, dan gaat de kopie ook weg.",
     "Your other lists have no wishes to add yet." to "Je andere lijstjes hebben nog geen wensen om toe te voegen.",
@@ -436,5 +435,9 @@ val NL: Map<String, String> = mapOf(
     "%d wishes chosen" to "%d wensen gekozen",
     "Wishes" to "Wensen",
     "1 wish added" to "1 wens toegevoegd",
-    "%d wishes added" to "%d wensen toegevoegd"
+    "%d wishes added" to "%d wensen toegevoegd",
+    "Added on %s" to "Toegevoegd op %s",
+    "No notifications yet. When a wish gets cheaper or more expensive, it shows up here." to "Nog geen meldingen. Wordt een wens goedkoper of duurder, dan zie je het hier.",
+    "decreased in price" to "in prijs gedaald",
+    "increased in price" to "in prijs gestegen"
 )

@@ -262,6 +262,7 @@ object Repo {
         }
         mineNames = mineIds.associateWith { MyLists.read(p, it).name }
         Lang.load(c)
+        Notifications.load(c)
         Sync.attach(c)
         Shared.load(c)
         friends = SafeStore.readList(p, "friends") { o -> Friend(o.getString("code"), o.optString("name", "Wishlist")) }

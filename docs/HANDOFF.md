@@ -60,9 +60,10 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 - v2.65: bottom bar (Home, New list, Add wish, Prices, Friends placeholder), Prices page, hero picture editor, colour sets for the standard themes, dashboard details. Proposed to the owner and waiting for an answer: the wording of the Notifications page (price drops and rises, with a red dot in the menu): options A "€10 cheaper than when you added it. Now €79.", B "11% cheaper since you added it (€89 → €79)", C "Good news: down to €79 (was €89)"; Claude recommended A.
 - v2.66: copying wishes from your other lists (in the New wishlist form and list settings), removing an original removes its copies; "Wish added on dd/mm/yy" on every wish.
 
+- v2.67: Notifications page (the owner's own wording: picture, name, "decreased/increased in price", bold %), red dots; "Added on Thursday 01-12-26".
+
 ## Next session
 - **Remind the owner: build the Friends feature** (they asked to be reminded; the bottom bar has a "Friends is coming soon" page for now).
-- Build the Notifications page once the owner has chosen the wording (see the last session's proposal in the chat: menu item above Bin with a red dot; only price drops and/or rises as switched on in App settings).
 - Ask how the dashboard, the bottom bar and the hero editor feel on the phone.
 ## Decisions and why
 - Lists are link-only, never listed publicly. Reservations are hidden from the owner and from editors so gifts stay a surprise.

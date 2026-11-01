@@ -53,6 +53,7 @@ object SharedPrices {
             for ((w, was) in alerts) {
                 val now = w.price ?: continue
                 val id = l.code.hashCode() * 31 + w.id.hashCode()
+                Notifications.priceChanged(c, "s:" + l.code, w, was, now)
                 if (now < was) {
                     if (Repo.notifyDrops) Alerts.notifyDrop(c, id, w.title, was, now, w.currency, tr("Price drop on %s", r.list.name))
                 } else if (Repo.notifyRises) {
