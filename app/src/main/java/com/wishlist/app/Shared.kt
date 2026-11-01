@@ -157,6 +157,10 @@ object Shared {
         }
     }
 
+    /** The wishes of group wishlist [code] as last seen on this phone (for its block on Home), without the bin. */
+    fun cachedWishes(c: Context, code: String): List<Wish> =
+        (if (active == code) content.wishes else readCache(c, code)?.wishes.orEmpty()).filter { it.bin == 0L }
+
     private fun writeCache(c: Context, code: String, ct: SharedContent) {
         val items = JSONArray()
         ct.wishes.forEach { items.put(wishToJson(it)) }

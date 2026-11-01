@@ -71,6 +71,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -682,7 +683,8 @@ fun App(
                     onOpenGroup = { openGroup(it) },
                     onNewMine = { newMine = true },
                     onNewGroup = { newShared = true },
-                    onProfile = { profileOpen = true }
+                    onProfile = { profileOpen = true },
+                    onAddTo = { t -> addTarget = t; prefill = ""; adding = true }
                 )
                 else -> key(Shared.active, Repo.openMine) {
                     HomeScreen(
@@ -875,6 +877,24 @@ fun HomeScreen(
     )
     val view = Repo.view
     val look = LocalLook.current
+    // A wish tapped on "All your wishes" or "Top wishes": scroll to it (showing every category if it was hidden by
+    // the filter or a search) and let it glow (owner, 2.91).
+    val gridState = rememberLazyGridState()
+    LaunchedEffect(WishFocus.target, sel, query) {
+        val t = WishFocus.target ?: return@LaunchedEffect
+        val i = list.indexOfFirst { it.id == t }
+        if (i < 0) {
+            if (sel != "All" || query.isNotEmpty()) {
+                cat = "All"; query = ""; searching = false
+            } else WishFocus.target = null
+            return@LaunchedEffect
+        }
+        WishFocus.target = null
+        delay(150)
+        // Two items come before the wishes: the cover and summary card, and the filters.
+        gridState.animateScrollToItem(i + 2)
+        WishFocus.glow(t)
+    }
 
     Scaffold(
         containerColor = cs.background,
@@ -974,6 +994,7 @@ fun HomeScreen(
             } else {
                 val gap = if (view == "grid") 12.dp else 16.dp
                 LazyVerticalGrid(
+                    state = gridState,
                     columns = if (view == "grid") GridCells.Fixed(2) else GridCells.Adaptive(300.dp),
                     contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 96.dp),
                     horizontalArrangement = Arrangement.spacedBy(gap),
@@ -983,6 +1004,8 @@ fun HomeScreen(
                     item(key = "filters", span = { GridItemSpan(maxLineSpan) }) { filters() }
                     gridItems(list, key = { it.id }) { w ->
                         val r = res[w.id]
+                        // A wish opened from "All your wishes" glows softly twice (WishFocus).
+                        GlowBox(w.id, small = view == "grid") {
                         when (view) {
                             "grid" -> CompactCard(
                                 w, onLongPress = { openMenu(w) },
@@ -1020,6 +1043,7 @@ fun HomeScreen(
                                     Icon(AppIcons.Delete, tr("Delete"), tint = look.cardMuted(w.id))
                                 }
                             }
+                        }
                         }
                     }
                 }

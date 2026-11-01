@@ -124,6 +124,10 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Cover photo per list: optional, off by default** (owner, 2.89): list settings > Cover photo, the same editor as the profile photo but rectangular, with a **Preview** of the list before saving. Only shown when chosen; only on your phone.
 - **Summary card at the top of your own lists**: number of wishes and total value (owner, 2.89; not on group wishlists since 2.90). The total value is no longer on Home.
 - **Home keeps its list sections** next to the "wishlists" page (owner, 2.90): one tap to any list beats a tidier Home.
+- **Lists on Home are blocks, two per row** (owner, 2.91, like GoWish's home): newest wish's photo, the number of wishes in a white circle top right (also 0), the name under the block. Empty list: "Empty" and "+ Add wish" (the wish form with that list chosen) on the theme's soft colour. Group wishlists use the phone's copy for their picture. "Recently opened" uses smaller blocks. Long press menu on Home only.
+- **The "wishlists" page only opens lists**: no + buttons, no long-press menu (owner, 2.91).
+- **Tapping a wish on "All your wishes" / "Top wishes"** opens its list, scrolls to it and lets it glow softly twice (owner, 2.91).
+- **Page texts** (owner, 2.91): "All your wishes" with "Every wish from all your wishlists, in one place."; "Top wishes" with its gold label and "The wishes you’d love most, from all your wishlists."
 - **A copied wish is one wish** in the counts and the All wishes / Top wishes pages, with all its lists in "Added to …" (owner, 2.90).
 - **Taking a top wish off from the Top wishes page asks first** ("Remove from top wishes?" No / Yes) (owner, 2.90).
 - **Groups: only the organiser invites by default**; the organiser can switch on "Members can invite too" (owner). Not built yet.

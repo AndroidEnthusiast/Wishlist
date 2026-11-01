@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -47,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -66,8 +69,14 @@ import java.io.File
  * together with other givers, for someone else) with a + for a new one. Tapping a list opens it; Back returns here.
  */
 
-/** One list on the dashboard: your own ([mineId]) or a group wishlist ([code]). */
-private class HubItem(val key: String, val name: String, val detail: String, val pictures: List<String>, val group: Boolean, val open: () -> Unit)
+/**
+ * One list on the dashboard: your own ("m:<id>") or a group wishlist ("s:<code>"). [picture]: its most recently added
+ * wish with a photo (none: the empty state or a gift). [addTo]: the "Save to" key, so "+ Add wish" starts on this list.
+ */
+private class HubItem(
+    val key: String, val name: String, val count: Int, val picture: String?, val group: Boolean,
+    val addTo: String, val open: () -> Unit
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,24 +86,27 @@ fun HubScreen(
     onOpenGroup: (String) -> Unit,
     onNewMine: () -> Unit,
     onNewGroup: () -> Unit,
-    onProfile: () -> Unit = {}
+    onProfile: () -> Unit = {},
+    // "+ Add wish" on an empty list's block: the wish form, with that list chosen.
+    onAddTo: (String) -> Unit = {}
 ) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
     // Your own lists are read again whenever one changes (mineVersion) or the open one changes.
     val mine = remember(Repo.mineVersion, Repo.myWishes, Repo.myName, Repo.mineIds, Repo.openMine) { Repo.allMine(ctx) }
+    // The picture of a list: its most recently added wish that has one (a wish's id is the moment it was added).
+    fun newest(ws: List<Wish>) = ws.filter { it.image.isNotBlank() }.maxByOrNull { it.id }?.image
     val mineItems = mine.map { d ->
         val n = if (d.name == "My wishlist") tr(d.name) else d.name
-        val count = d.wishes.size
-        // The total value is in the list's summary card now (2.89), not here.
-        val detail = if (count == 1) tr("1 wish") else tr("%d wishes", count)
-        // The picture: the most recently added wish that has one (a wish's id is the moment it was added).
-        val newest = d.wishes.filter { it.image.isNotBlank() }.maxByOrNull { it.id }?.image
-        HubItem("m:" + d.id, n, detail, listOfNotNull(newest), false) { onOpenMine(d.id) }
+        HubItem("m:" + d.id, n, d.wishes.size, newest(d.wishes), false, MyLists.saveKey(d.id, false)) { onOpenMine(d.id) }
     }
-    val groupItems = Shared.lists.map { l ->
-        HubItem("s:" + l.code, l.name, tr("Group wishlist"), emptyList(), true) { onOpenGroup(l.code) }
+    // Group wishlists: from the copy kept on the phone (it may be a little behind until the list is opened).
+    val groupItems = remember(Shared.lists, Shared.content) {
+        Shared.lists.map { l ->
+            val ws = Shared.cachedWishes(ctx, l.code)
+            HubItem("s:" + l.code, l.name, ws.size, newest(ws), true, l.code) { onOpenGroup(l.code) }
+        }
     }
     val all = (mineItems + groupItems).associateBy { it.key }
     val recentItems = Repo.recent.entries.sortedByDescending { it.value }.mapNotNull { all[it.key] }.take(10)
@@ -122,27 +134,27 @@ fun HubScreen(
         else listOf(edit, Triple(tr("Delete wishlist"), true, onDelete))
     }
 
-    // Your own lists, then the group wishlists: on Home, and on the page behind the "wishlists" number.
-    val listsSection: @Composable () -> Unit = {
-        HubTitle(tr("My wishlists"), addLabel = tr("New wishlist"), onAdd = onNewMine)
-        Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            mineItems.forEach { ListRow(it, actionsOf(it)) }
-        }
+    // Your own lists, then the group wishlists, as blocks two per row (owner, 2.91). On Home with the + buttons and
+    // the long-press menu; on the "wishlists" page only for opening lists (owner: new lists are made from Home and
+    // the bottom bar).
+    @Composable
+    fun ListsSection(onHome: Boolean) {
+        HubTitle(tr("My wishlists"), addLabel = tr("New wishlist"), onAdd = if (onHome) onNewMine else null)
+        BlockGrid(mineItems, onHome, ::actionsOf, onAddTo)
 
-        HubTitle(tr("Group wishlists"), addLabel = tr("New group wishlist"), onAdd = onNewGroup)
-        Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (groupItems.isEmpty()) {
-                Text(
-                    tr("Collect gift ideas for someone together with other givers, and see who buys what."),
-                    style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
-                )
-            }
-            groupItems.forEach { ListRow(it, actionsOf(it)) }
+        HubTitle(tr("Group wishlists"), addLabel = tr("New group wishlist"), onAdd = if (onHome) onNewGroup else null)
+        if (groupItems.isEmpty()) {
+            Text(
+                tr("Collect gift ideas for someone together with other givers, and see who buys what."),
+                style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
         }
+        BlockGrid(groupItems, onHome, ::actionsOf, onAddTo)
     }
 
     val page = HubNav.page
-    if (page != null) OverviewScreen(page, snack, listsSection, onOpenMine) else Scaffold(
+    if (page != null) OverviewScreen(page, snack, { ListsSection(onHome = false) }, onOpenMine) else Scaffold(
         containerColor = cs.background,
         topBar = {
             TopAppBar(
@@ -167,11 +179,11 @@ fun HubScreen(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    items(recentItems.size) { i -> RecentCard(recentItems[i]) }
+                    items(recentItems.size) { i -> RecentCard(recentItems[i], onAddTo) }
                 }
             }
 
-            listsSection()
+            ListsSection(onHome = true)
 
             // Price changes: the wishes on your lists whose price changed, cheaper first, then dearer.
             val changed = mine.flatMap { it.wishes }.distinctBy { it.id }.filter { w ->
@@ -362,79 +374,108 @@ private fun HubTitle(text: String, addLabel: String? = null, small: Boolean = fa
     }
 }
 
-/** A list in "My wishlists" or "Group wishlists": a small picture, its name and how many wishes it has. */
+/** Blocks two per row (the last one alone on its row when the number is odd). */
+@Composable
+private fun BlockGrid(
+    items: List<HubItem>, onHome: Boolean, actionsOf: (HubItem) -> List<Triple<String, Boolean, () -> Unit>>,
+    onAddTo: (String) -> Unit
+) {
+    Column(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        items.chunked(2).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                row.forEach { item ->
+                    ListBlock(item, if (onHome) actionsOf(item) else emptyList(), onAddTo, Modifier.weight(1f), small = false)
+                }
+                if (row.size == 1) Spacer(Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+/**
+ * A wishlist as a block (owner, 2.91, after GoWish's home): a square with the newest wish's photo (on the theme's
+ * soft colour, like every product photo) and the number of wishes in a white circle top right; its name under it.
+ * An empty list says "Empty" with "+ Add wish", which opens the wish form with this list chosen. Tap opens the list;
+ * a long press opens the small menu ([actions], Home only).
+ */
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
-private fun ListRow(item: HubItem, actions: List<Triple<String, Boolean, () -> Unit>>) {
+private fun ListBlock(
+    item: HubItem, actions: List<Triple<String, Boolean, () -> Unit>>, onAddTo: (String) -> Unit,
+    modifier: Modifier, small: Boolean
+) {
     val look = LocalLook.current
     val id = item.key.hashCode().toLong()
-    // Tap opens the list; a long press opens a small menu right there (Edit name, Delete or Leave). Tap elsewhere to close.
     var menu by remember { mutableStateOf(false) }
-    Box {
-    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-        actions.forEach { (label, danger, act) ->
-            DropdownMenuItem(
-                text = { Text(label, color = if (danger) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface) },
-                onClick = { menu = false; act() }
-            )
+    Column(modifier) {
+        Box {
+            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                actions.forEach { (label, danger, act) ->
+                    DropdownMenuItem(
+                        text = { Text(label, color = if (danger) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface) },
+                        onClick = { menu = false; act() }
+                    )
+                }
+            }
+            val shape = look.cardShape(id, small = true)
+            Box(
+                Modifier.fillMaxWidth().aspectRatio(1f).lookCard(look, id, shape)
+                    .combinedClickable(onClick = item.open, onLongClick = if (actions.isEmpty()) null else ({ menu = true }))
+            ) {
+                // The picture area: the theme's soft colour, the photo on it.
+                Box(
+                    Modifier.fillMaxSize().padding(if (small) 6.dp else 8.dp)
+                        .lookMat(look, RoundedCornerShape(if (small) 12.dp else 16.dp), look.pictureBg(id, item.picture != null)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    val pic = item.picture
+                    if (pic != null) {
+                        PhotoCard(pic, item.name, small = true, modifier = Modifier.fillMaxSize())
+                    } else if (item.count == 0) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                tr("Empty"), style = if (small) MaterialTheme.typography.labelLarge else MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold, color = look.cardMuted(id)
+                            )
+                            if (!small) Text(
+                                "+ " + tr("Add wish"), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
+                                color = look.chipContent(true),
+                                modifier = Modifier.padding(top = 8.dp).lookChip(look, on = true)
+                                    .clickable { onAddTo(item.addTo) }.padding(horizontal = 12.dp, vertical = 6.dp)
+                            )
+                        }
+                    } else {
+                        // Wishes, but none with a photo.
+                        Text(if (item.group) "👥" else "🎁", fontSize = if (small) 26.sp else 40.sp)
+                    }
+                }
+                // The number of wishes: a white circle top right (also 0, owner).
+                Box(
+                    Modifier.align(Alignment.TopEnd).padding(if (small) 8.dp else 12.dp)
+                        .size(if (small) 22.dp else 28.dp).clip(CircleShape).background(Color.White)
+                        .border(1.dp, Color.Black.copy(alpha = 0.08f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        item.count.toString(), color = Color(0xFF1B1B1F), fontWeight = FontWeight.Bold,
+                        fontSize = if (small) 11.sp else 13.sp, maxLines = 1
+                    )
+                }
+            }
         }
-    }
-    Row(
-        Modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true))
-            .combinedClickable(onClick = item.open, onLongClick = { menu = true })
-            .padding(10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        ListThumb(item, id, Modifier.size(64.dp))
-        Column(Modifier.weight(1f).padding(start = 14.dp)) {
-            Text(
-                item.name, style = MaterialTheme.typography.titleMedium, color = look.cardInk(id),
-                maxLines = 1, overflow = TextOverflow.Ellipsis
-            )
-            Text(item.detail, style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id), maxLines = 1)
-        }
-    }
+        Text(
+            item.name, style = if (small) MaterialTheme.typography.labelLarge else MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onBackground,
+            maxLines = 1, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 6.dp, start = 2.dp, end = 2.dp)
+        )
     }
 }
 
-/** A card in "Recently opened". */
+/** A list in "Recently opened": a smaller block (owner, 2.91). */
 @Composable
-private fun RecentCard(item: HubItem) {
-    val look = LocalLook.current
-    val id = item.key.hashCode().toLong()
-    Column(
-        Modifier.width(112.dp).lookCard(look, id, look.cardShape(id, small = true)).clickable(onClick = item.open)
-            .padding(6.dp)
-    ) {
-        ListThumb(item, id, Modifier.fillMaxWidth().height(64.dp))
-        Text(
-            item.name, style = MaterialTheme.typography.labelLarge, color = look.cardInk(id),
-            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp, start = 4.dp, end = 4.dp)
-        )
-        Text(
-            // Only the number of wishes here: the total value doesn't fit this small card.
-            item.detail.substringBefore(" · "), style = MaterialTheme.typography.labelSmall, color = look.cardMuted(id), maxLines = 1,
-            overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 4.dp, end = 4.dp, bottom = 4.dp)
-        )
-    }
-}
-
-/** The picture of a list: its first wish's photo, or a gift (your own) or people (a group wishlist). */
-@Composable
-private fun ListThumb(item: HubItem, id: Long, modifier: Modifier) {
-    val look = LocalLook.current
-    val shape = RoundedCornerShape(14.dp)
-    Box(modifier.lookMat(look, shape, look.pictureBg(id, false)), contentAlignment = Alignment.Center) {
-        val pic = item.pictures.firstOrNull()
-        if (pic != null) {
-            AsyncImage(
-                model = pic, contentDescription = null, contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxSize().padding(6.dp)
-            )
-        } else {
-            Text(if (item.group) "👥" else "🎁", fontSize = 28.sp)
-        }
-    }
+private fun RecentCard(item: HubItem, onAddTo: (String) -> Unit) {
+    ListBlock(item, emptyList(), onAddTo, Modifier.width(112.dp), small = true)
 }
 
 /** A new wishlist of your own: a name (required) and notes about what it's for. */

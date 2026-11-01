@@ -1,7 +1,10 @@
 package com.wishlist.app
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,6 +29,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -47,6 +52,42 @@ import coil.compose.AsyncImage
  * wishes and top wishes. Each number opens a page: all your wishlists (your own, then group wishlists), all wishes of
  * your own lists, or only the top wishes (with a star to take a wish off again).
  */
+
+/**
+ * A wish opened from "All your wishes" or "Top wishes" (2.91): the list scrolls to [target] and lets it glow softly
+ * twice ([GlowBox]).
+ */
+object WishFocus {
+    var target by mutableStateOf<Long?>(null)
+    /** The wish that glows and a counter, so the same wish can glow again. */
+    var glowing by mutableStateOf<Pair<Long, Int>?>(null)
+        private set
+
+    fun glow(id: Long) { glowing = id to ((glowing?.second ?: 0) + 1) }
+}
+
+/** Around a wish card on a list: a soft glow in the theme's colour that pulses twice and fades, when [WishFocus] says so. */
+@Composable
+fun GlowBox(id: Long, small: Boolean, content: @Composable () -> Unit) {
+    val look = LocalLook.current
+    val col = MaterialTheme.colorScheme.primary
+    val g = remember { Animatable(0f) }
+    val n = WishFocus.glowing?.takeIf { it.first == id }?.second ?: 0
+    LaunchedEffect(n) {
+        if (n == 0) return@LaunchedEffect
+        repeat(2) {
+            g.animateTo(1f, tween(450))
+            g.animateTo(0.3f, tween(450))
+        }
+        g.animateTo(0f, tween(700))
+    }
+    val lit = g.value
+    val shape = look.cardShape(id, small)
+    Box(
+        Modifier.shadow((18 * lit).dp, shape, clip = false, ambientColor = col, spotColor = col)
+            .then(if (lit > 0.01f) Modifier.border(3.dp, col.copy(alpha = 0.8f * lit), shape) else Modifier)
+    ) { content() }
+}
 
 /** Which page of Home is open: null (Home itself), "lists", "wishes" or "top". */
 object HubNav {
@@ -136,7 +177,7 @@ fun OverviewScreen(
             TopAppBar(
                 title = {
                     Text(
-                        when (page) { "lists" -> tr("Wishlists"); "top" -> tr("Top wishes"); else -> tr("All wishes") },
+                        when (page) { "lists" -> tr("Wishlists"); "top" -> tr("Top wishes"); else -> tr("All your wishes") },
                         fontWeight = look.titleWeight
                     )
                 },
@@ -170,13 +211,22 @@ fun OverviewScreen(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            if (page == "top") item {
-                MostWantedBadge(showLabel = true, modifier = Modifier.padding(bottom = 4.dp))
+            // A short line under the title (owner, 2.91); Top wishes keeps its gold label above it.
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(bottom = 4.dp)) {
+                    if (page == "top") MostWantedBadge(showLabel = true)
+                    Text(
+                        if (page == "top") tr("The wishes you’d love most, from all your wishlists.")
+                        else tr("Every wish from all your wishlists, in one place."),
+                        style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
+                    )
+                }
             }
             items(shown, key = { it.w.id }) { p ->
                 WishLine(
                     p,
-                    onOpen = { onOpenMine(p.listIds.first()) },
+                    // Opens the list, scrolls to the wish and lets it glow (WishFocus).
+                    onOpen = { WishFocus.target = p.w.id; onOpenMine(p.listIds.first()) },
                     onUnstar = if (page == "top") ({ unstarring = p }) else null
                 )
             }

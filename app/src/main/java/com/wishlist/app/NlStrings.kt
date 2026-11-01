@@ -583,5 +583,9 @@ val NL: Map<String, String> = mapOf(
     "Added to %s" to "Toegevoegd aan %s",
     "Remove from top wishes?" to "Weghalen uit topwensen?",
     "“%s” stays on your wishlist, just no longer as a top wish." to "“%s” blijft op je verlanglijstje, alleen niet meer als topwens.",
+    "Empty" to "Leeg",
+    "All your wishes" to "Al je wensen",
+    "The wishes you’d love most, from all your wishlists." to "De wensen die je het liefst wilt, van al je verlanglijstjes.",
+    "Every wish from all your wishlists, in one place." to "Elke wens van al je verlanglijstjes, op één plek.",
     "No" to "Nee"
 )
