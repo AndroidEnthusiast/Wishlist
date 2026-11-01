@@ -24,7 +24,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **The Themer has only a back arrow** (no menu button). Choices there only change the preview; "Apply" (top right, shown when the choice differs from the theme in use) changes the app (2.56: the owner wanted a confirming action).
 - **Web pages only offer light and dark** (plus following the device), as a bare minimum. No palettes on the web.
 - **The friends' page looks the same as the app and the browser editor**, for both "My wishlist" and shared lists.
-- **List settings vs App settings**: each list has its own settings (opened with the settings button where the refresh button used to be); things that are about the whole app sit in "App settings". Pull down to refresh; the refresh circle is hidden when idle.
+- **List settings vs App settings**: each list has its own settings (opened with the settings button where the refresh button used to be); things that are about the whole app sit in "App settings". Pull down to refresh; the refresh circle is hidden when idle, and shows for at most about 2.5 s (2.61): the price check carries on in the background and a message says when it is done.
 - **Wording settled by the owner**: "+ Add wish"; "Instant delete wishes" ("Turn on to delete wishes without warning"); under Price alerts a sub-heading "Notifications" with "Price drops" (on by default) and "Price surges" (off by default) (2.54).
 
 - **App settings, Price alerts (2.54)**: "Check every" with the choices as boxes in one row (Hour, 3 hours, 6, 12, 24); no Check now / Test notification / Notification settings / Battery settings buttons.

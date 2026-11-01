@@ -2,6 +2,12 @@ package com.wishlist.app
 
 import android.content.Context
 import androidx.work.CoroutineWorker
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import androidx.work.WorkerParameters
 
 class PriceWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {
@@ -51,5 +57,44 @@ object PriceCheck {
             }
         }
         return dropped
+    }
+}
+
+/**
+ * Pulling down on a list: the price check runs here, outside the screen, so it goes on when the refresh circle has
+ * gone or the screen changes. A pull while a check is still running doesn't start a second one.
+ */
+object PriceRefresh {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private var running: Job? = null
+
+    /** [shared]: the code of the shared wishlist that is open, or null for My wishlist. [done] gets the message to show. */
+    fun start(c: Context, shared: String?, done: suspend (String) -> Unit): Job {
+        running?.let { if (it.isActive) return it }
+        val job = scope.launch {
+            val msg = try {
+                if (shared != null) {
+                    if (!Shared.refresh(c)) tr("Couldn’t reach the server")
+                    else {
+                        val n = SharedPrices.check(c, shared)
+                        Shared.refresh(c)
+                        if (n > 0) tr("Prices checked: %d cheaper", n) else tr("Prices checked")
+                    }
+                } else {
+                    val n = PriceCheck.mine(c)
+                    if (n > 0) tr("Prices checked: %d cheaper", n) else tr("Prices checked")
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                tr("Couldn’t check the prices. Check your connection.")
+            }
+            try {
+                done(msg)
+            } catch (e: Exception) {
+            }
+        }
+        running = job
+        return job
     }
 }

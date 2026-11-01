@@ -109,6 +109,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
@@ -152,6 +153,7 @@ import androidx.work.WorkManager
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.launch
 import java.util.Locale
 import java.util.concurrent.TimeUnit
@@ -643,24 +645,13 @@ fun HomeScreen(
     val pull = rememberPullToRefreshState()
     if (pull.isRefreshing) {
         LaunchedEffect(true) {
-            val msg = try {
-                if (inShared) {
-                    val code = Shared.active
-                    if (!Shared.refresh(ctx)) tr("Couldn’t reach the server")
-                    else {
-                        val n = if (code != null) SharedPrices.check(ctx, code) else 0
-                        Shared.refresh(ctx)
-                        if (n > 0) tr("Prices checked: %d cheaper", n) else tr("Prices checked")
-                    }
-                } else {
-                    val n = PriceCheck.mine(ctx)
-                    if (n > 0) tr("Prices checked: %d cheaper", n) else tr("Prices checked")
-                }
-            } catch (e: Exception) {
-                tr("Couldn’t check the prices. Check your connection.")
-            }
+            // Asking every shop can take long (some are read in a hidden browser, one wish at a time), so the circle
+            // shows for at most 2.5 seconds; the check goes on in the background, prices change on screen as they
+            // come in, and a message says when it's done.
+            val job = PriceRefresh.start(ctx, if (inShared) Shared.active else null) { msg -> snack.showSnackbar(msg) }
+            val finished = withTimeoutOrNull(2500) { job.join() } != null
             pull.endRefresh()
-            snack.showSnackbar(msg)
+            if (!finished) snack.showSnackbar(tr("Checking prices…"), duration = SnackbarDuration.Short)
         }
     }
     // A shared wishlist is put together by the givers, for someone else: there is no "most wanted" (nobody can say
