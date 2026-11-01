@@ -402,12 +402,12 @@ fun Look.pictureShape(id: Long, small: Boolean): Shape = when (design) {
 }
 
 /**
- * Behind a picture: white for shop photos (except organic and clay, which use soft mats, and neobrutalism Midnight,
- * whose pictures sit on the dark background), a tint when there is none.
+ * Behind a picture: a soft colour of the theme, with the photo as a small card on it (PhotoCard), or the emoji when
+ * there is no photo.
  */
 fun Look.pictureBg(id: Long, hasImage: Boolean): Color = when {
+    // Photos sit as a small card on a soft colour of the theme (2.63); neobrutalism Midnight keeps them on dark.
     hasImage && design == "neo" && dark -> scheme.background
-    hasImage && design != "organic" && design != "clay" -> Color.White
     else -> tints[pick(id, tints.size)]
 }
 

@@ -937,10 +937,7 @@ fun CompactCard(
             contentAlignment = Alignment.Center
         ) {
             if (w.image.isNotEmpty()) {
-                AsyncImage(
-                    model = w.image, contentDescription = w.title,
-                    contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().padding(6.dp)
-                )
+                PhotoCard(w.image, w.title, small = true)
             } else Text(emoji, fontSize = 36.sp)
             // Top left: the eye of a private wish, then the price change.
             Row(
@@ -1067,10 +1064,7 @@ fun WishCard(
             contentAlignment = Alignment.Center
         ) {
             if (w.image.isNotEmpty()) {
-                AsyncImage(
-                    model = w.image, contentDescription = w.title,
-                    contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().padding(8.dp)
-                )
+                PhotoCard(w.image, w.title, small = false)
             } else Text(emoji, fontSize = 48.sp)
             // Top left: the eye of a private wish, then the price change.
             Row(

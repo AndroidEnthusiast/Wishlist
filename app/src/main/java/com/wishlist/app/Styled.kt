@@ -7,6 +7,15 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -391,6 +400,41 @@ fun SavedFeedback(saves: Int, modifier: Modifier = Modifier) {
                     modifier = Modifier.padding(start = 4.dp)
                 )
             }
+        }
+    }
+}
+
+/**
+ * A shop photo shown as a small rounded card in the middle of the picture area, which has a soft colour of the theme
+ * (the owner found the big white areas of white-background shop photos dull, 2.63). The card takes the photo's own
+ * shape, so its corners and shadow sit on the photo itself. Neobrutalism gives it an ink line and a hard shadow.
+ */
+@Composable
+fun PhotoCard(url: String, description: String, small: Boolean, modifier: Modifier = Modifier) {
+    val look = LocalLook.current
+    val painter = rememberAsyncImagePainter(url)
+    val drawable = (painter.state as? AsyncImagePainter.State.Success)?.result?.drawable
+    val ratio = drawable?.let { d ->
+        if (d.intrinsicWidth > 0 && d.intrinsicHeight > 0) d.intrinsicWidth.toFloat() / d.intrinsicHeight else null
+    }
+    Box(modifier.fillMaxSize().padding(if (small) 12.dp else 16.dp), contentAlignment = Alignment.Center) {
+        if (ratio == null) {
+            // Still loading (or it failed): nothing to frame yet. The painter needs to be drawn to load.
+            Image(painter, description, Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+        } else {
+            val shape = when (look.design) {
+                "organic" -> RoundedCornerShape(14.dp, 14.dp, 14.dp, 4.dp)
+                "neo" -> RoundedCornerShape(8.dp)
+                else -> RoundedCornerShape(if (small) 10.dp else 14.dp)
+            }
+            val frame = if (look.design == "neo") Modifier.hardShadow(look.line, shape, 3.dp)
+            else Modifier.shadow(if (small) 4.dp else 6.dp, shape, clip = false)
+            Image(
+                painter, description, contentScale = ContentScale.Crop,
+                modifier = Modifier.aspectRatio(ratio, matchHeightConstraintsFirst = true)
+                    .then(frame).clip(shape).background(Color.White)
+                    .then(if (look.design == "neo") Modifier.border(2.dp, look.line, shape) else Modifier)
+            )
         }
     }
 }
