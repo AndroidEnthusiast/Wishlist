@@ -153,6 +153,10 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - The Notifications page lists everything: price changes, friend requests (tap: Friends), approvals, reserved-gift alerts, newest first, with the red dot.
 - A short, skippable 3-step welcome on first start: your name (photo optional), name your first wishlist, one line on how friends reserve gifts; then the permission questions.
 - The browser editor keeps to what givers need (lists for someone, friends' links); new personal features stay app-only.
+- Wish cards keep their buttons (pencil, Owned tick, bin, long-press menu).
+- The wish form always shows a small tip under the link field: share from a shop's app or browser to Wishlist (faster).
+- List settings grouped in sections: "About this list" (name, cover, note), "Who can see it", "Wishes" (categories, copy, export), "Danger zone" (delete).
+- Categories: one set for all your own lists; a category made on one list can be used on every list.
 
 ## Open ideas (not decided)
 - Personal recovery key: an encrypted online backup of your lists, keys, creator rights and settings, restored with a key (optionally saved in Google Password Manager), plus automatic clean-up of lists nobody uses. Ask the owner before building.
