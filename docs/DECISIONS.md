@@ -145,6 +145,10 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - "Price surges" becomes "Price increases" (with "Price drops").
 - **The lists edited together are called "Wishlist for someone"** (NL "Verlanglijstje voor iemand"), not "Group wishlist" or "Shared wishlist": the owner plans a future feature "Wishlist sharing group" (friends in a group see each other's wishlists); "Gift list" was too close to "wishlist", "Joint wishlist" not liked, "Gift planner" sounded like a tool. Home heading: "Wishlists for someone" (NL "Verlanglijstjes voor iemand"). Explainer (in the "New wishlist" choice and under the empty heading): "Make a wishlist with other gift givers and surprise someone with a gift they’ll love." Renamed everywhere, app and web pages.
 - **The Prices tab is "Price watch"** (page title; owner).
+- Friends' links (?c=CODE) stay, for people without the app ("Friends + anyone with the link").
+- Price watch shows only your own wishes.
+- "Got it" stays, with a better one-word label (choosing).
+- Tidy up the main screen's navigation under the hood, in its own version (owner).
 
 ## Open ideas (not decided)
 - Personal recovery key: an encrypted online backup of your lists, keys, creator rights and settings, restored with a key (optionally saved in Google Password Manager), plus automatic clean-up of lists nobody uses. Ask the owner before building.
