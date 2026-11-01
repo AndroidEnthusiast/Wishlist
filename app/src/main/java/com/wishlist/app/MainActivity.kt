@@ -415,6 +415,16 @@ fun App(
     var friendsOpen by remember { mutableStateOf(false) }
     // Your profile (menu > Profile, or your picture on Friends): photo, name and friend code (FriendsUi.kt).
     var profileOpen by remember { mutableStateOf(false) }
+
+    /**
+     * Closes every screen that lies on top of Home or a list (settings, bin, a friend's link list, a list's settings,
+     * Price watch, Friends, Notifications, Profile). One place, so none is forgotten (2.95: these were 30 hand-written
+     * copies, and a forgotten one kept Profile on screen when Notifications was opened from the menu).
+     */
+    fun closeAll() {
+        settings = false; binOpen = false; friendCode = null; listSettings = false
+        pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false
+    }
     var createChoice by remember { mutableStateOf(false) }
     // "Add wish" from the bottom bar: the form with "Save to", starting at the list on screen (or the last one used).
     var addTarget by remember { mutableStateOf<String?>(null) }
@@ -429,13 +439,13 @@ fun App(
     fun openMine(id: String) {
         Shared.close()
         Repo.openMine(ctx, id)
-        settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false; hub = false
+        closeAll(); hub = false
     }
 
     /** Opens a group wishlist. */
     fun openGroup(code: String) {
         Shared.open(ctx, code)
-        settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false; hub = false
+        closeAll(); hub = false
     }
 
     fun openFriend(code: String) {
@@ -445,12 +455,12 @@ fun App(
         }
         // A list of one of your friends (Friends tab) opens there.
         if (FriendsNav.openByCode(code)) {
-            settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; notesOpen = false; profileOpen = false
+            closeAll()
             friendsOpen = true
             return
         }
         if (Repo.friends.any { it.code == code }) {
-            friendCode = code; settings = false; binOpen = false
+            closeAll(); friendCode = code
             return
         }
         scope.launch {
@@ -460,7 +470,7 @@ fun App(
                     snack.showToast(tr("No list found for that code."))
                 } else {
                     Repo.addFriend(ctx, Friend(code, r.name))
-                    friendCode = code; settings = false; binOpen = false
+                    closeAll(); friendCode = code
                 }
             } catch (e: Exception) {
                 snack.showToast(tr("Couldn’t reach the server. Check your connection."))
@@ -479,7 +489,7 @@ fun App(
     }
     LaunchedEffect(sharedUrl) {
         if (sharedUrl != null) {
-            prefill = sharedUrl; adding = true; settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false
+            closeAll(); prefill = sharedUrl; adding = true
             onSharedUsed()
         }
     }
@@ -492,21 +502,21 @@ fun App(
     LaunchedEffect(binTarget) {
         if (binTarget != null) {
             Bin.focus = binTarget
-            binOpen = true; settings = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false
+            closeAll(); binOpen = true
             scope.launch { drawer.close() }
             onBinUsed()
         }
     }
     LaunchedEffect(sharedInvite) {
         if (sharedInvite != null) {
-            joinDlg = sharedInvite; settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false
+            closeAll(); joinDlg = sharedInvite
             onSharedUsed()
         }
     }
 
     BackHandler(enabled = drawer.isOpen) { scope.launch { drawer.close() } }
     BackHandler(enabled = !drawer.isOpen && (settings || binOpen || friendCode != null)) {
-        settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false
+        closeAll()
     }
     // Back from a shared wishlist goes to My wishlist.
     // Back from a list goes to the dashboard; back from Prices or Friends to where you were.
@@ -523,7 +533,7 @@ fun App(
     LaunchedEffect(FriendsNav.openTab) {
         if (FriendsNav.openTab) {
             FriendsNav.openTab = false
-            settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; notesOpen = false; profileOpen = false
+            closeAll()
             friendsOpen = true
         }
     }
@@ -588,11 +598,11 @@ fun App(
                     val onList = !elsewhere && !hub
                     DrawerItem(tr("Home"), AppIcons.Home, hub && !elsewhere) {
                         HubNav.page = null
-                        settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false; hub = true
+                        closeAll(); hub = true
                         scope.launch { drawer.close() }
                     }
                     DrawerItem(tr("Profile"), AppIcons.Person, profileOpen) {
-                        settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false
+                        closeAll()
                         profileOpen = true
                         scope.launch { drawer.close() }
                     }
@@ -639,23 +649,23 @@ fun App(
                         )
                         Repo.friends.forEach { f ->
                             DrawerItem(f.name, AppIcons.Person, !settings && !binOpen && !notesOpen && friendCode == f.code) {
-                                friendCode = f.code; settings = false; binOpen = false
+                                closeAll(); friendCode = f.code
                                 scope.launch { drawer.close() }
                             }
                         }
                         Spacer(Modifier.height(8.dp))
                     }
                     DrawerItem(tr("Notifications"), AppIcons.Notifications, notesOpen && !settings && !binOpen, dot = Notifications.unread) {
-                        settings = false; binOpen = false; friendCode = null; listSettings = false
-                        pricesOpen = false; friendsOpen = false; notesOpen = true
+                        closeAll()
+                        notesOpen = true
                         scope.launch { drawer.close() }
                     }
                     DrawerItem(tr("Bin"), AppIcons.Delete, binOpen) {
-                        binOpen = true; settings = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false
+                        closeAll(); binOpen = true
                         scope.launch { drawer.close() }
                     }
                     DrawerItem(tr("App settings"), AppIcons.Settings, settings) {
-                        settings = true; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false
+                        closeAll(); settings = true
                         scope.launch { drawer.close() }
                     }
                 }
@@ -718,7 +728,7 @@ fun App(
         if (showBar) {
             AppBottomBar(
                 current = when { pricesOpen -> "prices"; friendsOpen -> "friends"; hub -> "home"; else -> "" },
-                onHome = { HubNav.page = null; settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false; hub = true },
+                onHome = { HubNav.page = null; closeAll(); hub = true },
                 onCreate = { createChoice = true },
                 onAdd = {
                     val onAList = !hub && !pricesOpen && !friendsOpen
@@ -773,7 +783,7 @@ fun App(
             onCreated = { code ->
                 newShared = false
                 // It appears under Group wishlists on the dashboard; the invite comes up so you can ask people in.
-                Shared.open(ctx, code); settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false
+                Shared.open(ctx, code); closeAll()
                 hub = true
                 inviteDlg = true
             },
@@ -796,7 +806,7 @@ fun App(
             onCreated = { id ->
                 newMine = false
                 // It appears under My wishlists on the dashboard.
-                settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false; hub = true
+                closeAll(); hub = true
                 scope.launch { snack.showToast(tr("“%s” is ready", Repo.mineName(id))) }
             },
             onClose = { newMine = false }
