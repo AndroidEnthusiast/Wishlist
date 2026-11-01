@@ -62,7 +62,7 @@ fun AppBottomBar(
         )
         NavigationBarItem(
             selected = false, onClick = onCreate,
-            icon = { GiftIcon(LocalContentColor.current) }, label = { Text(tr("New wishlist"), maxLines = 1, softWrap = false) }
+            icon = { WishlistIcon(LocalContentColor.current) }, label = { Text(tr("New wishlist"), maxLines = 1, softWrap = false) }
         )
         // Add wish: only a + in a filled circle, no words.
         NavigationBarItem(
@@ -90,23 +90,33 @@ fun AppBottomBar(
     }
 }
 
-/** A gift box: a wishlist. */
+/** A wishlist: a page with a heart and two lines (drawn here, in one colour like the other icons). */
 @Composable
-private fun GiftIcon(tint: Color) {
+private fun WishlistIcon(tint: Color) {
     Canvas(Modifier.size(24.dp)) {
         val u = size.width / 24f
-        val st = Stroke(2f * u, cap = StrokeCap.Round, join = StrokeJoin.Round)
-        // Lid, box, ribbon down the middle, and the bow.
-        drawRoundRect(tint, Offset(3f * u, 8f * u), Size(18f * u, 4.5f * u), androidx.compose.ui.geometry.CornerRadius(1.2f * u), style = st)
-        drawRoundRect(tint, Offset(4.5f * u, 12.5f * u), Size(15f * u, 8.5f * u), androidx.compose.ui.geometry.CornerRadius(1.2f * u), style = st)
-        drawLine(tint, Offset(12f * u, 8f * u), Offset(12f * u, 21f * u), 2f * u, StrokeCap.Round)
-        val bow = Path().apply {
-            moveTo(12f * u, 8f * u)
-            cubicTo(9f * u, 3f * u, 5.5f * u, 5.5f * u, 8.5f * u, 8f * u)
-            moveTo(12f * u, 8f * u)
-            cubicTo(15f * u, 3f * u, 18.5f * u, 5.5f * u, 15.5f * u, 8f * u)
+        val st = Stroke(1.9f * u, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        // The page, with a second edge at the right and bottom, like a little book.
+        drawRoundRect(tint, Offset(3.5f * u, 2.5f * u), Size(14.5f * u, 17.5f * u), androidx.compose.ui.geometry.CornerRadius(2f * u), style = st)
+        val back = Path().apply {
+            moveTo(20.5f * u, 6f * u)
+            lineTo(20.5f * u, 21.5f * u)
+            lineTo(7f * u, 21.5f * u)
         }
-        drawPath(bow, tint, style = st)
+        drawPath(back, tint, style = st)
+        // The heart.
+        val heart = Path().apply {
+            moveTo(10.75f * u, 12f * u)
+            cubicTo(7.2f * u, 9.6f * u, 7.4f * u, 6.2f * u, 9.4f * u, 6.1f * u)
+            cubicTo(10.2f * u, 6.05f * u, 10.6f * u, 6.6f * u, 10.75f * u, 7.1f * u)
+            cubicTo(10.9f * u, 6.6f * u, 11.3f * u, 6.05f * u, 12.1f * u, 6.1f * u)
+            cubicTo(14.1f * u, 6.2f * u, 14.3f * u, 9.6f * u, 10.75f * u, 12f * u)
+            close()
+        }
+        drawPath(heart, tint, style = Stroke(1.7f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        // Two lines: the wishes.
+        drawLine(tint, Offset(7.2f * u, 14.6f * u), Offset(14.3f * u, 14.6f * u), 1.9f * u, StrokeCap.Round)
+        drawLine(tint, Offset(7.2f * u, 17.2f * u), Offset(14.3f * u, 17.2f * u), 1.9f * u, StrokeCap.Round)
     }
 }
 

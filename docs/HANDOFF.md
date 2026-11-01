@@ -70,6 +70,8 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - v2.71: editor black screen fixed, "No price change yet", readable Neobrutalism text (accent colour only for blocks), "New wishlist" gift icon.
 
+- v2.72: licences page (Material Icons, OFL fonts, Apache libraries with full texts); self-drawn "New wishlist" icon. Checked: every icon in the app is Material (Apache 2.0), self-drawn or emoji; Google Sans is the OFL release (2025). Not checked: where the web pages' pictures (icon.png, og*.png) came from (made in earlier sessions).
+
 ## Next session
 - **Remind the owner: build the Friends feature** (they asked to be reminded; the bottom bar has a "Friends is coming soon" page for now).
 - Ask how the dashboard, the bottom bar and the hero editor feel on the phone.

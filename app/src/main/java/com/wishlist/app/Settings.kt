@@ -86,6 +86,7 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
     var me by remember { mutableStateOf(Shared.lastName) }
+    var licences by remember { mutableStateOf(false) }
     // Counts the saves: each one shows a green tick with "Saved" for a moment (SavedFeedback).
     var nameSaved by remember { mutableStateOf(0) }
     val focus = LocalFocusManager.current
@@ -275,6 +276,16 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                 }
             }) { Text(tr("Download app")) }
 
+            SectionTitle(tr("About"))
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    tr("The icons, fonts and building blocks in Wishlist, and their licences."),
+                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
+                    modifier = Modifier.weight(1f).padding(end = 12.dp)
+                )
+                OutlinedButton(onClick = { licences = true }) { Text(tr("Licences")) }
+            }
+
             SectionTitle(tr("Share the app"))
             Text(
                 tr("Share this app through your messaging app of choice."),
@@ -291,4 +302,5 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
             }) { Text(tr("Share app (APK)")) }
         }
     }
+    if (licences) LicencesDialog { licences = false }
 }

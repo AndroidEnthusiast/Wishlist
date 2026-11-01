@@ -444,5 +444,15 @@ val NL: Map<String, String> = mapOf(
     "Change the cover photo" to "Omslagfoto wijzigen",
     "Cover photo" to "Omslagfoto",
     "Zoom" to "Zoom",
-    "No price change yet" to "Nog geen prijswijziging"
+    "No price change yet" to "Nog geen prijswijziging",
+    "Licences" to "Licenties",
+    "Wishlist uses its own drawings and these free, open-source parts:" to "Wishlist gebruikt eigen tekeningen en deze vrije, open-source onderdelen:",
+    "Icons" to "Pictogrammen",
+    "Fonts" to "Lettertypen",
+    "Building blocks" to "Bouwstenen",
+    "Our own icons: menu, view buttons, prices, wishlist, crop, light, new photo and the colour ball." to "Eigen pictogrammen: menu, weergaveknoppen, prijzen, verlanglijstje, bijsnijden, licht, nieuwe foto en de kleurenbol.",
+    "Apache License 2.0 (full text)" to "Apache License 2.0 (volledige tekst)",
+    "SIL Open Font License 1.1 (full text)" to "SIL Open Font License 1.1 (volledige tekst)",
+    "About" to "Over",
+    "The icons, fonts and building blocks in Wishlist, and their licences." to "De pictogrammen, lettertypen en bouwstenen in Wishlist, en hun licenties."
 )
