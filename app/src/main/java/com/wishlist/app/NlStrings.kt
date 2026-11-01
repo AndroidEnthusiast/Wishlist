@@ -609,5 +609,10 @@ val NL: Map<String, String> = mapOf(
     "Friends see your name and photo. Your name is also shown as “Added by” on wishlists for someone (you can use a different name on one list in its ⚙)." to "Vrienden zien je naam en foto. Je naam staat ook bij “Toegevoegd door” op verlanglijstjes voor iemand (op één lijstje kun je een andere naam gebruiken via ⚙).",
     "The wishlist will be deleted and its wishes moved to the bin. You can restore them there for 30 days." to "Het verlanglijstje wordt verwijderd en de wensen gaan naar de prullenbak. Daar kun je ze 30 dagen terugzetten.",
     "Faster: in a shop’s app or your browser, tap Share and choose Wishlist." to "Sneller: tik in de app van een winkel of in je browser op Delen en kies Wishlist.",
+    "No notifications yet. Price changes, friend requests and news about gifts you reserved show up here." to "Nog geen meldingen. Prijswijzigingen, vriendschapsverzoeken en nieuws over cadeaus die je reserveerde komen hier.",
+    "approved your friend request" to "heeft je vriendschapsverzoek goedgekeurd",
+    "Your reserved gift was moved to the bin" to "Je gereserveerde cadeau is naar de prullenbak verplaatst",
+    "Your reserved gift was taken off the list" to "Je gereserveerde cadeau is van het lijstje gehaald",
+    "Birthday in %d days" to "Jarig over %d dagen",
     "No" to "Nee"
 )

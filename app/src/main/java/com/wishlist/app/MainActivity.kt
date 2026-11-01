@@ -671,9 +671,14 @@ fun App(
                 }
                 notesOpen -> NotificationsScreen(snack) { key ->
                     notesOpen = false; profileOpen = false
-                    // Opens the list the wish is on.
-                    if (key.startsWith("m:")) key.removePrefix("m:").takeIf { it in Repo.mineIds }?.let { openMine(it) }
-                    else key.removePrefix("s:").takeIf { k -> Shared.lists.any { it.code == k } }?.let { openGroup(it) }
+                    // Opens where it happened: the list the wish is on, a friend's list, Friends, or that friend.
+                    when {
+                        key.startsWith("m:") -> key.removePrefix("m:").takeIf { it in Repo.mineIds }?.let { openMine(it) }
+                        key.startsWith("s:") -> key.removePrefix("s:").takeIf { k -> Shared.lists.any { it.code == k } }?.let { openGroup(it) }
+                        key.startsWith("c:") -> openFriend(key.removePrefix("c:"))
+                        key.startsWith("r:") -> { FriendsNav.reset(); friendsOpen = true }
+                        key.startsWith("p:") -> { FriendsNav.reset(); FriendsNav.person = key.removePrefix("p:"); friendsOpen = true }
+                    }
                 }
                 pricesOpen -> PricesScreen(snack, onProfile = { profileOpen = true })
                 friendsOpen -> FriendsScreen(snack, onProfile = { profileOpen = true }, onOpenLink = { friendCode = it })

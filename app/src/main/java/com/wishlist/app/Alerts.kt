@@ -109,6 +109,7 @@ object Alerts {
                 description = tr("Tells you when a gift you reserved is moved to the bin or taken off a list")
             }
         )
+        Notifications.add(c, "gift_binned", "s:$code", w.title, w.image, w.id)
         val id = code.hashCode() * 31 + w.id.hashCode() + 7
         val text = if (w.binBy.isNotBlank()) tr("“%1\$s” on %2\$s was moved to the bin by %3\$s.", w.title, listName, w.binBy)
         else tr("“%1\$s” on %2\$s was moved to the bin.", w.title, listName)
@@ -139,6 +140,7 @@ object Alerts {
                 description = tr("Tells you when a gift you reserved is moved to the bin or taken off a list")
             }
         )
+        Notifications.add(c, "gift_gone", "c:$code", title, "", id)
         val nid = code.hashCode() * 31 + id.hashCode() + 11
         val text = tr("“%1\$s” was taken off %2\$s. Have a look for another gift.", title, listName)
         val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.FRIEND_CODE, code)

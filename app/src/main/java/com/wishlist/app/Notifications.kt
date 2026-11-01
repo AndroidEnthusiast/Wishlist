@@ -60,7 +60,13 @@ val NewDot = Color(0xFFE53935)
  */
 data class PriceNote(
     val wishId: Long, val listKey: String, val title: String, val image: String, val pct: Double, val time: Long, val read: Boolean,
-    /** "price" (a drop or rise) or "target" (your target price was reached: [amount] in [currency]). */
+    /**
+     * "price" (a drop or rise), "target" (your target price was reached: [amount] in [currency]), and since 2.95 (owner:
+     * everything in one place) "friend_req" (someone wants to be your friend), "friend_ok" (your request was approved),
+     * "gift_binned" (a gift you reserved was moved to the bin), "gift_gone" (a gift you reserved was taken off a friend's
+     * list) and "birthday" (a friend's birthday is coming: [amount] = days to go). For these [title] is the person or the
+     * gift, [image] a photo (or empty) and [listKey] where a tap goes: "r:<profile id>" (Friends), "p:<profile id>" (that friend), "s:<code>" or "c:<code>".
+     */
     val kind: String = "price", val amount: Double = 0.0, val currency: String = ""
 )
 
@@ -108,9 +114,24 @@ object Notifications {
         prefs(c).edit().putString(KEY, a.toString()).apply()
     }
 
-    /** What the page shows: drops and rises as switched on in App settings. */
+    /** What the page shows: drops and rises as switched on in App settings, and every other kind. */
     val shown: List<PriceNote>
-        get() = all.filter { it.kind == "target" || if (it.pct < 0) Repo.notifyDrops else Repo.notifyRises }
+        get() = all.filter { it.kind != "price" || if (it.pct < 0) Repo.notifyDrops else Repo.notifyRises }
+
+    /**
+     * Adds a notification that isn't about a price (see [PriceNote.kind]). The same kind for the same place and wish
+     * replaces an older one. [read]: it was seen on screen already (no red dot).
+     */
+    @Synchronized
+    fun add(
+        c: Context, kind: String, listKey: String, title: String, image: String = "", wishId: Long = 0L,
+        amount: Double = 0.0, read: Boolean = false
+    ) {
+        load(c)
+        val rest = all.filter { !(it.kind == kind && it.listKey == listKey && it.wishId == wishId) }
+        all = (listOf(PriceNote(wishId, listKey, title, image, 0.0, System.currentTimeMillis(), read, kind, amount)) + rest).take(100)
+        save(c)
+    }
 
     /** True while there is something new to see (the red dots). */
     val unread: Boolean get() = shown.any { !it.read }
@@ -230,7 +251,7 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
         if (notes.isEmpty()) {
             Box(Modifier.padding(pad).fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
                 Text(
-                    tr("No notifications yet. When a wish gets cheaper or more expensive, it shows up here."),
+                    tr("No notifications yet. Price changes, friend requests and news about gifts you reserved show up here."),
                     color = cs.onSurfaceVariant, textAlign = TextAlign.Center
                 )
             }
@@ -245,6 +266,7 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                 val id = n.wishId
                 val down = n.pct < 0
                 val target = n.kind == "target"
+                val other = n.kind != "price" && !target
                 // Swipe left or right to delete it straight away, with Undo for 5 seconds.
                 SwipeAway(n, trash = true, onGone = {
                     val at = Notifications.remove(ctx, n)
@@ -263,11 +285,16 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                     val mat = RoundedCornerShape(10.dp)
                     Box(Modifier.size(44.dp).lookMat(look, mat, look.pictureBg(id, false)), contentAlignment = Alignment.Center) {
                         if (n.image.isNotBlank()) {
+                            val person = n.kind.startsWith("friend") || n.kind == "birthday"
                             AsyncImage(
-                                model = n.image, contentDescription = null, contentScale = ContentScale.Fit,
-                                modifier = Modifier.fillMaxSize().padding(3.dp)
+                                model = n.image, contentDescription = null,
+                                contentScale = if (person) ContentScale.Crop else ContentScale.Fit,
+                                modifier = if (person) Modifier.fillMaxSize() else Modifier.fillMaxSize().padding(3.dp)
                             )
-                        } else Text("🎁", fontSize = 20.sp)
+                        } else Text(
+                            when (n.kind) { "friend_req", "friend_ok" -> "🤝"; "birthday" -> "🎂"; else -> "🎁" },
+                            fontSize = 20.sp
+                        )
                     }
                     Column(Modifier.weight(1f).padding(start = 12.dp, end = 8.dp)) {
                         Text(
@@ -275,11 +302,21 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                             maxLines = 2, overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            if (target) tr("reached your target price") else if (down) tr("decreased in price") else tr("increased in price"),
+                            when (n.kind) {
+                                "target" -> tr("reached your target price")
+                                "friend_req" -> tr("wants to be your friend")
+                                "friend_ok" -> tr("approved your friend request")
+                                "gift_binned" -> tr("Your reserved gift was moved to the bin")
+                                "gift_gone" -> tr("Your reserved gift was taken off the list")
+                                "birthday" -> tr("Birthday in %d days", n.amount.toInt())
+                                else -> if (down) tr("decreased in price") else tr("increased in price")
+                            },
                             style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id)
                         )
                     }
-                    if (target) {
+                    if (other) {
+                        // No number on the right for these.
+                    } else if (target) {
                         Text(
                             money(n.amount, n.currency), style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold, color = targetGold(look.dark)

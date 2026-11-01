@@ -153,9 +153,14 @@ object Friends {
         val p = prefs(c)
         val told = p.getStringSet("fr_in_told", null)?.toSet() ?: emptySet()
         val sent = p.getStringSet("fr_out", null)?.toSet() ?: emptySet()
-        if (!onScreen) {
-            for (r in s.incoming) if (r.id !in told) Alerts.notifyFriend(c, r.id, r.name, request = true)
-            for (f in s.friends) if (f.id in sent) Alerts.notifyFriend(c, f.id, f.name, request = false)
+        // Also kept on the Notifications page (2.95); already seen when it happened while Friends was on screen.
+        for (r in s.incoming) if (r.id !in told) {
+            if (!onScreen) Alerts.notifyFriend(c, r.id, r.name, request = true)
+            Notifications.add(c, "friend_req", "r:${r.id}", r.name.ifBlank { tr("Someone") }, photos[r.id] ?: "", read = onScreen)
+        }
+        for (f in s.friends) if (f.id in sent) {
+            if (!onScreen) Alerts.notifyFriend(c, f.id, f.name, request = false)
+            Notifications.add(c, "friend_ok", "p:${f.id}", f.name.ifBlank { tr("Someone") }, photos[f.id] ?: "", read = onScreen)
         }
         p.edit()
             .putStringSet("fr_in_told", s.incoming.map { it.id }.toSet())
