@@ -6,6 +6,8 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -92,6 +94,12 @@ fun HubScreen(
     }
     val all = (mineItems + groupItems).associateBy { it.key }
     val recentItems = Repo.recent.entries.sortedByDescending { it.value }.mapNotNull { all[it.key] }.take(10)
+    val scope = rememberCoroutineScope()
+    // Long press on a list (see the end of this screen).
+    var actionsFor by remember { mutableStateOf<HubItem?>(null) }
+    var renaming by remember { mutableStateOf<HubItem?>(null) }
+    var deleting by remember { mutableStateOf<HubItem?>(null) }
+    var leaving by remember { mutableStateOf<HubItem?>(null) }
 
     Scaffold(
         containerColor = cs.background,
@@ -122,7 +130,7 @@ fun HubScreen(
 
             HubTitle(tr("My wishlists"), addLabel = tr("New wishlist"), onAdd = onNewMine)
             Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                mineItems.forEach { ListRow(it) }
+                mineItems.forEach { ListRow(it) { actionsFor = it } }
             }
 
             HubTitle(tr("Group wishlists"), addLabel = tr("New group wishlist"), onAdd = onNewGroup)
@@ -133,8 +141,182 @@ fun HubScreen(
                         style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
                     )
                 }
-                groupItems.forEach { ListRow(it) }
+                groupItems.forEach { ListRow(it) { actionsFor = it } }
             }
+
+            // Price changes: the wishes on your lists whose price changed, cheaper first, then dearer.
+            val changed = mine.flatMap { it.wishes }.distinctBy { it.id }.filter { w ->
+                val p = w.price
+                val o = w.oldPrice
+                p != null && o != null && o > 0 && kotlin.math.abs(p - o) > 0.005
+            }
+            val drops = changed.filter { it.price!! < it.oldPrice!! }.sortedBy { it.price!! / it.oldPrice!! }
+            val rises = changed.filter { it.price!! > it.oldPrice!! }.sortedByDescending { it.price!! / it.oldPrice!! }
+            HubTitle(tr("Price changes"))
+            Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (changed.isEmpty()) {
+                    Text(
+                        tr("No price changes yet. When a wish gets cheaper or more expensive, it shows up here."),
+                        style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
+                    )
+                }
+                (drops + rises).forEach { PriceChangeRow(it) }
+            }
+        }
+    }
+
+    // Long press on a list: its options, then renaming, deleting or leaving.
+    actionsFor?.let { item ->
+        val group = item.key.startsWith("s:")
+        val code = item.key.substringAfter(':')
+        val creator = group && Shared.lists.firstOrNull { it.code == code }?.owner?.isNotEmpty() == true
+        AlertDialog(
+            onDismissRequest = { actionsFor = null },
+            title = { Text(item.name, maxLines = 2, overflow = TextOverflow.Ellipsis) },
+            text = {
+                Column {
+                    ActionRow(tr("Edit name")) { actionsFor = null; renaming = item }
+                    if (group && !creator) ActionRow(tr("Leave wishlist")) { actionsFor = null; leaving = item }
+                    else ActionRow(tr("Delete wishlist"), danger = true) {
+                        actionsFor = null
+                        if (!group && Repo.mineIds.size < 2) {
+                            scope.launch { snack.showSnackbar(tr("This is your only wishlist. Make another one first.")) }
+                        } else deleting = item
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { actionsFor = null }) { Text(tr("Cancel")) } }
+        )
+    }
+    renaming?.let { item ->
+        val group = item.key.startsWith("s:")
+        val code = item.key.substringAfter(':')
+        var n by remember(item.key) { mutableStateOf(item.name) }
+        AlertDialog(
+            onDismissRequest = { renaming = null },
+            title = { Text(tr("Edit name")) },
+            text = {
+                OutlinedTextField(
+                    n, { n = it.take(60) }, singleLine = true, label = { Text(tr("Name*")) },
+                    keyboardOptions = Capitalised, modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(enabled = n.isNotBlank(), onClick = {
+                    renaming = null
+                    if (group) {
+                        // Group wishlists are renamed for everyone on them.
+                        Shared.open(ctx, code)
+                        Shared.setName(ctx, n.trim())
+                    } else Repo.renameMine(ctx, code, n)
+                }) { Text(tr("Save")) }
+            },
+            dismissButton = { TextButton(onClick = { renaming = null }) { Text(tr("Cancel")) } }
+        )
+    }
+    deleting?.let { item ->
+        val group = item.key.startsWith("s:")
+        val code = item.key.substringAfter(':')
+        var busy by remember(item.key) { mutableStateOf(false) }
+        AlertDialog(
+            onDismissRequest = { if (!busy) deleting = null },
+            title = { Text(if (group) tr("Delete “%s” for everyone?", item.name) else tr("Delete “%s”?", item.name)) },
+            text = {
+                Text(
+                    if (group) tr("Everyone on this group wishlist will lose it, with all its wishes and reservations. This can’t be undone.")
+                    else tr("The wishlist will be deleted and its wishes moved to the bin. You can restore them there for 10 days.")
+                )
+            },
+            confirmButton = {
+                TextButton(enabled = !busy, onClick = {
+                    busy = true
+                    scope.launch {
+                        val msg = try {
+                            if (group) {
+                                Shared.open(ctx, code)
+                                Shared.deleteForEveryone(ctx)
+                            } else {
+                                // Its friends' link stops working first, then the list goes and its wishes to the bin.
+                                val d = Repo.mine(ctx, code)
+                                if (d.code != null) {
+                                    try {
+                                        Sync.unpublishStored(d)
+                                    } catch (e: Exception) {
+                                    }
+                                }
+                                Repo.deleteMine(ctx, code)
+                            }
+                            tr("“%s” was deleted", item.name)
+                        } catch (e: Exception) {
+                            tr("Couldn’t do that. Check your connection.")
+                        }
+                        busy = false
+                        deleting = null
+                        snack.showSnackbar(msg)
+                    }
+                }) { Text(tr("Delete"), color = cs.error) }
+            },
+            dismissButton = { TextButton(enabled = !busy, onClick = { deleting = null }) { Text(tr("Cancel")) } }
+        )
+    }
+    leaving?.let { item ->
+        val code = item.key.substringAfter(':')
+        AlertDialog(
+            onDismissRequest = { leaving = null },
+            title = { Text(tr("Leave “%s”?", item.name)) },
+            text = { Text(tr("It disappears from your lists. It stays for everyone else, and you can join again with the invite link.")) },
+            confirmButton = { TextButton(onClick = { leaving = null; Shared.leave(ctx, code) }) { Text(tr("Leave")) } },
+            dismissButton = { TextButton(onClick = { leaving = null }) { Text(tr("Cancel")) } }
+        )
+    }
+}
+
+@Composable
+private fun ActionRow(text: String, danger: Boolean = false, onClick: () -> Unit) {
+    Text(
+        text, style = MaterialTheme.typography.bodyLarge,
+        color = if (danger) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 14.dp)
+    )
+}
+
+/** One wish in "Price changes": a square picture, the old and the new price, and the change in percent. */
+@Composable
+private fun PriceChangeRow(w: Wish) {
+    val look = LocalLook.current
+    val id = w.id
+    val old = w.oldPrice ?: return
+    val now = w.price ?: return
+    val down = now < old
+    Row(
+        Modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true))
+            .clickable { HistoryNav.open = w.id }.padding(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val sq = RoundedCornerShape(14.dp)
+        Box(Modifier.size(64.dp).lookMat(look, sq, look.pictureBg(id, false)), contentAlignment = Alignment.Center) {
+            if (w.image.isNotBlank()) {
+                AsyncImage(model = w.image, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            } else Text("🎁", fontSize = 26.sp)
+        }
+        Column(Modifier.weight(1f).padding(start = 14.dp)) {
+            Text(
+                w.title, style = MaterialTheme.typography.titleSmall, color = look.cardInk(id),
+                maxLines = 1, overflow = TextOverflow.Ellipsis
+            )
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 2.dp)) {
+                Text(tr("Old %s", money(old, w.currency)), style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id))
+                Text(
+                    tr("New %s", money(now, w.currency)), style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold, color = look.cardInk(id), modifier = Modifier.padding(start = 12.dp)
+                )
+            }
+            val pct = Math.round(kotlin.math.abs(now / old - 1) * 100).coerceAtLeast(1)
+            Text(
+                (if (down) "↓ " else "↑ ") + pct + "%", style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold, color = if (down) look.drop else look.rise
+            )
         }
     }
 }
@@ -176,11 +358,14 @@ private fun HubTitle(text: String, addLabel: String? = null, small: Boolean = fa
 
 /** A list in "My wishlists" or "Group wishlists": a small picture, its name and how many wishes it has. */
 @Composable
-private fun ListRow(item: HubItem) {
+@OptIn(ExperimentalFoundationApi::class)
+private fun ListRow(item: HubItem, onLongPress: () -> Unit) {
     val look = LocalLook.current
     val id = item.key.hashCode().toLong()
+    // Tap opens the list; a long press shows Edit name and Delete (or Leave).
     Row(
-        Modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true)).clickable(onClick = item.open)
+        Modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true))
+            .combinedClickable(onClick = item.open, onLongClick = onLongPress)
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

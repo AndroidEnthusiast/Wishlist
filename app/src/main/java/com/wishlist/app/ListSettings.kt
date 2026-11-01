@@ -221,7 +221,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                     TextButton(onClick = { stopDlg = true }) { Text(tr("Stop sharing"), color = cs.error) }
                 }
                 // Lists you made yourself can be deleted (the original My wishlist stays).
-                if (Repo.openMine != MAIN_LIST) {
+                if (Repo.mineIds.size > 1) {
                     SectionTitle(tr("Manage"))
                     TextButton(onClick = { deleteMineDlg = true }) { Text(tr("Delete this wishlist"), color = cs.error) }
                 }
@@ -268,8 +268,8 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
         val id = Repo.openMine
         AlertDialog(
             onDismissRequest = { deleteMineDlg = false },
-            title = { Text(tr("Delete this wishlist?")) },
-            text = { Text(tr("“%s” and all its wishes are deleted for good. Friends’ links to it stop working.", Repo.listName)) },
+            title = { Text(tr("Delete “%s”?", Repo.listName)) },
+            text = { Text(tr("The wishlist will be deleted and its wishes moved to the bin. You can restore them there for 10 days.")) },
             confirmButton = {
                 TextButton(onClick = {
                     deleteMineDlg = false
@@ -281,7 +281,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                             } catch (e: Exception) {
                             }
                         }
-                        Repo.removeMine(ctx, id)
+                        Repo.deleteMine(ctx, id)
                         (onDeleted ?: onBack)()
                     }
                 }) { Text(tr("Delete"), color = cs.error) }

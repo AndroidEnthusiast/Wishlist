@@ -464,5 +464,20 @@ val NL: Map<String, String> = mapOf(
     "Target price reached" to "Streefprijs bereikt",
     "Create a new personal wishlist" to "Maak een nieuw persoonlijk verlanglijstje",
     "One wishlist that you and the people you invite add to and edit together" to "Eén verlanglijstje waar jij en de mensen die je uitnodigt samen aan werken",
-    "Version %s" to "Versie %s"
+    "Version %s" to "Versie %s",
+    "“%s” was deleted" to "“%s” is verwijderd",
+    "Its wishlist" to "Het verlanglijstje",
+    "Choose a wishlist for this wish, or create a new one." to "Kies een verlanglijstje voor deze wens, of maak een nieuw verlanglijstje.",
+    "No price changes yet. When a wish gets cheaper or more expensive, it shows up here." to "Nog geen prijswijzigingen. Wordt een wens goedkoper of duurder, dan zie je het hier.",
+    "Edit name" to "Naam wijzigen",
+    "Leave wishlist" to "Verlanglijstje verlaten",
+    "Delete wishlist" to "Verlanglijstje verwijderen",
+    "This is your only wishlist. Make another one first." to "Dit is je enige verlanglijstje. Maak eerst een ander.",
+    "Delete “%s” for everyone?" to "“%s” voor iedereen verwijderen?",
+    "Everyone on this group wishlist will lose it, with all its wishes and reservations. This can’t be undone." to "Iedereen op dit groepsverlanglijstje raakt het kwijt, met alle wensen en reserveringen. Dit kan niet ongedaan worden gemaakt.",
+    "The wishlist will be deleted and its wishes moved to the bin. You can restore them there for 10 days." to "Het verlanglijstje wordt verwijderd en de wensen gaan naar de prullenbak. Daar kun je ze 10 dagen terugzetten.",
+    "Leave “%s”?" to "“%s” verlaten?",
+    "It disappears from your lists. It stays for everyone else, and you can join again with the invite link." to "Het verdwijnt uit je lijstjes. Het blijft voor iedereen, en met de uitnodigingslink kun je weer meedoen.",
+    "Old %s" to "Oud %s",
+    "New %s" to "Nieuw %s"
 )

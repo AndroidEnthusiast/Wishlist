@@ -174,6 +174,8 @@ object Repo {
     private var copies: Map<String, Set<Long>> = emptyMap()
     /** The copies the last move to the bin took along, so Undo can put them back. */
     private var lastCascade: Pair<Long, List<String>>? = null
+    /** Names of deleted lists whose wishes may still be in the bin ("gone_<time>" to name). */
+    private var goneNames: Map<String, String> = emptyMap()
     /** Which of your lists a wish in the bin came from (wish id to list id); missing means "main". */
     private var binOwner: Map<Long, String> = emptyMap()
     /** Recently opened lists: "m:<id>" for your own, "s:<code>" for a group wishlist, with the moment opened. */
@@ -248,6 +250,12 @@ object Repo {
             emptyMap()
         }
         hero = p.getString("hero", "") ?: ""
+        goneNames = try {
+            val o = JSONObject(p.getString("mine_gone", null) ?: "{}")
+            o.keys().asSequence().associateWith { o.getString(it) }
+        } catch (e: Exception) {
+            emptyMap()
+        }
         copies = try {
             val o = JSONObject(p.getString("mine_copies", null) ?: "{}")
             o.keys().asSequence().associateWith { k ->
@@ -296,6 +304,7 @@ object Repo {
             .putString("bin_owner", owners.toString())
             .putString("recent", rec.toString())
             .putString("mine_copies", cp.toString())
+            .putString("mine_gone", JSONObject(goneNames as Map<*, *>).toString())
             .putString("hero", hero)
             .putString("hero_edit", heroEdit.toJson())
             .putString("hero_cut", heroCut)
@@ -422,30 +431,91 @@ object Repo {
         return id
     }
 
-    /** Deletes one of your own lists (not the original one) with its wishes, their pictures and price history. */
+    /**
+     * Deletes one of your own lists (since 2.79 any of them, as long as one is left). Its wishes go to the bin for
+     * [BIN_DAYS] days, remembered as coming from a deleted list ([goneNames]), so restoring asks where they should go.
+     * When the original list ("main", with the old storage keys) is deleted, the next list takes its place there.
+     * Taking the list offline (its friends' link) is up to the caller, before this.
+     */
     @Synchronized
-    fun removeMine(c: Context, id: String) {
-        if (id == MAIN_LIST || id !in mineIds) return
-        if (openMine == id) {
-            applyMine(MyLists.read(prefs(c), MAIN_LIST))
-            openMine = MAIN_LIST
-        }
-        val d = MyLists.read(prefs(c), id)
-        copies = copies - id
-        // Pictures and price history stay when a wish (or a copy of it) is on another of your lists.
-        val elsewhere = mineIds.filter { it != id }.flatMap { mine(c, it).wishes }
-        d.wishes.forEach { w ->
-            if (elsewhere.none { it.image == w.image } && myBin.none { it.image == w.image }) ImageStore.delete(c, w.image)
-            if (elsewhere.none { it.id == w.id }) History.remove(c, w.id)
-        }
-        val binned = binOwner.filterValues { it == id }.keys
-        myBin = myBin.filter { it.id !in binned }
-        binOwner = binOwner - binned
-        mineIds = mineIds - id
-        mineNames = mineNames - id
-        recent = recent - "m:$id"
-        prefs(c).edit().remove(MyLists.blobKey(id)).apply()
+    fun deleteMine(c: Context, id: String): Boolean {
+        if (id !in mineIds || mineIds.size < 2) return false
         persist(c)
+        val p = prefs(c)
+        val d = MyLists.read(p, id)
+        val now = System.currentTimeMillis()
+        val goneId = "gone_$now"
+        val binned = d.wishes.map { it.copy(bin = now) }
+        myBin = binned + myBin.filter { b -> binned.none { it.id == b.id } }
+        binOwner = binOwner + binned.associate { it.id to goneId }
+        goneNames = goneNames + (goneId to d.name)
+        copies = copies - id
+        recent = recent - "m:$id"
+        mineNames = mineNames - id
+        val e = p.edit()
+        if (id == MAIN_LIST) {
+            // The next list moves into the original's place, with its friends' link, copies and history entry.
+            val next = mineIds.first { it != MAIN_LIST }
+            val nd = MyLists.read(p, next)
+            MyLists.write(e, nd.copy(id = MAIN_LIST))
+            e.remove(MyLists.blobKey(next))
+            copies = (copies - next).let { m -> copies[next]?.let { m + (MAIN_LIST to it) } ?: m }
+            binOwner = binOwner.mapValues { (_, v) -> if (v == next) MAIN_LIST else v }
+            recent = recent["m:$next"]?.let { t -> recent - "m:$next" + ("m:$MAIN_LIST" to t) } ?: recent
+            mineNames = mineNames - next + (MAIN_LIST to nd.name)
+            mineIds = mineIds - next
+            if (openMine == next) openMine = MAIN_LIST
+        } else {
+            e.remove(MyLists.blobKey(id))
+            mineIds = mineIds - id
+            if (openMine == id) openMine = MAIN_LIST
+        }
+        e.apply()
+        // The open list is read again from storage (it may have moved).
+        applyMine(MyLists.read(p, openMine))
+        persist(c)
+        mineVersion++
+        return true
+    }
+
+    /** The name of the deleted list a wish in the bin came from, or null when its list still exists. */
+    fun deletedListOf(wishId: Long): String? {
+        val o = binOwner[wishId] ?: return null
+        return if (o in mineIds) null else goneNames[o] ?: ""
+    }
+
+    /** The name to show for a wish in the bin: its list, or the deleted list it came from. */
+    fun binListName(wishId: Long): String = deletedListOf(wishId)?.ifBlank { null } ?: mineName(ownerOf(wishId))
+
+    /** Restores a wish from the bin to one of your lists (for a wish whose own list was deleted). */
+    @Synchronized
+    fun restoreMineTo(c: Context, wishId: Long, listId: String): Boolean {
+        val w = myBin.firstOrNull { it.id == wishId } ?: return false
+        if (listId !in mineIds) return false
+        myBin = myBin.filter { it.id != wishId }
+        binOwner = binOwner - wishId
+        updateMine(c, listId) { l -> if (l.any { it.id == wishId }) l else listOf(w.copy(bin = 0L, binBy = "")) + l }
+        persist(c)
+        mineVersion++
+        return true
+    }
+
+    /** Renames one of your lists, open or not. */
+    @Synchronized
+    fun renameMine(c: Context, id: String, name: String) {
+        val n = name.trim().ifEmpty { return }
+        if (id !in mineIds) return
+        if (id == openMine) {
+            myName = n
+            commit(c)
+        } else {
+            val d = MyLists.read(prefs(c), id).copy(name = n)
+            val e = prefs(c).edit()
+            MyLists.write(e, d)
+            e.apply()
+            if (d.code != null) Sync.pushStored(c, d, myBin.filter { ownerOf(it.id) == id })
+        }
+        mineNames = mineNames + (id to n)
         mineVersion++
     }
 

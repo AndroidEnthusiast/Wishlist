@@ -176,6 +176,19 @@ object Sync {
         photoStatus = ""
     }
 
+    /** Takes one of your lists offline that may not be open (before deleting it): its pictures, then the list. */
+    suspend fun unpublishStored(d: MineData) = lock.withLock {
+        val code = d.code ?: return@withLock
+        val token = d.token ?: return@withLock
+        for (n in d.photos) {
+            try {
+                Cloud.deletePhoto(code, token, n)
+            } catch (e: Exception) {
+            }
+        }
+        Cloud.deleteList(code, token)
+    }
+
     fun newCode(): String {
         val r = SecureRandom()
         return (1..8).map { ALPHABET[r.nextInt(ALPHABET.length)] }.joinToString("")

@@ -1,5 +1,8 @@
 package com.wishlist.app
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -67,6 +70,9 @@ fun BinScreen(snack: SnackbarHostState) {
     var busy by remember { mutableStateOf<String?>(null) }
     var askDelete by remember { mutableStateOf<BinEntry?>(null) }
     var askEmpty by remember { mutableStateOf(false) }
+    // A wish whose own list was deleted: where should it go back to?
+    var homeless by remember { mutableStateOf<BinEntry?>(null) }
+    var newListFor by remember { mutableStateOf<BinEntry?>(null) }
     // The wish that glows, with a counter so the same wish can glow again after a second alert.
     var lit by remember { mutableStateOf<Pair<String, Int>?>(null) }
 
@@ -99,6 +105,10 @@ fun BinScreen(snack: SnackbarHostState) {
     }
 
     fun restore(e: BinEntry) {
+        if (e.listCode == null && Repo.deletedListOf(e.wish.id) != null) {
+            homeless = e
+            return
+        }
         busy = e.key
         scope.launch {
             val msg = try {
@@ -210,6 +220,41 @@ fun BinScreen(snack: SnackbarHostState) {
         )
     }
 
+    fun restoredTo(e: BinEntry, id: String) {
+        if (Repo.restoreMineTo(ctx, e.wish.id, id)) {
+            scope.launch { snack.showSnackbar(tr("“%1\$s” is back on %2\$s.", shortTitle(e.wish.title), Repo.mineName(id))) }
+        }
+    }
+    homeless?.let { e ->
+        AlertDialog(
+            onDismissRequest = { homeless = null },
+            title = { Text(tr("“%s” was deleted", Repo.deletedListOf(e.wish.id).orEmpty().ifBlank { tr("Its wishlist") })) },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    Text(tr("Choose a wishlist for this wish, or create a new one."), style = MaterialTheme.typography.bodyMedium)
+                    Repo.mineIds.forEach { id ->
+                        Text(
+                            Repo.mineName(id), style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                                .clickable { homeless = null; restoredTo(e, id) }
+                                .padding(horizontal = 8.dp, vertical = 14.dp)
+                        )
+                    }
+                    Text(
+                        "+ " + tr("New wishlist"), style = MaterialTheme.typography.bodyLarge, color = cs.primary,
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                            .clickable { homeless = null; newListFor = e }
+                            .padding(horizontal = 8.dp, vertical = 14.dp)
+                    )
+                }
+            },
+            confirmButton = { TextButton(onClick = { homeless = null }) { Text(tr("Cancel")) } }
+        )
+    }
+    // A new list for it: once made, the wish goes straight onto it.
+    newListFor?.let { e ->
+        NewListDialog(onCreated = { id -> newListFor = null; restoredTo(e, id) }, onClose = { newListFor = null })
+    }
     if (askEmpty) {
         val n = entries.size
         AlertDialog(

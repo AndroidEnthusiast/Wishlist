@@ -38,7 +38,7 @@ object Bin {
 
     /** Everything in the bin, newest first: My wishlist's bin straight from the phone, and the shared bins. */
     val entries: List<BinEntry>
-        get() = (Repo.myBin.map { BinEntry(it, null, Repo.mineName(Repo.ownerOf(it.id))) } + shared).sortedByDescending { it.wish.bin }
+        get() = (Repo.myBin.map { BinEntry(it, null, Repo.binListName(it.id)) } + shared).sortedByDescending { it.wish.bin }
     var loading by mutableStateOf(false)
         private set
     /** True when the bin of a shared wishlist couldn't be loaded (no internet). */
