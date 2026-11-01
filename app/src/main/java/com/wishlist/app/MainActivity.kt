@@ -373,7 +373,9 @@ fun App(
     // null: closed, "": open and empty, otherwise opened with an invite that was sent to the app.
     var joinDlg by remember { mutableStateOf<String?>(null) }
     var inviteDlg by remember { mutableStateOf(false) }
-    val perm = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    // The background question comes once, after the notifications question has been answered (or wasn't needed).
+    var askBackground by remember { mutableStateOf(false) }
+    val perm = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { askBackground = true }
 
     fun openFriend(code: String) {
         if (code == Repo.shareCode) {
@@ -403,6 +405,7 @@ fun App(
         if (Build.VERSION.SDK_INT >= 33 &&
             ctx.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) perm.launch(Manifest.permission.POST_NOTIFICATIONS)
+        else askBackground = true
     }
     LaunchedEffect(sharedUrl) {
         if (sharedUrl != null) {
@@ -587,6 +590,7 @@ fun App(
     if (inviteDlg) SharedShareDialog { inviteDlg = false }
     DeleteHost(snack)
     PrivateHost(snack)
+    if (askBackground) BackgroundQuestion()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -782,7 +786,7 @@ fun HomeScreen(
                                 onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) })
                             ) {
                                 IconButton(onClick = { editing = w }) {
-                                    Icon(AppIcons.Edit, tr("Edit"), tint = cs.onSurfaceVariant)
+                                    Icon(AppIcons.Edit, tr("Edit"), tint = look.cardMuted(w.id))
                                 }
                                 if (inShared) {
                                     // Reserving takes the place of "got it" on a shared list.
@@ -795,12 +799,12 @@ fun HomeScreen(
                                     IconButton(onClick = { Repo.replace(ctx, w.copy(got = !w.got)) }) {
                                         Icon(
                                             AppIcons.Check, tr("Mark as got"),
-                                            tint = if (w.got) cs.primary else cs.onSurfaceVariant
+                                            tint = if (w.got) cs.primary else look.cardMuted(w.id)
                                         )
                                     }
                                 }
                                 IconButton(onClick = { DeleteFlow.request(ctx, w) }) {
-                                    Icon(AppIcons.Delete, tr("Delete"), tint = cs.onSurfaceVariant)
+                                    Icon(AppIcons.Delete, tr("Delete"), tint = look.cardMuted(w.id))
                                 }
                             }
                         }
@@ -896,6 +900,9 @@ fun CompactCard(
     val ctx = LocalContext.current
     // inert: a sample card (the Themer's preview) that does nothing when tapped.
     val look = LocalLook.current
+    // The text on the card: dark ink on the bright cards of neobrutalism Midnight, the theme's own text otherwise.
+    val ink = look.cardInk(w.id)
+    val muted = look.cardMuted(w.id)
     val ui = LocalUriHandler.current
     // Tapping the picture shows it big (ImageViewer); tapping the words opens the shop page.
     var viewing by remember { mutableStateOf(false) }
@@ -914,7 +921,7 @@ fun CompactCard(
             else Modifier
         ).lookCard(look, w.id, look.cardShape(w.id, small = true))
     ) {
-        CompositionLocalProvider(LocalContentColor provides cs.onSurface) {
+        CompositionLocalProvider(LocalContentColor provides ink) {
         Box(
             Modifier.padding(look.inset(small = true)).fillMaxWidth().height(130.dp)
                 .lookMat(look, look.pictureShape(w.id, small = true), look.pictureBg(w.id, w.image.isNotEmpty()))
@@ -970,18 +977,18 @@ fun CompactCard(
             ) {
                 Text(
                     w.title, style = MaterialTheme.typography.titleSmall,
-                    maxLines = 2, overflow = TextOverflow.Ellipsis, color = cs.onSurface
+                    maxLines = 2, overflow = TextOverflow.Ellipsis, color = ink
                 )
                 Text(
                     if (newP != null) money(newP, w.currency) else tr("No price"),
                     style = MaterialTheme.typography.titleMedium, fontWeight = look.priceWeight, fontFamily = look.display,
-                    maxLines = 1, color = if (drop) look.drop else if (rise) look.rise else cs.onSurface,
+                    maxLines = 1, color = if (drop) look.drop else if (rise) look.rise else ink,
                     modifier = Modifier.padding(top = 2.dp, bottom = 6.dp)
                 )
             }
             Box {
                 IconButton(onClick = { if (!inert) menu = true }) {
-                    Icon(AppIcons.MoreVert, tr("More"), tint = cs.onSurfaceVariant)
+                    Icon(AppIcons.MoreVert, tr("More"), tint = muted)
                 }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                     DropdownMenuItem(text = { Text(tr("Edit")) }, onClick = { menu = false; onEdit() })
@@ -1022,6 +1029,9 @@ fun WishCard(
     actions: @Composable RowScope.() -> Unit
 ) {
     val look = LocalLook.current
+    // The text on the card: dark ink on the bright cards of neobrutalism Midnight, the theme's own text otherwise.
+    val ink = look.cardInk(w.id)
+    val muted = look.cardMuted(w.id)
     val ui = LocalUriHandler.current
     // Tapping the picture shows it big (ImageViewer); tapping the words opens the shop page.
     var viewing by remember { mutableStateOf(false) }
@@ -1041,7 +1051,7 @@ fun WishCard(
             else Modifier
         ).lookCard(look, w.id, look.cardShape(w.id, small = false))
     ) {
-        CompositionLocalProvider(LocalContentColor provides cs.onSurface) {
+        CompositionLocalProvider(LocalContentColor provides ink) {
         Box(
             Modifier.padding(look.inset(small = false)).fillMaxWidth().height(160.dp)
                 .lookMat(look, look.pictureShape(w.id, small = false), look.pictureBg(w.id, w.image.isNotEmpty()))
@@ -1102,29 +1112,29 @@ fun WishCard(
                     // Organic shows it as a small spaced-out line in capitals, like its list title.
                     Text(
                         if (look.design == "organic") label.uppercase() else label,
-                        style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelMedium, color = muted,
                         letterSpacing = if (look.design == "organic") 1.2.sp else TextUnit.Unspecified
                     )
                 }
                 Text(
                     w.title, style = MaterialTheme.typography.titleMedium,
-                    maxLines = 2, overflow = TextOverflow.Ellipsis, color = cs.onSurface
+                    maxLines = 2, overflow = TextOverflow.Ellipsis, color = ink
                 )
                 if (w.desc.isNotBlank()) {
                     Text(
                         w.desc, style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 2, overflow = TextOverflow.Ellipsis, color = cs.onSurfaceVariant
+                        maxLines = 2, overflow = TextOverflow.Ellipsis, color = muted
                     )
                 }
                 if (w.size.isNotBlank()) SizeTag(w.size, Modifier.padding(top = 4.dp))
                 if (w.note.isNotBlank()) {
                     Text(
                         tr("Note: %s", w.note), style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 3, overflow = TextOverflow.Ellipsis, color = cs.onSurface
+                        maxLines = 3, overflow = TextOverflow.Ellipsis, color = ink
                     )
                 }
                 if (w.by.isNotBlank()) {
-                    Text(tr("Added by %s", w.by), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
+                    Text(tr("Added by %s", w.by), style = MaterialTheme.typography.labelMedium, color = muted)
                 }
             }
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -1132,12 +1142,12 @@ fun WishCard(
                     Text(
                         if (newP != null) money(newP, w.currency) else tr("No price"),
                         style = MaterialTheme.typography.titleLarge, fontWeight = look.priceWeight,
-                        color = if (drop) look.drop else if (rise) look.rise else cs.onSurface
+                        color = if (drop) look.drop else if (rise) look.rise else ink
                     )
                     if ((drop || rise) && oldP != null) {
                         Text(
                             money(oldP, w.currency), style = MaterialTheme.typography.bodyMedium,
-                            textDecoration = TextDecoration.LineThrough, color = cs.onSurfaceVariant,
+                            textDecoration = TextDecoration.LineThrough, color = muted,
                             modifier = Modifier.padding(start = 8.dp)
                         )
                     }

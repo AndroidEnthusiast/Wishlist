@@ -231,13 +231,15 @@ fun lookFor(style: String, setKey: String, classicMode: String): Look {
             Look(
                 "neo", dark,
                 scheme(dark, main, inkOnBright, a2, inkOnBright, a3, bg, surface, ink, muted, surface, ink, mix(ink, bg, 0.7f)),
-                if (dark) listOf(surface) else listOf(main, white, a2, a3),
+                // Midnight too has bright cards (with dark text, see cardInk) on the dark background, and light shadows.
+                if (dark) accents else listOf(main, white, a2, a3),
                 accents.map { if (dark) mix(it, surface, 0.15f) else mix(it, white, 0.35f) },
                 ink,
-                if (dark) accents else listOf(ink),
+                listOf(ink),
                 listOf(mix(ink, bg, if (dark) 0.86f else 0.9f)),
                 lexend,
-                if (dark) greenD else c(0xFF00873C), if (dark) redD else c(0xFFD62828)
+                // Prices are written on the bright cards, so they are dark green and red in Midnight too.
+                c(0xFF00873C), c(0xFFD62828)
             )
         }
         "clay" -> {
@@ -399,8 +401,12 @@ fun Look.pictureShape(id: Long, small: Boolean): Shape = when (design) {
     else -> RectangleShape
 }
 
-/** Behind a picture: white for shop photos (except organic and clay, which use soft mats), a tint when there is none. */
+/**
+ * Behind a picture: white for shop photos (except organic and clay, which use soft mats, and neobrutalism Midnight,
+ * whose pictures sit on the dark background), a tint when there is none.
+ */
 fun Look.pictureBg(id: Long, hasImage: Boolean): Color = when {
+    hasImage && design == "neo" && dark -> scheme.background
     hasImage && design != "organic" && design != "clay" -> Color.White
     else -> tints[pick(id, tints.size)]
 }
@@ -409,6 +415,12 @@ fun Look.pictureBg(id: Long, hasImage: Boolean): Color = when {
 val Look.pictureLine: Dp get() = if (design == "neo") 2.dp else 0.dp
 
 fun Look.cardFill(id: Long): Color = fills[pick(id, fills.size)]
+
+/** The text colour on a wish card: dark ink on the bright cards of neobrutalism Midnight, the theme's text otherwise. */
+fun Look.cardInk(id: Long): Color = if (design == "neo" && dark) Color(0xFF111111) else scheme.onSurface
+
+/** The quieter text (shop, description, icons) on a wish card. */
+fun Look.cardMuted(id: Long): Color = if (design == "neo" && dark) Color(0xFF3A3A40) else scheme.onSurfaceVariant
 
 /** Small labels on a card (price change, "Got it"). */
 fun Look.badgeShape(small: Boolean): Shape = when (design) {

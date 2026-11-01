@@ -373,5 +373,11 @@ val NL: Map<String, String> = mapOf(
     "Price surges" to "Prijsstijgingen",
     "Hour" to "Uur",
     "%d hours" to "%d uur",
-    "Apply" to "Toepassen"
+    "Apply" to "Toepassen",
+    "Allow price checks in the background?" to "Prijzen op de achtergrond laten controleren?",
+    "Then Wishlist can check prices while your phone is asleep, so price alerts arrive on time instead of when you open the app. Android asks you to confirm once." to "Dan kan Wishlist prijzen controleren terwijl je telefoon slaapt, zodat prijsmeldingen op tijd komen in plaats van wanneer je de app opent. Android vraagt je één keer om te bevestigen.",
+    "Allow" to "Toestaan",
+    "Not now" to "Niet nu",
+    "Checks while your phone sleeps" to "Controles terwijl je telefoon slaapt",
+    "Off: price alerts may wait until you open the app." to "Uit: prijsmeldingen kunnen wachten tot je de app opent."
 )

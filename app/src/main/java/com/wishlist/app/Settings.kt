@@ -51,6 +51,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardActions
@@ -246,6 +250,27 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
             ) {
                 Text(tr("Price surges"), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f).padding(end = 12.dp))
                 Switch(checked = Repo.notifyRises, onCheckedChange = { Repo.setNotifyRises(ctx, it) })
+            }
+            // Only while Android may hold back the checks (not Unrestricted): a way to allow it after "Not now".
+            // Checked again each time you come back to the app (after Android's question).
+            var bgOk by remember { mutableStateOf(Background.allowed(ctx)) }
+            val life = LocalLifecycleOwner.current
+            DisposableEffect(life) {
+                val obs = LifecycleEventObserver { _, e -> if (e == Lifecycle.Event.ON_RESUME) bgOk = Background.allowed(ctx) }
+                life.lifecycle.addObserver(obs)
+                onDispose { life.lifecycle.removeObserver(obs) }
+            }
+            if (!bgOk) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                        Text(tr("Checks while your phone sleeps"), style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            tr("Off: price alerts may wait until you open the app."),
+                            style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
+                        )
+                    }
+                    TextButton(onClick = { Background.request(ctx) }) { Text(tr("Allow")) }
+                }
             }
 
             SectionTitle(tr("Update the app"))

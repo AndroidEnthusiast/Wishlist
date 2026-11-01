@@ -51,6 +51,8 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - v2.61: pull to refresh no longer keeps the circle spinning while every shop is asked (Marktplaats and others are read slowly in a hidden browser); the check continues in the background.
 
+- v2.62: one-time background question (Android Unrestricted) after alerts only arrived on opening the app; Neobrutalism Midnight cards bright with dark text. Open question to the owner: what to do with the big white picture areas (product photos on white) in the large cards; options given: photo fills the area, blurred photo behind it, or a tinted mat with the photo as a rounded card.
+
 ## Next session
 Ask the owner how the four designs look on the phone and what to change. Not yet styled per design: text fields (only their shape and colours change), drop-down menus, the bin's cards, the picture viewer, the star and private-eye badges, the menu (hamburger) icon. The web pages still only have light/dark (DECISIONS: ask before adding designs there).
 
