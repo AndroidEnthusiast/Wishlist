@@ -141,6 +141,10 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - "Price changes" leaves Home; price news lives on the Prices tab and in Notifications.
 - One sharing choice per list: list settings > "Who can see this list": Only me / My friends / Friends + anyone with the link (replaces the separate friends' link and "Visible to friends").
 - The bottom bar keeps "New wishlist".
+- One wording to open a shop page: "View in shop" (not "View product" / "Open in store").
+- "Price surges" becomes "Price increases" (with "Price drops").
+- The lists edited together need a new name, NOT "Group wishlist": the owner plans a future feature "Wishlist sharing group" (friends join a group and see each other's wishlists). "Gift list" is too close to "wishlist"; "Joint wishlist" is understood but not liked. Choosing from alternatives.
+- The Prices tab's page title: owner leans to "Price changes"; choosing from alternatives.
 
 ## Open ideas (not decided)
 - Personal recovery key: an encrypted online backup of your lists, keys, creator rights and settings, restored with a key (optionally saved in Google Password Manager), plus automatic clean-up of lists nobody uses. Ask the owner before building.
