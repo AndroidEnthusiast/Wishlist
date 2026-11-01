@@ -92,6 +92,8 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - v2.83: plus and minus instead of arrows for price changes, app and web.
 
+- v2.84: one highlighted item in the menu; swipe notifications away (Undo); every bottom message 5 s and swipeable.
+
 ## Next session
 **The owner's next topic: Friends and Groups** (they asked to be reminded to build Friends; the bottom bar has a "Friends is coming soon" page, `FriendsSoonScreen` in `Prices.kt`). Their idea, in their words, to refine with them before building:
 - **Friends**: see friends' wishlists in one place (gift ideas based on the receiver's own wishes: the safest choices).

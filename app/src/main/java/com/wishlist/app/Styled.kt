@@ -1,5 +1,16 @@
 package com.wishlist.app
 
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.Snackbar
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -450,4 +461,59 @@ fun PhotoCard(url: String, description: String, small: Boolean, modifier: Modifi
             )
         }
     }
+}
+
+/**
+ * Shows a message at the bottom (a "toast" with or without Undo). Every message stays 5 seconds ([AppSnackbarHost]
+ * takes it away then), whatever duration is asked, and can be swiped away left or right before that (owner, 2.84).
+ */
+suspend fun SnackbarHostState.showToast(
+    message: String,
+    actionLabel: String? = null,
+    withDismissAction: Boolean = false,
+    @Suppress("UNUSED_PARAMETER") duration: SnackbarDuration = SnackbarDuration.Indefinite
+): SnackbarResult = showSnackbar(message, actionLabel, withDismissAction, SnackbarDuration.Indefinite)
+
+/** The place where messages show: each one for 5 seconds, and swipe it left or right to dismiss it. */
+@Composable
+fun AppSnackbarHost(state: SnackbarHostState, modifier: Modifier = Modifier) {
+    SnackbarHost(state, modifier) { data ->
+        LaunchedEffect(data) {
+            delay(5000)
+            data.dismiss()
+        }
+        SwipeAway(data, onGone = { data.dismiss() }) { Snackbar(data) }
+    }
+}
+
+/** Swipe it left or right (far enough) and it slides away; not far enough and it springs back. */
+@Composable
+fun SwipeAway(key: Any, onGone: () -> Unit, content: @Composable () -> Unit) {
+    val offset = remember(key) { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+    var width by remember(key) { mutableStateOf(1f) }
+    Box(
+        Modifier
+            .onSizeChanged { width = it.width.toFloat().coerceAtLeast(1f) }
+            .graphicsLayer {
+                translationX = offset.value
+                alpha = 1f - (kotlin.math.abs(offset.value) / width).coerceIn(0f, 1f) * 0.8f
+            }
+            .pointerInput(key) {
+                detectHorizontalDragGestures(
+                    onDragEnd = {
+                        scope.launch {
+                            if (kotlin.math.abs(offset.value) > width * 0.3f) {
+                                offset.animateTo(if (offset.value > 0) width else -width, tween(160))
+                                onGone()
+                            } else offset.animateTo(0f, tween(180))
+                        }
+                    },
+                    onDragCancel = { scope.launch { offset.animateTo(0f, tween(180)) } }
+                ) { ch, drag ->
+                    ch.consume()
+                    scope.launch { offset.snapTo(offset.value + drag) }
+                }
+            }
+    ) { content() }
 }

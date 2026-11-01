@@ -417,7 +417,7 @@ fun App(
 
     fun openFriend(code: String) {
         if (code == Repo.shareCode) {
-            scope.launch { snack.showSnackbar(tr("That’s your own list. Friends reserve from it, and you can’t peek.")) }
+            scope.launch { snack.showToast(tr("That’s your own list. Friends reserve from it, and you can’t peek.")) }
             return
         }
         if (Repo.friends.any { it.code == code }) {
@@ -428,13 +428,13 @@ fun App(
             try {
                 val r = Cloud.fetchList(code)
                 if (r == null) {
-                    snack.showSnackbar(tr("No list found for that code."))
+                    snack.showToast(tr("No list found for that code."))
                 } else {
                     Repo.addFriend(ctx, Friend(code, r.name))
                     friendCode = code; settings = false; binOpen = false
                 }
             } catch (e: Exception) {
-                snack.showSnackbar(tr("Couldn’t reach the server. Check your connection."))
+                snack.showToast(tr("Couldn’t reach the server. Check your connection."))
             }
         }
     }
@@ -529,8 +529,10 @@ fun App(
                             maxLines = 1, overflow = TextOverflow.Ellipsis
                         )
                     }
-                    val onList = !settings && !binOpen && friendCode == null && !hub
-                    DrawerItem(tr("Home"), AppIcons.Home, hub && !settings && !binOpen && friendCode == null) {
+                    // Only the screen that is open is highlighted: one item at a time.
+                    val elsewhere = settings || binOpen || friendCode != null || notesOpen || pricesOpen || friendsOpen
+                    val onList = !elsewhere && !hub
+                    DrawerItem(tr("Home"), AppIcons.Home, hub && !elsewhere) {
                         settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; hub = true
                         scope.launch { drawer.close() }
                     }
@@ -576,14 +578,14 @@ fun App(
                             modifier = Modifier.padding(start = 28.dp, top = 16.dp, bottom = 8.dp)
                         )
                         Repo.friends.forEach { f ->
-                            DrawerItem(f.name, AppIcons.Person, !settings && !binOpen && friendCode == f.code) {
+                            DrawerItem(f.name, AppIcons.Person, !settings && !binOpen && !notesOpen && friendCode == f.code) {
                                 friendCode = f.code; settings = false; binOpen = false
                                 scope.launch { drawer.close() }
                             }
                         }
                         Spacer(Modifier.height(8.dp))
                     }
-                    DrawerItem(tr("Notifications"), AppIcons.Notifications, notesOpen, dot = Notifications.unread) {
+                    DrawerItem(tr("Notifications"), AppIcons.Notifications, notesOpen && !settings && !binOpen, dot = Notifications.unread) {
                         settings = false; binOpen = false; friendCode = null; listSettings = false
                         pricesOpen = false; friendsOpen = false; notesOpen = true
                         scope.launch { drawer.close() }
@@ -722,7 +724,7 @@ fun App(
                 newMine = false
                 // It appears under My wishlists on the dashboard.
                 settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; hub = true
-                scope.launch { snack.showSnackbar(tr("“%s” is ready", Repo.mineName(id))) }
+                scope.launch { snack.showToast(tr("“%s” is ready", Repo.mineName(id))) }
             },
             onClose = { newMine = false }
         )
@@ -787,7 +789,7 @@ fun HomeScreen(
         val m = Shared.notice
         if (m.isNotEmpty()) {
             Shared.clearNotice()
-            snack.showSnackbar(m)
+            snack.showToast(m)
         }
     }
     val inShared = Shared.active != null
@@ -801,10 +803,10 @@ fun HomeScreen(
             // Asking every shop can take long (some are read in a hidden browser, one wish at a time), so the circle
             // shows for at most 2.5 seconds; the check goes on in the background, prices change on screen as they
             // come in, and a message says when it's done.
-            val job = PriceRefresh.start(ctx, if (inShared) Shared.active else null) { msg -> snack.showSnackbar(msg) }
+            val job = PriceRefresh.start(ctx, if (inShared) Shared.active else null) { msg -> snack.showToast(msg) }
             val finished = withTimeoutOrNull(2500) { job.join() } != null
             pull.endRefresh()
-            if (!finished) snack.showSnackbar(tr("Checking prices…"), duration = SnackbarDuration.Short)
+            if (!finished) snack.showToast(tr("Checking prices…"), duration = SnackbarDuration.Short)
         }
     }
     // A shared wishlist is put together by the givers, for someone else: there is no "most wanted" (nobody can say
@@ -843,7 +845,7 @@ fun HomeScreen(
             )
         },
         floatingActionButton = { AddWishButton(onAdd) },
-        snackbarHost = { SnackbarHost(snack) }
+        snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
         // Behind the list: the blobs, glows or dots of the design (nothing in Material 3).
         Column(Modifier.padding(pad).lookBackdrop(look)) {

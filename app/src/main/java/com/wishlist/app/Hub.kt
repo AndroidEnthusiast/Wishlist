@@ -110,7 +110,7 @@ fun HubScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
         },
-        snackbarHost = { SnackbarHost(snack) }
+        snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
         Column(
             Modifier.padding(pad).fillMaxSize().lookBackdrop(look).verticalScroll(rememberScrollState())
@@ -180,7 +180,7 @@ fun HubScreen(
                     else ActionRow(tr("Delete wishlist"), danger = true) {
                         actionsFor = null
                         if (!group && Repo.mineIds.size < 2) {
-                            scope.launch { snack.showSnackbar(tr("This is your only wishlist. Make another one first.")) }
+                            scope.launch { snack.showToast(tr("This is your only wishlist. Make another one first.")) }
                         } else deleting = item
                     }
                 }
@@ -252,7 +252,7 @@ fun HubScreen(
                         }
                         busy = false
                         deleting = null
-                        snack.showSnackbar(msg)
+                        snack.showToast(msg)
                     }
                 }) { Text(tr("Delete"), color = cs.error) }
             },

@@ -265,7 +265,7 @@ fun startShare(c: Context, scope: CoroutineScope, snack: SnackbarHostState) {
             val code = Sync.publish(c)
             shareText(c, tr("Share wishlist"), inviteText(code))
         } catch (e: Exception) {
-            snack.showSnackbar(tr("Couldn’t share: %s", e.message ?: tr("no connection")))
+            snack.showToast(tr("Couldn’t share: %s", e.message ?: tr("no connection")))
         }
     }
 }

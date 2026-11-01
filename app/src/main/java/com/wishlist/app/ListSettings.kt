@@ -89,7 +89,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
         },
-        snackbarHost = { SnackbarHost(snack) }
+        snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
         Column(
             Modifier.padding(pad).verticalScroll(rememberScrollState())
@@ -102,7 +102,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                 Button(onClick = {
                     Repo.setListName(ctx, name)
                     name = Repo.listName
-                    scope.launch { snack.showSnackbar(tr("Name saved")) }
+                    scope.launch { snack.showToast(tr("Name saved")) }
                 }) { Text(tr("Save")) }
             }
             if (shared != null) {
@@ -134,7 +134,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
             Button(onClick = {
                 Repo.setAbout(ctx, about)
                 about = Repo.about
-                scope.launch { snack.showSnackbar(tr("Note saved")) }
+                scope.launch { snack.showToast(tr("Note saved")) }
             }) { Text(tr("Save note")) }
 
             SectionTitle(tr("Categories"))
@@ -171,7 +171,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                     Button(onClick = { scope.launch { ShareCard.share(ctx, ShareCard.Kind.INVITE, title, invite) } }) { Text(tr("Send invite")) }
                     OutlinedButton(onClick = {
                         clip.setText(AnnotatedString(invite))
-                        scope.launch { snack.showSnackbar(tr("Invite link copied")) }
+                        scope.launch { snack.showToast(tr("Invite link copied")) }
                     }) { Text(tr("Copy link")) }
                 }
                 SectionTitle(tr("Manage"))
@@ -212,7 +212,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                         Button(onClick = { startShare(ctx, scope, snack) }) { Text(tr("Share link")) }
                         OutlinedButton(onClick = {
                             clip.setText(AnnotatedString(shareLink(code)))
-                            scope.launch { snack.showSnackbar(tr("Link copied")) }
+                            scope.launch { snack.showToast(tr("Link copied")) }
                         }) { Text(tr("Copy link")) }
                     }
                 }
@@ -259,7 +259,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
             onDone = { ws ->
                 copyDlg = false
                 Repo.copyInto(ctx, target, ws)
-                scope.launch { snack.showSnackbar(if (ws.size == 1) tr("1 wish added") else tr("%d wishes added", ws.size)) }
+                scope.launch { snack.showToast(if (ws.size == 1) tr("1 wish added") else tr("%d wishes added", ws.size)) }
             },
             onClose = { copyDlg = false }
         )
@@ -301,7 +301,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                         try {
                             Sync.unpublish(ctx)
                         } catch (e: Exception) {
-                            snack.showSnackbar(tr("Couldn’t stop sharing. Check your connection."))
+                            snack.showToast(tr("Couldn’t stop sharing. Check your connection."))
                         }
                     }
                 }) { Text(tr("Stop sharing")) }

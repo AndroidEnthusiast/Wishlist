@@ -95,7 +95,7 @@ fun FriendScreen(f: Friend, snack: SnackbarHostState, onMenu: () -> Unit, onRemo
                 msg = tr("No connection. Try again.")
             }
             busy = null
-            msg?.let { snack.showSnackbar(it) }
+            msg?.let { snack.showToast(it) }
         }
     }
 
@@ -112,7 +112,7 @@ fun FriendScreen(f: Friend, snack: SnackbarHostState, onMenu: () -> Unit, onRemo
                 }
             )
         },
-        snackbarHost = { SnackbarHost(snack) }
+        snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
         val r0 = remote
         Column(Modifier.padding(pad)) {

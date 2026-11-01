@@ -107,7 +107,7 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
         },
-        snackbarHost = { SnackbarHost(snack) }
+        snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
         Column(
             Modifier.padding(pad).verticalScroll(rememberScrollState())
@@ -273,7 +273,7 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                 try {
                     ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(Config.APK_URL)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                 } catch (e: Exception) {
-                    scope.launch { snack.showSnackbar(tr("Couldn’t open the download. Check your connection.")) }
+                    scope.launch { snack.showToast(tr("Couldn’t open the download. Check your connection.")) }
                 }
             }) { Text(tr("Download app")) }
 
@@ -297,7 +297,7 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                     try {
                         shareApk(ctx)
                     } catch (e: Exception) {
-                        snack.showSnackbar(tr("Couldn’t share the app"))
+                        snack.showToast(tr("Couldn’t share the app"))
                     }
                 }
             }) { Text(tr("Share app (APK)")) }

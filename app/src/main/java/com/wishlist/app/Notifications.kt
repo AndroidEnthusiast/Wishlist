@@ -1,6 +1,9 @@
 package com.wishlist.app
 
 import android.content.Context
+import androidx.compose.material3.SnackbarResult
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -132,6 +135,24 @@ object Notifications {
         save(c)
     }
 
+    /** Deletes one notification; returns where it was, for Undo. */
+    @Synchronized
+    fun remove(c: Context, n: PriceNote): Int {
+        val i = all.indexOf(n)
+        if (i < 0) return -1
+        all = all - n
+        save(c)
+        return i
+    }
+
+    /** Undo: puts a deleted notification back where it was. */
+    @Synchronized
+    fun restore(c: Context, n: PriceNote, at: Int) {
+        if (n in all) return
+        all = all.toMutableList().also { it.add(at.coerceIn(0, it.size), n) }
+        save(c)
+    }
+
     @Synchronized
     fun markAllRead(c: Context) {
         if (all.none { !it.read }) return
@@ -148,6 +169,7 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
     val notes = Notifications.shown
+    val scope = rememberCoroutineScope()
     // Opening the page counts as seeing them: the red dots go.
     LaunchedEffect(Unit) { Notifications.markAllRead(ctx) }
     Scaffold(
@@ -159,7 +181,7 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
         },
-        snackbarHost = { SnackbarHost(snack) }
+        snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
         if (notes.isEmpty()) {
             Box(Modifier.padding(pad).fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
@@ -179,6 +201,15 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                 val id = n.wishId
                 val down = n.pct < 0
                 val target = n.kind == "target"
+                // Swipe left or right to delete it straight away, with Undo for 5 seconds.
+                SwipeAway(n, onGone = {
+                    val at = Notifications.remove(ctx, n)
+                    scope.launch {
+                        snack.currentSnackbarData?.dismiss()
+                        val r = snack.showToast(tr("Notification deleted"), tr("Undo"))
+                        if (r == SnackbarResult.ActionPerformed && at >= 0) Notifications.restore(ctx, n, at)
+                    }
+                }) {
                 Row(
                     Modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true))
                         // A reached target opens the wish's price history; a price change opens its list.
@@ -217,6 +248,7 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                             color = if (down) look.drop else look.rise
                         )
                     }
+                }
                 }
             }
         }

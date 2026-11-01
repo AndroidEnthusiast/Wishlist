@@ -26,6 +26,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Shop photos as small cards on a coloured area** (2.63, owner chose option C): the picture area of a wish takes a soft colour of the theme and the photo sits on it as a rounded card with a light shadow, in every theme. Chosen over filling the area with the photo (cuts products off) and a blurred copy behind it (stays white for white photos).
 - **Copying wishes between your own lists** (2.66): optional in the New wishlist form ("Add wishes from your other lists") and in a list's settings; no extra card on an empty list. Copies, not moves. Removing the original removes its copies too (and whoever reserved a copy is told it's gone, as for any removed gift); removing a copy only removes that copy. Group wishlists are not a source (they hold ideas for someone else); "inspiration for others" may come later, but Friends is the better way to share gift ideas.
 - **"Added on Thursday 01-12-26"** in small italics on every wish card and on the Prices page (2.67; "Wish added on 01/11/26" of 2.66 looked awful with slashes and "wish" is implied).
+- **Notifications can be swiped away** (left or right) to delete them, with "Notification deleted" and Undo (2.84).
 - **Notifications page** (2.67, owner's wording): menu item above Bin with a red dot (also on the menu button) while something is new. Each notification: the wish's small picture, its name, "decreased in price" or "increased in price" (nothing more), and the percentage in bold green or red on the right. Drops and rises only as switched on in App settings.
 - **Standard themes have colour sets too** (2.65, owner): in the Themer, Standard > Light, Dark or AMOLED black, then that mode's colour sets (the six of `PALETTES`, in tones made for light or dark; AMOLED uses the dark tones on black). App settings > Theme only has the Themer button. Photos in Dark and AMOLED sit on a quiet colour (the full accent colour was too bright).
 - **Dashboard details** (2.65): small + and pencil buttons; "Total value" of a list's wishes instead of "Shared with friends"; "Recently opened" smaller than the list sections.
@@ -46,6 +47,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **The Themer has only a back arrow** (no menu button). Choices there only change the preview; "Apply" (top right, shown when the choice differs from the theme in use) changes the app (2.56: the owner wanted a confirming action).
 - **Web pages only offer light and dark** (plus following the device), as a bare minimum. No palettes on the web.
 - **The friends' page looks the same as the app and the browser editor**, for both "My wishlist" and shared lists.
+- **The side menu highlights only the screen that is open** (2.84).
 - **List settings vs App settings**: each list has its own settings (opened with the settings button where the refresh button used to be); things that are about the whole app sit in "App settings". Pull down to refresh; the refresh circle is hidden when idle, and shows for at most about 2.5 s (2.61): the price check carries on in the background and a message says when it is done.
 - **Wording settled by the owner**: "+ Add wish"; "Instant delete wishes" ("Turn on to delete wishes without warning"); under Price alerts a sub-heading "Notifications" with "Price drops" (on by default) and "Price surges" (off by default) (2.54).
 
@@ -91,7 +93,8 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Link previews**: invites use `web/join/` and friends' links use `web/list/`, each with its own preview picture; sharing from the app also sends a picture with the list name.
 
 - **Bin (October 2026)**: a deleted wish goes to the bin (Menu > Bin) at once. It stays there 10 days, then it is deleted for good. One bin for all lists. Wishes in the bin get no price-drop or price-rise notifications. The bin has no refresh button: it is always up to date by itself.
-- **The delete message is short**: just "Wish moved to the bin" with Undo, and it goes away after a few seconds (about 4).
+- **The delete message is short**: just "Wish moved to the bin" with Undo.
+- **Every message at the bottom stays 5 seconds and can be swiped away** left or right, Undo or not (owner, 2.84).
 - **Everyone on a shared wishlist sees its bin** and can restore or delete its wishes. On My wishlist only the owner sees the bin (and still never sees reservations).
 - **"Your reserved gift has been moved to the bin"**: if someone other than the person who reserved a gift moves it to the bin, that person gets this notification. Tapping it opens the bin, scrolls to the gift when it is out of sight, and lets it glow softly.
 

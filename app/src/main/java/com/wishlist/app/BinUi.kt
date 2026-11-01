@@ -91,7 +91,7 @@ fun BinScreen(snack: SnackbarHostState) {
         val k = focus.first + ":" + focus.second
         val i = Bin.entries.indexOfFirst { it.key == k }
         if (i < 0) {
-            snack.showSnackbar(tr("That gift is no longer in the bin."))
+            snack.showToast(tr("That gift is no longer in the bin."))
             return@LaunchedEffect
         }
         delay(150) // let the list be laid out first
@@ -118,7 +118,7 @@ fun BinScreen(snack: SnackbarHostState) {
                 tr("Couldn’t save that. Check your connection and try again.")
             }
             busy = null
-            snack.showSnackbar(msg)
+            snack.showToast(msg)
         }
     }
 
@@ -128,7 +128,7 @@ fun BinScreen(snack: SnackbarHostState) {
             try {
                 Bin.deleteForGood(ctx, e)
             } catch (ex: Exception) {
-                snack.showSnackbar(tr("Couldn’t delete that wish. Check your connection and try again."))
+                snack.showToast(tr("Couldn’t delete that wish. Check your connection and try again."))
             }
             busy = null
         }
@@ -148,7 +148,7 @@ fun BinScreen(snack: SnackbarHostState) {
                 }
             )
         },
-        snackbarHost = { SnackbarHost(snack) }
+        snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
         Box(Modifier.padding(pad).fillMaxSize()) {
             if (entries.isEmpty() && Bin.loading && Shared.lists.isNotEmpty()) {
@@ -222,7 +222,7 @@ fun BinScreen(snack: SnackbarHostState) {
 
     fun restoredTo(e: BinEntry, id: String) {
         if (Repo.restoreMineTo(ctx, e.wish.id, id)) {
-            scope.launch { snack.showSnackbar(tr("“%1\$s” is back on %2\$s.", shortTitle(e.wish.title), Repo.mineName(id))) }
+            scope.launch { snack.showToast(tr("“%1\$s” is back on %2\$s.", shortTitle(e.wish.title), Repo.mineName(id))) }
         }
     }
     homeless?.let { e ->
@@ -274,7 +274,7 @@ fun BinScreen(snack: SnackbarHostState) {
                     scope.launch {
                         val ok = Bin.empty(ctx)
                         busy = null
-                        if (!ok) snack.showSnackbar(tr("Couldn’t delete everything. Check your connection and try again."))
+                        if (!ok) snack.showToast(tr("Couldn’t delete everything. Check your connection and try again."))
                     }
                 }) { Text(tr("Empty bin"), color = cs.error) }
             },

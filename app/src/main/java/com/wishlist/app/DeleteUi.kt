@@ -37,7 +37,7 @@ fun DeleteHost(snack: SnackbarHostState) {
     LaunchedEffect(t) {
         if (t == null) return@LaunchedEffect
         snack.currentSnackbarData?.dismiss()
-        val r = snack.showSnackbar(
+        val r = snack.showToast(
             message = tr("Wish moved to the bin"),
             actionLabel = tr("Undo"),
             duration = SnackbarDuration.Short

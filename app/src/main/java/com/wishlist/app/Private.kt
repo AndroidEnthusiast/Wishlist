@@ -99,7 +99,7 @@ fun PrivateHost(snack: SnackbarHostState) {
         snack.currentSnackbarData?.dismiss()
         // Material only has 4 or 10 seconds: this one stays 5.
         val timer = launch { delay(5000); snack.currentSnackbarData?.dismiss() }
-        val r = snack.showSnackbar(
+        val r = snack.showToast(
             message = if (ch.second) tr("Wish is now private") else tr("Wish is now visible to friends"),
             actionLabel = tr("Undo"),
             duration = SnackbarDuration.Indefinite

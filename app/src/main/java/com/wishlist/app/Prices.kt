@@ -68,7 +68,7 @@ fun PricesScreen(snack: SnackbarHostState) {
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
         },
-        snackbarHost = { SnackbarHost(snack) }
+        snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
         if (rows.isEmpty()) {
             Box(Modifier.padding(pad).fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
@@ -159,7 +159,7 @@ fun FriendsSoonScreen(snack: SnackbarHostState) {
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
         },
-        snackbarHost = { SnackbarHost(snack) }
+        snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
         Column(
             Modifier.padding(pad).fillMaxSize().padding(32.dp),
