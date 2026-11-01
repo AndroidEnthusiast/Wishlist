@@ -59,17 +59,51 @@ object Sync {
      * 3. removes online pictures that no wish uses anymore.
      */
     private suspend fun pushLocked() {
-        val code = Repo.shareCode ?: return
-        val token = Repo.ownerToken ?: return
-        val c = app
-        // Always My wishlist, even while a shared wishlist is open on screen.
+        // Always the open list of your own, even while a group wishlist is open on screen.
+        pushData(Repo.currentMine(), Repo.syncWishes(), live = true)
+    }
+
+    /**
+     * Before another of your lists is opened: the one being left goes online now, as it is at this moment (a push
+     * that was waiting would otherwise send the newly opened list instead). Called by Repo.openMine.
+     */
+    @Synchronized
+    fun flush(c: Context) {
+        if (Repo.shareCode == null) return
+        job?.cancel()
+        val d = Repo.currentMine()
         val wishes = Repo.syncWishes()
+        scope.launch {
+            try {
+                lock.withLock { pushData(d, wishes, live = false) }
+            } catch (e: Exception) {
+            }
+        }
+    }
+
+    /** Sends one of your lists that isn't open (changed by the background price check, for example). */
+    fun pushStored(c: Context, d: MineData, binned: List<Wish>) {
+        if (d.code == null) return
+        val wishes = (d.wishes + binned).filter { !it.priv }
+        scope.launch {
+            try {
+                lock.withLock { pushData(d, wishes, live = false) }
+            } catch (e: Exception) {
+            }
+        }
+    }
+
+    /** [live]: the open list, whose picture status shows in its settings. */
+    private suspend fun pushData(d: MineData, wishes: List<Wish>, live: Boolean) {
+        val code = d.code ?: return
+        val token = d.token ?: return
+        val c = app
         if (c == null) {
-            Cloud.pushList(code, token, Repo.myName, Repo.myCats, wishes, Repo.myAbout)
+            Cloud.pushList(code, token, d.name, d.cats, wishes, d.about)
             return
         }
         val mine = wishes.filter { ImageStore.isLocal(it.image) }.associateBy { it.image.substringAfterLast('/') }
-        var up = Repo.uploadedPhotos
+        var up = d.photos
         var problem: String? = null
 
         for ((name, w) in mine) {
@@ -78,7 +112,7 @@ object Sync {
             try {
                 Cloud.uploadPhoto(code, token, name, bytes)
                 up = up + name
-                Repo.setUploaded(c, up)
+                Repo.setUploadedFor(c, d.id, up)
             } catch (e: Exception) {
                 problem = e.message ?: tr("unknown error")
             }
@@ -91,18 +125,19 @@ object Sync {
                 if (n in up) w.copy(image = Cloud.photoUrl(code, n)) else w.copy(image = "")
             }
         }
-        Cloud.pushList(code, token, Repo.myName, Repo.myCats, out, Repo.myAbout)
+        Cloud.pushList(code, token, d.name, d.cats, out, d.about)
 
         for (n in up - mine.keys) {
             try {
                 Cloud.deletePhoto(code, token, n)
                 up = up - n
-                Repo.setUploaded(c, up)
+                Repo.setUploadedFor(c, d.id, up)
             } catch (e: Exception) {
                 problem = problem ?: (e.message ?: tr("unknown error"))
             }
         }
 
+        if (!live) return
         photoStatus = when {
             problem != null -> tr("Pictures could not be uploaded: %s", problem)
             mine.isEmpty() -> ""

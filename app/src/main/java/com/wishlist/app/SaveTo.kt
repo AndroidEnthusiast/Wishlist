@@ -20,23 +20,21 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 
 /**
- * A wishlist a new wish can be saved to. [code] is null for My wishlist, otherwise the code of a shared wishlist.
- * [priv]: My wishlist as a private wish (only on this phone).
+ * A wishlist a new wish can be saved to. [code] is null for your own lists, otherwise the code of a group wishlist.
+ * [priv]: as a private wish (only on this phone). [key]: what Repo.lastSaveTo remembers ("mine", "private",
+ * "mine:<id>", "private:<id>" or a group wishlist's code, see MyLists.saveKey).
  */
-data class SaveTarget(val code: String?, val name: String, val priv: Boolean = false) {
-    /** "mine", "private" or the code of a shared list (also what Repo.lastSaveTo remembers). */
-    val key: String get() = code ?: if (priv) "private" else "mine"
-}
+data class SaveTarget(val code: String?, val name: String, val key: String)
 
-/**
- * Every wishlist you can save to, My wishlist first. When you can make more wishlists of your own later,
- * this is the one place that has to list them too.
- */
-fun saveTargets(myName: String, shared: List<SharedList>): List<SaveTarget> {
-    val mine = myName.ifBlank { "My wishlist" }.let { if (it == "My wishlist") tr(it) else it }
-    return listOf(SaveTarget(null, mine), SaveTarget(null, tr("%s · Private wish", mine), priv = true)) +
-        shared.map { SaveTarget(it.code, it.name) }
-}
+/** Every wishlist you can save to: each of your own (also as a private wish), then the group wishlists. */
+fun saveTargets(mine: List<Pair<String, String>>, shared: List<SharedList>): List<SaveTarget> =
+    mine.flatMap { (id, raw) ->
+        val name = raw.ifBlank { "My wishlist" }.let { if (it == "My wishlist") tr(it) else it }
+        listOf(
+            SaveTarget(null, name, MyLists.saveKey(id, false)),
+            SaveTarget(null, tr("%s · Private wish", name), MyLists.saveKey(id, true))
+        )
+    } + shared.map { SaveTarget(it.code, it.name, it.code) }
 
 /** A drop-down to choose which wishlist a wish is saved to. */
 @Composable

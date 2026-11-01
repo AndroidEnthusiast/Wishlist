@@ -370,12 +370,28 @@ fun App(
     var listSettings by remember { mutableStateOf(false) }
     var friendCode by remember { mutableStateOf<String?>(null) }
     var newShared by remember { mutableStateOf(false) }
+    // The dashboard (Hub.kt) is the start screen; tapping a list opens it, Back returns to the dashboard.
+    var hub by remember { mutableStateOf(true) }
+    var newMine by remember { mutableStateOf(false) }
     // null: closed, "": open and empty, otherwise opened with an invite that was sent to the app.
     var joinDlg by remember { mutableStateOf<String?>(null) }
     var inviteDlg by remember { mutableStateOf(false) }
     // The background question comes once, after the notifications question has been answered (or wasn't needed).
     var askBackground by remember { mutableStateOf(false) }
     val perm = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { askBackground = true }
+
+    /** Opens one of your own wishlists. */
+    fun openMine(id: String) {
+        Shared.close()
+        Repo.openMine(ctx, id)
+        settings = false; binOpen = false; friendCode = null; listSettings = false; hub = false
+    }
+
+    /** Opens a group wishlist. */
+    fun openGroup(code: String) {
+        Shared.open(ctx, code)
+        settings = false; binOpen = false; friendCode = null; listSettings = false; hub = false
+    }
 
     fun openFriend(code: String) {
         if (code == Repo.shareCode) {
@@ -439,8 +455,9 @@ fun App(
         settings = false; binOpen = false; friendCode = null; listSettings = false
     }
     // Back from a shared wishlist goes to My wishlist.
-    BackHandler(enabled = !drawer.isOpen && !settings && !binOpen && friendCode == null && Shared.active != null) {
-        Shared.close()
+    // Back from a list goes to the dashboard.
+    BackHandler(enabled = !drawer.isOpen && !settings && !binOpen && friendCode == null && !listSettings && !hub) {
+        hub = true
     }
 
     val openMenu: () -> Unit = { scope.launch { drawer.open() } }
@@ -483,29 +500,46 @@ fun App(
                             maxLines = 1, overflow = TextOverflow.Ellipsis
                         )
                     }
-                    DrawerItem(tr("My wishlist"), AppIcons.Favorite, !settings && !binOpen && friendCode == null && Shared.active == null) {
-                        Shared.close(); settings = false; binOpen = false; friendCode = null; listSettings = false
+                    val onList = !settings && !binOpen && friendCode == null && !hub
+                    DrawerItem(tr("Home"), AppIcons.Home, hub && !settings && !binOpen && friendCode == null) {
+                        settings = false; binOpen = false; friendCode = null; listSettings = false; hub = true
                         scope.launch { drawer.close() }
                     }
-                    // A thin line, then the wishlists you edit together with other people.
+                    // Your own wishlists, then a way to make a new one.
                     DrawerDivider()
                     Text(
-                        tr("Shared wishlists"), style = MaterialTheme.typography.labelLarge,
+                        tr("My wishlists"), style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 28.dp, top = 8.dp, bottom = 8.dp)
+                    )
+                    Repo.mineIds.forEach { id ->
+                        DrawerItem(Repo.mineName(id), AppIcons.Favorite, onList && Shared.active == null && Repo.openMine == id) {
+                            openMine(id)
+                            scope.launch { drawer.close() }
+                        }
+                    }
+                    DrawerItem(tr("New wishlist"), AppIcons.Add, false) {
+                        newMine = true
+                        scope.launch { drawer.close() }
+                    }
+                    // Then the wishlists you make together with other givers (group wishlists).
+                    DrawerDivider()
+                    Text(
+                        tr("Group wishlists"), style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 28.dp, top = 8.dp, bottom = 8.dp)
                     )
                     Shared.lists.forEach { sl ->
-                        DrawerItem(sl.name, AppIcons.Share, !settings && !binOpen && friendCode == null && Shared.active == sl.code) {
-                            Shared.open(ctx, sl.code); settings = false; binOpen = false; friendCode = null; listSettings = false
+                        DrawerItem(sl.name, AppIcons.Share, onList && Shared.active == sl.code) {
+                            openGroup(sl.code)
                             scope.launch { drawer.close() }
                         }
                     }
-                    // A line between the wishlists above and the action below: one is a list, the other makes a list.
-                    DrawerDivider()
-                    DrawerItem(tr("New shared wishlist"), AppIcons.Add, false) {
+                    DrawerItem(tr("New group wishlist"), AppIcons.Add, false) {
                         newShared = true
                         scope.launch { drawer.close() }
                     }
+                    DrawerDivider()
                     if (Repo.friends.isNotEmpty()) {
                         Text(
                             tr("Friends’ lists"), style = MaterialTheme.typography.labelLarge,
@@ -539,8 +573,17 @@ fun App(
                 settings -> SettingsScreen(snack, openMenu)
                 binOpen -> BinScreen(snack)
                 fr != null -> FriendScreen(fr, snack, openMenu) { friendCode = null }
-                listSettings -> key(Shared.active) { ListSettingsScreen(snack) { listSettings = false } }
-                else -> key(Shared.active) {
+                listSettings -> key(Shared.active, Repo.openMine) {
+                    ListSettingsScreen(snack, onDeleted = { listSettings = false; hub = true }) { listSettings = false }
+                }
+                hub -> HubScreen(
+                    snack,
+                    onOpenMine = { openMine(it) },
+                    onOpenGroup = { openGroup(it) },
+                    onNewMine = { newMine = true },
+                    onNewGroup = { newShared = true }
+                )
+                else -> key(Shared.active, Repo.openMine) {
                     HomeScreen(
                         snack, openMenu,
                         onAdd = { prefill = ""; adding = true },
@@ -571,7 +614,9 @@ fun App(
         NewSharedDialog(
             onCreated = { code ->
                 newShared = false
+                // It appears under Group wishlists on the dashboard; the invite comes up so you can ask people in.
                 Shared.open(ctx, code); settings = false; binOpen = false; friendCode = null; listSettings = false
+                hub = true
                 inviteDlg = true
             },
             onClose = { newShared = false }
@@ -582,12 +627,23 @@ fun App(
             key = inviteKey,
             onJoined = { code ->
                 joinDlg = null
-                Shared.open(ctx, code); settings = false; binOpen = false; friendCode = null; listSettings = false
+                openGroup(code)
             },
             onClose = { joinDlg = null }
         )
     }
     if (inviteDlg) SharedShareDialog { inviteDlg = false }
+    if (newMine) {
+        NewListDialog(
+            onCreated = { id ->
+                newMine = false
+                // It appears under My wishlists on the dashboard.
+                settings = false; binOpen = false; friendCode = null; listSettings = false; hub = true
+                scope.launch { snack.showSnackbar(tr("“%s” is ready", Repo.mineName(id))) }
+            },
+            onClose = { newMine = false }
+        )
+    }
     DeleteHost(snack)
     PrivateHost(snack)
     if (askBackground) BackgroundQuestion()
@@ -646,6 +702,10 @@ fun HomeScreen(
         }
     }
     val inShared = Shared.active != null
+    // For "Recently opened" on the dashboard.
+    LaunchedEffect(Shared.active, Repo.openMine) {
+        Repo.touchRecent(ctx, Shared.active?.let { "s:$it" } ?: ("m:" + Repo.openMine))
+    }
     val pull = rememberPullToRefreshState()
     if (pull.isRefreshing) {
         LaunchedEffect(true) {
@@ -1160,14 +1220,15 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
     val scope = rememberCoroutineScope()
     // Which wishlist was open when this dialog started. A wish shared in from the browser can be saved to another one.
     val startList = remember { Shared.active }
-    val targets = saveTargets(Repo.myName, Shared.lists)
+    val targets = saveTargets(Repo.mineIds.map { it to (Repo.mineNames[it] ?: "My wishlist") }, Shared.lists)
     var url by remember { mutableStateOf(edit?.url ?: initialUrl) }
     var title by remember { mutableStateOf(edit?.title ?: "") }
     var price by remember { mutableStateOf(edit?.price?.let { "%.2f".format(Locale.US, it) } ?: "") }
     var desc by remember { mutableStateOf(edit?.desc ?: "") }
     var image by remember { mutableStateOf(edit?.image ?: "") }
     var cur by remember { mutableStateOf(edit?.currency ?: "USD") }
-    var cat by remember { mutableStateOf(if (edit != null) edit.category else (Repo.cats.firstOrNull() ?: "")) }
+    // A new wish starts without a category: you pick one yourself if you want (2.64).
+    var cat by remember { mutableStateOf(edit?.category ?: "") }
     var note by remember { mutableStateOf(edit?.note ?: "") }
     var sizeSel by remember { mutableStateOf(edit?.size ?: "") }
     var star by remember { mutableStateOf(edit?.star ?: false) }
@@ -1228,12 +1289,16 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
     }
     // A wish shared in from the browser goes where the last one went (My wishlist, private, or a shared list).
     fun pickTarget(key: String) {
-        when (key) {
-            "mine", "private" -> { Shared.close(); priv = key == "private" }
-            else -> if (Shared.lists.any { it.code == key }) { Shared.open(ctx, key); priv = false }
+        val mineId = MyLists.idOfSaveKey(key)
+        if (mineId != null) {
+            Shared.close()
+            Repo.openMine(ctx, mineId)
+            priv = key.startsWith("private")
+        } else if (Shared.lists.any { it.code == key }) {
+            Shared.open(ctx, key); priv = false
         }
-        // Every wishlist has its own categories.
-        cat = Repo.cats.firstOrNull() ?: ""
+        // Every wishlist has its own categories; none is picked for you.
+        cat = ""
     }
     LaunchedEffect(Unit) {
         if (chooseList && edit == null) pickTarget(Repo.lastSaveTo)
@@ -1248,7 +1313,7 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (chooseList && edit == null) {
                     SaveToField(
-                        targets = targets, selected = Shared.active ?: if (priv) "private" else "mine",
+                        targets = targets, selected = Shared.active ?: MyLists.saveKey(Repo.openMine, priv),
                         onPick = { pickTarget(it) },
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -1361,7 +1426,7 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, onC
                                 priv = priv && Shared.active == null
                             )
                         )
-                        if (chooseList) Repo.setLastSaveTo(ctx, Shared.active ?: if (priv) "private" else "mine")
+                        if (chooseList) Repo.setLastSaveTo(ctx, Shared.active ?: MyLists.saveKey(Repo.openMine, priv))
                     } else {
                         Repo.replace(
                             ctx,

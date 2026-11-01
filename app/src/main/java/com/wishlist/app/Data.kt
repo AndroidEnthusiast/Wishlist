@@ -153,6 +153,28 @@ object Repo {
         private set
     private var loaded = false
 
+    // ---- several wishlists of your own (see MyLists.kt) ----
+    /** The id of your own wishlist that is open (its data is in myWishes, myName, ...). "main" is the original one. */
+    var openMine by mutableStateOf(MAIN_LIST)
+        private set
+    /** All your own wishlists, oldest first. */
+    var mineIds by mutableStateOf(listOf(MAIN_LIST))
+        private set
+    /** The names of your own lists (id to name), for places that only need the name (the bin, menus). */
+    var mineNames by mutableStateOf(mapOf<String, String>())
+        private set
+    /** Goes up whenever a list that isn't open is changed, so the dashboard reads them again. */
+    var mineVersion by mutableStateOf(0)
+        private set
+    /** Which of your lists a wish in the bin came from (wish id to list id); missing means "main". */
+    private var binOwner: Map<Long, String> = emptyMap()
+    /** Recently opened lists: "m:<id>" for your own, "s:<code>" for a group wishlist, with the moment opened. */
+    var recent by mutableStateOf(mapOf<String, Long>())
+        private set
+    /** The picture at the top of the dashboard (a file: address), or empty for the theme's own colours. */
+    var hero by mutableStateOf("")
+        private set
+
     private fun prefs(c: Context) =
         c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
 
@@ -192,6 +214,32 @@ object Repo {
         shareCode = p.getString("code", null)
         ownerToken = p.getString("token", null)
         uploadedPhotos = p.getStringSet("photosUp", null)?.toSet() ?: emptySet()
+        // Your own wishlists. Before 2.64 there was only "main", stored as above.
+        mineIds = try {
+            val a = JSONArray(p.getString("mine_ids", null) ?: "[]")
+            (0 until a.length()).map { a.getString(it) }
+        } catch (e: Exception) {
+            emptyList()
+        }.let { ids -> if (MAIN_LIST in ids) ids else listOf(MAIN_LIST) + ids }
+        binOwner = try {
+            val o = JSONObject(p.getString("bin_owner", null) ?: "{}")
+            o.keys().asSequence().associate { it.toLong() to o.getString(it) }
+        } catch (e: Exception) {
+            emptyMap()
+        }
+        recent = try {
+            val o = JSONObject(p.getString("recent", null) ?: "{}")
+            o.keys().asSequence().associateWith { o.getLong(it) }
+        } catch (e: Exception) {
+            emptyMap()
+        }
+        hero = p.getString("hero", "") ?: ""
+        val open = p.getString("mine_open", MAIN_LIST) ?: MAIN_LIST
+        if (open != MAIN_LIST && open in mineIds) {
+            applyMine(MyLists.read(p, open))
+            openMine = open
+        }
+        mineNames = mineIds.associateWith { MyLists.read(p, it).name }
         Lang.load(c)
         Sync.attach(c)
         Shared.load(c)
@@ -201,16 +249,24 @@ object Repo {
     }
 
     private fun persist(c: Context) {
-        val arr = JSONArray()
-        myWishes.forEach { arr.put(wishToJson(it)) }
         val binArr = JSONArray()
         myBin.forEach { binArr.put(wishToJson(it)) }
         val fr = JSONArray()
         friends.forEach { fr.put(JSONObject().put("code", it.code).put("name", it.name)) }
-        prefs(c).edit()
-            .putString("wishes", arr.toString())
-            .putString("bin", binArr.toString())
-            .putString("cats", myCats.joinToString("\n"))
+        mineNames = mineNames + (openMine to myName)
+        val e = prefs(c).edit()
+        // The open list of your own goes where it belongs ("main": the old keys; another list: its own entry).
+        MyLists.write(e, currentMine())
+        val owners = JSONObject()
+        binOwner.forEach { (k, v) -> owners.put(k.toString(), v) }
+        val rec = JSONObject()
+        recent.forEach { (k, v) -> rec.put(k, v) }
+        e.putString("bin", binArr.toString())
+            .putString("mine_ids", JSONArray(mineIds).toString())
+            .putString("mine_open", openMine)
+            .putString("bin_owner", owners.toString())
+            .putString("recent", rec.toString())
+            .putString("hero", hero)
             .putString("theme", theme)
             .putString("palette", palette)
             .putString("style", design)
@@ -218,17 +274,12 @@ object Repo {
             .putString("font", font)
             .putString("view", view)
             .putString("sort", sort)
-            .putString("about", myAbout)
             .putInt("interval", intervalHours)
             .putBoolean("instant_delete", instantDelete)
             .putBoolean("notify_drops", notifyDrops)
             .putBoolean("notify_rises", notifyRises)
             .putLong("lastCheck", lastCheck)
             .putString("last_save_to", lastSaveTo)
-            .putString("name", myName)
-            .putString("code", shareCode)
-            .putString("token", ownerToken)
-            .putStringSet("photosUp", uploadedPhotos.toSet())
             .putString("friends", fr.toString())
             .apply()
     }
@@ -284,7 +335,139 @@ object Repo {
      * My wishlist as it goes online for friends. The bin goes along too (marked "bin", so friends don't see it), so a
      * reservation on it stays when it is restored. Private wishes never go online.
      */
-    fun syncWishes(): List<Wish> = (myWishes + myBin).filter { !it.priv }
+    fun syncWishes(): List<Wish> = (myWishes + myBin.filter { ownerOf(it.id) == openMine }).filter { !it.priv }
+
+    /** The list a wish in the bin came from (the original list when unknown or deleted). */
+    fun ownerOf(wishId: Long): String = binOwner[wishId]?.takeIf { it in mineIds } ?: MAIN_LIST
+
+    // ---- several wishlists of your own (begin) ----
+
+    /** The open list of your own, as stored. */
+    fun currentMine(): MineData = MineData(openMine, myName, myAbout, myCats, myWishes, shareCode, ownerToken, uploadedPhotos)
+
+    private fun applyMine(d: MineData) {
+        myWishes = d.wishes; myName = d.name; myAbout = d.about; myCats = d.cats
+        shareCode = d.code; ownerToken = d.token; uploadedPhotos = d.photos
+    }
+
+    /** One of your lists: the open one from memory, the others from storage. */
+    @Synchronized
+    fun mine(c: Context, id: String): MineData = if (id == openMine) currentMine() else MyLists.read(prefs(c), id)
+
+    /** All your own lists, oldest first. */
+    @Synchronized
+    fun allMine(c: Context): List<MineData> = mineIds.map { mine(c, it) }
+
+    /** The name of one of your lists as shown ("My wishlist" is translated). */
+    fun mineName(id: String): String {
+        val n = mineNames[id] ?: "My wishlist"
+        return if (n == "My wishlist") tr(n) else n
+    }
+
+    /** Opens another of your own lists (the one that was open is saved, and sent online first when it is shared). */
+    @Synchronized
+    fun openMine(c: Context, id: String) {
+        if (id == openMine || id !in mineIds) return
+        Sync.flush(c)
+        persist(c)
+        applyMine(MyLists.read(prefs(c), id))
+        openMine = id
+        persist(c)
+        Sync.push()
+    }
+
+    /** Makes a new wishlist of your own and returns its id. It isn't opened. */
+    @Synchronized
+    fun createMine(c: Context, name: String, about: String): String {
+        val id = System.currentTimeMillis().toString()
+        val e = prefs(c).edit()
+        MyLists.write(e, MineData(id, name.trim().ifEmpty { "Wishlist" }, about.trim().take(ABOUT_MAX), DEFAULT_CATS, emptyList(), null, null, emptySet()))
+        e.apply()
+        mineIds = mineIds + id
+        mineNames = mineNames + (id to name.trim().ifEmpty { "Wishlist" })
+        persist(c)
+        mineVersion++
+        return id
+    }
+
+    /** Deletes one of your own lists (not the original one) with its wishes, their pictures and price history. */
+    @Synchronized
+    fun removeMine(c: Context, id: String) {
+        if (id == MAIN_LIST || id !in mineIds) return
+        if (openMine == id) {
+            applyMine(MyLists.read(prefs(c), MAIN_LIST))
+            openMine = MAIN_LIST
+        }
+        val d = MyLists.read(prefs(c), id)
+        d.wishes.forEach { ImageStore.delete(c, it.image); History.remove(c, it.id) }
+        val binned = binOwner.filterValues { it == id }.keys
+        myBin = myBin.filter { it.id !in binned }
+        binOwner = binOwner - binned
+        mineIds = mineIds - id
+        mineNames = mineNames - id
+        recent = recent - "m:$id"
+        prefs(c).edit().remove(MyLists.blobKey(id)).apply()
+        persist(c)
+        mineVersion++
+    }
+
+    /**
+     * Changes the wishes of one of your lists, open or not (the background price check, saving a wish elsewhere).
+     * A list that isn't open is saved straight to storage and, when it has a friends' link, sent online.
+     */
+    @Synchronized
+    fun updateMine(c: Context, id: String, change: (List<Wish>) -> List<Wish>) {
+        if (id == openMine) {
+            myWishes = change(myWishes)
+            commit(c)
+            return
+        }
+        val d = MyLists.read(prefs(c), id)
+        val nd = d.copy(wishes = change(d.wishes))
+        val e = prefs(c).edit()
+        MyLists.write(e, nd)
+        e.apply()
+        mineVersion++
+        if (nd.code != null) Sync.pushStored(c, nd, myBin.filter { ownerOf(it.id) == id })
+    }
+
+    /** Pictures that went online for a list that may no longer be open. */
+    @Synchronized
+    fun setUploadedFor(c: Context, id: String, names: Set<String>) {
+        if (id == openMine) {
+            setUploaded(c, names)
+            return
+        }
+        val d = MyLists.read(prefs(c), id)
+        val e = prefs(c).edit()
+        MyLists.write(e, d.copy(photos = names))
+        e.apply()
+    }
+
+    /** Remembers that a list was opened, for "Recently opened" on the dashboard. */
+    @Synchronized
+    fun touchRecent(c: Context, key: String) {
+        recent = (recent + (key to System.currentTimeMillis())).entries
+            .sortedByDescending { it.value }.take(12).associate { it.key to it.value }
+        persist(c)
+    }
+
+    @Synchronized
+    fun forgetRecent(c: Context, key: String) {
+        if (key !in recent) return
+        recent = recent - key
+        persist(c)
+    }
+
+    @Synchronized
+    fun setHero(c: Context, image: String) {
+        val old = hero
+        hero = image
+        persist(c)
+        if (old.isNotEmpty() && old != image) ImageStore.delete(c, old)
+    }
+
+    // ---- several wishlists of your own (end) ----
 
     /** Makes a wish of My wishlist private (it goes offline at the next push) or visible to friends again. */
     @Synchronized
@@ -302,6 +485,7 @@ object Repo {
         val w = myWishes[i].copy(bin = System.currentTimeMillis())
         myWishes = myWishes.filter { it.id != id }
         myBin = listOf(w) + myBin.filter { it.id != id }
+        binOwner = binOwner + (id to openMine)
         commit(c)
         return Trashed(w, i, null)
     }
@@ -313,7 +497,15 @@ object Repo {
             Shared.untrash(c, t)
             return
         }
+        val owner = ownerOf(t.wish.id)
         myBin = myBin.filter { it.id != t.wish.id }
+        binOwner = binOwner - t.wish.id
+        if (owner != openMine) {
+            // You opened another of your lists before tapping Undo: the wish goes back to its own list.
+            updateMine(c, owner) { l -> if (l.any { it.id == t.wish.id }) l else listOf(t.wish.copy(bin = 0L, binBy = "")) + l }
+            persist(c)
+            return
+        }
         if (myWishes.none { it.id == t.wish.id }) {
             myWishes = myWishes.toMutableList().also { it.add(t.index.coerceIn(0, it.size), t.wish.copy(bin = 0L, binBy = "")) }
         }
@@ -324,7 +516,14 @@ object Repo {
     @Synchronized
     fun restoreMine(c: Context, id: Long): Boolean {
         val w = myBin.firstOrNull { it.id == id } ?: return false
+        val owner = ownerOf(id)
         myBin = myBin.filter { it.id != id }
+        binOwner = binOwner - id
+        if (owner != openMine) {
+            updateMine(c, owner) { l -> if (l.any { it.id == id }) l else listOf(w.copy(bin = 0L, binBy = "")) + l }
+            persist(c)
+            return true
+        }
         if (myWishes.none { it.id == id }) myWishes = listOf(w.copy(bin = 0L, binBy = "")) + myWishes
         commit(c)
         return true
@@ -336,6 +535,7 @@ object Repo {
         val gone = myBin.filter { it.id in ids }
         if (gone.isEmpty()) return
         myBin = myBin.filter { it.id !in ids }
+        binOwner = binOwner - ids
         commit(c)
         gone.forEach {
             ImageStore.delete(c, it.image)
@@ -391,7 +591,7 @@ object Repo {
 
     @Synchronized
     fun setListName(c: Context, name: String) {
-        val n = name.trim().ifEmpty { if (Shared.active != null) "Shared wishlist" else "My wishlist" }
+        val n = name.trim().ifEmpty { if (Shared.active != null) "Shared wishlist" else if (openMine == MAIN_LIST) "My wishlist" else "Wishlist" }
         if (Shared.active != null) {
             Shared.setName(c, n)
             return

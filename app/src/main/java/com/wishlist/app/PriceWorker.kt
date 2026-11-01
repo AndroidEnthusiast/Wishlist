@@ -32,32 +32,39 @@ class PriceWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx,
 
 /** The price check of My wishlist, used by [PriceWorker] and by pulling down on the list. */
 object PriceCheck {
-    /** Asks every shop for its price now. Returns how many prices dropped (each drop also sends a notification). */
+    /**
+     * Asks every shop for its price now, for every wishlist of your own (open or not). Returns how many prices
+     * dropped (each drop also sends a notification).
+     */
     suspend fun mine(c: Context): Int {
         var dropped = 0
-        for (w in Repo.myWishes.toList()) {
-            if (w.got || w.url.isBlank()) continue
-            // Items that already have a price may use the slower hidden-browser read; priceless ones are skipped cheaply.
-            val np = fetchMeta(w.url, c, w.price != null)?.price ?: continue
-            // Re-read the wish: it may have been edited while the page was loading.
-            val cw = Repo.myWishes.firstOrNull { it.id == w.id } ?: continue
-            val cur = cw.price
-            when {
-                cur == null -> Repo.replaceMine(c, cw.copy(price = np))
-                np < cur - 0.005 -> {
-                    Repo.replaceMine(c, cw.copy(price = np, oldPrice = cur))
+        for (listId in Repo.mineIds.toList()) {
+            for (w in Repo.mine(c, listId).wishes) {
+                if (w.got || w.url.isBlank()) continue
+                // Items that already have a price may use the slower hidden-browser read; priceless ones are skipped cheaply.
+                val np = fetchMeta(w.url, c, w.price != null)?.price ?: continue
+                // Re-read the wish: it may have been edited (or the list deleted) while the page was loading.
+                if (listId !in Repo.mineIds) break
+                val cw = Repo.mine(c, listId).wishes.firstOrNull { it.id == w.id } ?: continue
+                val cur = cw.price
+                // A price that went up keeps the old price too, so the wish shows "↑ +12%".
+                val nw = when {
+                    cur == null -> cw.copy(price = np)
+                    np < cur - 0.005 || np > cur + 0.005 -> cw.copy(price = np, oldPrice = cur)
+                    else -> null
+                } ?: continue
+                Repo.updateMine(c, listId) { l -> l.map { if (it.id == nw.id) nw else it } }
+                // A changed price becomes a point in the price history.
+                History.record(c, nw.id, np)
+                if (cur != null && np < cur - 0.005) {
                     if (Repo.notifyDrops) Alerts.notifyDrop(c, cw.id.toInt(), cw.title, cur, np, cw.currency)
                     dropped++
-                }
-                np > cur + 0.005 -> {
-                    // A price that went up keeps the old price too, so the wish shows "↑ +12%".
-                    Repo.replaceMine(c, cw.copy(price = np, oldPrice = cur))
+                } else if (cur != null && np > cur + 0.005) {
                     if (Repo.notifyRises) Alerts.notifyRise(c, cw.id.toInt(), cw.title, cur, np, cw.currency)
                 }
             }
         }
         return dropped
-    }
 }
 
 /**

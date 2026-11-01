@@ -52,7 +52,7 @@ private fun SectionTitle(t: String) {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ListSettingsScreen(snack: SnackbarHostState, onBack: () -> Unit) {
+fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null, onBack: () -> Unit) {
     val ctx = LocalContext.current
     val clip = LocalClipboardManager.current
     val scope = rememberCoroutineScope()
@@ -66,6 +66,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onBack: () -> Unit) {
     var stopDlg by remember { mutableStateOf(false) }
     var manage by remember { mutableStateOf<String?>(null) }
     var meDlg by remember { mutableStateOf(false) }
+    var deleteMineDlg by remember { mutableStateOf(false) }
     BackHandler(onBack = onBack)
 
     Scaffold(
@@ -76,7 +77,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onBack: () -> Unit) {
                     Column {
                         Text(Repo.listName, fontWeight = LocalLook.current.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(
-                            if (shared != null) tr("Shared wishlist settings") else tr("Wishlist settings"),
+                            if (shared != null) tr("Group wishlist settings") else tr("Wishlist settings"),
                             style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
                         )
                     }
@@ -215,6 +216,11 @@ fun ListSettingsScreen(snack: SnackbarHostState, onBack: () -> Unit) {
                 if (Config.enabled && code != null) {
                     TextButton(onClick = { stopDlg = true }) { Text(tr("Stop sharing"), color = cs.error) }
                 }
+                // Lists you made yourself can be deleted (the original My wishlist stays).
+                if (Repo.openMine != MAIN_LIST) {
+                    SectionTitle(tr("Manage"))
+                    TextButton(onClick = { deleteMineDlg = true }) { Text(tr("Delete this wishlist"), color = cs.error) }
+                }
             }
         }
     }
@@ -240,6 +246,31 @@ fun ListSettingsScreen(snack: SnackbarHostState, onBack: () -> Unit) {
                 TextButton(onClick = { Shared.setMe(ctx, shared.code, n); meDlg = false }) { Text(tr("Save")) }
             },
             dismissButton = { TextButton(onClick = { meDlg = false }) { Text(tr("Cancel")) } }
+        )
+    }
+    if (deleteMineDlg) {
+        val id = Repo.openMine
+        AlertDialog(
+            onDismissRequest = { deleteMineDlg = false },
+            title = { Text(tr("Delete this wishlist?")) },
+            text = { Text(tr("“%s” and all its wishes are deleted for good. Friends’ links to it stop working.", Repo.listName)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    deleteMineDlg = false
+                    scope.launch {
+                        // Online first (when it has a friends' link), then on the phone.
+                        if (Repo.shareCode != null) {
+                            try {
+                                Sync.unpublish(ctx)
+                            } catch (e: Exception) {
+                            }
+                        }
+                        Repo.removeMine(ctx, id)
+                        (onDeleted ?: onBack)()
+                    }
+                }) { Text(tr("Delete"), color = cs.error) }
+            },
+            dismissButton = { TextButton(onClick = { deleteMineDlg = false }) { Text(tr("Cancel")) } }
         )
     }
     if (stopDlg) {

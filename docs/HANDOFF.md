@@ -55,8 +55,10 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - v2.63: shop photos as small rounded cards on a theme-coloured picture area (owner chose this over cropping or a blurred background).
 
+- v2.64: dashboard (start screen) with hero picture, Recently opened, My wishlists and Group wishlists; several wishlists of your own; "Group wishlists" name; no default category.
+
 ## Next session
-Ask the owner how the four designs look on the phone and what to change. Not yet styled per design: text fields (only their shape and colours change), drop-down menus, the bin's cards, the picture viewer, the star and private-eye badges, the menu (hamburger) icon. The web pages still only have light/dark (DECISIONS: ask before adding designs there).
+The owner said they will keep improving the dashboard and the new-list form. Ask how the dashboard feels on the phone. Ideas not built yet: deleting or renaming the original "My wishlist"; reordering lists; a cover picture per list; showing group wishlists' wish counts and pictures on the dashboard (they are not stored on the phone); friends' lists on the dashboard; the browser editor knows nothing about several lists (each list has its own friends' link, so friends' pages work as before).
 
 ## Decisions and why
 - Lists are link-only, never listed publicly. Reservations are hidden from the owner and from editors so gifts stay a surprise.

@@ -38,7 +38,7 @@ object Bin {
 
     /** Everything in the bin, newest first: My wishlist's bin straight from the phone, and the shared bins. */
     val entries: List<BinEntry>
-        get() = (Repo.myBin.map { BinEntry(it, null, myListName()) } + shared).sortedByDescending { it.wish.bin }
+        get() = (Repo.myBin.map { BinEntry(it, null, Repo.mineName(Repo.ownerOf(it.id))) } + shared).sortedByDescending { it.wish.bin }
     var loading by mutableStateOf(false)
         private set
     /** True when the bin of a shared wishlist couldn't be loaded (no internet). */
@@ -50,7 +50,6 @@ object Bin {
 
     private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
 
-    private fun myListName() = if (Repo.myName == "My wishlist") tr(Repo.myName) else Repo.myName
 
     fun expired(w: Wish, now: Long = System.currentTimeMillis()): Boolean = w.bin > 0L && now - w.bin >= BIN_DAYS * DAY_MS
 

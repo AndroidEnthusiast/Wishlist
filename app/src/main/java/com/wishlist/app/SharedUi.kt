@@ -39,6 +39,8 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var name by remember { mutableStateOf("") }
+    var notes by remember { mutableStateOf("") }
+    var missing by remember { mutableStateOf(false) }
     var me by remember { mutableStateOf(Shared.lastName) }
     var busy by remember { mutableStateOf(false) }
     var err by remember { mutableStateOf("") }
@@ -46,7 +48,7 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
     AlertDialog(
         onDismissRequest = { if (!busy) onClose() },
         properties = DialogProperties(dismissOnClickOutside = false),
-        title = { Text(tr("New shared wishlist")) },
+        title = { Text(tr("New group wishlist")) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
@@ -54,8 +56,15 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 OutlinedTextField(
-                    name, { name = it.take(60) }, label = { Text(tr("Name of the wishlist")) },
-                    placeholder = { Text(tr("Baby registry")) }, singleLine = true, modifier = Modifier.fillMaxWidth()
+                    name, { name = it.take(60); if (it.isNotBlank()) missing = false }, label = { Text(tr("Name*")) },
+                    placeholder = { Text(tr("Baby registry")) }, singleLine = true, isError = missing,
+                    supportingText = if (missing) ({ Text(tr("What is this wishlist called?")) }) else null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    notes, { notes = it.take(ABOUT_MAX) },
+                    label = { Text(tr("Notes")) }, placeholder = { Text(tr("What is this wishlist for?")) },
+                    maxLines = 4, modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     me, { me = it.take(30) }, label = { Text(tr("Your name")) },
@@ -71,10 +80,21 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
             TextButton(
                 enabled = !busy && me.isNotBlank() && Config.enabled,
                 onClick = {
+                    if (name.isBlank()) {
+                        missing = true
+                        return@TextButton
+                    }
                     busy = true; err = ""
                     scope.launch {
                         try {
                             val l = Shared.create(ctx, name, me)
+                            // The notes become the list's note for everyone on it.
+                            if (notes.isNotBlank()) {
+                                try {
+                                    Cloud.shAbout(l.key, notes.trim().take(ABOUT_MAX))
+                                } catch (e: Exception) {
+                                }
+                            }
                             onCreated(l.code)
                         } catch (e: Exception) {
                             busy = false
