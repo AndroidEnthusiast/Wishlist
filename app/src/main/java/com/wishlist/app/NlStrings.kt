@@ -661,5 +661,16 @@ val NL: Map<String, String> = mapOf(
     "Share your wishlist with friends. They tap Reserve on a gift they’ll buy, so nobody gives the same gift twice, and you never see what they reserve." to "Deel je verlanglijstje met vrienden. Zij tikken op Reserveren bij een cadeau dat ze kopen, zodat niemand hetzelfde geeft, en jij ziet nooit wat er gereserveerd is.",
     "Start" to "Beginnen",
     "Next" to "Volgende",
+    "Backup saved. Keep it somewhere safe." to "Back-up opgeslagen. Bewaar hem op een veilige plek.",
+    "Couldn’t make the backup." to "Kon de back-up niet maken.",
+    "Moving to a new phone? Export everything to one file: your wishlists, wishes, photos, profile, friends and the wishlists for someone you’re on. Then import it on the new phone." to "Naar een nieuwe telefoon? Exporteer alles naar één bestand: je verlanglijstjes, wensen, foto’s, profiel, vrienden en de verlanglijstjes voor iemand waar je op staat. Importeer het daarna op de nieuwe telefoon.",
+    "Export everything" to "Alles exporteren",
+    "Import" to "Importeren",
+    "The file holds your keys: whoever has it can act as you. Keep it somewhere safe, for example your own Google Drive." to "Het bestand bevat je sleutels: wie het heeft, kan doen alsof hij jou is. Bewaar het op een veilige plek, bijvoorbeeld je eigen Google Drive.",
+    "Replace everything on this phone?" to "Alles op deze telefoon vervangen?",
+    "Everything in Wishlist on this phone is replaced by the backup, and the app starts again. This can’t be undone." to "Alles in Wishlist op deze telefoon wordt vervangen door de back-up en de app start opnieuw. Dit kan niet ongedaan worden gemaakt.",
+    "That file isn’t a Wishlist backup." to "Dat bestand is geen back-up van Wishlist.",
+    "Your profile belongs to this phone. Moving to a new phone? App settings > Backup takes your profile, friends and wishlists along." to "Je profiel hoort bij deze telefoon. Naar een nieuwe telefoon? Met App-instellingen > Back-up neem je je profiel, vrienden en verlanglijstjes mee.",
+    "Backup" to "Back-up",
     "No" to "Nee"
 )

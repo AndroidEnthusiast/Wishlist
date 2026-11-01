@@ -918,7 +918,7 @@ fun ProfileScreen(snack: SnackbarHostState) {
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
             )
             Text(
-                tr("Your profile belongs to this phone. On a new phone, or after reinstalling the app, you start again."),
+                tr("Your profile belongs to this phone. Moving to a new phone? App settings > Backup takes your profile, friends and wishlists along."),
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 16.dp)
             )
         }

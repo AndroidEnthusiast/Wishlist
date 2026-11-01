@@ -216,6 +216,10 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                 }
             }
 
+            // Export and import, to move to a new phone (owner, 2.95).
+            SectionTitle(tr("Backup"))
+            BackupSection(snack)
+
             SectionTitle(tr("Update the app"))
             val version = remember {
                 try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName.orEmpty() } catch (e: Exception) { "" }
