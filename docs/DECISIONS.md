@@ -11,6 +11,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Explain plainly, in UK English, tap by tap.** Say what you are changing before or as you change it, and be honest about what was and wasn't tested.
 - **When a new app build is ready to download, say so explicitly in bold: "App available for download", as the very last line of the message** (under everything else, so the owner sees it without scrolling up). (October 2026) The word "download" links straight to the newest APK: `**App available for [download](https://github.com/AndroidEnthusiast/Wishlist/releases/download/latest/Wishlist.apk)**` (November 2026).
 - **Show previews of visible changes** (an HTML mock-up or simulation) when the owner asks to see something before it is built.
+- **Push back and ask before building** (owner, 1 November 2026): don't just agree. Point out weak spots, offer a better option when there is one, and ask the open questions first (preferably as a pop-up with choices, AskUserQuestion) before building, so nothing has to be redone. Small, clear requests can be built straight away.
 
 ## Language
 - **UK English everywhere, and everything also in Dutch.** App: App settings > Language (English (UK) / Nederlands). Web pages: a language switch. Wishes themselves are never translated.
