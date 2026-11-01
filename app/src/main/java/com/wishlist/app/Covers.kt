@@ -139,14 +139,15 @@ fun ListSummaryCard(wishes: List<Wish>, modifier: Modifier = Modifier) {
     }
 }
 
-/** The top of a list, above its filters: the cover photo (only when chosen) and the summary card. */
+/** The top of a list, above its filters: the cover photo (only when chosen) and, on your own lists, the summary card. */
 @Composable
 fun ListHeader(wishes: List<Wish>) {
     val ctx = LocalContext.current
     val cover = remember(ListCovers.version, Shared.active, Repo.openMine) { ListCovers.get(ctx, ListCovers.openKey()) }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         if (cover != null) ListCoverPicture(cover)
-        ListSummaryCard(wishes)
+        // Only on your own lists (owner, 2.90): a group wishlist's total isn't what its givers need.
+        if (Shared.active == null) ListSummaryCard(wishes)
     }
 }
 
@@ -245,7 +246,7 @@ fun CoverPreview(img: String, edit: HeroEdit, onClose: () -> Unit) {
             ) {
                 // The photo exactly as in the frame now (worked out from the edit, as on the list).
                 HeroPicture(img, edit, Modifier.fillMaxWidth().height(150.dp).clip(RoundedCornerShape(24.dp)))
-                ListSummaryCard(wishes)
+                if (Shared.active == null) ListSummaryCard(wishes)
                 wishes.take(4).forEach { w ->
                     val id = w.id
                     Row(

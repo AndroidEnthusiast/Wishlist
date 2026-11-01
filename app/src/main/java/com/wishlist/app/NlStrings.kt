@@ -581,5 +581,7 @@ val NL: Map<String, String> = mapOf(
     "No top wishes yet. Tap the star on a wish to make it a top wish." to "Nog geen topwensen. Tik op de ster bij een wens om er een topwens van te maken.",
     "No wishes yet." to "Nog geen wensen.",
     "Added to %s" to "Toegevoegd aan %s",
+    "Remove from top wishes?" to "Weghalen uit topwensen?",
+    "“%s” stays on your wishlist, just no longer as a top wish." to "“%s” blijft op je verlanglijstje, alleen niet meer als topwens.",
     "No" to "Nee"
 )

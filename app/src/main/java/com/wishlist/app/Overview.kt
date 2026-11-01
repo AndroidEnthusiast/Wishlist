@@ -53,8 +53,13 @@ object HubNav {
     var page by mutableStateOf<String?>(null)
 }
 
-/** A wish with the list it is on (one of your own). */
-private data class Placed(val w: Wish, val listId: String, val listName: String)
+/**
+ * A wish with the lists it is on (your own). A wish copied into other lists keeps its id, so it is one wish: counted
+ * and shown once, with every list in "Added to …" (owner, 2.90). Top wish when any of its copies is.
+ */
+private data class Placed(val w: Wish, val listIds: List<String>, val listNames: List<String>) {
+    val starred: Boolean get() = w.star
+}
 
 private fun listLabel(name: String) = if (name == "My wishlist") tr(name) else name
 
@@ -62,7 +67,13 @@ private fun listLabel(name: String) = if (name == "My wishlist") tr(name) else n
 private fun placedWishes(): List<Placed> {
     val ctx = LocalContext.current
     val mine = remember(Repo.mineVersion, Repo.myWishes, Repo.myName, Repo.mineIds, Repo.openMine) { Repo.allMine(ctx) }
-    return mine.flatMap { d -> d.wishes.map { Placed(it, d.id, listLabel(d.name)) } }.sortedByDescending { it.w.id }
+    return mine.flatMap { d -> d.wishes.map { Triple(it, d.id, listLabel(d.name)) } }
+        .groupBy { it.first.id }
+        .map { (_, copies) ->
+            val w = copies.first().first.copy(star = copies.any { it.first.star })
+            Placed(w, copies.map { it.second }, copies.map { it.third })
+        }
+        .sortedByDescending { it.w.id }
 }
 
 /** Your picture and name on the left; the three numbers next to it. */
@@ -90,7 +101,7 @@ fun ProfileSummary(onProfile: () -> Unit) {
         Row(Modifier.weight(1f).padding(start = 8.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
             Stat(lists, if (lists == 1) tr("wishlist") else tr("wishlists")) { HubNav.page = "lists" }
             Stat(all.size, if (all.size == 1) tr("wish") else tr("wishes")) { HubNav.page = "wishes" }
-            val top = all.count { it.w.star }
+            val top = all.count { it.starred }
             Stat(top, if (top == 1) tr("top wish") else tr("top wishes")) { HubNav.page = "top" }
         }
     }
@@ -118,6 +129,7 @@ fun OverviewScreen(
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
     BackHandler { HubNav.page = null }
+    var unstarring by remember { mutableStateOf<Placed?>(null) }
     Scaffold(
         containerColor = cs.background,
         topBar = {
@@ -142,7 +154,7 @@ fun OverviewScreen(
             return@Scaffold
         }
         val all = placedWishes()
-        val shown = if (page == "top") all.filter { it.w.star } else all
+        val shown = if (page == "top") all.filter { it.starred } else all
         if (shown.isEmpty()) {
             Box(Modifier.padding(pad).fillMaxSize().padding(32.dp), Alignment.Center) {
                 Text(
@@ -161,16 +173,32 @@ fun OverviewScreen(
             if (page == "top") item {
                 MostWantedBadge(showLabel = true, modifier = Modifier.padding(bottom = 4.dp))
             }
-            items(shown, key = { it.listId + "/" + it.w.id }) { p ->
+            items(shown, key = { it.w.id }) { p ->
                 WishLine(
                     p,
-                    onOpen = { onOpenMine(p.listId) },
-                    onUnstar = if (page == "top") ({
-                        Repo.updateMine(ctx, p.listId) { ws -> ws.map { if (it.id == p.w.id) it.copy(star = false) else it } }
-                    }) else null
+                    onOpen = { onOpenMine(p.listIds.first()) },
+                    onUnstar = if (page == "top") ({ unstarring = p }) else null
                 )
             }
         }
+    }
+    // Taking a top wish off is asked first (owner, 2.90): an accidental tap on the star shouldn't do it.
+    unstarring?.let { p ->
+        AlertDialog(
+            onDismissRequest = { unstarring = null },
+            title = { Text(tr("Remove from top wishes?")) },
+            text = { Text(tr("“%s” stays on your wishlist, just no longer as a top wish.", p.w.title)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    unstarring = null
+                    // Every copy of the wish, on every list it is on.
+                    p.listIds.forEach { id ->
+                        Repo.updateMine(ctx, id) { ws -> ws.map { if (it.id == p.w.id) it.copy(star = false) else it } }
+                    }
+                }) { Text(tr("Yes")) }
+            },
+            dismissButton = { TextButton(onClick = { unstarring = null }) { Text(tr("No")) } }
+        )
     }
 }
 
@@ -195,7 +223,7 @@ private fun WishLine(p: Placed, onOpen: () -> Unit, onUnstar: (() -> Unit)?) {
         Column(Modifier.weight(1f).padding(start = 12.dp, end = 8.dp)) {
             Text(w.title, style = MaterialTheme.typography.bodyLarge, color = look.cardInk(id), maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(
-                tr("Added to %s", p.listName), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold,
+                tr("Added to %s", p.listNames.joinToString(", ")), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold,
                 color = look.cardMuted(id), maxLines = 1, overflow = TextOverflow.Ellipsis
             )
         }

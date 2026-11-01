@@ -122,7 +122,10 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Home layout** (owner, 2.89): no cover photo card on Home. At the top: your picture with your name under it, then the numbers wishlists / wishes / top wishes, each opening its own page (all wishlists; all wishes with picture, name, "Added to …", price; top wishes with the "Top wish" label on top and a star to unstar). "Recently opened" stays.
 - **A list's picture is its newest wish** (owner, 2.89), never a cover photo. Discussed: GoWish shows a cover photo per list; the owner prefers seeing the wishes.
 - **Cover photo per list: optional, off by default** (owner, 2.89): list settings > Cover photo, the same editor as the profile photo but rectangular, with a **Preview** of the list before saving. Only shown when chosen; only on your phone.
-- **Summary card at the top of each list**: number of wishes and total value (owner, 2.89). The total value is no longer on Home.
+- **Summary card at the top of your own lists**: number of wishes and total value (owner, 2.89; not on group wishlists since 2.90). The total value is no longer on Home.
+- **Home keeps its list sections** next to the "wishlists" page (owner, 2.90): one tap to any list beats a tidier Home.
+- **A copied wish is one wish** in the counts and the All wishes / Top wishes pages, with all its lists in "Added to …" (owner, 2.90).
+- **Taking a top wish off from the Top wishes page asks first** ("Remove from top wishes?" No / Yes) (owner, 2.90).
 - **Groups: only the organiser invites by default**; the organiser can switch on "Members can invite too" (owner). Not built yet.
 - **Joining a group means bringing exactly one wishlist**: before joining you pick one of your lists or make a new one (optionally with wishes copied from your other lists). Without a wishlist you can't join (owner). Not built yet.
 - **"Groups" is the name for a group of people** who each bring their own list (owner). The existing "Group wishlists" (one list edited together for someone else) needs a new name; the owner is still choosing (offered: "Gift lists", "Gift plans", "Joint wishlists").
