@@ -93,7 +93,7 @@ fun AddWishButton(onClick: () -> Unit) {
         )
         else -> ExtendedFloatingActionButton(
             text = text, icon = icon, onClick = onClick,
-            containerColor = look.accentContainer, contentColor = look.onAccentContainer
+            containerColor = cs.primaryContainer, contentColor = cs.onPrimaryContainer
         )
     }
 }
