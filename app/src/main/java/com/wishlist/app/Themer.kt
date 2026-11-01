@@ -250,7 +250,12 @@ private fun ColourSets(d: Design, chosen: String, onPick: (String) -> Unit) {
             style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 14.dp)
         )
-        LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
+        // One fixed height for the row and every option (a name may take two lines), so nothing jumps while swiping.
+        LazyRow(
+            modifier = Modifier.fillMaxWidth().height(104.dp),
+            verticalAlignment = Alignment.Top,
+            contentPadding = PaddingValues(horizontal = 8.dp)
+        ) {
             items(d.sets.size) { i ->
                 val set = d.sets[i]
                 ColourOption(set, set.key == chosen, Modifier.width(80.dp)) { onPick(set.key) }
@@ -285,7 +290,7 @@ private fun ThemeSample(look: Look) {
 private fun ColourOption(set: ColourSet, chosen: Boolean, modifier: Modifier, translate: Boolean = true, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Column(
-        modifier.clip(RoundedCornerShape(16.dp)).clickable(onClick = onClick).padding(vertical = 8.dp),
+        modifier.height(104.dp).clip(RoundedCornerShape(16.dp)).clickable(onClick = onClick).padding(vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(contentAlignment = Alignment.Center) {

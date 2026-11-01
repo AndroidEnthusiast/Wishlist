@@ -45,6 +45,8 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - v2.58: the owner found Claymorphism too close to Material 3; clay now draws real inflated pillows (inner shadows, soft drop shadow) on everything. The "build failed" e-mails came from pushing to the session branch too (GitHub Pages only deploys from main): push only to main.
 
+- v2.59: colour sets in the Themer no longer jump while swiping (fixed height). Work now happens on a local branch `main`, pushed only to `main`.
+
 ## Next session
 Ask the owner how the four designs look on the phone and what to change. Not yet styled per design: text fields (only their shape and colours change), drop-down menus, the bin's cards, the picture viewer, the star and private-eye badges, the menu (hamburger) icon. The web pages still only have light/dark (DECISIONS: ask before adding designs there).
 
