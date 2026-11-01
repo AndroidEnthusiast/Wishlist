@@ -103,7 +103,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 
 ## Security
 - **The app is signed with a private key** kept only in the GitHub repository secrets `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS` (since version 2.31). Never put the key or its password in the project and never change the key, or updates stop installing over the app.
-- **No import/export feature** for now; the owner accepted losing wishes when the signing key changed.
+- ~~No import/export feature for now~~: replaced by Export and import (1 November 2026, see "App review").
 
 ## Backend
 - **Free Supabase plan** (500 MB database). Usage is small (estimated 20–30 MB in October 2026). SQL scripts are run by the owner by hand; give exact steps.
@@ -163,7 +163,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - On a friend's page, their numbers open their wishes / top wishes; tapping a wish opens its list, scrolls to it and glows; reserving happens on the list.
 - The bin keeps wishes 30 days (was 10). Bin stays in the menu only.
 - Profile gets a short "I like…" line (visible to friends, gift inspiration). No sizes on the profile.
-- **Export and import** (owner, 1 November 2026; replaces "No import/export for now"): a simple way to move your whole profile to a new phone (details being decided).
+- **Export and import** (owner, 1 November 2026; replaces "No import/export for now"): a simple way to move your whole profile to a new phone. App settings > Backup: "Export everything" makes one file (lists, wishes, own photos, covers, profile photo, profile and friends keys, lists for someone you're on, settings); you keep it yourself (Drive, e-mail, USB). No password (the owner's choice; warn that the file holds your keys). "Import" on the new phone replaces everything after a warning. A line on Profile points to it.
 - Price check interval stays a choice; all themes and colour sets stay.
 - **All review changes go out together in one update**, which the owner then tests (owner, 1 November 2026).
 
