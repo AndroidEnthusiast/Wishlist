@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -73,6 +74,10 @@ import kotlinx.coroutines.launch
 object FriendsNav {
     var person by mutableStateOf<String?>(null)
     var list by mutableStateOf<FriendList?>(null)
+    /** On a friend's page: their "wishes" or "top" page (2.95), or null. */
+    var page by mutableStateOf<String?>(null)
+    /** The lists of the friend whose page is open, as loaded (for the blocks and the numbers). */
+    var loaded by mutableStateOf<Map<String, RemoteList>>(emptyMap())
 
     /** Set when a friend request alert is tapped: MainActivity opens the Friends tab. */
     var openTab by mutableStateOf(false)
@@ -80,7 +85,7 @@ object FriendsNav {
     /** On a friend's page or list: the screen has a back arrow instead of the menu button. */
     val deep: Boolean get() = person != null
 
-    fun reset() { person = null; list = null }
+    fun reset() { person = null; list = null; page = null; loaded = emptyMap() }
 
     /** Opens the list with [code] if it belongs to a friend (for example from a "gift no longer on the list" alert). */
     fun openByCode(code: String): Boolean {
@@ -150,11 +155,17 @@ fun FriendsScreen(snack: SnackbarHostState, onProfile: () -> Unit, onOpenLink: (
     }
     if (person != null && list != null) {
         BackHandler { FriendsNav.list = null }
+        // Coming back from the list returns to where you were: their page or their wishes page.
         FriendScreen(
             Friend(list.code, list.name), snack, onMenu = {}, onRemoved = {},
             fetch = { Friends.fetchList(ctx, person.id, list.code) },
             onBack = { FriendsNav.list = null }
         )
+        return
+    }
+    if (person != null && FriendsNav.page != null) {
+        BackHandler { FriendsNav.page = null }
+        FriendWishesPage(person, FriendsNav.page!!, snack)
         return
     }
     if (person != null) {
@@ -421,12 +432,39 @@ private fun FriendRow(f: Person, onOpen: () -> Unit, onHide: () -> Unit, onUnfol
     }
 }
 
-/** A friend's page: their picture and name, and the wishlists they let friends see. */
+/** Loads every list friend [f] lets you see (for the blocks and the numbers on their page). */
+@Composable
+private fun LoadFriendLists(f: Person) {
+    val ctx = LocalContext.current
+    LaunchedEffect(f.id, f.lists) {
+        val out = HashMap<String, RemoteList>()
+        for (l in f.lists) {
+            try {
+                Friends.fetchList(ctx, f.id, l.code)?.let { out[l.code] = it }
+            } catch (e: Exception) {
+            }
+        }
+        FriendsNav.loaded = out
+    }
+}
+
+/** A friend's wishes that you can see: visible lists, not in their bin. */
+private fun friendWishes(f: Person): List<Pair<Wish, FriendList>> =
+    f.lists.flatMap { l -> FriendsNav.loaded[l.code]?.wishes.orEmpty().filter { it.bin == 0L && it.id != ABOUT_ITEM_ID }.map { it to l } }
+        .distinctBy { it.first.id }
+        .sortedByDescending { it.first.id }
+
+/**
+ * A friend's page, like your own Home (owner, 2.95): their picture and name (with their birthday and "I like…"), the
+ * numbers (wishlists, wishes, top wishes: tap for their pages) and their visible lists as blocks.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FriendPage(f: Person, snack: SnackbarHostState) {
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
+    LoadFriendLists(f)
+    val wishes = friendWishes(f)
     Scaffold(
         containerColor = cs.background,
         topBar = {
@@ -438,42 +476,155 @@ private fun FriendPage(f: Person, snack: SnackbarHostState) {
         },
         snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
+        Column(
+            Modifier.padding(pad).fillMaxSize().lookBackdrop(look).verticalScroll(rememberScrollState()).padding(bottom = 32.dp)
+        ) {
+            // Picture and name on the left, the numbers next to them, as on your Home.
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.widthIn(max = 96.dp).padding(4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Avatar(Friends.photos[f.id], f.name, 64.dp)
+                    Text(
+                        f.name, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 6.dp)
+                    )
+                }
+                Row(Modifier.weight(1f).padding(start = 8.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    val top = wishes.count { it.first.star }
+                    FriendStat(f.lists.size, if (f.lists.size == 1) tr("Wishlist") else tr("Wishlists")) {}
+                    FriendStat(wishes.size, if (wishes.size == 1) tr("Wish") else tr("Wishes")) { FriendsNav.page = "wishes" }
+                    FriendStat(top, if (top == 1) tr("Top wish") else tr("Top wishes")) { FriendsNav.page = "top" }
+                }
+            }
+            // Birthday and "I like…" (2.95).
+            val days = Friends.daysUntil(f.birthday)
+            if (days != null || f.bio.isNotBlank()) {
+                Column(Modifier.padding(horizontal = 20.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (days != null) Text(
+                        "🎂 " + (if (days == 0) tr("Birthday today") else tr("Birthday in %d days", days)) + " · " + birthdayText(f.birthday),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    if (f.bio.isNotBlank()) Text(tr("I like: %s", f.bio), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                }
+            }
+            Text(
+                tr("Wishlists"), style = MaterialTheme.typography.titleLarge, fontWeight = look.titleWeight,
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 4.dp)
+            )
+            if (f.lists.isEmpty()) {
+                Text(
+                    tr("%s hasn’t made a wishlist visible to friends yet.", f.name),
+                    color = cs.onSurfaceVariant, modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
+            val items = f.lists.map { l ->
+                val ws = FriendsNav.loaded[l.code]?.wishes.orEmpty().filter { it.bin == 0L && it.id != ABOUT_ITEM_ID }
+                val pic = ws.filter { it.image.isNotBlank() }.maxByOrNull { it.id }?.image
+                HubItem("f:" + l.code, l.name, if (FriendsNav.loaded.containsKey(l.code)) ws.size else l.count, pic, false, "") { FriendsNav.list = l }
+            }
+            BlockGrid(items, onHome = false, actionsOf = { emptyList() }, onAddTo = {})
+            if (f.hidden) {
+                Text(
+                    tr("Your lists are hidden from %s. Change this with ⋮ on Friends.", f.name),
+                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
+        }
+    }
+}
+
+/** "14 July" from "07-14", in the app's language. */
+fun birthdayText(b: String): String {
+    val m = Regex("^(\\d{2})-(\\d{2})$").find(b) ?: return ""
+    val month = java.time.Month.of(m.groupValues[1].toInt())
+    val locale = if (Lang.code == "nl") java.util.Locale("nl") else java.util.Locale.UK
+    return m.groupValues[2].toInt().toString() + " " + month.getDisplayName(java.time.format.TextStyle.FULL, locale)
+}
+
+@Composable
+private fun FriendStat(n: Int, label: String, onClick: () -> Unit) {
+    Column(
+        Modifier.clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(n.toString(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+    }
+}
+
+/**
+ * A friend's wishes or top wishes (2.95, like your own pages): picture, name, "On …", price. Tapping one opens its list,
+ * scrolls to it and lets it glow; you reserve there.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FriendWishesPage(f: Person, page: String, snack: SnackbarHostState) {
+    val cs = MaterialTheme.colorScheme
+    val look = LocalLook.current
+    LoadFriendLists(f)
+    val all = friendWishes(f)
+    val shown = if (page == "top") all.filter { it.first.star } else all
+    Scaffold(
+        containerColor = cs.background,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        if (page == "top") tr("%s’s top wishes", f.name) else tr("%s’s wishes", f.name),
+                        fontWeight = look.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis
+                    )
+                },
+                navigationIcon = { IconButton(onClick = { FriendsNav.page = null }) { Icon(AppIcons.ArrowBack, tr("Back")) } },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
+            )
+        },
+        snackbarHost = { AppSnackbarHost(snack) }
+    ) { pad ->
         LazyColumn(
-            Modifier.padding(pad).fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 32.dp),
+            Modifier.padding(pad).fillMaxSize().lookBackdrop(look),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             item {
-                Column(Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Avatar(Friends.photos[f.id], f.name, 96.dp)
-                    Text(f.name, style = MaterialTheme.typography.titleLarge, fontWeight = look.titleWeight, modifier = Modifier.padding(top = 10.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(bottom = 4.dp)) {
+                    if (page == "top") MostWantedBadge(showLabel = true)
+                    Text(
+                        if (page == "top") tr("The wishes %s would love most: a safe bet.", f.name)
+                        else tr("Every wish %s lets friends see, in one place.", f.name),
+                        style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
+                    )
                 }
             }
-            if (f.lists.isEmpty()) item {
-                Text(
-                    tr("%s hasn’t made a wishlist visible to friends yet.", f.name),
-                    color = cs.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(16.dp)
-                )
+            if (shown.isEmpty()) item {
+                Text(tr("No wishes yet."), color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 16.dp))
             }
-            items(f.lists, key = { it.code }) { l ->
-                val id = l.code.hashCode().toLong()
+            items(shown, key = { it.first.id }) { (w, l) ->
+                val id = w.id
                 Row(
                     Modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true))
-                        .clickable { FriendsNav.list = l }.padding(14.dp),
+                        .clickable { WishFocus.target = w.id; FriendsNav.list = l }
+                        .padding(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("🎁", fontSize = 26.sp)
-                    Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                        Text(l.name, style = MaterialTheme.typography.titleMedium, color = look.cardInk(id), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(countText(l.count), style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id))
+                    Box(
+                        Modifier.size(48.dp).clip(RoundedCornerShape(10.dp)).background(look.pictureBg(id, w.image.isNotBlank())),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (w.image.isNotBlank()) AsyncImage(w.image, null, Modifier.fillMaxSize().padding(4.dp), contentScale = ContentScale.Fit)
+                        else Text("🎁", fontSize = 20.sp)
                     }
+                    Column(Modifier.weight(1f).padding(start = 12.dp, end = 8.dp)) {
+                        Text(w.title, style = MaterialTheme.typography.bodyLarge, color = look.cardInk(id), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        Text(
+                            tr("On %s", l.name), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold,
+                            color = look.cardMuted(id), maxLines = 1, overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    w.price?.let {
+                        Text(money(it, w.currency), style = MaterialTheme.typography.titleSmall, fontWeight = look.priceWeight, color = look.cardInk(id))
+                    }
+                    if (w.star) Text("★", color = StarGold, fontSize = 20.sp, modifier = Modifier.padding(start = 8.dp))
                 }
-            }
-            if (f.hidden) item {
-                Text(
-                    tr("Your lists are hidden from %s. Change this with ⋮ on Friends.", f.name),
-                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp)
-                )
             }
         }
     }
@@ -569,6 +720,8 @@ fun ProfileScreen(snack: SnackbarHostState) {
     Friends.load(ctx)
     var me by remember { mutableStateOf(Shared.lastName) }
     var nameSaved by remember { mutableIntStateOf(0) }
+    var bio by remember { mutableStateOf(Friends.myBio) }
+    var bioSaved by remember { mutableIntStateOf(0) }
     var photoMenu by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
     var newCodeDlg by remember { mutableStateOf(false) }
@@ -688,6 +841,49 @@ fun ProfileScreen(snack: SnackbarHostState) {
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
             )
 
+            // Birthday (day and month, no year) and "I like…", both seen by friends (2.95).
+            ProfileTitle(tr("Birthday"))
+            BirthdayPicker(Friends.myBirthday) { b ->
+                scope.launch {
+                    try {
+                        Friends.setAbout(ctx, b, Friends.myBio)
+                        snack.showToast(if (b.isEmpty()) tr("Birthday removed") else tr("Birthday saved"))
+                    } catch (e: Exception) {
+                        snack.showToast(tr("Saved on this phone. It goes online when you have a connection."))
+                    }
+                }
+            }
+            Text(
+                tr("Optional. Friends see the day and month, and get a reminder two weeks before."),
+                style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
+            )
+
+            ProfileTitle(tr("I like…"))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    bio, { bio = it.take(120) }, singleLine = true, modifier = Modifier.weight(1f),
+                    placeholder = { Text(tr("For example: hiking, coffee and Lego")) },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done, capitalization = KeyboardCapitalization.Sentences),
+                    keyboardActions = KeyboardActions(onDone = {
+                        val b = bio
+                        scope.launch {
+                            try {
+                                Friends.setAbout(ctx, Friends.myBirthday, b)
+                            } catch (e: Exception) {
+                            }
+                        }
+                        bioSaved++
+                        keyboard?.hide()
+                        focusManager.clearFocus()
+                    })
+                )
+                SavedFeedback(bioSaved)
+            }
+            Text(
+                tr("Gift ideas for your friends, in a few words."),
+                style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
+            )
+
             ProfileTitle(tr("Your friend code"))
             val code = Friends.state?.code.orEmpty()
             when {
@@ -771,6 +967,53 @@ fun ProfileScreen(snack: SnackbarHostState) {
             },
             dismissButton = { TextButton(onClick = { newCodeDlg = false }) { Text(tr("Cancel")) } }
         )
+    }
+}
+
+/** Day and month of your birthday (no year), each a drop-down; "Remove" clears it. [onChange] gets "MM-DD" or "". */
+@Composable
+private fun BirthdayPicker(value: String, onChange: (String) -> Unit) {
+    val look = LocalLook.current
+    val m = Regex("^(\\d{2})-(\\d{2})$").find(value)
+    var month by remember(value) { mutableIntStateOf(m?.groupValues?.get(1)?.toInt() ?: 0) }
+    var day by remember(value) { mutableIntStateOf(m?.groupValues?.get(2)?.toInt() ?: 0) }
+    var dayMenu by remember { mutableStateOf(false) }
+    var monthMenu by remember { mutableStateOf(false) }
+    val locale = if (Lang.code == "nl") java.util.Locale("nl") else java.util.Locale.UK
+    fun monthName(n: Int) = java.time.Month.of(n).getDisplayName(java.time.format.TextStyle.FULL, locale)
+    fun send(d: Int, mo: Int) {
+        if (d > 0 && mo > 0) {
+            // A day the month doesn't have (31 April) becomes its last day.
+            val last = java.time.Month.of(mo).length(true)
+            onChange("%02d-%02d".format(mo, minOf(d, last)))
+        }
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box {
+            Text(
+                if (day > 0) day.toString() else tr("Day"), style = MaterialTheme.typography.titleMedium,
+                color = look.chipContent(false),
+                modifier = Modifier.lookChip(look).clickable { dayMenu = true }.padding(horizontal = 16.dp, vertical = 10.dp)
+            )
+            DropdownMenu(expanded = dayMenu, onDismissRequest = { dayMenu = false }) {
+                (1..31).forEach { d ->
+                    DropdownMenuItem(text = { Text(d.toString()) }, onClick = { dayMenu = false; day = d; send(d, month) })
+                }
+            }
+        }
+        Box {
+            Text(
+                if (month > 0) monthName(month) else tr("Month"), style = MaterialTheme.typography.titleMedium,
+                color = look.chipContent(false),
+                modifier = Modifier.lookChip(look).clickable { monthMenu = true }.padding(horizontal = 16.dp, vertical = 10.dp)
+            )
+            DropdownMenu(expanded = monthMenu, onDismissRequest = { monthMenu = false }) {
+                (1..12).forEach { mo ->
+                    DropdownMenuItem(text = { Text(monthName(mo)) }, onClick = { monthMenu = false; month = mo; send(day, mo) })
+                }
+            }
+        }
+        if (value.isNotEmpty()) TextButton(onClick = { day = 0; month = 0; onChange("") }) { Text(tr("Remove")) }
     }
 }
 

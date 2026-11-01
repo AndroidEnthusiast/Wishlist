@@ -181,6 +181,8 @@ class MainActivity : ComponentActivity() {
         const val HISTORY_ID = "history_id"
         /** A friend request (or an approval) alert: open the Friends tab. */
         const val OPEN_FRIENDS = "open_friends"
+        /** A birthday alert: the friend (profile id) whose page to open. */
+        const val OPEN_FRIEND = "open_friend"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -239,6 +241,14 @@ class MainActivity : ComponentActivity() {
         if (i != null && i.hasExtra(HISTORY_ID)) {
             HistoryNav.open = i.getLongExtra(HISTORY_ID, 0L)
             i.removeExtra(HISTORY_ID)
+            return
+        }
+        if (i != null && i.hasExtra(OPEN_FRIEND)) {
+            val id = i.getStringExtra(OPEN_FRIEND)
+            i.removeExtra(OPEN_FRIEND)
+            FriendsNav.reset()
+            FriendsNav.person = id
+            FriendsNav.openTab = true
             return
         }
         if (i != null && i.hasExtra(OPEN_FRIENDS)) {

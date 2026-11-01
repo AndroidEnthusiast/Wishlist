@@ -56,4 +56,21 @@ select wl_fr_answer('BBBBBBBBBBBBBBBBBBBB','tokB_tokB_tokB_tokB_','AAAAAAAAAAAAA
 select pg_temp.ok(wl_fr_state('BBBBBBBBBBBBBBBBBBBB','tokB_tokB_tokB_tokB_')->'friends' = '[]'::jsonb, 'the sender cannot approve their own request');
 do $$ begin perform 1 from wl_profiles; raise exception 'FAIL tables readable';
 exception when others then if sqlerrm like 'FAIL%' then raise; end if; end $$;
+-- 2.95: birthday and "I like…", a list's link switched off
+select wl_pf_about('CCCCCCCCCCCCCCCCCCCC','tokC_tokC_tokC_tokC_','07-14','Coffee and Lego');
+select pg_temp.ok(wl_fr_state('AAAAAAAAAAAAAAAAAAAA','tokA_tokA_tokA_tokA_')->'friends'->0->>'birthday' = '07-14', 'friend sees the birthday');
+select pg_temp.ok(wl_fr_state('AAAAAAAAAAAAAAAAAAAA','tokA_tokA_tokA_tokA_')->'friends'->0->>'bio' = 'Coffee and Lego', 'friend sees I like');
+do $$ begin perform wl_pf_about('CCCCCCCCCCCCCCCCCCCC','tokC_tokC_tokC_tokC_','13-40',''); raise exception 'FAIL bad birthday accepted';
+exception when others then if sqlerrm like 'FAIL%' then raise; end if; end $$;
+select wl_create_list('LISTC001','ownerC_ownerC_ownerC','Cas list');
+select wl_pf_lists('CCCCCCCCCCCCCCCCCCCC','tokC_tokC_tokC_tokC_','[{"code":"LISTC001","token":"ownerC_ownerC_ownerC"}]');
+select wl_set_link('LISTC001','ownerC_ownerC_ownerC',false);
+select pg_temp.ok(wl_get_list('LISTC001') is null, 'link off: the link does not open the list');
+select pg_temp.ok(wl_fr_list('AAAAAAAAAAAAAAAAAAAA','tokA_tokA_tokA_tokA_','CCCCCCCCCCCCCCCCCCCC','LISTC001')->>'name' = 'Cas list', 'link off: friends still see it');
+do $$ begin perform wl_set_link('LISTC001','wrong',true); raise exception 'FAIL wrong token switched the link';
+exception when others then if sqlerrm like 'FAIL%' then raise; end if; end $$;
+select wl_set_link('LISTC001','ownerC_ownerC_ownerC',true);
+select pg_temp.ok(wl_get_list('LISTC001')->>'name' = 'Cas list', 'link on again');
+do $$ begin perform wl_list_json('LISTC001'); raise exception 'FAIL internal function callable';
+exception when others then if sqlerrm like 'FAIL%' then raise; end if; end $$;
 \echo ALL FRIENDS CHECKS OK

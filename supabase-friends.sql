@@ -35,6 +35,10 @@ create table if not exists wl_friends (
 );
 create index if not exists wl_friends_b on wl_friends (b);
 
+-- 2.95: an optional birthday ("MM-DD", no year) and an "I like…" line, both visible to friends.
+alter table wl_profiles add column if not exists birthday text not null default '';
+alter table wl_profiles add column if not exists bio text not null default '';
+
 -- The lists a profile shows to its friends. A list that is deleted online disappears from here by itself.
 create table if not exists wl_profile_lists (
   profile text not null references wl_profiles(id) on delete cascade,
@@ -101,6 +105,17 @@ begin
   update wl_profiles
     set photo = coalesce(p_photo, ''), photo_v = (extract(epoch from clock_timestamp()) * 1000)::bigint
     where id = p_id;
+end $$;
+
+-- Your birthday ("MM-DD" or '') and "I like…" line (2.95).
+create or replace function wl_pf_about(p_id text, p_token text, p_birthday text, p_bio text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  perform wl_pf_check(p_id, p_token);
+  if coalesce(p_birthday, '') <> '' and p_birthday !~ '^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$' then
+    raise exception 'bad birthday';
+  end if;
+  update wl_profiles set birthday = coalesce(p_birthday, ''), bio = left(coalesce(p_bio, ''), 120) where id = p_id;
 end $$;
 
 -- A new friend code; the old one stops working. Friends you already have stay.
@@ -198,7 +213,7 @@ begin
     'code', (select code from wl_profiles where id = p_id),
     'friends', coalesce((
       select jsonb_agg(jsonb_build_object(
-        'id', p.id, 'name', p.name, 'pv', p.photo_v, 'since', f.created_at,
+        'id', p.id, 'name', p.name, 'pv', p.photo_v, 'since', f.created_at, 'birthday', p.birthday, 'bio', p.bio,
         'hidden', case when f.a = p_id then f.a_hides else f.b_hides end,
         'lists', case when (case when f.a = p_id then f.b_hides else f.a_hides end) then '[]'::jsonb else coalesce((
           select jsonb_agg(jsonb_build_object(
@@ -295,6 +310,7 @@ grant execute on function
   wl_pf_save(text, text, text),
   wl_pf_photo(text, text, text),
   wl_pf_new_code(text, text),
+  wl_pf_about(text, text, text, text),
   wl_pf_lists(text, text, jsonb),
   wl_fr_add(text, text, text),
   wl_fr_answer(text, text, text, boolean),

@@ -73,7 +73,7 @@ import java.io.File
  * One list on the dashboard: your own ("m:<id>") or a group wishlist ("s:<code>"). [picture]: its most recently added
  * wish with a photo (none: the empty state or a gift). [addTo]: the "Save to" key, so "+ Add wish" starts on this list.
  */
-private class HubItem(
+internal class HubItem(
     val key: String, val name: String, val count: Int, val picture: String?, val group: Boolean,
     val addTo: String, val open: () -> Unit
 )
@@ -359,7 +359,7 @@ private fun HubTitle(text: String, addLabel: String? = null, small: Boolean = fa
 
 /** Blocks two per row (the last one alone on its row when the number is odd). */
 @Composable
-private fun BlockGrid(
+internal fun BlockGrid(
     items: List<HubItem>, onHome: Boolean, actionsOf: (HubItem) -> List<Triple<String, Boolean, () -> Unit>>,
     onAddTo: (String) -> Unit
 ) {
@@ -383,7 +383,7 @@ private fun BlockGrid(
  */
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
-private fun ListBlock(
+internal fun ListBlock(
     item: HubItem, actions: List<Triple<String, Boolean, () -> Unit>>, onAddTo: (String) -> Unit,
     modifier: Modifier, small: Boolean
 ) {

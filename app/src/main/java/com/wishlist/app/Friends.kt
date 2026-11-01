@@ -37,7 +37,11 @@ data class Person(
     val name: String,
     val pv: Long,
     val hidden: Boolean = false,
-    val lists: List<FriendList> = emptyList()
+    val lists: List<FriendList> = emptyList(),
+    /** "MM-DD" or "" (2.95). */
+    val birthday: String = "",
+    /** Their "I like…" line (2.95). */
+    val bio: String = ""
 )
 
 data class FriendsState(
@@ -74,6 +78,8 @@ object Friends {
         loaded = true
         val p = prefs(c)
         myPhoto = p.getString("pf_photo", "") ?: ""
+        myBirthday = p.getString("pf_bday", "") ?: ""
+        myBio = p.getString("pf_bio", "") ?: ""
         photoSrc = p.getString("pf_src", "") ?: ""
         photoEdit = HeroEdit.fromJson(p.getString("pf_edit", null))
         visible = p.getStringSet("fr_vis", null)?.toSet() ?: emptySet()
@@ -112,6 +118,80 @@ object Friends {
             p.edit().putBoolean("pf_made", true).apply()
             if (myPhoto.isNotEmpty()) uploadPhoto(c)
             pushLists(c)
+            if (myBirthday.isNotEmpty() || myBio.isNotEmpty()) pushAbout(c)
+        } else if (p.getBoolean("pf_about_dirty", false)) pushAbout(c)
+    }
+
+    // ---- birthday and "I like…" (2.95) ----
+
+    /** Your birthday as "MM-DD", or "". */
+    var myBirthday by mutableStateOf("")
+        private set
+    /** Your "I like…" line. */
+    var myBio by mutableStateOf("")
+        private set
+
+    /** Saves your birthday and "I like…" on the phone, then online (an error is thrown when offline: saved next time). */
+    suspend fun setAbout(c: Context, birthday: String, bio: String) {
+        myBirthday = birthday
+        myBio = bio.trim().take(120)
+        // "Not sent yet" until the server has it: an offline save goes online with the next refresh ([ensure]).
+        prefs(c).edit().putString("pf_bday", myBirthday).putString("pf_bio", myBio).putBoolean("pf_about_dirty", true).apply()
+        ensure(c)
+        pushAbout(c)
+    }
+
+    private suspend fun pushAbout(c: Context) {
+        Cloud.rpc("wl_pf_about", base(c).put("p_birthday", myBirthday).put("p_bio", myBio))
+        prefs(c).edit().putBoolean("pf_about_dirty", false).apply()
+    }
+
+    /** Days until the next birthday "MM-DD" (0 = today), or null without one. */
+    fun daysUntil(birthday: String, today: java.time.LocalDate = java.time.LocalDate.now()): Int? {
+        val m = Regex("^(\\d{2})-(\\d{2})$").find(birthday) ?: return null
+        val month = m.groupValues[1].toInt()
+        val day = m.groupValues[2].toInt()
+        fun on(year: Int): java.time.LocalDate? = try {
+            // 29 February in a year without it: the 28th.
+            java.time.LocalDate.of(year, month, if (month == 2 && day == 29 && !java.time.Year.isLeap(year.toLong())) 28 else day)
+        } catch (e: Exception) {
+            null
+        }
+        var next = on(today.year) ?: return null
+        if (next.isBefore(today)) next = on(today.year + 1) ?: return null
+        return java.time.temporal.ChronoUnit.DAYS.between(today, next).toInt()
+    }
+
+    /**
+     * Birthday reminders (owner, 2.95): 14 days before a friend's birthday, and again 7 days before only when you
+     * haven't reserved anything on their lists yet. Each once a year. Runs with the background check.
+     */
+    private suspend fun birthdays(c: Context, s: FriendsState) {
+        val p = prefs(c)
+        val year = java.time.LocalDate.now().year
+        for (f in s.friends) {
+            val d = daysUntil(f.birthday) ?: continue
+            val key14 = "bd14_${f.id}_$year"
+            val key7 = "bd7_${f.id}_$year"
+            if (d in 8..14 && !p.getBoolean(key14, false)) {
+                Alerts.notifyBirthday(c, f.id, f.name, d)
+                Notifications.add(c, "birthday", "p:${f.id}", f.name, photos[f.id] ?: "", amount = d.toDouble())
+                p.edit().putBoolean(key14, true).apply()
+            } else if (d in 1..7 && !p.getBoolean(key7, false)) {
+                p.edit().putBoolean(key7, true).putBoolean(key14, true).apply()
+                // Only when nothing on their lists is reserved by this phone.
+                val reserved = f.lists.any { l ->
+                    try {
+                        Cloud.fetchReservations(l.code, Repo.deviceId).values.any { it }
+                    } catch (e: Exception) {
+                        true // can't tell: better no reminder than a wrong one
+                    }
+                }
+                if (!reserved) {
+                    Alerts.notifyBirthday(c, f.id, f.name, d)
+                    Notifications.add(c, "birthday", "p:${f.id}", f.name, photos[f.id] ?: "", amount = d.toDouble())
+                }
+            }
         }
     }
 
@@ -142,6 +222,7 @@ object Friends {
             prefs(c).edit().putString("fr_state", t).apply()
             loadPhotos(c, s)
             notifyNews(c, s, onScreen = false)
+            birthdays(c, s)
         }
     }
 
@@ -179,7 +260,8 @@ object Friends {
                 if (ls == null) emptyList() else (0 until ls.length()).map { j ->
                     val l = ls.getJSONObject(j)
                     FriendList(l.getString("code"), l.optString("name", ""), l.optInt("count", 0))
-                }
+                },
+                p.optString("birthday", ""), p.optString("bio", "")
             )
         }
         FriendsState(o.optString("code", ""), people(o.optJSONArray("friends")), people(o.optJSONArray("incoming")), people(o.optJSONArray("outgoing")))

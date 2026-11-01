@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -147,7 +148,27 @@ fun FriendScreen(
                             Text(tr("Nothing here yet."), color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     } else {
+                        // A wish tapped on a friend's "Wishes" or "Top wishes" page: scroll to it if it isn't in
+                        // sight and let it glow (2.95, like your own lists).
+                        val gridState = rememberLazyGridState()
+                        LaunchedEffect(WishFocus.target, cat, shown.size) {
+                            val t = WishFocus.target ?: return@LaunchedEffect
+                            val i = shown.indexOfFirst { it.id == t }
+                            if (i < 0) {
+                                if (cat != "All") cat = "All" else WishFocus.target = null
+                                return@LaunchedEffect
+                            }
+                            delay(150)
+                            val info = gridState.layoutInfo
+                            val seen = info.visibleItemsInfo.firstOrNull { it.index == i }
+                            val inSight = seen != null && seen.offset.y >= info.viewportStartOffset &&
+                                seen.offset.y + seen.size.height <= info.viewportEndOffset
+                            if (!inSight) gridState.animateScrollToItem(i)
+                            WishFocus.glow(t)
+                            WishFocus.target = null
+                        }
                         LazyVerticalGrid(
+                            state = gridState,
                             columns = GridCells.Adaptive(300.dp),
                             contentPadding = PaddingValues(16.dp, 12.dp, 16.dp, 32.dp),
                             horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -155,6 +176,7 @@ fun FriendScreen(
                         ) {
                             gridItems(shown, key = { it.id }) { w ->
                                 val r = res[w.id]
+                                GlowBox(w.id, small = false) {
                                 WishCard(
                                     w,
                                     badge = when {
@@ -176,6 +198,7 @@ fun FriendScreen(
                                             }
                                         }
                                     }
+                                }
                                 }
                             }
                         }

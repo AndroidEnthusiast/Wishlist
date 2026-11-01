@@ -165,7 +165,7 @@ object Alerts {
         val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         nm.createNotificationChannel(
             NotificationChannel(FRIENDS_CHANNEL, tr("Friends"), NotificationManager.IMPORTANCE_HIGH).apply {
-                description = tr("Tells you about friend requests")
+                description = tr("Tells you about friend requests and birthdays")
             }
         )
         val nid = id.hashCode() * 31 + (if (request) 13 else 17)
@@ -173,6 +173,33 @@ object Alerts {
         val title = if (request) tr("%s wants to be your friend", who) else tr("%s approved your friend request", who)
         val text = if (request) tr("Open Friends to approve or decline.") else tr("You can now see the wishlists %s shares with friends.", who)
         val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_FRIENDS, true)
+            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        val pi = PendingIntent.getActivity(c, nid, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val n = NotificationCompat.Builder(c, FRIENDS_CHANNEL)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+        nm.notify(nid, n)
+    }
+
+    /** A friend's birthday is in [days] days (2.95). Tapping opens that friend's page. */
+    fun notifyBirthday(c: Context, id: String, name: String, days: Int) {
+        val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        nm.createNotificationChannel(
+            NotificationChannel(FRIENDS_CHANNEL, tr("Friends"), NotificationManager.IMPORTANCE_HIGH).apply {
+                description = tr("Tells you about friend requests and birthdays")
+            }
+        )
+        val nid = id.hashCode() * 31 + 19
+        val who = name.ifBlank { tr("Someone") }
+        val title = tr("%1\$s’s birthday is in %2\$d days", who, days)
+        val text = tr("Have a look at %s’s wishlist for a gift they’ll love.", who)
+        val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_FRIEND, id)
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val pi = PendingIntent.getActivity(c, nid, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val n = NotificationCompat.Builder(c, FRIENDS_CHANNEL)
