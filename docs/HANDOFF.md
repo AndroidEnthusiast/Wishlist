@@ -62,6 +62,8 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - v2.67: Notifications page (the owner's own wording: picture, name, "decreased/increased in price", bold %), red dots; "Added on Thursday 01-12-26".
 
+- v2.68: "cover photo" with an editor like Marktplaats's (rotate, crop, light, text with colour and position, new photo).
+
 ## Next session
 - **Remind the owner: build the Friends feature** (they asked to be reminded; the bottom bar has a "Friends is coming soon" page for now).
 - Ask how the dashboard, the bottom bar and the hero editor feel on the phone.

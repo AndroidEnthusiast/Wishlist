@@ -234,7 +234,7 @@ private fun ListThumb(item: HubItem, id: Long, modifier: Modifier) {
 }
 
 /**
- * The picture at the top of the dashboard: your own photo, or the theme's colours with a gift. The pencil lets you
+ * The cover photo at the top of the dashboard: your own photo, or the theme's colours with a gift. The pencil lets you
  * choose a photo, take one, or go back to the colours.
  */
 @Composable
@@ -270,16 +270,16 @@ private fun Hero(modifier: Modifier) {
         Box(
             Modifier.align(Alignment.BottomEnd).padding(10.dp).size(32.dp).clip(CircleShape)
                 .background(cs.surface.copy(alpha = 0.85f))
-                .clickable(onClickLabel = tr("Change the picture")) { menu = true },
+                .clickable(onClickLabel = tr("Change the cover photo")) { menu = true },
             contentAlignment = Alignment.Center
         ) {
-            Icon(AppIcons.Edit, tr("Change the picture"), tint = cs.onSurface, modifier = Modifier.size(16.dp))
+            Icon(AppIcons.Edit, tr("Change the cover photo"), tint = cs.onSurface, modifier = Modifier.size(16.dp))
         }
     }
     if (menu) {
         AlertDialog(
             onDismissRequest = { menu = false },
-            title = { Text(tr("Picture at the top")) },
+            title = { Text(tr("Cover photo")) },
             text = {
                 Column {
                     HeroChoice(tr("Choose a photo")) {
@@ -294,7 +294,7 @@ private fun Hero(modifier: Modifier) {
                         }
                     }
                     if (Repo.hero.isNotEmpty()) {
-                        HeroChoice(tr("Adjust the picture")) { menu = false; adjusting = true }
+                        HeroChoice(tr("Edit cover photo")) { menu = false; adjusting = true }
                         HeroChoice(tr("Remove the photo")) { menu = false; Repo.setHero(ctx, "") }
                     }
                 }
@@ -305,7 +305,12 @@ private fun Hero(modifier: Modifier) {
     pending?.let { img ->
         HeroEditor(
             img, HeroEdit(),
-            onSave = { e -> pending = null; Repo.setHero(ctx, img, e) },
+            onSave = { chosen, e ->
+                pending = null
+                Repo.setHero(ctx, chosen, e)
+                // Another photo was picked in the editor: the first one isn't needed.
+                if (chosen != img) ImageStore.delete(ctx, img)
+            },
             // Cancelled: the copied photo isn't needed.
             onCancel = { pending = null; ImageStore.delete(ctx, img) }
         )
@@ -313,7 +318,7 @@ private fun Hero(modifier: Modifier) {
     if (adjusting && Repo.hero.isNotEmpty()) {
         HeroEditor(
             Repo.hero, Repo.heroEdit,
-            onSave = { e -> adjusting = false; Repo.setHero(ctx, Repo.hero, e) },
+            onSave = { chosen, e -> adjusting = false; Repo.setHero(ctx, chosen, e) },
             onCancel = { adjusting = false }
         )
     }
