@@ -9,7 +9,7 @@ import androidx.work.WorkerParameters
 import org.json.JSONArray
 
 /** How long a deleted wish stays in the bin before it is deleted for good. */
-const val BIN_DAYS = 10
+const val BIN_DAYS = 30
 private const val DAY_MS = 24L * 60 * 60 * 1000
 
 /** One wish in the bin. [listCode] is the shared wishlist it came from, or null for My wishlist. */

@@ -607,5 +607,7 @@ val NL: Map<String, String> = mapOf(
     "No wishlist for someone is open." to "Er is geen verlanglijstje voor iemand open.",
     "Invitation to a wishlist for someone" to "Uitnodiging voor een verlanglijstje voor iemand",
     "Friends see your name and photo. Your name is also shown as “Added by” on wishlists for someone (you can use a different name on one list in its ⚙)." to "Vrienden zien je naam en foto. Je naam staat ook bij “Toegevoegd door” op verlanglijstjes voor iemand (op één lijstje kun je een andere naam gebruiken via ⚙).",
+    "The wishlist will be deleted and its wishes moved to the bin. You can restore them there for 30 days." to "Het verlanglijstje wordt verwijderd en de wensen gaan naar de prullenbak. Daar kun je ze 30 dagen terugzetten.",
+    "Faster: in a shop’s app or your browser, tap Share and choose Wishlist." to "Sneller: tik in de app van een winkel of in je browser op Delen en kies Wishlist.",
     "No" to "Nee"
 )

@@ -325,7 +325,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
         AlertDialog(
             onDismissRequest = { deleteMineDlg = false },
             title = { Text(tr("Delete “%s”?", Repo.listName)) },
-            text = { Text(tr("The wishlist will be deleted and its wishes moved to the bin. You can restore them there for 10 days.")) },
+            text = { Text(tr("The wishlist will be deleted and its wishes moved to the bin. You can restore them there for 30 days.")) },
             confirmButton = {
                 TextButton(onClick = {
                     deleteMineDlg = false

@@ -389,7 +389,7 @@ fun App(
     var prefill by remember { mutableStateOf("") }
     var catDlg by remember { mutableStateOf(false) }
     var settings by remember { mutableStateOf(false) }
-    // The bin (menu > Bin): deleted wishes of every list, for 10 days.
+    // The bin (menu > Bin): deleted wishes of every list, for 30 days.
     var binOpen by remember { mutableStateOf(false) }
     // The settings of the open list (its ⚙), apart from the app's Settings in the menu.
     var listSettings by remember { mutableStateOf(false) }
@@ -1525,6 +1525,11 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, sta
                 if (err.isNotEmpty()) {
                     Text(err, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 }
+                // Always shown (owner, 2.95): the fastest way to add a wish, which most people don't know.
+                if (edit == null) Text(
+                    tr("Faster: in a shop’s app or your browser, tap Share and choose Wishlist."),
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 ImageBlock(image, onPick = { pickImage() }, onRemove = {
                     if (picked.isNotEmpty() && picked == image) { ImageStore.delete(ctx, picked); picked = "" }
                     image = ""

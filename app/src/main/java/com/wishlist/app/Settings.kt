@@ -121,20 +121,7 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                 }
             }
 
-            SectionTitle(tr("Deleting wishes"))
-            Row(
-                Modifier.fillMaxWidth().clickable { Repo.setInstantDelete(ctx, !Repo.instantDelete) },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                    Text(tr("Instant delete wishes"), style = MaterialTheme.typography.bodyLarge)
-                    Text(
-                        tr("Turn on to delete wishes without a warning."),
-                        style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
-                    )
-                }
-                Switch(checked = Repo.instantDelete, onCheckedChange = { Repo.setInstantDelete(ctx, it) })
-            }
+            // No "Instant delete wishes" any more (owner, 2.95): deleting never asks, the bin and Undo are enough.
 
             SectionTitle(tr("Theme"))
             // Everything about the look is in the Themer: the standard themes (Light, Dark, AMOLED black, each with

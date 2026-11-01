@@ -185,24 +185,7 @@ fun HubScreen(
 
             ListsSection(onHome = true)
 
-            // Price changes: the wishes on your lists whose price changed, cheaper first, then dearer.
-            val changed = mine.flatMap { it.wishes }.distinctBy { it.id }.filter { w ->
-                val p = w.price
-                val o = w.oldPrice
-                p != null && o != null && o > 0 && kotlin.math.abs(p - o) > 0.005
-            }
-            val drops = changed.filter { it.price!! < it.oldPrice!! }.sortedBy { it.price!! / it.oldPrice!! }
-            val rises = changed.filter { it.price!! > it.oldPrice!! }.sortedByDescending { it.price!! / it.oldPrice!! }
-            HubTitle(tr("Price changes"))
-            Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                if (changed.isEmpty()) {
-                    Text(
-                        tr("No price changes yet. When a wish gets cheaper or more expensive, it shows up here."),
-                        style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
-                    )
-                }
-                (drops + rises).forEach { PriceChangeRow(it) }
-            }
+            // No "Price changes" here any more (owner, 2.95): price news is on Price watch and in Notifications.
         }
     }
 
@@ -242,7 +225,7 @@ fun HubScreen(
             text = {
                 Text(
                     if (group) tr("Everyone on this wishlist for someone will lose it, with all its wishes and reservations. This can’t be undone.")
-                    else tr("The wishlist will be deleted and its wishes moved to the bin. You can restore them there for 10 days.")
+                    else tr("The wishlist will be deleted and its wishes moved to the bin. You can restore them there for 30 days.")
                 )
             },
             confirmButton = {

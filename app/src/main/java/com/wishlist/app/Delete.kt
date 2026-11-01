@@ -6,10 +6,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
 /**
- * Deleting a wish, the careful way. Every Delete button calls [request]:
- *  - normally the person is asked "Delete this wish?" first;
- *  - with "Instant delete" on in Settings it is deleted at once;
- *  - either way the wish goes to the bin at once (Bin.kt, 10 days), and a short message with Undo takes it out again.
+ * Deleting a wish. Every Delete button calls [request]: the wish goes to the bin at once (Bin.kt, 30 days) and a
+ * short message with Undo takes it out again. No question first (owner, 2.95: the bin and Undo are the safety net;
+ * the "Instant delete wishes" setting is gone).
  */
 object DeleteFlow {
     /** The wish the person is being asked about, or null. */
@@ -21,7 +20,7 @@ object DeleteFlow {
         private set
 
     fun request(c: Context, w: Wish) {
-        if (Repo.instantDelete) delete(c, w) else asking = w
+        delete(c, w)
     }
 
     fun cancel() {
