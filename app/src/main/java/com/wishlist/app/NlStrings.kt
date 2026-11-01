@@ -479,5 +479,5 @@ val NL: Map<String, String> = mapOf(
     "Choose an amount below the price now (%s)." to "Kies een bedrag onder de huidige prijs (%s).",
     "Target price" to "Streefprijs",
     "Remove the target price" to "Streefprijs verwijderen",
-    "We’ll let you know when the price drops to your target or lower." to "We laten het je weten als de prijs daalt tot je streefprijs of lager."
+    "You’ll get a notification when the price drops to your target or lower." to "Je krijgt een melding als de prijs daalt tot je streefprijs of lager."
 )

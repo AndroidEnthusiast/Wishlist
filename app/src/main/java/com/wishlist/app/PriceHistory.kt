@@ -235,7 +235,7 @@ private fun TargetRow(w: Wish, reached: Boolean, gold: Color, highlight: Boolean
         }
         err?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = cs.error) }
         Text(
-            tr("We’ll let you know when the price drops to your target or lower."),
+            tr("You’ll get a notification when the price drops to your target or lower."),
             style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
         )
     }
