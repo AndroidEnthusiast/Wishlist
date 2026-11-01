@@ -159,7 +159,8 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - Categories: one set for all your own lists; a category made on one list can be used on every list.
   Wishlists for someone keep their own categories (their givers edit them). Deleting a category removes it from all your own lists; their wishes stay, without a category (the question says how many wishes on how many lists).
 - A friend's page looks like your own Home profile: their picture and name, the numbers (wishlists, wishes, top wishes) and their visible lists as blocks.
-- Optional birthday on the profile (day and month), visible to friends, with a reminder before it.
+- Optional birthday on the profile (day and month), visible to friends. Reminders: 14 days before, and again 7 days before only if you haven't reserved anything on their lists yet. Needs a new Supabase script (owner agreed).
+- On a friend's page, their numbers open their wishes / top wishes; tapping a wish opens its list, scrolls to it and glows; reserving happens on the list.
 - Price check interval stays a choice; all themes and colour sets stay.
 - **All review changes go out together in one update**, which the owner then tests (owner, 1 November 2026).
 
