@@ -10,6 +10,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -45,6 +46,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -106,6 +111,23 @@ private val heroTextShadow = Shadow(Color.Black.copy(alpha = 0.6f), Offset(0f, 2
 /** Text colours to choose from. */
 private val TEXT_COLOURS = listOf(0xFFFFFFFF, 0xFF111111, 0xFFFFE14D, 0xFFFF7EB6, 0xFF7EEDC0, 0xFF8FB8FF)
 
+/**
+ * Keeps an edit inside the frame: the photo (aspect [raw] before turning) always covers the [w] x [h] frame.
+ * Returns the photo's size at scale 1 too.
+ */
+private fun coverSize(w: Float, h: Float, raw: Float, rotation: Int): Pair<Float, Float> {
+    val aspect = if (rotation % 180 != 0) 1f / raw else raw
+    return if (aspect > w / h) (h * aspect to h) else (w to w / aspect)
+}
+
+private fun clampEdit(e: HeroEdit, w: Float, h: Float, raw: Float): HeroEdit {
+    val (bw, bh) = coverSize(w, h, raw, e.rotation)
+    val s = e.scale.coerceIn(1f, 5f)
+    val mx = ((bw * s - w) / 2f).coerceAtLeast(0f) / w
+    val my = ((bh * s - h) / 2f).coerceAtLeast(0f) / h
+    return e.copy(scale = s, x = e.x.coerceIn(-mx, mx), y = e.y.coerceIn(-my, my))
+}
+
 /** Lighter or darker: [b] from -1 to 1 adds or takes away up to 40% of white. */
 private fun brightness(b: Float): ColorFilter? {
     if (b == 0f) return null
@@ -120,13 +142,28 @@ private fun brightness(b: Float): ColorFilter? {
  * photo, drag the text to place it. The photo always covers the whole frame. [grid]: thirds lines to line things up.
  */
 @Composable
-fun HeroPicture(image: String, edit: HeroEdit, modifier: Modifier, onChange: ((HeroEdit) -> Unit)? = null, grid: Boolean = false) {
+fun HeroPicture(
+    image: String, edit: HeroEdit, modifier: Modifier, onChange: ((HeroEdit) -> Unit)? = null, grid: Boolean = false,
+    showOutside: Boolean = false
+) {
     val painter = rememberAsyncImagePainter(image)
     val drawable = (painter.state as? AsyncImagePainter.State.Success)?.result?.drawable
     val density = LocalDensity.current
     val current by rememberUpdatedState(edit)
     val change by rememberUpdatedState(onChange)
-    BoxWithConstraints(modifier.clipToBounds()) {
+    // showOutside (the editor): the whole photo shows, the part outside the frame dimmed, so you see what you cut off.
+    val dim = Color.Black.copy(alpha = 0.6f)
+    BoxWithConstraints(
+        if (showOutside) modifier.drawWithContent {
+            drawContent()
+            val big = 4000f
+            drawRect(dim, Offset(-big, -big), Size(size.width + 2 * big, big))
+            drawRect(dim, Offset(-big, size.height), Size(size.width + 2 * big, big))
+            drawRect(dim, Offset(-big, 0f), Size(big, size.height))
+            drawRect(dim, Offset(size.width, 0f), Size(big, size.height))
+            drawRect(Color.White, Offset.Zero, size, style = Stroke(1.5.dp.toPx()))
+        } else modifier.clipToBounds()
+    ) {
         val w = constraints.maxWidth.toFloat().coerceAtLeast(1f)
         val h = constraints.maxHeight.toFloat().coerceAtLeast(1f)
         val sideways = edit.rotation % 180 != 0
@@ -170,7 +207,7 @@ fun HeroPicture(image: String, edit: HeroEdit, modifier: Modifier, onChange: ((H
                 }
             }
         }
-        if (onChange != null) {
+        if (onChange != null && !showOutside) {
             Box(
                 Modifier.matchParentSize().pointerInput(Unit) {
                     detectTransformGestures { _, pan, zoom, _ ->
@@ -263,12 +300,30 @@ fun HeroEditor(image: String, start: HeroEdit, onSave: (String, HeroEdit) -> Uni
                         onSave(img, edit)
                     }) { Icon(AppIcons.Check, tr("Save"), tint = onDark) }
                 }
-                // The photo, in a frame the size of the one on the dashboard.
-                Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                // The photo, in a frame the size of the one on the dashboard. Drag anywhere here to move it and pinch to
+                // zoom, straight away; the part outside the frame shows dimmed.
+                val painter = rememberAsyncImagePainter(img)
+                val d = (painter.state as? AsyncImagePainter.State.Success)?.result?.drawable
+                val raw = d?.let { if (it.intrinsicWidth > 0 && it.intrinsicHeight > 0) it.intrinsicWidth.toFloat() / it.intrinsicHeight else null }
+                val density = LocalDensity.current
+                val latest by rememberUpdatedState(edit)
+                val rawNow by rememberUpdatedState(raw)
+                BoxWithConstraints(Modifier.weight(1f).fillMaxWidth().clipToBounds(), contentAlignment = Alignment.Center) {
+                    val fw = constraints.maxWidth - with(density) { 32.dp.toPx() }
+                    val fh = with(density) { 150.dp.toPx() }
+                    Box(
+                        Modifier.matchParentSize().pointerInput(fw) {
+                            detectTransformGestures { _, pan, zoom, _ ->
+                                val r = rawNow ?: return@detectTransformGestures
+                                val e = latest
+                                edit = clampEdit(e.copy(scale = e.scale * zoom, x = e.x + pan.x / fw, y = e.y + pan.y / fh), fw, fh, r)
+                            }
+                        }
+                    )
                     HeroPicture(
                         img, edit,
-                        Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(150.dp).clip(RoundedCornerShape(28.dp)),
-                        onChange = { edit = it }, grid = tool == "crop"
+                        Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(150.dp),
+                        onChange = { edit = it }, grid = tool == "crop", showOutside = true
                     )
                 }
                 // The tool that is open.
@@ -280,15 +335,17 @@ fun HeroEditor(image: String, start: HeroEdit, onSave: (String, HeroEdit) -> Uni
                         }
                         "text" -> TextTool(edit, onDark) { edit = it }
                         else -> {
-                            Text(
-                                tr("Pinch to zoom and drag to move the photo."),
-                                style = MaterialTheme.typography.bodySmall, color = onDark.copy(alpha = 0.8f)
-                            )
-                            if (edit.scale != 1f || edit.x != 0f || edit.y != 0f) {
-                                TextButton(onClick = { edit = edit.copy(scale = 1f, x = 0f, y = 0f) }) {
-                                    Text(tr("Reset zoom and position"))
+                            Text(tr("Zoom"), style = MaterialTheme.typography.labelLarge, color = onDark.copy(alpha = 0.8f))
+                            Slider(
+                                value = edit.scale, valueRange = 1f..5f,
+                                onValueChange = { v ->
+                                    val r = raw
+                                    edit = if (r == null) edit.copy(scale = v) else {
+                                        val fw = with(density) { (ctx.resources.displayMetrics.widthPixels - 32.dp.toPx()) }
+                                        clampEdit(edit.copy(scale = v), fw, with(density) { 150.dp.toPx() }, r)
+                                    }
                                 }
-                            }
+                            )
                         }
                     }
                 }
@@ -316,9 +373,10 @@ fun HeroEditor(image: String, start: HeroEdit, onSave: (String, HeroEdit) -> Uni
     }
 }
 
-/** The text box: the words, their colour, a box behind them, and where they go (or drag them on the photo). */
+/** The text box: the words, then the colours, the rainbow dot (any colour) and the box behind the text in one row. */
 @Composable
 private fun TextTool(edit: HeroEdit, onDark: Color, onChange: (HeroEdit) -> Unit) {
+    var wheel by remember { mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         val w = Color.White
         OutlinedTextField(
@@ -331,22 +389,86 @@ private fun TextTool(edit: HeroEdit, onDark: Color, onChange: (HeroEdit) -> Unit
                 focusedBorderColor = w, unfocusedBorderColor = w.copy(alpha = 0.5f)
             )
         )
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            val custom = TEXT_COLOURS.none { it == edit.color }
             TEXT_COLOURS.forEach { c ->
                 Box(
                     Modifier.size(28.dp).clip(CircleShape).background(Color(c))
                         .border(if (edit.color == c) 3.dp else 1.dp, if (edit.color == c) Color(0xFF8FB8FF) else onDark.copy(alpha = 0.4f), CircleShape)
-                        .clickable { onChange(edit.copy(color = c)) }
+                        .clickable { onChange(edit.copy(color = c)); wheel = false }
                 )
             }
-        }
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            // Any colour: a rainbow dot that opens the colour ball.
+            Box(
+                Modifier.size(28.dp).clip(CircleShape)
+                    .background(Brush.sweepGradient(RAINBOW))
+                    .border(if (custom || wheel) 3.dp else 1.dp, if (custom || wheel) Color(0xFF8FB8FF) else onDark.copy(alpha = 0.4f), CircleShape)
+                    .clickable { wheel = !wheel }
+            )
             Chip(tr("Box"), edit.box) { onChange(edit.copy(box = !edit.box)) }
-            Chip(tr("Top"), edit.ty < 0.34f) { onChange(edit.copy(tx = 0.5f, ty = 0.22f)) }
-            Chip(tr("Middle"), edit.ty in 0.34f..0.66f) { onChange(edit.copy(tx = 0.5f, ty = 0.5f)) }
-            Chip(tr("Bottom"), edit.ty > 0.66f) { onChange(edit.copy(tx = 0.5f, ty = 0.78f)) }
         }
-        Text(tr("Or drag the text on the photo."), style = MaterialTheme.typography.bodySmall, color = onDark.copy(alpha = 0.8f))
+        if (wheel) ColourBall(Color(edit.color)) { c -> onChange(edit.copy(color = c.toArgb().toLong() and 0xFFFFFFFFL)) }
+    }
+}
+
+private val RAINBOW = listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta, Color.Red)
+
+/**
+ * A ball with every colour: the colours around it, white in the middle. Slide a finger over it; the small rectangle on
+ * the right shows the colour under your finger.
+ */
+@Composable
+private fun ColourBall(current: Color, onPick: (Color) -> Unit) {
+    var at by remember { mutableStateOf<Offset?>(null) }
+    fun colourAt(p: Offset, r: Float, c: Offset): Color {
+        val dx = p.x - c.x
+        val dy = p.y - c.y
+        val dist = kotlin.math.sqrt(dx * dx + dy * dy).coerceAtMost(r)
+        var hue = Math.toDegrees(kotlin.math.atan2(dy, dx).toDouble()).toFloat()
+        if (hue < 0) hue += 360f
+        return Color(android.graphics.Color.HSVToColor(floatArrayOf(hue, dist / r, 1f)))
+    }
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Canvas(
+            Modifier.size(150.dp).pointerInput(Unit) {
+                val r = size.width / 2f
+                val c = Offset(size.width / 2f, size.height / 2f)
+                fun pickAt(p: Offset) {
+                    val v = p - c
+                    val len = kotlin.math.sqrt(v.x * v.x + v.y * v.y)
+                    val q = if (len > r) c + v * (r / len) else p
+                    at = q
+                    onPick(colourAt(q, r, c))
+                }
+                detectDragGestures(onDragStart = { pickAt(it) }) { ch, _ ->
+                    ch.consume()
+                    pickAt(ch.position)
+                }
+            }.pointerInput(Unit) {
+                val r = size.width / 2f
+                val c = Offset(size.width / 2f, size.height / 2f)
+                detectTapGestures { p ->
+                    val v = p - c
+                    val len = kotlin.math.sqrt(v.x * v.x + v.y * v.y)
+                    val q = if (len > r) c + v * (r / len) else p
+                    at = q
+                    onPick(colourAt(q, r, c))
+                }
+            }
+        ) {
+            val r = size.minDimension / 2f
+            drawCircle(Brush.sweepGradient(RAINBOW, center), r, center)
+            drawCircle(Brush.radialGradient(listOf(Color.White, Color.White.copy(alpha = 0f)), center, r), r, center)
+            at?.let {
+                drawCircle(Color.White, 9.dp.toPx(), it, style = Stroke(3.dp.toPx()))
+                drawCircle(Color.Black.copy(alpha = 0.5f), 10.5.dp.toPx(), it, style = Stroke(1.dp.toPx()))
+            }
+        }
+        // The colour under your finger.
+        Box(
+            Modifier.size(56.dp, 36.dp).clip(RoundedCornerShape(8.dp)).background(current)
+                .border(1.dp, Color.White.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+        )
     }
 }
 

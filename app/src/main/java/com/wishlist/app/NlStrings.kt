@@ -407,7 +407,6 @@ val NL: Map<String, String> = mapOf(
     "A wishlist of your own, to share with friends" to "Een eigen verlanglijstje, om met vrienden te delen",
     "Collect gift ideas for someone together with other givers" to "Verzamel samen met andere gevers cadeau-ideeën voor iemand",
     "Optional" to "Optioneel",
-    "Reset zoom and position" to "Zoom en positie herstellen",
     "Total value %s" to "Totale waarde %s",
     "No prices yet. Wishes with a price show up here, with how much they changed since you added them." to "Nog geen prijzen. Wensen met een prijs staan hier, met hoeveel ze veranderd zijn sinds je ze toevoegde.",
     "↓ %d%% since added" to "↓ %d%% sinds toegevoegd",
@@ -437,7 +436,6 @@ val NL: Map<String, String> = mapOf(
     "increased in price" to "in prijs gestegen",
     "Edit cover photo" to "Omslagfoto bewerken",
     "Lighter or darker" to "Lichter of donkerder",
-    "Pinch to zoom and drag to move the photo." to "Knijp om in te zoomen en sleep om de foto te verplaatsen.",
     "Rotate left" to "Naar links draaien",
     "Rotate right" to "Naar rechts draaien",
     "Crop" to "Bijsnijden",
@@ -445,10 +443,7 @@ val NL: Map<String, String> = mapOf(
     "New photo" to "Nieuwe foto",
     "Text on the photo" to "Tekst op de foto",
     "Box" to "Vlak",
-    "Top" to "Boven",
-    "Middle" to "Midden",
-    "Bottom" to "Onder",
-    "Or drag the text on the photo." to "Of sleep de tekst over de foto.",
     "Change the cover photo" to "Omslagfoto wijzigen",
-    "Cover photo" to "Omslagfoto"
+    "Cover photo" to "Omslagfoto",
+    "Zoom" to "Zoom"
 )

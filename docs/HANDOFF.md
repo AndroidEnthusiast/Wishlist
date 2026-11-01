@@ -64,6 +64,8 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - v2.68: "cover photo" with an editor like Marktplaats's (rotate, crop, light, text with colour and position, new photo).
 
+- v2.69: cover photo editor: move and zoom at once with the outside dimmed, colour ball, free text placement.
+
 ## Next session
 - **Remind the owner: build the Friends feature** (they asked to be reminded; the bottom bar has a "Friends is coming soon" page for now).
 - Ask how the dashboard, the bottom bar and the hero editor feel on the phone.
