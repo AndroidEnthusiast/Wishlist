@@ -157,6 +157,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - The wish form always shows a small tip under the link field: share from a shop's app or browser to Wishlist (faster).
 - List settings grouped in sections: "About this list" (name, cover, note), "Who can see it", "Wishes" (categories, copy, export), "Danger zone" (delete).
 - Categories: one set for all your own lists; a category made on one list can be used on every list.
+  Wishlists for someone keep their own categories (their givers edit them). Deleting a category removes it from all your own lists; their wishes stay, without a category (the question says how many wishes on how many lists).
 
 ## Open ideas (not decided)
 - Personal recovery key: an encrypted online backup of your lists, keys, creator rights and settings, restored with a key (optionally saved in Google Password Manager), plus automatic clean-up of lists nobody uses. Ask the owner before building.
