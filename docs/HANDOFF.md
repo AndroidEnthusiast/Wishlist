@@ -88,6 +88,8 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - v2.80: menu items no longer scroll; target price row under "Tracking since…" (save with the keyboard's tick, ✕ removes), never gold straight away.
 
+- v2.81: target price shows as bold text once saved (frame gone, green tick), ✕ brings the field back, short line below.
+
 ## Next session
 - **Remind the owner: build the Friends feature** (they asked to be reminded; the bottom bar has a "Friends is coming soon" page for now).
 - Ask how the dashboard, the bottom bar and the hero editor feel on the phone.

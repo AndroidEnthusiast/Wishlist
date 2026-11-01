@@ -197,33 +197,47 @@ private fun TargetRow(w: Wish, reached: Boolean, gold: Color, highlight: Boolean
             }
         }
     }
-    Column {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+    // Editing (the field with its frame) until a target is saved; then the amount in bold, without a frame.
+    var editing by remember(w.id) { mutableStateOf(target == null) }
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.height(56.dp)) {
             Text(
                 tr("Target price"), fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.titleSmall.copy(shadow = glow),
                 color = if (reached) gold else cs.onSurface, modifier = Modifier.padding(end = 10.dp)
             )
-            OutlinedTextField(
-                text, { text = it.take(10); err = null }, singleLine = true,
-                prefix = { Text(currencySymbol(w.currency)) },
-                textStyle = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = if (reached) FontWeight.Bold else FontWeight.Normal,
-                    color = if (reached) gold else cs.onSurface, shadow = glow
-                ),
-                isError = err != null,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { save() }),
-                modifier = Modifier.width(112.dp)
-            )
+            if (editing || target == null) {
+                OutlinedTextField(
+                    text, { text = it.take(10); err = null }, singleLine = true,
+                    prefix = { Text(currencySymbol(w.currency)) },
+                    isError = err != null,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { save(); if (err == null) editing = false }),
+                    modifier = Modifier.width(112.dp)
+                )
+            } else {
+                // Set: the amount in bold (gold when reached). Tap it to change it.
+                Text(
+                    money(target ?: 0.0, w.currency),
+                    style = MaterialTheme.typography.titleMedium.copy(shadow = glow), fontWeight = FontWeight.Bold,
+                    color = if (reached) gold else cs.onSurface,
+                    modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { editing = true }
+                        .padding(horizontal = 4.dp, vertical = 6.dp)
+                )
+            }
             SavedFeedback(saves, Modifier.padding(start = 6.dp), compact = true)
             if (target != null) {
-                IconButton(onClick = { Targets.set(ctx, w, null); text = ""; err = null }) {
+                // ✕: the target goes and the field is back.
+                IconButton(onClick = { Targets.set(ctx, w, null); text = ""; err = null; editing = true }) {
                     Icon(AppIcons.Close, tr("Remove the target price"), tint = cs.onSurfaceVariant)
                 }
             }
         }
         err?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = cs.error) }
+        Text(
+            tr("We’ll let you know when the price drops to your target or lower."),
+            style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
+        )
     }
 }
 
