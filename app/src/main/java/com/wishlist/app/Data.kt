@@ -273,6 +273,15 @@ object Repo {
             openMine = open
         }
         mineNames = mineIds.associateWith { MyLists.read(p, it).name }
+        // One set of categories for all your own lists (owner, 2.95): the first time, every list gets them all.
+        if (!p.getBoolean("cats_merged", false)) {
+            val union = (listOf(myCats) + mineIds.filter { it != openMine }.map { MyLists.read(p, it).cats }).flatten()
+                .fold(listOf<String>()) { acc, n -> if (acc.any { it.equals(n, ignoreCase = true) }) acc else acc + n }
+            myCats = union
+            persist(c)
+            otherLists(c) { it.copy(cats = union) }
+            p.edit().putBoolean("cats_merged", true).apply()
+        }
         Lang.load(c)
         Notifications.load(c)
         Targets.load(c)
@@ -326,6 +335,15 @@ object Repo {
     }
 
     /** Saves locally and, if the list is shared, pushes the change online. */
+    /** Changes every list of your own that isn't open (the categories they share). */
+    private fun otherLists(c: Context, change: (MineData) -> MineData) {
+        val p = prefs(c)
+        val e = p.edit()
+        for (id in mineIds) if (id != openMine) MyLists.write(e, change(MyLists.read(p, id)))
+        e.apply()
+        mineVersion++
+    }
+
     private fun commit(c: Context) {
         persist(c)
         Sync.push()
@@ -422,7 +440,7 @@ object Repo {
     fun createMine(c: Context, name: String, about: String): String {
         val id = System.currentTimeMillis().toString()
         val e = prefs(c).edit()
-        MyLists.write(e, MineData(id, name.trim().ifEmpty { "Wishlist" }, about.trim().take(ABOUT_MAX), DEFAULT_CATS, emptyList(), null, null, emptySet()))
+        MyLists.write(e, MineData(id, name.trim().ifEmpty { "Wishlist" }, about.trim().take(ABOUT_MAX), myCats, emptyList(), null, null, emptySet()))
         e.apply()
         mineIds = mineIds + id
         mineNames = mineNames + (id to name.trim().ifEmpty { "Wishlist" })
@@ -723,6 +741,8 @@ object Repo {
         if (Shared.active != null) return Shared.addCat(c, n)
         myCats = myCats + n
         commit(c)
+        // Every list of your own gets it (2.95).
+        otherLists(c) { d -> if (d.cats.any { it.equals(n, ignoreCase = true) }) d else d.copy(cats = d.cats + n) }
         return n
     }
 
@@ -738,6 +758,10 @@ object Repo {
         myWishes = myWishes.map { if (it.category == old) it.copy(category = n) else it }
         myBin = myBin.map { if (it.category == old) it.copy(category = n) else it }
         commit(c)
+        // On all your own lists (2.95).
+        otherLists(c) { d ->
+            d.copy(cats = d.cats.map { if (it == old) n else it }, wishes = d.wishes.map { if (it.category == old) it.copy(category = n) else it })
+        }
         return true
     }
 
@@ -752,6 +776,16 @@ object Repo {
         myWishes = myWishes.map { if (it.category == name) it.copy(category = "") else it }
         myBin = myBin.map { if (it.category == name) it.copy(category = "") else it }
         commit(c)
+        // Gone from all your own lists; their wishes stay, without a category (2.95).
+        otherLists(c) { d ->
+            d.copy(cats = d.cats.filter { it != name }, wishes = d.wishes.map { if (it.category == name) it.copy(category = "") else it })
+        }
+    }
+
+    /** How many wishes on how many of your own lists are in category [name] (for the delete question). */
+    fun catUse(c: Context, name: String): Pair<Int, Int> {
+        val per = allMine(c).map { d -> d.wishes.count { it.category == name } }.filter { it > 0 }
+        return per.sum() to per.size
     }
 
     @Synchronized

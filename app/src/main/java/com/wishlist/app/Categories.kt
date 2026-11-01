@@ -128,13 +128,16 @@ fun RenameCategoryDialog(name: String, onRenamed: (String) -> Unit, onClose: () 
 @Composable
 fun DeleteCategoryDialog(name: String, onDeleted: () -> Unit, onClose: () -> Unit) {
     val ctx = LocalContext.current
-    val n = Repo.wishes.count { it.category == name }
+    // Your own lists share their categories (2.95): count on all of them. A wishlist for someone: only that list.
+    val own = Shared.active == null
+    val (n, lists) = if (own) Repo.catUse(ctx, name) else Repo.wishes.count { it.category == name } to 1
     AlertDialog(
         onDismissRequest = onClose,
         title = { Text(tr("Delete “%s”?", name), maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = {
             Text(
                 if (n == 0) tr("No wishes are in this category.")
+                else if (own && lists > 1) tr("It goes from all your wishlists. %1\$d wishes on %2\$d wishlists stay, just without a category.", n, lists)
                 else tr("%d wish(es) stay on your list, just without a category.", n)
             )
         },

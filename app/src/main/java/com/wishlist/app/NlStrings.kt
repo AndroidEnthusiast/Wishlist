@@ -629,5 +629,6 @@ val NL: Map<String, String> = mapOf(
     "Only you?" to "Alleen jij?",
     "Friends can no longer see this wishlist, its link stops working and all reservations on it are deleted. Sharing it again later makes a new link." to "Vrienden zien dit verlanglijstje dan niet meer, de link werkt niet meer en alle reserveringen erop worden verwijderd. Later opnieuw delen maakt een nieuwe link.",
     "Only you can see this wishlist now" to "Alleen jij kunt dit verlanglijstje nu zien",
+    "It goes from all your wishlists. %1\$d wishes on %2\$d wishlists stay, just without a category." to "Hij verdwijnt van al je verlanglijstjes. %1\$d wensen op %2\$d verlanglijstjes blijven, alleen zonder categorie.",
     "No" to "Nee"
 )
