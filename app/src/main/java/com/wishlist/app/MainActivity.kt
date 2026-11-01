@@ -468,7 +468,10 @@ fun App(
         }
     }
 
-    LaunchedEffect(Unit) {
+    // The welcome comes first on the very first start (Welcome.kt); the permission questions after it.
+    var welcome by remember { mutableStateOf(Welcome.needed(ctx)) }
+    LaunchedEffect(welcome) {
+        if (welcome) return@LaunchedEffect
         if (Build.VERSION.SDK_INT >= 33 &&
             ctx.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) perm.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -799,6 +802,7 @@ fun App(
             onClose = { newMine = false }
         )
     }
+    if (welcome) WelcomeFlow { welcome = false }
     DeleteHost(snack)
     PrivateHost(snack)
     if (askBackground) BackgroundQuestion()

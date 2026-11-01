@@ -650,5 +650,16 @@ val NL: Map<String, String> = mapOf(
     "Gift ideas for your friends, in a few words." to "Cadeau-ideeën voor je vrienden, in een paar woorden.",
     "Day" to "Dag",
     "Month" to "Maand",
+    "Step %1\$d of %2\$d" to "Stap %1\$d van %2\$d",
+    "Skip" to "Overslaan",
+    "Welcome to Wishlist" to "Welkom bij Wishlist",
+    "What’s your name? Friends see it, and it’s shown on the wishes you add to a wishlist for someone." to "Hoe heet je? Vrienden zien je naam, en hij staat bij de wensen die je toevoegt aan een verlanglijstje voor iemand.",
+    "Add a photo (optional)" to "Voeg een foto toe (niet verplicht)",
+    "Your first wishlist" to "Je eerste verlanglijstje",
+    "Give it a name, for example “Birthday” or “Christmas”. You can make more wishlists later." to "Geef het een naam, bijvoorbeeld “Verjaardag” of “Kerst”. Je kunt later meer verlanglijstjes maken.",
+    "Gifts stay a surprise" to "Cadeaus blijven een verrassing",
+    "Share your wishlist with friends. They tap Reserve on a gift they’ll buy, so nobody gives the same gift twice, and you never see what they reserve." to "Deel je verlanglijstje met vrienden. Zij tikken op Reserveren bij een cadeau dat ze kopen, zodat niemand hetzelfde geeft, en jij ziet nooit wat er gereserveerd is.",
+    "Start" to "Beginnen",
+    "Next" to "Volgende",
     "No" to "Nee"
 )
