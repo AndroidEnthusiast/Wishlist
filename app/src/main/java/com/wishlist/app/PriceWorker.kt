@@ -65,6 +65,7 @@ object PriceCheck {
             }
         }
         return dropped
+    }
 }
 
 /**
