@@ -44,6 +44,15 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import kotlinx.coroutines.launch
 
+/** The heading of one of the four groups of a list's settings. */
+@Composable
+private fun GroupTitle(t: String) {
+    Text(
+        t, style = MaterialTheme.typography.titleLarge, fontWeight = LocalLook.current.titleWeight,
+        color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(top = 28.dp)
+    )
+}
+
 @Composable
 private fun SectionTitle(t: String) {
     Text(
@@ -106,6 +115,8 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                 .padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            // Four groups (owner, 2.95): about this list, who can see it, its wishes, and the danger zone at the bottom.
+            GroupTitle(tr("About this list"))
             SectionTitle(tr("Name of the wishlist"))
             // Like your name on Profile: no Save button, the keyboard's tick saves it and closes the keyboard, then a
             // green tick with "Saved" (2.88). An empty name isn't saved: the old one comes back.
@@ -161,6 +172,31 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                 scope.launch { snack.showToast(tr("Note saved")) }
             }) { Text(tr("Save note")) }
 
+
+            GroupTitle(tr("Who can see it"))
+            if (shared != null) {
+                val title = Repo.listName
+                val invite = inviteLink(shared.key)
+                SectionTitle(tr("Invite people"))
+                Text(
+                    tr("They can add and change wishes and reserve gifts. Only send it to people you trust."),
+                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = { scope.launch { ShareCard.share(ctx, ShareCard.Kind.INVITE, title, invite) } }) { Text(tr("Send invite")) }
+                    OutlinedButton(onClick = {
+                        clip.setText(AnnotatedString(invite))
+                        scope.launch { snack.showToast(tr("Invite link copied")) }
+                    }) { Text(tr("Copy link")) }
+                }
+                if (shared.owner.isNotEmpty()) {
+                    TextButton(onClick = { manage = "reset" }) { Text(tr("Make a new invite link")) }
+                }
+            } else {
+                WhoCanSeeSection(snack)
+            }
+
+            GroupTitle(tr("Wishes"))
             SectionTitle(tr("Categories"))
             if (Repo.cats.isEmpty()) {
                 Text(tr("No categories yet."), color = cs.onSurfaceVariant)
@@ -183,102 +219,24 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                 Button(onClick = { Repo.addCat(ctx, newCat); newCat = "" }) { Text(tr("Add")) }
             }
 
-            if (shared != null) {
-                val title = Repo.listName
-                val invite = inviteLink(shared.key)
-                SectionTitle(tr("Invite people"))
-                Text(
-                    tr("They can add and change wishes and reserve gifts. Only send it to people you trust."),
-                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = { scope.launch { ShareCard.share(ctx, ShareCard.Kind.INVITE, title, invite) } }) { Text(tr("Send invite")) }
-                    OutlinedButton(onClick = {
-                        clip.setText(AnnotatedString(invite))
-                        scope.launch { snack.showToast(tr("Invite link copied")) }
-                    }) { Text(tr("Copy link")) }
-                }
-                SectionTitle(tr("Manage"))
-                if (shared.owner.isNotEmpty()) {
-                    TextButton(onClick = { manage = "reset" }) { Text(tr("Make a new invite link")) }
-                }
-                TextButton(onClick = { manage = "leave" }) { Text(tr("Leave this wishlist")) }
-                if (shared.owner.isNotEmpty()) {
-                    TextButton(onClick = { manage = "delete" }) { Text(tr("Delete for everyone"), color = cs.error) }
-                }
-            } else {
+            if (shared == null) {
                 // Copy wishes from your other lists into this one (also offered when a list is made).
                 if (canCopyFromOthers(ctx, Repo.openMine)) {
-                    SectionTitle(tr("Wishes"))
                     TextButton(onClick = { copyDlg = true }) { Text(tr("Add wishes from your other lists")) }
                 }
-                // Friends (Friends tab) can see this list when this is on. Off for every list until you turn it on.
-                if (Config.enabled) {
-                    SectionTitle(tr("Friends"))
-                    val listId = Repo.openMine
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                            Text(tr("Visible to friends"), style = MaterialTheme.typography.bodyLarge)
-                            Text(
-                                tr("Your friends can see this wishlist and reserve gifts. You never see what they reserve. Private wishes stay hidden."),
-                                style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
-                            )
-                        }
-                        Switch(
-                            checked = Friends.isVisible(listId), enabled = !visBusy,
-                            onCheckedChange = { on ->
-                                visBusy = true
-                                scope.launch {
-                                    try {
-                                        // The list has to be online first (it gets its friends' link, like sharing it).
-                                        if (on && Repo.shareCode == null) Sync.publish(ctx)
-                                        Friends.setVisible(ctx, listId, on)
-                                        visBusy = false
-                                        snack.showToast(if (on) tr("Your friends can see this wishlist now") else tr("Hidden from your friends"))
-                                    } catch (e: Exception) {
-                                        visBusy = false
-                                        snack.showToast(tr("Couldn’t reach the server. Check your connection."))
-                                    }
-                                }
-                            }
-                        )
-                    }
-                }
-                SectionTitle(tr("Sharing"))
-                val code = Repo.shareCode
-                if (!Config.enabled) {
-                    Text(tr("Online sharing isn’t set up in this build yet."), color = cs.onSurfaceVariant)
-                } else if (code == null) {
-                    Text(
-                        tr("Not shared yet. Share your list so friends can reserve gifts. You won’t see what they reserve."),
-                        color = cs.onSurfaceVariant
-                    )
-                    Button(onClick = { startShare(ctx, scope, snack) }) { Text(tr("Share my wishlist")) }
-                } else {
-                    Text(tr("Friends open this link and tap Reserve. You never see what they reserve."), color = cs.onSurfaceVariant)
-                    Text(shareLink(code), color = cs.onSurface)
-                    if (Sync.photoStatus.isNotEmpty()) {
-                        Text(Sync.photoStatus, color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                    }
-                    Text(
-                        tr("Don’t open your own link in a browser, or you’ll see what’s reserved."),
-                        color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = { startShare(ctx, scope, snack) }) { Text(tr("Share link")) }
-                        OutlinedButton(onClick = {
-                            clip.setText(AnnotatedString(shareLink(code)))
-                            scope.launch { snack.showToast(tr("Link copied")) }
-                        }) { Text(tr("Copy link")) }
-                    }
-                }
                 TextButton(onClick = { shareList(ctx, Repo.wishes) }) { Text(tr("Export as plain text")) }
-                if (Config.enabled && code != null) {
-                    TextButton(onClick = { stopDlg = true }) { Text(tr("Stop sharing"), color = cs.error) }
-                }
-                // Lists you made yourself can be deleted (the original My wishlist stays).
-                if (Repo.mineIds.size > 1) {
-                    SectionTitle(tr("Manage"))
+            }
+
+            // Lists you made yourself can be deleted (you always keep one); a wishlist for someone can be left, or
+            // deleted for everyone by the person who made it.
+            if (shared != null || Repo.mineIds.size > 1) {
+                GroupTitle(tr("Danger zone"))
+                if (shared != null) {
+                    TextButton(onClick = { manage = "leave" }) { Text(tr("Leave this wishlist")) }
+                    if (shared.owner.isNotEmpty()) {
+                        TextButton(onClick = { manage = "delete" }) { Text(tr("Delete for everyone"), color = cs.error) }
+                    }
+                } else {
                     TextButton(onClick = { deleteMineDlg = true }) { Text(tr("Delete this wishlist"), color = cs.error) }
                 }
             }

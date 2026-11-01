@@ -443,6 +443,7 @@ object Repo {
         persist(c)
         Friends.forget(c, id)
         ListCovers.remove(c, "m:$id")
+        ListLink.forget(c, id)
         val p = prefs(c)
         val d = MyLists.read(p, id)
         val now = System.currentTimeMillis()

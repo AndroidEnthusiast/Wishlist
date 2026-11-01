@@ -1,4 +1,5 @@
--- Friends setup (version 2.87): profiles, friend codes, friend requests and the lists friends may see.
+-- Friends setup (version 2.87, extended in 2.95): profiles, friend codes, friend requests, the lists friends may see,
+-- and (2.95) birthdays, an "I like…" line and "Who can see this list" (a list's link can be switched off).
 -- Run this ONCE in Supabase: SQL Editor -> New query -> paste everything -> Run.
 -- Run supabase-setup.sql first (you already did). Safe to run again later; it won't delete anything.
 --
@@ -236,6 +237,43 @@ begin
   return coalesce(v, '');
 end $$;
 
+-- "Who can see this list" (2.95): a list's friends' link can be switched off ("My friends" only). Friends in the app
+-- still see it through wl_fr_list. (Also in supabase-setup.sql, so running either file again keeps it.)
+alter table wl_lists add column if not exists link_off boolean not null default false;
+
+create or replace function wl_get_list(p_code text)
+returns jsonb language sql stable security definer set search_path = public as $$
+  select jsonb_build_object(
+    'name', l.name,
+    'cats', l.cats,
+    'items', coalesce(
+      (select jsonb_agg(i.data order by i.id desc) from wl_items i where i.list_code = l.code),
+      '[]'::jsonb)
+  ) from wl_lists l where l.code = p_code and not l.link_off
+$$;
+
+-- The list whatever its link says: only for wl_fr_list below (not callable by the app).
+create or replace function wl_list_json(p_code text)
+returns jsonb language sql stable security definer set search_path = public as $$
+  select jsonb_build_object(
+    'name', l.name,
+    'cats', l.cats,
+    'items', coalesce(
+      (select jsonb_agg(i.data order by i.id desc) from wl_items i where i.list_code = l.code),
+      '[]'::jsonb)
+  ) from wl_lists l where l.code = p_code
+$$;
+
+-- Switches the friends' link of your list on or off (owner token required).
+create or replace function wl_set_link(p_code text, p_token text, p_on boolean)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not exists (select 1 from wl_lists where code = p_code and owner_token = p_token) then
+    raise exception 'not allowed';
+  end if;
+  update wl_lists set link_off = not p_on where code = p_code;
+end $$;
+
 -- One list of a friend, as the friends' page sees it (no reservations). Null unless that friend lets you see it.
 create or replace function wl_fr_list(p_id text, p_token text, p_other text, p_code text)
 returns jsonb language plpgsql security definer set search_path = public as $$
@@ -248,10 +286,10 @@ begin
   ) or not exists (select 1 from wl_profile_lists where profile = p_other and list_code = p_code) then
     return null;
   end if;
-  return wl_get_list(p_code);
+  return wl_list_json(p_code);
 end $$;
 
-revoke execute on function wl_pf_check(text, text), wl_pf_new_code_text() from public, anon;
+revoke execute on function wl_pf_check(text, text), wl_pf_new_code_text(), wl_list_json(text) from public, anon;
 
 grant execute on function
   wl_pf_save(text, text, text),
@@ -264,5 +302,7 @@ grant execute on function
   wl_fr_hide(text, text, text, boolean),
   wl_fr_state(text, text),
   wl_fr_photo(text, text, text),
-  wl_fr_list(text, text, text, text)
+  wl_fr_list(text, text, text, text),
+  wl_get_list(text),
+  wl_set_link(text, text, boolean)
 to anon;

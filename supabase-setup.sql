@@ -56,7 +56,11 @@ returns void language sql security definer set search_path = public as $$
   delete from wl_lists where code = p_code and owner_token = p_token
 $$;
 
--- Anyone with the code can read the list. Reservations are NOT included here.
+-- "Who can see this list" (2.95): with link_off the friends' link doesn't open the list; friends in the app still see
+-- it (supabase-friends.sql, wl_fr_list).
+alter table wl_lists add column if not exists link_off boolean not null default false;
+
+-- Anyone with the code can read the list, unless its link is switched off. Reservations are NOT included here.
 create or replace function wl_get_list(p_code text)
 returns jsonb language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
@@ -65,7 +69,7 @@ returns jsonb language sql stable security definer set search_path = public as $
     'items', coalesce(
       (select jsonb_agg(i.data order by i.id desc) from wl_items i where i.list_code = l.code),
       '[]'::jsonb)
-  ) from wl_lists l where l.code = p_code
+  ) from wl_lists l where l.code = p_code and not l.link_off
 $$;
 
 -- Only friends' phones ever call this one. The owner's app never does.
