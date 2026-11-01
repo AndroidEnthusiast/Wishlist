@@ -107,5 +107,11 @@ What the owner has decided, and why. Follow these unless the owner changes their
 ## Backend
 - **Free Supabase plan** (500 MB database). Usage is small (estimated 20–30 MB in October 2026). SQL scripts are run by the owner by hand; give exact steps.
 
+## Friends and Groups (being designed, November 2026)
+- **Groups: only the organiser invites by default**; the organiser can switch on "Members can invite too" (owner).
+- **Joining a group means bringing exactly one wishlist**: before joining you pick one of your lists or make a new one (optionally with wishes copied from your other lists). Without a wishlist you can't join (owner).
+- **"Groups" is the name for a group of people** who each bring their own list (owner: feels most logical). The existing "Group wishlists" (one list edited together for someone else) needs a new name; still to choose.
+- **Friends are profiles**: a profile (name, photo, a friend code to share), add a friend by entering their code, unfollow, and choose friends who may not see your lists (owner's request; details still to settle).
+
 ## Open ideas (not decided)
 - Personal recovery key: an encrypted online backup of your lists, keys, creator rights and settings, restored with a key (optionally saved in Google Password Manager), plus automatic clean-up of lists nobody uses. Ask the owner before building.
