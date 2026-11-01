@@ -82,6 +82,8 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - v2.77: target prices (price history), View product, both prices on the Prices tab, smooth folding of Other information, picker layout, capital letters in text fields. Ideas offered for Prices but not chosen yet: a summary at the top, a trend line per row, sorting chips, "checked … ago", a warning when a shop can't be read.
 
+- v2.78: version number in the menu, clearer texts in the New wishlist choice, no total value on Recently opened cards.
+
 ## Next session
 - **Remind the owner: build the Friends feature** (they asked to be reminded; the bottom bar has a "Friends is coming soon" page for now).
 - Ask how the dashboard, the bottom bar and the hero editor feel on the phone.

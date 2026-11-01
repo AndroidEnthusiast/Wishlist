@@ -210,7 +210,8 @@ private fun RecentCard(item: HubItem) {
             maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp, start = 4.dp, end = 4.dp)
         )
         Text(
-            item.detail, style = MaterialTheme.typography.labelSmall, color = look.cardMuted(id), maxLines = 1,
+            // Only the number of wishes here: the total value doesn't fit this small card.
+            item.detail.substringBefore(" · "), style = MaterialTheme.typography.labelSmall, color = look.cardMuted(id), maxLines = 1,
             overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 4.dp, end = 4.dp, bottom = 4.dp)
         )
     }

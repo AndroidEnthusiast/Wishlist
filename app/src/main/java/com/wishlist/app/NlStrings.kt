@@ -403,8 +403,6 @@ val NL: Map<String, String> = mapOf(
     "“%s” is ready" to "“%s” is klaar",
     "Prices" to "Prijzen",
     "Friends" to "Vrienden",
-    "A wishlist of your own, to share with friends" to "Een eigen verlanglijstje, om met vrienden te delen",
-    "Collect gift ideas for someone together with other givers" to "Verzamel samen met andere gevers cadeau-ideeën voor iemand",
     "Optional" to "Optioneel",
     "Total value %s" to "Totale waarde %s",
     "No prices yet. Wishes with a price show up here, with how much they changed since you added them." to "Nog geen prijzen. Wensen met een prijs staan hier, met hoeveel ze veranderd zijn sinds je ze toevoegde.",
@@ -463,5 +461,8 @@ val NL: Map<String, String> = mapOf(
     "Now %1\$s · Lowest since added %2\$s" to "Nu %1\$s · Laagste sinds toegevoegd %2\$s",
     "Target price (%s)" to "Streefprijs (%s)",
     "%1\$s is now %2\$s. Your target was %3\$s." to "%1\$s kost nu %2\$s. Je streefprijs was %3\$s.",
-    "Target price reached" to "Streefprijs bereikt"
+    "Target price reached" to "Streefprijs bereikt",
+    "Create a new personal wishlist" to "Maak een nieuw persoonlijk verlanglijstje",
+    "One wishlist that you and the people you invite add to and edit together" to "Eén verlanglijstje waar jij en de mensen die je uitnodigt samen aan werken",
+    "Version %s" to "Versie %s"
 )

@@ -514,7 +514,10 @@ fun App(
                 ),
                 drawerContainerColor = if (look.classic) DrawerDefaults.containerColor else MaterialTheme.colorScheme.surface
             ) {
-                Column(Modifier.verticalScroll(rememberScrollState())) {
+                val appVersion = remember {
+                    try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName.orEmpty() } catch (e: Exception) { "" }
+                }
+                Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
                     // Same height as the top bar; the menu button (now an X) sits at the left of this row.
                     Box(
                         Modifier.fillMaxWidth().height(64.dp).padding(start = 60.dp, end = 16.dp),
@@ -593,6 +596,13 @@ fun App(
                         scope.launch { drawer.close() }
                     }
                 }
+                // Bottom left of the menu: the version of the app.
+                Spacer(Modifier.weight(1f))
+                Text(
+                    tr("Version %s", appVersion), style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 28.dp, top = 8.dp, bottom = 16.dp)
+                )
             }
         }
     ) {

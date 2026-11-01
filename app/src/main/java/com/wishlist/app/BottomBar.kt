@@ -163,8 +163,8 @@ fun CreateChoiceDialog(onMine: () -> Unit, onGroup: () -> Unit, onClose: () -> U
         title = { Text(tr("Create")) },
         text = {
             Column {
-                Choice(tr("New wishlist"), tr("A wishlist of your own, to share with friends")) { onMine() }
-                Choice(tr("New group wishlist"), tr("Collect gift ideas for someone together with other givers")) { onGroup() }
+                Choice(tr("New wishlist"), tr("Create a new personal wishlist")) { onMine() }
+                Choice(tr("New group wishlist"), tr("One wishlist that you and the people you invite add to and edit together")) { onGroup() }
             }
         },
         confirmButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
