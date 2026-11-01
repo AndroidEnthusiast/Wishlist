@@ -253,21 +253,11 @@ fun TopAppBar(
     M3TopAppBar(title, modifier.then(line), navigationIcon, actions, colors = colors)
 }
 
-/** The name of a list in its top bar. Organic puts a small spaced-out line above it ("7 WISHES"). */
+/** The name of a list in its top bar, the same in every theme. ([count] is no longer shown: the owner removed
+ * Organic's "7 WISHES" line in 2.60.) */
 @Composable
-fun ListTitle(name: String, count: Int) {
-    val look = LocalLook.current
-    if (look.design == "organic") {
-        Column {
-            Text(
-                tr("%d wishes", count).uppercase(), style = MaterialTheme.typography.labelSmall, letterSpacing = 1.6.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1
-            )
-            Text(name, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-    } else {
-        Text(name, fontWeight = look.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis)
-    }
+fun ListTitle(name: String, @Suppress("UNUSED_PARAMETER") count: Int) {
+    Text(name, fontWeight = LocalLook.current.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis)
 }
 
 /** The price change on a wish ("↓ 20% off"). Classic: white on green or red, as before. */
