@@ -76,6 +76,8 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - v2.74: cover editor: the photo stands still, only the frame moves, pinch zooms around the frame; the saved cover is cut out exactly (the owner saw a different part on the dashboard in 2.73).
 
+- v2.75: cover editor rebuilt: fixed frame, move and zoom the photo; root cause of the mismatch found (the photo was drawn in a box limited to the screen size).
+
 ## Next session
 - **Remind the owner: build the Friends feature** (they asked to be reminded; the bottom bar has a "Friends is coming soon" page for now).
 - Ask how the dashboard, the bottom bar and the hero editor feel on the phone.
