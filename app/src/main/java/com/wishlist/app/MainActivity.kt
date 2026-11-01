@@ -892,8 +892,13 @@ fun HomeScreen(
         // The target is cleared only at the end: clearing it is a change of this effect's key, which would stop it
         // before the scroll and the glow (the bug in 2.91).
         delay(150)
-        // Two items come before the wishes: the cover and summary card, and the filters.
-        gridState.animateScrollToItem(i + 2)
+        // Two items come before the wishes: the cover and summary card, and the filters. Only scrolls when the wish
+        // isn't fully in sight (2.94: it also scrolled when it was, so the filters jumped away).
+        val info = gridState.layoutInfo
+        val seen = info.visibleItemsInfo.firstOrNull { it.index == i + 2 }
+        val inSight = seen != null && seen.offset.y >= info.viewportStartOffset &&
+            seen.offset.y + seen.size.height <= info.viewportEndOffset
+        if (!inSight) gridState.animateScrollToItem(i + 2)
         WishFocus.glow(t)
         WishFocus.target = null
     }

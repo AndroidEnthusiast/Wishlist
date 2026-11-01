@@ -2,6 +2,7 @@ package com.wishlist.app
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -71,37 +72,35 @@ object WishFocus {
 
 /**
  * Around a wish card on a list: a soft glow in the theme's colour that pulses twice and fades, when [WishFocus] says
- * so. When it is over (or stopped halfway, for example by scrolling), [WishFocus] forgets it and the card is drawn
- * exactly as before: no glow modifiers at all (2.93: in 2.92 a rim could stay behind).
+ * so. One smooth wave (up, down, up, down) with no stops between (2.94: in 2.93 the steps each slowed down at their
+ * end, so the last fade seemed to pause). The card is always inside the same Box: only the glow comes and goes, so
+ * the card is never rebuilt and its photo doesn't flash (it did in 2.93). When it is over, or stopped halfway,
+ * [WishFocus] forgets it.
  */
 @Composable
 fun GlowBox(id: Long, small: Boolean, content: @Composable () -> Unit) {
     val look = LocalLook.current
     val col = MaterialTheme.colorScheme.primary
-    val g = remember { Animatable(0f) }
+    val p = remember { Animatable(0f) }
     val n = WishFocus.glowing?.takeIf { it.first == id }?.second ?: 0
     LaunchedEffect(n) {
         if (n == 0) return@LaunchedEffect
         try {
-            g.snapTo(0f)
-            repeat(2) {
-                g.animateTo(1f, tween(450))
-                g.animateTo(0.3f, tween(450))
-            }
-            g.animateTo(0f, tween(700))
+            p.snapTo(0f)
+            p.animateTo(1f, tween(1800, easing = LinearEasing))
         } finally {
+            // No suspending here (it may be a cancellation): forgetting it is enough, lit is 0 then.
             WishFocus.done(id)
         }
     }
-    if (n == 0) {
-        content()
-        return
-    }
-    val lit = g.value
+    // Two pulses: 0 → 1 → 0 → 1 → 0, as a smooth wave.
+    val lit = if (n == 0) 0f else ((1f - kotlin.math.cos(4f * Math.PI.toFloat() * p.value)) / 2f)
     val shape = look.cardShape(id, small)
     Box(
-        Modifier.shadow((18 * lit).dp, shape, clip = false, ambientColor = col, spotColor = col)
-            .then(if (lit > 0.01f) Modifier.border(3.dp, col.copy(alpha = 0.8f * lit), shape) else Modifier)
+        if (lit > 0.01f) Modifier
+            .shadow((18 * lit).dp, shape, clip = false, ambientColor = col, spotColor = col)
+            .border(3.dp, col.copy(alpha = 0.8f * lit), shape)
+        else Modifier
     ) { content() }
 }
 
