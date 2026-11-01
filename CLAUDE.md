@@ -5,6 +5,7 @@ Read this first, then `docs/DECISIONS.md` (what the owner has decided and why: f
 ## Who you are working with
 - The owner is a beginner. They work from an Android phone and a Chromebook (browser only), with no terminal or IDE. They write in plain English.
 - Explain in short, exact, tap-by-tap steps. Name the real buttons ("Settings", "Secrets and variables", "Actions"). One thing at a time. No jargon unless you explain it in a few words.
+- **Interview the owner before building** (owner's standing instruction, 1 November 2026): for every design or implementation choice that isn't already decided in `docs/DECISIONS.md`, ask first with pop-up questions (the AskUserQuestion tool, a recommended option first), and push back when an idea has a weak spot. Don't just agree, and don't fill gaps with your own choices: things built on guesses had to be redone. Re-read the owner's earlier messages and check every point was built; say plainly if something was left out.
 - Be honest about testing: always say what you ran and what you could NOT check (see "Cannot be checked here" below).
 - No iOS app is planned. iPhone and computer users edit shared lists in the browser editor (`web/edit.html`).
 
