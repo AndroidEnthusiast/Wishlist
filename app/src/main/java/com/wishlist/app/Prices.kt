@@ -43,7 +43,7 @@ import coil.compose.AsyncImage
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PricesScreen(snack: SnackbarHostState) {
+fun PricesScreen(snack: SnackbarHostState, onProfile: () -> Unit = {}) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
@@ -65,6 +65,7 @@ fun PricesScreen(snack: SnackbarHostState) {
             TopAppBar(
                 title = { Text(tr("Price history"), fontWeight = look.titleWeight) },
                 navigationIcon = { MenuSlot() },
+                actions = { ProfileButton(onProfile) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
         },

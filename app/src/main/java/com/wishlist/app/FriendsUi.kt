@@ -110,6 +110,14 @@ fun Avatar(photo: String?, name: String, size: Dp) {
     }
 }
 
+/** Your profile picture at the top right of Home, Prices and Friends: opens your profile. */
+@Composable
+fun ProfileButton(onProfile: () -> Unit) {
+    val ctx = LocalContext.current
+    Friends.load(ctx)
+    IconButton(onClick = onProfile) { Avatar(Friends.myPhoto, Shared.lastName, 32.dp) }
+}
+
 @Composable
 private fun FriendsTitle(t: String) {
     Text(
@@ -200,10 +208,7 @@ private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenL
                 title = { Text(tr("Friends"), fontWeight = LocalLook.current.titleWeight) },
                 navigationIcon = { MenuSlot() },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
-                actions = {
-                    // Your own picture: opens your profile.
-                    IconButton(onClick = onProfile) { Avatar(Friends.myPhoto, Shared.lastName, 32.dp) }
-                }
+                actions = { ProfileButton(onProfile) }
             )
         },
         snackbarHost = { AppSnackbarHost(snack) }
@@ -580,14 +585,23 @@ fun ProfileScreen(snack: SnackbarHostState) {
         }
     }
 
+    // A new photo (chosen or taken) goes to the editor first, with a round frame, like the cover photo on Home.
+    var pending by remember { mutableStateOf<String?>(null) }
+    var adjusting by remember { mutableStateOf(false) }
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) {
-            busy = true
-            scope.launch {
-                val ok = Friends.setPhoto(ctx, uri)
-                busy = false
-                snack.showToast(if (ok) tr("Photo saved") else tr("Couldn’t save the photo online. Check your connection."))
-            }
+        if (uri != null) scope.launch { ImageStore.import(ctx, uri)?.let { pending = it } }
+    }
+    val cameraFile = remember { java.io.File(java.io.File(ctx.cacheDir, "share").apply { mkdirs() }, "profile_camera.jpg") }
+    val cameraUri = remember { androidx.core.content.FileProvider.getUriForFile(ctx, ctx.packageName + ".files", cameraFile) }
+    val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
+        if (ok) scope.launch { ImageStore.import(ctx, cameraUri)?.let { pending = it } }
+    }
+    fun save(src: String, e: HeroEdit) {
+        busy = true
+        scope.launch {
+            val ok = Friends.setPhoto(ctx, src, e)
+            busy = false
+            snack.showToast(if (ok) tr("Photo saved") else tr("Couldn’t save the photo online. Check your connection."))
         }
     }
 
@@ -622,6 +636,17 @@ fun ProfileScreen(snack: SnackbarHostState) {
                         DropdownMenuItem(text = { Text(tr("Choose a photo")) }, onClick = {
                             photoMenu = false
                             pick.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        })
+                        DropdownMenuItem(text = { Text(tr("Take a photo")) }, onClick = {
+                            photoMenu = false
+                            try {
+                                camera.launch(cameraUri)
+                            } catch (e: Exception) {
+                            }
+                        })
+                        if (Friends.photoSrc.isNotEmpty()) DropdownMenuItem(text = { Text(tr("Edit profile photo")) }, onClick = {
+                            photoMenu = false
+                            adjusting = true
                         })
                         if (Friends.myPhoto.isNotEmpty()) DropdownMenuItem(text = { Text(tr("Remove photo")) }, onClick = {
                             photoMenu = false
@@ -706,6 +731,25 @@ fun ProfileScreen(snack: SnackbarHostState) {
     if (adding) AddFriendDialog { msg ->
         adding = false
         if (msg != null) scope.launch { snack.showToast(msg) }
+    }
+    pending?.let { img ->
+        HeroEditor(
+            img, HeroEdit(), round = true,
+            onSave = { chosen, e ->
+                pending = null
+                // Another photo was picked in the editor: the first one isn't needed.
+                if (chosen != img) ImageStore.delete(ctx, img)
+                save(chosen, e)
+            },
+            onCancel = { pending = null; ImageStore.delete(ctx, img) }
+        )
+    }
+    if (adjusting && Friends.photoSrc.isNotEmpty()) {
+        HeroEditor(
+            Friends.photoSrc, Friends.photoEdit, round = true,
+            onSave = { chosen, e -> adjusting = false; save(chosen, e) },
+            onCancel = { adjusting = false }
+        )
     }
     if (newCodeDlg) {
         AlertDialog(

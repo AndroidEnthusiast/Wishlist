@@ -36,6 +36,12 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import kotlinx.coroutines.launch
 
 @Composable
@@ -69,6 +75,9 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
     var deleteMineDlg by remember { mutableStateOf(false) }
     var copyDlg by remember { mutableStateOf(false) }
     var visBusy by remember { mutableStateOf(false) }
+    var nameSaved by remember { mutableStateOf(0) }
+    val keyboard = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
     BackHandler(onBack = onBack)
 
     Scaffold(
@@ -98,13 +107,23 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             SectionTitle(tr("Name of the wishlist"))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(name, { name = it }, singleLine = true, modifier = Modifier.weight(1f), keyboardOptions = Capitalised)
-                Button(onClick = {
-                    Repo.setListName(ctx, name)
-                    name = Repo.listName
-                    scope.launch { snack.showToast(tr("Name saved")) }
-                }) { Text(tr("Save")) }
+            // Like your name on Profile: no Save button, the keyboard's tick saves it and closes the keyboard, then a
+            // green tick with "Saved" (2.88). An empty name isn't saved: the old one comes back.
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    name, { name = it }, singleLine = true, modifier = Modifier.weight(1f),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done, capitalization = KeyboardCapitalization.Sentences),
+                    keyboardActions = KeyboardActions(onDone = {
+                        if (name.isNotBlank()) {
+                            Repo.setListName(ctx, name)
+                            nameSaved++
+                        }
+                        name = Repo.listName
+                        keyboard?.hide()
+                        focusManager.clearFocus()
+                    })
+                )
+                SavedFeedback(nameSaved)
             }
             if (shared != null) {
                 Text(tr("Everyone on this list sees the new name."), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)

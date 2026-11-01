@@ -76,7 +76,8 @@ fun HubScreen(
     onOpenMine: (String) -> Unit,
     onOpenGroup: (String) -> Unit,
     onNewMine: () -> Unit,
-    onNewGroup: () -> Unit
+    onNewGroup: () -> Unit,
+    onProfile: () -> Unit = {}
 ) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
@@ -126,6 +127,7 @@ fun HubScreen(
             TopAppBar(
                 title = { Text(tr("Home"), fontWeight = look.titleWeight) },
                 navigationIcon = { MenuSlot() },
+                actions = { ProfileButton(onProfile) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
         },

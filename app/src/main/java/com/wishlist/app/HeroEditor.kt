@@ -64,6 +64,7 @@ import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
@@ -309,7 +310,11 @@ fun HeroPicture(
  * the tick; [onSave] gets the photo (it may be a new one) and how to show it.
  */
 @Composable
-fun HeroEditor(image: String, start: HeroEdit, onSave: (String, HeroEdit) -> Unit, onCancel: () -> Unit) {
+fun HeroEditor(
+    image: String, start: HeroEdit, onSave: (String, HeroEdit) -> Unit, onCancel: () -> Unit,
+    // The profile photo (2.88): a round frame (a square photo is saved, shown in a circle), no text tool.
+    round: Boolean = false
+) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var img by remember { mutableStateOf(image) }
@@ -341,7 +346,7 @@ fun HeroEditor(image: String, start: HeroEdit, onSave: (String, HeroEdit) -> Uni
                 Row(Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = { cancel() }) { Icon(AppIcons.ArrowBack, tr("Cancel"), tint = onDark) }
                     Text(
-                        tr("Edit cover photo"), style = MaterialTheme.typography.titleLarge, color = onDark,
+                        if (round) tr("Edit profile photo") else tr("Edit cover photo"), style = MaterialTheme.typography.titleLarge, color = onDark,
                         modifier = Modifier.weight(1f).padding(start = 8.dp)
                     )
                     IconButton(onClick = {
@@ -358,7 +363,8 @@ fun HeroEditor(image: String, start: HeroEdit, onSave: (String, HeroEdit) -> Uni
                 val raw = d?.let { if (it.intrinsicWidth > 0 && it.intrinsicHeight > 0) it.intrinsicWidth.toFloat() / it.intrinsicHeight else null }
                 val density = LocalDensity.current
                 // The shape of the frame on the dashboard (16 dp from both sides, 150 dp high).
-                val fa = (LocalConfiguration.current.screenWidthDp - 32).coerceAtLeast(120) / 150f
+                // The profile photo: a circle in a square.
+                val fa = if (round) 1f else (LocalConfiguration.current.screenWidthDp - 32).coerceAtLeast(120) / 150f
                 // The photo's zoom (1 = it just fills the frame) and where its middle is on screen; null: not placed yet.
                 var zoomS by remember(img, edit.rotation) { mutableStateOf<Float?>(null) }
                 var midS by remember(img, edit.rotation) { mutableStateOf<Offset?>(null) }
@@ -422,11 +428,18 @@ fun HeroEditor(image: String, start: HeroEdit, onSave: (String, HeroEdit) -> Uni
                                 }
                             }
                             val dim = Color.Black.copy(alpha = 0.6f)
-                            drawRect(dim, Offset.Zero, Size(size.width, frame.top))
-                            drawRect(dim, Offset(0f, frame.bottom), Size(size.width, size.height - frame.bottom))
-                            drawRect(dim, Offset(0f, frame.top), Size(frame.left, frame.height))
-                            drawRect(dim, Offset(frame.right, frame.top), Size(size.width - frame.right, frame.height))
-                            drawRect(Color.White, frame.topLeft, frame.size, style = Stroke(2.dp.toPx()))
+                            if (round) {
+                                // Everything outside the circle dimmed, and a white ring: what is inside is the photo.
+                                val ring = androidx.compose.ui.graphics.Path().apply { addOval(frame) }
+                                clipPath(ring, androidx.compose.ui.graphics.ClipOp.Difference) { drawRect(dim) }
+                                drawCircle(Color.White, frame.width / 2f, frame.center, style = Stroke(2.dp.toPx()))
+                            } else {
+                                drawRect(dim, Offset.Zero, Size(size.width, frame.top))
+                                drawRect(dim, Offset(0f, frame.bottom), Size(size.width, size.height - frame.bottom))
+                                drawRect(dim, Offset(0f, frame.top), Size(frame.left, frame.height))
+                                drawRect(dim, Offset(frame.right, frame.top), Size(size.width - frame.right, frame.height))
+                                drawRect(Color.White, frame.topLeft, frame.size, style = Stroke(2.dp.toPx()))
+                            }
                             if (tool == "crop") {
                                 val g = Color.White.copy(alpha = 0.5f)
                                 for (i in 1..2) {
@@ -453,7 +466,7 @@ fun HeroEditor(image: String, start: HeroEdit, onSave: (String, HeroEdit) -> Uni
                         )
                         fun dp(px: Float) = with(density) { px.toDp() }
                         // The text, in the frame: drag it to move it; tap it for corners that make it bigger or smaller.
-                        if (edit.text.isNotBlank()) {
+                        if (!round && edit.text.isNotBlank()) {
                             Box(Modifier.offset { IntOffset(frame.left.roundToInt(), frame.top.roundToInt()) }.size(dp(frame.width), dp(frame.height))) {
                                 EditableText(edit, frame.width, frame.height, textOn, onSelect = { textOn = it }) { edit = it }
                             }
@@ -482,7 +495,7 @@ fun HeroEditor(image: String, start: HeroEdit, onSave: (String, HeroEdit) -> Uni
                         }
                         ToolButton(tr("Crop"), tool == "crop", { tool = "crop" }) { CropIcon(Color(0xFF111111)) }
                         ToolButton(tr("Lighter or darker"), tool == "light", { tool = "light" }) { SunIcon(Color(0xFF111111)) }
-                        ToolButton(tr("Text"), tool == "text", { tool = "text" }) {
+                        if (!round) ToolButton(tr("Text"), tool == "text", { tool = "text" }) {
                             Text("T", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111111))
                         }
                         ToolButton(tr("New photo"), false, {

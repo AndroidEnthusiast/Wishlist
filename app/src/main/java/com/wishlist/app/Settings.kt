@@ -86,12 +86,7 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
-    var me by remember { mutableStateOf(Shared.lastName) }
     var licences by remember { mutableStateOf(false) }
-    // Counts the saves: each one shows a green tick with "Saved" for a moment (SavedFeedback).
-    var nameSaved by remember { mutableStateOf(0) }
-    val focus = LocalFocusManager.current
-    val keyboard = LocalSoftwareKeyboardController.current
     // The Themer: its own screen, opened from the Theme section. Back returns here. (The menu button hides meanwhile.)
     if (ThemerNav.open) {
         ThemerScreen { ThemerNav.open = false }
@@ -125,13 +120,6 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                     Text(n)
                 }
             }
-
-            // Your name moved to Profile (2.87), with your photo and friend code.
-            SectionTitle(tr("Your name"))
-            Text(
-                tr("Your name, photo and friend code are in your Profile (menu > Profile)."),
-                style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
-            )
 
             SectionTitle(tr("Deleting wishes"))
             Row(

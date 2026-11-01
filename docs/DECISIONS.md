@@ -113,6 +113,11 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Lists are invisible to friends by default** (owner): each own wishlist has a "Visible to friends" switch in its settings. Turning it on puts the list online (it gets its friends' link). Private wishes stay hidden.
 - **Per friend**: "Hide my lists from …" hides all your lists from that one friend (stay friends, they aren't told); "Unfollow" ends the friendship for both (nobody is told; add each other again with a code). This is new in 2.87: before, only single wishes could be private (hidden from everyone).
 - **Make a new code**: the old code stops working; friends you already have stay.
+- **Profile photo is edited like the cover photo, in a round frame** (owner, 2.88): rotate, crop, lighter or darker; no text.
+- **Your profile picture is top right on Home, Prices and Friends** (owner, 2.88), and opens Profile.
+- **The menu's heading is "Menu"** (owner, 2.88): you can have several wishlists, so not one list's name.
+- **Your name is only on Profile**, not in App settings (owner, 2.88).
+- **Names save with the keyboard's tick and a green "Saved" tick** (owner, 2.88): your name, a list's name, target prices. No Save buttons for these.
 - **Groups: only the organiser invites by default**; the organiser can switch on "Members can invite too" (owner). Not built yet.
 - **Joining a group means bringing exactly one wishlist**: before joining you pick one of your lists or make a new one (optionally with wishes copied from your other lists). Without a wishlist you can't join (owner). Not built yet.
 - **"Groups" is the name for a group of people** who each bring their own list (owner). The existing "Group wishlists" (one list edited together for someone else) needs a new name; the owner is still choosing (offered: "Gift lists", "Gift plans", "Joint wishlists").

@@ -562,5 +562,7 @@ val NL: Map<String, String> = mapOf(
     "Only for “%s”. Leave it empty to use the name from your profile." to "Alleen voor “%s”. Laat leeg om de naam uit je profiel te gebruiken.",
     "The link stops working, your friends can no longer see this list, and all reservations are deleted. Sharing again later creates a new link." to "De link werkt dan niet meer, je vrienden zien dit lijstje niet meer en alle reserveringen worden verwijderd. Later opnieuw delen maakt een nieuwe link.",
     "Your name, photo and friend code are in your Profile (menu > Profile)." to "Je naam, foto en vriendcode staan in je Profiel (menu > Profiel).",
+    "Edit profile photo" to "Profielfoto bewerken",
+    "Menu" to "Menu",
     "No" to "Nee"
 )

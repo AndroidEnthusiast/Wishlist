@@ -559,8 +559,9 @@ fun App(
                         Modifier.fillMaxWidth().height(64.dp).padding(start = 60.dp, end = 16.dp),
                         contentAlignment = Alignment.CenterStart
                     ) {
+                        // "Menu": you have several wishlists, so not the name of one of them (owner, 2.88).
                         Text(
-                            Repo.listName, style = MaterialTheme.typography.titleLarge,
+                            tr("Menu"), style = MaterialTheme.typography.titleLarge,
                             maxLines = 1, overflow = TextOverflow.Ellipsis
                         )
                     }
@@ -668,14 +669,15 @@ fun App(
                     if (key.startsWith("m:")) key.removePrefix("m:").takeIf { it in Repo.mineIds }?.let { openMine(it) }
                     else key.removePrefix("s:").takeIf { k -> Shared.lists.any { it.code == k } }?.let { openGroup(it) }
                 }
-                pricesOpen -> PricesScreen(snack)
+                pricesOpen -> PricesScreen(snack, onProfile = { profileOpen = true })
                 friendsOpen -> FriendsScreen(snack, onProfile = { profileOpen = true }, onOpenLink = { friendCode = it })
                 hub -> HubScreen(
                     snack,
                     onOpenMine = { openMine(it) },
                     onOpenGroup = { openGroup(it) },
                     onNewMine = { newMine = true },
-                    onNewGroup = { newShared = true }
+                    onNewGroup = { newShared = true },
+                    onProfile = { profileOpen = true }
                 )
                 else -> key(Shared.active, Repo.openMine) {
                     HomeScreen(

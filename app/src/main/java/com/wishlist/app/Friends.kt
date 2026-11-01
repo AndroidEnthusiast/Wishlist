@@ -74,6 +74,8 @@ object Friends {
         loaded = true
         val p = prefs(c)
         myPhoto = p.getString("pf_photo", "") ?: ""
+        photoSrc = p.getString("pf_src", "") ?: ""
+        photoEdit = HeroEdit.fromJson(p.getString("pf_edit", null))
         visible = p.getStringSet("fr_vis", null)?.toSet() ?: emptySet()
         state = p.getString("fr_state", null)?.let { parse(it) }
         val dir = photoDir(c)
@@ -208,14 +210,25 @@ object Friends {
         photos = out
     }
 
-    /** Your new profile photo from the gallery: cut to a square, made small and sent online. */
-    suspend fun setPhoto(c: Context, uri: Uri): Boolean {
-        val imported = ImageStore.import(c, uri) ?: return false
+    /** The photo your profile picture was cut from (kept so it can be edited again), and how it was cut. */
+    var photoSrc by mutableStateOf("")
+        private set
+    var photoEdit by mutableStateOf(HeroEdit())
+        private set
+
+    /**
+     * Your profile photo after the editor (round frame, see [HeroEditor]): [src] is the whole photo, [edit] how it is
+     * turned, cut and lightened. The part in the circle is saved as a small square JPEG and sent online.
+     * Returns false when it couldn't be sent (it is kept on the phone and sent the next time).
+     */
+    suspend fun setPhoto(c: Context, src: String, edit: HeroEdit): Boolean {
+        val cut = renderCover(c, src, edit, 1f) ?: return false
         val file = withContext(Dispatchers.IO) {
             try {
-                val src = File(Uri.parse(imported).path ?: return@withContext null)
-                val bmp = BitmapFactory.decodeFile(src.path) ?: return@withContext null
-                src.delete()
+                val cutFile = File(Uri.parse(cut).path ?: return@withContext null)
+                val bmp = BitmapFactory.decodeFile(cutFile.path)
+                cutFile.delete()
+                if (bmp == null) return@withContext null
                 val side = min(bmp.width, bmp.height)
                 val sq = Bitmap.createBitmap(bmp, (bmp.width - side) / 2, (bmp.height - side) / 2, side, side)
                 val small = Bitmap.createScaledBitmap(sq, 320, 320, true)
@@ -227,8 +240,11 @@ object Friends {
             }
         } ?: return false
         oldPhotoFile()?.delete()
+        if (photoSrc.isNotEmpty() && photoSrc != src) ImageStore.delete(c, photoSrc)
         myPhoto = Uri.fromFile(file).toString()
-        prefs(c).edit().putString("pf_photo", myPhoto).apply()
+        photoSrc = src
+        photoEdit = edit
+        prefs(c).edit().putString("pf_photo", myPhoto).putString("pf_src", src).putString("pf_edit", edit.toJson()).apply()
         return try {
             ensure(c)
             uploadPhoto(c)
@@ -248,8 +264,11 @@ object Friends {
 
     suspend fun removePhoto(c: Context) {
         oldPhotoFile()?.delete()
+        if (photoSrc.isNotEmpty()) ImageStore.delete(c, photoSrc)
         myPhoto = ""
-        prefs(c).edit().putString("pf_photo", "").apply()
+        photoSrc = ""
+        photoEdit = HeroEdit()
+        prefs(c).edit().putString("pf_photo", "").putString("pf_src", "").putString("pf_edit", "").apply()
         if (prefs(c).getBoolean("pf_made", false)) Cloud.rpc("wl_pf_photo", base(c).put("p_photo", ""))
     }
 
