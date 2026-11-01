@@ -87,10 +87,11 @@ fun HubScreen(
     val mineItems = mine.map { d ->
         val n = if (d.name == "My wishlist") tr(d.name) else d.name
         val count = d.wishes.size
-        val total = totalValue(d.wishes)
-        val detail = (if (count == 1) tr("1 wish") else tr("%d wishes", count)) +
-            if (total != null) " · " + tr("Total value %s", total) else ""
-        HubItem("m:" + d.id, n, detail, d.wishes.map { it.image }.filter { it.isNotBlank() }.take(3), false) { onOpenMine(d.id) }
+        // The total value is in the list's summary card now (2.89), not here.
+        val detail = if (count == 1) tr("1 wish") else tr("%d wishes", count)
+        // The picture: the most recently added wish that has one (a wish's id is the moment it was added).
+        val newest = d.wishes.filter { it.image.isNotBlank() }.maxByOrNull { it.id }?.image
+        HubItem("m:" + d.id, n, detail, listOfNotNull(newest), false) { onOpenMine(d.id) }
     }
     val groupItems = Shared.lists.map { l ->
         HubItem("s:" + l.code, l.name, tr("Group wishlist"), emptyList(), true) { onOpenGroup(l.code) }
@@ -121,7 +122,27 @@ fun HubScreen(
         else listOf(edit, Triple(tr("Delete wishlist"), true, onDelete))
     }
 
-    Scaffold(
+    // Your own lists, then the group wishlists: on Home, and on the page behind the "wishlists" number.
+    val listsSection: @Composable () -> Unit = {
+        HubTitle(tr("My wishlists"), addLabel = tr("New wishlist"), onAdd = onNewMine)
+        Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            mineItems.forEach { ListRow(it, actionsOf(it)) }
+        }
+
+        HubTitle(tr("Group wishlists"), addLabel = tr("New group wishlist"), onAdd = onNewGroup)
+        Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (groupItems.isEmpty()) {
+                Text(
+                    tr("Collect gift ideas for someone together with other givers, and see who buys what."),
+                    style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
+                )
+            }
+            groupItems.forEach { ListRow(it, actionsOf(it)) }
+        }
+    }
+
+    val page = HubNav.page
+    if (page != null) OverviewScreen(page, snack, listsSection, onOpenMine) else Scaffold(
         containerColor = cs.background,
         topBar = {
             TopAppBar(
@@ -137,7 +158,8 @@ fun HubScreen(
             Modifier.padding(pad).fillMaxSize().lookBackdrop(look).verticalScroll(rememberScrollState())
                 .padding(bottom = 32.dp)
         ) {
-            Hero(Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+            // Your picture and name, and the numbers (2.89: the cover photo card is gone).
+            ProfileSummary(onProfile)
 
             if (recentItems.isNotEmpty()) {
                 HubTitle(tr("Recently opened"), small = true)
@@ -149,21 +171,7 @@ fun HubScreen(
                 }
             }
 
-            HubTitle(tr("My wishlists"), addLabel = tr("New wishlist"), onAdd = onNewMine)
-            Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                mineItems.forEach { ListRow(it, actionsOf(it)) }
-            }
-
-            HubTitle(tr("Group wishlists"), addLabel = tr("New group wishlist"), onAdd = onNewGroup)
-            Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                if (groupItems.isEmpty()) {
-                    Text(
-                        tr("Collect gift ideas for someone together with other givers, and see who buys what."),
-                        style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
-                    )
-                }
-                groupItems.forEach { ListRow(it, actionsOf(it)) }
-            }
+            listsSection()
 
             // Price changes: the wishes on your lists whose price changed, cheaper first, then dearer.
             val changed = mine.flatMap { it.wishes }.distinctBy { it.id }.filter { w ->
@@ -427,114 +435,6 @@ private fun ListThumb(item: HubItem, id: Long, modifier: Modifier) {
             Text(if (item.group) "👥" else "🎁", fontSize = 28.sp)
         }
     }
-}
-
-/**
- * The cover photo at the top of the dashboard: your own photo, or the theme's colours with a gift. The pencil lets you
- * choose a photo, take one, or go back to the colours.
- */
-@Composable
-private fun Hero(modifier: Modifier) {
-    val ctx = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val cs = MaterialTheme.colorScheme
-    val look = LocalLook.current
-    var menu by remember { mutableStateOf(false) }
-    // The cover's shape (width / height): 16 dp from both sides, 150 dp high, as in the editor.
-    val coverShape = (LocalConfiguration.current.screenWidthDp - 32).coerceAtLeast(120) / 150f
-    // A new photo is adjusted first (HeroEditor) and only becomes the picture after Save.
-    var pending by remember { mutableStateOf<String?>(null) }
-    var adjusting by remember { mutableStateOf(false) }
-    val pick = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) scope.launch { ImageStore.import(ctx, uri)?.let { pending = it } }
-    }
-    // A photo from the camera goes to a temporary file first, then into the app like a chosen photo.
-    val cameraFile = remember { File(File(ctx.cacheDir, "share").apply { mkdirs() }, "hero_camera.jpg") }
-    val cameraUri: Uri = remember { FileProvider.getUriForFile(ctx, ctx.packageName + ".files", cameraFile) }
-    val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
-        if (ok) scope.launch { ImageStore.import(ctx, cameraUri)?.let { pending = it } }
-    }
-    val shape = RoundedCornerShape(28.dp)
-    Box(
-        modifier.fillMaxWidth().height(150.dp)
-            .then(if (look.classic) Modifier.clip(shape) else Modifier.lookCard(look, 1L, shape))
-            .background(Brush.linearGradient(listOf(cs.primaryContainer, cs.tertiaryContainer)))
-    ) {
-        if (Repo.hero.isNotEmpty()) {
-            HeroPicture(Repo.hero, Repo.heroEdit, Modifier.fillMaxSize(), cut = Repo.heroCut)
-        } else {
-            Text("🎁", fontSize = 56.sp, modifier = Modifier.align(Alignment.Center))
-        }
-        Box(
-            Modifier.align(Alignment.BottomEnd).padding(10.dp).size(32.dp).clip(CircleShape)
-                .background(cs.surface.copy(alpha = 0.85f))
-                .clickable(onClickLabel = tr("Change the cover photo")) { menu = true },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(AppIcons.Edit, tr("Change the cover photo"), tint = cs.onSurface, modifier = Modifier.size(16.dp))
-        }
-    }
-    if (menu) {
-        AlertDialog(
-            onDismissRequest = { menu = false },
-            title = { Text(tr("Cover photo")) },
-            text = {
-                Column {
-                    HeroChoice(tr("Choose a photo")) {
-                        menu = false
-                        pick.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                    }
-                    HeroChoice(tr("Take a photo")) {
-                        menu = false
-                        try {
-                            camera.launch(cameraUri)
-                        } catch (e: Exception) {
-                        }
-                    }
-                    if (Repo.hero.isNotEmpty()) {
-                        HeroChoice(tr("Edit cover photo")) { menu = false; adjusting = true }
-                        HeroChoice(tr("Remove the photo")) { menu = false; Repo.setHero(ctx, "") }
-                    }
-                }
-            },
-            confirmButton = { TextButton(onClick = { menu = false }) { Text(tr("Cancel")) } }
-        )
-    }
-    pending?.let { img ->
-        HeroEditor(
-            img, HeroEdit(),
-            onSave = { chosen, e ->
-                pending = null
-                // The cover is cut out exactly as it was in the frame, then saved.
-                scope.launch {
-                    Repo.setHero(ctx, chosen, e, renderCover(ctx, chosen, e, coverShape) ?: "")
-                    // Another photo was picked in the editor: the first one isn't needed.
-                    if (chosen != img) ImageStore.delete(ctx, img)
-                }
-            },
-            // Cancelled: the copied photo isn't needed.
-            onCancel = { pending = null; ImageStore.delete(ctx, img) }
-        )
-    }
-    if (adjusting && Repo.hero.isNotEmpty()) {
-        HeroEditor(
-            Repo.hero, Repo.heroEdit,
-            onSave = { chosen, e ->
-                adjusting = false
-                scope.launch { Repo.setHero(ctx, chosen, e, renderCover(ctx, chosen, e, coverShape) ?: "") }
-            },
-            onCancel = { adjusting = false }
-        )
-    }
-}
-
-@Composable
-private fun HeroChoice(text: String, onClick: () -> Unit) {
-    Text(
-        text, style = MaterialTheme.typography.bodyLarge,
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 14.dp)
-    )
 }
 
 /** A new wishlist of your own: a name (required) and notes about what it's for. */

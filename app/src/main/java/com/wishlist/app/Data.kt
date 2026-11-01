@@ -442,6 +442,7 @@ object Repo {
         if (id !in mineIds || mineIds.size < 2) return false
         persist(c)
         Friends.forget(c, id)
+        ListCovers.remove(c, "m:$id")
         val p = prefs(c)
         val d = MyLists.read(p, id)
         val now = System.currentTimeMillis()
@@ -459,6 +460,7 @@ object Repo {
             val next = mineIds.first { it != MAIN_LIST }
             val nd = MyLists.read(p, next)
             Friends.moveId(c, next, MAIN_LIST)
+            ListCovers.move(c, "m:$next", "m:$MAIN_LIST")
             MyLists.write(e, nd.copy(id = MAIN_LIST))
             e.remove(MyLists.blobKey(next))
             copies = (copies - next).let { m -> copies[next]?.let { m + (MAIN_LIST to it) } ?: m }

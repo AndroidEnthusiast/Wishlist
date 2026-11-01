@@ -313,13 +313,16 @@ fun HeroPicture(
 fun HeroEditor(
     image: String, start: HeroEdit, onSave: (String, HeroEdit) -> Unit, onCancel: () -> Unit,
     // The profile photo (2.88): a round frame (a square photo is saved, shown in a circle), no text tool.
-    round: Boolean = false
+    round: Boolean = false,
+    // A wishlist's cover (2.89): a Preview button shows the list with the photo as it is in the frame now.
+    preview: (@Composable (String, HeroEdit, () -> Unit) -> Unit)? = null
 ) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var img by remember { mutableStateOf(image) }
     var edit by remember { mutableStateOf(start) }
     var tool by remember { mutableStateOf("crop") }
+    var previewing by remember { mutableStateOf(false) }
     // The text is selected (tapped): it shows corners to make it bigger or smaller.
     var textOn by remember { mutableStateOf(false) }
     // Photos picked here with the arrow: the ones not kept are deleted again.
@@ -340,7 +343,10 @@ fun HeroEditor(
     val dark = Color(0xFF111111)
     val onDark = Color.White
     Dialog(onDismissRequest = { cancel() }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(Modifier.fillMaxSize(), color = dark, contentColor = onDark) {
+        if (previewing && preview != null) {
+            androidx.activity.compose.BackHandler { previewing = false }
+            preview(img, edit) { previewing = false }
+        } else Surface(Modifier.fillMaxSize(), color = dark, contentColor = onDark) {
             Column(Modifier.statusBarsPadding().navigationBarsPadding()) {
                 // Top: back (cancel), the title, the tick (save).
                 Row(Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -349,6 +355,12 @@ fun HeroEditor(
                         if (round) tr("Edit profile photo") else tr("Edit cover photo"), style = MaterialTheme.typography.titleLarge, color = onDark,
                         modifier = Modifier.weight(1f).padding(start = 8.dp)
                     )
+                    if (preview != null) {
+                        Text(
+                            tr("Preview"), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = onDark,
+                            modifier = Modifier.clip(CircleShape).clickable { previewing = true }.padding(horizontal = 12.dp, vertical = 8.dp)
+                        )
+                    }
                     IconButton(onClick = {
                         picked.filter { it != img }.forEach { ImageStore.delete(ctx, it) }
                         onSave(img, edit)

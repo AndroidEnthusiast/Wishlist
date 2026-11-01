@@ -142,6 +142,10 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                 }
             }
 
+            // An optional cover photo at the top of the list (2.89): none until you choose one.
+            SectionTitle(tr("Cover photo"))
+            CoverSection(snack)
+
             SectionTitle(tr("Note for friends"))
             Text(
                 if (shared != null) tr("Shown at the top of the list. For example sizes, or things the person already has.")

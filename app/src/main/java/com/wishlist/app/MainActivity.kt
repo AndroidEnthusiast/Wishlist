@@ -69,6 +69,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.lazy.items
@@ -533,9 +534,12 @@ fun App(
     val inThemer = settings && ThemerNav.open
     // A friend's page or list (Friends tab) has a back arrow instead of the menu button.
     val inFriend = friendsOpen && FriendsNav.deep && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen && !profileOpen
+    // A page behind one of the numbers on Home (Overview.kt) has a back arrow too.
+    val inOverview = hub && HubNav.page != null && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen &&
+        !profileOpen && !pricesOpen && !friendsOpen
     ModalNavigationDrawer(
         drawerState = drawer,
-        gesturesEnabled = !inListSettings && !inThemer && !inFriend,
+        gesturesEnabled = !inListSettings && !inThemer && !inFriend && !inOverview,
         drawerContent = {
             val look = LocalLook.current
             ModalDrawerSheet(
@@ -569,6 +573,7 @@ fun App(
                     val elsewhere = settings || binOpen || friendCode != null || notesOpen || pricesOpen || friendsOpen || profileOpen
                     val onList = !elsewhere && !hub
                     DrawerItem(tr("Home"), AppIcons.Home, hub && !elsewhere) {
+                        HubNav.page = null
                         settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false; hub = true
                         scope.launch { drawer.close() }
                     }
@@ -693,7 +698,7 @@ fun App(
         if (showBar) {
             AppBottomBar(
                 current = when { pricesOpen -> "prices"; friendsOpen -> "friends"; hub -> "home"; else -> "" },
-                onHome = { settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false; hub = true },
+                onHome = { HubNav.page = null; settings = false; binOpen = false; friendCode = null; listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false; hub = true },
                 onCreate = { createChoice = true },
                 onAdd = {
                     val onAList = !hub && !pricesOpen && !friendsOpen
@@ -713,7 +718,7 @@ fun App(
     }
 
     // The menu button lives above the menu so it can spin into an X and close it.
-    if (!inListSettings && !inThemer && !inFriend) Box(
+    if (!inListSettings && !inThemer && !inFriend && !inOverview) Box(
         Modifier.windowInsetsPadding(TopAppBarDefaults.windowInsets).height(64.dp).padding(start = 4.dp),
         contentAlignment = Alignment.CenterStart
     ) {
@@ -899,64 +904,71 @@ fun HomeScreen(
         Column(Modifier.padding(pad).lookBackdrop(look)) {
             if (inShared && Shared.gone) SharedGoneNotice()
             if (searching) SearchField(query, { query = it }) { searching = false; query = "" }
-            Row(
-                Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 2.dp, bottom = 2.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Left: what you see and in which order (category, sort). Right: how it looks (view buttons).
-                Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.weight(1f, fill = false)) {
-                        Row(
-                            Modifier.lookChip(look).clickable { catMenu = true }
-                                .padding(start = 12.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                catLabel(sel), style = MaterialTheme.typography.titleMedium,
-                                maxLines = 1, overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f, fill = false).widthIn(max = 200.dp)
-                            )
-                            Icon(AppIcons.ArrowDropDown, tr("Choose category"))
-                        }
-                        DropdownMenu(expanded = catMenu, onDismissRequest = { catMenu = false }) {
-                            (listOf("All") + Repo.cats).forEach { c ->
-                                val n = if (c == "All") Repo.wishes.size else Repo.wishes.count { it.category == c }
-                                // Long press a category to edit or delete it ("All" can't be changed).
-                                CatMenuRow(
-                                    text = catLabel(c) + " ($n)", bold = c == sel,
-                                    onClick = { cat = c; catMenu = false },
-                                    onLongClick = if (c == "All") null else ({
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        catMenu = false
-                                        catAction = c
-                                    })
+            // The category and sort choices and the view buttons. Since 2.89 they scroll with the list, under the
+            // cover photo (when chosen) and the summary card.
+            val filters: @Composable () -> Unit = {
+                Row(
+                    Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Left: what you see and in which order (category, sort). Right: how it looks (view buttons).
+                    Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.weight(1f, fill = false)) {
+                            Row(
+                                Modifier.lookChip(look).clickable { catMenu = true }
+                                    .padding(start = 12.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    catLabel(sel), style = MaterialTheme.typography.titleMedium,
+                                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f, fill = false).widthIn(max = 200.dp)
+                                )
+                                Icon(AppIcons.ArrowDropDown, tr("Choose category"))
+                            }
+                            DropdownMenu(expanded = catMenu, onDismissRequest = { catMenu = false }) {
+                                (listOf("All") + Repo.cats).forEach { c ->
+                                    val n = if (c == "All") Repo.wishes.size else Repo.wishes.count { it.category == c }
+                                    // Long press a category to edit or delete it ("All" can't be changed).
+                                    CatMenuRow(
+                                        text = catLabel(c) + " ($n)", bold = c == sel,
+                                        onClick = { cat = c; catMenu = false },
+                                        onLongClick = if (c == "All") null else ({
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            catMenu = false
+                                            catAction = c
+                                        })
+                                    )
+                                }
+                                DropdownMenuItem(
+                                    text = { Text(tr("New category…")) },
+                                    leadingIcon = { Icon(AppIcons.Add, null) },
+                                    onClick = { catMenu = false; onNewCat() }
                                 )
                             }
-                            DropdownMenuItem(
-                                text = { Text(tr("New category…")) },
-                                leadingIcon = { Icon(AppIcons.Add, null) },
-                                onClick = { catMenu = false; onNewCat() }
-                            )
                         }
+                        SortButton(sortMode, withStar = !inShared) { Repo.setSort(ctx, it) }
                     }
-                    SortButton(sortMode, withStar = !inShared) { Repo.setSort(ctx, it) }
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(if (look.classic) 2.dp else 6.dp)) {
-                    ViewButton("list", tr("Large cards"), view == "list") { Repo.setView(ctx, "list") }
-                    ViewButton("grid", tr("Two per row"), view == "grid") { Repo.setView(ctx, "grid") }
+                    Row(horizontalArrangement = Arrangement.spacedBy(if (look.classic) 2.dp else 6.dp)) {
+                        ViewButton("list", tr("Large cards"), view == "list") { Repo.setView(ctx, "list") }
+                        ViewButton("grid", tr("Two per row"), view == "grid") { Repo.setView(ctx, "grid") }
+                    }
                 }
             }
             // Pull down on the list to refresh it: the shops are asked for their prices now (and a shared list is
             // fetched again), so price changes show. This took the place of the refresh button in the top bar.
             Box(Modifier.fillMaxSize().clipToBounds().nestedScroll(pull.nestedScrollConnection)) {
             if (list.isEmpty()) {
-                Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(32.dp), Alignment.Center) {
+                Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    ListHeader(Repo.wishes)
+                    Spacer(Modifier.height(8.dp))
+                    filters()
                     Text(
                         if (query.isNotBlank()) {
                             if (sel != "All") tr("No wishes match “%1\$s” in %2\$s.", query.trim(), catLabel(sel))
                             else tr("No wishes match “%s”.", query.trim())
                         } else tr("Nothing here yet. Tap Add wish, or share a product link to Wishlist from your browser."),
-                        color = cs.onSurfaceVariant
+                        color = cs.onSurfaceVariant, modifier = Modifier.padding(16.dp)
                     )
                 }
             } else {
@@ -967,6 +979,8 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(gap),
                     verticalArrangement = Arrangement.spacedBy(gap)
                 ) {
+                    item(key = "header", span = { GridItemSpan(maxLineSpan) }) { ListHeader(Repo.wishes) }
+                    item(key = "filters", span = { GridItemSpan(maxLineSpan) }) { filters() }
                     gridItems(list, key = { it.id }) { w ->
                         val r = res[w.id]
                         when (view) {

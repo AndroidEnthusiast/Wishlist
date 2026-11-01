@@ -100,6 +100,7 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 ## Session of 1 November 2026: Friends (v2.87)
 - Talked Friends and Groups through with the owner (choices in DECISIONS.md, "Friends and Groups"), then built Friends: Profile (photo, name, friend code), friend requests with approval, the Friends tab, a friend's page and lists, "Hide my lists from …", "Unfollow", "Visible to friends" per list, notifications for requests and approvals.
 - v2.88 (same day, owner's requests): round profile photo editor (the cover editor with a circle), profile picture top right on Home/Prices/Friends, "Menu" as the menu heading, "Your name" removed from App settings, list name saves with the keyboard tick and "Saved".
+- v2.89 (same day): Home reorganised (profile summary with numbers and their pages, no cover card, newest wish as a list's picture), summary card and optional cover photo (with Preview) per list. Feedback that started it: testers didn't understand the Home cover photo.
 - New `supabase-friends.sql` (the owner runs it by hand); checked on a local PostgreSQL with `tests/sql/friends_test.sql` (32 checks). The Android code could not be compiled here (no Android SDK); checked by hand and by the GitHub build.
 
 ## Next session
