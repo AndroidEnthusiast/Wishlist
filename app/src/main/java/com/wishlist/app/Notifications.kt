@@ -1,6 +1,9 @@
 package com.wishlist.app
 
 import android.content.Context
+import androidx.compose.runtime.remember
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarResult
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
@@ -145,6 +148,22 @@ object Notifications {
         return i
     }
 
+    /** Deletes them all; returns them, for Undo. */
+    @Synchronized
+    fun clear(c: Context): List<PriceNote> {
+        val gone = all
+        all = emptyList()
+        save(c)
+        return gone
+    }
+
+    /** Undo of [clear]: they come back (with any that arrived meanwhile on top). */
+    @Synchronized
+    fun putBack(c: Context, gone: List<PriceNote>) {
+        all = (all + gone.filter { it !in all }).take(100)
+        save(c)
+    }
+
     /** Undo: puts a deleted notification back where it was. */
     @Synchronized
     fun restore(c: Context, n: PriceNote, at: Int) {
@@ -170,6 +189,25 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
     val look = LocalLook.current
     val notes = Notifications.shown
     val scope = rememberCoroutineScope()
+    var askClear by remember { mutableStateOf(false) }
+    if (askClear) {
+        AlertDialog(
+            onDismissRequest = { askClear = false },
+            title = { Text(tr("Delete all notifications?")) },
+            confirmButton = {
+                TextButton(onClick = {
+                    askClear = false
+                    val gone = Notifications.clear(ctx)
+                    scope.launch {
+                        snack.currentSnackbarData?.dismiss()
+                        val r = snack.showToast(tr("All notifications deleted"), tr("Undo"))
+                        if (r == SnackbarResult.ActionPerformed) Notifications.putBack(ctx, gone)
+                    }
+                }) { Text(tr("Yes")) }
+            },
+            dismissButton = { TextButton(onClick = { askClear = false }) { Text(tr("No")) } }
+        )
+    }
     // Opening the page counts as seeing them: the red dots go.
     LaunchedEffect(Unit) { Notifications.markAllRead(ctx) }
     Scaffold(
@@ -178,6 +216,12 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
             TopAppBar(
                 title = { Text(tr("Notifications"), fontWeight = look.titleWeight) },
                 navigationIcon = { MenuSlot() },
+                // Top right: delete them all (after a yes).
+                actions = {
+                    if (notes.isNotEmpty()) {
+                        IconButton(onClick = { askClear = true }) { Icon(AppIcons.Delete, tr("Delete all notifications")) }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
         },

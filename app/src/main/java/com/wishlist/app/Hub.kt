@@ -27,6 +27,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -96,10 +98,27 @@ fun HubScreen(
     val recentItems = Repo.recent.entries.sortedByDescending { it.value }.mapNotNull { all[it.key] }.take(10)
     val scope = rememberCoroutineScope()
     // Long press on a list (see the end of this screen).
-    var actionsFor by remember { mutableStateOf<HubItem?>(null) }
     var renaming by remember { mutableStateOf<HubItem?>(null) }
     var deleting by remember { mutableStateOf<HubItem?>(null) }
     var leaving by remember { mutableStateOf<HubItem?>(null) }
+    // Long press on a list: Edit name, then Delete wishlist (or Leave wishlist on a group wishlist someone else made).
+    fun actionsOf(item: HubItem): List<Triple<String, Boolean, () -> Unit>> {
+        val group = item.key.startsWith("s:")
+        val code = item.key.substringAfter(':')
+        val creator = group && Shared.lists.firstOrNull { it.code == code }?.owner?.isNotEmpty() == true
+        val onEdit: () -> Unit = { renaming = item }
+        val onLeave: () -> Unit = { leaving = item }
+        val onDelete: () -> Unit = {
+            if (!group && Repo.mineIds.size < 2) {
+                scope.launch { snack.showToast(tr("This is your only wishlist. Make another one first.")) }
+            } else {
+                deleting = item
+            }
+        }
+        val edit = Triple(tr("Edit name"), false, onEdit)
+        return if (group && !creator) listOf(edit, Triple(tr("Leave wishlist"), true, onLeave))
+        else listOf(edit, Triple(tr("Delete wishlist"), true, onDelete))
+    }
 
     Scaffold(
         containerColor = cs.background,
@@ -130,7 +149,7 @@ fun HubScreen(
 
             HubTitle(tr("My wishlists"), addLabel = tr("New wishlist"), onAdd = onNewMine)
             Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                mineItems.forEach { ListRow(it) { actionsFor = it } }
+                mineItems.forEach { ListRow(it, actionsOf(it)) }
             }
 
             HubTitle(tr("Group wishlists"), addLabel = tr("New group wishlist"), onAdd = onNewGroup)
@@ -141,7 +160,7 @@ fun HubScreen(
                         style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
                     )
                 }
-                groupItems.forEach { ListRow(it) { actionsFor = it } }
+                groupItems.forEach { ListRow(it, actionsOf(it)) }
             }
 
             // Price changes: the wishes on your lists whose price changed, cheaper first, then dearer.
@@ -165,29 +184,6 @@ fun HubScreen(
         }
     }
 
-    // Long press on a list: its options, then renaming, deleting or leaving.
-    actionsFor?.let { item ->
-        val group = item.key.startsWith("s:")
-        val code = item.key.substringAfter(':')
-        val creator = group && Shared.lists.firstOrNull { it.code == code }?.owner?.isNotEmpty() == true
-        AlertDialog(
-            onDismissRequest = { actionsFor = null },
-            title = { Text(item.name, maxLines = 2, overflow = TextOverflow.Ellipsis) },
-            text = {
-                Column {
-                    ActionRow(tr("Edit name")) { actionsFor = null; renaming = item }
-                    if (group && !creator) ActionRow(tr("Leave wishlist")) { actionsFor = null; leaving = item }
-                    else ActionRow(tr("Delete wishlist"), danger = true) {
-                        actionsFor = null
-                        if (!group && Repo.mineIds.size < 2) {
-                            scope.launch { snack.showToast(tr("This is your only wishlist. Make another one first.")) }
-                        } else deleting = item
-                    }
-                }
-            },
-            confirmButton = { TextButton(onClick = { actionsFor = null }) { Text(tr("Cancel")) } }
-        )
-    }
     renaming?.let { item ->
         val group = item.key.startsWith("s:")
         val code = item.key.substringAfter(':')
@@ -359,13 +355,23 @@ private fun HubTitle(text: String, addLabel: String? = null, small: Boolean = fa
 /** A list in "My wishlists" or "Group wishlists": a small picture, its name and how many wishes it has. */
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
-private fun ListRow(item: HubItem, onLongPress: () -> Unit) {
+private fun ListRow(item: HubItem, actions: List<Triple<String, Boolean, () -> Unit>>) {
     val look = LocalLook.current
     val id = item.key.hashCode().toLong()
-    // Tap opens the list; a long press shows Edit name and Delete (or Leave).
+    // Tap opens the list; a long press opens a small menu right there (Edit name, Delete or Leave). Tap elsewhere to close.
+    var menu by remember { mutableStateOf(false) }
+    Box {
+    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+        actions.forEach { (label, danger, act) ->
+            DropdownMenuItem(
+                text = { Text(label, color = if (danger) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface) },
+                onClick = { menu = false; act() }
+            )
+        }
+    }
     Row(
         Modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true))
-            .combinedClickable(onClick = item.open, onLongClick = onLongPress)
+            .combinedClickable(onClick = item.open, onLongClick = { menu = true })
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -377,6 +383,7 @@ private fun ListRow(item: HubItem, onLongPress: () -> Unit) {
             )
             Text(item.detail, style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id), maxLines = 1)
         }
+    }
     }
 }
 
