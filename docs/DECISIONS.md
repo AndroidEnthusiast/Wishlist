@@ -147,7 +147,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **The Prices tab is "Price watch"** (page title; owner).
 - Friends' links (?c=CODE) stay, for people without the app ("Friends + anyone with the link").
 - Price watch shows only your own wishes.
-- "Got it" stays, with a better one-word label (choosing).
+- "Got it" stays but is called **"Owned"** (NL "In bezit") everywhere, also for friends.
 - Tidy up the main screen's navigation under the hood, in its own version (owner).
 
 ## Open ideas (not decided)
