@@ -140,10 +140,10 @@ fun ProfileSummary(onProfile: () -> Unit) {
             )
         }
         Row(Modifier.weight(1f).padding(start = 8.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-            Stat(lists, if (lists == 1) tr("wishlist") else tr("wishlists")) { HubNav.page = "lists" }
-            Stat(all.size, if (all.size == 1) tr("wish") else tr("wishes")) { HubNav.page = "wishes" }
+            Stat(lists, if (lists == 1) tr("Wishlist") else tr("Wishlists")) { HubNav.page = "lists" }
+            Stat(all.size, if (all.size == 1) tr("Wish") else tr("Wishes")) { HubNav.page = "wishes" }
             val top = all.count { it.starred }
-            Stat(top, if (top == 1) tr("top wish") else tr("top wishes")) { HubNav.page = "top" }
+            Stat(top, if (top == 1) tr("Top wish") else tr("Top wishes")) { HubNav.page = "top" }
         }
     }
 }

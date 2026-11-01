@@ -449,8 +449,8 @@ private fun ListBlock(
                         Text(if (item.group) "👥" else "🎁", fontSize = if (small) 26.sp else 40.sp)
                     }
                 }
-                // The number of wishes: a white circle top right (also 0, owner).
-                Box(
+                // The number of wishes: a white circle top right (also 0, owner). Not on "Recently opened" (owner, 2.92).
+                if (!small) Box(
                     Modifier.align(Alignment.TopEnd).padding(if (small) 8.dp else 12.dp)
                         .size(if (small) 22.dp else 28.dp).clip(CircleShape).background(Color.White)
                         .border(1.dp, Color.Black.copy(alpha = 0.08f), CircleShape),

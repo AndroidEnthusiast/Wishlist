@@ -129,7 +129,7 @@ fun ListSummaryCard(wishes: List<Wish>, modifier: Modifier = Modifier) {
     ) {
         Column(Modifier.weight(1f)) {
             Text(wishes.size.toString(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = look.cardInk(id))
-            Text(if (wishes.size == 1) tr("wish") else tr("wishes"), style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id))
+            Text(if (wishes.size == 1) tr("Wish") else tr("Wishes"), style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id))
         }
         Box(Modifier.width(1.dp).height(32.dp).background(look.cardMuted(id).copy(alpha = 0.3f)))
         Column(Modifier.weight(1f).padding(start = 16.dp)) {

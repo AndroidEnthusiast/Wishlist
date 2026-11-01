@@ -889,11 +889,13 @@ fun HomeScreen(
             } else WishFocus.target = null
             return@LaunchedEffect
         }
-        WishFocus.target = null
+        // The target is cleared only at the end: clearing it is a change of this effect's key, which would stop it
+        // before the scroll and the glow (the bug in 2.91).
         delay(150)
         // Two items come before the wishes: the cover and summary card, and the filters.
         gridState.animateScrollToItem(i + 2)
         WishFocus.glow(t)
+        WishFocus.target = null
     }
 
     Scaffold(
