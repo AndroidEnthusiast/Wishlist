@@ -47,7 +47,7 @@ object PriceCheck {
                 if (listId !in Repo.mineIds) break
                 val cw = Repo.mine(c, listId).wishes.firstOrNull { it.id == w.id } ?: continue
                 val cur = cw.price
-                // A price that went up keeps the old price too, so the wish shows "↑ +12%".
+                // A price that went up keeps the old price too, so the wish shows "+12%".
                 val nw = when {
                     cur == null -> cw.copy(price = np)
                     np < cur - 0.005 || np > cur + 0.005 -> cw.copy(price = np, oldPrice = cur)

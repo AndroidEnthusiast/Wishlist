@@ -305,7 +305,7 @@ private fun HistoryBody(points: List<PricePoint>, currency: String, nowSec: Long
     } else {
         val down = ch.first < 0
         Text(
-            (if (down) "↓ " else "↑ ") + tr("%1\$s (%2\$d%%) since %3\$s", money(abs(ch.first), currency), Math.round(abs(ch.second)), day(range.t0)),
+            (if (down) "−" else "+") + tr("%1\$s (%2\$d%%) since %3\$s", money(abs(ch.first), currency), Math.round(abs(ch.second)), day(range.t0)),
             style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium,
             color = if (down) DropGreen else cs.error
         )

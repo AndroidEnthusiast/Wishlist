@@ -274,7 +274,7 @@ fun ListTitle(name: String, @Suppress("UNUSED_PARAMETER") count: Int) {
     Text(name, fontWeight = LocalLook.current.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis)
 }
 
-/** The price change on a wish ("↓ 20% off"). Classic: white on green or red, as before. */
+/** The price change on a wish ("−20%", "+5%"; plus and minus, not arrows: it isn't a stock trade). Classic: white on green or red, as before. */
 @Composable
 fun PriceBadge(text: String, rise: Boolean, small: Boolean) {
     val look = LocalLook.current

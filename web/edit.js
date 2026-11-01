@@ -779,7 +779,7 @@
   }
 
   function isDrop(w) { return w.price !== null && w.old !== null && w.old > w.price; }
-  // A price check found a higher price: shown with "↑ +12%" in red, the opposite of a drop.
+  // A price check found a higher price: shown with "+12%" in red, the opposite of a drop.
   function isRise(w) { return w.price !== null && w.old !== null && w.old > 0 && w.price > w.old + 0.005; }
   function changeClass(w) { return isDrop(w) ? " drop" : isRise(w) ? " rise" : ""; }
 
@@ -805,8 +805,9 @@
     c.setAttribute("data-id", String(w.id));
     var pic = pictureOf(w);
     var drop = isDrop(w), rise = isRise(w);
-    if (drop) pic.appendChild(el("span", "badge drop", "↓ " + (compact ? Math.round((1 - w.price / w.old) * 100) + "%" : T("{0}% off", Math.round((1 - w.price / w.old) * 100)))));
-    else if (rise) pic.appendChild(el("span", "badge drop rise", "↑ +" + Math.round((w.price / w.old - 1) * 100) + "%"));
+    // Plus and minus, not arrows (it isn't a stock trade).
+    if (drop) pic.appendChild(el("span", "badge drop", "−" + Math.round((1 - w.price / w.old) * 100) + "%"));
+    else if (rise) pic.appendChild(el("span", "badge drop rise", "+" + Math.round((w.price / w.old - 1) * 100) + "%"));
     var bx = el("div", "badges");
     if (mine || taken) bx.appendChild(el("span", "badge status", resLabel(w)));
     if (bx.childNodes.length) pic.appendChild(bx);

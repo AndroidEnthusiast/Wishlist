@@ -314,7 +314,7 @@ private fun PriceChangeRow(w: Wish) {
             }
             val pct = Math.round(kotlin.math.abs(now / old - 1) * 100).coerceAtLeast(1)
             Text(
-                (if (down) "↓ " else "↑ ") + pct + "%", style = MaterialTheme.typography.labelLarge,
+                (if (down) "−" else "+") + pct + "%", style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold, color = if (down) look.drop else look.rise
             )
         }

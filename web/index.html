@@ -484,7 +484,7 @@ function openCatMenu() {
 function isDrop(w) {
   return typeof w.price === "number" && typeof w.old === "number" && w.old > w.price;
 }
-// A price check found a higher price: shown with "↑ +12%" in red, the opposite of a drop.
+// A price check found a higher price: shown with "+12%" in red, the opposite of a drop.
 function isRise(w) {
   return typeof w.price === "number" && typeof w.old === "number" && w.old > 0 && w.price > w.old + 0.005;
 }
@@ -552,8 +552,9 @@ function card(w, compact) {
     pic.appendChild(el("span", null, "🎁"));
   }
   var drop = isDrop(w), rise = isRise(w);
-  if (drop) pic.appendChild(el("span", "badge drop", "↓ " + T("{0}% off", Math.round((1 - w.price / w.old) * 100))));
-  else if (rise) pic.appendChild(el("span", "badge drop rise", "↑ +" + Math.round((w.price / w.old - 1) * 100) + "%"));
+  // Plus and minus, not arrows (it isn't a stock trade).
+  if (drop) pic.appendChild(el("span", "badge drop", "−" + Math.round((1 - w.price / w.old) * 100) + "%"));
+  else if (rise) pic.appendChild(el("span", "badge drop rise", "+" + Math.round((w.price / w.old - 1) * 100) + "%"));
   var status = got ? T("Got it") : r === true ? T("Reserved by you") : r === false ? T("Reserved") : "";
   var bx = el("div", "badges");
   if (w.star && !got && !SHARED_LIST) bx.appendChild(starBadge());

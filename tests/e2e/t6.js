@@ -122,7 +122,7 @@ const IOS = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/
   check("invite: no confetti when the phone asks for less motion", (await t.page.locator(".inv canvas.confetti").count()) === 0);
   await t.ctx.close();
 
-  // ---- a price that went up shows "↑ +20%" in red, the opposite of a drop ----
+  // ---- a price that went up shows "+20%" in red, the opposite of a drop ("−20%", plus and minus since 2.83) ----
   const risen = [
     { id: 2002, url: "https://shop.example/a", title: "Kettle", desc: "", image: "", price: 60, old: 50, cur: "EUR", cat: "", got: false },
     { id: 2001, url: "https://shop.example/b", title: "Mug", desc: "", image: "", price: 8, old: 10, cur: "EUR", cat: "", got: false },
@@ -130,13 +130,13 @@ const IOS = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/
   t = await boot({ items: risen });
   await t.page.waitForSelector(".card");
   const k = t.page.locator(".card[data-id='2002']"), m = t.page.locator(".card[data-id='2001']");
-  check("editor: price increase badge", (await k.locator(".badge.rise").innerText()).trim() === "↑ +20%" && (await k.locator(".price.rise").count()) === 1 && (await k.locator(".old").count()) === 1);
-  check("editor: drop still green with minus", /↓ 20% off/.test(await m.locator(".badge.drop").innerText()) && (await m.locator(".badge.rise").count()) === 0);
+  check("editor: price increase badge", (await k.locator(".badge.rise").innerText()).trim() === "+20%" && (await k.locator(".price.rise").count()) === 1 && (await k.locator(".old").count()) === 1);
+  check("editor: drop still green with minus", /−20%/.test(await m.locator(".badge.drop").innerText()) && (await m.locator(".badge.rise").count()) === 0);
   await t.ctx.close();
   t = await boot({ goto: false, items: risen });
   await t.page.goto(t.base + "?c=" + CODE);
   await t.page.waitForSelector(".card");
-  check("friends page: price increase badge", /↑ \+20%/.test(await t.page.locator(".card", { hasText: "Kettle" }).locator(".badge").first().innerText()));
+  check("friends page: price increase badge", /^\+20%/.test(await t.page.locator(".card", { hasText: "Kettle" }).locator(".badge").first().innerText()));
   await t.ctx.close();
 
   // ---- Dutch: a Dutch browser gets Dutch pages; the switch at the bottom changes the language ----

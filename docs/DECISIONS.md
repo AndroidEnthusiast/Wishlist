@@ -76,6 +76,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Wish form, later tweaks**: the folded section is called "Other information" ("Description, size, notes"); the price field shows the currency's symbol (€ for EUR) in front of the amount, label "Price (EUR)"; no "Fetch details" button (pasting a link reads the page; the keyboard's Done key does too).
 
 ## Prices
+- **Price changes use + and −, not arrows** (owner, 2.83: "it isn't a stock trade"): "−20%", "+5%", in the app and on the web pages.
 - **Price rises are shown too**: the old price stays visible, with a red ↑ and the percentage. Price drops as before.
 
 ## Lists and sharing

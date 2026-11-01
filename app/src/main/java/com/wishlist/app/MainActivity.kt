@@ -1095,7 +1095,7 @@ fun CompactCard(
             ) {
                 if ((drop || rise) && newP != null && oldP != null) {
                     PriceBadge(
-                        if (rise) "↑ +${Math.round((newP / oldP - 1) * 100)}%" else "↓ ${Math.round((1 - newP / oldP) * 100)}%",
+                        if (rise) "+${Math.round((newP / oldP - 1) * 100)}%" else "−${Math.round((1 - newP / oldP) * 100)}%",
                         rise, small = true
                     )
                 }
@@ -1224,7 +1224,7 @@ fun WishCard(
             ) {
                 if ((drop || rise) && newP != null && oldP != null) {
                     PriceBadge(
-                        if (rise) "↑ +${Math.round((newP / oldP - 1) * 100)}%" else "↓ " + tr("%d%% off", Math.round((1 - newP / oldP) * 100)),
+                        if (rise) "+${Math.round((newP / oldP - 1) * 100)}%" else "−${Math.round((1 - newP / oldP) * 100)}%",
                         rise, small = false
                     )
                 }

@@ -90,9 +90,16 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - v2.81: target price shows as bold text once saved (frame gone, green tick), ✕ brings the field back, short line below.
 
+- v2.83: plus and minus instead of arrows for price changes, app and web.
+
 ## Next session
-- **Remind the owner: build the Friends feature** (they asked to be reminded; the bottom bar has a "Friends is coming soon" page for now).
-- Ask how the dashboard, the bottom bar and the hero editor feel on the phone.
+**The owner's next topic: Friends and Groups** (they asked to be reminded to build Friends; the bottom bar has a "Friends is coming soon" page, `FriendsSoonScreen` in `Prices.kt`). Their idea, in their words, to refine with them before building:
+- **Friends**: see friends' wishlists in one place (gift ideas based on the receiver's own wishes: the safest choices).
+- **Groups**: a group / environment you create and invite friends to. Joining a group means bringing a wishlist: having one is mandatory. The invitation offers "Join with an existing wishlist" or "Join with a new wishlist" (a new one can be filled with wishes from your other lists, like the New wishlist form already does).
+- **App users only for now**: someone without the app has nowhere to keep their wishlist or their place in the group (closing the web page loses it), as the owner said. A web version would need some way to remember them (a personal link or an account) and the owner prefers no email accounts.
+- Things to think through with the owner: how groups relate to the existing "group wishlists" (one shared list for someone else) and to friends' links (`?c=CODE`); what a member sees of the others' lists (reservations stay a surprise for the list's owner); leaving a group; who can invite; the Supabase tables and functions this needs (new SQL the owner runs by hand).
+- Other open points: ask how 2.65-2.83 feel on the phone; ideas offered for the Prices tab but not chosen yet (summary at the top, a trend line per row, sorting chips, "checked … ago", a warning when a shop can't be read).
+
 ## Decisions and why
 - Lists are link-only, never listed publicly. Reservations are hidden from the owner and from editors so gifts stay a surprise.
 - Shared lists are online-first: no internet means the change is undone with a message (simple and safe). Same field changed by two people at the same moment: the later save wins.

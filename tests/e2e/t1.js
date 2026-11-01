@@ -42,7 +42,7 @@ const { boot, done, check, summary, KEY, CODE, sleep, openDrawer, catItems } = r
   check("no most wanted on a shared list (not even for a wish starred earlier)", (await t.page.locator(".card .badge.star, .card .starbtn, [data-star]").count()) === 0);
   check("no Got it on a shared list", !/Got it/.test(await t.page.locator("#view").innerText()) && (await t.page.getByLabel("Mark as got").count()) === 0);
   check("Reserve buttons", (await t.page.locator(".card").getByRole("button", { name: "Reserve", exact: true }).count()) === 3);
-  check("price drop badge", /% off/.test(await t.page.locator(".card").first().innerText()));
+  check("price drop badge", /−\d+%/.test(await t.page.locator(".card").first().innerText()));
   check("Added by", /Added by Mia/.test(await t.page.locator(".card").first().innerText()));
   check("note", /White, please/.test(await t.page.locator(".card").first().innerText()));
   check("size tag", /Size M/.test(await t.page.locator(".card").nth(1).innerText()));
