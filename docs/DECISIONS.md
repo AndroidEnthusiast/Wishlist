@@ -107,11 +107,16 @@ What the owner has decided, and why. Follow these unless the owner changes their
 ## Backend
 - **Free Supabase plan** (500 MB database). Usage is small (estimated 20–30 MB in October 2026). SQL scripts are run by the owner by hand; give exact steps.
 
-## Friends and Groups (being designed, November 2026)
-- **Groups: only the organiser invites by default**; the organiser can switch on "Members can invite too" (owner).
-- **Joining a group means bringing exactly one wishlist**: before joining you pick one of your lists or make a new one (optionally with wishes copied from your other lists). Without a wishlist you can't join (owner).
-- **"Groups" is the name for a group of people** who each bring their own list (owner: feels most logical). The existing "Group wishlists" (one list edited together for someone else) needs a new name; still to choose.
-- **Friends are profiles**: a profile (name, photo, a friend code to share), add a friend by entering their code, unfollow, and choose friends who may not see your lists (owner's request; details still to settle).
+## Friends and Groups (November 2026)
+- **Friends are profiles** (owner): Profile page (menu > Profile, or your picture on Friends) with photo, name (moved from App settings) and a friend code to share. Profiles belong to the phone (no e-mail accounts).
+- **Adding a friend needs approval** (owner): sending your code says you want to be friends; when someone enters it, **you (the code's owner) approve or decline**. Waiting requests show on Friends (red dot on the bottom bar) and as a notification. If you both enter each other's code, that counts as yes.
+- **Lists are invisible to friends by default** (owner): each own wishlist has a "Visible to friends" switch in its settings. Turning it on puts the list online (it gets its friends' link). Private wishes stay hidden.
+- **Per friend**: "Hide my lists from …" hides all your lists from that one friend (stay friends, they aren't told); "Unfollow" ends the friendship for both (nobody is told; add each other again with a code). This is new in 2.87: before, only single wishes could be private (hidden from everyone).
+- **Make a new code**: the old code stops working; friends you already have stay.
+- **Groups: only the organiser invites by default**; the organiser can switch on "Members can invite too" (owner). Not built yet.
+- **Joining a group means bringing exactly one wishlist**: before joining you pick one of your lists or make a new one (optionally with wishes copied from your other lists). Without a wishlist you can't join (owner). Not built yet.
+- **"Groups" is the name for a group of people** who each bring their own list (owner). The existing "Group wishlists" (one list edited together for someone else) needs a new name; the owner is still choosing (offered: "Gift lists", "Gift plans", "Joint wishlists").
+- **Still to decide**: whether hiding your lists from a friend also hides the list you brought to a group you're both in (Claude suggested: no, the group is a separate place you chose to join).
 
 ## Open ideas (not decided)
 - Personal recovery key: an encrypted online backup of your lists, keys, creator rights and settings, restored with a key (optionally saved in Google Password Manager), plus automatic clean-up of lists nobody uses. Ask the owner before building.

@@ -45,7 +45,13 @@ import kotlinx.coroutines.launch
 /** Someone else's list: you can see it and reserve items. The owner never sees reservations. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FriendScreen(f: Friend, snack: SnackbarHostState, onMenu: () -> Unit, onRemoved: () -> Unit) {
+fun FriendScreen(
+    f: Friend, snack: SnackbarHostState, onMenu: () -> Unit, onRemoved: () -> Unit,
+    // A list of a friend from the Friends tab: loaded through the friendship (not the link), with a back arrow and
+    // no "Remove this list" (unfollowing is done on the friend).
+    fetch: (suspend () -> RemoteList?)? = null,
+    onBack: (() -> Unit)? = null
+) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var remote by remember(f.code) { mutableStateOf<RemoteList?>(null) }
@@ -60,7 +66,7 @@ fun FriendScreen(f: Friend, snack: SnackbarHostState, onMenu: () -> Unit, onRemo
     LaunchedEffect(f.code, tick) {
         while (true) {
             try {
-                val r = Cloud.fetchList(f.code)
+                val r = if (fetch != null) fetch() else Cloud.fetchList(f.code)
                 if (r == null) {
                     state = "gone"
                 } else {
@@ -69,7 +75,7 @@ fun FriendScreen(f: Friend, snack: SnackbarHostState, onMenu: () -> Unit, onRemo
                     res = m
                     FriendWatch.check(ctx, f, r, m.filterValues { it }.keys)
                     state = "ok"
-                    if (r.name != f.name) Repo.renameFriend(ctx, f.code, r.name)
+                    if (fetch == null && r.name != f.name) Repo.renameFriend(ctx, f.code, r.name)
                 }
             } catch (e: Exception) {
                 if (remote == null) state = "offline"
@@ -104,11 +110,13 @@ fun FriendScreen(f: Friend, snack: SnackbarHostState, onMenu: () -> Unit, onRemo
         topBar = {
             TopAppBar(
                 title = { Text(f.name, fontWeight = LocalLook.current.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                navigationIcon = { MenuSlot() },
+                navigationIcon = {
+                    if (onBack != null) IconButton(onClick = onBack) { Icon(AppIcons.ArrowBack, tr("Back")) } else MenuSlot()
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 actions = {
                     IconButton(onClick = { tick++ }) { Icon(AppIcons.Refresh, tr("Refresh")) }
-                    IconButton(onClick = { confirmRemove = true }) { Icon(AppIcons.Delete, tr("Remove this list")) }
+                    if (onBack == null) IconButton(onClick = { confirmRemove = true }) { Icon(AppIcons.Delete, tr("Remove this list")) }
                 }
             )
         },

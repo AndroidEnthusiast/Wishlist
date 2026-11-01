@@ -1,0 +1,356 @@
+package com.wishlist.app
+
+import android.content.Context
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.util.Base64
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.ByteArrayOutputStream
+import java.io.File
+import kotlin.math.min
+
+/*
+ * Friends (since 2.87), with supabase-friends.sql.
+ *  - Your profile: a random id and secret token (only on this phone and online), your name (the app name, see
+ *    Shared.setAppName), an optional photo and a friend code you can give to people.
+ *  - Someone enters your code: a friend request. You approve or decline it in the Friends tab (and get a notification).
+ *  - Each of your own lists has "Visible to friends" in its settings (off by default). Such a list goes online like a
+ *    shared list (it gets its friends' link), and your friends can see it and reserve gifts. You never see reservations.
+ *  - Per friend: "Hide my lists from …" (they aren't told) and "Unfollow" (you are no longer friends; they aren't told).
+ * Profiles belong to the phone (no e-mail accounts): a new phone starts again.
+ */
+
+data class FriendList(val code: String, val name: String, val count: Int)
+
+data class Person(
+    val id: String,
+    val name: String,
+    val pv: Long,
+    val hidden: Boolean = false,
+    val lists: List<FriendList> = emptyList()
+)
+
+data class FriendsState(
+    val code: String,
+    val friends: List<Person>,
+    val incoming: List<Person>,
+    val outgoing: List<Person>
+)
+
+object Friends {
+    private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
+    private val lock = Mutex()
+
+    /** What the Friends tab shows (the last answer from the server, also kept on the phone for offline use). */
+    var state by mutableStateOf<FriendsState?>(null)
+        private set
+
+    /** Your own photo on this phone (a file), or "". */
+    var myPhoto by mutableStateOf("")
+        private set
+
+    /** Ids of your own lists that friends can see. */
+    var visible by mutableStateOf<Set<String>>(emptySet())
+        private set
+
+    /** Friends' photos on this phone, by profile id (a file address). */
+    var photos by mutableStateOf<Map<String, String>>(emptyMap())
+        private set
+
+    private var loaded = false
+
+    fun load(c: Context) {
+        if (loaded) return
+        loaded = true
+        val p = prefs(c)
+        myPhoto = p.getString("pf_photo", "") ?: ""
+        visible = p.getStringSet("fr_vis", null)?.toSet() ?: emptySet()
+        state = p.getString("fr_state", null)?.let { parse(it) }
+        val dir = photoDir(c)
+        photos = (dir.listFiles() ?: emptyArray()).filter { it.name.endsWith(".jpg") }
+            .associate { it.name.substringBefore('_') to Uri.fromFile(it).toString() }
+    }
+
+    /** True once this phone has a profile online. */
+    fun hasProfile(c: Context) = prefs(c).getString("pf_id", null) != null
+
+    /** Requests that wait for your approval: a red dot on Friends. */
+    val waiting: Int get() = state?.incoming?.size ?: 0
+
+    private fun ids(c: Context): Pair<String, String> {
+        val p = prefs(c)
+        val id = p.getString("pf_id", null) ?: Sync.newKey().also { p.edit().putString("pf_id", it).apply() }
+        val token = p.getString("pf_token", null) ?: Sync.newKey().also { p.edit().putString("pf_token", it).apply() }
+        return id to token
+    }
+
+    private fun base(c: Context): JSONObject {
+        val (id, token) = ids(c)
+        return JSONObject().put("p_id", id).put("p_token", token)
+    }
+
+    private fun str(t: String): String = t.trim().removeSurrounding("\"")
+
+    /** Makes your profile online the first time; afterwards saves your name. */
+    suspend fun ensure(c: Context) {
+        val p = prefs(c)
+        val fresh = !p.getBoolean("pf_made", false)
+        Cloud.rpc("wl_pf_save", base(c).put("p_name", Shared.lastName))
+        if (fresh) {
+            p.edit().putBoolean("pf_made", true).apply()
+            if (myPhoto.isNotEmpty()) uploadPhoto(c)
+            pushLists(c)
+        }
+    }
+
+    /** Your name changed (Profile, or anywhere else the app name is set). */
+    suspend fun nameChanged(c: Context) {
+        if (prefs(c).getBoolean("pf_made", false)) Cloud.rpc("wl_pf_save", base(c).put("p_name", Shared.lastName))
+    }
+
+    /** Loads everything for the Friends tab. Throws when offline (the last state stays on screen). */
+    suspend fun refresh(c: Context) = lock.withLock {
+        ensure(c)
+        val t = Cloud.rpc("wl_fr_state", base(c))
+        val s = parse(t) ?: return@withLock
+        state = s
+        prefs(c).edit().putString("fr_state", t).apply()
+        loadPhotos(c, s)
+        notifyNews(c, s, onScreen = true)
+    }
+
+    /** The background check: notifications for new requests and for requests that were approved. */
+    suspend fun poll(c: Context) {
+        load(c)
+        if (!prefs(c).getBoolean("pf_made", false)) return
+        lock.withLock {
+            val t = Cloud.rpc("wl_fr_state", base(c))
+            val s = parse(t) ?: return@withLock
+            state = s
+            prefs(c).edit().putString("fr_state", t).apply()
+            loadPhotos(c, s)
+            notifyNews(c, s, onScreen = false)
+        }
+    }
+
+    /**
+     * Requests are told once. On screen they are only remembered (you can see them, and Friends has a red dot); in the
+     * background each new one gives a notification. The same for a request of yours that was approved.
+     */
+    private fun notifyNews(c: Context, s: FriendsState, onScreen: Boolean) {
+        val p = prefs(c)
+        val told = p.getStringSet("fr_in_told", null)?.toSet() ?: emptySet()
+        val sent = p.getStringSet("fr_out", null)?.toSet() ?: emptySet()
+        if (!onScreen) {
+            for (r in s.incoming) if (r.id !in told) Alerts.notifyFriend(c, r.id, r.name, request = true)
+            for (f in s.friends) if (f.id in sent) Alerts.notifyFriend(c, f.id, f.name, request = false)
+        }
+        p.edit()
+            .putStringSet("fr_in_told", s.incoming.map { it.id }.toSet())
+            // Your requests that are still waiting, so their approval can be told later.
+            .putStringSet("fr_out", s.outgoing.map { it.id }.toSet())
+            .apply()
+    }
+
+    private fun parse(t: String): FriendsState? = try {
+        val o = JSONObject(t)
+        fun people(a: JSONArray?): List<Person> = if (a == null) emptyList() else (0 until a.length()).map { i ->
+            val p = a.getJSONObject(i)
+            val ls = p.optJSONArray("lists")
+            Person(
+                p.getString("id"), p.optString("name", ""), p.optLong("pv", 0L), p.optBoolean("hidden", false),
+                if (ls == null) emptyList() else (0 until ls.length()).map { j ->
+                    val l = ls.getJSONObject(j)
+                    FriendList(l.getString("code"), l.optString("name", ""), l.optInt("count", 0))
+                }
+            )
+        }
+        FriendsState(o.optString("code", ""), people(o.optJSONArray("friends")), people(o.optJSONArray("incoming")), people(o.optJSONArray("outgoing")))
+    } catch (e: Exception) {
+        null
+    }
+
+    // ---- photos ----
+
+    private fun photoDir(c: Context) = File(c.filesDir, "friends").apply { mkdirs() }
+
+    /** Loads the photos that are new or changed ("<id>_<version>.jpg"); removes ones nobody needs any more. */
+    private suspend fun loadPhotos(c: Context, s: FriendsState) {
+        val dir = photoDir(c)
+        val people = s.friends + s.incoming + s.outgoing
+        val want = people.filter { it.pv > 0 }.associate { it.id to "${it.id}_${it.pv}.jpg" }
+        val out = HashMap<String, String>()
+        for ((id, name) in want) {
+            val f = File(dir, name)
+            if (!f.exists()) {
+                try {
+                    val b64 = str(Cloud.rpc("wl_fr_photo", base(c).put("p_other", id)))
+                    if (b64.isEmpty()) continue
+                    val bytes = Base64.decode(b64, Base64.DEFAULT)
+                    withContext(Dispatchers.IO) { f.writeBytes(bytes) }
+                } catch (e: Exception) {
+                    continue
+                }
+            }
+            out[id] = Uri.fromFile(f).toString()
+        }
+        (dir.listFiles() ?: emptyArray()).filter { it.name !in want.values }.forEach { it.delete() }
+        photos = out
+    }
+
+    /** Your new profile photo from the gallery: cut to a square, made small and sent online. */
+    suspend fun setPhoto(c: Context, uri: Uri): Boolean {
+        val imported = ImageStore.import(c, uri) ?: return false
+        val file = withContext(Dispatchers.IO) {
+            try {
+                val src = File(Uri.parse(imported).path ?: return@withContext null)
+                val bmp = BitmapFactory.decodeFile(src.path) ?: return@withContext null
+                src.delete()
+                val side = min(bmp.width, bmp.height)
+                val sq = Bitmap.createBitmap(bmp, (bmp.width - side) / 2, (bmp.height - side) / 2, side, side)
+                val small = Bitmap.createScaledBitmap(sq, 320, 320, true)
+                val f = File(c.filesDir, "profile_" + System.currentTimeMillis() + ".jpg")
+                f.outputStream().use { small.compress(Bitmap.CompressFormat.JPEG, 85, it) }
+                f
+            } catch (e: Exception) {
+                null
+            }
+        } ?: return false
+        oldPhotoFile()?.delete()
+        myPhoto = Uri.fromFile(file).toString()
+        prefs(c).edit().putString("pf_photo", myPhoto).apply()
+        return try {
+            ensure(c)
+            uploadPhoto(c)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    private fun oldPhotoFile(): File? = Uri.parse(myPhoto).path?.let { File(it) }?.takeIf { myPhoto.isNotEmpty() }
+
+    private suspend fun uploadPhoto(c: Context) {
+        val f = oldPhotoFile()
+        val b64 = if (f != null && f.exists()) Base64.encodeToString(withContext(Dispatchers.IO) { f.readBytes() }, Base64.NO_WRAP) else ""
+        Cloud.rpc("wl_pf_photo", base(c).put("p_photo", b64))
+    }
+
+    suspend fun removePhoto(c: Context) {
+        oldPhotoFile()?.delete()
+        myPhoto = ""
+        prefs(c).edit().putString("pf_photo", "").apply()
+        if (prefs(c).getBoolean("pf_made", false)) Cloud.rpc("wl_pf_photo", base(c).put("p_photo", ""))
+    }
+
+    // ---- codes and requests ----
+
+    /** The friend code as people read it: "K7Q-4MZ". */
+    fun pretty(code: String) = if (code.length == 6) code.substring(0, 3) + "-" + code.substring(3) else code
+
+    suspend fun newCode(c: Context) {
+        ensure(c)
+        Cloud.rpc("wl_pf_new_code", base(c))
+        refresh(c)
+    }
+
+    /** Returns the server's answer: status ("sent", "friends", "already", "self", "none") and their name. */
+    suspend fun add(c: Context, code: String): Pair<String, String> {
+        ensure(c)
+        val o = JSONObject(Cloud.rpc("wl_fr_add", base(c).put("p_code", code)))
+        refresh(c)
+        return o.optString("status") to o.optString("name", "")
+    }
+
+    suspend fun answer(c: Context, id: String, yes: Boolean) {
+        Cloud.rpc("wl_fr_answer", base(c).put("p_other", id).put("p_yes", yes))
+        refresh(c)
+    }
+
+    /** Unfollow a friend, or take back a request you sent. */
+    suspend fun remove(c: Context, id: String) {
+        Cloud.rpc("wl_fr_remove", base(c).put("p_other", id))
+        refresh(c)
+    }
+
+    suspend fun hide(c: Context, id: String, hide: Boolean) {
+        Cloud.rpc("wl_fr_hide", base(c).put("p_other", id).put("p_hide", hide))
+        refresh(c)
+    }
+
+    /** A list of friend [id], only when they let you see it (null otherwise). */
+    suspend fun fetchList(c: Context, id: String, code: String): RemoteList? {
+        val t = Cloud.rpc("wl_fr_list", base(c).put("p_other", id).put("p_code", code)).trim()
+        if (t.isEmpty() || t == "null") return null
+        return Cloud.parseRemote(JSONObject(t))
+    }
+
+    // ---- which of your lists friends can see ----
+
+    fun isVisible(id: String) = id in visible
+
+    /** Turns "Visible to friends" on or off for your list [id] (its code and token must be known when on). */
+    suspend fun setVisible(c: Context, id: String, on: Boolean) {
+        val before = visible
+        visible = if (on) visible + id else visible - id
+        prefs(c).edit().putStringSet("fr_vis", visible).apply()
+        try {
+            ensure(c)
+            pushLists(c)
+        } catch (e: Exception) {
+            // Not saved online: the switch goes back.
+            visible = before
+            prefs(c).edit().putStringSet("fr_vis", visible).apply()
+            throw e
+        }
+    }
+
+    /** A list went offline or was deleted: friends can't see it any more. */
+    fun forget(c: Context, id: String) {
+        load(c)
+        if (id !in visible) return
+        visible = visible - id
+        prefs(c).edit().putStringSet("fr_vis", visible).apply()
+    }
+
+    /** Your list [from] now lives under the id [to] (the original list was deleted and the next took its place). */
+    fun moveId(c: Context, from: String, to: String) {
+        load(c)
+        if (from !in visible) return
+        visible = visible - from + to
+        prefs(c).edit().putStringSet("fr_vis", visible).apply()
+    }
+
+    /** Sends which lists friends can see (each with its owner token, so the server knows they are yours). */
+    suspend fun pushLists(c: Context) {
+        val a = JSONArray()
+        for (d in Repo.allMine(c)) {
+            if (d.id !in visible) continue
+            val code = d.code ?: continue
+            val token = d.token ?: continue
+            a.put(JSONObject().put("code", code).put("token", token))
+        }
+        Cloud.rpc("wl_pf_lists", base(c).put("p_lists", a))
+    }
+
+    // ---- sharing your code ----
+
+    fun shareCode(c: Context, code: String) {
+        val text = tr(
+            "Let’s be friends on Wishlist, so we can see each other’s wishlists. My friend code is %1\$s. In the app, tap Friends and then Add a friend. No app yet? Get it here: %2\$s",
+            pretty(code), Config.APK_URL
+        )
+        val i = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
+        c.startActivity(Intent.createChooser(i, tr("Share your friend code")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+}

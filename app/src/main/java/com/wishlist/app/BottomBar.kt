@@ -47,7 +47,9 @@ fun AppBottomBar(
     onCreate: () -> Unit,
     onAdd: () -> Unit,
     onPrices: () -> Unit,
-    onFriends: () -> Unit
+    onFriends: () -> Unit,
+    // Friend requests wait for your approval.
+    friendsDot: Boolean = false
 ) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
@@ -87,7 +89,13 @@ fun AppBottomBar(
         )
         NavigationBarItem(
             selected = current == "friends", onClick = onFriends,
-            icon = { Icon(AppIcons.Person, null) }, label = { BarLabel(tr("Friends")) }
+            icon = {
+                Box {
+                    Icon(AppIcons.Person, null)
+                    if (friendsDot) RedDot(Modifier.align(Alignment.TopEnd).offset(4.dp, (-3).dp))
+                }
+            },
+            label = { BarLabel(tr("Friends")) }
         )
     }
 }

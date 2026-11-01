@@ -68,6 +68,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
     var meDlg by remember { mutableStateOf(false) }
     var deleteMineDlg by remember { mutableStateOf(false) }
     var copyDlg by remember { mutableStateOf(false) }
+    var visBusy by remember { mutableStateOf(false) }
     BackHandler(onBack = onBack)
 
     Scaffold(
@@ -113,8 +114,8 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                     Column(Modifier.weight(1f)) {
                         Text(shared.me.ifBlank { Shared.lastName.ifBlank { tr("No name yet") } }, style = MaterialTheme.typography.bodyLarge)
                         Text(
-                            if (shared.me.isBlank() || shared.me == Shared.lastName) tr("From App settings. Shown as “Added by” on the wishes you add.")
-                            else tr("Only on this list. App settings has “%s”.", Shared.lastName),
+                            if (shared.me.isBlank() || shared.me == Shared.lastName) tr("From your profile. Shown as “Added by” on the wishes you add.")
+                            else tr("Only on this list. Your profile has “%s”.", Shared.lastName),
                             style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
                         )
                     }
@@ -188,6 +189,38 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                     SectionTitle(tr("Wishes"))
                     TextButton(onClick = { copyDlg = true }) { Text(tr("Add wishes from your other lists")) }
                 }
+                // Friends (Friends tab) can see this list when this is on. Off for every list until you turn it on.
+                if (Config.enabled) {
+                    SectionTitle(tr("Friends"))
+                    val listId = Repo.openMine
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                            Text(tr("Visible to friends"), style = MaterialTheme.typography.bodyLarge)
+                            Text(
+                                tr("Your friends can see this wishlist and reserve gifts. You never see what they reserve. Private wishes stay hidden."),
+                                style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = Friends.isVisible(listId), enabled = !visBusy,
+                            onCheckedChange = { on ->
+                                visBusy = true
+                                scope.launch {
+                                    try {
+                                        // The list has to be online first (it gets its friends' link, like sharing it).
+                                        if (on && Repo.shareCode == null) Sync.publish(ctx)
+                                        Friends.setVisible(ctx, listId, on)
+                                        visBusy = false
+                                        snack.showToast(if (on) tr("Your friends can see this wishlist now") else tr("Hidden from your friends"))
+                                    } catch (e: Exception) {
+                                        visBusy = false
+                                        snack.showToast(tr("Couldn’t reach the server. Check your connection."))
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }
                 SectionTitle(tr("Sharing"))
                 val code = Repo.shareCode
                 if (!Config.enabled) {
@@ -240,7 +273,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        tr("Only for “%s”. Leave it empty to use the name from App settings.", Repo.listName),
+                        tr("Only for “%s”. Leave it empty to use the name from your profile.", Repo.listName),
                         style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
                     )
                     OutlinedTextField(n, { n = it.take(30) }, singleLine = true, label = { Text(tr("Your name")) }, keyboardOptions = Capitalised)
@@ -293,13 +326,20 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
         AlertDialog(
             onDismissRequest = { stopDlg = false },
             title = { Text(tr("Stop sharing?")) },
-            text = { Text(tr("The link stops working and all reservations are deleted. Sharing again later creates a new link.")) },
+            text = {
+                Text(
+                    if (Friends.isVisible(Repo.openMine)) tr("The link stops working, your friends can no longer see this list, and all reservations are deleted. Sharing again later creates a new link.")
+                    else tr("The link stops working and all reservations are deleted. Sharing again later creates a new link.")
+                )
+            },
             confirmButton = {
                 TextButton(onClick = {
                     stopDlg = false
                     scope.launch {
                         try {
                             Sync.unpublish(ctx)
+                            // Offline means friends can't see it either (the server forgets it by itself).
+                            Friends.forget(ctx, Repo.openMine)
                         } catch (e: Exception) {
                             snack.showToast(tr("Couldn’t stop sharing. Check your connection."))
                         }

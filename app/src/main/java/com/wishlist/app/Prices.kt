@@ -144,38 +144,3 @@ fun PricesScreen(snack: SnackbarHostState) {
     }
     open?.let { w -> PriceHistoryDialog(w) { open = null } }
 }
-
-/** Friends (the bottom bar): coming later. For now a page that says what it will be. */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun FriendsSoonScreen(snack: SnackbarHostState) {
-    val cs = MaterialTheme.colorScheme
-    Scaffold(
-        containerColor = cs.background,
-        topBar = {
-            TopAppBar(
-                title = { Text(tr("Friends"), fontWeight = LocalLook.current.titleWeight) },
-                navigationIcon = { MenuSlot() },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
-            )
-        },
-        snackbarHost = { AppSnackbarHost(snack) }
-    ) { pad ->
-        Column(
-            Modifier.padding(pad).fillMaxSize().padding(32.dp),
-            verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text("🤝", fontSize = 56.sp)
-            Text(
-                tr("Friends is coming soon"), style = MaterialTheme.typography.titleLarge,
-                fontWeight = LocalLook.current.titleWeight, textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 16.dp)
-            )
-            Text(
-                tr("Soon you’ll find your friends here, with their wishlists, so you always know what to give."),
-                style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-        }
-    }
-}

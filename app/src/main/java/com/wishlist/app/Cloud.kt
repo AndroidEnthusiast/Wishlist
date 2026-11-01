@@ -19,7 +19,7 @@ const val ABOUT_ITEM_ID = 0L
 
 /** Talks to the Supabase functions created by supabase-setup.sql. */
 object Cloud {
-    private suspend fun rpc(fn: String, body: JSONObject): String = withContext(Dispatchers.IO) {
+    internal suspend fun rpc(fn: String, body: JSONObject): String = withContext(Dispatchers.IO) {
         if (!Config.enabled) throw CloudException(tr("Online sharing isn’t set up in this build."))
         val conn = URL(Config.SUPABASE_URL.trimEnd('/') + "/rest/v1/rpc/" + fn)
             .openConnection() as HttpURLConnection
@@ -140,6 +140,8 @@ object Cloud {
         if (t.isEmpty() || t == "null") return null
         return parseList(JSONObject(t))
     }
+
+    internal fun parseRemote(o: JSONObject): RemoteList = parseList(o)
 
     private fun parseList(o: JSONObject): RemoteList {
         val a = o.getJSONArray("items")

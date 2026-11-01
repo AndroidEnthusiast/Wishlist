@@ -18,6 +18,8 @@ The last line must say `ALL SUITES OK`. Each suite also exits with an error code
 | `index-page/test.js` | `web/index.html` in jsdom: friends' page, invite page (Android vs. other devices), clipboard copy | 140 |
 | `e2e/t1.js` to `t6.js` | The browser editor `web/edit.html` in Chromium: viewing, the app-style top bar, side menu, category drop-down and sort menu, the three views, adding by link or by hand, editing one field, reservations (Reserve/Undo, someone faster, offline), delete/Undo, categories, list name and note, share dialog and the share picture with the list name, failed saves, sorting, search, offline copy, pictures, two people at once, old refresh answers, iPhone tip, invite redirects, the link-preview pages join/ and list/ and the friends' page of a shared list | 37 + 32 + 29 + 38 + 34 + 42 |
 
+Not in `run-all.sh` (it needs PostgreSQL): `sql/friends_test.sql` checks `supabase-friends.sql` (profiles, friend codes, requests, approve/decline, hiding, unfollow, which lists friends may open) on a local PostgreSQL with a role `anon`: run `supabase-setup.sql`, `supabase-shared.sql` and `supabase-friends.sql` in an empty database, then `psql -v ON_ERROR_STOP=1 -f sql/friends_test.sql`. It ends with `ALL FRIENDS CHECKS OK`. 32 checks.
+
 Notes
 - `e2e/lib.js` serves the real `web/` folder and starts the pretend Supabase; `boot({...})` options: `items`, `about`, `name`, `key`, `ua`, `dark`, `reduced`, `clock`, `goto`, `viewport`, or `fake` to share one pretend server between two browser windows.
 - A suite that fails prints `FAIL <name>`. Fix the code, or the check if the behaviour was changed on purpose, and say which.

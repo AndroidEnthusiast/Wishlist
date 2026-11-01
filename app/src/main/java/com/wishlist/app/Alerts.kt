@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit
 object Alerts {
     const val CHANNEL = "price_drops"
     private const val BIN_CHANNEL = "reserved_bin"
+    private const val FRIENDS_CHANNEL = "friends"
 
     /** Creates the notification channel (high importance, so the alert pops up). Safe to call again and again. */
     fun ensureChannel(c: Context) {
@@ -146,6 +147,35 @@ object Alerts {
         val n = NotificationCompat.Builder(c, BIN_CHANNEL)
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle(tr("A gift you reserved is no longer on the list"))
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+        nm.notify(nid, n)
+    }
+
+    /**
+     * Friends: someone sent you a friend request ([request]), or approved yours. Tapping opens the Friends tab.
+     */
+    fun notifyFriend(c: Context, id: String, name: String, request: Boolean) {
+        val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        nm.createNotificationChannel(
+            NotificationChannel(FRIENDS_CHANNEL, tr("Friends"), NotificationManager.IMPORTANCE_HIGH).apply {
+                description = tr("Tells you about friend requests")
+            }
+        )
+        val nid = id.hashCode() * 31 + (if (request) 13 else 17)
+        val who = name.ifBlank { tr("Someone") }
+        val title = if (request) tr("%s wants to be your friend", who) else tr("%s approved your friend request", who)
+        val text = if (request) tr("Open Friends to approve or decline.") else tr("You can now see the wishlists %s shares with friends.", who)
+        val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_FRIENDS, true)
+            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        val pi = PendingIntent.getActivity(c, nid, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val n = NotificationCompat.Builder(c, FRIENDS_CHANNEL)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle(title)
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
             .setPriority(NotificationCompat.PRIORITY_HIGH)

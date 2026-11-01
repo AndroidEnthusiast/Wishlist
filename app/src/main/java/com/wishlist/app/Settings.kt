@@ -126,30 +126,11 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                 }
             }
 
+            // Your name moved to Profile (2.87), with your photo and friend code.
             SectionTitle(tr("Your name"))
-            // No Save button: the keyboard's tick saves the name and closes the keyboard. (An empty name isn't saved:
-            // the old one comes back.)
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(
-                    me, { me = it.take(30) }, singleLine = true, label = { Text(tr("Name")) },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done, capitalization = KeyboardCapitalization.Sentences),
-                    keyboardActions = KeyboardActions(onDone = {
-                        if (me.isNotBlank()) {
-                            Shared.setAppName(ctx, me)
-                            nameSaved++
-                        }
-                        me = Shared.lastName
-                        keyboard?.hide()
-                        focus.clearFocus()
-                    }),
-                    modifier = Modifier.weight(1f)
-                )
-                // Always takes its room, so the field keeps the same width when "Saved" shows.
-                SavedFeedback(nameSaved)
-            }
             Text(
-                tr("Shown as “Added by” on the shared wishlists you’re on. You can use a different name on one list in its ⚙."),
-                style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
+                tr("Your name, photo and friend code are in your Profile (menu > Profile)."),
+                style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
             )
 
             SectionTitle(tr("Deleting wishes"))

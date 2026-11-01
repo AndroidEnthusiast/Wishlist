@@ -235,7 +235,7 @@ object Bin {
     }
 }
 
-/** Runs [Bin.watch] and [FriendWatch.checkAll] every half hour (see [Alerts.scheduleBin]). */
+/** Runs [Bin.watch], [FriendWatch.checkAll] and [Friends.poll] every half hour (see [Alerts.scheduleBin]). */
 class BinWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {
     override suspend fun doWork(): Result {
         val c = applicationContext
@@ -246,6 +246,11 @@ class BinWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, p
         }
         try {
             FriendWatch.checkAll(c)
+        } catch (e: Exception) {
+        }
+        // Friend requests, and requests of yours that were approved (Friends.kt).
+        try {
+            Friends.poll(c)
         } catch (e: Exception) {
         }
         return Result.success()

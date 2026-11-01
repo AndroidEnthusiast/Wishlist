@@ -97,13 +97,15 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 - v2.85: small long-press menu on Home lists; delete all notifications (bin icon, Yes/No, Undo).
 - v2.86: swiping a notification shows a red block with a bin icon as you slide.
 
+## Session of 1 November 2026: Friends (v2.87)
+- Talked Friends and Groups through with the owner (choices in DECISIONS.md, "Friends and Groups"), then built Friends: Profile (photo, name, friend code), friend requests with approval, the Friends tab, a friend's page and lists, "Hide my lists from …", "Unfollow", "Visible to friends" per list, notifications for requests and approvals.
+- New `supabase-friends.sql` (the owner runs it by hand); checked on a local PostgreSQL with `tests/sql/friends_test.sql` (32 checks). The Android code could not be compiled here (no Android SDK); checked by hand and by the GitHub build.
+
 ## Next session
-**The owner's next topic: Friends and Groups** (they asked to be reminded to build Friends; the bottom bar has a "Friends is coming soon" page, `FriendsSoonScreen` in `Prices.kt`). Their idea, in their words, to refine with them before building:
-- **Friends**: see friends' wishlists in one place (gift ideas based on the receiver's own wishes: the safest choices).
-- **Groups**: a group / environment you create and invite friends to. Joining a group means bringing a wishlist: having one is mandatory. The invitation offers "Join with an existing wishlist" or "Join with a new wishlist" (a new one can be filled with wishes from your other lists, like the New wishlist form already does).
-- **App users only for now**: someone without the app has nowhere to keep their wishlist or their place in the group (closing the web page loses it), as the owner said. A web version would need some way to remember them (a personal link or an account) and the owner prefers no email accounts.
-- Things to think through with the owner: how groups relate to the existing "group wishlists" (one shared list for someone else) and to friends' links (`?c=CODE`); what a member sees of the others' lists (reservations stay a surprise for the list's owner); leaving a group; who can invite; the Supabase tables and functions this needs (new SQL the owner runs by hand).
-- Other open points: ask how 2.65-2.83 feel on the phone; ideas offered for the Prices tab but not chosen yet (summary at the top, a trend line per row, sorting chips, "checked … ago", a warning when a shop can't be read).
+- **Ask the owner** whether `supabase-friends.sql` was run, and how Friends 2.87 works on two phones (adding by code, approving, a visible list, reserving, hiding, unfollowing, the notifications). Nothing of it could be tried on a real phone or the real Supabase.
+- **Groups** (owner's next step after Friends): a group you create and invite friends to; joining means bringing exactly one wishlist (pick one or make a new one, optionally copying wishes from your other lists); only the organiser invites unless they switch on "Members can invite too"; app users only for now. Still open: the new name for the existing "Group wishlists" (one list edited together for someone else; offered "Gift lists", "Gift plans", "Joint wishlists"), and whether hiding your lists from a friend also hides the list you brought to a shared group (suggested: no).
+- Friends follow-ups to offer: a tap-to-add link for friend codes (needs a small web page and an app link); background "gift no longer on the list" checks for friends' lists (only on screen now, `FriendWatch` checks link lists only); the Friends cards are drawn with the theme's card style but were never seen on a phone.
+- Other open points: ask how 2.65-2.86 feel on the phone; ideas offered for the Prices tab but not chosen yet (summary at the top, a trend line per row, sorting chips, "checked … ago", a warning when a shop can't be read).
 
 ## Decisions and why
 - Lists are link-only, never listed publicly. Reservations are hidden from the owner and from editors so gifts stay a surprise.
