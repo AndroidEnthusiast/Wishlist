@@ -658,7 +658,7 @@ fun App(
                 profileOpen -> ProfileScreen(snack)
                 settings -> SettingsScreen(snack, openMenu)
                 binOpen -> BinScreen(snack)
-                fr != null -> FriendScreen(fr, snack, openMenu) { friendCode = null }
+                fr != null -> FriendScreen(fr, snack, openMenu, onRemoved = { friendCode = null })
                 listSettings -> key(Shared.active, Repo.openMine) {
                     ListSettingsScreen(snack, onDeleted = { listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false; hub = true }) { listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false }
                 }
