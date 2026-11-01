@@ -64,9 +64,16 @@ object WishFocus {
         private set
 
     fun glow(id: Long) { glowing = id to ((glowing?.second ?: 0) + 1) }
+
+    /** The glow of [id] is over: the card goes back to how it was. */
+    fun done(id: Long) { if (glowing?.first == id) glowing = null }
 }
 
-/** Around a wish card on a list: a soft glow in the theme's colour that pulses twice and fades, when [WishFocus] says so. */
+/**
+ * Around a wish card on a list: a soft glow in the theme's colour that pulses twice and fades, when [WishFocus] says
+ * so. When it is over (or stopped halfway, for example by scrolling), [WishFocus] forgets it and the card is drawn
+ * exactly as before: no glow modifiers at all (2.93: in 2.92 a rim could stay behind).
+ */
 @Composable
 fun GlowBox(id: Long, small: Boolean, content: @Composable () -> Unit) {
     val look = LocalLook.current
@@ -75,11 +82,20 @@ fun GlowBox(id: Long, small: Boolean, content: @Composable () -> Unit) {
     val n = WishFocus.glowing?.takeIf { it.first == id }?.second ?: 0
     LaunchedEffect(n) {
         if (n == 0) return@LaunchedEffect
-        repeat(2) {
-            g.animateTo(1f, tween(450))
-            g.animateTo(0.3f, tween(450))
+        try {
+            g.snapTo(0f)
+            repeat(2) {
+                g.animateTo(1f, tween(450))
+                g.animateTo(0.3f, tween(450))
+            }
+            g.animateTo(0f, tween(700))
+        } finally {
+            WishFocus.done(id)
         }
-        g.animateTo(0f, tween(700))
+    }
+    if (n == 0) {
+        content()
+        return
     }
     val lit = g.value
     val shape = look.cardShape(id, small)
