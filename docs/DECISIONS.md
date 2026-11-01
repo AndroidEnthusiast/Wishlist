@@ -161,6 +161,9 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - A friend's page looks like your own Home profile: their picture and name, the numbers (wishlists, wishes, top wishes) and their visible lists as blocks.
 - Optional birthday on the profile (day and month), visible to friends. Reminders: 14 days before, and again 7 days before only if you haven't reserved anything on their lists yet. Needs a new Supabase script (owner agreed).
 - On a friend's page, their numbers open their wishes / top wishes; tapping a wish opens its list, scrolls to it and glows; reserving happens on the list.
+- The bin keeps wishes 30 days (was 10). Bin stays in the menu only.
+- Profile gets a short "I like…" line (visible to friends, gift inspiration). No sizes on the profile.
+- **Export and import** (owner, 1 November 2026; replaces "No import/export for now"): a simple way to move your whole profile to a new phone (details being decided).
 - Price check interval stays a choice; all themes and colour sets stay.
 - **All review changes go out together in one update**, which the owner then tests (owner, 1 November 2026).
 
