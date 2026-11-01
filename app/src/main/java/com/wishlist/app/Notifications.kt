@@ -246,7 +246,7 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                 val down = n.pct < 0
                 val target = n.kind == "target"
                 // Swipe left or right to delete it straight away, with Undo for 5 seconds.
-                SwipeAway(n, onGone = {
+                SwipeAway(n, trash = true, onGone = {
                     val at = Notifications.remove(ctx, n)
                     scope.launch {
                         snack.currentSnackbarData?.dismiss()

@@ -18,6 +18,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.aspectRatio
@@ -486,34 +487,53 @@ fun AppSnackbarHost(state: SnackbarHostState, modifier: Modifier = Modifier) {
     }
 }
 
-/** Swipe it left or right (far enough) and it slides away; not far enough and it springs back. */
+/**
+ * Swipe it left or right (far enough) and it slides away; not far enough and it springs back. [trash]: while sliding,
+ * a red block with a bin icon grows on the side that is uncovered (deleting a notification).
+ */
 @Composable
-fun SwipeAway(key: Any, onGone: () -> Unit, content: @Composable () -> Unit) {
+fun SwipeAway(key: Any, onGone: () -> Unit, trash: Boolean = false, content: @Composable () -> Unit) {
     val offset = remember(key) { Animatable(0f) }
     val scope = rememberCoroutineScope()
     var width by remember(key) { mutableStateOf(1f) }
-    Box(
-        Modifier
-            .onSizeChanged { width = it.width.toFloat().coerceAtLeast(1f) }
-            .graphicsLayer {
-                translationX = offset.value
-                alpha = 1f - (kotlin.math.abs(offset.value) / width).coerceIn(0f, 1f) * 0.8f
-            }
-            .pointerInput(key) {
-                detectHorizontalDragGestures(
-                    onDragEnd = {
-                        scope.launch {
-                            if (kotlin.math.abs(offset.value) > width * 0.3f) {
-                                offset.animateTo(if (offset.value > 0) width else -width, tween(160))
-                                onGone()
-                            } else offset.animateTo(0f, tween(180))
-                        }
-                    },
-                    onDragCancel = { scope.launch { offset.animateTo(0f, tween(180)) } }
-                ) { ch, drag ->
-                    ch.consume()
-                    scope.launch { offset.snapTo(offset.value + drag) }
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    Box(Modifier.onSizeChanged { width = it.width.toFloat().coerceAtLeast(1f) }) {
+        if (trash && offset.value != 0f) {
+            val shown = with(density) { kotlin.math.abs(offset.value).toDp() }
+            Box(
+                Modifier.matchParentSize().padding(vertical = 2.dp),
+                contentAlignment = if (offset.value > 0) Alignment.CenterStart else Alignment.CenterEnd
+            ) {
+                Box(
+                    Modifier.fillMaxHeight().width(shown).clip(RoundedCornerShape(14.dp)).background(Color(0xFFD32F2F)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (shown > 32.dp) Icon(AppIcons.Delete, null, tint = Color.White)
                 }
             }
-    ) { content() }
+        }
+        Box(
+            Modifier
+                .graphicsLayer {
+                    translationX = offset.value
+                    if (!trash) alpha = 1f - (kotlin.math.abs(offset.value) / width).coerceIn(0f, 1f) * 0.8f
+                }
+                .pointerInput(key) {
+                    detectHorizontalDragGestures(
+                        onDragEnd = {
+                            scope.launch {
+                                if (kotlin.math.abs(offset.value) > width * 0.3f) {
+                                    offset.animateTo(if (offset.value > 0) width else -width, tween(160))
+                                    onGone()
+                                } else offset.animateTo(0f, tween(180))
+                            }
+                        },
+                        onDragCancel = { scope.launch { offset.animateTo(0f, tween(180)) } }
+                    ) { ch, drag ->
+                        ch.consume()
+                        scope.launch { offset.snapTo(offset.value + drag) }
+                    }
+                }
+        ) { content() }
+    }
 }
