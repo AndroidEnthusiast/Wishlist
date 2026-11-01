@@ -136,7 +136,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **"Groups" is the name for a group of people** who each bring their own list (owner). The existing "Group wishlists" (one list edited together for someone else) needs a new name; the owner is still choosing (offered: "Gift lists", "Gift plans", "Joint wishlists").
 - **Still to decide**: whether hiding your lists from a friend also hides the list you brought to a group you're both in (Claude suggested: no, the group is a separate place you chose to join).
 
-## App review (1 November 2026, owner interviewed; to build)
+## App review (1 November 2026, owner interviewed; built in 2.95)
 - Side menu keeps everything (lists included).
 - "Price changes" leaves Home; price news lives on the Prices tab and in Notifications.
 - One sharing choice per list: list settings > "Who can see this list": Only me / My friends / Friends + anyone with the link (replaces the separate friends' link and "Visible to friends").
