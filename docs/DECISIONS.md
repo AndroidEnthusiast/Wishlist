@@ -136,6 +136,12 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **"Groups" is the name for a group of people** who each bring their own list (owner). The existing "Group wishlists" (one list edited together for someone else) needs a new name; the owner is still choosing (offered: "Gift lists", "Gift plans", "Joint wishlists").
 - **Still to decide**: whether hiding your lists from a friend also hides the list you brought to a group you're both in (Claude suggested: no, the group is a separate place you chose to join).
 
+## App review (1 November 2026, owner interviewed; to build)
+- Side menu keeps everything (lists included).
+- "Price changes" leaves Home; price news lives on the Prices tab and in Notifications.
+- One sharing choice per list: list settings > "Who can see this list": Only me / My friends / Friends + anyone with the link (replaces the separate friends' link and "Visible to friends").
+- The bottom bar keeps "New wishlist".
+
 ## Open ideas (not decided)
 - Personal recovery key: an encrypted online backup of your lists, keys, creator rights and settings, restored with a key (optionally saved in Google Password Manager), plus automatic clean-up of lists nobody uses. Ask the owner before building.
   - Owner asked (1 November 2026, not a priority yet): pictures would go to Supabase file storage (free plan about 1 GB, separate from the 500 MB database). Back up only the cut-out pictures as shown (profile about 20 KB, list cover about 150–250 KB, own wish photos about 50 KB), not the originals: roughly 1–2 MB per active person. After a restore you can choose a new photo but not re-crop the old one.
