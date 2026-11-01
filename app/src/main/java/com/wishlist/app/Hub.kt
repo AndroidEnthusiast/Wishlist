@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -244,6 +245,8 @@ private fun Hero(modifier: Modifier) {
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
     var menu by remember { mutableStateOf(false) }
+    // The cover's shape (width / height): 16 dp from both sides, 150 dp high, as in the editor.
+    val coverShape = (LocalConfiguration.current.screenWidthDp - 32).coerceAtLeast(120) / 150f
     // A new photo is adjusted first (HeroEditor) and only becomes the picture after Save.
     var pending by remember { mutableStateOf<String?>(null) }
     var adjusting by remember { mutableStateOf(false) }
@@ -263,7 +266,7 @@ private fun Hero(modifier: Modifier) {
             .background(Brush.linearGradient(listOf(cs.primaryContainer, cs.tertiaryContainer)))
     ) {
         if (Repo.hero.isNotEmpty()) {
-            HeroPicture(Repo.hero, Repo.heroEdit, Modifier.fillMaxSize())
+            HeroPicture(Repo.hero, Repo.heroEdit, Modifier.fillMaxSize(), cut = Repo.heroCut)
         } else {
             Text("🎁", fontSize = 56.sp, modifier = Modifier.align(Alignment.Center))
         }
@@ -307,9 +310,12 @@ private fun Hero(modifier: Modifier) {
             img, HeroEdit(),
             onSave = { chosen, e ->
                 pending = null
-                Repo.setHero(ctx, chosen, e)
-                // Another photo was picked in the editor: the first one isn't needed.
-                if (chosen != img) ImageStore.delete(ctx, img)
+                // The cover is cut out exactly as it was in the frame, then saved.
+                scope.launch {
+                    Repo.setHero(ctx, chosen, e, renderCover(ctx, chosen, e, coverShape) ?: "")
+                    // Another photo was picked in the editor: the first one isn't needed.
+                    if (chosen != img) ImageStore.delete(ctx, img)
+                }
             },
             // Cancelled: the copied photo isn't needed.
             onCancel = { pending = null; ImageStore.delete(ctx, img) }
@@ -318,7 +324,10 @@ private fun Hero(modifier: Modifier) {
     if (adjusting && Repo.hero.isNotEmpty()) {
         HeroEditor(
             Repo.hero, Repo.heroEdit,
-            onSave = { chosen, e -> adjusting = false; Repo.setHero(ctx, chosen, e) },
+            onSave = { chosen, e ->
+                adjusting = false
+                scope.launch { Repo.setHero(ctx, chosen, e, renderCover(ctx, chosen, e, coverShape) ?: "") }
+            },
             onCancel = { adjusting = false }
         )
     }

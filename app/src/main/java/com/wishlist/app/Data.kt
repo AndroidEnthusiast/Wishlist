@@ -185,6 +185,9 @@ object Repo {
     /** How that picture sits in its frame (zoom, position) and its optional text: see HeroEditor.kt. */
     var heroEdit by mutableStateOf(HeroEdit())
         private set
+    /** The finished cover picture (the part in the frame, turned and lightened), made when it was saved; empty for older ones. */
+    var heroCut by mutableStateOf("")
+        private set
 
     private fun prefs(c: Context) =
         c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
@@ -255,6 +258,7 @@ object Repo {
             emptyMap()
         }
         heroEdit = HeroEdit.fromJson(p.getString("hero_edit", null))
+        heroCut = p.getString("hero_cut", "") ?: ""
         val open = p.getString("mine_open", MAIN_LIST) ?: MAIN_LIST
         if (open != MAIN_LIST && open in mineIds) {
             applyMine(MyLists.read(p, open))
@@ -293,6 +297,7 @@ object Repo {
             .putString("mine_copies", cp.toString())
             .putString("hero", hero)
             .putString("hero_edit", heroEdit.toJson())
+            .putString("hero_cut", heroCut)
             .putString("theme", theme)
             .putString("palette", palette)
             .putString("style", design)
@@ -516,10 +521,13 @@ object Repo {
     }
 
     @Synchronized
-    fun setHero(c: Context, image: String, edit: HeroEdit = HeroEdit()) {
+    fun setHero(c: Context, image: String, edit: HeroEdit = HeroEdit(), cut: String = "") {
         val old = hero
+        val oldCut = heroCut
         hero = image
         heroEdit = edit
+        heroCut = cut
+        if (oldCut.isNotEmpty() && oldCut != cut) ImageStore.delete(c, oldCut)
         persist(c)
         if (old.isNotEmpty() && old != image) ImageStore.delete(c, old)
     }

@@ -175,7 +175,7 @@ private fun brightness(b: Float): ColorFilter? {
 @Composable
 fun HeroPicture(
     image: String, edit: HeroEdit, modifier: Modifier, onChange: ((HeroEdit) -> Unit)? = null, grid: Boolean = false,
-    showOutside: Boolean = false
+    showOutside: Boolean = false, cut: String = ""
 ) {
     val painter = rememberAsyncImagePainter(image)
     val drawable = (painter.state as? AsyncImagePainter.State.Success)?.result?.drawable
@@ -220,7 +220,10 @@ fun HeroPicture(
         // Turned sideways, the picture is drawn with width and height swapped and then turned.
         val dw = if (sideways) bh else bw
         val dh = if (sideways) bw else bh
-        Image(
+        // The saved cover (exactly the part that was in the frame, turned and lightened) when there is one.
+        if (cut.isNotEmpty()) Image(
+            rememberAsyncImagePainter(cut), null, contentScale = ContentScale.Crop, modifier = Modifier.matchParentSize()
+        ) else Image(
             painter, null, contentScale = ContentScale.FillBounds, colorFilter = brightness(edit.bright),
             modifier = Modifier.align(Alignment.Center)
                 .requiredSize(with(density) { dw.toDp() }, with(density) { dh.toDp() })
@@ -336,17 +339,19 @@ fun HeroEditor(image: String, start: HeroEdit, onSave: (String, HeroEdit) -> Uni
                         onSave(img, edit)
                     }) { Icon(AppIcons.Check, tr("Save"), tint = onDark) }
                 }
-                // The whole photo with the cover frame over it (the rest dimmed). The frame always keeps its size on
-                // screen: drag it to move it over the photo (when it reaches the edge of the screen, the photo moves
-                // instead), pinch to zoom the photo around it. What is inside the frame is the cover photo.
+                // The whole photo stands still on screen, with the cover frame over it (the rest dimmed). One finger
+                // moves the frame (it always keeps its size); pinching zooms the photo around the frame, so what is in
+                // the frame stays in place. What is inside the frame is the cover photo.
                 val painter = rememberAsyncImagePainter(img)
                 val d = (painter.state as? AsyncImagePainter.State.Success)?.result?.drawable
                 val raw = d?.let { if (it.intrinsicWidth > 0 && it.intrinsicHeight > 0) it.intrinsicWidth.toFloat() / it.intrinsicHeight else null }
                 val density = LocalDensity.current
                 // The shape of the frame on the dashboard (16 dp from both sides, 150 dp high).
                 val fa = (LocalConfiguration.current.screenWidthDp - 32).coerceAtLeast(120) / 150f
-                // Where the frame's middle is on screen (null: in the middle of the photo area).
-                var framePos by remember(img) { mutableStateOf<Offset?>(null) }
+                // The photo's zoom and middle, and the frame's middle, on screen (null: not placed yet).
+                var zoomS by remember(img, edit.rotation) { mutableStateOf<Float?>(null) }
+                var photoS by remember(img, edit.rotation) { mutableStateOf<Offset?>(null) }
+                var frameS by remember(img, edit.rotation) { mutableStateOf<Offset?>(null) }
                 BoxWithConstraints(Modifier.weight(1f).fillMaxWidth().clipToBounds()) {
                     val aw = constraints.maxWidth.toFloat()
                     val ah = constraints.maxHeight.toFloat()
@@ -357,28 +362,50 @@ fun HeroEditor(image: String, start: HeroEdit, onSave: (String, HeroEdit) -> Uni
                     }
                     if (r != null) {
                         val sideways = edit.rotation % 180 != 0
+                        val ar = if (sideways) 1f / r else r
                         val m = with(density) { 16.dp.toPx() }
                         // The frame: as wide as fits (and not too high), always this size.
                         val fw = minOf(aw - 2 * m, (ah - 2 * m) * fa)
                         val fh = fw / fa
-                        fun clampFrame(p: Offset) = Offset(
-                            p.x.coerceIn(fw / 2f + m, (aw - fw / 2f - m).coerceAtLeast(fw / 2f + m)),
-                            p.y.coerceIn(fh / 2f + m, (ah - fh / 2f - m).coerceAtLeast(fh / 2f + m))
-                        )
-                        fun frameRect(): Rect {
-                            val c = clampFrame(framePos ?: Offset(aw / 2f, ah / 2f))
-                            return Rect(Offset(c.x - fw / 2f, c.y - fh / 2f), Size(fw, fh))
+                        // The photo at zoom 1: it fits the screen, but is never smaller than the frame.
+                        val fitW = if (ar > (aw - 2 * m) / (ah - 2 * m)) aw - 2 * m else (ah - 2 * m) * ar
+                        val baseW = maxOf(fitW, fw, fh * ar)
+                        val baseH = baseW / ar
+                        val mid = Offset(aw / 2f, ah / 2f)
+                        fun photoRect(z: Float, c: Offset) = Rect(Offset(c.x - baseW * z / 2f, c.y - baseH * z / 2f), Size(baseW * z, baseH * z))
+                        // The frame stays on the photo and on the screen.
+                        fun keepFrame(p: Offset, pr: Rect): Offset {
+                            val x0 = maxOf(pr.left + fw / 2f, m + fw / 2f)
+                            val x1 = minOf(pr.right - fw / 2f, aw - m - fw / 2f)
+                            val y0 = maxOf(pr.top + fh / 2f, m + fh / 2f)
+                            val y1 = minOf(pr.bottom - fh / 2f, ah - m - fh / 2f)
+                            return Offset(
+                                if (x0 <= x1) p.x.coerceIn(x0, x1) else (x0 + x1) / 2f,
+                                if (y0 <= y1) p.y.coerceIn(y0, y1) else (y0 + y1) / 2f
+                            )
                         }
-                        // The photo is placed so that the crop sits exactly in the frame.
-                        fun imgRect(): Rect {
-                            val fr = frameRect()
+                        // Where things start: from the edit (so editing again shows the same part), frame in the middle.
+                        val start = remember(img, edit.rotation, aw, ah, r) {
                             val c = toCrop(edit, fa, r)
-                            val w = fw / c.cw
-                            val h = fh / c.ch
-                            return Rect(Offset(fr.left - (c.cx - c.cw / 2f) * w, fr.top - (c.cy - c.ch / 2f) * h), Size(w, h))
+                            val z = (fw / c.cw / baseW).coerceIn(1f, 8f)
+                            val pw = baseW * z
+                            val ph = baseH * z
+                            val pc = if (z <= 1.0001f) mid else Offset(mid.x - c.cx * pw + pw / 2f, mid.y - c.cy * ph + ph / 2f)
+                            val fc = if (z <= 1.0001f) Offset(pc.x - pw / 2f + c.cx * pw, pc.y - ph / 2f + c.cy * ph) else mid
+                            Triple(z, pc, fc)
                         }
-                        val ir = imgRect()
-                        val cr = frameRect()
+                        fun zoomNow() = zoomS ?: start.first
+                        fun photoNow() = photoS ?: start.second
+                        fun frameNow() = keepFrame(frameS ?: start.third, photoRect(zoomNow(), photoNow()))
+                        // The edit follows what is in the frame.
+                        fun sync() {
+                            val pr = photoRect(zoomNow(), photoNow())
+                            val f = frameNow()
+                            edit = fromCrop(edit, Crop((f.x - pr.left) / pr.width, (f.y - pr.top) / pr.height, fw / pr.width, fh / pr.height), fa, r)
+                        }
+                        val ir = photoRect(zoomNow(), photoNow())
+                        val fcNow = frameNow()
+                        val cr = Rect(Offset(fcNow.x - fw / 2f, fcNow.y - fh / 2f), Size(fw, fh))
                         fun dp(px: Float) = with(density) { px.toDp() }
                         // The photo.
                         Box(
@@ -409,7 +436,7 @@ fun HeroEditor(image: String, start: HeroEdit, onSave: (String, HeroEdit) -> Uni
                                 }
                             }
                         }
-                        // Touch: one finger moves the frame over the photo, two fingers zoom the photo.
+                        // Touch: one finger moves the frame; two fingers zoom the photo around the frame.
                         Box(
                             Modifier.matchParentSize().pointerInput(r, fa, aw, ah, edit.rotation) {
                                 awaitEachGesture {
@@ -419,11 +446,19 @@ fun HeroEditor(image: String, start: HeroEdit, onSave: (String, HeroEdit) -> Uni
                                         val ev = awaitPointerEvent()
                                         val pressed = ev.changes.filter { it.pressed }
                                         if (pressed.isEmpty()) break
-                                        val c = toCrop(edit, fa, r)
                                         if (pressed.size >= 2) {
-                                            // Zoom the photo: the part in the frame gets smaller, the frame stays.
-                                            val z = ev.calculateZoom()
-                                            if (z != 1f) edit = fromCrop(edit, c.copy(cw = c.cw / z), fa, r)
+                                            val zf = ev.calculateZoom()
+                                            if (zf != 1f) {
+                                                val z0 = zoomNow()
+                                                val z1 = (z0 * zf).coerceIn(1f, 8f)
+                                                val f = frameNow()
+                                                // Zoom around the frame's middle; back at zoom 1 the photo is in its place again.
+                                                val pc = if (z1 <= 1.0001f) mid else f + (photoNow() - f) * (z1 / z0)
+                                                zoomS = z1
+                                                photoS = pc
+                                                frameS = keepFrame(f, photoRect(z1, pc))
+                                                sync()
+                                            }
                                             ev.changes.forEach { it.consume() }
                                             continue
                                         }
@@ -431,14 +466,8 @@ fun HeroEditor(image: String, start: HeroEdit, onSave: (String, HeroEdit) -> Uni
                                         if (ch.isConsumed) continue
                                         val dl = ch.positionChange()
                                         if (dl == Offset.Zero) continue
-                                        val iw = fw / c.cw
-                                        val ih = fh / c.ch
-                                        val moved = fromCrop(edit, c.copy(cx = c.cx + dl.x / iw, cy = c.cy + dl.y / ih), fa, r)
-                                        val c2 = toCrop(moved, fa, r)
-                                        // The frame goes as far as the crop could go; at the screen's edge the photo moves.
-                                        val before = frameRect().center
-                                        framePos = clampFrame(before + Offset((c2.cx - c.cx) * iw, (c2.cy - c.cy) * ih))
-                                        edit = moved
+                                        frameS = keepFrame(frameNow() + dl, photoRect(zoomNow(), photoNow()))
+                                        sync()
                                         ch.consume()
                                     }
                                 }
@@ -718,3 +747,52 @@ private fun UploadIcon(c: Color) {
         drawPath(tray, c, style = st)
     }
 }
+
+/**
+ * Makes the cover picture: exactly the part of [image] that was in the frame ([edit], frame shape [fa]), turned and
+ * lightened or darkened, as a JPEG at most 1400 pixels wide. Returns its address, or null when it couldn't be made
+ * (the dashboard then works it out from [edit] itself).
+ */
+suspend fun renderCover(c: android.content.Context, image: String, edit: HeroEdit, fa: Float): String? =
+    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        try {
+            val path = android.net.Uri.parse(image).path ?: return@withContext null
+            val o = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            android.graphics.BitmapFactory.decodeFile(path, o)
+            if (o.outWidth <= 0 || o.outHeight <= 0) return@withContext null
+            var sample = 1
+            while (maxOf(o.outWidth, o.outHeight) / (sample * 2) >= 2400) sample *= 2
+            var bmp = android.graphics.BitmapFactory.decodeFile(path, android.graphics.BitmapFactory.Options().apply { inSampleSize = sample })
+                ?: return@withContext null
+            if (edit.rotation % 360 != 0) {
+                val m = android.graphics.Matrix().apply { postRotate(edit.rotation.toFloat()) }
+                bmp = android.graphics.Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, m, true)
+            }
+            val raw = bmp.width.toFloat() / bmp.height
+            // toCrop expects the aspect before turning; the bitmap is already turned.
+            val before = if (edit.rotation % 180 != 0) 1f / raw else raw
+            val cr = toCrop(edit, fa, before)
+            val left = ((cr.cx - cr.cw / 2f) * bmp.width).toInt().coerceIn(0, bmp.width - 1)
+            val top = ((cr.cy - cr.ch / 2f) * bmp.height).toInt().coerceIn(0, bmp.height - 1)
+            val w = (cr.cw * bmp.width).toInt().coerceIn(1, bmp.width - left)
+            val h = (cr.ch * bmp.height).toInt().coerceIn(1, bmp.height - top)
+            val outW = minOf(w, 1400)
+            val outH = (outW * h.toFloat() / w).toInt().coerceAtLeast(1)
+            val out = android.graphics.Bitmap.createBitmap(outW, outH, android.graphics.Bitmap.Config.ARGB_8888)
+            val canvas = android.graphics.Canvas(out)
+            val paint = android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG)
+            if (edit.bright != 0f) {
+                val k = edit.bright * 0.4f * 255f
+                paint.colorFilter = android.graphics.ColorMatrixColorFilter(
+                    floatArrayOf(1f, 0f, 0f, 0f, k, 0f, 1f, 0f, 0f, k, 0f, 0f, 1f, 0f, k, 0f, 0f, 0f, 1f, 0f)
+                )
+            }
+            canvas.drawBitmap(bmp, android.graphics.Rect(left, top, left + w, top + h), android.graphics.Rect(0, 0, outW, outH), paint)
+            val dir = java.io.File(c.filesDir, "images").apply { mkdirs() }
+            val file = java.io.File(dir, "cover_" + System.currentTimeMillis() + ".jpg")
+            java.io.FileOutputStream(file).use { out.compress(android.graphics.Bitmap.CompressFormat.JPEG, 90, it) }
+            android.net.Uri.fromFile(file).toString()
+        } catch (e: Exception) {
+            null
+        }
+    }
