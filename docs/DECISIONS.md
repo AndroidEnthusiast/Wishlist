@@ -149,6 +149,10 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - Price watch shows only your own wishes.
 - "Got it" stays but is called **"Owned"** (NL "In bezit") everywhere, also for friends.
 - Tidy up the main screen's navigation under the hood, in its own version (owner).
+- Deleting a wish: no question first; bin + Undo is enough. The "Instant delete wishes" setting goes.
+- The Notifications page lists everything: price changes, friend requests (tap: Friends), approvals, reserved-gift alerts, newest first, with the red dot.
+- A short, skippable 3-step welcome on first start: your name (photo optional), name your first wishlist, one line on how friends reserve gifts; then the permission questions.
+- The browser editor keeps to what givers need (lists for someone, friends' links); new personal features stay app-only.
 
 ## Open ideas (not decided)
 - Personal recovery key: an encrypted online backup of your lists, keys, creator rights and settings, restored with a key (optionally saved in Google Password Manager), plus automatic clean-up of lists nobody uses. Ask the owner before building.
