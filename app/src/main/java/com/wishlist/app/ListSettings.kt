@@ -67,6 +67,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
     var manage by remember { mutableStateOf<String?>(null) }
     var meDlg by remember { mutableStateOf(false) }
     var deleteMineDlg by remember { mutableStateOf(false) }
+    var copyDlg by remember { mutableStateOf(false) }
     BackHandler(onBack = onBack)
 
     Scaffold(
@@ -184,6 +185,11 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                     TextButton(onClick = { manage = "delete" }) { Text(tr("Delete for everyone"), color = cs.error) }
                 }
             } else {
+                // Copy wishes from your other lists into this one (also offered when a list is made).
+                if (canCopyFromOthers(ctx, Repo.openMine)) {
+                    SectionTitle(tr("Wishes"))
+                    TextButton(onClick = { copyDlg = true }) { Text(tr("Add wishes from your other lists")) }
+                }
                 SectionTitle(tr("Sharing"))
                 val code = Repo.shareCode
                 if (!Config.enabled) {
@@ -246,6 +252,18 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                 TextButton(onClick = { Shared.setMe(ctx, shared.code, n); meDlg = false }) { Text(tr("Save")) }
             },
             dismissButton = { TextButton(onClick = { meDlg = false }) { Text(tr("Cancel")) } }
+        )
+    }
+    if (copyDlg) {
+        val target = Repo.openMine
+        CopyWishesDialog(
+            target,
+            onDone = { ws ->
+                copyDlg = false
+                Repo.copyInto(ctx, target, ws)
+                scope.launch { snack.showSnackbar(if (ws.size == 1) tr("1 wish added") else tr("%d wishes added", ws.size)) }
+            },
+            onClose = { copyDlg = false }
         )
     }
     if (deleteMineDlg) {

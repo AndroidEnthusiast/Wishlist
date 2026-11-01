@@ -1084,8 +1084,9 @@ fun CompactCard(
                     if (newP != null) money(newP, w.currency) else tr("No price"),
                     style = MaterialTheme.typography.titleMedium, fontWeight = look.priceWeight, fontFamily = look.display,
                     maxLines = 1, color = if (drop) look.drop else if (rise) look.rise else ink,
-                    modifier = Modifier.padding(top = 2.dp, bottom = 6.dp)
+                    modifier = Modifier.padding(top = 2.dp)
                 )
+                AddedOnText(w, muted, Modifier.padding(bottom = 6.dp))
             }
             Box {
                 IconButton(onClick = { if (!inert) menu = true }) {
@@ -1234,6 +1235,7 @@ fun WishCard(
                 if (w.by.isNotBlank()) {
                     Text(tr("Added by %s", w.by), style = MaterialTheme.typography.labelMedium, color = muted)
                 }
+                AddedOnText(w, muted, Modifier.padding(top = 2.dp))
             }
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Row(Modifier.weight(1f), verticalAlignment = Alignment.Bottom) {

@@ -56,7 +56,7 @@ fun PricesScreen(snack: SnackbarHostState) {
             val now = w.price ?: 0.0
             PriceRow(name, w, if (first != null && first > 0) (now - first) / first * 100 else null)
         }
-    }.sortedBy { it.change ?: 0.0 }
+    }.distinctBy { it.w.id }.sortedBy { it.change ?: 0.0 } // a copied wish (same id) shows once
     var open by remember { mutableStateOf<Wish?>(null) }
 
     Scaffold(
@@ -105,6 +105,7 @@ fun PricesScreen(snack: SnackbarHostState) {
                                 maxLines = 2, overflow = TextOverflow.Ellipsis
                             )
                             Text(r.list, style = MaterialTheme.typography.labelSmall, color = look.cardMuted(id), maxLines = 1)
+                            AddedOnText(r.w, look.cardMuted(id))
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text(

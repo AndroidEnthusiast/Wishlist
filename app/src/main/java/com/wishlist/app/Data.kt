@@ -166,6 +166,14 @@ object Repo {
     /** Goes up whenever a list that isn't open is changed, so the dashboard reads them again. */
     var mineVersion by mutableStateOf(0)
         private set
+    /**
+     * Wishes copied from one of your lists into another (list id to the ids copied into it). A copy keeps the wish's
+     * id, so it is the same wish: when the original is removed, its copies go too (and anyone who reserved a copy
+     * hears that it's gone, as with any removed wish). Removing a copy only removes that copy.
+     */
+    private var copies: Map<String, Set<Long>> = emptyMap()
+    /** The copies the last move to the bin took along, so Undo can put them back. */
+    private var lastCascade: Pair<Long, List<String>>? = null
     /** Which of your lists a wish in the bin came from (wish id to list id); missing means "main". */
     private var binOwner: Map<Long, String> = emptyMap()
     /** Recently opened lists: "m:<id>" for your own, "s:<code>" for a group wishlist, with the moment opened. */
@@ -237,6 +245,15 @@ object Repo {
             emptyMap()
         }
         hero = p.getString("hero", "") ?: ""
+        copies = try {
+            val o = JSONObject(p.getString("mine_copies", null) ?: "{}")
+            o.keys().asSequence().associateWith { k ->
+                val a = o.getJSONArray(k)
+                (0 until a.length()).map { a.getLong(it) }.toSet()
+            }
+        } catch (e: Exception) {
+            emptyMap()
+        }
         heroEdit = HeroEdit.fromJson(p.getString("hero_edit", null))
         val open = p.getString("mine_open", MAIN_LIST) ?: MAIN_LIST
         if (open != MAIN_LIST && open in mineIds) {
@@ -265,11 +282,14 @@ object Repo {
         binOwner.forEach { (k, v) -> owners.put(k.toString(), v) }
         val rec = JSONObject()
         recent.forEach { (k, v) -> rec.put(k, v) }
+        val cp = JSONObject()
+        copies.forEach { (k, v) -> cp.put(k, JSONArray(v.toList())) }
         e.putString("bin", binArr.toString())
             .putString("mine_ids", JSONArray(mineIds).toString())
             .putString("mine_open", openMine)
             .putString("bin_owner", owners.toString())
             .putString("recent", rec.toString())
+            .putString("mine_copies", cp.toString())
             .putString("hero", hero)
             .putString("hero_edit", heroEdit.toJson())
             .putString("theme", theme)
@@ -404,7 +424,13 @@ object Repo {
             openMine = MAIN_LIST
         }
         val d = MyLists.read(prefs(c), id)
-        d.wishes.forEach { ImageStore.delete(c, it.image); History.remove(c, it.id) }
+        copies = copies - id
+        // Pictures and price history stay when a wish (or a copy of it) is on another of your lists.
+        val elsewhere = mineIds.filter { it != id }.flatMap { mine(c, it).wishes }
+        d.wishes.forEach { w ->
+            if (elsewhere.none { it.image == w.image } && myBin.none { it.image == w.image }) ImageStore.delete(c, w.image)
+            if (elsewhere.none { it.id == w.id }) History.remove(c, w.id)
+        }
         val binned = binOwner.filterValues { it == id }.keys
         myBin = myBin.filter { it.id !in binned }
         binOwner = binOwner - binned
@@ -434,6 +460,30 @@ object Repo {
         e.apply()
         mineVersion++
         if (nd.code != null) Sync.pushStored(c, nd, myBin.filter { ownerOf(it.id) == id })
+    }
+
+    private fun dropCopy(m: Map<String, Set<Long>>, list: String, id: Long): Map<String, Set<Long>> {
+        val left = m[list].orEmpty() - id
+        return if (left.isEmpty()) m - list else m + (list to left)
+    }
+
+    /**
+     * Copies wishes from your other lists into one of yours (at the top, skipping any it already has). They keep their
+     * id: see [copies].
+     */
+    @Synchronized
+    fun copyInto(c: Context, listId: String, wishes: List<Wish>) {
+        if (listId !in mineIds || wishes.isEmpty()) return
+        var added = emptySet<Long>()
+        updateMine(c, listId) { ws ->
+            val fresh = wishes.filter { w -> ws.none { it.id == w.id } }.distinctBy { it.id }
+                .map { it.copy(bin = 0L, binBy = "") }
+            added = fresh.map { it.id }.toSet()
+            fresh + ws
+        }
+        copies = copies + (listId to (copies[listId].orEmpty() + added))
+        persist(c)
+        mineVersion++
     }
 
     /** Pictures that went online for a list that may no longer be open. */
@@ -492,6 +542,18 @@ object Repo {
         myWishes = myWishes.filter { it.id != id }
         myBin = listOf(w) + myBin.filter { it.id != id }
         binOwner = binOwner + (id to openMine)
+        val wasCopy = copies[openMine]?.contains(id) == true
+        copies = dropCopy(copies, openMine, id)
+        // Removing an original also removes its copies on your other lists (removing a copy leaves the rest).
+        lastCascade = null
+        if (!wasCopy) {
+            val others = copies.filter { (l, ids) -> l != openMine && id in ids && l in mineIds }.keys.toList()
+            for (l in others) {
+                updateMine(c, l) { ws -> ws.filter { it.id != id } }
+                copies = dropCopy(copies, l, id)
+            }
+            if (others.isNotEmpty()) lastCascade = id to others
+        }
         commit(c)
         return Trashed(w, i, null)
     }
@@ -506,6 +568,16 @@ object Repo {
         val owner = ownerOf(t.wish.id)
         myBin = myBin.filter { it.id != t.wish.id }
         binOwner = binOwner - t.wish.id
+        // Undo also brings back the copies the removal took along.
+        lastCascade?.takeIf { it.first == t.wish.id }?.let { (wid, lists) ->
+            val back = t.wish.copy(bin = 0L, binBy = "")
+            for (l in lists) {
+                if (l !in mineIds) continue
+                updateMine(c, l) { ws -> if (ws.any { it.id == wid }) ws else listOf(back) + ws }
+                copies = copies + (l to (copies[l].orEmpty() + wid))
+            }
+            lastCascade = null
+        }
         if (owner != openMine) {
             // You opened another of your lists before tapping Undo: the wish goes back to its own list.
             updateMine(c, owner) { l -> if (l.any { it.id == t.wish.id }) l else listOf(t.wish.copy(bin = 0L, binBy = "")) + l }
@@ -543,9 +615,11 @@ object Repo {
         myBin = myBin.filter { it.id !in ids }
         binOwner = binOwner - ids
         commit(c)
-        gone.forEach {
-            ImageStore.delete(c, it.image)
-            History.remove(c, it.id)
+        // A copy on another list may still use the same picture and price history.
+        val inUse = allMine(c).flatMap { it.wishes }
+        gone.forEach { g ->
+            if (inUse.none { it.image == g.image } && myBin.none { it.image == g.image }) ImageStore.delete(c, g.image)
+            if (inUse.none { it.id == g.id }) History.remove(c, g.id)
         }
     }
 

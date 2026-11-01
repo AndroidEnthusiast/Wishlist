@@ -335,6 +335,10 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var missing by remember { mutableStateOf(false) }
+    // Optional: wishes from your other lists, copied in when the list is made.
+    var picked by remember { mutableStateOf(listOf<Wish>()) }
+    var picking by remember { mutableStateOf(false) }
+    val canCopy = remember { canCopyFromOthers(ctx, null) }
     AlertDialog(
         onDismissRequest = onClose,
         properties = DialogProperties(dismissOnClickOutside = false),
@@ -352,14 +356,41 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
                     label = { Text(tr("Notes")) }, placeholder = { Text(tr("What is this wishlist for?")) },
                     maxLines = 4, modifier = Modifier.fillMaxWidth()
                 )
+                if (canCopy) {
+                    Row(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { picking = true }
+                            .padding(vertical = 10.dp, horizontal = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(AppIcons.Add, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                        Column(Modifier.weight(1f).padding(start = 10.dp)) {
+                            Text(tr("Add wishes from your other lists"), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                            Text(
+                                when (picked.size) {
+                                    0 -> tr("Optional")
+                                    1 -> tr("1 wish chosen")
+                                    else -> tr("%d wishes chosen", picked.size)
+                                },
+                                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
             TextButton(onClick = {
                 if (name.isBlank()) missing = true
-                else onCreated(Repo.createMine(ctx, name, notes))
+                else {
+                    val id = Repo.createMine(ctx, name, notes)
+                    Repo.copyInto(ctx, id, picked)
+                    onCreated(id)
+                }
             }) { Text(tr("Create")) }
         },
         dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
     )
+    if (picking) {
+        CopyWishesDialog(null, onDone = { picked = it; picking = false }, onClose = { picking = false })
+    }
 }
