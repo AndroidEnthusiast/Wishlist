@@ -553,8 +553,10 @@ private fun FriendStat(n: Int, label: String, onClick: () -> Unit) {
         Modifier.statTile().clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 3.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(n.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+        // The tile's own ink (dark on the bright cards of some styles) and the style's display font for the number.
+        val look = LocalLook.current
+        Text(n.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, fontFamily = look.display, color = look.cardInk(5L))
+        Text(label, style = MaterialTheme.typography.bodySmall, color = look.cardMuted(5L), maxLines = 1)
     }
 }
 

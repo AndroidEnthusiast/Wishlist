@@ -165,15 +165,24 @@ fun ProfileSummary(onProfile: () -> Unit) {
 }
 
 /**
- * The small, quiet tile behind a number (owner, 2.96: "separate tiles, but subtle"): the card colour, a little see-
- * through, no shadow; a faint edge in dark.
+ * The small tile behind a number (owner, 2.96: "separate tiles, but subtle"). Quiet: the card colour, a little see-
+ * through, no shadow, a faint edge in dark. The other styles (owner, 2.103: the tiles must follow the theme): a small
+ * version of their own card, with its lines, hard shadow, cut corners or raised neumorphic shape.
  */
 @Composable
 fun Modifier.statTile(): Modifier {
     val look = LocalLook.current
-    val shape = RoundedCornerShape(12.dp)
-    return clip(shape).background(look.cardFill(5L).copy(alpha = 0.75f))
-        .then(if (look.dark) Modifier.border(1.dp, Color.White.copy(alpha = 0.06f), shape) else Modifier)
+    return when (look.design) {
+        "neo" -> lookSurface(look, RoundedCornerShape(10.dp), look.cardFill(5L), depth = 3.dp)
+        "chaos" -> lookSurface(look, RoundedCornerShape(14.dp), look.cardFill(5L), depth = 3.dp)
+        "neu" -> lookSurface(look, RoundedCornerShape(14.dp), look.cardFill(5L), depth = 4.dp)
+        "cyber" -> lookSurface(look, androidx.compose.foundation.shape.CutCornerShape(topEnd = 10.dp, bottomStart = 10.dp), look.cardFill(5L))
+        else -> {
+            val shape = RoundedCornerShape(12.dp)
+            clip(shape).background(look.cardFill(5L).copy(alpha = 0.75f))
+                .then(if (look.dark) Modifier.border(1.dp, Color.White.copy(alpha = 0.06f), shape) else Modifier)
+        }
+    }
 }
 
 @Composable
@@ -182,8 +191,10 @@ private fun Stat(n: Int, label: String, onClick: () -> Unit) {
         Modifier.statTile().clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 3.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(n.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+        // The tile's own ink (dark on the bright cards of some styles) and the style's display font for the number.
+        val look = LocalLook.current
+        Text(n.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, fontFamily = look.display, color = look.cardInk(5L))
+        Text(label, style = MaterialTheme.typography.bodySmall, color = look.cardMuted(5L), maxLines = 1)
     }
 }
 

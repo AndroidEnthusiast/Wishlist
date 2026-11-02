@@ -214,3 +214,4 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Colour picker** (owner, 2.102): the same colour in light and dark (no lighter dark tone); the two previews keep small labels "Light mode" and "Dark mode".
 - **Chat** (owner, 2.102): tap the friend's picture or name at the top of a chat to open their page; read ticks closer together; the gift button lined up with the text box.
 - **No flashing photos** (owner, 2.102): switching tabs or views must never reload a product photo that was already shown; toggles keep their style's shape when on; the bottom bar must not jump when coming back to the app (cause: keyboard of another app; the app now draws edge to edge).
+- **Number tiles follow the style** (owner, 2.103): the Wishlists / Wishes / Top wishes tiles next to the profile picture are a small card of the style in use (Quiet stays subtle).
