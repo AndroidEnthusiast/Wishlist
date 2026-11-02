@@ -181,7 +181,9 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - Material 3, Organic and the Standard themes are removed; current users move to Quiet with the closest accent.
 - Styles changed (owner): **Claymorphism replaced by Retro futurism; Cyberpunk UI and Gen Z chaos maximalism added** (references on uistyleguide.com, which this cloud session can't open). So: Quiet + Neobrutalism, Neumorphism, Retro futurism, Cyberpunk, Gen Z chaos.
 - The styles may use everything that belongs to them, including their own fonts everywhere (owner: "Everything from the theme can be applied"); Gen Z chaos goes full chaos (wish rows tilted too); Cyberpunk has a real light mode; every style uses the 5 accents (retro and cyberpunk add a fixed second colour for effects).
-- Next: preview of all six, then build.
+- Retro futurism removed after the preview (owner). **Final: Quiet (default) + Neobrutalism, Neumorphism, Cyberpunk, Gen Z chaos**, each light + dark, 5 accents (Blue, Indigo, Green, Orange, Pink). Preview: https://claude.ai/artifact/NiJ5D8P4Xk8JQiJLwBMtKe
+- Wish views: both "Large cards" and "Two per row" stay, restyled per style.
+- Bottom bar: the second spot becomes **"Wishlists"** (opens the page with all your wishlists), as in the preview; new lists come from Home's + (replaces the earlier "keep New wishlist").
 
 ## Open ideas (not decided)
 - Personal recovery key: an encrypted online backup of your lists, keys, creator rights and settings, restored with a key (optionally saved in Google Password Manager), plus automatic clean-up of lists nobody uses. Ask the owner before building.
