@@ -73,6 +73,30 @@ import java.io.File
  */
 
 /**
+ * "Wishlist" at the top of Home, in the style's own way (2.97): Quiet bold and tight; Cyberpunk in capitals with a
+ * glitch (the word twice more, shifted, in the accent and neon); chaos tilted with a hard pink shadow.
+ */
+@Composable
+fun Wordmark() {
+    val look = LocalLook.current
+    val style = MaterialTheme.typography.headlineSmall.copy(fontWeight = look.titleWeight)
+    when (look.design) {
+        "cyber" -> Box {
+            val st = style.copy(letterSpacing = 3.sp)
+            Text("WISHLIST", style = st, color = look.accent, modifier = Modifier.offset(x = 2.dp))
+            Text("WISHLIST", style = st, color = look.blobs[0], modifier = Modifier.offset(x = (-2).dp))
+            Text("WISHLIST", style = st, color = MaterialTheme.colorScheme.onBackground)
+        }
+        "chaos" -> Text(
+            "Wishlist", color = MaterialTheme.colorScheme.onBackground,
+            style = style.copy(shadow = androidx.compose.ui.graphics.Shadow(look.blobs[0], Offset(6f, 6f), 0f)),
+            modifier = Modifier.rotate(-3f)
+        )
+        else -> Text("Wishlist", style = style, color = MaterialTheme.colorScheme.onBackground)
+    }
+}
+
+/**
  * One list on the dashboard: your own ("m:<id>") or a group wishlist ("s:<code>"). [picture]: its most recently added
  * wish with a photo (none: the empty state or a gift). [addTo]: the "Save to" key, so "+ Add wish" starts on this list.
  */
