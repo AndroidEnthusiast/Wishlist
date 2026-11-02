@@ -179,7 +179,9 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - Neumorphism keeps readable contrast (text, prices and buttons stay strong; accent-coloured buttons), in light and dark.
 - Every style: light + dark + the same 5 accents (Blue, Indigo, Green, Orange, Pink).
 - Material 3, Organic and the Standard themes are removed; current users move to Quiet with the closest accent.
-- Next: preview of Quiet + the three styles, then build.
+- Styles changed (owner): **Claymorphism replaced by Retro futurism; Cyberpunk UI and Gen Z chaos maximalism added** (references on uistyleguide.com, which this cloud session can't open). So: Quiet + Neobrutalism, Neumorphism, Retro futurism, Cyberpunk, Gen Z chaos.
+- The styles may use everything that belongs to them, including their own fonts everywhere (owner: "Everything from the theme can be applied"); Gen Z chaos goes full chaos (wish rows tilted too); Cyberpunk has a real light mode; every style uses the 5 accents (retro and cyberpunk add a fixed second colour for effects).
+- Next: preview of all six, then build.
 
 ## Open ideas (not decided)
 - Personal recovery key: an encrypted online backup of your lists, keys, creator rights and settings, restored with a key (optionally saved in Google Password Manager), plus automatic clean-up of lists nobody uses. Ask the owner before building.
