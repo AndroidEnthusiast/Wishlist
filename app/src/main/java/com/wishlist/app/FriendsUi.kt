@@ -1,5 +1,11 @@
 package com.wishlist.app
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.height
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -694,16 +700,8 @@ fun AddFriendDialog(onClose: (String?) -> Unit) {
                     name, { name = it.take(30); error = null }, singleLine = true, label = { Text(tr("Your name")) },
                     keyboardOptions = Capitalised
                 )
-                OutlinedTextField(
-                    code, { code = it.take(9); error = null }, singleLine = true, label = { Text(tr("Friend code")) },
-                    isError = error != null,
-                    supportingText = if (err != null) {
-                        { Text(err) }
-                    } else null,
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { if (!busy) send() }),
-                    modifier = Modifier.focusRequester(focus)
-                )
+                CodeBoxes(code, { code = it; error = null }, isError = err != null, onDone = { if (!busy) send() }, modifier = Modifier.focusRequester(focus))
+                if (err != null) Text(err, color = cs.error, style = MaterialTheme.typography.bodySmall)
             }
         },
         confirmButton = { TextButton(onClick = { send() }, enabled = !busy) { Text(tr("Send request")) } },
@@ -1031,4 +1029,67 @@ private fun ProfileTitle(t: String) {
         t, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(top = 20.dp)
     )
+}
+
+
+/**
+ * A friend code typed into six blocks, three, a dash, three, like the code itself (owner, 2.104). Letters become
+ * capitals. Pasting works with the code alone ("ABC-123", "abc123") or with the whole shared message: the code is
+ * picked out of it. One hidden text field takes the typing; the blocks only show it.
+ */
+@Composable
+fun CodeBoxes(code: String, onChange: (String) -> Unit, isError: Boolean, onDone: () -> Unit, modifier: Modifier = Modifier) {
+    val look = LocalLook.current
+    val cs = MaterialTheme.colorScheme
+    var focused by remember { mutableStateOf(false) }
+    androidx.compose.foundation.text.BasicTextField(
+        value = androidx.compose.ui.text.input.TextFieldValue(code, androidx.compose.ui.text.TextRange(code.length)),
+        onValueChange = { v -> onChange(codeFrom(v.text)) },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(
+            capitalization = KeyboardCapitalization.Characters, autoCorrect = false,
+            keyboardType = androidx.compose.ui.text.input.KeyboardType.Ascii, imeAction = ImeAction.Done
+        ),
+        keyboardActions = KeyboardActions(onDone = { onDone() }),
+        cursorBrush = androidx.compose.ui.graphics.SolidColor(Color.Transparent),
+        textStyle = androidx.compose.ui.text.TextStyle(color = Color.Transparent),
+        modifier = modifier.fillMaxWidth().onFocusChanged { focused = it.isFocused }
+            .semantics { contentDescription = tr("Friend code") },
+        decorationBox = { inner ->
+            Box {
+                // The real (invisible) field stays underneath, so long-press > Paste works anywhere on the blocks.
+                Box(Modifier.matchParentSize()) { inner() }
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    for (i in 0 until 6) {
+                        if (i == 3) Text(
+                            "–", style = MaterialTheme.typography.titleLarge, color = cs.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 4.dp)
+                        )
+                        val active = focused && i == code.length.coerceAtMost(5)
+                        val shape = if (look.design == "cyber") look.chipShape else RoundedCornerShape(12.dp)
+                        Box(
+                            Modifier.weight(1f).padding(horizontal = 3.dp).height(54.dp)
+                                .lookSurface(look, shape, cs.surfaceVariant, raised = false)
+                                .border(
+                                    if (active || isError) 2.dp else 0.dp,
+                                    when { isError -> cs.error; active -> look.accent; else -> Color.Transparent }, shape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                code.getOrNull(i)?.toString() ?: "", style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold, fontFamily = look.display, color = cs.onSurface
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    )
+}
+
+/** The code in what was typed or pasted: "ABC-123" anywhere in a text first, otherwise its first 6 letters and digits. */
+fun codeFrom(text: String): String {
+    Regex("([A-Za-z0-9]{3})-([A-Za-z0-9]{3})").find(text)?.let { return (it.groupValues[1] + it.groupValues[2]).uppercase() }
+    return text.filter { it.isLetterOrDigit() && it.code < 128 }.uppercase().take(6)
 }

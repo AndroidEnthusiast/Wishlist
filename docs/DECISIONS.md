@@ -215,3 +215,4 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Chat** (owner, 2.102): tap the friend's picture or name at the top of a chat to open their page; read ticks closer together; the gift button lined up with the text box.
 - **No flashing photos** (owner, 2.102): switching tabs or views must never reload a product photo that was already shown; toggles keep their style's shape when on; the bottom bar must not jump when coming back to the app (cause: keyboard of another app; the app now draws edge to edge).
 - **Number tiles follow the style** (owner, 2.103): the Wishlists / Wishes / Top wishes tiles next to the profile picture are a small card of the style in use (Quiet stays subtle).
+- **Friend code as six blocks** (owner, 2.104): three blocks, a dash, three blocks, in the style; capitals; paste works (also the whole shared message). Full code: wait for the button, no auto-send (owner).
