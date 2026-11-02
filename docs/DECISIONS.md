@@ -168,6 +168,14 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - Price check interval stays a choice; all themes and colour sets stay.
 - **All review changes go out together in one update**, which the owner then tests (owner, 1 November 2026).
 
+## Premium identity (2 November 2026, being designed)
+- Owner: the app "still feels cheap … like default settings … doesn't have its own feel". Diagnosis given: stock Material parts at stock sizes, no brand (no wordmark, emoji as pictures), flat type, ~40 half-designed theme combinations, busy cards.
+- References: Pinterest / Airbnb, Apple (Wallet, Photos), Revolut / Monzo. Mood: warm and personal, elegant and calm, bold and modern.
+- **One signature look, in light and dark, plus accent colours**; the five designs and their colour sets go.
+- Emoji placeholders become Material icons.
+- **Safety net (owner):** if the owner doesn't like the new look, revert the theme to exactly how it was in **v2.96 (commit 123322e)**.
+- Next: a preview with 2–3 directions to choose from, before building.
+
 ## Open ideas (not decided)
 - Personal recovery key: an encrypted online backup of your lists, keys, creator rights and settings, restored with a key (optionally saved in Google Password Manager), plus automatic clean-up of lists nobody uses. Ask the owner before building.
   - Owner asked (1 November 2026, not a priority yet): pictures would go to Supabase file storage (free plan about 1 GB, separate from the 500 MB database). Back up only the cut-out pictures as shown (profile about 20 KB, list cover about 150–250 KB, own wish photos about 50 KB), not the originals: roughly 1–2 MB per active person. After a restore you can choose a new photo but not re-crop the old one.
