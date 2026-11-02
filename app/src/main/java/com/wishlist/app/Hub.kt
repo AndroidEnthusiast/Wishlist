@@ -169,7 +169,7 @@ fun HubScreen(
         HubTitle(tr("My wishlists"), addLabel = tr("New wishlist"), onAdd = if (onHome) onNewMine else null)
         BlockGrid(mineItems, onHome, ::actionsOf, onAddTo)
 
-        HubTitle(tr("Wishlists for someone"), addLabel = tr("New wishlist for someone"), onAdd = if (onHome) onNewGroup else null)
+        HubTitle(tr("Gift lists"), addLabel = tr("New gift list"), onAdd = if (onHome) onNewGroup else null)
         if (groupItems.isEmpty()) {
             Text(
                 tr("Make a wishlist with other gift givers and surprise someone with a gift they’ll love."),
@@ -252,7 +252,7 @@ fun HubScreen(
             title = { Text(if (group) tr("Delete “%s” for everyone?", item.name) else tr("Delete “%s”?", item.name)) },
             text = {
                 Text(
-                    if (group) tr("Everyone on this wishlist for someone will lose it, with all its wishes and reservations. This can’t be undone.")
+                    if (group) tr("Everyone on this gift list will lose it, with all its wishes and reservations. This can’t be undone.")
                     else tr("The wishlist will be deleted and its wishes moved to the bin. You can restore them there for 30 days.")
                 )
             },
@@ -326,7 +326,7 @@ private fun PriceChangeRow(w: Wish) {
         val sq = RoundedCornerShape(14.dp)
         Box(Modifier.size(64.dp).lookMat(look, sq, look.pictureBg(id, false)), contentAlignment = Alignment.Center) {
             if (w.image.isNotBlank()) {
-                AsyncImage(model = w.image, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                WishImage(w.image, Modifier.fillMaxSize(), ContentScale.Crop)
             } else PlaceholderIcon("gift", 26.dp)
         }
         Column(Modifier.weight(1f).padding(start = 14.dp)) {

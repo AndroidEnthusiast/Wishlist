@@ -80,7 +80,6 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
     var renCat by remember { mutableStateOf<String?>(null) }
     var stopDlg by remember { mutableStateOf(false) }
     var manage by remember { mutableStateOf<String?>(null) }
-    var meDlg by remember { mutableStateOf(false) }
     var deleteMineDlg by remember { mutableStateOf(false) }
     var copyDlg by remember { mutableStateOf(false) }
     var visBusy by remember { mutableStateOf(false) }
@@ -97,7 +96,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                     Column {
                         Text(Repo.listName, fontWeight = LocalLook.current.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(
-                            if (shared != null) tr("Wishlist for someone") else tr("Wishlist settings"),
+                            if (shared != null) tr("Gift list") else tr("Wishlist settings"),
                             style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
                         )
                     }
@@ -139,18 +138,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
             if (shared != null) {
                 Text(tr("Everyone on this list sees the new name."), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
 
-                SectionTitle(tr("Your name on this list"))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text(shared.me.ifBlank { Shared.lastName.ifBlank { tr("No name yet") } }, style = MaterialTheme.typography.bodyLarge)
-                        Text(
-                            if (shared.me.isBlank() || shared.me == Shared.lastName) tr("From your profile. Shown as “Added by” on the wishes you add.")
-                            else tr("Only on this list. Your profile has “%s”.", Shared.lastName),
-                            style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
-                        )
-                    }
-                    TextButton(onClick = { meDlg = true }) { Text(tr("Use another name")) }
-                }
+                // No "Your name on this list" any more (owner, 2.102): your profile name is always used.
             }
 
             // An optional cover photo at the top of the list (2.89): none until you choose one.
@@ -246,26 +234,6 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
     delCat?.let { dc -> DeleteCategoryDialog(dc, onDeleted = {}, onClose = { delCat = null }) }
     renCat?.let { rc -> RenameCategoryDialog(rc, onRenamed = {}, onClose = { renCat = null }) }
     manage?.let { m -> SharedManageDialog(m, onClose = { manage = null }, onGone = { manage = null; onBack() }) }
-    if (meDlg && shared != null) {
-        var n by remember { mutableStateOf(shared.me.ifBlank { Shared.lastName }) }
-        AlertDialog(
-            onDismissRequest = { meDlg = false },
-            title = { Text(tr("Your name on this list")) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        tr("Only for “%s”. Leave it empty to use the name from your profile.", Repo.listName),
-                        style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
-                    )
-                    OutlinedTextField(n, { n = it.take(30) }, singleLine = true, label = { Text(tr("Your name")) }, keyboardOptions = Capitalised)
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { Shared.setMe(ctx, shared.code, n); meDlg = false }) { Text(tr("Save")) }
-            },
-            dismissButton = { TextButton(onClick = { meDlg = false }) { Text(tr("Cancel")) } }
-        )
-    }
     if (copyDlg) {
         val target = Repo.openMine
         CopyWishesDialog(

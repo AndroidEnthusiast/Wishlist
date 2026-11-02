@@ -158,7 +158,7 @@ fun FriendsScreen(snack: SnackbarHostState, onProfile: () -> Unit, onOpenLink: (
         // Coming back from the list returns to where you were: their page or their wishes page.
         FriendScreen(
             Friend(list.code, list.name), snack, onMenu = {}, onRemoved = {},
-            fetch = { Friends.fetchList(ctx, person.id, list.code) },
+            fetch = { Friends.fetchList(ctx, person.id, list.code) }, ownerName = person.name,
             onBack = { FriendsNav.list = null }
         )
         return
@@ -616,7 +616,7 @@ private fun FriendWishesPage(f: Person, page: String, snack: SnackbarHostState) 
                         Modifier.size(48.dp).clip(RoundedCornerShape(10.dp)).background(look.pictureBg(id, w.image.isNotBlank())),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (w.image.isNotBlank()) AsyncImage(w.image, null, Modifier.fillMaxSize().padding(4.dp), contentScale = ContentScale.Fit)
+                        if (w.image.isNotBlank()) WishImage(w.image, Modifier.fillMaxSize().padding(4.dp))
                         else PlaceholderIcon("gift", 20.dp)
                     }
                     Column(Modifier.weight(1f).padding(start = 12.dp, end = 8.dp)) {
@@ -843,7 +843,7 @@ fun ProfileScreen(snack: SnackbarHostState) {
                 SavedFeedback(nameSaved)
             }
             Text(
-                tr("Friends see your name and photo. Your name is also shown as “Added by” on wishlists for someone (you can use a different name on one list in its ⚙)."),
+                tr("Friends see your name and photo. Your name is also shown as “Added by” on the gift lists you’re on."),
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
             )
 

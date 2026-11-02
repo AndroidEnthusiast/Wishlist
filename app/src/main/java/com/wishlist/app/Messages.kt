@@ -1,5 +1,6 @@
 package com.wishlist.app
 
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
 import androidx.activity.compose.BackHandler
@@ -373,7 +374,15 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
         topBar = {
             TopAppBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Tap the picture or name: their page (owner, 2.102), only while you are friends.
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clip(RoundedCornerShape(12.dp)).then(
+                            if (friend != null) Modifier.clickable(onClickLabel = tr("Open profile")) {
+                                FriendsNav.reset(); FriendsNav.person = peer; FriendsNav.openTab = true
+                            } else Modifier
+                        ).padding(end = 8.dp)
+                    ) {
                         Avatar(Friends.photos[peer], name, 36.dp)
                         Text(
                             name, fontWeight = look.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -507,7 +516,7 @@ private fun Bubble(m: ChatMessage, shape: androidx.compose.ui.graphics.Shape, on
                         Modifier.size(52.dp).clip(RoundedCornerShape(10.dp)).background(Color.White),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (m.content.img.isNotBlank()) AsyncImage(m.content.img, null, Modifier.fillMaxSize().padding(3.dp), contentScale = ContentScale.Fit)
+                        if (m.content.img.isNotBlank()) WishImage(m.content.img, Modifier.fillMaxSize().padding(3.dp))
                         else GiftIcon(Color(0xFF8A8A92), 26.dp)
                     }
                     Column(Modifier.padding(start = 10.dp).widthIn(max = 200.dp)) {
@@ -520,9 +529,11 @@ private fun Bubble(m: ChatMessage, shape: androidx.compose.ui.graphics.Shape, on
             }
             Row(Modifier.align(Alignment.End).padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(SimpleDateFormat("HH:mm", Locale.UK).format(Date(m.at)), color = ink.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                // The two read ticks sit close together, overlapping a little (owner, 2.102).
                 if (m.mine) Text(
-                    if (m.read) " ✓✓" else " ✓", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold,
-                    color = if (m.read) Color(0xFF7FE3FF) else ink.copy(alpha = 0.7f)
+                    if (m.read) "✓✓" else "✓", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold,
+                    letterSpacing = (-4).sp, color = if (m.read) Color(0xFF7FE3FF) else ink.copy(alpha = 0.7f),
+                    modifier = Modifier.padding(start = 4.dp, end = if (m.read) 4.dp else 0.dp)
                 )
             }
         }
@@ -539,7 +550,8 @@ private fun InputBar(text: String, onText: (String) -> Unit, sending: Boolean, o
         Modifier.fillMaxWidth().navigationBarsPadding().padding(start = 8.dp, end = 8.dp, top = 6.dp, bottom = 8.dp),
         verticalAlignment = Alignment.Bottom
     ) {
-        IconButton(onClick = onWish) { GiftIcon(cs.onSurfaceVariant) }
+        // Bottom-aligned with the text box (it grows with long messages), lifted so its middle meets a one-line box's.
+        IconButton(onClick = onWish, modifier = Modifier.padding(bottom = 4.dp)) { GiftIcon(cs.onSurfaceVariant) }
         val shape = RoundedCornerShape(24.dp)
         TextField(
             text, onText, placeholder = { Text(tr("Message")) }, maxLines = 5,
@@ -552,7 +564,7 @@ private fun InputBar(text: String, onText: (String) -> Unit, sending: Boolean, o
             modifier = Modifier.weight(1f).lookSurface(look, if (look.design == "cyber") look.chipShape else shape, cs.surfaceVariant, raised = false)
         )
         Box(
-            Modifier.padding(start = 8.dp).size(48.dp).lookSurface(look, look.fabShape, if (text.isBlank() || sending) cs.outline else look.accent)
+            Modifier.padding(start = 8.dp, bottom = 4.dp).size(48.dp).lookSurface(look, look.fabShape, if (text.isBlank() || sending) cs.outline else look.accent)
                 .clickable(enabled = text.isNotBlank() && !sending, onClick = onSend),
             contentAlignment = Alignment.Center
         ) {
@@ -587,7 +599,7 @@ private fun WishPicker(onPick: (Wish) -> Unit, onClose: () -> Unit) {
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Box(Modifier.size(40.dp).clip(RoundedCornerShape(8.dp)).background(Color.White), contentAlignment = Alignment.Center) {
-                                    if (w.image.isNotBlank()) AsyncImage(w.image, null, Modifier.fillMaxSize().padding(2.dp), contentScale = ContentScale.Fit)
+                                    if (w.image.isNotBlank()) WishImage(w.image, Modifier.fillMaxSize().padding(2.dp))
                                     else GiftIcon(Color(0xFF8A8A92), 20.dp)
                                 }
                                 Text(w.title, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 10.dp))

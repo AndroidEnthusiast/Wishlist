@@ -19,7 +19,7 @@ function fakeFetch(url, opts) {
   const body = JSON.parse(opts.body);
   store.calls.push([fn, body, opts.headers]);
   let out;
-  if (fn === "wl_get_list") out = body.p_code === "ZZZZZZZZ" ? null : {name: "Sam's wishlist", cats: store.noCats ? [] : ["Tech","Home","Books"], items};
+  if (fn === "wl_get_list") out = body.p_code === "ZZZZZZZZ" ? null : {name: "Sam's wishlist", owner: store.owner === undefined ? "" : store.owner, cats: store.noCats ? [] : ["Tech","Home","Books"], items};
   else if (fn === "wl_get_reservations")
     out = Object.entries(store.reservations).map(([id, d]) => ({id: Number(id), mine: d === body.p_device}));
   else if (fn === "wl_sh_info") out = body.p_key === "ABCDEFGHJKLMNPQRSTUV" ? {name: store.inviteName || "Baby registry", count: store.inviteCount === undefined ? 3 : store.inviteCount} : null;
@@ -72,6 +72,11 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   let doc = d.window.document;
   check("title is list name", doc.title === "Sam's wishlist" && doc.getElementById("name").textContent === "Sam's wishlist");
   check("3 cards rendered", doc.querySelectorAll(".card").length === 3);
+  check("no owner name: no Owned by line", doc.getElementById("owner").hidden);
+  store.owner = "Sam <b>R</b>";
+  let own = await load("?c=abcd2345");
+  check("Owned by the owner's name, as text (2.102)", own.window.document.getElementById("owner").textContent === "Owned by Sam <b>R</b>" && !own.window.document.getElementById("owner").hidden && !own.window.document.querySelector("#owner b"));
+  delete store.owner;
   check("HTML in title is not injected", !doc.querySelector(".title b") && doc.body.innerHTML.includes("&lt;b&gt;X"));
   check("javascript: link not used", ![...doc.querySelectorAll("a")].some(a => a.href.startsWith("javascript")));
   check("javascript: image not used", ![...doc.querySelectorAll("img")].some(i => i.src.startsWith("javascript")));

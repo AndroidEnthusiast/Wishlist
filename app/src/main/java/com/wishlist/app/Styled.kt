@@ -30,6 +30,13 @@ import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.platform.LocalContext
 import coil.request.ImageRequest
 import coil.size.Precision
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.layout.offset
+import coil.imageLoader
+import coil.memory.MemoryCache
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
@@ -190,13 +197,29 @@ fun Switch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifier: Mo
                 uncheckedThumbColor = look.line, uncheckedTrackColor = cs.surfaceVariant, uncheckedBorderColor = look.line
             )
         )
-        "neu" -> M3Switch(
-            checked, onCheckedChange, modifier.neu(look, CircleShape, cs.background, 3.dp, pressed = true), enabled = enabled,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White, checkedTrackColor = look.accent, checkedBorderColor = Color.Transparent,
-                uncheckedThumbColor = cs.onSurfaceVariant, uncheckedTrackColor = Color.Transparent, uncheckedBorderColor = Color.Transparent
-            )
-        )
+        // Neumorphism: its own switch (2.102). Material's pill sat inside a round dent, so on looked like a different
+        // shape than off. Now one pill pressed into the page (filled with the accent when on) and a raised round knob.
+        "neu" -> {
+            val t by animateFloatAsState(if (checked) 1f else 0f, label = "switch")
+            Box(
+                modifier.size(width = 64.dp, height = 48.dp).then(
+                    if (onCheckedChange != null) Modifier.toggleable(checked, enabled = enabled, role = Role.Switch) { onCheckedChange(it) }
+                    else Modifier
+                ),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    Modifier.size(width = 56.dp, height = 32.dp)
+                        .neu(look, RoundedCornerShape(50), lerp(cs.background, look.accent, t), 3.dp, pressed = true),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Box(
+                        Modifier.offset(x = 4.dp + 24.dp * t).size(24.dp)
+                            .neu(look, CircleShape, lerp(cs.background, Color.White, t), 2.dp)
+                    )
+                }
+            }
+        }
         "cyber" -> M3Switch(
             checked, onCheckedChange, modifier, enabled = enabled,
             colors = SwitchDefaults.colors(
@@ -404,23 +427,56 @@ fun SavedFeedback(saves: Int, modifier: Modifier = Modifier, compact: Boolean = 
     }
 }
 
+/** A wish photo in a small spot (lists, rows, chat): drawn from memory when it was shown before (no flash). */
+@Composable
+fun WishImage(url: String, modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Fit) {
+    Image(rememberWishPhoto(url).first, null, modifier, contentScale = contentScale)
+}
+
 /**
  * Blur stage (owner, 2.100): a soft blur of the photo fills the whole picture area and the photo itself ([PhotoCard])
  * sits big and uncut in the middle. The blur is a tiny copy of the photo stretched out (soft on every Android version),
  * blurred once more on Android 12 and newer; a light veil (dark in dark mode) keeps it calm. Colours come from the photo,
  * the theme stays as it is.
  */
-/** The size (pixels) every wish photo is loaded at on cards, so all views share one copy in memory. */
-const val PHOTO_PX = 1000
+/** The size (pixels) every wish photo is loaded at, so all screens and views share one copy in memory. */
+const val PHOTO_PX = 720
+
+/**
+ * A wish photo, loaded once and then drawn straight from memory (owner, 2.102: "switch between pages where products
+ * are listed without the images loading or doing something"). A photo that was shown before is in Coil's memory
+ * under its own key (url + size); it is then drawn on the very first frame, without a loading step that could flash.
+ * Otherwise it loads as usual (from the phone's disk cache or the shop). Returns the painter and the photo's
+ * width/height (null while it loads). [exact]: exactly this small (the blur behind a photo).
+ */
+@Composable
+fun rememberWishPhoto(url: String, px: Int = PHOTO_PX, exact: Boolean = false): Pair<androidx.compose.ui.graphics.painter.Painter, Float?> {
+    val ctx = LocalContext.current
+    val key = "$url#$px"
+    val cached = remember(key) {
+        try { ctx.imageLoader.memoryCache?.get(MemoryCache.Key(key))?.bitmap } catch (e: Exception) { null }
+    }
+    if (cached != null) {
+        val p = remember(cached) { androidx.compose.ui.graphics.painter.BitmapPainter(cached.asImageBitmap()) }
+        return p to (if (cached.height > 0) cached.width.toFloat() / cached.height else 1f)
+    }
+    val request = remember(key) {
+        ImageRequest.Builder(ctx).data(url).size(px).memoryCacheKey(key)
+            .apply { if (exact) precision(Precision.EXACT) }.build()
+    }
+    val painter = rememberAsyncImagePainter(request)
+    val d = (painter.state as? AsyncImagePainter.State.Success)?.result?.drawable
+    val ratio = d?.let { if (it.intrinsicWidth > 0 && it.intrinsicHeight > 0) it.intrinsicWidth.toFloat() / it.intrinsicHeight else null }
+    return painter to ratio
+}
 
 @Composable
 fun PhotoStage(url: String, description: String, small: Boolean, modifier: Modifier = Modifier) {
     val look = LocalLook.current
-    val ctx = LocalContext.current
-    val tiny = remember(url) { ImageRequest.Builder(ctx).data(url).size(24).precision(Precision.EXACT).build() }
+    val tiny = rememberWishPhoto(url, 24, exact = true).first
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Image(
-            rememberAsyncImagePainter(tiny), null, contentScale = ContentScale.Crop,
+            tiny, null, contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize().then(
                 if (android.os.Build.VERSION.SDK_INT >= 31) Modifier.blur(if (small) 14.dp else 20.dp, BlurredEdgeTreatment.Rectangle)
                 else Modifier
@@ -439,15 +495,8 @@ fun PhotoStage(url: String, description: String, small: Boolean, modifier: Modif
 @Composable
 fun PhotoCard(url: String, description: String, small: Boolean, modifier: Modifier = Modifier) {
     val look = LocalLook.current
-    val ctx = LocalContext.current
-    // One fixed size for every card (2.101): switching between large cards and two per row then finds the photo in
-    // memory at once. Before, each view asked for its own size, the photo was loaded again and flickered.
-    val request = remember(url) { ImageRequest.Builder(ctx).data(url).size(PHOTO_PX).build() }
-    val painter = rememberAsyncImagePainter(request)
-    val drawable = (painter.state as? AsyncImagePainter.State.Success)?.result?.drawable
-    val ratio = drawable?.let { d ->
-        if (d.intrinsicWidth > 0 && d.intrinsicHeight > 0) d.intrinsicWidth.toFloat() / d.intrinsicHeight else null
-    }
+    // One fixed size everywhere, drawn from memory when it was shown before (rememberWishPhoto, 2.101/2.102).
+    val (painter, ratio) = rememberWishPhoto(url)
     Box(modifier.fillMaxSize().padding(if (small) 9.dp else 14.dp), contentAlignment = Alignment.Center) {
         if (ratio == null) {
             // Still loading (or it failed): nothing to frame yet. The painter needs to be drawn to load.

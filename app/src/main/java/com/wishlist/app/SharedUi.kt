@@ -41,22 +41,23 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var missing by remember { mutableStateOf(false) }
-    var me by remember { mutableStateOf(Shared.lastName) }
+    // "Added by" uses your profile name (owner, 2.102): not asked here.
+    val me = Shared.lastName
     var busy by remember { mutableStateOf(false) }
     var err by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = { if (!busy) onClose() },
         properties = DialogProperties(dismissOnClickOutside = false),
-        title = { Text(tr("New wishlist for someone")) },
+        title = { Text(tr("Create a gift list for someone")) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    tr("Put gift ideas together with the other givers, for example for a birthday. Everyone you invite can add wishes and reserve what they’ll buy, so nobody gives the same gift twice. Don’t invite the person the gifts are for: they would see what’s reserved."),
+                    tr("Collect gift ideas together for someone you want to surprise. Everyone you invite can add ideas and reserve what they’ll buy, so no gift is bought twice."),
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 OutlinedTextField(
-                    name, { name = it.take(60); if (it.isNotBlank()) missing = false }, label = { Text(tr("Name*")) },
+                    name, { name = it.take(60); if (it.isNotBlank()) missing = false }, label = { Text(tr("Gift list name*")) },
                     placeholder = { Text(tr("Baby registry")) }, singleLine = true, isError = missing,
                     supportingText = if (missing) ({ Text(tr("What is this wishlist called?")) }) else null,
                     modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
@@ -64,10 +65,6 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
                     notes, { notes = it.take(ABOUT_MAX) },
                     label = { Text(tr("Notes")) }, placeholder = { Text(tr("What is this wishlist for?")) },
                     maxLines = 4, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
-                OutlinedTextField(
-                    me, { me = it.take(30) }, label = { Text(tr("Your name")) },
-                    supportingText = { Text(tr("Shown on the wishes you add")) },
-                    singleLine = true, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 if (err.isNotEmpty()) {
                     Text(err, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 }
@@ -75,7 +72,7 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
         },
         confirmButton = {
             TextButton(
-                enabled = !busy && me.isNotBlank() && Config.enabled,
+                enabled = !busy && Config.enabled,
                 onClick = {
                     if (name.isBlank()) {
                         missing = true
@@ -141,7 +138,7 @@ fun JoinDialog(key: String, onJoined: (String) -> Unit, onClose: () -> Unit) {
         onDismissRequest = { if (!joining) onClose() },
         // Only the buttons close this, so a tap next to it doesn't lose the invitation.
         properties = DialogProperties(dismissOnClickOutside = false),
-        title = { Text(if (name != null) tr("Join “%s”?", name) else tr("Invitation to a wishlist for someone")) },
+        title = { Text(if (name != null) tr("Join “%s”?", name) else tr("Invitation to a gift list")) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (name != null) {
@@ -149,7 +146,8 @@ fun JoinDialog(key: String, onJoined: (String) -> Unit, onClose: () -> Unit) {
                         tr("You’ll be able to add and change wishes and reserve gifts on this list, together with the other givers."),
                         style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    OutlinedTextField(
+                    // Your profile name is used (owner, 2.102); only asked when there is none yet (a brand-new install).
+                    if (Shared.lastName.isBlank()) OutlinedTextField(
                         me, { me = it.take(30) }, label = { Text(tr("Your name")) },
                         supportingText = { Text(tr("Shown on the wishes you add")) },
                         singleLine = true, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)

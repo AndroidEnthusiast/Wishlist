@@ -82,15 +82,13 @@ val ACCENTS: List<Accent> = listOf(
 fun accentFor(key: String): Accent = ACCENTS.firstOrNull { it.key == key } ?: customAccent(key) ?: ACCENTS[0]
 
 /**
- * Any colour (owner, 2.101): picked on the colour ball in the Themer and stored as "#RRGGBB". Light uses it as it is;
- * dark a lighter tone of it (a third of the way to white), as the five accents do.
+ * Any colour (owner, 2.101): picked on the colour ball in the Themer and stored as "#RRGGBB". The same colour in light
+ * and in dark (owner, 2.102: what you pick is what you get).
  */
 fun customAccent(key: String): Accent? {
     if (!Regex("#[0-9A-Fa-f]{6}").matches(key)) return null
-    val rgb = key.substring(1).toLong(16)
-    val light = 0xFF000000L or rgb
-    val dark = lerp(Color(light), Color.White, 0.33f).toArgb().toLong() and 0xFFFFFFFFL
-    return Accent(key.uppercase(), "Your colour", light, dark)
+    val argb = 0xFF000000L or key.substring(1).toLong(16)
+    return Accent(key.uppercase(), "Your colour", argb, argb)
 }
 
 /** A colour as "#RRGGBB". */

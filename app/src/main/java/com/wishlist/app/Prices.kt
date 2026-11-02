@@ -94,10 +94,7 @@ fun PricesScreen(snack: SnackbarHostState, onProfile: () -> Unit = {}) {
                         val mat = RoundedCornerShape(12.dp)
                         Box(Modifier.size(52.dp).lookMat(look, mat, look.pictureBg(id, false)), contentAlignment = Alignment.Center) {
                             if (r.w.image.isNotBlank()) {
-                                AsyncImage(
-                                    model = r.w.image, contentDescription = null, contentScale = ContentScale.Fit,
-                                    modifier = Modifier.fillMaxSize().padding(4.dp)
-                                )
+                                WishImage(r.w.image, Modifier.fillMaxSize().padding(4.dp))
                             } else PlaceholderIcon("gift", 22.dp)
                         }
                         Column(Modifier.weight(1f).padding(start = 12.dp, end = 8.dp)) {

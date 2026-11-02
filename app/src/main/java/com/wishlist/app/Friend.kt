@@ -51,7 +51,9 @@ fun FriendScreen(
     // A list of a friend from the Friends tab: loaded through the friendship (not the link), with a back arrow and
     // no "Remove this list" (unfollowing is done on the friend).
     fetch: (suspend () -> RemoteList?)? = null,
-    onBack: (() -> Unit)? = null
+    onBack: (() -> Unit)? = null,
+    // Whose list it is ("Owned by …", 2.102): the friend's name, or what the list itself says (opened from a link).
+    ownerName: String? = null
 ) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -110,7 +112,16 @@ fun FriendScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text(f.name, fontWeight = LocalLook.current.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                title = {
+                    Column {
+                        Text(f.name, fontWeight = LocalLook.current.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        val owner = ownerName?.takeIf { it.isNotBlank() } ?: remote?.owner
+                        if (!owner.isNullOrBlank()) Text(
+                            tr("Owned by %s", owner), style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                },
                 navigationIcon = {
                     if (onBack != null) IconButton(onClick = onBack) { Icon(AppIcons.ArrowBack, tr("Back")) } else MenuSlot()
                 },

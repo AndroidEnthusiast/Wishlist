@@ -104,16 +104,18 @@ fun ColourPickerDialog(start: String, onPick: (String) -> Unit, onClose: () -> U
                         modifier = Modifier.weight(1f)
                     )
                 }
-                // The colour, as a button would look in light and in dark.
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    val ac = accentFor(key)
-                    listOf(Color(0xFFF7F7F9) to Color(ac.light), Color(0xFF121214) to Color(ac.dark)).forEach { (page, tone) ->
-                        Box(
-                            Modifier.clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp)).background(page)
-                                .border(1.dp, cs.outlineVariant, androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
-                                .padding(10.dp)
-                        ) {
-                            Box(Modifier.size(width = 72.dp, height = 30.dp).clip(CircleShape).background(tone))
+                // The colour, as a button would look on a light and on a dark page (the same colour in both, 2.102).
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Bottom) {
+                    listOf(tr("Light mode") to Color(0xFFF7F7F9), tr("Dark mode") to Color(0xFF121214)).forEach { (label, page) ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(label, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(bottom = 4.dp))
+                            Box(
+                                Modifier.clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp)).background(page)
+                                    .border(1.dp, cs.outlineVariant, androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
+                                    .padding(10.dp)
+                            ) {
+                                Box(Modifier.size(width = 72.dp, height = 30.dp).clip(CircleShape).background(colour))
+                            }
                         }
                     }
                 }

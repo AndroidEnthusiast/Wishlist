@@ -1,5 +1,6 @@
 // The Dutch wording of the web pages, by their English wording (see T() in i18n.js). The app's are in NlStrings.kt.
 window.WL_NL = {
+  "Owned by {0}": "Van {0}",
   "No connection. Showing the last copy; changes can’t be saved until you’re back online.": "Geen verbinding. Je ziet de laatste kopie; wijzigingen kunnen pas worden opgeslagen als je weer online bent.",
   "Couldn’t save that. Check your connection and try again.": "Kan dat niet opslaan. Controleer je verbinding en probeer het opnieuw.",
   "Saved without the picture: it couldn’t be uploaded.": "Opgeslagen zonder afbeelding: die kon niet worden geüpload.",

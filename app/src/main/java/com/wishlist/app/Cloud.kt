@@ -9,7 +9,7 @@ import java.net.URL
 
 class CloudException(message: String) : Exception(message)
 
-data class RemoteList(val name: String, val cats: List<String>, val wishes: List<Wish>, val about: String = "")
+data class RemoteList(val name: String, val cats: List<String>, val wishes: List<Wish>, val about: String = "", val owner: String = "")
 
 /** A shared wishlist as an editor sees it: the list plus its public code (the one friends use). */
 data class RemoteShared(val code: String, val list: RemoteList)
@@ -128,7 +128,19 @@ object Cloud {
                 .put("p_code", code).put("p_token", token).put("p_name", name)
                 .put("p_cats", JSONArray(cats)).put("p_items", items)
         )
+        // "Owned by …" on friends' screens (2.102, supabase-friends.sql): your profile name with the list, sent when
+        // it changed. Without the new script the function doesn't exist yet: then nothing happens.
+        val me = Shared.lastName.trim()
+        if (me.isNotEmpty() && ownerSent[code] != me) {
+            try {
+                rpc("wl_set_owner", JSONObject().put("p_code", code).put("p_token", token).put("p_name", me))
+                ownerSent[code] = me
+            } catch (e: Exception) {
+            }
+        }
     }
+
+    private val ownerSent = java.util.concurrent.ConcurrentHashMap<String, String>()
 
     suspend fun deleteList(code: String, token: String) {
         rpc("wl_delete_list", JSONObject().put("p_code", code).put("p_token", token))
@@ -156,7 +168,7 @@ object Cloud {
         return RemoteList(
             o.optString("name", "Wishlist"),
             if (cs == null) emptyList() else (0 until cs.length()).map { cs.getString(it) },
-            wishes, about
+            wishes, about, o.optString("owner", "")
         )
     }
 

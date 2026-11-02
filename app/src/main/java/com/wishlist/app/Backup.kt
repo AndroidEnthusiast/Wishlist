@@ -173,7 +173,7 @@ fun BackupSection(snack: SnackbarHostState) {
         if (uri != null) importing = uri
     }
     Text(
-        tr("Moving to a new phone? Export everything to one file: your wishlists, wishes, photos, profile, friends and the wishlists for someone you’re on. Then import it on the new phone."),
+        tr("Moving to a new phone? Export everything to one file: your wishlists, wishes, photos, profile, friends and the gift lists you’re on. Then import it on the new phone."),
         style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
     )
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

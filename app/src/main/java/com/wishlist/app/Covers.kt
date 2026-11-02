@@ -257,7 +257,7 @@ fun CoverPreview(img: String, edit: HeroEdit, onClose: () -> Unit) {
                             Modifier.size(48.dp).clip(RoundedCornerShape(10.dp)).background(look.pictureBg(id, w.image.isNotBlank())),
                             contentAlignment = Alignment.Center
                         ) {
-                            if (w.image.isNotBlank()) AsyncImage(w.image, null, Modifier.fillMaxSize().padding(4.dp), contentScale = ContentScale.Fit)
+                            if (w.image.isNotBlank()) WishImage(w.image, Modifier.fillMaxSize().padding(4.dp))
                             else PlaceholderIcon("gift", 20.dp)
                         }
                         Text(

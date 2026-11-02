@@ -80,7 +80,8 @@ object Shared {
     private val stamp = AtomicInteger(0)
 
     val current: SharedList? get() = lists.firstOrNull { it.code == active }
-    val me: String get() = current?.me.orEmpty()
+    /** Your name on gift lists: always your profile name (owner, 2.102: never asked, no other name per list). */
+    val me: String get() = lastName
     val isCreator: Boolean get() = current?.owner?.isNotEmpty() == true
 
     private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
@@ -125,7 +126,7 @@ object Shared {
         if (n.isEmpty()) return
         val old = lastName
         rememberName(c, n)
-        lists = lists.map { if (it.me.isBlank() || it.me == old) it.copy(me = n) else it }
+        lists = lists.map { it.copy(me = n) }
         saveLists(c)
     }
 
@@ -558,7 +559,7 @@ object Shared {
 
     /** Creator only: a new edit key. The old invite link stops working. Returns the new key. */
     suspend fun resetKey(c: Context): String {
-        val l = current ?: throw CloudException(tr("No wishlist for someone is open."))
+        val l = current ?: throw CloudException(tr("No gift list is open."))
         if (l.owner.isEmpty()) throw CloudException(tr("Only the person who made this list can do that."))
         val nk = Sync.newKey()
         Cloud.shReset(l.code, l.owner, nk)

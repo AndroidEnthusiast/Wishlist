@@ -1,5 +1,9 @@
 package com.wishlist.app
 
+import androidx.core.view.WindowCompat
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -198,10 +202,19 @@ class MainActivity : ComponentActivity() {
         Alerts.schedule(this, Repo.intervalHours, false)
         Alerts.scheduleBin(this)
         Sync.push()
+        // Edge to edge (owner, 2.102): the app draws behind the system bars and handles them itself. Before, Android
+        // shrank the whole window for the keyboard ("adjustResize"), also for a keyboard that was still closing in
+        // another app when you came back, so the bottom bar jumped up for a moment. Now only what needs it moves.
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             WishTheme {
-                App(sharedUrl, sharedCode, sharedInvite, binTarget, { binTarget = null }) {
-                    sharedUrl = null; sharedCode = null; sharedInvite = null
+                Box(
+                    Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
+                        .windowInsetsPadding(WindowInsets.statusBars)
+                ) {
+                    App(sharedUrl, sharedCode, sharedInvite, binTarget, { binTarget = null }) {
+                        sharedUrl = null; sharedCode = null; sharedInvite = null
+                    }
                 }
             }
         }
@@ -634,7 +647,7 @@ fun App(
                     // Then the wishlists you make together with other givers (group wishlists).
                     DrawerDivider()
                     Text(
-                        tr("Wishlists for someone"), style = MaterialTheme.typography.labelLarge,
+                        tr("Gift lists"), style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 28.dp, top = 8.dp, bottom = 8.dp)
                     )
@@ -644,7 +657,7 @@ fun App(
                             scope.launch { drawer.close() }
                         }
                     }
-                    DrawerItem(tr("New wishlist for someone"), AppIcons.Add, false) {
+                    DrawerItem(tr("New gift list"), AppIcons.Add, false) {
                         newShared = true
                         scope.launch { drawer.close() }
                     }
@@ -688,10 +701,12 @@ fun App(
     ) {
         // The screen behind the menu blurs a little while the menu is open.
         val fr = Repo.friends.firstOrNull { it.code == friendCode }
-        val showBar = !settings && !binOpen && fr == null && !listSettings && !notesOpen && !profileOpen && !inChat
+        // While the keyboard is open the bottom bar steps aside and the screen above it makes room (edge to edge, 2.102).
+        val imeOpen = WindowInsets.isImeVisible
+        val showBar = !settings && !binOpen && fr == null && !listSettings && !notesOpen && !profileOpen && !inChat && !imeOpen
         Column(Modifier.fillMaxSize().then(if (blurRadius > 0.dp) Modifier.blur(blurRadius) else Modifier)) {
         // With the bottom bar, the screens above it don't leave room for the phone's own navigation bar again.
-        Box(Modifier.weight(1f).then(if (showBar) Modifier.consumeWindowInsets(WindowInsets.navigationBars) else Modifier)) {
+        Box(Modifier.weight(1f).imePadding().then(if (showBar) Modifier.consumeWindowInsets(WindowInsets.navigationBars) else Modifier)) {
             when {
                 profileOpen -> ProfileScreen(snack)
                 settings -> SettingsScreen(snack, openMenu)

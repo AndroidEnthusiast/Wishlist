@@ -109,7 +109,7 @@ fun WelcomeFlow(onDone: () -> Unit) {
                             PlaceholderIcon("hello", 56.dp, LocalLook.current.accent)
                             Text(tr("Welcome to Wishlist"), style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 12.dp))
                             Text(
-                                tr("What’s your name? Friends see it, and it’s shown on the wishes you add to a wishlist for someone."),
+                                tr("What’s your name? Friends see it, and it’s shown on the wishes you add to a gift list."),
                                 style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
                             )

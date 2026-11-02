@@ -30,6 +30,7 @@ body {
 header { padding: 20px 16px 8px; max-width: 1100px; margin: 0 auto; }
 h1 { margin: 0 0 4px; font-size: 1.6rem; font-weight: 500; overflow-wrap: anywhere; }
 .sub { margin: 0; color: var(--muted); font-size: .95rem; }
+.owner { margin: 0 0 4px; color: var(--muted); font-size: .85rem; font-weight: 600; }
 main { max-width: 1100px; margin: 0 auto; padding: 8px 16px 48px; }
 .chips { display: flex; gap: 8px; overflow-x: auto; padding: 8px 0 12px; scrollbar-width: none; }
 .chips::-webkit-scrollbar { display: none; }

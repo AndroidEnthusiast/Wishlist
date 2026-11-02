@@ -73,4 +73,9 @@ select wl_set_link('LISTC001','ownerC_ownerC_ownerC',true);
 select pg_temp.ok(wl_get_list('LISTC001')->>'name' = 'Cas list', 'link on again');
 do $$ begin perform wl_list_json('LISTC001'); raise exception 'FAIL internal function callable';
 exception when others then if sqlerrm like 'FAIL%' then raise; end if; end $$;
+-- "Owned by" (2.102): only the list's owner can set the name; the link page gets it.
+select wl_set_owner('LISTC001','badtoken','Hacker');
+select pg_temp.ok(wl_get_list('LISTC001')->>'owner' = '', 'a wrong token can''t set the owner name');
+select wl_set_owner('LISTC001','ownerC_ownerC_ownerC','Cas');
+select pg_temp.ok(wl_get_list('LISTC001')->>'owner' = 'Cas', 'the link page gets the owner name');
 \echo ALL FRIENDS CHECKS OK

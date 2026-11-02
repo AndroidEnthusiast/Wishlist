@@ -59,12 +59,15 @@ $$;
 -- "Who can see this list" (2.95): with link_off the friends' link doesn't open the list; friends in the app still see
 -- it (supabase-friends.sql, wl_fr_list).
 alter table wl_lists add column if not exists link_off boolean not null default false;
+-- "Owned by …" (2.102): the owner's profile name, shown under the list name to friends (app and web page).
+alter table wl_lists add column if not exists owner_name text not null default '';
 
 -- Anyone with the code can read the list, unless its link is switched off. Reservations are NOT included here.
 create or replace function wl_get_list(p_code text)
 returns jsonb language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
     'name', l.name,
+    'owner', l.owner_name,
     'cats', l.cats,
     'items', coalesce(
       (select jsonb_agg(i.data order by i.id desc) from wl_items i where i.list_code = l.code),

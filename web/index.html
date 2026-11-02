@@ -34,6 +34,7 @@ try { var wlt = localStorage.getItem("wl_theme"); if (wlt === "light" || wlt ===
   <h1 id="name">Wishlist</h1>
 </header>
 <main>
+  <p class="owner" id="owner" hidden></p>
   <p class="sub" id="sub" hidden></p>
   <p class="about" id="about" hidden></p>
   <p class="tip" id="gone" role="status" hidden></p>
@@ -659,6 +660,10 @@ function render() {
 
   $("name").textContent = list.name || "Wishlist";
   document.title = list.name || "Wishlist";
+  // Whose list this is (2.102): the owner's profile name, sent by their app (supabase-friends.sql).
+  var ow = $("owner");
+  ow.textContent = list.owner ? T("Owned by {0}", String(list.owner).slice(0, 30)) : "";
+  ow.hidden = !list.owner;
   $("sub").textContent = T("Reserve a gift so nobody gives the same gift twice.");
   var ab = $("about");
   ab.textContent = list.about || "";

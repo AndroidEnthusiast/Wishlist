@@ -255,11 +255,14 @@ end $$;
 -- "Who can see this list" (2.95): a list's friends' link can be switched off ("My friends" only). Friends in the app
 -- still see it through wl_fr_list. (Also in supabase-setup.sql, so running either file again keeps it.)
 alter table wl_lists add column if not exists link_off boolean not null default false;
+-- "Owned by …" (2.102): the owner's profile name, shown under the list name to friends (app and web page).
+alter table wl_lists add column if not exists owner_name text not null default '';
 
 create or replace function wl_get_list(p_code text)
 returns jsonb language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
     'name', l.name,
+    'owner', l.owner_name,
     'cats', l.cats,
     'items', coalesce(
       (select jsonb_agg(i.data order by i.id desc) from wl_items i where i.list_code = l.code),
@@ -272,12 +275,20 @@ create or replace function wl_list_json(p_code text)
 returns jsonb language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
     'name', l.name,
+    'owner', l.owner_name,
     'cats', l.cats,
     'items', coalesce(
       (select jsonb_agg(i.data order by i.id desc) from wl_items i where i.list_code = l.code),
       '[]'::jsonb)
   ) from wl_lists l where l.code = p_code
 $$;
+
+-- Your profile name on your list, for "Owned by …" (owner token required).
+create or replace function wl_set_owner(p_code text, p_token text, p_name text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  update wl_lists set owner_name = left(coalesce(p_name, ''), 30) where code = p_code and owner_token = p_token;
+end $$;
 
 -- Switches the friends' link of your list on or off (owner token required).
 create or replace function wl_set_link(p_code text, p_token text, p_on boolean)
@@ -320,5 +331,6 @@ grant execute on function
   wl_fr_photo(text, text, text),
   wl_fr_list(text, text, text, text),
   wl_get_list(text),
-  wl_set_link(text, text, boolean)
+  wl_set_link(text, text, boolean),
+  wl_set_owner(text, text, text)
 to anon;

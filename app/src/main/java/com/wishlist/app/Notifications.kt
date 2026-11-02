@@ -289,10 +289,9 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                     Box(Modifier.size(44.dp).lookMat(look, mat, look.pictureBg(id, false)), contentAlignment = Alignment.Center) {
                         if (n.image.isNotBlank()) {
                             val person = n.kind.startsWith("friend") || n.kind == "birthday"
-                            AsyncImage(
-                                model = n.image, contentDescription = null,
-                                contentScale = if (person) ContentScale.Crop else ContentScale.Fit,
-                                modifier = if (person) Modifier.fillMaxSize() else Modifier.fillMaxSize().padding(3.dp)
+                            WishImage(
+                                n.image, if (person) Modifier.fillMaxSize() else Modifier.fillMaxSize().padding(3.dp),
+                                if (person) ContentScale.Crop else ContentScale.Fit
                             )
                         } else PlaceholderIcon(
                             when (n.kind) { "friend_req", "friend_ok" -> "friend"; "birthday" -> "birthday"; else -> "gift" }, 22.dp
