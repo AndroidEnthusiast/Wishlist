@@ -544,10 +544,10 @@ fun birthdayText(b: String): String {
 @Composable
 private fun FriendStat(n: Int, label: String, onClick: () -> Unit) {
     Column(
-        Modifier.clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 6.dp),
+        Modifier.statTile().clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 3.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(n.toString(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(n.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
     }
 }

@@ -199,7 +199,28 @@ private fun scheme(
  * The look for a theme. [style]: "classic" or a design key. [setKey]: the design's colour set.
  * [classicMode]: for the classic themes, "light", "dark" or "amoled".
  */
-fun lookFor(style: String, setKey: String, classicMode: String): Look {
+fun lookFor(style: String, setKey: String, classicMode: String): Look = withDepth(baseLook(style, setKey, classicMode))
+
+/**
+ * Depth (owner, 2.96, "medium" in the preview): the page gets a slightly deeper colour than before (light: a touch of
+ * the theme colour and a little darker; dark: darker), so cards stand out. Standard and Material 3 cards also get a
+ * lighter colour of their own; with [lookCard] they get a soft shadow (and in dark a faint edge). Neobrutalism,
+ * Claymorphism and Organic keep their own card colours and shadows.
+ */
+private fun withDepth(l: Look): Look {
+    val bg = l.scheme.background
+    val page = if (l.dark) mix(bg, Color.Black, 0.3f) else mix(mix(bg, l.scheme.primary, 0.035f), Color.Black, 0.035f)
+    val fills = when (l.design) {
+        "classic", "material" -> l.fills.map { if (l.dark) mix(it, Color.White, 0.05f) else mix(it, Color.White, 0.7f) }
+        else -> l.fills
+    }
+    return Look(
+        l.design, l.dark, l.scheme.copy(background = page, surface = page), fills, l.tints, l.line, l.shadows, l.blobs,
+        l.display, l.drop, l.rise, l.accent, l.onAccent
+    )
+}
+
+private fun baseLook(style: String, setKey: String, classicMode: String): Look {
     val d = designFor(style) ?: return classicLook(classicMode, setKey)
     val s = colourSetFor(d, setKey)
     val dark = s.dark
@@ -496,9 +517,16 @@ fun Modifier.clayEdge(look: Look, shape: Shape, width: Dp = 1.5.dp): Modifier = 
 fun Modifier.lookCard(look: Look, id: Long, shape: Shape): Modifier = when (look.design) {
     "neo" -> hardShadow(look.shadows[pick(id, look.shadows.size)], shape, 5.dp)
         .clip(shape).background(look.cardFill(id)).border(2.dp, look.line, shape)
-    "organic" -> clip(shape).background(look.cardFill(id)).border(1.dp, look.line, shape)
+    "organic" -> softLift(look, shape).clip(shape).background(look.cardFill(id)).border(1.dp, look.line, shape)
     "clay" -> clay(look, shape, look.cardFill(id), 12.dp)
-    else -> clip(shape).background(look.cardFill(id))
+    else -> softLift(look, shape).clip(shape).background(look.cardFill(id))
+        .then(if (look.dark) Modifier.border(1.dp, Color.White.copy(alpha = 0.06f), shape) else Modifier)
+}
+
+/** The soft shadow under a card (2.96): a little tinted in light, darker and smaller in dark. */
+private fun Modifier.softLift(look: Look, shape: Shape): Modifier {
+    val col = if (look.dark) Color.Black else Color(0xFF28286E)
+    return shadow(if (look.dark) 3.dp else 4.dp, shape, clip = false, ambientColor = col.copy(alpha = 0.5f), spotColor = col.copy(alpha = 0.35f))
 }
 
 /** The mat a picture sits on inside a card. Clay presses it in; the others simply fill it. */

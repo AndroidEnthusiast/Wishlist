@@ -39,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -163,13 +164,25 @@ fun ProfileSummary(onProfile: () -> Unit) {
     }
 }
 
+/**
+ * The small, quiet tile behind a number (owner, 2.96: "separate tiles, but subtle"): the card colour, a little see-
+ * through, no shadow; a faint edge in dark.
+ */
+@Composable
+fun Modifier.statTile(): Modifier {
+    val look = LocalLook.current
+    val shape = RoundedCornerShape(12.dp)
+    return clip(shape).background(look.cardFill(5L).copy(alpha = 0.75f))
+        .then(if (look.dark) Modifier.border(1.dp, Color.White.copy(alpha = 0.06f), shape) else Modifier)
+}
+
 @Composable
 private fun Stat(n: Int, label: String, onClick: () -> Unit) {
     Column(
-        Modifier.clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 6.dp),
+        Modifier.statTile().clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 3.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(n.toString(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(n.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
     }
 }
