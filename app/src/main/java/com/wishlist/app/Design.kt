@@ -5,6 +5,7 @@ import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Shapes
@@ -16,488 +17,388 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.addOutline
-import androidx.compose.ui.graphics.asAndroidPath
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.addOutline
+import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.drawOutline
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlin.math.cos
-import kotlin.math.sin
 
 /*
- * Themes (App settings > Theme, and the Themer).
- *
- * The standard ("classic") themes are the original look: Light, Dark and AMOLED black (Repo.theme), indigo,
- * with Google Sans. Their look is "classic" below and must stay exactly as it was.
- *
- * Next to them are four designs, each a complete style of its own with its own colour sets (one of them dark), fonts,
- * icons, buttons, switches, dialogs, top bar, side menu, labels and wish cards. The font from App settings is not used:
- *  - material: Material 3 Expressive (Android 16): tonal colour blocks, big round shapes, Google Sans, rounded icons.
- *  - organic:  warm paper, pebble shapes, blobs, Fraunces + Nunito, thin outlined icons (docs/designs/organic).
- *  - neo:      neobrutalism: thick ink lines, hard offset shadows, bright blocks, dot grid, Lexend, sharp icons.
- *  - clay:     claymorphism: puffy cards with soft coloured shadows and a light top edge, pastel glows,
- *              Plus Jakarta Sans + Inter, rounded icons.
+ * The look of the app (since 2.97, owner): one signature look, **Quiet** (calm and precise, like Apple Wallet and
+ * Photos: one clean typeface, bold tight headings, grouped white cards on a soft grey page, true black in dark), and
+ * four styles that dress the same layout up in their own way:
+ *  - neo:   Neobrutalism: thick ink lines, hard offset shadows (in dark they take the accent), a dot grid.
+ *  - neu:   Neumorphism: everything in one colour, shaped by light and shade (raised cards, pressed-in pictures);
+ *           text, prices and buttons keep strong contrast.
+ *  - cyber: Cyberpunk: neon on near-black (a pale daylight terminal in light), cut-off corners, thin lines, scan lines,
+ *           Rajdhani with monospace labels.
+ *  - chaos: Gen Z chaos maximalism: clashing hot pink, lime and yellow, tilted cards, thick lines, Bungee headings,
+ *           handwritten Caveat labels, polka dots.
+ * Every style has light and dark ([Repo.theme]) and the same five accent colours ([ACCENTS], [Repo.palette]).
+ * The old designs (Standard, Material 3, Organic, Claymorphism) and their colour sets are gone; see Repo.load for how
+ * people who used them move over. Preview the owner chose from: https://claude.ai/artifact/NiJ5D8P4Xk8JQiJLwBMtKe
  */
 
-/**
- * A colour set: the main colour (buttons, highlights), two accents, the paper (background) and the ink (text).
- * A dark set gives the dark background as paper and light text as ink.
- */
-class ColourSet(
-    val key: String, val name: String, val main: Long, val a2: Long, val a3: Long, val paper: Long, val ink: Long,
-    val dark: Boolean = false
+/** A style: its key ([Repo.design]), its name and one line about it (the Themer). */
+class StyleInfo(val key: String, val name: String, val about: String)
+
+val STYLES: List<StyleInfo> = listOf(
+    StyleInfo("quiet", "Quiet", "Calm and precise: clean cards on a soft grey page, bold headings, true black in dark."),
+    StyleInfo("neo", "Neobrutalism", "Thick ink lines and hard shadows; in dark the shadows take your colour."),
+    StyleInfo("neu", "Neumorphism", "One colour, shaped by light and shade: raised cards, pictures pressed in."),
+    StyleInfo("cyber", "Cyberpunk", "Neon on near-black, cut-off corners, scan lines and monospace labels."),
+    StyleInfo("chaos", "Gen Z chaos", "Full chaos: clashing colours, tilted cards, stickers and handwriting.")
 )
 
-class Design(val key: String, val name: String, val about: String, val sets: List<ColourSet>)
+fun styleFor(key: String): StyleInfo = STYLES.firstOrNull { it.key == key } ?: STYLES[0]
 
-val DESIGNS: List<Design> = listOf(
-    Design(
-        "material", "Material 3", "Android 16’s expressive look: tonal colour blocks, big round shapes, bold numbers.",
-        listOf(
-            ColourSet("lilac", "Lilac", 0xFF7B52C9, 0xFFF07B6B, 0xFFE6A6F2, 0xFFFCF3FD, 0xFF1F1424),
-            ColourSet("coral", "Coral", 0xFFB8473A, 0xFFFFB59E, 0xFF8C6BD6, 0xFFFFF5F2, 0xFF2B1512),
-            ColourSet("ocean", "Ocean", 0xFF1F6FB2, 0xFF8FD3F0, 0xFFFFC27A, 0xFFF3F8FD, 0xFF0E1C2B),
-            ColourSet("forest", "Forest", 0xFF2E7D4F, 0xFFB7E4A8, 0xFFF2C14E, 0xFFF3F9F3, 0xFF10241A),
-            ColourSet("sunshine", "Sunshine", 0xFF8A5A00, 0xFFFFD66B, 0xFFF07B6B, 0xFFFFF8EC, 0xFF261A00),
-            ColourSet("plum", "Plum night", 0xFFD7B4FF, 0xFFFF9C8F, 0xFFF2B8F5, 0xFF1A111D, 0xFFF3E8F5, dark = true)
-        )
-    ),
-    Design(
-        "organic", "Organic", "Warm and natural: soft paper, pebble shapes and a friendly serif.",
-        listOf(
-            ColourSet("sage", "Sage", 0xFF4F6B4A, 0xFFC9A574, 0xFF9C88B5, 0xFFF3EEE4, 0xFF2A2B24),
-            ColourSet("terracotta", "Terracotta", 0xFFA0583C, 0xFF7C8B5A, 0xFFD9A55B, 0xFFF6EEE6, 0xFF2E241F),
-            ColourSet("lavender", "Lavender", 0xFF6B5B8E, 0xFF8FA383, 0xFFD3A67A, 0xFFF2EFF2, 0xFF29262F),
-            ColourSet("seaglass", "Sea glass", 0xFF3D6E73, 0xFFC6A27A, 0xFF8DAE9B, 0xFFEEF1EC, 0xFF1F2A2B),
-            ColourSet("berry", "Berry", 0xFF8A4560, 0xFFB98A62, 0xFF7E9171, 0xFFF6EEEC, 0xFF2E2226),
-            ColourSet("night", "Forest night", 0xFFA9C59E, 0xFFD7B98A, 0xFFB9A6D3, 0xFF191A15, 0xFFECE7DB, dark = true)
-        )
-    ),
-    Design(
-        "neo", "Neobrutalism", "Bold and playful: thick lines, hard shadows and bright blocks of colour.",
-        listOf(
-            ColourSet("lemon", "Lemon and lilac", 0xFFF2F98E, 0xFFC4F7C4, 0xFFF0D0F8, 0xFFFFFFFF, 0xFF14183B),
-            ColourSet("bubblegum", "Bubblegum", 0xFFFF9BD2, 0xFF9BD7FF, 0xFFFFE57A, 0xFFFFF7FB, 0xFF111111),
-            ColourSet("tangerine", "Tangerine", 0xFFFFA552, 0xFF7FE3CF, 0xFFFFE9A8, 0xFFFFF6E9, 0xFF1A1A1A),
-            ColourSet("electric", "Electric", 0xFF7AA2FF, 0xFFD4FF5C, 0xFFFFB8B8, 0xFFF4F6FF, 0xFF0B0B1A),
-            ColourSet("mint", "Mint and coral", 0xFF7EEDC0, 0xFFFF9C8A, 0xFFFFF0A6, 0xFFF2FFF8, 0xFF102018),
-            ColourSet("midnight", "Midnight", 0xFFF2F98E, 0xFF9BD7FF, 0xFFFF9BD2, 0xFF141416, 0xFFF4F4EE, dark = true)
-        )
-    ),
-    Design(
-        "clay", "Claymorphism", "Soft and puffy: inflated clay shapes with inner glows, soft shadows and pastels.",
-        listOf(
-            ColourSet("lavender", "Lavender", 0xFF7C6AED, 0xFFA7EFC2, 0xFFFFC4AE, 0xFFF4F1FF, 0xFF1E1B4B),
-            ColourSet("mint", "Mint", 0xFF2FA37A, 0xFFFFD39E, 0xFFB9C6FF, 0xFFEFFAF5, 0xFF12332A),
-            ColourSet("peach", "Peach", 0xFFE0663A, 0xFFB7A7F7, 0xFF9FE3D0, 0xFFFFF4EE, 0xFF3A1E14),
-            ColourSet("sky", "Sky", 0xFF3D8BF2, 0xFFFFD27A, 0xFFF7A8C8, 0xFFEFF5FF, 0xFF12264A),
-            ColourSet("bubblegum", "Bubblegum", 0xFFE35D9C, 0xFF9ED8F5, 0xFFFFE08A, 0xFFFFF0F6, 0xFF3D1229),
-            ColourSet("dusk", "Dusk", 0xFF9D8CFF, 0xFF7FD6A8, 0xFFFFB199, 0xFF1B1830, 0xFFECE9FF, dark = true)
-        )
-    )
+/** An accent colour: the tone for light and the (lighter) tone for dark. */
+class Accent(val key: String, val name: String, val light: Long, val dark: Long)
+
+val ACCENTS: List<Accent> = listOf(
+    Accent("blue", "Blue", 0xFF0A6CFF, 0xFF4D94FF),
+    Accent("indigo", "Indigo", 0xFF4C4CD6, 0xFF8585FF),
+    Accent("green", "Green", 0xFF1F9D55, 0xFF3DDC84),
+    Accent("orange", "Orange", 0xFFF2711C, 0xFFFF9A52),
+    Accent("pink", "Pink", 0xFFE5367A, 0xFFFF6FA3)
 )
 
-/** The design with this key, or null for the classic themes. */
-fun designFor(key: String): Design? = DESIGNS.firstOrNull { it.key == key }
+fun accentFor(key: String): Accent = ACCENTS.firstOrNull { it.key == key } ?: ACCENTS[0]
 
-fun colourSetFor(d: Design, key: String): ColourSet = d.sets.firstOrNull { it.key == key } ?: d.sets[0]
-
-/** Everything the screens need to draw the chosen theme. Get it with LocalLook.current. */
+/** Everything the screens need to draw the chosen look. Get it with LocalLook.current. */
 class Look(
-    /** "classic", "material", "organic", "neo" or "clay". */
+    /** "quiet", "neo", "neu", "cyber" or "chaos". */
     val design: String,
     val dark: Boolean,
     val scheme: ColorScheme,
-    /** Card colours, used in turn (neobrutalism has several; the others one). */
+    /** Card colours, used in turn. */
     val fills: List<Color>,
     /** Soft colours behind pictures, used in turn. */
     val tints: List<Color>,
-    /** Thin lines (organic) and the thick lines of neobrutalism. */
+    /** Lines: hairlines (Quiet), thick ink (Neobrutalism, chaos), neon (Cyberpunk). */
     val line: Color,
-    /** Hard shadow colours of neobrutalism, used in turn; the soft shadow colour of clay is the first. */
+    /** Shadow colours: the hard shadow (neo, chaos); for neumorphism the shade and the light. */
     val shadows: List<Color>,
-    /** The shapes, glows or dots drawn behind the list. */
+    /** Colours of what is drawn behind the screens (dots, neon, chaos circles). */
     val blobs: List<Color>,
-    /** The font of names, headings and prices, or null for the font chosen in App settings (classic themes). */
+    /** The font of names, headings and prices. */
     val display: FontFamily?,
     /** A cheaper and a dearer price. */
     val drop: Color,
     val rise: Color,
-    /**
-     * The colour of filled blocks (buttons, the chosen chip, Add wish, the + buttons) and what goes on them. Usually the
-     * main colour; in Neobrutalism's light sets the main colour is too light for text, so there the scheme's primary
-     * (used for text, titles, radio buttons, links) is the dark ink and the bright colour is only used here (2.71).
-     */
+    /** The colour of filled blocks (buttons, the chosen chip, Add wish, the + buttons) and what goes on them. */
     val accent: Color = scheme.primary,
     val onAccent: Color = scheme.onPrimary
 ) {
-    val classic: Boolean get() = design == "classic"
+    /** The signature look. (Kept under the old name: "classic" meant the plain standard look.) */
+    val classic: Boolean get() = design == "quiet"
 }
 
-val LocalLook = staticCompositionLocalOf { lookFor("classic", "", "light") }
+val LocalLook = staticCompositionLocalOf { lookFor("quiet", "blue", "light") }
 
 private fun c(v: Long) = Color(v)
 private fun mix(a: Color, b: Color, t: Float) = lerp(a, b, t)
-/** Dark ink on light colours, white on dark ones. */
-private fun on(bg: Color, ink: Color) = if (bg.luminance() > 0.4f) ink else Color.White
 private fun pick(id: Long, n: Int) = Math.floorMod(id, n.toLong()).toInt()
+/** Dark ink on light colours, white on dark ones. */
+private fun inkOn(bg: Color) = if (bg.luminance() > 0.5f) c(0xFF0B0B0F) else Color.White
 
-private val fraunces by lazy { google("Fraunces") }
-private val nunito by lazy { google("Nunito") }
-private val lexend by lazy { google("Lexend") }
-private val jakarta by lazy { google("Plus Jakarta Sans") }
-private val inter by lazy { google("Inter") }
+val figtree by lazy { google("Figtree") }
+private val rajdhani by lazy { google("Rajdhani") }
+private val techMono by lazy { google("Share Tech Mono") }
+private val bungee by lazy { google("Bungee") }
+private val bricolage by lazy { google("Bricolage Grotesque") }
+private val caveat by lazy { google("Caveat") }
 
-/** All the colours of a scheme from a few, plus the surface container steps that menus and dialogs use. */
+/** All the colours of a scheme from a few, plus the surface steps that menus and dialogs use. */
 private fun scheme(
-    dark: Boolean, primary: Color, onPrimary: Color, container: Color, onContainer: Color, accent: Color,
-    bg: Color, surface: Color, text: Color, muted: Color, variant: Color, outline: Color, outlineVariant: Color
+    dark: Boolean, primary: Color, onPrimary: Color, container: Color, onContainer: Color,
+    bg: Color, surface: Color, text: Color, muted: Color, outline: Color, outlineVariant: Color
 ): ColorScheme {
     val step = { t: Float -> mix(bg, text, t) }
     return if (!dark) lightColorScheme(
         primary = primary, onPrimary = onPrimary, primaryContainer = container, onPrimaryContainer = onContainer,
         secondary = primary, onSecondary = onPrimary, secondaryContainer = container, onSecondaryContainer = onContainer,
-        tertiary = accent, onTertiary = on(accent, text), tertiaryContainer = accent, onTertiaryContainer = on(accent, text),
+        tertiary = primary, onTertiary = onPrimary, tertiaryContainer = container, onTertiaryContainer = onContainer,
         background = bg, onBackground = text, surface = bg, onSurface = text,
-        surfaceVariant = variant, onSurfaceVariant = muted, outline = outline, outlineVariant = outlineVariant,
-        surfaceTint = primary, inverseSurface = text, inverseOnSurface = bg, inversePrimary = container,
-        surfaceBright = surface, surfaceDim = step(0.08f),
-        surfaceContainerLowest = surface, surfaceContainerLow = mix(bg, surface, 0.5f), surfaceContainer = step(0.03f),
-        surfaceContainerHigh = surface, surfaceContainerHighest = step(0.08f)
+        surfaceVariant = surface, onSurfaceVariant = muted, outline = outline, outlineVariant = outlineVariant,
+        surfaceTint = Color.Transparent, inverseSurface = text, inverseOnSurface = bg, inversePrimary = container,
+        surfaceBright = surface, surfaceDim = step(0.06f),
+        surfaceContainerLowest = surface, surfaceContainerLow = surface, surfaceContainer = surface,
+        surfaceContainerHigh = surface, surfaceContainerHighest = step(0.06f)
     ) else darkColorScheme(
         primary = primary, onPrimary = onPrimary, primaryContainer = container, onPrimaryContainer = onContainer,
         secondary = primary, onSecondary = onPrimary, secondaryContainer = container, onSecondaryContainer = onContainer,
-        tertiary = accent, onTertiary = on(accent, bg), tertiaryContainer = accent, onTertiaryContainer = on(accent, bg),
+        tertiary = primary, onTertiary = onPrimary, tertiaryContainer = container, onTertiaryContainer = onContainer,
         background = bg, onBackground = text, surface = bg, onSurface = text,
-        surfaceVariant = variant, onSurfaceVariant = muted, outline = outline, outlineVariant = outlineVariant,
-        surfaceTint = primary, inverseSurface = text, inverseOnSurface = bg, inversePrimary = container,
-        surfaceBright = step(0.16f), surfaceDim = bg,
-        surfaceContainerLowest = mix(bg, Color.Black, 0.5f), surfaceContainerLow = step(0.04f), surfaceContainer = step(0.06f),
-        surfaceContainerHigh = surface, surfaceContainerHighest = step(0.12f)
+        surfaceVariant = surface, onSurfaceVariant = muted, outline = outline, outlineVariant = outlineVariant,
+        surfaceTint = Color.Transparent, inverseSurface = text, inverseOnSurface = bg, inversePrimary = container,
+        surfaceBright = step(0.12f), surfaceDim = bg,
+        surfaceContainerLowest = bg, surfaceContainerLow = surface, surfaceContainer = surface,
+        surfaceContainerHigh = surface, surfaceContainerHighest = step(0.14f)
     )
 }
 
 /**
- * The look for a theme. [style]: "classic" or a design key. [setKey]: the design's colour set.
- * [classicMode]: for the classic themes, "light", "dark" or "amoled".
+ * The look for a style ([style], one of [STYLES]), an accent ([accentKey], one of [ACCENTS]) and a mode ("light" or
+ * "dark"; anything else counts as dark).
  */
-fun lookFor(style: String, setKey: String, classicMode: String): Look = withDepth(baseLook(style, setKey, classicMode))
-
-/**
- * Depth (owner, 2.96, "medium" in the preview): the page gets a slightly deeper colour than before (light: a touch of
- * the theme colour and a little darker; dark: darker), so cards stand out. Standard and Material 3 cards also get a
- * lighter colour of their own; with [lookCard] they get a soft shadow (and in dark a faint edge). Neobrutalism,
- * Claymorphism and Organic keep their own card colours and shadows.
- */
-private fun withDepth(l: Look): Look {
-    val bg = l.scheme.background
-    val page = if (l.dark) mix(bg, Color.Black, 0.3f) else mix(mix(bg, l.scheme.primary, 0.035f), Color.Black, 0.035f)
-    val fills = when (l.design) {
-        "classic", "material" -> l.fills.map { if (l.dark) mix(it, Color.White, 0.05f) else mix(it, Color.White, 0.7f) }
-        else -> l.fills
-    }
-    return Look(
-        l.design, l.dark, l.scheme.copy(background = page, surface = page), fills, l.tints, l.line, l.shadows, l.blobs,
-        l.display, l.drop, l.rise, l.accent, l.onAccent
-    )
-}
-
-private fun baseLook(style: String, setKey: String, classicMode: String): Look {
-    val d = designFor(style) ?: return classicLook(classicMode, setKey)
-    val s = colourSetFor(d, setKey)
-    val dark = s.dark
-    val main = c(s.main); val a2 = c(s.a2); val a3 = c(s.a3); val paper = c(s.paper); val ink = c(s.ink)
-    val white = Color.White; val black = Color.Black
-    val greenL = c(0xFF1E7B45); val redL = c(0xFFB3261E)
-    val greenD = c(0xFF6FD39A); val redD = c(0xFFFF8A80)
+fun lookFor(style: String, accentKey: String, mode: String): Look {
+    val dark = mode != "light"
+    val ac = accentFor(accentKey)
+    val a = c(if (dark) ac.dark else ac.light)
+    val onA = inkOn(a)
+    val white = Color.White
+    val greenL = c(0xFF1F8A4C); val redL = c(0xFFC4321F)
+    val greenD = c(0xFF4CD98A); val redD = c(0xFFFF7B6E)
     val drop = if (dark) greenD else greenL
     val rise = if (dark) redD else redL
-    return when (d.key) {
-        "organic" -> {
-            val bg = paper
-            val surface = if (dark) mix(paper, main, 0.06f) else mix(paper, c(0xFFFFFDF8), 0.75f)
-            val text = ink
-            val muted = mix(ink, paper, if (dark) 0.3f else 0.32f)
-            val line = if (dark) mix(paper, main, 0.18f) else mix(paper, ink, 0.12f)
-            val onPrimary = if (dark) mix(main, black, 0.75f) else on(main, ink)
-            val container = if (dark) mix(main, paper, 0.72f) else mix(main, white, 0.76f)
-            val onContainer = if (dark) mix(main, white, 0.6f) else mix(main, ink, 0.6f)
-            val tints = listOf(main, a2, a3).map { if (dark) mix(it, paper, 0.82f) else mix(it, white, 0.78f) }
-            Look(
-                "organic", dark,
-                scheme(dark, main, onPrimary, container, onContainer, a2, bg, surface, text, muted, surface, mix(line, text, 0.35f), line),
-                listOf(surface), tints, line, listOf(line),
-                listOf(mix(main, paper, if (dark) 0.85f else 0.84f), mix(a2, paper, if (dark) 0.88f else 0.78f)),
-                fraunces, drop, rise
-            )
-        }
+    return when (styleFor(style).key) {
         "neo" -> {
-            val bg = paper
-            val surface = if (dark) c(0xFF1F1F23) else white
-            val muted = if (dark) mix(ink, bg, 0.3f) else mix(ink, white, 0.28f)
-            val accents = listOf(main, a2, a3)
-            // The neobrutalist colours are all bright, so the text on them is always the dark ink.
-            val inkOnBright = if (dark) c(0xFF111111) else ink
+            val bg = if (dark) c(0xFF141414) else c(0xFFF4F1EA)
+            val surface = if (dark) c(0xFF1F1F1F) else white
+            val ink = if (dark) c(0xFFFAFAFA) else c(0xFF111111)
+            val muted = if (dark) c(0xFFC8C8C8) else c(0xFF454545)
             Look(
                 "neo", dark,
-                // Light sets: text and small controls in ink (the bright colours are unreadable as text on white);
-                // the bright main colour fills the blocks (accent).
-                scheme(dark, if (dark) main else ink, if (dark) inkOnBright else white, a2, inkOnBright, a3, bg, surface, ink, muted, surface, ink, mix(ink, bg, 0.7f)),
-                // Midnight too has bright cards (with dark text, see cardInk) on the dark background, and light shadows.
-                if (dark) accents else listOf(main, white, a2, a3),
-                accents.map { if (dark) mix(it, surface, 0.15f) else mix(it, white, 0.35f) },
-                ink,
-                listOf(ink),
-                listOf(mix(ink, bg, if (dark) 0.86f else 0.9f)),
-                lexend,
-                // Prices are written on the bright cards, so they are dark green and red in Midnight too.
-                c(0xFF00873C), c(0xFFD62828),
-                accent = main, onAccent = inkOnBright
+                // Text and small controls in ink; the accent only fills blocks.
+                scheme(dark, ink, if (dark) c(0xFF111111) else white, mix(a, surface, 0.7f), ink, bg, surface, ink, muted, ink, mix(ink, bg, 0.75f)),
+                listOf(surface), listOf(mix(a, surface, if (dark) 0.72f else 0.74f)), ink,
+                listOf(if (dark) a else ink), listOf(mix(ink, bg, 0.88f)),
+                figtree, drop, rise, accent = a, onAccent = onA
             )
         }
-        "clay" -> {
-            // A slightly deeper pastel background, so the pale clay pillows stand out from it.
-            val bg = if (dark) paper else mix(paper, main, 0.06f)
-            val surface = if (dark) mix(paper, main, 0.12f) else mix(paper, white, 0.78f)
-            val muted = mix(ink, paper, if (dark) 0.32f else 0.38f)
-            val onPrimary = if (dark) mix(main, black, 0.75f) else on(main, ink)
-            val container = if (dark) mix(main, paper, 0.62f) else mix(main, white, 0.82f)
-            val onContainer = if (dark) mix(main, white, 0.7f) else mix(main, ink, 0.5f)
-            val tints = listOf(a2, main, a3).map { if (dark) mix(it, paper, 0.72f) else mix(it, white, if (it == main) 0.8f else 0.55f) }
+        "neu" -> {
+            val bg = if (dark) c(0xFF23262D) else c(0xFFE6E9EF)
+            val text = if (dark) c(0xFFEEF0F5) else c(0xFF1A1C22)
+            val muted = if (dark) c(0xFFA3A8B5) else c(0xFF555A66)
+            val shade = if (dark) c(0xFF16181D) else c(0xFFC0C5CF)
+            val light = if (dark) c(0xFF31353E) else white
             Look(
-                "clay", dark,
-                scheme(dark, main, onPrimary, container, onContainer, a2, bg, surface, ink, muted, surface, mix(ink, bg, 0.6f), mix(ink, bg, 0.85f)),
-                listOf(surface), tints, mix(ink, bg, 0.85f),
-                listOf(if (dark) black.copy(alpha = 0.65f) else mix(main, ink, 0.35f).copy(alpha = 0.35f)),
-                listOf(mix(main, if (dark) paper else white, if (dark) 0.7f else 0.72f), mix(a2, if (dark) paper else white, if (dark) 0.75f else 0.45f)),
-                jakarta, drop, rise
+                "neu", dark,
+                scheme(dark, a, onA, mix(a, bg, 0.8f), mix(a, text, 0.5f), bg, bg, text, muted, mix(text, bg, 0.6f), mix(text, bg, 0.88f)),
+                listOf(bg), listOf(bg), mix(text, bg, 0.88f), listOf(shade, light), emptyList(),
+                figtree, drop, rise
+            )
+        }
+        "cyber" -> {
+            val bg = if (dark) c(0xFF06070C) else c(0xFFEEF2F4)
+            val surface = if (dark) c(0xFF0C1018) else white
+            val text = if (dark) c(0xFFE8FBFF) else c(0xFF0A0D12)
+            val muted = if (dark) c(0xFF7F98A6) else c(0xFF4C5A63)
+            val neon = if (dark) c(0xFF00F0FF) else c(0xFF008EA3)
+            val line = if (dark) neon.copy(alpha = 0.45f) else text
+            Look(
+                "cyber", dark,
+                scheme(dark, a, onA, mix(a, surface, 0.8f), mix(a, text, 0.4f), bg, surface, text, muted, line, mix(text, bg, 0.85f)),
+                listOf(surface), listOf(if (dark) c(0xFF0A0D14) else c(0xFFF6F8F9)), line,
+                listOf(neon), listOf(neon),
+                rajdhani, drop, rise
+            )
+        }
+        "chaos" -> {
+            val bg = if (dark) c(0xFF0D0D0D) else c(0xFFFFF7E8)
+            val surface = if (dark) c(0xFF1B1B1B) else white
+            val ink = if (dark) white else c(0xFF0D0D0D)
+            val muted = if (dark) c(0xFFE6E6E6) else c(0xFF333333)
+            val hot = c(0xFFFF2BD6); val sun = c(0xFFFFE600); val lime = c(0xFFC6FF00)
+            Look(
+                "chaos", dark,
+                scheme(dark, ink, if (dark) c(0xFF0D0D0D) else white, mix(a, surface, 0.6f), ink, bg, surface, ink, muted, ink, mix(ink, bg, 0.7f)),
+                listOf(surface), listOf(lime, mix(hot, white, 0.35f), sun, mix(a, white, 0.45f)), ink,
+                listOf(if (dark) hot else ink), listOf(hot, sun, lime, ink.copy(alpha = if (dark) 0.10f else 0.12f)),
+                bungee, drop, rise, accent = a, onAccent = onA
             )
         }
         else -> {
-            // Material 3 Expressive: tonal surfaces made from the main colour, a strong container colour.
-            val bg = paper
-            val surface = if (dark) mix(paper, main, 0.1f) else mix(paper, white, 0.6f)
-            val card = if (dark) mix(paper, main, 0.14f) else mix(paper, main, 0.09f)
-            val muted = mix(ink, paper, if (dark) 0.3f else 0.35f)
-            val onPrimary = if (dark) mix(main, black, 0.75f) else on(main, ink)
-            val container = if (dark) mix(main, paper, 0.55f) else mix(main, white, 0.7f)
-            val onContainer = if (dark) mix(main, white, 0.75f) else mix(main, ink, 0.65f)
-            val tints = listOf(a2, main, a3).map { if (dark) mix(it, paper, 0.7f) else mix(it, white, if (it == main) 0.78f else 0.62f) }
+            // Quiet.
+            val bg = if (dark) Color.Black else c(0xFFF2F2F7)
+            val surface = if (dark) c(0xFF1C1C1E) else white
+            val text = if (dark) c(0xFFF5F5F7) else c(0xFF111114)
+            val muted = if (dark) c(0xFF98989F) else c(0xFF6C6C74)
+            val hair = if (dark) c(0xFF2C2C2E) else c(0xFFE5E5EA)
             Look(
-                "material", dark,
-                scheme(dark, main, onPrimary, container, onContainer, a2, bg, surface, ink, muted, card, mix(ink, bg, 0.5f), mix(ink, bg, 0.82f)),
-                listOf(card), tints, mix(ink, bg, 0.82f), listOf(mix(ink, bg, 0.5f)), emptyList(),
-                GoogleSans, drop, rise
+                "quiet", dark,
+                scheme(dark, a, onA, mix(a, surface, if (dark) 0.78f else 0.86f), mix(a, text, 0.45f), bg, surface, text, muted,
+                    if (dark) c(0xFF48484A) else c(0xFFC7C7CC), hair),
+                listOf(surface), listOf(if (dark) c(0xFF2A2A2D) else c(0xFFF7F7FA)), hair,
+                listOf(Color.Black.copy(alpha = if (dark) 0.5f else 0.06f)), emptyList(),
+                figtree, drop, rise
             )
         }
     }
 }
 
-/** The classic themes, exactly as before: indigo (PALETTES[0]) in light, dark or AMOLED black. */
-/**
- * The standard themes: Light, Dark or AMOLED black with one of the colour sets in PALETTES (Indigo is the original;
- * the sets are picked in the Themer since 2.65). Each set has tones made for light and for dark; AMOLED black uses the
- * dark tones on pure black.
- */
-private fun classicLook(mode: String, palette: String = "indigo"): Look {
-    val p = PALETTES.firstOrNull { it.key == palette } ?: PALETTES[0]
-    var scheme = if (mode == "light") p.light else p.dark
-    // AMOLED black: the dark colours on pure black, with the cards just off black.
-    if (mode == "amoled") scheme = scheme.copy(background = Color.Black, surface = Color.Black, surfaceVariant = Color(0xFF0E0E11))
-    // Behind photos: the light container colour in Light; in Dark and AMOLED a quiet mix of the card colour with a
-    // little of it (the full container colour was too bright there).
-    val mat = when (mode) {
-        "light" -> scheme.primaryContainer
-        "amoled" -> lerp(Color(0xFF0E0E11), scheme.primaryContainer, 0.28f)
-        else -> lerp(scheme.surfaceVariant, scheme.primaryContainer, 0.38f)
-    }
-    return Look(
-        "classic", mode != "light", scheme,
-        listOf(scheme.surfaceVariant), listOf(mat), scheme.outline, listOf(scheme.outline), emptyList(),
-        null, Color(0xFF0B7A3E), Color(0xFFBA1A1A)
-    )
-}
+private fun TextStyle.styled(f: FontFamily, w: FontWeight, spacing: Float? = null) =
+    copy(fontFamily = f, fontWeight = w, letterSpacing = if (spacing == null) letterSpacing else spacing.sp)
 
-private fun TextStyle.styled(f: FontFamily, w: FontWeight, extraSpacing: Float = 0f) =
-    copy(fontFamily = f, fontWeight = w, letterSpacing = if (extraSpacing == 0f) letterSpacing else (letterSpacing.value + extraSpacing).sp)
-
-/** The type of a design: a heading font (display, headlines, big titles, prices) and a text font. */
-private fun designType(
-    head: FontFamily, body: FontFamily, headW: FontWeight, titleW: FontWeight, smallTitleFont: FontFamily,
-    smallTitleW: FontWeight, bodyW: FontWeight, labelW: FontWeight, labelSpacing: Float = 0f
+/** The type of a style: a heading font (display, headlines, big titles) and a text font, and the labels' font. */
+private fun styleType(
+    head: FontFamily, headW: FontWeight, headSpacing: Float?, body: FontFamily, titleW: FontWeight, bodyW: FontWeight,
+    label: FontFamily, labelW: FontWeight, small: FontFamily = label, smallW: FontWeight = labelW
 ): Typography {
     val d = Typography()
     return Typography(
-        displayLarge = d.displayLarge.styled(head, headW), displayMedium = d.displayMedium.styled(head, headW),
-        displaySmall = d.displaySmall.styled(head, headW), headlineLarge = d.headlineLarge.styled(head, headW),
-        headlineMedium = d.headlineMedium.styled(head, headW), headlineSmall = d.headlineSmall.styled(head, headW),
-        titleLarge = d.titleLarge.styled(head, titleW),
-        titleMedium = d.titleMedium.styled(smallTitleFont, smallTitleW), titleSmall = d.titleSmall.styled(smallTitleFont, smallTitleW),
+        displayLarge = d.displayLarge.styled(head, headW, headSpacing), displayMedium = d.displayMedium.styled(head, headW, headSpacing),
+        displaySmall = d.displaySmall.styled(head, headW, headSpacing), headlineLarge = d.headlineLarge.styled(head, headW, headSpacing),
+        headlineMedium = d.headlineMedium.styled(head, headW, headSpacing), headlineSmall = d.headlineSmall.styled(head, headW, headSpacing),
+        titleLarge = d.titleLarge.styled(head, headW, headSpacing),
+        titleMedium = d.titleMedium.styled(body, titleW), titleSmall = d.titleSmall.styled(body, titleW),
         bodyLarge = d.bodyLarge.styled(body, bodyW), bodyMedium = d.bodyMedium.styled(body, bodyW), bodySmall = d.bodySmall.styled(body, bodyW),
-        labelLarge = d.labelLarge.styled(body, labelW, labelSpacing), labelMedium = d.labelMedium.styled(body, labelW, labelSpacing),
-        labelSmall = d.labelSmall.styled(body, labelW, labelSpacing)
+        labelLarge = d.labelLarge.styled(label, labelW), labelMedium = d.labelMedium.styled(label, labelW),
+        labelSmall = d.labelSmall.styled(small, smallW)
     )
 }
 
-/** The fonts of a design. The classic themes use [classic] (the font chosen in App settings). */
-fun typographyFor(design: String, classic: Typography): Typography = when (design) {
-    "material" -> designType(GoogleSans, GoogleSans, FontWeight.Medium, FontWeight.Medium, GoogleSans, FontWeight.SemiBold, FontWeight.Normal, FontWeight.Medium)
-    "organic" -> designType(fraunces, nunito, FontWeight.SemiBold, FontWeight.SemiBold, nunito, FontWeight.Bold, FontWeight.Normal, FontWeight.SemiBold, 0.2f)
-    "neo" -> designType(lexend, lexend, FontWeight.ExtraBold, FontWeight.Bold, lexend, FontWeight.SemiBold, FontWeight.Normal, FontWeight.SemiBold)
-    "clay" -> designType(jakarta, inter, FontWeight.ExtraBold, FontWeight.ExtraBold, jakarta, FontWeight.Bold, FontWeight.Normal, FontWeight.Medium)
-    else -> classic
+/**
+ * The fonts of each style. Quiet, Neobrutalism and Neumorphism: Figtree (bold, tight headings). Cyberpunk: Rajdhani
+ * with Share Tech Mono labels. Chaos: Bungee headings, Bricolage Grotesque text, handwritten Caveat for small labels.
+ * (Fonts with one weight, Bungee and Share Tech Mono, are only asked for in that weight.)
+ */
+fun typographyFor(design: String, @Suppress("UNUSED_PARAMETER") classic: Typography? = null): Typography = when (design) {
+    "neo" -> styleType(figtree, FontWeight.ExtraBold, -0.4f, figtree, FontWeight.Bold, FontWeight.Normal, figtree, FontWeight.Bold)
+    "neu" -> styleType(figtree, FontWeight.Bold, -0.3f, figtree, FontWeight.SemiBold, FontWeight.Normal, figtree, FontWeight.SemiBold)
+    "cyber" -> styleType(rajdhani, FontWeight.Bold, 0.6f, rajdhani, FontWeight.Bold, FontWeight.Medium, techMono, FontWeight.Normal)
+    "chaos" -> styleType(bungee, FontWeight.Normal, 0f, bricolage, FontWeight.Bold, FontWeight.Normal, bricolage, FontWeight.Bold, caveat, FontWeight.Bold)
+    else -> styleType(figtree, FontWeight.ExtraBold, -0.5f, figtree, FontWeight.SemiBold, FontWeight.Normal, figtree, FontWeight.SemiBold)
 }
 
-/** The weight of screen titles in the top bar (classic: Medium, as before). */
+/** The weight of screen titles in the top bar. */
 val Look.titleWeight: FontWeight
     get() = when (design) {
-        "neo" -> FontWeight.Bold
-        "clay" -> FontWeight.ExtraBold
-        "organic" -> FontWeight.SemiBold
-        else -> FontWeight.Medium
+        "chaos" -> FontWeight.Normal
+        "cyber", "neu" -> FontWeight.Bold
+        else -> FontWeight.ExtraBold
     }
 
 /** The weight of prices. */
 val Look.priceWeight: FontWeight
     get() = when (design) {
-        "material", "neo" -> FontWeight.Bold
-        "clay" -> FontWeight.ExtraBold
-        else -> FontWeight.SemiBold
+        "chaos" -> FontWeight.Normal
+        else -> FontWeight.Bold
     }
 
-/** Icon style: "filled" (classic), "rounded", "outlined" or "sharp". */
+/** Icon style: "rounded" (Quiet, Neumorphism, chaos) or "sharp" (Neobrutalism, Cyberpunk). */
 val Look.iconStyle: String
     get() = when (design) {
-        "material", "clay" -> "rounded"
-        "organic" -> "outlined"
-        "neo" -> "sharp"
-        else -> "filled"
+        "neo", "cyber" -> "sharp"
+        else -> "rounded"
     }
 
-/** The Material shapes (dialogs, menus, text fields, snackbars) of each design. */
+/** The Material shapes (dialogs, menus, text fields, snackbars) of each style. */
 fun shapesFor(design: String): Shapes = when (design) {
-    "material" -> Shapes(
-        extraSmall = RoundedCornerShape(12.dp), small = RoundedCornerShape(14.dp), medium = RoundedCornerShape(20.dp),
-        large = RoundedCornerShape(28.dp), extraLarge = RoundedCornerShape(36.dp)
-    )
-    "organic" -> Shapes(
-        extraSmall = RoundedCornerShape(14.dp, 14.dp, 14.dp, 6.dp), small = RoundedCornerShape(14.dp), medium = RoundedCornerShape(18.dp),
-        large = RoundedCornerShape(24.dp), extraLarge = RoundedCornerShape(30.dp, 30.dp, 30.dp, 12.dp)
-    )
     "neo" -> Shapes(
         extraSmall = RoundedCornerShape(6.dp), small = RoundedCornerShape(8.dp), medium = RoundedCornerShape(10.dp),
         large = RoundedCornerShape(12.dp), extraLarge = RoundedCornerShape(14.dp)
     )
-    "clay" -> Shapes(
-        extraSmall = RoundedCornerShape(16.dp), small = RoundedCornerShape(18.dp), medium = RoundedCornerShape(22.dp),
-        large = RoundedCornerShape(28.dp), extraLarge = RoundedCornerShape(32.dp)
+    "neu" -> Shapes(
+        extraSmall = RoundedCornerShape(14.dp), small = RoundedCornerShape(16.dp), medium = RoundedCornerShape(20.dp),
+        large = RoundedCornerShape(24.dp), extraLarge = RoundedCornerShape(30.dp)
     )
-    else -> Shapes()
+    "cyber" -> Shapes(
+        extraSmall = CutCornerShape(4.dp), small = CutCornerShape(6.dp), medium = CutCornerShape(8.dp),
+        large = CutCornerShape(10.dp), extraLarge = CutCornerShape(topEnd = 16.dp, bottomStart = 16.dp)
+    )
+    "chaos" -> Shapes(
+        extraSmall = RoundedCornerShape(10.dp), small = RoundedCornerShape(12.dp), medium = RoundedCornerShape(16.dp),
+        large = RoundedCornerShape(20.dp), extraLarge = RoundedCornerShape(24.dp)
+    )
+    else -> Shapes(
+        extraSmall = RoundedCornerShape(10.dp), small = RoundedCornerShape(12.dp), medium = RoundedCornerShape(16.dp),
+        large = RoundedCornerShape(22.dp), extraLarge = RoundedCornerShape(28.dp)
+    )
 }
 
-/** The shape of a wish card. Organic cards are pebbles: one corner less round, in turn left or right. */
+/** The shape of a card. Cyberpunk cuts two corners off. */
 fun Look.cardShape(id: Long, small: Boolean): Shape = when (design) {
-    "organic" -> {
-        val r = if (small) 24.dp else 30.dp
-        val k = if (small) 10.dp else 12.dp
-        if (pick(id, 2) == 0) RoundedCornerShape(r, r, r, k) else RoundedCornerShape(r, k, r, r)
-    }
     "neo" -> RoundedCornerShape(if (small) 12.dp else 14.dp)
-    "clay" -> RoundedCornerShape(if (small) 26.dp else 32.dp)
-    "material" -> RoundedCornerShape(if (small) 24.dp else 28.dp)
+    "neu" -> RoundedCornerShape(if (small) 20.dp else 24.dp)
+    "cyber" -> CutCornerShape(topEnd = if (small) 12.dp else 16.dp, bottomStart = if (small) 12.dp else 16.dp)
+    "chaos" -> RoundedCornerShape(if (small) 14.dp else 18.dp)
     else -> RoundedCornerShape(if (small) 16.dp else 20.dp)
 }
 
-/** Space around the picture inside a card: pictures sit on a mat, except in classic and neobrutalism. */
-fun Look.inset(small: Boolean): Dp = when (design) {
-    "organic", "clay" -> if (small) 8.dp else 10.dp
-    "material" -> if (small) 6.dp else 8.dp
-    else -> 0.dp
-}
+/** Space around the picture inside a card: Neumorphism presses the picture into the card; the others fill the top. */
+fun Look.inset(small: Boolean): Dp = if (design == "neu") (if (small) 8.dp else 10.dp) else 0.dp
 
 fun Look.pictureShape(id: Long, small: Boolean): Shape = when (design) {
-    "organic" -> {
-        val r = if (small) 18.dp else 24.dp
-        val k = if (small) 6.dp else 8.dp
-        if (pick(id, 2) == 0) RoundedCornerShape(r, r, r, k) else RoundedCornerShape(r, k, r, r)
-    }
-    "clay" -> RoundedCornerShape(if (small) 20.dp else 24.dp)
-    "material" -> RoundedCornerShape(if (small) 18.dp else 22.dp)
+    "neu" -> RoundedCornerShape(if (small) 14.dp else 18.dp)
     else -> RectangleShape
 }
 
-/**
- * Behind a picture: a soft colour of the theme, with the photo as a small card on it (PhotoCard), or the emoji when
- * there is no photo.
- */
-fun Look.pictureBg(id: Long, hasImage: Boolean): Color = when {
-    // Photos sit as a small card on a soft colour of the theme (2.63); neobrutalism Midnight keeps them on dark.
-    hasImage && design == "neo" && dark -> scheme.background
-    else -> tints[pick(id, tints.size)]
-}
+/** Behind a picture: a soft colour of the look, with the photo as a small card on it (PhotoCard). */
+fun Look.pictureBg(id: Long, hasImage: Boolean): Color = tints[pick(id, tints.size)]
 
-/** Neobrutalism draws a thick line under the picture. */
-val Look.pictureLine: Dp get() = if (design == "neo") 2.dp else 0.dp
+/** A line under the picture: thick ink (Neobrutalism, chaos) or a thin neon line (Cyberpunk). */
+val Look.pictureLine: Dp
+    get() = when (design) {
+        "neo" -> 2.dp
+        "chaos" -> 3.dp
+        "cyber" -> 1.dp
+        else -> 0.dp
+    }
 
 fun Look.cardFill(id: Long): Color = fills[pick(id, fills.size)]
 
-/** The text colour on a wish card: dark ink on the bright cards of neobrutalism Midnight, the theme's text otherwise. */
-fun Look.cardInk(id: Long): Color = if (design == "neo" && dark) Color(0xFF111111) else scheme.onSurface
+/** The text colour on a card. */
+fun Look.cardInk(@Suppress("UNUSED_PARAMETER") id: Long): Color = scheme.onSurface
 
-/** The quieter text (shop, description, icons) on a wish card. */
-fun Look.cardMuted(id: Long): Color = if (design == "neo" && dark) Color(0xFF3A3A40) else scheme.onSurfaceVariant
+/** The quieter text (shop, description, icons) on a card. */
+fun Look.cardMuted(@Suppress("UNUSED_PARAMETER") id: Long): Color = scheme.onSurfaceVariant
 
-/** Small labels on a card (price change, "Got it"). */
+/** Small labels on a card (price change, "Owned"). */
 fun Look.badgeShape(small: Boolean): Shape = when (design) {
-    "organic" -> RoundedCornerShape(14.dp, 14.dp, 14.dp, 4.dp)
     "neo" -> RoundedCornerShape(6.dp)
-    "clay", "material" -> CircleShape
+    "neu" -> CircleShape
+    "cyber" -> CutCornerShape(topEnd = 5.dp, bottomStart = 5.dp)
+    "chaos" -> RoundedCornerShape(10.dp)
     else -> RoundedCornerShape(if (small) 6.dp else 8.dp)
 }
 
-/** Buttons such as the category button and the view switch. */
+/** Small buttons such as the category button and the view switch. */
 val Look.chipShape: Shape
     get() = when (design) {
-        "organic", "clay", "material" -> CircleShape
         "neo" -> RoundedCornerShape(10.dp)
-        else -> RoundedCornerShape(12.dp)
+        "cyber" -> CutCornerShape(topEnd = 8.dp, bottomStart = 8.dp)
+        "chaos" -> RoundedCornerShape(12.dp)
+        else -> CircleShape
     }
 
 /** The Add wish button. */
 val Look.fabShape: Shape
     get() = when (design) {
-        "organic" -> RoundedCornerShape(22.dp, 30.dp, 26.dp, 30.dp)
         "neo" -> RoundedCornerShape(12.dp)
-        "clay" -> RoundedCornerShape(28.dp)
-        "material" -> RoundedCornerShape(20.dp)
-        else -> RoundedCornerShape(16.dp)
+        "cyber" -> CutCornerShape(topEnd = 12.dp, bottomStart = 12.dp)
+        "chaos" -> RoundedCornerShape(16.dp)
+        else -> CircleShape
     }
 
 /** The shape of ordinary buttons. */
 val Look.buttonShape: Shape
     get() = when (design) {
-        "organic" -> RoundedCornerShape(18.dp, 22.dp, 20.dp, 22.dp)
         "neo" -> RoundedCornerShape(10.dp)
+        "cyber" -> CutCornerShape(topEnd = 10.dp, bottomStart = 10.dp)
+        "chaos" -> RoundedCornerShape(14.dp)
         else -> CircleShape
     }
+
+/** Gen Z chaos tilts cards a little, each its own way (by its id). */
+fun Look.tilt(id: Long): Float = if (design == "chaos") listOf(-1.6f, 1.2f, -0.8f, 1.8f, -1.2f, 0.9f)[pick(id, 6)] else 0f
 
 /** A hard shadow: the shape again, moved down and to the right, in one flat colour. */
 fun Modifier.hardShadow(color: Color, shape: Shape, offset: Dp = 4.dp): Modifier = drawBehind {
@@ -506,53 +407,41 @@ fun Modifier.hardShadow(color: Color, shape: Shape, offset: Dp = 4.dp): Modifier
     translate(o, o) { drawOutline(outline, color) }
 }
 
-/** The soft light edge at the top of a clay shape. */
-fun Modifier.clayEdge(look: Look, shape: Shape, width: Dp = 1.5.dp): Modifier = border(
-    width,
-    Brush.verticalGradient(listOf(Color.White.copy(alpha = if (look.dark) 0.16f else 0.95f), Color.Transparent)),
-    shape
-)
-
-/** The frame of a wish card in the chosen theme: its colour, lines, shadow and shape. */
-fun Modifier.lookCard(look: Look, id: Long, shape: Shape): Modifier = when (look.design) {
-    "neo" -> hardShadow(look.shadows[pick(id, look.shadows.size)], shape, 5.dp)
-        .clip(shape).background(look.cardFill(id)).border(2.dp, look.line, shape)
-    "organic" -> softLift(look, shape).clip(shape).background(look.cardFill(id)).border(1.dp, look.line, shape)
-    "clay" -> clay(look, shape, look.cardFill(id), 12.dp)
-    else -> softLift(look, shape).clip(shape).background(look.cardFill(id))
-        .then(if (look.dark) Modifier.border(1.dp, Color.White.copy(alpha = 0.06f), shape) else Modifier)
+/**
+ * Any surface in the chosen style: a card, a dialog, a button, a chip, the bottom bar. [fill] its colour; [raised]
+ * false = pressed in (Neumorphism) or without the hard shadow (Neobrutalism, chaos). The content is clipped to [shape].
+ */
+fun Modifier.lookSurface(look: Look, shape: Shape, fill: Color, raised: Boolean = true, depth: Dp = 6.dp): Modifier = when (look.design) {
+    "neo" -> (if (raised) hardShadow(look.shadows[0], shape, 4.dp) else this).clip(shape).background(fill).border(2.dp, look.line, shape)
+    "chaos" -> (if (raised) hardShadow(look.shadows[0], shape, 5.dp) else this).clip(shape).background(fill).border(3.dp, look.line, shape)
+    "neu" -> neu(look, shape, fill, depth, pressed = !raised)
+    "cyber" -> clip(shape).background(fill).border(1.dp, look.line, shape)
+    // Quiet: just the card colour; in light a hairline so white cards don't melt into each other.
+    else -> clip(shape).background(fill).then(if (!look.dark) Modifier.border(1.dp, Color.Black.copy(alpha = 0.04f), shape) else Modifier)
 }
 
-/** The soft shadow under a card (2.96): a little tinted in light, darker and smaller in dark. */
-private fun Modifier.softLift(look: Look, shape: Shape): Modifier {
-    val col = if (look.dark) Color.Black else Color(0xFF28286E)
-    return shadow(if (look.dark) 3.dp else 4.dp, shape, clip = false, ambientColor = col.copy(alpha = 0.5f), spotColor = col.copy(alpha = 0.35f))
-}
+/** The frame of a wish card (or any card) in the chosen style: its colour, lines, shadow, shape and (chaos) tilt. */
+fun Modifier.lookCard(look: Look, id: Long, shape: Shape): Modifier =
+    (if (look.design == "chaos") rotate(look.tilt(id)) else this).lookSurface(look, shape, look.cardFill(id), depth = 8.dp)
 
-/** The mat a picture sits on inside a card. Clay presses it in; the others simply fill it. */
+/** The mat a picture sits on inside a card. Neumorphism presses it in; the others simply fill it. */
 fun Modifier.lookMat(look: Look, shape: Shape, fill: Color): Modifier =
-    if (look.design == "clay") clay(look, shape, fill, 8.dp, pressed = true) else clip(shape).background(fill)
+    if (look.design == "neu") neu(look, shape, fill, 5.dp, pressed = true) else clip(shape).background(fill)
 
-/** Android 9 and newer can blur the clay shadows; Android 8 gets the flatter clay of 2.52. */
-private val clayBlur = Build.VERSION.SDK_INT >= 28
+/** Android 9 and newer can blur the neumorphic shadows; Android 8 gets a plain soft shadow. */
+private val canBlur = Build.VERSION.SDK_INT >= 28
 
 /**
- * Claymorphism: a puffy clay pillow. A soft, coloured shadow below it, a light glow inside its top-left edge and a
- * soft shade inside its bottom-right edge, on a gently shaded fill. [depth] sets how puffy it is. [pressed]: pressed
- * in instead (picture mats): the shade top-left, the light bottom-right and no shadow below. The content is clipped
- * to [shape]. Material components on top should have a transparent container.
+ * Neumorphism: a shape in the background colour, raised by a light shadow top-left and a shade bottom-right, or
+ * [pressed] in (the light and shade inside its edges instead). The content is clipped to [shape].
  */
-fun Modifier.clay(look: Look, shape: Shape, fill: Color, depth: Dp = 10.dp, pressed: Boolean = false): Modifier {
-    if (!clayBlur) {
-        val glow = look.shadows[0]
-        return (if (pressed) this else shadow(depth, shape, clip = false, ambientColor = glow, spotColor = glow))
-            .clip(shape)
-            .background(Brush.verticalGradient(listOf(lerp(fill, Color.White, if (look.dark) 0.06f else 0.5f), fill)))
-            .then(if (pressed) Modifier else Modifier.clayEdge(look, shape))
+fun Modifier.neu(look: Look, shape: Shape, fill: Color, depth: Dp = 6.dp, pressed: Boolean = false): Modifier {
+    val shade = look.shadows[0]
+    val light = look.shadows.getOrElse(1) { Color.White }
+    if (!canBlur) {
+        return (if (pressed) this else shadow(depth, shape, clip = false, ambientColor = shade, spotColor = shade))
+            .clip(shape).background(if (pressed) lerp(fill, shade, 0.25f) else fill)
     }
-    val light = Color.White.copy(alpha = if (look.dark) 0.14f else 0.85f)
-    val shade = if (look.dark) Color.Black.copy(alpha = 0.6f) else look.shadows[0]
-    val drop = look.shadows[0]
     return drawWithCache {
         val d = depth.toPx()
         val outline = shape.createOutline(size, layoutDirection, this)
@@ -562,75 +451,67 @@ fun Modifier.clay(look: Look, shape: Shape, fill: Color, depth: Dp = 10.dp, pres
             color = col.toArgb()
             maskFilter = BlurMaskFilter(blur.coerceAtLeast(1f), BlurMaskFilter.Blur.NORMAL)
         }
-        // Everything outside the shape moved by (dx, dy): drawn blurred inside the shape it becomes an inner shadow
-        // along the opposite edges.
+        // Everything outside the shape moved by (dx, dy): drawn blurred inside the shape it becomes an inner shadow.
         fun frame(dx: Float, dy: Float) = android.graphics.Path().apply {
             val m = d * 4
             addRect(-m, -m, size.width + m, size.height + m, android.graphics.Path.Direction.CW)
             addPath(shapePath, dx, dy)
             fillType = android.graphics.Path.FillType.EVEN_ODD
         }
-        val o = d * 0.5f
-        val lightFrame = if (pressed) frame(-o, -o) else frame(o, o)
-        val shadeFrame = if (pressed) frame(o, o) else frame(-o, -o)
-        val lightPaint = paint(light, d * 0.8f)
-        val shadePaint = paint(shade, d * 0.9f)
-        val dropPaint = paint(drop, d * 1.4f)
-        val dropPath = android.graphics.Path(shapePath).apply { offset(d * 0.3f, d * 0.75f) }
-        val fillBrush = if (pressed) SolidColor(lerp(fill, Color.Black, if (look.dark) 0.08f else 0.03f))
-        else Brush.linearGradient(
-            listOf(lerp(fill, Color.White, if (look.dark) 0.05f else 0.4f), fill, lerp(fill, Color.Black, if (look.dark) 0.08f else 0.03f)),
-            Offset.Zero, Offset(size.width, size.height)
-        )
+        val shadePaint = paint(shade, d * 1.2f)
+        val lightPaint = paint(light, d * 1.2f)
+        val down = android.graphics.Path(shapePath).apply { offset(d, d) }
+        val up = android.graphics.Path(shapePath).apply { offset(-d, -d) }
+        val innerShade = frame(d * 0.6f, d * 0.6f)
+        val innerLight = frame(-d * 0.6f, -d * 0.6f)
         onDrawWithContent {
             val canvas = drawContext.canvas.nativeCanvas
-            if (!pressed) canvas.drawPath(dropPath, dropPaint)
+            if (!pressed) {
+                canvas.drawPath(down, shadePaint)
+                canvas.drawPath(up, lightPaint)
+            }
             canvas.save()
             canvas.clipPath(shapePath)
-            drawRect(fillBrush)
-            canvas.drawPath(lightFrame, lightPaint)
-            canvas.drawPath(shadeFrame, shadePaint)
+            drawRect(fill)
+            if (pressed) {
+                canvas.drawPath(innerShade, shadePaint)
+                canvas.drawPath(innerLight, lightPaint)
+            }
             canvas.restore()
             drawContent()
         }
     }.clip(shape)
 }
 
-/** The frame of a small button (category, view switch). [on] = chosen. */
+/** The frame of a small button (category, view switch, a chip). [on] = chosen. */
 fun Modifier.lookChip(look: Look, on: Boolean = false): Modifier {
     val cs = look.scheme
     val shape = look.chipShape
     return when (look.design) {
         "neo" -> (if (on) hardShadow(look.line, shape, 3.dp) else this)
-            .clip(shape).background(if (on) look.accent else cs.surface).border(2.dp, look.line, shape)
-        "organic" -> clip(shape).background(if (on) look.accent else Color.Transparent).border(1.dp, look.line, shape)
-        "clay" -> clay(look, shape, if (on) look.accent else look.cardFill(0), if (on) 6.dp else 5.dp)
-        "material" -> clip(shape).background(if (on) look.accent else cs.surfaceVariant)
-        else -> clip(shape).background(if (on) cs.primaryContainer else Color.Transparent)
+            .clip(shape).background(if (on) look.accent else cs.surfaceVariant).border(2.dp, look.line, shape)
+        "chaos" -> (if (on) hardShadow(look.shadows[0], shape, 3.dp) else this)
+            .clip(shape).background(if (on) look.tints[0] else cs.surfaceVariant).border(2.dp, look.line, shape)
+        "neu" -> if (on) neu(look, shape, look.accent, 4.dp) else neu(look, shape, cs.background, 4.dp)
+        "cyber" -> clip(shape).background(if (on) look.accent else cs.surfaceVariant).border(1.dp, look.line, shape)
+        // Quiet: a white pill, the chosen one dark (light in dark).
+        else -> clip(shape).background(if (on) cs.onSurface else cs.surfaceVariant)
     }
 }
 
 /** The colour of the text and icons on a chip made with [lookChip]. */
 fun Look.chipContent(on: Boolean): Color = when {
-    !on -> if (design == "classic") scheme.onSurfaceVariant else scheme.onSurface
-    design == "classic" -> scheme.onPrimaryContainer
+    !on -> scheme.onSurface
+    design == "quiet" -> if (dark) Color.Black else Color.White
+    design == "chaos" -> Color(0xFF0D0D0D)
     else -> onAccent
 }
 
-/** What is drawn behind the list: organic blobs, clay glows, a neobrutalist dot grid. Classic and Material stay plain. */
+/**
+ * What is drawn behind the screens: Neobrutalism's dot grid, Cyberpunk's scan lines (dark) or grid (light), chaos's
+ * polka dots and big coloured circles. Quiet and Neumorphism stay plain.
+ */
 fun Modifier.lookBackdrop(look: Look): Modifier = when (look.design) {
-    "organic" -> drawBehind {
-        blob(Offset(size.width * 0.86f, 34.dp.toPx()), 110.dp.toPx(), look.blobs[0], 0.4f)
-        blob(Offset(size.width * 0.08f, 190.dp.toPx()), 80.dp.toPx(), look.blobs[1], 2.1f)
-    }
-    "clay" -> drawBehind {
-        // A soft pastel gradient from top to bottom, with two glows.
-        drawRect(Brush.verticalGradient(listOf(Color.Transparent, look.blobs[0].copy(alpha = 0.7f))))
-        fun glow(center: Offset, r: Float, col: Color) =
-            drawCircle(Brush.radialGradient(listOf(col, col.copy(alpha = 0f)), center, r), r, center)
-        glow(Offset(size.width * 0.92f, 20.dp.toPx()), 150.dp.toPx(), look.blobs[0])
-        glow(Offset(size.width * 0.05f, size.height * 0.55f), 130.dp.toPx(), look.blobs[1])
-    }
     "neo" -> drawBehind {
         val step = 22.dp.toPx()
         val r = 1.2.dp.toPx()
@@ -641,26 +522,33 @@ fun Modifier.lookBackdrop(look: Look): Modifier = when (look.design) {
             y += step
         }
     }
+    "cyber" -> drawBehind {
+        val col = look.blobs[0]
+        if (look.dark) {
+            val step = 3.dp.toPx()
+            var y = 0f
+            while (y < size.height) { drawRect(col.copy(alpha = 0.035f), Offset(0f, y), androidx.compose.ui.geometry.Size(size.width, 1f)); y += step }
+        } else {
+            val step = 24.dp.toPx()
+            val lineCol = look.scheme.onBackground.copy(alpha = 0.05f)
+            var x = 0f
+            while (x < size.width) { drawRect(lineCol, Offset(x, 0f), androidx.compose.ui.geometry.Size(1f, size.height)); x += step }
+            var y = 0f
+            while (y < size.height) { drawRect(lineCol, Offset(0f, y), androidx.compose.ui.geometry.Size(size.width, 1f)); y += step }
+        }
+    }
+    "chaos" -> drawBehind {
+        val dots = look.blobs[3]
+        val step = 18.dp.toPx()
+        var y = step / 2
+        while (y < size.height) {
+            var x = step / 2
+            while (x < size.width) { drawCircle(dots, 1.2.dp.toPx(), Offset(x, y)); x += step }
+            y += step
+        }
+        drawCircle(look.blobs[0].copy(alpha = 0.85f), 70.dp.toPx(), Offset(size.width * 0.92f, 60.dp.toPx()))
+        drawCircle(look.blobs[1].copy(alpha = 0.85f), 40.dp.toPx(), Offset(size.width * 0.06f, 340.dp.toPx()))
+        drawCircle(look.blobs[2].copy(alpha = 0.85f), 56.dp.toPx(), Offset(size.width * 0.98f, 620.dp.toPx()))
+    }
     else -> this
-}
-
-/** A soft, irregular pebble: a smooth curve through eight points at slightly different distances from the centre. */
-private fun DrawScope.blob(center: Offset, r: Float, color: Color, seed: Float) {
-    val n = 8
-    val pts = (0 until n).map { i ->
-        val a = (i * 2 * Math.PI / n).toFloat()
-        val k = 1f + 0.16f * sin(seed + i * 1.7f) + 0.08f * cos(seed * 2 + i * 2.9f)
-        Offset(center.x + cos(a) * r * k, center.y + sin(a) * r * k * 0.86f)
-    }
-    fun mid(p: Offset, q: Offset) = Offset((p.x + q.x) / 2, (p.y + q.y) / 2)
-    val path = Path()
-    val start = mid(pts[n - 1], pts[0])
-    path.moveTo(start.x, start.y)
-    for (i in 0 until n) {
-        val p = pts[i]
-        val m = mid(p, pts[(i + 1) % n])
-        path.quadraticBezierTo(p.x, p.y, m.x, m.y)
-    }
-    path.close()
-    drawPath(path, color)
 }

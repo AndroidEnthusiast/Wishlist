@@ -134,7 +134,7 @@ fun CopyWishesDialog(targetId: String?, onDone: (List<Wish>) -> Unit, onClose: (
                                                     model = w.image, contentDescription = null, contentScale = ContentScale.Fit,
                                                     modifier = Modifier.fillMaxSize().padding(3.dp)
                                                 )
-                                            } else Text("🎁", fontSize = 20.sp)
+                                            } else PlaceholderIcon("gift", 20.dp)
                                         }
                                         Column(Modifier.weight(1f).padding(start = 12.dp, end = 8.dp)) {
                                             Text(

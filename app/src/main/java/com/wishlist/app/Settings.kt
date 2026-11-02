@@ -151,12 +151,7 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                     val shape = RoundedCornerShape(12.dp)
                     Box(
                         Modifier.weight(1f).height(44.dp)
-                            .then(
-                                if (look.classic) Modifier.clip(shape)
-                                    .background(if (on) cs.primaryContainer else Color.Transparent)
-                                    .border(1.dp, if (on) cs.primary else cs.outlineVariant, shape)
-                                else Modifier.lookChip(look, on)
-                            )
+                            .lookChip(look, on)
                             .selectable(selected = on, role = Role.RadioButton) {
                                 Repo.setInterval(ctx, h)
                                 Alerts.schedule(ctx, h, true)
@@ -167,7 +162,7 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                             if (h == 1) tr("Hour") else tr("%d hours", h),
                             style = MaterialTheme.typography.labelMedium, maxLines = 1,
                             fontWeight = if (on) FontWeight.Bold else null,
-                            color = if (look.classic) (if (on) cs.onPrimaryContainer else cs.onSurfaceVariant) else look.chipContent(on)
+                            color = look.chipContent(on)
                         )
                     }
                 }

@@ -319,7 +319,7 @@ private fun BinRow(e: BinEntry, enabled: Boolean, glow: Int, onRestore: () -> Un
                             model = w.image, contentDescription = w.title, contentScale = ContentScale.Fit,
                             modifier = Modifier.fillMaxSize().padding(4.dp)
                         )
-                    } else Text("🎁", fontSize = 28.sp)
+                    } else PlaceholderIcon("gift", 28.dp)
                 }
                 Column(Modifier.weight(1f).padding(start = 12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(

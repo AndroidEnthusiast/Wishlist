@@ -47,6 +47,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -158,7 +161,8 @@ fun HubScreen(
         containerColor = cs.background,
         topBar = {
             TopAppBar(
-                title = { Text(tr("Home"), fontWeight = look.titleWeight) },
+                // The app's wordmark instead of "Home" (2.97, in the style's own way).
+                title = { Wordmark() },
                 navigationIcon = { MenuSlot() },
                 actions = { ProfileButton(onProfile) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
@@ -299,7 +303,7 @@ private fun PriceChangeRow(w: Wish) {
         Box(Modifier.size(64.dp).lookMat(look, sq, look.pictureBg(id, false)), contentAlignment = Alignment.Center) {
             if (w.image.isNotBlank()) {
                 AsyncImage(model = w.image, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-            } else Text("🎁", fontSize = 26.sp)
+            } else PlaceholderIcon("gift", 26.dp)
         }
         Column(Modifier.weight(1f).padding(start = 14.dp)) {
             Text(
@@ -429,7 +433,7 @@ internal fun ListBlock(
                         }
                     } else {
                         // Wishes, but none with a photo.
-                        Text(if (item.group) "👥" else "🎁", fontSize = if (small) 26.sp else 40.sp)
+                        PlaceholderIcon(if (item.group) "group" else "gift", if (small) 26.dp else 40.dp)
                     }
                 }
                 // The number of wishes: a white circle top right (also 0, owner). Not on "Recently opened" (owner, 2.92).

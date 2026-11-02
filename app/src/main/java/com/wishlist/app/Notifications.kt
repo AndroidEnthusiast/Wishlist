@@ -291,9 +291,8 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                                 contentScale = if (person) ContentScale.Crop else ContentScale.Fit,
                                 modifier = if (person) Modifier.fillMaxSize() else Modifier.fillMaxSize().padding(3.dp)
                             )
-                        } else Text(
-                            when (n.kind) { "friend_req", "friend_ok" -> "🤝"; "birthday" -> "🎂"; else -> "🎁" },
-                            fontSize = 20.sp
+                        } else PlaceholderIcon(
+                            when (n.kind) { "friend_req", "friend_ok" -> "friend"; "birthday" -> "birthday"; else -> "gift" }, 22.dp
                         )
                     }
                     Column(Modifier.weight(1f).padding(start = 12.dp, end = 8.dp)) {

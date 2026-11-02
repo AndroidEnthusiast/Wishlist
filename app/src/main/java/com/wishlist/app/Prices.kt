@@ -98,7 +98,7 @@ fun PricesScreen(snack: SnackbarHostState, onProfile: () -> Unit = {}) {
                                     model = r.w.image, contentDescription = null, contentScale = ContentScale.Fit,
                                     modifier = Modifier.fillMaxSize().padding(4.dp)
                                 )
-                            } else Text("🎁", fontSize = 22.sp)
+                            } else PlaceholderIcon("gift", 22.dp)
                         }
                         Column(Modifier.weight(1f).padding(start = 12.dp, end = 8.dp)) {
                             Text(

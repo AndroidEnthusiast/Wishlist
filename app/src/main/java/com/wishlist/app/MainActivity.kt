@@ -347,25 +347,9 @@ fun AnimatedMenuIcon(open: Boolean, tint: Color) {
 private fun DrawerItem(label: String, icon: ImageVector, selected: Boolean, dot: Boolean = false, onClick: () -> Unit) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
-    if (look.classic) {
-        NavigationDrawerItem(
-            label = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-            selected = selected,
-            onClick = onClick,
-            icon = { Icon(icon, null) },
-            badge = if (dot) ({ RedDot() }) else null,
-            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-        )
-        return
-    }
-    // The designs: the chosen item looks like the design's chosen button (filled, with its lines or shadow).
+    // The chosen item looks like the style's chosen chip (2.97): Quiet a soft tinted pill, the others their own frame.
     val shape = look.chipShape
-    val frame = if (!selected) Modifier else when (look.design) {
-        "neo" -> Modifier.hardShadow(look.line, shape, 3.dp).border(2.dp, look.line, shape)
-        "clay" -> Modifier.clay(look, shape, look.accent, 6.dp)
-        else -> Modifier
-    }
-    val on = look.design == "neo" || look.design == "clay"
+    val framed = selected && look.design != "quiet"
     NavigationDrawerItem(
         label = {
             Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = if (selected) FontWeight.Bold else null)
@@ -376,12 +360,13 @@ private fun DrawerItem(label: String, icon: ImageVector, selected: Boolean, dot:
         badge = if (dot) ({ RedDot() }) else null,
         shape = shape,
         colors = NavigationDrawerItemDefaults.colors(
-            selectedContainerColor = if (look.design == "clay") Color.Transparent else if (on) look.accent else cs.primaryContainer,
-            selectedTextColor = if (on) look.onAccent else cs.onPrimaryContainer,
-            selectedIconColor = if (on) look.onAccent else cs.onPrimaryContainer,
+            selectedContainerColor = if (framed) Color.Transparent else cs.primaryContainer,
+            selectedTextColor = if (framed) look.chipContent(true) else cs.onPrimaryContainer,
+            selectedIconColor = if (framed) look.chipContent(true) else cs.onPrimaryContainer,
+            unselectedContainerColor = Color.Transparent,
             unselectedTextColor = cs.onSurface, unselectedIconColor = cs.onSurfaceVariant
         ),
-        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding).then(frame)
+        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding).then(if (framed) Modifier.lookChip(look, true) else Modifier)
     )
 }
 
@@ -568,14 +553,14 @@ fun App(
             val look = LocalLook.current
             ModalDrawerSheet(
                 modifier = Modifier.width(sheetWidth).then(
-                    // Neobrutalism: a thick ink line along the edge of the menu.
-                    if (look.design == "neo") Modifier.drawWithContent {
+                    // A line along the edge of the menu: thick ink (Neobrutalism, chaos) or thin neon (Cyberpunk).
+                    if (look.design == "neo" || look.design == "chaos" || look.design == "cyber") Modifier.drawWithContent {
                         drawContent()
-                        val w = 2.dp.toPx()
+                        val w = when (look.design) { "chaos" -> 3.dp; "cyber" -> 1.dp; else -> 2.dp }.toPx()
                         drawRect(look.line, Offset(size.width - w, 0f), Size(w, size.height))
                     } else Modifier
                 ),
-                drawerContainerColor = if (look.classic) DrawerDefaults.containerColor else MaterialTheme.colorScheme.surface
+                drawerContainerColor = MaterialTheme.colorScheme.background
             ) {
                 val appVersion = remember {
                     try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName.orEmpty() } catch (e: Exception) { "" }
@@ -727,9 +712,13 @@ fun App(
         }
         if (showBar) {
             AppBottomBar(
-                current = when { pricesOpen -> "prices"; friendsOpen -> "friends"; hub -> "home"; else -> "" },
+                current = when {
+                    pricesOpen -> "prices"; friendsOpen -> "friends"
+                    hub && HubNav.page == "lists" -> "wishlists"; hub -> "home"; else -> ""
+                },
                 onHome = { HubNav.page = null; closeAll(); hub = true },
-                onCreate = { createChoice = true },
+                // "Wishlists" (owner, 2.97): the page with all your wishlists; new lists come from Home's +.
+                onWishlists = { closeAll(); hub = true; HubNav.page = "lists" },
                 onAdd = {
                     val onAList = !hub && !pricesOpen && !friendsOpen
                     addTarget = if (onAList) (Shared.active ?: MyLists.saveKey(Repo.openMine, false)) else Repo.lastSaveTo
@@ -1005,7 +994,7 @@ fun HomeScreen(
                         }
                         SortButton(sortMode, withStar = !inShared) { Repo.setSort(ctx, it) }
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(if (look.classic) 2.dp else 6.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         ViewButton("list", tr("Large cards"), view == "list") { Repo.setView(ctx, "list") }
                         ViewButton("grid", tr("Two per row"), view == "grid") { Repo.setView(ctx, "grid") }
                     }
@@ -1121,9 +1110,9 @@ fun HomeScreen(
 fun ViewButton(kind: String, label: String, selected: Boolean, onClick: () -> Unit) {
     val look = LocalLook.current
     // The classic themes show only the chosen one filled (as before); the designs frame both, as buttons.
-    val framed = !look.classic || selected
+    val framed = true
     Box(
-        Modifier.size(if (look.classic) 44.dp else 40.dp)
+        Modifier.size(40.dp)
             .then(if (framed) Modifier.lookChip(look, on = selected) else Modifier.clip(look.chipShape))
             .semantics { contentDescription = label }
             .clickable(onClick = onClick),
@@ -1211,7 +1200,7 @@ fun CompactCard(
         ) {
             if (w.image.isNotEmpty()) {
                 PhotoCard(w.image, w.title, small = true)
-            } else Text(emoji, fontSize = 36.sp)
+            } else PlaceholderIcon("gift", 36.dp)
             // Top left: the price change.
             Row(
                 Modifier.align(Alignment.TopStart).padding(8.dp),
@@ -1340,7 +1329,7 @@ fun WishCard(
         ) {
             if (w.image.isNotEmpty()) {
                 PhotoCard(w.image, w.title, small = false)
-            } else Text(emoji, fontSize = 48.sp)
+            } else PlaceholderIcon("gift", 48.dp)
             // Top left: the price change.
             Row(
                 Modifier.align(Alignment.TopStart).padding(12.dp),
@@ -1379,11 +1368,11 @@ fun WishCard(
                 )
             ) {
                 if (label.isNotEmpty()) {
-                    // Organic shows it as a small spaced-out line in capitals, like its list title.
+                    // Cyberpunk shows it as a small spaced-out line in capitals.
                     Text(
-                        if (look.design == "organic") label.uppercase() else label,
+                        if (look.design == "cyber") label.uppercase() else label,
                         style = MaterialTheme.typography.labelMedium, color = muted,
-                        letterSpacing = if (look.design == "organic") 1.2.sp else TextUnit.Unspecified
+                        letterSpacing = if (look.design == "cyber") 1.2.sp else TextUnit.Unspecified
                     )
                 }
                 Text(

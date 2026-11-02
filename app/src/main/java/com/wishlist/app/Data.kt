@@ -85,14 +85,14 @@ object Repo {
         private set
     var theme by mutableStateOf("light")
         private set
-    /** The palette picked before 2.50 (one of PALETTES in Theme.kt). No longer chosen or used: the app is always indigo. */
+    /** The accent colour (2.97): one of ACCENTS in Design.kt. (Before: the colour set of the standard themes.) */
     var palette by mutableStateOf("indigo")
         private set
     /**
-     * "classic" (the standard themes Light / Dark / AMOLED black in [theme], the original look) or one
-     * of the four designs in Design.kt ("material", "organic", "neo", "clay"), with its colour set in [colours].
+     * The style (2.97): one of STYLES in Design.kt ("quiet", "neo", "neu", "cyber", "chaos"), with light or dark in
+     * [theme] and the accent in [palette]. ([colours] is the old designs' colour set, only read to move people over.)
      */
-    var design by mutableStateOf("classic")
+    var design by mutableStateOf("quiet")
         private set
     var colours by mutableStateOf("")
         private set
@@ -212,9 +212,31 @@ object Repo {
             ?: if ((c.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
                 android.content.res.Configuration.UI_MODE_NIGHT_YES) "dark" else "light"
         palette = p.getString("palette", "indigo") ?: "indigo"
-        // Stored as "style" since 2.52 ("design" of 2.51 is ignored: everyone starts on the classic themes again).
-        design = p.getString("style", "classic")?.takeIf { d -> designFor(d) != null } ?: "classic"
+        // Stored as "style" since 2.52. Since 2.97 (owner) it is one of STYLES (Design.kt), with an accent in
+        // "palette" and light or dark in "theme". The first time, the old choice moves over: Neobrutalism stays
+        // (Midnight becomes dark), the other old designs and the standard themes become Quiet; AMOLED black becomes
+        // dark; the old colour sets become the closest accent.
+        val oldStyle = p.getString("style", "classic") ?: "classic"
         colours = p.getString("style_colours", "") ?: ""
+        if (!p.getBoolean("look_v2", false)) {
+            design = if (oldStyle == "neo") "neo" else "quiet"
+            if (oldStyle != "classic") {
+                // The old designs had their own dark sets (light or dark came from the set, not from "theme").
+                theme = if (colours in setOf("midnight", "plum", "night", "dusk")) "dark" else "light"
+            }
+            if (theme == "amoled") theme = "dark"
+            palette = when (if (oldStyle == "classic") palette else colours) {
+                "indigo", "lavender", "lilac", "plum", "dusk" -> "indigo"
+                "sage", "forest", "night", "mint", "seaglass" -> "green"
+                "rose", "berry", "bubblegum", "coral" -> "pink"
+                "amber", "sunshine", "terracotta", "tangerine", "peach", "lemon" -> "orange"
+                else -> "blue"
+            }
+            p.edit().putBoolean("look_v2", true).apply()
+        } else {
+            design = styleFor(oldStyle).key
+            if (ACCENTS.none { it.key == palette }) palette = "blue"
+        }
         font = p.getString("font", "google_sans") ?: "google_sans"
         instantDelete = p.getBoolean("instant_delete", false)
         notifyDrops = p.getBoolean("notify_drops", true)
@@ -801,17 +823,13 @@ object Repo {
 
     @Synchronized
     fun setTheme(c: Context, t: String) { theme = t; persist(c) }
+    /** The accent colour: one of ACCENTS (Design.kt). Kept as "palette" (it held the old colour sets). */
     fun setPalette(c: Context, p: String) { palette = p; persist(c) }
-    /** One of the classic themes: "system", "light", "dark" or "amoled". */
-    fun setClassic(c: Context, t: String) { design = "classic"; theme = t; persist(c) }
-    /** A design keeps its colour set when it has one with that name, otherwise it takes its first. */
-    fun setDesign(c: Context, d: String) {
-        val ds = designFor(d) ?: return setClassic(c, theme)
-        design = ds.key
-        if (ds.sets.none { it.key == colours }) colours = ds.sets[0].key
+    /** The look (2.97): a style of STYLES, "light" or "dark", and an accent of ACCENTS. */
+    fun setLook(c: Context, style: String, mode: String, accent: String) {
+        design = styleFor(style).key; theme = mode; palette = accentFor(accent).key
         persist(c)
     }
-    fun setColours(c: Context, k: String) { colours = k; persist(c) }
     fun setFont(c: Context, f: String) { font = f; persist(c) }
 
     @Synchronized

@@ -106,7 +106,7 @@ fun WelcomeFlow(onDone: () -> Unit) {
                 ) {
                     when (step) {
                         1 -> {
-                            Text("👋", fontSize = 56.sp)
+                            PlaceholderIcon("hello", 56.dp, LocalLook.current.accent)
                             Text(tr("Welcome to Wishlist"), style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 12.dp))
                             Text(
                                 tr("What’s your name? Friends see it, and it’s shown on the wishes you add to a wishlist for someone."),
@@ -127,7 +127,7 @@ fun WelcomeFlow(onDone: () -> Unit) {
                             )
                         }
                         2 -> {
-                            Text("🎁", fontSize = 56.sp)
+                            PlaceholderIcon("gift", 56.dp, LocalLook.current.accent)
                             Text(tr("Your first wishlist"), style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 12.dp))
                             Text(
                                 tr("Give it a name, for example “Birthday” or “Christmas”. You can make more wishlists later."),
@@ -140,7 +140,7 @@ fun WelcomeFlow(onDone: () -> Unit) {
                             )
                         }
                         else -> {
-                            Text("🤫", fontSize = 56.sp)
+                            PlaceholderIcon("secret", 56.dp, LocalLook.current.accent)
                             Text(tr("Gifts stay a surprise"), style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 12.dp))
                             Text(
                                 tr("Share your wishlist with friends. They tap Reserve on a gift they’ll buy, so nobody gives the same gift twice, and you never see what they reserve."),

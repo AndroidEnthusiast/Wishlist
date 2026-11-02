@@ -66,43 +66,30 @@ fun AddWishButton(onClick: () -> Unit) {
     val shape = look.fabShape
     val flat = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)
     val text: @Composable () -> Unit = {
-        Text(tr("Add wish"), fontWeight = if (look.classic) null else FontWeight.Bold)
+        Text(tr("Add wish"), fontWeight = FontWeight.Bold)
     }
     val icon: @Composable () -> Unit = { Icon(AppIcons.Add, null) }
-    when (look.design) {
-        "neo" -> ExtendedFloatingActionButton(
-            text = text, icon = icon, onClick = onClick,
-            modifier = Modifier.hardShadow(look.line, shape, 4.dp).border(2.dp, look.line, shape),
-            shape = shape, containerColor = look.accent, contentColor = look.onAccent, elevation = flat
+    if (look.design == "quiet") {
+        // Quiet: an accent pill with a soft coloured shadow.
+        ExtendedFloatingActionButton(
+            text = text, icon = icon, onClick = onClick, shape = shape,
+            modifier = Modifier.shadow(10.dp, shape, clip = false, ambientColor = look.accent, spotColor = look.accent),
+            containerColor = look.accent, contentColor = look.onAccent, elevation = flat
         )
-        "clay" -> ExtendedFloatingActionButton(
+    } else {
+        ExtendedFloatingActionButton(
             text = text, icon = icon, onClick = onClick,
-            modifier = Modifier.clay(look, shape, look.accent, 12.dp),
+            modifier = Modifier.lookSurface(look, shape, look.accent, depth = 8.dp),
             shape = shape, containerColor = Color.Transparent, contentColor = look.onAccent, elevation = flat
-        )
-        "organic" -> ExtendedFloatingActionButton(
-            text = text, icon = icon, onClick = onClick, shape = shape,
-            containerColor = look.accent, contentColor = look.onAccent,
-            elevation = FloatingActionButtonDefaults.elevation(3.dp, 4.dp, 3.dp, 3.dp)
-        )
-        // Material 3 Expressive: a big squircle in the strong container colour.
-        "material" -> ExtendedFloatingActionButton(
-            text = text, icon = icon, onClick = onClick, shape = shape,
-            modifier = Modifier.height(64.dp),
-            containerColor = look.accent, contentColor = look.onAccent
-        )
-        else -> ExtendedFloatingActionButton(
-            text = text, icon = icon, onClick = onClick,
-            containerColor = cs.primaryContainer, contentColor = cs.onPrimaryContainer
         )
     }
 }
 
 /**
- * The Themer (App settings > Theme > Themer): a big sample wishlist, and below it the designs side by side. Tapping a
- * design shows it in the preview and pops up its colour sets ("Standard" pops up Light, Dark and AMOLED black).
- * Nothing changes in the app until "Apply" (top right, shown once the choice differs from the theme in use).
- * Back without Apply keeps the theme in use.
+ * The Themer (App settings > Theme): a big sample wishlist in the look being tried, and under it the choices: the
+ * style (Quiet and the four styles, side by side with a small sample each), Light or Dark, and the accent colour
+ * (2.97). Nothing changes in the app until "Apply" (top right, shown once the choice differs from the look in use).
+ * Back without Apply keeps the look in use.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -111,24 +98,12 @@ fun ThemerScreen(onBack: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     BackHandler(onBack = onBack)
     DisposableEffect(Unit) { onDispose { ThemerNav.open = false } }
-    // The choice being tried out: a design (or "classic"), its colour set, and the standard theme for "classic".
     val inUseMode = effectiveTheme()
-    var tryDesign by remember { mutableStateOf(Repo.design) }
-    var tryColours by remember { mutableStateOf(Repo.colours) }
+    var tryStyle by remember { mutableStateOf(styleFor(Repo.design).key) }
     var tryMode by remember { mutableStateOf(inUseMode) }
-    // The colour set of the standard themes (one of PALETTES).
-    var tryPalette by remember { mutableStateOf(Repo.palette) }
-    // Standard: first Light / Dark / AMOLED black, then (after picking one) the colour sets made for it.
-    var standardColours by remember { mutableStateOf(false) }
-    val tryD = designFor(tryDesign)
-    val changed = tryDesign != Repo.design || (
-        if (tryD == null) tryMode != inUseMode || tryPalette != Repo.palette
-        else colourSetFor(tryD, tryColours).key != colourSetFor(tryD, Repo.colours).key
-    )
-    val apply = {
-        if (tryD == null) { Repo.setClassic(ctx, tryMode); Repo.setPalette(ctx, tryPalette) }
-        else { Repo.setDesign(ctx, tryD.key); Repo.setColours(ctx, colourSetFor(tryD, tryColours).key) }
-    }
+    var tryAccent by remember { mutableStateOf(accentFor(Repo.palette).key) }
+    val changed = tryStyle != styleFor(Repo.design).key || tryMode != inUseMode || tryAccent != accentFor(Repo.palette).key
+    val apply = { Repo.setLook(ctx, tryStyle, tryMode, tryAccent) }
 
     Scaffold(
         containerColor = cs.background,
@@ -144,59 +119,64 @@ fun ThemerScreen(onBack: () -> Unit) {
         }
     ) { pad ->
         Column(Modifier.padding(pad).fillMaxSize()) {
-            Spacer(Modifier.height(16.dp))
-            // The preview is drawn in the theme being tried out; the rest of the screen keeps the theme in use.
-            LookTheme(lookFor(tryDesign, if (tryD == null) tryPalette else tryColours, tryMode)) {
+            Spacer(Modifier.height(8.dp))
+            // The preview is drawn in the look being tried out; the rest of the screen keeps the look in use.
+            LookTheme(lookFor(tryStyle, tryAccent, tryMode)) {
                 ThemePreview(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp))
             }
-            // The colour sets of the chosen design pop up between the preview and the designs.
-            AnimatedContent(
-                targetState = tryDesign,
-                transitionSpec = { (fadeIn() + slideInVertically { it / 2 }) togetherWith fadeOut() },
-                label = "colourSets"
-            ) { key ->
-                val d = designFor(key)
-                if (d != null) ColourSets(d, colourSetFor(d, tryColours).key) { tryColours = it }
-                else if (!standardColours) StandardThemes(tryMode) { tryMode = it; standardColours = true }
-                else StandardColours(tryMode, tryPalette, onPick = { tryPalette = it }, onModes = { standardColours = false })
-            }
-            // The designs, side by side; swipe to see them all.
-            // All tiles have the same fixed height, so the row never changes height (and nothing jumps) while swiping.
+            Text(
+                tr(styleFor(tryStyle).about), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp)
+            )
+            // The styles, side by side; swipe to see them all.
             LazyRow(
-                modifier = Modifier.fillMaxWidth().height(132.dp),
+                modifier = Modifier.fillMaxWidth().height(126.dp),
                 verticalAlignment = Alignment.Top,
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 6.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                item {
-                    DesignTile(tr("Standard"), lookFor("classic", tryPalette, tryMode), tryDesign == "classic") {
-                        tryDesign = "classic"
-                        standardColours = false
-                    }
+                items(STYLES.size) { i ->
+                    val st = STYLES[i]
+                    DesignTile(tr(st.name), lookFor(st.key, tryAccent, tryMode), tryStyle == st.key) { tryStyle = st.key }
                 }
-                items(DESIGNS.size) { i ->
-                    val d = DESIGNS[i]
-                    val chosen = tryDesign == d.key
-                    DesignTile(tr(d.name), lookFor(d.key, if (chosen) tryColours else "", "light"), chosen) {
-                        // A design keeps the colour set when it has one with that name, otherwise its first.
-                        if (d.sets.none { it.key == tryColours }) tryColours = d.sets[0].key
-                        tryDesign = d.key
-                    }
+            }
+            // Light or dark, and the accent colour, in one row.
+            Row(
+                Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                listOf("light" to tr("Light"), "dark" to tr("Dark")).forEach { (k, n) ->
+                    val on = tryMode == k
+                    Text(
+                        n, style = MaterialTheme.typography.labelLarge, color = LocalLook.current.chipContent(on),
+                        modifier = Modifier.lookChip(LocalLook.current, on).clickable { tryMode = k }
+                            .padding(horizontal = 14.dp, vertical = 8.dp)
+                    )
+                }
+                Spacer(Modifier.weight(1f))
+                ACCENTS.forEach { ac ->
+                    val on = ac.key == tryAccent
+                    val col = Color(if (tryMode == "light") ac.light else ac.dark)
+                    Box(
+                        Modifier.size(30.dp).clip(CircleShape)
+                            .border(if (on) 2.dp else 0.dp, if (on) cs.onSurface else Color.Transparent, CircleShape)
+                            .padding(if (on) 4.dp else 0.dp).clip(CircleShape).background(col)
+                            .clickable(onClickLabel = tr(ac.name)) { tryAccent = ac.key }
+                    )
                 }
             }
         }
     }
 }
 
-/** One design in the row under the preview: a small sample and its name. */
+/** One style in the row under the preview: a small sample and its name. */
 @Composable
 private fun DesignTile(name: String, sample: Look, chosen: Boolean, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val box = RoundedCornerShape(18.dp)
     Column(
-        Modifier.width(96.dp).height(112.dp).clip(box)
-            .border(if (chosen) 2.dp else 1.dp, if (chosen) cs.primary else cs.outlineVariant, box)
-            .background(if (chosen) cs.primaryContainer.copy(alpha = 0.35f) else Color.Transparent)
+        Modifier.width(96.dp).height(110.dp).clip(box)
+            .border(if (chosen) 2.dp else 1.dp, if (chosen) cs.onSurface else cs.outlineVariant, box)
             .clickable(onClick = onClick)
             .padding(vertical = 10.dp, horizontal = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -210,104 +190,7 @@ private fun DesignTile(name: String, sample: Look, chosen: Boolean, onClick: () 
     }
 }
 
-/** The standard themes (Light, Dark, AMOLED black), in a card that pops up above the tiles when Standard is chosen. */
-@Composable
-private fun StandardThemes(chosen: String, onPick: (String) -> Unit) {
-    val cs = MaterialTheme.colorScheme
-    val card = RoundedCornerShape(24.dp)
-    Column(
-        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp)
-            .clip(card).background(cs.surfaceContainerHigh).border(1.dp, cs.outlineVariant, card)
-            .padding(top = 10.dp, bottom = 4.dp)
-    ) {
-        Text(
-            tr("Standard themes"), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 14.dp)
-        )
-        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
-            listOf("light" to tr("Light"), "dark" to tr("Dark"), "amoled" to tr("AMOLED black")).forEach { (k, n) ->
-                val look = lookFor("classic", "", k)
-                // A swatch like the colour sets: the background with the indigo of that theme.
-                val set = ColourSet(
-                    k, n, look.scheme.primary.toArgb().toLong() and 0xFFFFFFFFL,
-                    look.scheme.primaryContainer.toArgb().toLong() and 0xFFFFFFFFL,
-                    look.scheme.surfaceVariant.toArgb().toLong() and 0xFFFFFFFFL,
-                    look.scheme.background.toArgb().toLong() and 0xFFFFFFFFL,
-                    look.scheme.onBackground.toArgb().toLong() and 0xFFFFFFFFL
-                )
-                ColourOption(set, chosen == k, Modifier.weight(1f), translate = false) { onPick(k) }
-            }
-        }
-    }
-}
-
-/**
- * The colour sets of a standard theme, after Light, Dark or AMOLED black was picked: each set in the tones made for
- * that mode. "Light, Dark or AMOLED black" goes back to the modes.
- */
-@Composable
-private fun StandardColours(mode: String, chosen: String, onPick: (String) -> Unit, onModes: () -> Unit) {
-    val cs = MaterialTheme.colorScheme
-    val card = RoundedCornerShape(24.dp)
-    val modeName = when (mode) { "dark" -> tr("Dark"); "amoled" -> tr("AMOLED black"); else -> tr("Light") }
-    Column(
-        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp)
-            .clip(card).background(cs.surfaceContainerHigh).border(1.dp, cs.outlineVariant, card)
-            .padding(top = 4.dp, bottom = 4.dp)
-    ) {
-        Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                tr("Colours for %s", modeName), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant,
-                modifier = Modifier.weight(1f)
-            )
-            TextButton(onClick = onModes) { Text(tr("Light, dark or AMOLED")) }
-        }
-        LazyRow(
-            modifier = Modifier.fillMaxWidth().height(104.dp),
-            verticalAlignment = Alignment.Top,
-            contentPadding = PaddingValues(horizontal = 8.dp)
-        ) {
-            items(PALETTES.size) { i ->
-                val p = PALETTES[i]
-                val sc = lookFor("classic", p.key, mode).scheme
-                fun argb(c: Color) = c.toArgb().toLong() and 0xFFFFFFFFL
-                val set = ColourSet(p.key, p.name, argb(sc.primary), argb(sc.primaryContainer), argb(sc.surfaceVariant), argb(sc.background), argb(sc.onBackground))
-                ColourOption(set, p.key == chosen, Modifier.width(80.dp)) { onPick(p.key) }
-            }
-        }
-    }
-}
-
-/** The colour sets of a design, in a card that pops up above the designs. */
-@Composable
-private fun ColourSets(d: Design, chosen: String, onPick: (String) -> Unit) {
-    val cs = MaterialTheme.colorScheme
-    val card = RoundedCornerShape(24.dp)
-    Column(
-        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp)
-            .clip(card).background(cs.surfaceContainerHigh).border(1.dp, cs.outlineVariant, card)
-            .padding(top = 10.dp, bottom = 4.dp)
-    ) {
-        Text(
-            tr("Colour combinations made for %s.", tr(d.name)),
-            style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 14.dp)
-        )
-        // One fixed height for the row and every option (a name may take two lines), so nothing jumps while swiping.
-        LazyRow(
-            modifier = Modifier.fillMaxWidth().height(104.dp),
-            verticalAlignment = Alignment.Top,
-            contentPadding = PaddingValues(horizontal = 8.dp)
-        ) {
-            items(d.sets.size) { i ->
-                val set = d.sets[i]
-                ColourOption(set, set.key == chosen, Modifier.width(80.dp)) { onPick(set.key) }
-            }
-        }
-    }
-}
-
-/** A little card drawn in a theme, on its own background, so the themes can be told apart. */
+/** A little card drawn in a look, on its own background, so the styles can be told apart. */
 @Composable
 private fun ThemeSample(look: Look) {
     Box(
@@ -318,49 +201,13 @@ private fun ThemeSample(look: Look) {
         Column(Modifier.fillMaxSize().lookCard(look, 4L, look.cardShape(4L, small = true))) {
             Box(
                 Modifier.padding(look.inset(small = true) / 2).fillMaxWidth().weight(1f)
-                    .clip(look.pictureShape(4L, small = true)).background(look.tints[1 % look.tints.size])
+                    .lookMat(look, look.pictureShape(4L, small = true), look.tints[1 % look.tints.size])
             )
             if (look.pictureLine > 0.dp) Box(Modifier.fillMaxWidth().height(look.pictureLine).background(look.line))
             Box(
                 Modifier.padding(5.dp).width(20.dp).height(5.dp).clip(CircleShape).background(look.accent)
             )
         }
-    }
-}
-
-/** One colour set: a round swatch (background, main colour and the two accents) with its name. */
-@Composable
-private fun ColourOption(set: ColourSet, chosen: Boolean, modifier: Modifier, translate: Boolean = true, onClick: () -> Unit) {
-    val cs = MaterialTheme.colorScheme
-    Column(
-        modifier.height(104.dp).clip(RoundedCornerShape(16.dp)).clickable(onClick = onClick).padding(vertical = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Canvas(Modifier.size(52.dp)) {
-                val r = size.minDimension / 2 - 5.dp.toPx()
-                val tl = Offset(center.x - r, center.y - r)
-                val sz = Size(r * 2, r * 2)
-                drawCircle(Color(set.paper), r, center)
-                drawArc(Color(set.main), 90f, 180f, true, tl, sz)
-                drawArc(Color(set.a2), 270f, 90f, true, tl, sz)
-                drawArc(Color(set.a3), 0f, 90f, true, tl, sz)
-                // The background of the set as a ring, so a dark set shows it is dark.
-                drawCircle(Color(set.paper), r - 1.5f.dp.toPx(), center, style = Stroke(3.dp.toPx()))
-                drawCircle(Color(set.ink).copy(alpha = 0.35f), r, center, style = Stroke(1.dp.toPx()))
-                if (chosen) drawCircle(cs.primary, r + 3.5f.dp.toPx(), center, style = Stroke(2.5f.dp.toPx()))
-            }
-            if (chosen) {
-                Box(Modifier.size(20.dp).clip(CircleShape).background(cs.primary), contentAlignment = Alignment.Center) {
-                    Icon(AppIcons.Check, null, tint = cs.onPrimary, modifier = Modifier.size(14.dp))
-                }
-            }
-        }
-        Text(
-            if (translate) tr(set.name) else set.name, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center,
-            color = if (chosen) cs.onSurface else cs.onSurfaceVariant, maxLines = 2,
-            modifier = Modifier.padding(top = 4.dp, start = 4.dp, end = 4.dp)
-        )
     }
 }
 

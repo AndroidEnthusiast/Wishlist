@@ -296,7 +296,7 @@ private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenL
                             .clickable { onOpenLink(l.code) }.padding(14.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("🎁", fontSize = 22.sp)
+                        PlaceholderIcon("gift", 22.dp)
                         Text(
                             l.name, style = MaterialTheme.typography.titleMedium, color = look.cardInk(id),
                             maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 12.dp)
@@ -500,7 +500,7 @@ private fun FriendPage(f: Person, snack: SnackbarHostState) {
             if (days != null || f.bio.isNotBlank()) {
                 Column(Modifier.padding(horizontal = 20.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     if (days != null) Text(
-                        "🎂 " + (if (days == 0) tr("Birthday today") else tr("Birthday in %d days", days)) + " · " + birthdayText(f.birthday),
+                        (if (days == 0) tr("Birthday today") else tr("Birthday in %d days", days)) + " · " + birthdayText(f.birthday),
                         style = MaterialTheme.typography.bodyMedium
                     )
                     if (f.bio.isNotBlank()) Text(tr("I like: %s", f.bio), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
@@ -611,7 +611,7 @@ private fun FriendWishesPage(f: Person, page: String, snack: SnackbarHostState) 
                         contentAlignment = Alignment.Center
                     ) {
                         if (w.image.isNotBlank()) AsyncImage(w.image, null, Modifier.fillMaxSize().padding(4.dp), contentScale = ContentScale.Fit)
-                        else Text("🎁", fontSize = 20.sp)
+                        else PlaceholderIcon("gift", 20.dp)
                     }
                     Column(Modifier.weight(1f).padding(start = 12.dp, end = 8.dp)) {
                         Text(w.title, style = MaterialTheme.typography.bodyLarge, color = look.cardInk(id), maxLines = 2, overflow = TextOverflow.Ellipsis)

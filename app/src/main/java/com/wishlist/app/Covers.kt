@@ -258,7 +258,7 @@ fun CoverPreview(img: String, edit: HeroEdit, onClose: () -> Unit) {
                             contentAlignment = Alignment.Center
                         ) {
                             if (w.image.isNotBlank()) AsyncImage(w.image, null, Modifier.fillMaxSize().padding(4.dp), contentScale = ContentScale.Fit)
-                            else Text("🎁", fontSize = 20.sp)
+                            else PlaceholderIcon("gift", 20.dp)
                         }
                         Text(
                             w.title, style = MaterialTheme.typography.bodyLarge, color = look.cardInk(id), maxLines = 1,

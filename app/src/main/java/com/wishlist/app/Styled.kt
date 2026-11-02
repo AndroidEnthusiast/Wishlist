@@ -109,30 +109,29 @@ object ThemerNav {
     var open by mutableStateOf(false)
 }
 
+/*
+ * The app's buttons, switches, dialogs and top bar in the chosen style (Design.kt, 2.97). Material's own parts are
+ * used underneath; outside Quiet they are see-through and the style's surface ([lookSurface]) is drawn behind them.
+ */
+
 @Composable
 fun Button(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) {
     val look = LocalLook.current
-    val cs = MaterialTheme.colorScheme
     val shape = look.buttonShape
-    when (look.design) {
-        "neo" -> M3Button(
-            onClick, modifier.then(if (enabled) Modifier.hardShadow(look.line, shape, 3.dp) else Modifier), enabled,
-            shape = shape, colors = ButtonDefaults.buttonColors(containerColor = look.accent, contentColor = look.onAccent),
-            elevation = null, border = BorderStroke(2.dp, look.line), content = content
+    if (look.design == "quiet") {
+        // Quiet: a calm pill in the accent colour, a little taller than Material's.
+        M3Button(
+            onClick, modifier.heightIn(min = 46.dp), enabled, shape = shape, elevation = null,
+            colors = ButtonDefaults.buttonColors(containerColor = look.accent, contentColor = look.onAccent),
+            contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp), content = content
         )
-        // Clay: a puffy pillow in the main colour (the button itself is see-through on top of it).
-        "clay" -> M3Button(
-            onClick, modifier.then(if (enabled) Modifier.clay(look, shape, look.accent, 6.dp) else Modifier), enabled,
-            shape = shape, elevation = null,
+    } else {
+        M3Button(
+            onClick, modifier.heightIn(min = 46.dp).then(if (enabled) Modifier.lookSurface(look, shape, look.accent, depth = 5.dp) else Modifier),
+            enabled, shape = shape, elevation = null,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = look.onAccent),
-            content = content
+            contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp), content = content
         )
-        "organic" -> M3Button(onClick, modifier, enabled, shape = shape, content = content)
-        "material" -> M3Button(
-            onClick, modifier.heightIn(min = 48.dp), enabled, shape = shape,
-            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp), content = content
-        )
-        else -> M3Button(onClick, modifier, enabled, content = content)
     }
 }
 
@@ -141,49 +140,37 @@ fun OutlinedButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: 
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
     val shape = look.buttonShape
-    when (look.design) {
-        "neo" -> M3OutlinedButton(
-            onClick, modifier.then(if (enabled) Modifier.hardShadow(look.line, shape, 3.dp) else Modifier), enabled,
-            shape = shape, colors = ButtonDefaults.outlinedButtonColors(containerColor = cs.surface, contentColor = cs.onSurface),
-            border = BorderStroke(2.dp, look.line), content = content
+    if (look.design == "quiet") {
+        // Quiet: a soft tinted pill with the accent as text (the "secondary" button of iOS).
+        M3Button(
+            onClick, modifier.heightIn(min = 46.dp), enabled, shape = shape, elevation = null,
+            colors = ButtonDefaults.buttonColors(containerColor = cs.primaryContainer, contentColor = if (look.dark) look.accent else cs.onPrimaryContainer),
+            contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp), content = content
         )
-        // Clay and Material 3 have soft "secondary" buttons filled with the light container colour.
-        "clay" -> M3Button(
-            onClick, modifier.then(if (enabled) Modifier.clay(look, shape, cs.primaryContainer, 5.dp) else Modifier), enabled,
-            shape = shape, elevation = null,
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = cs.onPrimaryContainer),
-            content = content
+    } else {
+        M3Button(
+            onClick, modifier.heightIn(min = 46.dp).then(if (enabled) Modifier.lookSurface(look, shape, cs.surfaceVariant, depth = 5.dp) else Modifier),
+            enabled, shape = shape, elevation = null,
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = cs.onSurface),
+            contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp), content = content
         )
-        "material" -> M3FilledTonalButton(
-            onClick, modifier.heightIn(min = 48.dp), enabled, shape = shape,
-            colors = ButtonDefaults.filledTonalButtonColors(containerColor = cs.primaryContainer, contentColor = cs.onPrimaryContainer),
-            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp), content = content
-        )
-        "organic" -> M3OutlinedButton(onClick, modifier, enabled, shape = shape, border = BorderStroke(1.dp, look.line), content = content)
-        else -> M3OutlinedButton(onClick, modifier, enabled, content = content)
     }
 }
 
 @Composable
-fun FilledTonalButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) {
-    val look = LocalLook.current
-    if (look.classic) M3FilledTonalButton(onClick, modifier, enabled, content = content)
-    else OutlinedButton(onClick, modifier, enabled, content)
-}
+fun FilledTonalButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) =
+    OutlinedButton(onClick, modifier, enabled, content)
 
 @Composable
 fun TextButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
-    when (look.design) {
-        "classic" -> M3TextButton(onClick, modifier, enabled, content = content)
-        // Neobrutalism: ink text (the bright main colour is unreadable as text on white).
-        "neo" -> M3TextButton(
-            onClick, modifier, enabled, shape = look.buttonShape,
-            colors = ButtonDefaults.textButtonColors(contentColor = cs.onSurface), content = content
-        )
-        else -> M3TextButton(onClick, modifier, enabled, shape = look.buttonShape, content = content)
-    }
+    // Neobrutalism and chaos: ink text (their accents are for blocks); the others: the accent.
+    val col = if (look.design == "neo" || look.design == "chaos") cs.onSurface else look.accent
+    M3TextButton(
+        onClick, modifier, enabled, shape = look.buttonShape,
+        colors = ButtonDefaults.textButtonColors(contentColor = col), content = content
+    )
 }
 
 @Composable
@@ -191,36 +178,36 @@ fun Switch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifier: Mo
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
     when (look.design) {
-        "neo" -> M3Switch(
+        "neo", "chaos" -> M3Switch(
             checked, onCheckedChange, modifier, enabled = enabled,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = look.onAccent, checkedTrackColor = look.accent, checkedBorderColor = look.line,
-                uncheckedThumbColor = look.line, uncheckedTrackColor = cs.surface, uncheckedBorderColor = look.line
+                uncheckedThumbColor = look.line, uncheckedTrackColor = cs.surfaceVariant, uncheckedBorderColor = look.line
             )
         )
-        "clay" -> M3Switch(
-            checked, onCheckedChange,
-            modifier.shadow(4.dp, CircleShape, clip = false, ambientColor = look.shadows[0], spotColor = look.shadows[0]),
-            enabled = enabled,
+        "neu" -> M3Switch(
+            checked, onCheckedChange, modifier.neu(look, CircleShape, cs.background, 3.dp, pressed = true), enabled = enabled,
             colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White, checkedTrackColor = cs.primary, checkedBorderColor = Color.Transparent,
-                uncheckedThumbColor = Color.White, uncheckedTrackColor = cs.primaryContainer, uncheckedBorderColor = Color.Transparent
+                checkedThumbColor = Color.White, checkedTrackColor = look.accent, checkedBorderColor = Color.Transparent,
+                uncheckedThumbColor = cs.onSurfaceVariant, uncheckedTrackColor = Color.Transparent, uncheckedBorderColor = Color.Transparent
             )
         )
-        "organic" -> M3Switch(
+        "cyber" -> M3Switch(
             checked, onCheckedChange, modifier, enabled = enabled,
             colors = SwitchDefaults.colors(
-                checkedThumbColor = cs.onPrimary, checkedTrackColor = cs.primary,
-                uncheckedThumbColor = cs.outline, uncheckedTrackColor = cs.surfaceVariant, uncheckedBorderColor = look.line
+                checkedThumbColor = look.onAccent, checkedTrackColor = look.accent, checkedBorderColor = look.accent,
+                uncheckedThumbColor = look.line, uncheckedTrackColor = Color.Transparent, uncheckedBorderColor = look.line
             )
         )
-        // Material 3 Expressive: a tick in the thumb when on.
-        "material" -> M3Switch(
-            checked, onCheckedChange, modifier,
-            thumbContent = if (checked) ({ Icon(AppIcons.Check, null, Modifier.size(SwitchDefaults.IconSize)) }) else null,
-            enabled = enabled
+        // Quiet: the accent when on, a soft grey when off, no outline (like iOS).
+        else -> M3Switch(
+            checked, onCheckedChange, modifier, enabled = enabled,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White, checkedTrackColor = look.accent, checkedBorderColor = Color.Transparent,
+                uncheckedThumbColor = Color.White, uncheckedTrackColor = if (look.dark) Color(0xFF39393D) else Color(0xFFE5E5EA),
+                uncheckedBorderColor = Color.Transparent
+            )
         )
-        else -> M3Switch(checked, onCheckedChange, modifier, enabled = enabled)
     }
 }
 
@@ -237,28 +224,18 @@ fun AlertDialog(
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
     val shape = MaterialTheme.shapes.extraLarge
-    when (look.design) {
-        "classic" -> M3AlertDialog(
-            onDismissRequest, confirmButton, modifier, dismissButton, title = title, text = text, properties = properties
+    if (look.design == "quiet") {
+        M3AlertDialog(
+            onDismissRequest, confirmButton, modifier, dismissButton, title = title, text = text,
+            shape = shape, containerColor = cs.surfaceContainerHigh, tonalElevation = 0.dp, properties = properties
         )
-        else -> {
-            val frame = when (look.design) {
-                "neo" -> Modifier.hardShadow(look.line, shape, 6.dp).border2(look, shape)
-                "organic" -> Modifier.border1(look, shape)
-                "clay" -> Modifier.clay(look, shape, cs.surfaceContainerHigh, 16.dp)
-                else -> Modifier
-            }
-            M3AlertDialog(
-                onDismissRequest, confirmButton, modifier.then(frame), dismissButton, title = title, text = text,
-                shape = shape, containerColor = if (look.design == "clay") Color.Transparent else cs.surfaceContainerHigh,
-                tonalElevation = 0.dp, properties = properties
-            )
-        }
+    } else {
+        M3AlertDialog(
+            onDismissRequest, confirmButton, modifier.lookSurface(look, shape, cs.surfaceContainerHigh, depth = 10.dp), dismissButton,
+            title = title, text = text, shape = shape, containerColor = Color.Transparent, tonalElevation = 0.dp, properties = properties
+        )
     }
 }
-
-private fun Modifier.border2(look: Look, shape: Shape) = border(2.dp, look.line, shape)
-private fun Modifier.border1(look: Look, shape: Shape) = border(1.dp, look.line, shape)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -270,11 +247,12 @@ fun TopAppBar(
     colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors()
 ) {
     val look = LocalLook.current
-    // Neobrutalism: a thick ink line under the top bar.
-    val line = if (look.design == "neo") Modifier.drawWithContent {
+    // A line under the top bar: thick ink (Neobrutalism, chaos) or thin neon (Cyberpunk).
+    val h = when (look.design) { "neo" -> 2.dp; "chaos" -> 3.dp; "cyber" -> 1.dp; else -> 0.dp }
+    val line = if (h > 0.dp) Modifier.drawWithContent {
         drawContent()
-        val h = 2.dp.toPx()
-        drawRect(look.line, Offset(0f, size.height - h), Size(size.width, h))
+        val px = h.toPx()
+        drawRect(look.line, Offset(0f, size.height - px), Size(size.width, px))
     } else Modifier
     M3TopAppBar(title, modifier.then(line), navigationIcon, actions, colors = colors)
 }
@@ -286,7 +264,7 @@ fun ListTitle(name: String, @Suppress("UNUSED_PARAMETER") count: Int) {
     Text(name, fontWeight = LocalLook.current.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis)
 }
 
-/** The price change on a wish ("−20%", "+5%"; plus and minus, not arrows: it isn't a stock trade). Classic: white on green or red, as before. */
+/** The price change on a wish ("−20%", "+5%"; plus and minus, not arrows: it isn't a stock trade). */
 @Composable
 fun PriceBadge(text: String, rise: Boolean, small: Boolean) {
     val look = LocalLook.current
@@ -294,50 +272,41 @@ fun PriceBadge(text: String, rise: Boolean, small: Boolean) {
     val bg: Color
     val fg: Color
     when (look.design) {
-        "classic" -> { bg = col; fg = Color.White }
-        "neo" -> { bg = if (rise) Color(0xFFFFB3B3) else Color(0xFFB8F5C8); fg = Color(0xFF111111) }
-        else -> { bg = lerp(col, look.scheme.surface, if (look.dark) 0.72f else 0.86f); fg = col }
+        "neo", "chaos" -> { bg = if (rise) Color(0xFFFFB3B3) else Color(0xFFB8F5C8); fg = Color(0xFF111111) }
+        "cyber" -> { bg = look.scheme.surfaceVariant; fg = col }
+        else -> { bg = lerp(col, look.scheme.surfaceVariant, if (look.dark) 0.78f else 0.88f); fg = col }
     }
-    val clay = look.design == "clay"
-    Surface(
-        color = if (clay) Color.Transparent else bg, shape = look.badgeShape(small),
-        modifier = if (clay) Modifier.clay(look, look.badgeShape(small), bg, 3.dp) else Modifier,
-        border = if (look.design == "neo") BorderStroke(1.5.dp, Color(0xFF111111)) else null
-    ) {
-        Text(
-            text, color = fg,
-            style = if (small) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
-            fontWeight = if (look.classic) null else FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = if (small) 6.dp else 10.dp, vertical = if (small) 2.dp else 4.dp)
-        )
-    }
+    StyleBadge(text, bg, fg, small, if (look.design == "cyber") col else null)
 }
 
-/** A status on a wish ("Got it", "Reserved"). Classic: on the background colour, as before. */
+/** A status on a wish ("Owned", "Reserved"). */
 @Composable
 fun StatusBadge(text: String, small: Boolean, modifier: Modifier = Modifier) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
     val bg = when (look.design) {
-        "classic" -> cs.background
-        "neo" -> cs.surface
+        "quiet" -> if (look.dark) Color(0xFF2C2C2E) else Color(0xFFF2F2F7)
+        "neo", "chaos", "cyber" -> cs.surfaceVariant
         else -> cs.primaryContainer
     }
-    val fg = when (look.design) {
-        "classic" -> cs.onBackground
-        "neo" -> cs.onSurface
-        else -> cs.onPrimaryContainer
+    StyleBadge(text, bg, cs.onSurface, small, null, modifier)
+}
+
+@Composable
+private fun StyleBadge(text: String, bg: Color, fg: Color, small: Boolean, lineColor: Color?, modifier: Modifier = Modifier) {
+    val look = LocalLook.current
+    val shape = look.badgeShape(small)
+    val border = when (look.design) {
+        "neo" -> BorderStroke(1.5.dp, look.line)
+        "chaos" -> BorderStroke(2.dp, look.line)
+        "cyber" -> BorderStroke(1.dp, lineColor ?: look.line)
+        else -> null
     }
-    val clay = look.design == "clay"
-    Surface(
-        color = if (clay) Color.Transparent else bg, shape = look.badgeShape(small),
-        modifier = if (clay) modifier.clay(look, look.badgeShape(small), bg, 3.dp) else modifier,
-        border = if (look.design == "neo") BorderStroke(1.5.dp, look.line) else null
-    ) {
+    Surface(color = bg, shape = shape, modifier = modifier, border = border) {
         Text(
             text, color = fg,
             style = if (small) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
-            fontWeight = if (look.classic) null else FontWeight.Bold,
+            fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(horizontal = if (small) 6.dp else 10.dp, vertical = if (small) 2.dp else 4.dp)
         )
     }
@@ -371,6 +340,7 @@ object AppIcons {
     val Favorite: ImageVector @Composable get() =
         v(Icons.Filled.Favorite, Icons.Outlined.FavoriteBorder, Icons.Rounded.Favorite, Icons.Sharp.Favorite)
     val Home: ImageVector @Composable get() = v(Icons.Filled.Home, Icons.Outlined.Home, Icons.Rounded.Home, Icons.Sharp.Home)
+    val Lock: ImageVector @Composable get() = v(Icons.Filled.Lock, Icons.Outlined.Lock, Icons.Rounded.Lock, Icons.Sharp.Lock)
     val ListIcon: ImageVector @Composable get() = v(
         Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List,
         Icons.AutoMirrored.Rounded.List, Icons.AutoMirrored.Sharp.List
@@ -448,17 +418,24 @@ fun PhotoCard(url: String, description: String, small: Boolean, modifier: Modifi
             Image(painter, description, Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
         } else {
             val shape = when (look.design) {
-                "organic" -> RoundedCornerShape(14.dp, 14.dp, 14.dp, 4.dp)
-                "neo" -> RoundedCornerShape(8.dp)
+                "neo", "chaos" -> RoundedCornerShape(8.dp)
+                "cyber" -> androidx.compose.foundation.shape.CutCornerShape(topEnd = 8.dp, bottomStart = 8.dp)
                 else -> RoundedCornerShape(if (small) 10.dp else 14.dp)
             }
-            val frame = if (look.design == "neo") Modifier.hardShadow(look.line, shape, 3.dp)
-            else Modifier.shadow(if (small) 4.dp else 6.dp, shape, clip = false)
+            val hard = look.design == "neo" || look.design == "chaos"
+            val frame = if (hard) Modifier.hardShadow(look.line, shape, 3.dp)
+            else Modifier.shadow(if (small) 3.dp else 5.dp, shape, clip = false)
             Image(
                 painter, description, contentScale = ContentScale.Crop,
                 modifier = Modifier.aspectRatio(ratio, matchHeightConstraintsFirst = true)
                     .then(frame).clip(shape).background(Color.White)
-                    .then(if (look.design == "neo") Modifier.border(2.dp, look.line, shape) else Modifier)
+                    .then(
+                        when {
+                            hard -> Modifier.border(2.dp, look.line, shape)
+                            look.design == "cyber" -> Modifier.border(1.dp, look.line, shape)
+                            else -> Modifier
+                        }
+                    )
             )
         }
     }

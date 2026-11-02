@@ -5,7 +5,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -23,6 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -30,6 +39,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,7 +54,7 @@ import androidx.compose.ui.unit.sp
 fun AppBottomBar(
     current: String,
     onHome: () -> Unit,
-    onCreate: () -> Unit,
+    onWishlists: () -> Unit,
     onAdd: () -> Unit,
     onPrices: () -> Unit,
     onFriends: () -> Unit,
@@ -53,49 +63,64 @@ fun AppBottomBar(
 ) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
-    NavigationBar(
-        containerColor = if (look.classic) cs.surfaceContainer else cs.surface,
-        modifier = if (look.design == "neo") Modifier.drawWithContent {
-            drawContent()
-            drawRect(look.line, Offset.Zero, Size(size.width, 2.dp.toPx()))
-        } else Modifier
+    // A floating bar (2.97, the preview the owner chose): rounded, a little above the bottom edge, in the style's
+    // surface. Quiet: nearly opaque with a hairline and a soft shadow, like frosted glass.
+    val shape = when (look.design) {
+        "neo" -> RoundedCornerShape(16.dp)
+        "cyber" -> androidx.compose.foundation.shape.CutCornerShape(topEnd = 16.dp, bottomStart = 16.dp)
+        "chaos" -> RoundedCornerShape(20.dp)
+        else -> RoundedCornerShape(26.dp)
+    }
+    val frame = if (look.design == "quiet") Modifier
+        .shadow(12.dp, shape, clip = false, ambientColor = Color.Black.copy(alpha = 0.25f), spotColor = Color.Black.copy(alpha = 0.18f))
+        .clip(shape).background(cs.surfaceVariant.copy(alpha = 0.94f)).border(1.dp, look.line, shape)
+    else Modifier.lookSurface(look, shape, cs.surfaceVariant, depth = 7.dp)
+    Box(
+        Modifier.fillMaxWidth().background(cs.background).windowInsetsPadding(WindowInsets.navigationBars)
+            .padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 10.dp)
+            .then(if (look.design == "chaos") Modifier.rotate(-0.8f) else Modifier)
     ) {
-        NavigationBarItem(
-            selected = current == "home", onClick = onHome,
-            icon = { Icon(AppIcons.Home, null) }, label = { BarLabel(tr("Home")) }
-        )
-        NavigationBarItem(
-            selected = false, onClick = onCreate,
-            icon = { WishlistIcon(LocalContentColor.current) }, label = { BarLabel(tr("New wishlist")) }
-        )
-        // Add wish: only a + in a filled circle, no words.
-        NavigationBarItem(
-            selected = false, onClick = onAdd,
-            icon = {
-                Box(
-                    Modifier.size(40.dp).clip(if (look.design == "neo") RoundedCornerShape(10.dp) else CircleShape)
-                        .background(look.accent)
-                        // Neobrutalism: an ink line, so the bright block stands out on the light bar.
-                        .then(if (look.design == "neo") Modifier.border(2.dp, look.line, RoundedCornerShape(10.dp)) else Modifier),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(AppIcons.Add, tr("Add wish"), tint = look.onAccent, modifier = Modifier.size(26.dp))
-                }
+        Row(
+            frame.fillMaxWidth().height(64.dp).padding(horizontal = 6.dp),
+            horizontalArrangement = Arrangement.SpaceAround, verticalAlignment = Alignment.CenterVertically
+        ) {
+            BarItem(tr("Home"), current == "home", onHome) { Icon(AppIcons.Home, null, tint = it) }
+            BarItem(tr("Wishlists"), current == "wishlists", onWishlists) { WishlistIcon(it) }
+            // Add wish: only a + in the accent colour, no words.
+            Box(
+                Modifier.size(46.dp).then(
+                    if (look.design == "quiet") Modifier.shadow(6.dp, CircleShape, clip = false, ambientColor = look.accent, spotColor = look.accent)
+                        .clip(CircleShape).background(look.accent)
+                    else Modifier.lookSurface(look, look.fabShape, look.accent, depth = 5.dp)
+                ).clickable(onClickLabel = tr("Add wish"), onClick = onAdd),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(AppIcons.Add, tr("Add wish"), tint = look.onAccent, modifier = Modifier.size(28.dp))
             }
-        )
-        NavigationBarItem(
-            selected = current == "prices", onClick = onPrices,
-            icon = { PriceIcon(LocalContentColor.current) }, label = { BarLabel(tr("Prices")) }
-        )
-        NavigationBarItem(
-            selected = current == "friends", onClick = onFriends,
-            icon = {
-                Box {
-                    Icon(AppIcons.Person, null)
-                    if (friendsDot) RedDot(Modifier.align(Alignment.TopEnd).offset(4.dp, (-3).dp))
-                }
-            },
-            label = { BarLabel(tr("Friends")) }
+            BarItem(tr("Price watch"), current == "prices", onPrices) { PriceIcon(it) }
+            BarItem(tr("Friends"), current == "friends", onFriends, dot = friendsDot) { Icon(AppIcons.Person, null, tint = it) }
+        }
+    }
+}
+
+/** One place in the bar: its icon and name; the open one in full colour and bold, the others quieter. */
+@Composable
+private fun RowScope.BarItem(label: String, on: Boolean, onClick: () -> Unit, dot: Boolean = false, icon: @Composable (Color) -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val tint = if (on) cs.onSurface else cs.onSurfaceVariant
+    Column(
+        Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).clickable(onClick = onClick).padding(vertical = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box {
+            icon(tint)
+            if (dot) RedDot(Modifier.align(Alignment.TopEnd).offset(4.dp, (-3).dp))
+        }
+        Text(
+            label, maxLines = 1, softWrap = false, overflow = TextOverflow.Visible, color = tint,
+            fontWeight = if (on) FontWeight.Bold else FontWeight.Medium,
+            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.sp),
+            modifier = Modifier.padding(top = 2.dp)
         )
     }
 }
@@ -111,7 +136,7 @@ private fun BarLabel(text: String) {
 
 /** A wishlist: a page with a heart and two lines (drawn here, in one colour like the other icons). */
 @Composable
-private fun WishlistIcon(tint: Color) {
+fun WishlistIcon(tint: Color) {
     Canvas(Modifier.size(24.dp)) {
         val u = size.width / 24f
         val st = Stroke(1.9f * u, cap = StrokeCap.Round, join = StrokeJoin.Round)

@@ -296,7 +296,7 @@ private fun WishLine(p: Placed, onOpen: () -> Unit, onUnstar: (() -> Unit)?) {
             contentAlignment = Alignment.Center
         ) {
             if (w.image.isNotBlank()) AsyncImage(w.image, null, Modifier.fillMaxSize().padding(4.dp), contentScale = ContentScale.Fit)
-            else Text("🎁", fontSize = 20.sp)
+            else PlaceholderIcon("gift", 20.dp)
         }
         Column(Modifier.weight(1f).padding(start = 12.dp, end = 8.dp)) {
             Text(w.title, style = MaterialTheme.typography.bodyLarge, color = look.cardInk(id), maxLines = 2, overflow = TextOverflow.Ellipsis)

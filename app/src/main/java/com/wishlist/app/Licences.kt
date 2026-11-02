@@ -23,9 +23,9 @@ import androidx.compose.ui.unit.sp
  * App settings > About > Licences. Every icon, font and library in the app is our own or free to use under an open
  * licence; those licences ask that their text comes with the app, so here it is.
  *  - Icons: Google's Material Icons (Apache License 2.0). The other icons (menu, view buttons, prices, wishlist,
- *    crop, light, new photo, colour ball) are drawn in this app's own code.
- *  - Fonts: Google Sans (built in) and Fraunces, Nunito, Lexend, Plus Jakarta Sans, Inter (downloaded from Google
- *    Fonts): SIL Open Font License 1.1.
+ *    gift, crop, light, new photo, colour ball) are drawn in this app's own code.
+ *  - Fonts (2.97): Google Sans (built in) and Figtree, Rajdhani, Share Tech Mono, Bungee, Bricolage Grotesque, Caveat
+ *    (downloaded from Google Fonts): SIL Open Font License 1.1.
  *  - Libraries: AndroidX / Jetpack Compose, Kotlin, Coil (Apache License 2.0).
  * The full texts are in res/raw (license_apache.txt, license_ofl.txt).
  */
@@ -48,11 +48,11 @@ fun LicencesDialog(onClose: () -> Unit) {
                 Credit(tr("Icons"), "Material Icons, Google — Apache License 2.0")
                 Credit(
                     tr("Fonts"),
-                    "Google Sans, Fraunces, Nunito, Lexend, Plus Jakarta Sans, Inter — SIL Open Font License 1.1"
+                    "Google Sans, Figtree, Rajdhani, Share Tech Mono, Bungee, Bricolage Grotesque, Caveat — SIL Open Font License 1.1"
                 )
                 Credit(tr("Building blocks"), "AndroidX, Jetpack Compose, Kotlin, Coil — Apache License 2.0")
                 Text(
-                    tr("Our own icons: menu, view buttons, prices, wishlist, crop, light, new photo and the colour ball."),
+                    tr("Our own icons: menu, view buttons, prices, wishlist, gift, crop, light, new photo and the colour ball."),
                     style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
                 )
                 TextButton(onClick = { full = if (full == R.raw.license_apache) null else R.raw.license_apache }) {
