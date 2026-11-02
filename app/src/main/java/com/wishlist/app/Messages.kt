@@ -149,7 +149,10 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
     var problem by remember { mutableStateOf(false) }
     var loaded by remember { mutableStateOf(Chat.conversations.isNotEmpty()) }
     var picking by remember { mutableStateOf(false) }
+    var menu by remember { mutableStateOf(false) }
+    var layoutDlg by remember { mutableStateOf(false) }
     Friends.load(ctx)
+    ChatLayout.load(ctx)
     LaunchedEffect(Unit) {
         while (true) {
             problem = try {
@@ -170,6 +173,14 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
                 navigationIcon = { MenuSlot() },
                 actions = {
                     IconButton(onClick = { picking = true }) { Icon(AppIcons.Add, tr("New chat")) }
+                    Box {
+                        IconButton(onClick = { menu = true }) { Icon(AppIcons.MoreVert, tr("More")) }
+                        androidx.compose.material3.DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                            androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(tr("Chat layout")) }, onClick = { menu = false; layoutDlg = true }
+                            )
+                        }
+                    }
                     ProfileButton(onProfile)
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
@@ -206,6 +217,7 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
         }
     }
     if (picking) NewChatDialog(onPick = { picking = false; ChatNav.peer = it }, onClose = { picking = false })
+    if (layoutDlg) ChatLayoutDialog { layoutDlg = false }
 }
 
 @Composable
@@ -304,6 +316,7 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
     var deleting by remember { mutableStateOf<ChatMessage?>(null) }
     var wishPick by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
+    ChatLayout.load(ctx)
 
     // Load, then ask for new messages (and read ticks) every 3 seconds while the chat is open.
     LaunchedEffect(peer) {
@@ -373,14 +386,12 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
                 )
                 else LazyColumn(
                     state = listState, modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                 ) {
                     items(msgs.size, key = { msgs[it].id }) { i ->
                         val m = msgs[i]
-                        val prev = msgs.getOrNull(i - 1)
-                        if (prev == null || dayLabel(prev.at) != dayLabel(m.at)) DayChip(dayLabel(m.at))
-                        Bubble(m, onLongPress = if (m.mine) ({ deleting = m }) else null)
+                        ChatRow(m, msgs.getOrNull(i - 1), msgs.getOrNull(i + 1), ChatLayout.current, name, peer,
+                            onLongPress = if (m.mine) ({ deleting = m }) else null)
                     }
                 }
             }
@@ -434,18 +445,126 @@ private fun DayChip(label: String) {
     }
 }
 
-/** A message bubble: yours on the right in the accent colour, theirs on the left in the card colour. */
+/*
+ * Chat layouts (2.99, owner): one for all chats, in the theme's colours and fonts (the theme never changes).
+ *  - chat:  a small tail on the corner, time and ticks inside the bubble, a date chip per day.
+ *  - calm:  rounded bubbles without a tail, more space; time and ticks under the last bubble of a group.
+ *  - text:  simple rectangles, no ticks; the time between groups.
+ *  - round: very round bubbles that merge within a group; their picture next to their last one; "Sent" / "Seen".
+ * A group: messages from the same person within five minutes of each other.
+ */
+object ChatLayout {
+    val KEYS = listOf("chat", "calm", "text", "round")
+    var current by mutableStateOf("chat")
+        private set
+    private var loaded = false
+
+    fun load(c: android.content.Context) {
+        if (loaded) return
+        loaded = true
+        current = c.applicationContext.getSharedPreferences("wishlist", android.content.Context.MODE_PRIVATE)
+            .getString("chat_layout", "chat")?.takeIf { it in KEYS } ?: "chat"
+    }
+
+    fun set(c: android.content.Context, key: String) {
+        current = key
+        c.applicationContext.getSharedPreferences("wishlist", android.content.Context.MODE_PRIVATE).edit().putString("chat_layout", key).apply()
+    }
+
+    fun name(key: String) = when (key) { "calm" -> tr("Calm"); "text" -> tr("Text"); "round" -> tr("Round"); else -> tr("Chat") }
+
+    fun about(key: String) = when (key) {
+        "calm" -> tr("Rounded bubbles with more space; the time under a group.")
+        "text" -> tr("Simple and plain, like text messages, without ticks.")
+        "round" -> tr("Very round bubbles that join up, with your friend’s picture.")
+        else -> tr("Bubbles with a small tail; time and ticks inside.")
+    }
+}
+
+private fun sameGroup(a: ChatMessage?, b: ChatMessage?) =
+    a != null && b != null && a.mine == b.mine && kotlin.math.abs(a.at - b.at) < 5 * 60_000L && dayLabel(a.at) == dayLabel(b.at)
+
+/** One message in the chosen layout, with what goes around it (date chips, times, the picture). */
+@Composable
+fun ChatRow(m: ChatMessage, prev: ChatMessage?, next: ChatMessage?, layout: String, name: String, peer: String, onLongPress: (() -> Unit)?) {
+    val cs = MaterialTheme.colorScheme
+    val first = !sameGroup(prev, m)
+    val last = !sameGroup(m, next)
+    val newDay = prev == null || dayLabel(prev.at) != dayLabel(m.at)
+    val hm = SimpleDateFormat("HH:mm", Locale.UK).format(Date(m.at))
+    when (layout) {
+        "text" -> {
+            // The time (with the day when it is another day) between groups, centred and quiet.
+            if (first) Text(
+                if (dayLabel(m.at) == tr("Today")) hm else dayLabel(m.at) + " " + hm,
+                style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(top = if (prev == null) 0.dp else 14.dp, bottom = 6.dp)
+            )
+            Bubble(m, RoundedCornerShape(6.dp), meta = false, onLongPress = onLongPress, modifier = Modifier.padding(bottom = 4.dp))
+        }
+        "calm" -> {
+            if (newDay) DayChip(dayLabel(m.at))
+            Bubble(m, RoundedCornerShape(18.dp), meta = false, onLongPress = onLongPress,
+                modifier = Modifier.padding(top = if (first && !newDay) 10.dp else 3.dp))
+            if (last) Meta(m, hm, Modifier.fillMaxWidth().padding(top = 3.dp, start = 6.dp, end = 6.dp))
+        }
+        "round" -> {
+            if (newDay) DayChip(dayLabel(m.at))
+            // Inner corners of a group are small, so the bubbles join up.
+            val big = 22.dp; val small = 6.dp
+            val shape = if (m.mine) RoundedCornerShape(big, if (first) big else small, if (last) big else small, big)
+            else RoundedCornerShape(if (first) big else small, big, big, if (last) big else small)
+            Row(
+                Modifier.fillMaxWidth().padding(top = if (first && !newDay) 10.dp else 2.dp),
+                verticalAlignment = Alignment.Bottom
+            ) {
+                if (!m.mine) {
+                    Box(Modifier.size(28.dp)) { if (last) Avatar(Friends.photos[peer], name, 28.dp) }
+                    Spacer(Modifier.size(6.dp))
+                }
+                Box(Modifier.weight(1f)) { Bubble(m, shape, meta = false, onLongPress = onLongPress) }
+            }
+            if (last && m.mine) Text(
+                if (m.read) tr("Seen") else tr("Sent"), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant,
+                textAlign = TextAlign.End, modifier = Modifier.fillMaxWidth().padding(top = 2.dp, end = 6.dp)
+            )
+        }
+        else -> {
+            if (newDay) DayChip(dayLabel(m.at))
+            // A small "tail": the corner nearest the sender is sharp on the first bubble of a group.
+            val r = if (LocalLook.current.design == "neo" || LocalLook.current.design == "cyber") 10.dp else 16.dp
+            val shape = if (m.mine) RoundedCornerShape(r, if (first) 2.dp else r, r, r) else RoundedCornerShape(if (first) 2.dp else r, r, r, r)
+            Bubble(m, shape, meta = true, onLongPress = onLongPress, modifier = Modifier.padding(top = if (first && !newDay) 8.dp else 2.dp))
+        }
+    }
+}
+
+/** The time and ticks under a group (Calm). */
+@Composable
+private fun Meta(m: ChatMessage, hm: String, modifier: Modifier) {
+    val cs = MaterialTheme.colorScheme
+    Row(modifier, horizontalArrangement = if (m.mine) Arrangement.End else Arrangement.Start) {
+        Text(hm, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
+        if (m.mine) Text(
+            if (m.read) " ✓✓" else " ✓", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold,
+            color = if (m.read) LocalLook.current.accent else cs.onSurfaceVariant
+        )
+    }
+}
+
+/**
+ * A message bubble: yours on the right in the accent colour, theirs on the left in the card colour, with the [shape]
+ * of the layout. [meta]: the time and ticks inside (Chat).
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun Bubble(m: ChatMessage, onLongPress: (() -> Unit)?) {
+private fun Bubble(m: ChatMessage, shape: androidx.compose.ui.graphics.Shape, meta: Boolean, onLongPress: (() -> Unit)?, modifier: Modifier = Modifier) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
     val uri = LocalUriHandler.current
-    val r = if (look.design == "neo" || look.design == "cyber") 10.dp else 18.dp
-    val shape = if (m.mine) RoundedCornerShape(r, r, 4.dp, r) else RoundedCornerShape(r, r, r, 4.dp)
     val fill = if (m.mine) look.accent else cs.surfaceVariant
     val ink = if (m.mine) look.onAccent else cs.onSurface
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = if (m.mine) Arrangement.End else Arrangement.Start) {
+    Row(modifier.fillMaxWidth(), horizontalArrangement = if (m.mine) Arrangement.End else Arrangement.Start) {
         if (m.mine) Spacer(Modifier.widthIn(min = 48.dp))
         Column(
             Modifier.widthIn(max = 300.dp).lookSurface(look, shape, fill, raised = look.design != "neu" || m.mine, depth = 3.dp)
@@ -476,7 +595,7 @@ private fun Bubble(m: ChatMessage, onLongPress: (() -> Unit)?) {
                 }
                 else -> Text(m.content.text, color = ink, style = MaterialTheme.typography.bodyLarge)
             }
-            Row(Modifier.align(Alignment.End).padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (meta) Row(Modifier.align(Alignment.End).padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(SimpleDateFormat("HH:mm", Locale.UK).format(Date(m.at)), color = ink.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
                 if (m.mine) Text(
                     if (m.read) " ✓✓" else " ✓", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold,
@@ -486,6 +605,51 @@ private fun Bubble(m: ChatMessage, onLongPress: (() -> Unit)?) {
         }
         if (!m.mine) Spacer(Modifier.widthIn(min = 48.dp))
     }
+}
+
+/** Messages ⋮ > Chat layout (and App settings): the four layouts, each with a small sample in the theme. */
+@Composable
+fun ChatLayoutDialog(onClose: () -> Unit) {
+    val ctx = LocalContext.current
+    val cs = MaterialTheme.colorScheme
+    ChatLayout.load(ctx)
+    val now = System.currentTimeMillis()
+    val sample = listOf(
+        ChatMessage(1, false, ChatContent(true, "text", tr("Any ideas for Mum?")), now - 120_000, true),
+        ChatMessage(2, true, ChatContent(true, "text", tr("The candle on her list!")), now - 60_000, true),
+        ChatMessage(3, true, ChatContent(true, "text", tr("I’ll reserve it.")), now, false)
+    )
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text(tr("Chat layout")) },
+        text = {
+            LazyColumn(Modifier.heightIn(max = 520.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(ChatLayout.KEYS) { k ->
+                    val on = ChatLayout.current == k
+                    Column(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
+                            .background(if (on) cs.primaryContainer.copy(alpha = 0.5f) else Color.Transparent)
+                            .clickable { ChatLayout.set(ctx, k) }.padding(10.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            androidx.compose.material3.RadioButton(selected = on, onClick = { ChatLayout.set(ctx, k) })
+                            Column {
+                                Text(ChatLayout.name(k), style = MaterialTheme.typography.titleMedium)
+                                Text(ChatLayout.about(k), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                            }
+                        }
+                        // The sample, drawn with the real layout (taps do nothing here).
+                        Column(Modifier.fillMaxWidth().padding(top = 6.dp).clip(RoundedCornerShape(12.dp)).background(cs.background).padding(8.dp)) {
+                            sample.forEachIndexed { i, m ->
+                                ChatRow(m, sample.getOrNull(i - 1), sample.getOrNull(i + 1), k, "Anna", "", onLongPress = null)
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onClose) { Text(tr("Done")) } }
+    )
 }
 
 /** The bar to type in: a gift (send a wish), the text field, and send. */

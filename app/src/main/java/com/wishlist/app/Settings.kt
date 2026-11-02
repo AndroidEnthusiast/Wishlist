@@ -136,6 +136,17 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                 }
                 Button(onClick = { ThemerNav.open = true }) { Text(tr("Themer")) }
             }
+            // The chat layout (2.99): only the shape of the messages, never the theme's colours. Also in Messages > ⋮.
+            var layoutDlg by remember { mutableStateOf(false) }
+            ChatLayout.load(ctx)
+            Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                    Text(tr("Chat layout"), style = MaterialTheme.typography.bodyLarge)
+                    Text(ChatLayout.name(ChatLayout.current), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                }
+                OutlinedButton(onClick = { layoutDlg = true }) { Text(tr("Change")) }
+            }
+            if (layoutDlg) ChatLayoutDialog { layoutDlg = false }
 
             SectionTitle(tr("Price alerts"))
             Text(

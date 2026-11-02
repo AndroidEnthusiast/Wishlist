@@ -704,5 +704,18 @@ val NL: Map<String, String> = mapOf(
     "It is deleted for both of you." to "Het wordt voor jullie allebei verwijderd.",
     "Message" to "Bericht",
     "Send a wish" to "Een wens sturen",
-    "No" to "Nee"
+    "No" to "Nee",
+    "Chat layout" to "Chatindeling",
+    "Calm" to "Rustig",
+    "Round" to "Rond",
+    "Chat" to "Chat",
+    "Rounded bubbles with more space; the time under a group." to "Ronde ballonnen met meer ruimte; de tijd onder een groepje.",
+    "Simple and plain, like text messages, without ticks." to "Eenvoudig en sober, zoals sms’jes, zonder vinkjes.",
+    "Very round bubbles that join up, with your friend’s picture." to "Heel ronde ballonnen die aansluiten, met de foto van je vriend.",
+    "Bubbles with a small tail; time and ticks inside." to "Ballonnen met een klein staartje; tijd en vinkjes erin.",
+    "Seen" to "Gezien",
+    "Sent" to "Verstuurd",
+    "Any ideas for Mum?" to "Ideeën voor mama?",
+    "The candle on her list!" to "De kaars op haar lijst!",
+    "I’ll reserve it." to "Ik reserveer hem."
 )
