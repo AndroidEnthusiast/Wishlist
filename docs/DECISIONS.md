@@ -185,6 +185,17 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - Wish views: both "Large cards" and "Two per row" stay, restyled per style.
 - Bottom bar: the second spot becomes **"Wishlists"** (opens the page with all your wishlists), as in the preview; new lists come from Home's + (replaces the earlier "keep New wishlist").
 
+## Messages (2 November 2026, owner interviewed; built in 2.98)
+- "Messages" replaces "Wishlists" in the bottom bar (Home, Messages, +, Price watch, Friends). Wishlists stay on Home and behind its number.
+- Chat only with friends; a WhatsApp-like list (picture, name, last message, time, unread bubble, newest on top, + to start a chat) and conversations in the selected style.
+- No push service: messages appear within ~3 s while a chat is open; when the app is closed a notification can take 15–30 minutes (background check). Push (Firebase) can come later.
+- Send text and wishes (a small card; tapping opens it). No photos.
+- Ticks: one when sent, two coloured when read. No typing or last seen.
+- Deleting is always for everyone, and only your own messages.
+- **End-to-end encrypted** (owner: "No one should feel their messages can be read by me"): only the two phones can read them; the server only stores locked text. Chat keys and messages are **not** in the backup file; a new phone or reinstall can't read old chats ("This message can't be read on this phone"), new messages work straight away.
+- Unfollowing keeps the history readable, but no new messages.
+- Messages older than **1 year** are deleted automatically (space).
+
 ## Open ideas (not decided)
 - Personal recovery key: an encrypted online backup of your lists, keys, creator rights and settings, restored with a key (optionally saved in Google Password Manager), plus automatic clean-up of lists nobody uses. Ask the owner before building.
   - Owner asked (1 November 2026, not a priority yet): pictures would go to Supabase file storage (free plan about 1 GB, separate from the 500 MB database). Back up only the cut-out pictures as shown (profile about 20 KB, list cover about 150–250 KB, own wish photos about 50 KB), not the originals: roughly 1–2 MB per active person. After a restore you can choose a new photo but not re-crop the old one.
