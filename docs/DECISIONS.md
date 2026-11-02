@@ -195,6 +195,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **End-to-end encrypted** (owner: "No one should feel their messages can be read by me"): only the two phones can read them; the server only stores locked text. Chat keys and messages are **not** in the backup file; a new phone or reinstall can't read old chats ("This message can't be read on this phone"), new messages work straight away.
 - Unfollowing keeps the history readable, but no new messages.
 - Messages older than **1 year** are deleted automatically (space).
+- **Chat layouts** (owner, 2.99): four layouts inspired by well-known chat apps but without their names (trademarks): **Chat** (like WhatsApp: small tail, time and ticks inside, a date chip per day), **Calm** (like Signal: rounded, no tail, more space, time under a group), **Text** (like SMS: simple rectangles, no ticks, times between groups), **Round** (like Messenger: very round merging bubbles, their picture next to their last message). One layout for all chats, chosen in Messages ⋮ > Chat layout (with a preview) and in App settings. Always the theme's colours and fonts: the Themer's choice never changes.
 
 ## Open ideas (not decided)
 - Personal recovery key: an encrypted online backup of your lists, keys, creator rights and settings, restored with a key (optionally saved in Google Password Manager), plus automatic clean-up of lists nobody uses. Ask the owner before building.
