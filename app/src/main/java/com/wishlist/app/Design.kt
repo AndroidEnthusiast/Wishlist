@@ -79,7 +79,32 @@ val ACCENTS: List<Accent> = listOf(
     Accent("pink", "Pink", 0xFFE5367A, 0xFFFF6FA3)
 )
 
-fun accentFor(key: String): Accent = ACCENTS.firstOrNull { it.key == key } ?: ACCENTS[0]
+fun accentFor(key: String): Accent = ACCENTS.firstOrNull { it.key == key } ?: customAccent(key) ?: ACCENTS[0]
+
+/**
+ * Any colour (owner, 2.101): picked on the colour ball in the Themer and stored as "#RRGGBB". Light uses it as it is;
+ * dark a lighter tone of it (a third of the way to white), as the five accents do.
+ */
+fun customAccent(key: String): Accent? {
+    if (!Regex("#[0-9A-Fa-f]{6}").matches(key)) return null
+    val rgb = key.substring(1).toLong(16)
+    val light = 0xFF000000L or rgb
+    val dark = lerp(Color(light), Color.White, 0.33f).toArgb().toLong() and 0xFFFFFFFFL
+    return Accent(key.uppercase(), "Your colour", light, dark)
+}
+
+/** A colour as "#RRGGBB". */
+fun colourKey(col: Color): String = "#%06X".format(col.toArgb() and 0xFFFFFF)
+
+/** Whether the accent [key] may be hard to read on the page in light or dark (contrast under 2.5:1): a warning only. */
+fun hardToRead(key: String): Boolean {
+    val ac = accentFor(key)
+    fun contrast(a: Color, b: Color): Float {
+        val la = a.luminance() + 0.05f; val lb = b.luminance() + 0.05f
+        return if (la > lb) la / lb else lb / la
+    }
+    return contrast(Color(ac.light), Color(0xFFF7F7F9)) < 2.5f || contrast(Color(ac.dark), Color(0xFF121214)) < 2.5f
+}
 
 /** Everything the screens need to draw the chosen look. Get it with LocalLook.current. */
 class Look(

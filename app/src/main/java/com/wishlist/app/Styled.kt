@@ -410,6 +410,9 @@ fun SavedFeedback(saves: Int, modifier: Modifier = Modifier, compact: Boolean = 
  * blurred once more on Android 12 and newer; a light veil (dark in dark mode) keeps it calm. Colours come from the photo,
  * the theme stays as it is.
  */
+/** The size (pixels) every wish photo is loaded at on cards, so all views share one copy in memory. */
+const val PHOTO_PX = 1000
+
 @Composable
 fun PhotoStage(url: String, description: String, small: Boolean, modifier: Modifier = Modifier) {
     val look = LocalLook.current
@@ -436,7 +439,11 @@ fun PhotoStage(url: String, description: String, small: Boolean, modifier: Modif
 @Composable
 fun PhotoCard(url: String, description: String, small: Boolean, modifier: Modifier = Modifier) {
     val look = LocalLook.current
-    val painter = rememberAsyncImagePainter(url)
+    val ctx = LocalContext.current
+    // One fixed size for every card (2.101): switching between large cards and two per row then finds the photo in
+    // memory at once. Before, each view asked for its own size, the photo was loaded again and flickered.
+    val request = remember(url) { ImageRequest.Builder(ctx).data(url).size(PHOTO_PX).build() }
+    val painter = rememberAsyncImagePainter(request)
     val drawable = (painter.state as? AsyncImagePainter.State.Success)?.result?.drawable
     val ratio = drawable?.let { d ->
         if (d.intrinsicWidth > 0 && d.intrinsicHeight > 0) d.intrinsicWidth.toFloat() / d.intrinsicHeight else null

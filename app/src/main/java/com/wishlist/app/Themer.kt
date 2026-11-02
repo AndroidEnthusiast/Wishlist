@@ -1,5 +1,8 @@
 package com.wishlist.app
 
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -103,7 +106,15 @@ fun ThemerScreen(onBack: () -> Unit) {
     var tryMode by remember { mutableStateOf(inUseMode) }
     var tryAccent by remember { mutableStateOf(accentFor(Repo.palette).key) }
     val changed = tryStyle != styleFor(Repo.design).key || tryMode != inUseMode || tryAccent != accentFor(Repo.palette).key
-    val apply = { Repo.setLook(ctx, tryStyle, tryMode, tryAccent) }
+    var picker by remember { mutableStateOf(false) }
+    val snack = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    // Apply, then "Theme applied" (owner, 2.101).
+    val apply = {
+        Repo.setLook(ctx, tryStyle, tryMode, tryAccent)
+        scope.launch { snack.showToast(tr("Theme applied")) }
+        Unit
+    }
 
     Scaffold(
         containerColor = cs.background,
@@ -116,7 +127,8 @@ fun ThemerScreen(onBack: () -> Unit) {
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
-        }
+        },
+        snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
         Column(Modifier.padding(pad).fillMaxSize()) {
             Spacer(Modifier.height(8.dp))
@@ -140,9 +152,9 @@ fun ThemerScreen(onBack: () -> Unit) {
                     DesignTile(tr(st.name), lookFor(st.key, tryAccent, tryMode), tryStyle == st.key) { tryStyle = st.key }
                 }
             }
-            // Light or dark, and the accent colour, in one row.
+            // Light or dark, then the accent colours with the rainbow dot (any colour, owner 2.101) as the last one.
             Row(
-                Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 10.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 listOf("light" to tr("Light"), "dark" to tr("Dark")).forEach { (k, n) ->
@@ -153,20 +165,39 @@ fun ThemerScreen(onBack: () -> Unit) {
                             .padding(horizontal = 14.dp, vertical = 8.dp)
                     )
                 }
-                Spacer(Modifier.weight(1f))
+            }
+            Row(
+                Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                 ACCENTS.forEach { ac ->
                     val on = ac.key == tryAccent
                     val col = Color(if (tryMode == "light") ac.light else ac.dark)
                     Box(
-                        Modifier.size(30.dp).clip(CircleShape)
+                        Modifier.size(34.dp).clip(CircleShape)
                             .border(if (on) 2.dp else 0.dp, if (on) cs.onSurface else Color.Transparent, CircleShape)
                             .padding(if (on) 4.dp else 0.dp).clip(CircleShape).background(col)
                             .clickable(onClickLabel = tr(ac.name)) { tryAccent = ac.key }
                     )
                 }
+                // The rainbow dot: opens the colour ball. Once a colour of your own is chosen, it shows in the middle.
+                val own = customAccent(tryAccent)
+                Box(
+                    Modifier.size(34.dp).clip(CircleShape)
+                        .border(if (own != null) 2.dp else 0.dp, if (own != null) cs.onSurface else Color.Transparent, CircleShape)
+                        .padding(if (own != null) 4.dp else 0.dp).rainbowDot()
+                        .clickable(onClickLabel = tr("Any colour")) { picker = true },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (own != null) Box(
+                        Modifier.size(14.dp).clip(CircleShape).background(Color(if (tryMode == "light") own.light else own.dark))
+                            .border(1.5.dp, Color.White, CircleShape)
+                    )
+                }
             }
         }
     }
+    if (picker) ColourPickerDialog(tryAccent, onPick = { tryAccent = it; picker = false }, onClose = { picker = false })
 }
 
 /** One style in the row under the preview: a small sample and its name. */

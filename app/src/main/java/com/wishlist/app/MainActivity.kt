@@ -190,6 +190,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Repo.load(this)
+        Show.load(this)
         Friends.load(this)
         handle(intent)
         addOnNewIntentListener { handle(it) }
@@ -1233,7 +1234,7 @@ fun CompactCard(
                 Modifier.align(Alignment.TopStart).padding(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically
             ) {
-                if ((drop || rise) && newP != null && oldP != null) {
+                if (Show["show_badge"] && (drop || rise) && newP != null && oldP != null) {
                     PriceBadge(
                         if (rise) "+${Math.round((newP / oldP - 1) * 100)}%" else "−${Math.round((1 - newP / oldP) * 100)}%",
                         rise, small = true
@@ -1362,7 +1363,7 @@ fun WishCard(
                 Modifier.align(Alignment.TopStart).padding(12.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically
             ) {
-                if ((drop || rise) && newP != null && oldP != null) {
+                if (Show["show_badge"] && (drop || rise) && newP != null && oldP != null) {
                     PriceBadge(
                         if (rise) "+${Math.round((newP / oldP - 1) * 100)}%" else "−${Math.round((1 - newP / oldP) * 100)}%",
                         rise, small = false
@@ -1406,7 +1407,7 @@ fun WishCard(
                     w.title, style = MaterialTheme.typography.titleMedium,
                     maxLines = 2, overflow = TextOverflow.Ellipsis, color = ink
                 )
-                if (w.desc.isNotBlank()) {
+                if (Show["show_desc"] && w.desc.isNotBlank()) {
                     Text(
                         w.desc, style = MaterialTheme.typography.bodyMedium,
                         maxLines = 2, overflow = TextOverflow.Ellipsis, color = muted

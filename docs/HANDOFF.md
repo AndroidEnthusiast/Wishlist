@@ -106,9 +106,11 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 - v2.95: a full app review, interviewing the owner with pop-up questions (now a standing rule in CLAUDE.md); all answers in DECISIONS.md "App review"; everything built in one update (owner's wish).
 - v2.98: Messages (end-to-end encrypted chat with friends, `supabase-chat.sql`, checked with `tests/sql/chat_test.sql`). v2.99: four chat layouts (Chat, Calm, Text, Round) in Messages ⋮ and App settings, always in the theme's colours.
 - v2.100: "Added on" removed from wish cards; Blur stage pictures (preview first, owner chose); two per row is the default for new users.
+- v2.101: flicker fix when switching views, "What you see" and "Notifications" switches in App settings (owner interviewed), any accent colour (rainbow dot), "Theme applied", chat layouts removed, Messages tabs Chats / Friends with a "Start a chat" chip.
 - New `supabase-friends.sql` (the owner runs it by hand); checked on a local PostgreSQL with `tests/sql/friends_test.sql` (32 checks). The Android code could not be compiled here (no Android SDK); checked by hand and by the GitHub build.
 
 ## Next session
+- **Check 2.101 on the phone**: does switching views still flicker (the fix could not be seen here)? The colour ball, the Messages tabs, and that birthday alerts are now off by default (owner's choice; they were on before).
 - **Ask how the Blur stage pictures look on the phone** in all five styles (especially the Neumorphism dent and dark mode) and on the web pages. Not seen here: the blur on Android 11 and older (a stretched tiny copy instead of a real blur) and real shop photos.
 - **Check Messages**: did the owner run `supabase-chat.sql`? Without it, Messages says it can't reach the server. Ask how chatting feels between two phones (polling delay, ticks, delete) and how the four chat layouts look; none of that could be seen here.
 - **First: ask how the new look (v2.97) feels** in all five styles, light and dark. If the owner dislikes it, revert the look to v2.96 (commit 123322e) as promised. Could not be checked here: how the fonts download (Google Fonts via Play services), neumorphic shadows on older phones, and the chaos tilt on long lists.

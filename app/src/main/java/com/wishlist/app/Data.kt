@@ -235,7 +235,7 @@ object Repo {
             p.edit().putBoolean("look_v2", true).apply()
         } else {
             design = styleFor(oldStyle).key
-            if (ACCENTS.none { it.key == palette }) palette = "blue"
+            if (ACCENTS.none { it.key == palette } && customAccent(palette) == null) palette = "blue"
         }
         font = p.getString("font", "google_sans") ?: "google_sans"
         instantDelete = p.getBoolean("instant_delete", false)

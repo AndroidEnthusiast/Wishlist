@@ -114,9 +114,12 @@ object Notifications {
         prefs(c).edit().putString(KEY, a.toString()).apply()
     }
 
-    /** What the page shows: drops and rises as switched on in App settings, and every other kind. */
+    /** What the page shows: only the kinds switched on in App settings > Notifications. */
     val shown: List<PriceNote>
-        get() = all.filter { it.kind != "price" || if (it.pct < 0) Repo.notifyDrops else Repo.notifyRises }
+        get() = all.filter {
+            if (it.kind == "price") (if (it.pct < 0) Repo.notifyDrops else Repo.notifyRises)
+            else Show.keyFor(it.kind)?.let { k -> Show[k] } ?: true
+        }
 
     /**
      * Adds a notification that isn't about a price (see [PriceNote.kind]). The same kind for the same place and wish

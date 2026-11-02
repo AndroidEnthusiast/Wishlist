@@ -111,6 +111,7 @@ object Alerts {
             }
         )
         Notifications.add(c, "gift_binned", "s:$code", w.title, w.image, w.id)
+        if (!Show.on(c, "nt_bin")) return // switched off in App settings > Notifications (2.101)
         val id = code.hashCode() * 31 + w.id.hashCode() + 7
         val text = if (w.binBy.isNotBlank()) tr("“%1\$s” on %2\$s was moved to the bin by %3\$s.", w.title, listName, w.binBy)
         else tr("“%1\$s” on %2\$s was moved to the bin.", w.title, listName)
@@ -142,6 +143,7 @@ object Alerts {
             }
         )
         Notifications.add(c, "gift_gone", "c:$code", title, "", id)
+        if (!Show.on(c, "nt_gone")) return
         val nid = code.hashCode() * 31 + id.hashCode() + 11
         val text = tr("“%1\$s” was taken off %2\$s. Have a look for another gift.", title, listName)
         val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.FRIEND_CODE, code)
@@ -163,6 +165,7 @@ object Alerts {
      * Friends: someone sent you a friend request ([request]), or approved yours. Tapping opens the Friends tab.
      */
     fun notifyFriend(c: Context, id: String, name: String, request: Boolean) {
+        if (!Show.on(c, if (request) "nt_req" else "nt_ok")) return
         val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         nm.createNotificationChannel(
             NotificationChannel(FRIENDS_CHANNEL, tr("Friends"), NotificationManager.IMPORTANCE_HIGH).apply {
@@ -190,6 +193,7 @@ object Alerts {
 
     /** A friend's birthday is in [days] days (2.95). Tapping opens that friend's page. */
     fun notifyBirthday(c: Context, id: String, name: String, days: Int) {
+        if (!Show.on(c, "nt_bday")) return
         val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         nm.createNotificationChannel(
             NotificationChannel(FRIENDS_CHANNEL, tr("Friends"), NotificationManager.IMPORTANCE_HIGH).apply {
@@ -217,6 +221,7 @@ object Alerts {
 
     /** A new message from friend [id] (2.98). Tapping opens the conversation. */
     fun notifyMessage(c: Context, id: String, name: String, text: String) {
+        if (!Show.on(c, "nt_msg")) return
         val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         nm.createNotificationChannel(
             NotificationChannel(MESSAGES_CHANNEL, tr("Messages"), NotificationManager.IMPORTANCE_HIGH).apply {

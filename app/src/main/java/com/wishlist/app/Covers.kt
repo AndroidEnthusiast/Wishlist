@@ -147,7 +147,7 @@ fun ListHeader(wishes: List<Wish>) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         if (cover != null) ListCoverPicture(cover)
         // Only on your own lists (owner, 2.90): a group wishlist's total isn't what its givers need.
-        if (Shared.active == null) ListSummaryCard(wishes)
+        if (Shared.active == null && Show["show_summary"]) ListSummaryCard(wishes)
     }
 }
 

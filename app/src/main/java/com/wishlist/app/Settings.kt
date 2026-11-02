@@ -136,17 +136,11 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                 }
                 Button(onClick = { ThemerNav.open = true }) { Text(tr("Themer")) }
             }
-            // The chat layout (2.99): only the shape of the messages, never the theme's colours. Also in Messages > ⋮.
-            var layoutDlg by remember { mutableStateOf(false) }
-            ChatLayout.load(ctx)
-            Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f).padding(end = 12.dp)) {
-                    Text(tr("Chat layout"), style = MaterialTheme.typography.bodyLarge)
-                    Text(ChatLayout.name(ChatLayout.current), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
-                }
-                OutlinedButton(onClick = { layoutDlg = true }) { Text(tr("Change")) }
-            }
-            if (layoutDlg) ChatLayoutDialog { layoutDlg = false }
+            // What you see (owner, 2.101): for all your lists, only on this phone. Everything on by default.
+            SectionTitle(tr("What you see"))
+            SettingSwitch(tr("Price change on pictures"), tr("The −20% or +5% label on a wish’s picture."), Show["show_badge"]) { Show.set(ctx, "show_badge", it) }
+            SettingSwitch(tr("Descriptions"), tr("The shop’s description on the large cards."), Show["show_desc"]) { Show.set(ctx, "show_desc", it) }
+            SettingSwitch(tr("List summary"), tr("The number of wishes and the total value at the top of a list."), Show["show_summary"]) { Show.set(ctx, "show_summary", it) }
 
             SectionTitle(tr("Price alerts"))
             Text(
@@ -183,23 +177,6 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                 else tr("Last check: %s", DateUtils.getRelativeTimeSpanString(Repo.lastCheck)),
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
             )
-            // A sub-heading, as in Android's own settings: the switches below are about notifications.
-            Text(tr("Notifications"), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
-            // Drops are on unless switched off; increases only when switched on.
-            Row(
-                Modifier.fillMaxWidth().clickable { Repo.setNotifyDrops(ctx, !Repo.notifyDrops) },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(tr("Price drops"), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f).padding(end = 12.dp))
-                Switch(checked = Repo.notifyDrops, onCheckedChange = { Repo.setNotifyDrops(ctx, it) })
-            }
-            Row(
-                Modifier.fillMaxWidth().clickable { Repo.setNotifyRises(ctx, !Repo.notifyRises) },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(tr("Price increases"), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f).padding(end = 12.dp))
-                Switch(checked = Repo.notifyRises, onCheckedChange = { Repo.setNotifyRises(ctx, it) })
-            }
             // Only while Android may hold back the checks (not Unrestricted): a way to allow it after "Not now".
             // Checked again each time you come back to the app (after Android's question).
             var bgOk by remember { mutableStateOf(Background.allowed(ctx)) }
@@ -221,6 +198,18 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                     TextButton(onClick = { Background.request(ctx) }) { Text(tr("Allow")) }
                 }
             }
+
+            // Every kind of notification the app sends, each with its switch (owner, 2.101: "this helps me too to
+            // remember what notifications are being sent"). Off ones are also left off the Notifications page.
+            SectionTitle(tr("Notifications"))
+            SettingSwitch(tr("Price drops"), tr("A wish got cheaper."), Repo.notifyDrops) { Repo.setNotifyDrops(ctx, it) }
+            SettingSwitch(tr("Price increases"), tr("A wish got more expensive."), Repo.notifyRises) { Repo.setNotifyRises(ctx, it) }
+            SettingSwitch(tr("Reserved gift moved to the bin"), tr("Someone moved a gift you reserved to the bin."), Show["nt_bin"]) { Show.set(ctx, "nt_bin", it) }
+            SettingSwitch(tr("Reserved gift taken off a list"), tr("A gift you reserved is no longer on a friend’s list."), Show["nt_gone"]) { Show.set(ctx, "nt_gone", it) }
+            SettingSwitch(tr("Friend requests"), tr("Someone wants to be your friend."), Show["nt_req"]) { Show.set(ctx, "nt_req", it) }
+            SettingSwitch(tr("Friend request accepted"), tr("A friend approved your request."), Show["nt_ok"]) { Show.set(ctx, "nt_ok", it) }
+            SettingSwitch(tr("Friends’ birthdays"), tr("A few days before a friend’s birthday."), Show["nt_bday"]) { Show.set(ctx, "nt_bday", it) }
+            SettingSwitch(tr("New messages"), tr("A friend sent you a message."), Show["nt_msg"]) { Show.set(ctx, "nt_msg", it) }
 
             // Export and import, to move to a new phone (owner, 2.95).
             SectionTitle(tr("Backup"))
@@ -270,4 +259,19 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
         }
     }
     if (licences) LicencesDialog { licences = false }
+}
+
+/** One switch in App settings: a title, one quiet line about it, and the switch (the whole row can be tapped). */
+@Composable
+private fun SettingSwitch(title: String, about: String, on: Boolean, onChange: (Boolean) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clickable { onChange(!on) }.padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Text(about, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Switch(checked = on, onCheckedChange = onChange)
+    }
 }
