@@ -54,12 +54,14 @@ import androidx.compose.ui.unit.sp
 fun AppBottomBar(
     current: String,
     onHome: () -> Unit,
-    onWishlists: () -> Unit,
+    onMessages: () -> Unit,
     onAdd: () -> Unit,
     onPrices: () -> Unit,
     onFriends: () -> Unit,
     // Friend requests wait for your approval.
-    friendsDot: Boolean = false
+    friendsDot: Boolean = false,
+    // Unread messages.
+    messagesDot: Boolean = false
 ) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
@@ -85,7 +87,7 @@ fun AppBottomBar(
             horizontalArrangement = Arrangement.SpaceAround, verticalAlignment = Alignment.CenterVertically
         ) {
             BarItem(tr("Home"), current == "home", onHome) { Icon(AppIcons.Home, null, tint = it) }
-            BarItem(tr("Wishlists"), current == "wishlists", onWishlists) { WishlistIcon(it) }
+            BarItem(tr("Messages"), current == "messages", onMessages, dot = messagesDot) { ChatIcon(it) }
             // Add wish: only a + in the accent colour, no words.
             Box(
                 Modifier.size(46.dp).then(

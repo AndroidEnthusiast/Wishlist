@@ -471,6 +471,12 @@ private fun FriendPage(f: Person, snack: SnackbarHostState) {
             TopAppBar(
                 title = { Text(f.name, fontWeight = look.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = { IconButton(onClick = { FriendsNav.reset() }) { Icon(AppIcons.ArrowBack, tr("Back")) } },
+                // Message this friend (2.98).
+                actions = {
+                    IconButton(onClick = { ChatNav.peer = f.id; ChatNav.openTab = true }) {
+                        ChatIcon(MaterialTheme.colorScheme.onSurface)
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
         },

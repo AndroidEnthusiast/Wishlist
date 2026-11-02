@@ -181,6 +181,8 @@ class MainActivity : ComponentActivity() {
         const val HISTORY_ID = "history_id"
         /** A friend request (or an approval) alert: open the Friends tab. */
         const val OPEN_FRIENDS = "open_friends"
+        /** A new message alert: the friend (profile id) whose conversation to open. */
+        const val OPEN_CHAT = "open_chat"
         /** A birthday alert: the friend (profile id) whose page to open. */
         const val OPEN_FRIEND = "open_friend"
     }
@@ -241,6 +243,12 @@ class MainActivity : ComponentActivity() {
         if (i != null && i.hasExtra(HISTORY_ID)) {
             HistoryNav.open = i.getLongExtra(HISTORY_ID, 0L)
             i.removeExtra(HISTORY_ID)
+            return
+        }
+        if (i != null && i.hasExtra(OPEN_CHAT)) {
+            ChatNav.peer = i.getStringExtra(OPEN_CHAT)
+            i.removeExtra(OPEN_CHAT)
+            ChatNav.openTab = true
             return
         }
         if (i != null && i.hasExtra(OPEN_FRIEND)) {
@@ -398,6 +406,8 @@ fun App(
     // Notifications (menu, above Bin): price drops and rises, with a red dot while there is something new.
     var notesOpen by remember { mutableStateOf(false) }
     var friendsOpen by remember { mutableStateOf(false) }
+    // Messages (bottom bar, 2.98): the conversations, or one conversation (ChatNav.peer).
+    var messagesOpen by remember { mutableStateOf(false) }
     // Your profile (menu > Profile, or your picture on Friends): photo, name and friend code (FriendsUi.kt).
     var profileOpen by remember { mutableStateOf(false) }
 
@@ -408,7 +418,7 @@ fun App(
      */
     fun closeAll() {
         settings = false; binOpen = false; friendCode = null; listSettings = false
-        pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false
+        pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false; messagesOpen = false
     }
     var createChoice by remember { mutableStateOf(false) }
     // "Add wish" from the bottom bar: the form with "Save to", starting at the list on screen (or the last one used).
@@ -505,11 +515,19 @@ fun App(
     }
     // Back from a shared wishlist goes to My wishlist.
     // Back from a list goes to the dashboard; back from Prices or Friends to where you were.
-    BackHandler(enabled = !drawer.isOpen && !settings && !binOpen && friendCode == null && !listSettings && !hub && !pricesOpen && !friendsOpen && !notesOpen) {
+    BackHandler(enabled = !drawer.isOpen && !settings && !binOpen && friendCode == null && !listSettings && !hub && !pricesOpen && !friendsOpen && !notesOpen && !messagesOpen) {
         hub = true
     }
-    BackHandler(enabled = !drawer.isOpen && !settings && !binOpen && friendCode == null && (pricesOpen || friendsOpen || notesOpen)) {
-        pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false
+    BackHandler(enabled = !drawer.isOpen && !settings && !binOpen && friendCode == null && (pricesOpen || friendsOpen || notesOpen || messagesOpen)) {
+        pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false; messagesOpen = false
+    }
+    // A new message alert, or "Message" on a friend's page: Messages, at that conversation.
+    LaunchedEffect(ChatNav.openTab) {
+        if (ChatNav.openTab) {
+            ChatNav.openTab = false
+            closeAll()
+            messagesOpen = true
+        }
     }
 
     // Back from Profile goes to where you were (Friends, when you came from your picture there).
@@ -526,6 +544,8 @@ fun App(
     LaunchedEffect(Unit) {
         Friends.load(ctx)
         if (Config.enabled && Friends.hasProfile(ctx)) try { Friends.refresh(ctx) } catch (e: Exception) {}
+        // Unread messages show as a red dot on Messages from the start.
+        if (Config.enabled && Friends.hasProfile(ctx)) try { Chat.refresh(ctx) } catch (e: Exception) {}
     }
 
     val openMenu: () -> Unit = { scope.launch { drawer.open() } }
@@ -545,10 +565,12 @@ fun App(
     val inFriend = friendsOpen && FriendsNav.deep && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen && !profileOpen
     // A page behind one of the numbers on Home (Overview.kt) has a back arrow too.
     val inOverview = hub && HubNav.page != null && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen &&
-        !profileOpen && !pricesOpen && !friendsOpen
+        !profileOpen && !pricesOpen && !friendsOpen && !messagesOpen
+    // An open conversation has a back arrow too, and no bottom bar.
+    val inChat = messagesOpen && ChatNav.peer != null && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen && !profileOpen
     ModalNavigationDrawer(
         drawerState = drawer,
-        gesturesEnabled = !inListSettings && !inThemer && !inFriend && !inOverview,
+        gesturesEnabled = !inListSettings && !inThemer && !inFriend && !inOverview && !inChat,
         drawerContent = {
             val look = LocalLook.current
             ModalDrawerSheet(
@@ -579,7 +601,7 @@ fun App(
                         )
                     }
                     // Only the screen that is open is highlighted: one item at a time.
-                    val elsewhere = settings || binOpen || friendCode != null || notesOpen || pricesOpen || friendsOpen || profileOpen
+                    val elsewhere = settings || binOpen || friendCode != null || notesOpen || pricesOpen || friendsOpen || profileOpen || messagesOpen
                     val onList = !elsewhere && !hub
                     DrawerItem(tr("Home"), AppIcons.Home, hub && !elsewhere) {
                         HubNav.page = null
@@ -665,7 +687,7 @@ fun App(
     ) {
         // The screen behind the menu blurs a little while the menu is open.
         val fr = Repo.friends.firstOrNull { it.code == friendCode }
-        val showBar = !settings && !binOpen && fr == null && !listSettings && !notesOpen && !profileOpen
+        val showBar = !settings && !binOpen && fr == null && !listSettings && !notesOpen && !profileOpen && !inChat
         Column(Modifier.fillMaxSize().then(if (blurRadius > 0.dp) Modifier.blur(blurRadius) else Modifier)) {
         // With the bottom bar, the screens above it don't leave room for the phone's own navigation bar again.
         Box(Modifier.weight(1f).then(if (showBar) Modifier.consumeWindowInsets(WindowInsets.navigationBars) else Modifier)) {
@@ -690,6 +712,7 @@ fun App(
                 }
                 pricesOpen -> PricesScreen(snack, onProfile = { profileOpen = true })
                 friendsOpen -> FriendsScreen(snack, onProfile = { profileOpen = true }, onOpenLink = { friendCode = it })
+                messagesOpen -> MessagesScreen(snack, onProfile = { profileOpen = true })
                 hub -> HubScreen(
                     snack,
                     onOpenMine = { openMine(it) },
@@ -713,31 +736,35 @@ fun App(
         if (showBar) {
             AppBottomBar(
                 current = when {
-                    pricesOpen -> "prices"; friendsOpen -> "friends"
-                    hub && HubNav.page == "lists" -> "wishlists"; hub -> "home"; else -> ""
+                    pricesOpen -> "prices"; friendsOpen -> "friends"; messagesOpen -> "messages"
+                    hub -> "home"; else -> ""
                 },
                 onHome = { HubNav.page = null; closeAll(); hub = true },
-                // "Wishlists" (owner, 2.97): the page with all your wishlists; new lists come from Home's +.
-                onWishlists = { closeAll(); hub = true; HubNav.page = "lists" },
+                // "Messages" (owner, 2.98) took the place of "Wishlists"; your wishlists are on Home and its number.
+                onMessages = {
+                    if (messagesOpen) ChatNav.peer = null
+                    pricesOpen = false; friendsOpen = false; messagesOpen = true
+                },
                 onAdd = {
-                    val onAList = !hub && !pricesOpen && !friendsOpen
+                    val onAList = !hub && !pricesOpen && !friendsOpen && !messagesOpen
                     addTarget = if (onAList) (Shared.active ?: MyLists.saveKey(Repo.openMine, false)) else Repo.lastSaveTo
                     prefill = ""; adding = true
                 },
-                onPrices = { pricesOpen = true; friendsOpen = false },
+                onPrices = { pricesOpen = true; friendsOpen = false; messagesOpen = false },
                 onFriends = {
                     // Tapping Friends again goes back to its first page.
                     if (friendsOpen) FriendsNav.reset()
-                    friendsOpen = true; pricesOpen = false
+                    friendsOpen = true; pricesOpen = false; messagesOpen = false
                 },
-                friendsDot = Friends.waiting > 0
+                friendsDot = Friends.waiting > 0,
+                messagesDot = Chat.unreadTotal > 0
             )
         }
         }
     }
 
     // The menu button lives above the menu so it can spin into an X and close it.
-    if (!inListSettings && !inThemer && !inFriend && !inOverview) Box(
+    if (!inListSettings && !inThemer && !inFriend && !inOverview && !inChat) Box(
         Modifier.windowInsetsPadding(TopAppBarDefaults.windowInsets).height(64.dp).padding(start = 4.dp),
         contentAlignment = Alignment.CenterStart
     ) {

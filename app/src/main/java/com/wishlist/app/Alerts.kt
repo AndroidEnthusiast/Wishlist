@@ -22,6 +22,7 @@ object Alerts {
     const val CHANNEL = "price_drops"
     private const val BIN_CHANNEL = "reserved_bin"
     private const val FRIENDS_CHANNEL = "friends"
+    private const val MESSAGES_CHANNEL = "messages"
 
     /** Creates the notification channel (high importance, so the alert pops up). Safe to call again and again. */
     fun ensureChannel(c: Context) {
@@ -205,6 +206,30 @@ object Alerts {
         val n = NotificationCompat.Builder(c, FRIENDS_CHANNEL)
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle(title)
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+        nm.notify(nid, n)
+    }
+
+    /** A new message from friend [id] (2.98). Tapping opens the conversation. */
+    fun notifyMessage(c: Context, id: String, name: String, text: String) {
+        val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        nm.createNotificationChannel(
+            NotificationChannel(MESSAGES_CHANNEL, tr("Messages"), NotificationManager.IMPORTANCE_HIGH).apply {
+                description = tr("New messages from your friends")
+            }
+        )
+        val nid = id.hashCode() * 31 + 23
+        val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_CHAT, id)
+            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        val pi = PendingIntent.getActivity(c, nid, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val n = NotificationCompat.Builder(c, MESSAGES_CHANNEL)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle(name.ifBlank { tr("Someone") })
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
             .setPriority(NotificationCompat.PRIORITY_HIGH)

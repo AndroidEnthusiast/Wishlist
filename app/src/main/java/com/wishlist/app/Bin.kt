@@ -253,6 +253,11 @@ class BinWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, p
             Friends.poll(c)
         } catch (e: Exception) {
         }
+        // New messages (Chat.kt).
+        try {
+            Chat.poll(c)
+        } catch (e: Exception) {
+        }
         return Result.success()
     }
 }

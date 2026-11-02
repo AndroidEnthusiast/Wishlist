@@ -185,7 +185,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - Wish views: both "Large cards" and "Two per row" stay, restyled per style.
 - Bottom bar: the second spot becomes **"Wishlists"** (opens the page with all your wishlists), as in the preview; new lists come from Home's + (replaces the earlier "keep New wishlist").
 
-## Messages (2 November 2026, owner interviewed; built in 2.98)
+## Messages (2 November 2026, owner interviewed; built in 2.98; run `supabase-chat.sql`)
 - "Messages" replaces "Wishlists" in the bottom bar (Home, Messages, +, Price watch, Friends). Wishlists stay on Home and behind its number.
 - Chat only with friends; a WhatsApp-like list (picture, name, last message, time, unread bubble, newest on top, + to start a chat) and conversations in the selected style.
 - No push service: messages appear within ~3 s while a chat is open; when the app is closed a notification can take 15–30 minutes (background check). Push (Firebase) can come later.
