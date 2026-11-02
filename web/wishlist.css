@@ -40,13 +40,27 @@ main { max-width: 1100px; margin: 0 auto; padding: 8px 16px 48px; }
 .chip.on { background: var(--container); color: var(--on-container); border-color: transparent; }
 .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
 .card { background: var(--card); border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; }
-.card.dim .body, .card.dim .pic img { opacity: .6; }
+.card.dim .body, .card.dim .pic img:not(.back) { opacity: .6; }
+/* Blur stage (owner, 2.100): a soft blur of the photo fills the picture area (4:3, square when two per row) and the
+   photo itself sits big and uncut in the middle, as a small card with a soft shadow. */
 .pic {
-  position: relative; display: flex; align-items: center; justify-content: center; height: 170px;
-  background: #fff; text-decoration: none;
+  position: relative; display: flex; align-items: center; justify-content: center; aspect-ratio: 4 / 3;
+  max-width: 100%; overflow: hidden; background: var(--container); text-decoration: none;
 }
-.pic.empty { background: var(--container); font-size: 3rem; }
-.pic img { max-width: 100%; max-height: 100%; padding: 8px; object-fit: contain; }
+.pic.empty { font-size: 3rem; }
+.pic img.back {
+  position: absolute; inset: -24px; width: calc(100% + 48px); height: calc(100% + 48px); max-width: none; max-height: none;
+  padding: 0; object-fit: cover; filter: blur(22px) saturate(1.35); border-radius: 0; box-shadow: none; pointer-events: none;
+}
+.pic::after { content: ""; position: absolute; inset: 0; background: var(--pic-veil, rgba(255,255,255,.18)); pointer-events: none; }
+.pic.empty::after { display: none; }
+.pic > :not(img) { z-index: 2; }
+.pic img:not(.back) {
+  position: relative; z-index: 1; max-width: calc(100% - 28px); max-height: calc(100% - 28px); object-fit: contain;
+  border-radius: 12px; background: #fff; box-shadow: 0 6px 22px rgba(0,0,0,.22);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --pic-veil: rgba(0,0,0,.28); } }
+:root[data-theme="dark"] { --pic-veil: rgba(0,0,0,.28); }
 .badge {
   position: absolute; top: 12px; padding: 4px 10px; border-radius: 8px; font-size: .8rem; font-weight: 500;
 }
@@ -102,8 +116,8 @@ form.code input {
 .grid.two { gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (min-width: 720px) { .grid.two { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); } }
 .card.compact { border-radius: 16px; }
-.card.compact .pic { height: 130px; }
-.card.compact .pic img { padding: 6px; }
+.card.compact .pic { aspect-ratio: 1 / 1; }
+.card.compact .pic img:not(.back) { max-width: calc(100% - 18px); max-height: calc(100% - 18px); border-radius: 10px; }
 .card.compact .pic.empty { font-size: 2.2rem; }
 .card.compact .badge { top: 8px; padding: 2px 8px; font-size: .72rem; }
 .card.compact .badge.drop { left: 8px; }

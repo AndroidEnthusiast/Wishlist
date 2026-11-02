@@ -30,9 +30,13 @@ async function boot(opts) {
   });
   await fake.attach(ctx);
   const known = opts.name === undefined ? "Sam" : opts.name;
-  await ctx.addInitScript(([name]) => {
+  // Since 2.100 the default view is two per row; most checks look at the large cards, so they start there
+  // (opts.view: null keeps the real default).
+  const view = opts.view === undefined ? "list" : opts.view;
+  await ctx.addInitScript(([name, view]) => {
     try { if (name !== null && !localStorage.getItem("wl_asked")) { localStorage.setItem("wl_name", name); localStorage.setItem("wl_asked", "1"); } } catch (e) {}
-  }, [known]);
+    try { if (view !== null && !localStorage.getItem("wl_view")) localStorage.setItem("wl_view", view); } catch (e) {}
+  }, [known, view]);
   const page = await ctx.newPage();
   const errors = [];
   page.on("pageerror", e => errors.push(String(e)));

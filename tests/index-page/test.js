@@ -35,7 +35,9 @@ function fakeFetch(url, opts) {
 
 const ANDROID_UA = "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36";
 const IPHONE_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
-async function load(search, pre, ua) {
+// Since 2.100 new visitors start with two per row; most checks look at the large cards, so they start there
+// (realDefault: keep the page's own default).
+async function load(search, pre, ua, realDefault) {
   const vc = new (require("jsdom").VirtualConsole)();
   const navs = [];
   vc.on("jsdomError", e => { if (/navigation/i.test(String(e.message))) navs.push(String(e.message)); });
@@ -45,6 +47,7 @@ async function load(search, pre, ua) {
     beforeParse(w) {
       w.fetch = fakeFetch;
       Object.defineProperty(w.navigator, "userAgent", { configurable: true, value: ua || ANDROID_UA });
+      if (!realDefault) { try { w.localStorage.setItem("wl_view", "list"); } catch (e) { } }
       if (pre) pre(w);
     }
   });
@@ -167,11 +170,13 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   let rem = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_view", "grid"));
   check("remembered: opens in two per row", !!D(rem).querySelector(".grid.two") && D(rem).querySelectorAll("#views .vbtn")[1].classList.contains("on"));
   let junk = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_view", "<b>x</b>"));
-  check("junk stored value falls back to large cards", D(junk).querySelector(".grid").className === "grid");
+  check("junk stored value falls back to the default, two per row", D(junk).querySelector(".grid").className === "grid two");
+  let fresh = await load("?c=ABCD2345", null, null, true);
+  check("a new visitor starts with two per row (2.100)", !!D(fresh).querySelector(".grid.two") && D(fresh).querySelectorAll(".card.compact").length === 3);
 
   // the removed "images only" view falls back to large cards
   let g2 = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_view", "gallery"));
-  check("old images-only choice opens as large cards", D(g2).querySelector(".grid").className === "grid" && D(g2).querySelectorAll(".card").length === 3 && !D(g2).querySelector(".tile"));
+  check("old images-only choice opens as the default, two per row", D(g2).querySelector(".grid").className === "grid two" && D(g2).querySelectorAll(".card").length === 3 && !D(g2).querySelector(".tile"));
 
   // no categories: drop-down hidden, view buttons still there
   store.noCats = true;

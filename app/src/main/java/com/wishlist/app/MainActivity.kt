@@ -1212,8 +1212,8 @@ fun CompactCard(
     ) {
         CompositionLocalProvider(LocalContentColor provides ink) {
         Box(
-            Modifier.padding(look.inset(small = true)).fillMaxWidth().height(130.dp)
-                .lookMat(look, look.pictureShape(w.id, small = true), look.pictureBg(w.id, w.image.isNotEmpty()))
+            Modifier.padding(look.inset(small = true)).fillMaxWidth().aspectRatio(1f)
+                .lookMat(look, look.pictureShape(w.id, small = true), look.pictureBg(w.id, w.image.isNotEmpty()), over = true)
                 .combinedClickable(
                     enabled = w.image.isNotEmpty() || w.url.isNotBlank() || onLongPress != null,
                     onClickLabel = if (w.image.isNotEmpty()) tr("View picture") else null,
@@ -1226,7 +1226,7 @@ fun CompactCard(
             contentAlignment = Alignment.Center
         ) {
             if (w.image.isNotEmpty()) {
-                PhotoCard(w.image, w.title, small = true)
+                PhotoStage(w.image, w.title, small = true)
             } else PlaceholderIcon("gift", 36.dp)
             // Top left: the price change.
             Row(
@@ -1270,9 +1270,9 @@ fun CompactCard(
                     if (newP != null) money(newP, w.currency) else tr("No price"),
                     style = MaterialTheme.typography.titleMedium, fontWeight = look.priceWeight, fontFamily = look.display,
                     maxLines = 1, color = if (drop) look.drop else if (rise) look.rise else ink,
-                    modifier = Modifier.padding(top = 2.dp)
+                    modifier = Modifier.padding(top = 2.dp, bottom = 6.dp)
                 )
-                AddedOnText(w, muted, Modifier.padding(bottom = 6.dp))
+                // No "Added on" here (owner, 2.100): too busy on a list; it stays in Price watch.
             }
             Box {
                 IconButton(onClick = { if (!inert) menu = true }) {
@@ -1341,8 +1341,8 @@ fun WishCard(
     ) {
         CompositionLocalProvider(LocalContentColor provides ink) {
         Box(
-            Modifier.padding(look.inset(small = false)).fillMaxWidth().height(160.dp)
-                .lookMat(look, look.pictureShape(w.id, small = false), look.pictureBg(w.id, w.image.isNotEmpty()))
+            Modifier.padding(look.inset(small = false)).fillMaxWidth().aspectRatio(4f / 3f)
+                .lookMat(look, look.pictureShape(w.id, small = false), look.pictureBg(w.id, w.image.isNotEmpty()), over = true)
                 .combinedClickable(
                     enabled = w.image.isNotEmpty() || w.url.isNotBlank() || onLongPress != null,
                     onClickLabel = if (w.image.isNotEmpty()) tr("View picture") else null,
@@ -1355,7 +1355,7 @@ fun WishCard(
             contentAlignment = Alignment.Center
         ) {
             if (w.image.isNotEmpty()) {
-                PhotoCard(w.image, w.title, small = false)
+                PhotoStage(w.image, w.title, small = false)
             } else PlaceholderIcon("gift", 48.dp)
             // Top left: the price change.
             Row(
@@ -1422,7 +1422,7 @@ fun WishCard(
                 if (w.by.isNotBlank()) {
                     Text(tr("Added by %s", w.by), style = MaterialTheme.typography.labelMedium, color = muted)
                 }
-                AddedOnText(w, muted, Modifier.padding(top = 2.dp))
+                // No "Added on" here (owner, 2.100): too busy on a list; it stays in Price watch.
             }
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Row(Modifier.weight(1f), verticalAlignment = Alignment.Bottom) {

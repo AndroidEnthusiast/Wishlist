@@ -25,6 +25,11 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.BlurredEdgeTreatment
+import androidx.compose.ui.platform.LocalContext
+import coil.request.ImageRequest
+import coil.size.Precision
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
@@ -400,6 +405,30 @@ fun SavedFeedback(saves: Int, modifier: Modifier = Modifier, compact: Boolean = 
 }
 
 /**
+ * Blur stage (owner, 2.100): a soft blur of the photo fills the whole picture area and the photo itself ([PhotoCard])
+ * sits big and uncut in the middle. The blur is a tiny copy of the photo stretched out (soft on every Android version),
+ * blurred once more on Android 12 and newer; a light veil (dark in dark mode) keeps it calm. Colours come from the photo,
+ * the theme stays as it is.
+ */
+@Composable
+fun PhotoStage(url: String, description: String, small: Boolean, modifier: Modifier = Modifier) {
+    val look = LocalLook.current
+    val ctx = LocalContext.current
+    val tiny = remember(url) { ImageRequest.Builder(ctx).data(url).size(24).precision(Precision.EXACT).build() }
+    Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Image(
+            rememberAsyncImagePainter(tiny), null, contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize().then(
+                if (android.os.Build.VERSION.SDK_INT >= 31) Modifier.blur(if (small) 14.dp else 20.dp, BlurredEdgeTreatment.Rectangle)
+                else Modifier
+            )
+        )
+        Box(Modifier.fillMaxSize().background(if (look.dark) Color.Black.copy(alpha = 0.28f) else Color.White.copy(alpha = 0.18f)))
+        PhotoCard(url, description, small)
+    }
+}
+
+/**
  * A shop photo shown as a small rounded card in the middle of the picture area, which has a soft colour of the theme
  * (the owner found the big white areas of white-background shop photos dull, 2.63). The card takes the photo's own
  * shape, so its corners and shadow sit on the photo itself. Neobrutalism gives it an ink line and a hard shadow.
@@ -412,7 +441,7 @@ fun PhotoCard(url: String, description: String, small: Boolean, modifier: Modifi
     val ratio = drawable?.let { d ->
         if (d.intrinsicWidth > 0 && d.intrinsicHeight > 0) d.intrinsicWidth.toFloat() / d.intrinsicHeight else null
     }
-    Box(modifier.fillMaxSize().padding(if (small) 12.dp else 16.dp), contentAlignment = Alignment.Center) {
+    Box(modifier.fillMaxSize().padding(if (small) 9.dp else 14.dp), contentAlignment = Alignment.Center) {
         if (ratio == null) {
             // Still loading (or it failed): nothing to frame yet. The painter needs to be drawn to load.
             Image(painter, description, Modifier.fillMaxSize(), contentScale = ContentScale.Fit)

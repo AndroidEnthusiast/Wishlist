@@ -341,7 +341,7 @@ fun Look.pictureShape(id: Long, small: Boolean): Shape = when (design) {
     else -> RectangleShape
 }
 
-/** Behind a picture: a soft colour of the look, with the photo as a small card on it (PhotoCard). */
+/** Behind a picture without a photo: a soft colour of the look (a photo gets its own Blur stage, PhotoStage). */
 fun Look.pictureBg(id: Long, hasImage: Boolean): Color = tints[pick(id, tints.size)]
 
 /** A line under the picture: thick ink (Neobrutalism, chaos) or a thin neon line (Cyberpunk). */
@@ -425,17 +425,18 @@ fun Modifier.lookCard(look: Look, id: Long, shape: Shape): Modifier =
     (if (look.design == "chaos") rotate(look.tilt(id)) else this).lookSurface(look, shape, look.cardFill(id), depth = 8.dp)
 
 /** The mat a picture sits on inside a card. Neumorphism presses it in; the others simply fill it. */
-fun Modifier.lookMat(look: Look, shape: Shape, fill: Color): Modifier =
-    if (look.design == "neu") neu(look, shape, fill, 5.dp, pressed = true) else clip(shape).background(fill)
+fun Modifier.lookMat(look: Look, shape: Shape, fill: Color, over: Boolean = false): Modifier =
+    if (look.design == "neu") neu(look, shape, fill, 5.dp, pressed = true, over = over) else clip(shape).background(fill)
 
 /** Android 9 and newer can blur the neumorphic shadows; Android 8 gets a plain soft shadow. */
 private val canBlur = Build.VERSION.SDK_INT >= 28
 
 /**
  * Neumorphism: a shape in the background colour, raised by a light shadow top-left and a shade bottom-right, or
- * [pressed] in (the light and shade inside its edges instead). The content is clipped to [shape].
+ * [pressed] in (the light and shade inside its edges instead). The content is clipped to [shape]. [over]: the pressed-in
+ * light and shade are drawn over the content (the Blur stage of a wish photo fills the dent, which still looks pressed in).
  */
-fun Modifier.neu(look: Look, shape: Shape, fill: Color, depth: Dp = 6.dp, pressed: Boolean = false): Modifier {
+fun Modifier.neu(look: Look, shape: Shape, fill: Color, depth: Dp = 6.dp, pressed: Boolean = false, over: Boolean = false): Modifier {
     val shade = look.shadows[0]
     val light = look.shadows.getOrElse(1) { Color.White }
     if (!canBlur) {
@@ -473,12 +474,19 @@ fun Modifier.neu(look: Look, shape: Shape, fill: Color, depth: Dp = 6.dp, presse
             canvas.save()
             canvas.clipPath(shapePath)
             drawRect(fill)
-            if (pressed) {
+            if (pressed && !over) {
                 canvas.drawPath(innerShade, shadePaint)
                 canvas.drawPath(innerLight, lightPaint)
             }
             canvas.restore()
             drawContent()
+            if (pressed && over) {
+                canvas.save()
+                canvas.clipPath(shapePath)
+                canvas.drawPath(innerShade, shadePaint)
+                canvas.drawPath(innerLight, lightPaint)
+                canvas.restore()
+            }
         }
     }.clip(shape)
 }

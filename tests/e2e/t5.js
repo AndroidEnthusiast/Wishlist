@@ -109,7 +109,7 @@ const delayPuts = (fake, ms) => { fake.hooks.wl_sh_put_item = async () => { awai
   check("upload is a small JPEG into the list's folder", up[0] && up[0].head === "ffd8ff" && up[0].type === "image/jpeg" && up[0].rel.startsWith(CODE + "/") && up[0].size > 1000 && up[0].size < 300000, up[0]);
   const poster = t.fake.items(CODE).find(i => i.title === "Poster");
   check("wish stores the public address", poster.image === SUPA + "/storage/v1/object/public/wish-photos/" + up[0].rel, poster.image);
-  check("card shows it", (await t.page.locator(".card", { hasText: "Poster" }).locator("img").getAttribute("src")) === poster.image);
+  check("card shows it", (await t.page.locator(".card", { hasText: "Poster" }).locator("img:not(.back)").getAttribute("src")) === poster.image);
   check("not denied", !t.fake.log.some(x => x.denied));
   // dimensions of what was uploaded
   // remove it

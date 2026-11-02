@@ -12,6 +12,23 @@ const IOS = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/
   check("friends page: no js errors", t.errors.length === 0, t.errors);
   await t.ctx.close();
 
+  // 2.100: new visitors start with two per row, and a photo sits on a blur of itself (Blur stage) in both pages
+  t = await boot({ goto: false, view: null });
+  await t.page.goto(t.base + "?c=" + CODE);
+  await t.page.waitForSelector(".card");
+  check("friends page: two per row by default", (await t.page.locator(".grid.two .card.compact").count()) === 3);
+  await t.page.goto(t.url);
+  await t.page.waitForSelector(".card");
+  check("editor: two per row by default", (await t.page.locator(".grid.two .card.compact").count()) === 3);
+  const stage = await t.page.evaluate(() => [...document.querySelectorAll(".pic")].filter(p => p.querySelector("img:not(.back)")).map(p => {
+    const b = p.querySelector("img.back"), f = p.querySelector("img:not(.back)"), r = p.getBoundingClientRect();
+    return { back: !!b && b.getAttribute("aria-hidden") === "true" && b.alt === "" && /blur/.test(getComputedStyle(b).filter) && b.src === f.src,
+             square: Math.abs(r.width - r.height) < 2, front: +getComputedStyle(f).zIndex > 0 };
+  }));
+  check("blur stage: every photo has its hidden blurred copy behind it", stage.length > 0 && stage.every(x => x.back && x.front), stage);
+  check("blur stage: square pictures when two per row", stage.every(x => x.square), stage);
+  await t.ctx.close();
+
   // iPhone: the invitation page (so it's clear what they're invited to), with only "Edit in the browser"
   t = await boot({ goto: false, ua: IOS });
   await t.page.goto(t.base + "?j=" + KEY);

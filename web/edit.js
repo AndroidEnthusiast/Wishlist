@@ -290,7 +290,7 @@
   var refreshing = false;
   var offlineSaid = false;
 
-  var view = VIEWS.indexOf(lsGet("wl_view")) >= 0 ? lsGet("wl_view") : "list";
+  var view = VIEWS.indexOf(lsGet("wl_view")) >= 0 ? lsGet("wl_view") : "grid"; // two per row by default (owner, 2.100)
   var sortBy = (SORTS.map(function (s) { return s[0]; }).indexOf(lsGet("wl_sort_ed")) >= 0) ? lsGet("wl_sort_ed") : "new";
   var cat = "All", query = "";
   var me = lsGet("wl_name") || "";
@@ -791,7 +791,11 @@
     if (img) {
       var im = el("img");
       im.src = img; im.alt = w.title; im.loading = "lazy"; im.referrerPolicy = "no-referrer";
-      im.addEventListener("error", function () { im.remove(); pic.classList.add("empty"); pic.appendChild(el("span", null, "🎁")); });
+      // Blur stage (owner, 2.100): a soft blur of the same photo fills the area, the photo sits big in the middle.
+      var back = el("img", "back");
+      back.src = img; back.alt = ""; back.loading = "lazy"; back.referrerPolicy = "no-referrer"; back.setAttribute("aria-hidden", "true");
+      im.addEventListener("error", function () { im.remove(); back.remove(); pic.classList.add("empty"); pic.appendChild(el("span", null, "🎁")); });
+      pic.appendChild(back);
       pic.appendChild(im);
     } else {
       pic.appendChild(el("span", null, "🎁"));

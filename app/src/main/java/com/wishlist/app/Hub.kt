@@ -436,12 +436,12 @@ internal fun ListBlock(
                 // The picture area: the theme's soft colour, the photo on it.
                 Box(
                     Modifier.fillMaxSize().padding(if (small) 6.dp else 8.dp)
-                        .lookMat(look, RoundedCornerShape(if (small) 12.dp else 16.dp), look.pictureBg(id, item.picture != null)),
+                        .lookMat(look, RoundedCornerShape(if (small) 12.dp else 16.dp), look.pictureBg(id, item.picture != null), over = true),
                     contentAlignment = Alignment.Center
                 ) {
                     val pic = item.picture
                     if (pic != null) {
-                        PhotoCard(pic, item.name, small = true, modifier = Modifier.fillMaxSize())
+                        PhotoStage(pic, item.name, small = true)
                     } else if (item.count == 0) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(

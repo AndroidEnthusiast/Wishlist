@@ -121,7 +121,7 @@ function loadView() {
     var v = localStorage.getItem("wl_view");
     if (VIEWS.indexOf(v) >= 0) return v;
   } catch (e) { }
-  return "list";
+  return "grid"; // two per row by default (owner, 2.100); the large cards are the "details" view
 }
 
 function saveView(v) {
@@ -546,7 +546,11 @@ function card(w, compact) {
   if (img) {
     var im = el("img");
     im.src = img; im.alt = w.title || ""; im.loading = "lazy"; im.referrerPolicy = "no-referrer";
-    im.addEventListener("error", function () { im.remove(); pic.classList.add("empty"); pic.appendChild(el("span", null, "🎁")); });
+    // Blur stage (owner, 2.100): a soft blur of the same photo fills the area, the photo sits big in the middle.
+    var back = el("img", "back");
+    back.src = img; back.alt = ""; back.loading = "lazy"; back.referrerPolicy = "no-referrer"; back.setAttribute("aria-hidden", "true");
+    im.addEventListener("error", function () { im.remove(); back.remove(); pic.classList.add("empty"); pic.appendChild(el("span", null, "🎁")); });
+    pic.appendChild(back);
     pic.appendChild(im);
   } else {
     pic.appendChild(el("span", null, "🎁"));
