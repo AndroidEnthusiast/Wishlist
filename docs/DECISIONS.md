@@ -174,7 +174,12 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **One signature look, in light and dark, plus accent colours**; the five designs and their colour sets go.
 - Emoji placeholders become Material icons.
 - **Safety net (owner):** if the owner doesn't like the new look, revert the theme to exactly how it was in **v2.96 (commit 123322e)**.
-- Next: a preview with 2–3 directions to choose from, before building.
+- Preview of three directions (Keepsake, Quiet, Bold): the owner chose **Quiet** (Apple-calm: one clean typeface, Figtree, bold tight headings, grouped lists with hairlines, frosted floating bottom bar, wordmark, true black in dark, little colour).
+- **Quiet can be wrapped in three styles: Neobrutalism, Claymorphism, Neumorphism** (owner; reference https://www.uistyleguide.com/style/neumorphism). Same layout, type and spacing as Quiet; only the surfaces change (owner chose "same layout, different skin").
+- Neumorphism keeps readable contrast (text, prices and buttons stay strong; accent-coloured buttons), in light and dark.
+- Every style: light + dark + the same 5 accents (Blue, Indigo, Green, Orange, Pink).
+- Material 3, Organic and the Standard themes are removed; current users move to Quiet with the closest accent.
+- Next: preview of Quiet + the three styles, then build.
 
 ## Open ideas (not decided)
 - Personal recovery key: an encrypted online backup of your lists, keys, creator rights and settings, restored with a key (optionally saved in Google Password Manager), plus automatic clean-up of lists nobody uses. Ask the owner before building.
