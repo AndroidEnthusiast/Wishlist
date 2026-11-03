@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Wishlist</title>
+<link rel="icon" href="../icon.png">
+<!-- The link of a wishlist group (2.108): …/group/?g=KEY. Link previews (WhatsApp, Messages...) read these lines without running the page; then it goes on to the group page. -->
+<meta name="description" content="Bring your wishlist, see each other’s wishlists and reserve gifts, so nobody gives the same gift twice.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Join our wishlist group 🎁">
+<meta property="og:description" content="Bring your wishlist, see each other’s wishlists and reserve gifts, so nobody gives the same gift twice.">
+<meta property="og:image" content="https://androidenthusiast.github.io/Wishlist/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Join our wishlist group 🎁">
+<meta name="twitter:description" content="Bring your wishlist, see each other’s wishlists and reserve gifts, so nobody gives the same gift twice.">
+<meta name="twitter:image" content="https://androidenthusiast.github.io/Wishlist/og.png">
+<script>
+// Straight on to the group page, keeping the key from the link.
+location.replace("../group.html" + location.search);
+</script>
+</head>
+<body>
+<p><a id="go" href="../group.html">Open the wishlist group</a></p>
+<script>document.getElementById("go").href = "../group.html" + location.search;</script>
+</body>
+</html>

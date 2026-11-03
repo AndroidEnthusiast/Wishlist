@@ -1,0 +1,36 @@
+/* The wishlist group page (group.html, 2.108): only what wishlist.css and edit.css don't have. */
+.topbar.back { padding-left: 4px; }
+.topbar #backBtn { width: 48px; height: 48px; color: var(--fg); flex: none; }
+.gcover { margin: 4px 0 12px; border-radius: 24px; overflow: hidden; height: 150px; background: var(--card); }
+.gcover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gjoin { display: flex; flex-direction: column; gap: 12px; max-width: 520px; margin: 0 auto; padding-top: 8px; }
+.gjoin .act { align-self: flex-start; }
+.gtitle { margin: 0; font-size: 1.35rem; line-height: 1.25; }
+.gblocks { display: grid; gap: 14px 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 14px 0 8px; }
+@media (min-width: 720px) { .gblocks { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); } }
+.gblock { display: flex; flex-direction: column; align-items: stretch; text-align: left; gap: 2px; background: none;
+  border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; min-width: 0; }
+.gblock .pic { aspect-ratio: 1 / 1; border-radius: 20px; }
+.gblock .pic img:not(.back) { max-width: calc(100% - 18px); max-height: calc(100% - 18px); border-radius: 10px; }
+.gblock:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; border-radius: 20px; }
+.gempty { font-size: .95rem; font-weight: 600; color: var(--muted); padding: 0 8px; text-align: center; }
+.gblock .pic.empty .gempty:only-of-type { font-size: inherit; }
+.gcount { position: absolute; top: 10px; right: 10px; min-width: 26px; height: 26px; border-radius: 13px; background: #fff;
+  color: #1b1b1f; font-weight: 700; font-size: .8rem; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
+.avatar { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; overflow: hidden;
+  background: var(--primary); color: var(--on-primary); font-weight: 600; flex: none; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.avatar.onpic { position: absolute; left: 10px; bottom: 10px; box-shadow: 0 0 0 2px #fff; }
+.gname { font-weight: 600; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gsub { color: var(--muted); font-size: .85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gbox { margin: 20px 0 0; padding: 16px; border-radius: 20px; background: var(--card); display: flex; flex-direction: column;
+  gap: 10px; align-items: flex-start; }
+.gbox h3 { margin: 0; font-size: 1.05rem; }
+.gbox .hint { margin: 0; }
+.gbox a.act { text-decoration: none; }
+.gleave { margin: 20px 0 0; }
+.gtools { margin: 4px 0 12px; }
+.grow { display: block; width: 100%; text-align: left; padding: 16px; margin: 0 0 10px; border-radius: 16px; border: 0;
+  background: var(--card); color: var(--fg); font: inherit; font-weight: 600; cursor: pointer; }
+#langs { padding: 16px 0 96px; }

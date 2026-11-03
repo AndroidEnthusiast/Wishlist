@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<script>
+// Light or dark as chosen with the switch at the bottom (this browser only); otherwise the device decides.
+try { var wlt = localStorage.getItem("wl_theme"); if (wlt === "light" || wlt === "dark") document.documentElement.setAttribute("data-theme", wlt); } catch (e) { }
+</script>
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Wishlist</title>
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&amp;display=swap">
+<link rel="stylesheet" href="wishlist.css?v=dev">
+<link rel="stylesheet" href="edit.css?v=dev">
+<link rel="stylesheet" href="group.css?v=dev">
+</head>
+<body>
+<!-- A wishlist group in the browser (2.108), for people without the app: join with a wishlist of your own, see the
+     others' wishlists and reserve gifts, and keep your own list. Everything is drawn by group.js. -->
+<header class="topbar friends" id="head">
+  <button type="button" class="ibtn" id="backBtn" aria-label="Back" title="Back" hidden>
+    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+  </button>
+  <h1 id="name">Wishlist</h1>
+</header>
+<main>
+  <div id="view"><div class="center">Loading…</div></div>
+</main>
+<button type="button" class="fab" id="fab" hidden>
+  <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+  <span>Add wish</span>
+</button>
+<div id="snack" role="status" hidden></div>
+<div id="toast" role="status"></div>
+<div id="langs"></div>
+<script src="nl.js?v=dev"></script>
+<script src="i18n.js?v=dev"></script>
+<script src="parse.js?v=dev"></script>
+<script src="group.js?v=dev"></script>
+</body>
+</html>
