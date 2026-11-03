@@ -75,6 +75,15 @@ select pg_temp.fails($q$select wl_gr_settings('BBBBBBBBBBBBBBBBBBBB','tokB_tokB_
 select wl_gr_settings('AAAAAAAAAAAAAAAAAAAA','tokA_tokA_tokA_tokA_','GROUP0000000000000001','Family 2026',true);
 select wl_gr_invite('BBBBBBBBBBBBBBBBBBBB','tokB_tokB_tokB_tokB_','GROUP0000000000000001','AAAAAAAAAAAAAAAAAAAA');
 select pg_temp.ok(wl_gr_state('AAAAAAAAAAAAAAAAAAAA','tokA_tokA_tokA_tokA_')->'invites' = '[]', 'inviting a member does nothing');
+-- Ben (a member, allowed now) invites his friend Dan; Dan says No thanks: Ben AND the organiser are told.
+select wl_pf_save('DDDDDDDDDDDDDDDDDDDD','tokD_tokD_tokD_tokD_','Dan') as code_d \gset
+select wl_fr_add('DDDDDDDDDDDDDDDDDDDD','tokD_tokD_tokD_tokD_', :'code_b');
+select wl_fr_answer('BBBBBBBBBBBBBBBBBBBB','tokB_tokB_tokB_tokB_','DDDDDDDDDDDDDDDDDDDD',true);
+select wl_gr_invite('BBBBBBBBBBBBBBBBBBBB','tokB_tokB_tokB_tokB_','GROUP0000000000000001','DDDDDDDDDDDDDDDDDDDD');
+select wl_gr_decline('DDDDDDDDDDDDDDDDDDDD','tokD_tokD_tokD_tokD_','GROUP0000000000000001');
+select pg_temp.ok(wl_gr_state('BBBBBBBBBBBBBBBBBBBB','tokB_tokB_tokB_tokB_')->'news'->0->>'who' = 'Dan', 'the member who invited is told');
+select pg_temp.ok(wl_gr_state('AAAAAAAAAAAAAAAAAAAA','tokA_tokA_tokA_tokA_')->'news'->0->>'who' = 'Dan', 'the organiser is told too');
+select pg_temp.ok(jsonb_array_length(wl_gr_state('AAAAAAAAAAAAAAAAAAAA','tokA_tokA_tokA_tokA_')->'news') = 1, 'once each');
 
 -- Change my wishlist
 select wl_gr_set_list('BBBBBBBBBBBBBBBBBBBB','tokB_tokB_tokB_tokB_','GROUP0000000000000001','LISTB002','ownerB_ownerB_ownerB');

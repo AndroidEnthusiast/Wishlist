@@ -320,7 +320,7 @@ begin
     on conflict (group_id, profile) do update set by_profile = excluded.by_profile, created_at = now();
 end $$;
 
--- "No thanks": the invite goes, and whoever invited you is told.
+-- "No thanks": the invite goes, and whoever invited you (and the organiser) is told.
 create or replace function wl_gr_decline(p_id text, p_token text, p_group text)
 returns void language plpgsql security definer set search_path = public as $$
 declare i wl_group_invites;
@@ -329,9 +329,11 @@ begin
   select * into i from wl_group_invites where group_id = p_group and profile = p_id;
   if i.group_id is null then return; end if;
   delete from wl_group_invites where group_id = p_group and profile = p_id;
+  -- Whoever invited, and the organiser too when someone else invited (owner: the organiser is told).
   insert into wl_group_news (profile, kind, group_id, group_name, who)
-    select i.by_profile, 'declined', g.id, g.name, (select name from wl_profiles where id = p_id)
-    from wl_groups g where g.id = p_group;
+    select x.p, 'declined', g.id, g.name, (select name from wl_profiles where id = p_id)
+    from wl_groups g, (select i.by_profile as p union select g2.organiser from wl_groups g2 where g2.id = p_group) x
+    where g.id = p_group;
 end $$;
 
 -- Leave a group. The organiser must name the next organiser first ([p_next], a member); alone, they can only delete it.
