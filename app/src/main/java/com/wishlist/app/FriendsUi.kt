@@ -91,7 +91,17 @@ object FriendsNav {
     /** On a friend's page or list: the screen has a back arrow instead of the menu button. */
     val deep: Boolean get() = person != null
 
-    fun reset() { person = null; list = null; page = null; loaded = emptyMap() }
+    /** The chat the friend's page was opened from (tap their name at the top of a chat): Back returns there (2.105). */
+    var fromChat by mutableStateOf<String?>(null)
+
+    fun reset() { person = null; list = null; page = null; loaded = emptyMap(); fromChat = null }
+
+    /** Back from a friend's page: to the chat it was opened from, or to Friends. */
+    fun leavePerson() {
+        val back = fromChat
+        reset()
+        if (back != null) { ChatNav.peer = back; ChatNav.openTab = true }
+    }
 
     /** Opens the list with [code] if it belongs to a friend (for example from a "gift no longer on the list" alert). */
     fun openByCode(code: String): Boolean {
@@ -175,7 +185,7 @@ fun FriendsScreen(snack: SnackbarHostState, onProfile: () -> Unit, onOpenLink: (
         return
     }
     if (person != null) {
-        BackHandler { FriendsNav.reset() }
+        BackHandler { FriendsNav.leavePerson() }
         FriendPage(person, snack)
         return
     }
@@ -476,7 +486,7 @@ private fun FriendPage(f: Person, snack: SnackbarHostState) {
         topBar = {
             TopAppBar(
                 title = { Text(f.name, fontWeight = look.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                navigationIcon = { IconButton(onClick = { FriendsNav.reset() }) { Icon(AppIcons.ArrowBack, tr("Back")) } },
+                navigationIcon = { IconButton(onClick = { FriendsNav.leavePerson() }) { Icon(AppIcons.ArrowBack, tr("Back")) } },
                 // Message this friend (2.98).
                 actions = {
                     IconButton(onClick = { ChatNav.peer = f.id; ChatNav.openTab = true }) {

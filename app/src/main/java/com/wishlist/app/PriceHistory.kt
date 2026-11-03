@@ -33,6 +33,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -64,16 +66,18 @@ private val DropGreen = Color(0xFF0B7A3E)
 
 /** Shares one wish as plain text: its name, price and link. Works in any app. */
 fun shareItem(c: Context, w: Wish) {
-    val price = w.price?.let { money(it, w.currency) }
-    val head = listOfNotNull(w.title, price).joinToString(" - ")
-    shareText(c, tr("Share item"), if (w.url.isNotBlank()) head + "\n" + w.url else head)
+    // Owner, 2.105: "Look what’s on my wishlist" and the shop's link (it works for anyone, whoever can see the list).
+    val intro = if (Shared.active != null) tr("Look at this gift idea") else tr("Look what’s on my wishlist")
+    shareText(c, tr("Share"), if (w.url.isNotBlank()) intro + "\n" + w.url else intro + ": " + w.title)
 }
 
-/** What a long press on a wish opens. */
+/**
+ * What a long press on a wish opens (owner, 2.105): Edit and Private (with a tick); Price history and Share stay too.
+ * Top wish is the star on the picture. On a gift list there is no private wish and no price history (null).
+ */
 @Composable
-/** The long-press menu. On a shared list there is no most wanted and no price history: leave those out (null). */
 fun ItemMenuDialog(
-    w: Wish, onHistory: (() -> Unit)?, onShare: () -> Unit, onStar: (() -> Unit)?, onPrivate: (() -> Unit)? = null, onClose: () -> Unit
+    w: Wish, onEdit: () -> Unit, onHistory: (() -> Unit)?, onShare: () -> Unit, onPrivate: (() -> Unit)? = null, onClose: () -> Unit
 ) {
     val cs = MaterialTheme.colorScheme
     AlertDialog(
@@ -81,14 +85,14 @@ fun ItemMenuDialog(
         title = { Text(w.title, maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = {
             Column {
-                if (onStar != null) MenuRow(if (w.star) tr("Remove top wish") else tr("Top wish"), onStar) {
-                    StarIcon(w.star, if (w.star) StarGold else cs.onSurfaceVariant, 24.dp)
-                }
-                if (onPrivate != null) MenuRow(if (w.priv) tr("Visible to friends") else tr("Make private"), onPrivate) {
+                MenuRow(tr("Edit"), onEdit) { Icon(AppIcons.Edit, null, tint = cs.onSurfaceVariant) }
+                if (onPrivate != null) MenuRow(tr("Private"), onPrivate, trailing = {
+                    Checkbox(checked = w.priv, onCheckedChange = null)
+                }) {
                     Icon(PrivateIcon, null, tint = cs.onSurfaceVariant)
                 }
                 if (onHistory != null) MenuRow(tr("Price history"), onHistory) { HistoryIcon(cs.onSurfaceVariant) }
-                MenuRow(tr("Share item"), onShare) { Icon(AppIcons.Share, null, tint = cs.onSurfaceVariant) }
+                MenuRow(tr("Share"), onShare) { Icon(AppIcons.Share, null, tint = cs.onSurfaceVariant) }
             }
         },
         confirmButton = {},
@@ -96,8 +100,18 @@ fun ItemMenuDialog(
     )
 }
 
+/** "Private" with a tick box on the right, in the ⋮ menu of a wish (2.105). */
 @Composable
-fun MenuRow(label: String, onClick: () -> Unit, icon: @Composable () -> Unit) {
+fun PrivateMenuItem(on: Boolean, onClick: () -> Unit) {
+    DropdownMenuItem(
+        text = { Text(tr("Private")) },
+        trailingIcon = { Checkbox(checked = on, onCheckedChange = null) },
+        onClick = onClick
+    )
+}
+
+@Composable
+fun MenuRow(label: String, onClick: () -> Unit, trailing: (@Composable () -> Unit)? = null, icon: @Composable () -> Unit) {
     Row(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick)
             .padding(horizontal = 8.dp, vertical = 14.dp),
@@ -105,7 +119,8 @@ fun MenuRow(label: String, onClick: () -> Unit, icon: @Composable () -> Unit) {
     ) {
         icon()
         Spacer(Modifier.width(16.dp))
-        Text(label, style = MaterialTheme.typography.bodyLarge)
+        Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        trailing?.invoke()
     }
 }
 

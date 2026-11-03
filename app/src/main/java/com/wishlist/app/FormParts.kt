@@ -109,7 +109,11 @@ fun ProductInfo(content: @Composable ColumnScope.() -> Unit) {
     val reveal = remember { BringIntoViewRequester() }
     LaunchedEffect(open) {
         if (open) {
-            withFrameNanos { } // the opened part is laid out by then
+            withFrameNanos { } // the opened part is laid out by then (at full height: it only fades in)
+            reveal.bringIntoView()
+            // Once more after the fade, in case the dialog changed its height in between (2.105: the owner had to
+            // scroll down by hand to see the fields).
+            kotlinx.coroutines.delay(260)
             reveal.bringIntoView()
         }
     }
@@ -139,10 +143,11 @@ fun ProductInfo(content: @Composable ColumnScope.() -> Unit) {
                 }
                 Icon(AppIcons.ArrowDropDown, null, modifier = Modifier.rotate(turn))
             }
-            // Opens and closes with the same movement: it unfolds and fades in, and folds back while fading out.
+            // Opens at full height at once and fades in (2.105: unfolding meant the scroll only reached the heading,
+            // because the fields were still 0 high when it scrolled); folds back while fading out.
             AnimatedVisibility(
                 open,
-                enter = fadeIn(tween(220)) + expandVertically(tween(220)),
+                enter = fadeIn(tween(220)),
                 exit = fadeOut(tween(220)) + shrinkVertically(tween(220))
             ) {
                 Column(

@@ -132,11 +132,44 @@ object Chat {
         }
     }
 
-    /** Messages with [other] after message [after] (0: the newest 300), oldest first. Marks theirs as read. */
+    /**
+     * Messages with [other] after message [after] (0: the newest 300), oldest first. Since 2.105 (owner) fetching
+     * doesn't mark them as read any more: [seen] does, once you really looked at the chat. Without supabase-push.sql
+     * the old function is used (which still marks them read when fetched).
+     */
     suspend fun messages(c: Context, other: String, after: Long): List<ChatMessage> {
         ensureKey(c)
-        val a = JSONArray(Cloud.rpc("wl_chat_get", base(c).put("p_other", other).put("p_after", after)))
+        val body = base(c).put("p_other", other).put("p_after", after)
+        var t: String? = null
+        if (!oldServer) {
+            try {
+                t = Cloud.rpc("wl_chat_fetch", body)
+            } catch (e: CloudException) {
+                val m = e.message.orEmpty()
+                if (m.contains("PGRST202") || m.contains("wl_chat_fetch")) oldServer = true else throw e
+            }
+        }
+        val a = JSONArray(t ?: Cloud.rpc("wl_chat_get", body))
         return (0 until a.length()).map { read(c, a.getJSONObject(it), other) }
+    }
+
+    /** Saves this phone's push address with your profile (Push.kt, supabase-push.sql). */
+    suspend fun setPush(c: Context, token: String) {
+        Cloud.rpc("wl_push_set", base(c).put("p_push", token))
+    }
+
+    /** True when supabase-push.sql hasn't been run yet (no wl_chat_fetch). */
+    @Volatile private var oldServer = false
+
+    /**
+     * You have seen the chat with [other] up to their message [upTo] (it was on screen, with the app open): their
+     * messages up to it get the two coloured ticks on their phone, and its notification goes.
+     */
+    suspend fun seen(c: Context, other: String, upTo: Long) {
+        Alerts.clearMessage(c, other)
+        if (oldServer) return
+        Cloud.rpc("wl_chat_seen", base(c).put("p_other", other).put("p_upto", upTo))
+        conversations = conversations.map { if (it.id == other) it.copy(unread = 0) else it }
     }
 
     /** Ids of my messages to [other] (from id [from] on) that they have read: the double ticks. */

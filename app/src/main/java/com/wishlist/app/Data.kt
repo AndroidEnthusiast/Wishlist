@@ -610,6 +610,20 @@ object Repo {
         mineVersion++
     }
 
+    /** The friends' link code and owner token of your list [id], open or not. */
+    @Synchronized
+    fun setShareFor(c: Context, id: String, code: String?, token: String?) {
+        if (id == openMine) { setShare(c, code, token); mineVersion++; return }
+        val d = MyLists.read(prefs(c), id)
+        val e = prefs(c).edit()
+        MyLists.write(e, d.copy(code = code, token = token))
+        e.apply()
+        mineVersion++
+    }
+
+    /** Wishes of your list [id] that are in the bin. */
+    fun binnedOf(id: String): List<Wish> = myBin.filter { ownerOf(it.id) == id }
+
     /** Pictures that went online for a list that may no longer be open. */
     @Synchronized
     fun setUploadedFor(c: Context, id: String, names: Set<String>) {

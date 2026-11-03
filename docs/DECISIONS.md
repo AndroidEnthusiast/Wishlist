@@ -112,7 +112,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 ## Friends and Groups (November 2026)
 - **Friends are profiles** (owner): Profile page (menu > Profile, or your picture on Friends) with photo, name (moved from App settings) and a friend code to share. Profiles belong to the phone (no e-mail accounts).
 - **Adding a friend needs approval** (owner): sending your code says you want to be friends; when someone enters it, **you (the code's owner) approve or decline**. Waiting requests show on Friends (red dot on the bottom bar) and as a notification. If you both enter each other's code, that counts as yes.
-- **Lists are invisible to friends by default** (owner): each own wishlist has a "Visible to friends" switch in its settings. Turning it on puts the list online (it gets its friends' link). Private wishes stay hidden.
+- ~~Lists are invisible to friends by default~~ (owner, until 2.104): replaced in 2.105, see "3 November 2026" below (new lists start on "My friends").
 - **Per friend**: "Hide my lists from …" hides all your lists from that one friend (stay friends, they aren't told); "Unfollow" ends the friendship for both (nobody is told; add each other again with a code). This is new in 2.87: before, only single wishes could be private (hidden from everyone).
 - **Make a new code**: the old code stops working; friends you already have stay.
 - **Profile photo is edited like the cover photo, in a round frame** (owner, 2.88): rotate, crop, lighter or darker; no text.
@@ -122,7 +122,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Names save with the keyboard's tick and a green "Saved" tick** (owner, 2.88): your name, a list's name, target prices. No Save buttons for these.
 - **Home layout** (owner, 2.89): no cover photo card on Home. At the top: your picture with your name under it, then the numbers wishlists / wishes / top wishes, each opening its own page (all wishlists; all wishes with picture, name, "Added to …", price; top wishes with the "Top wish" label on top and a star to unstar). "Recently opened" stays.
 - **A list's picture is its newest wish** (owner, 2.89), never a cover photo. Discussed: GoWish shows a cover photo per list; the owner prefers seeing the wishes.
-- **Cover photo per list: optional, off by default** (owner, 2.89): list settings > Cover photo, the same editor as the profile photo but rectangular, with a **Preview** of the list before saving. Only shown when chosen; only on your phone.
+- **Cover photo per list: optional, off by default** (owner, 2.89): list settings > Cover photo, the same editor as the profile photo but rectangular, with a **Preview** of the list before saving. Only shown when chosen. (Since 2.105 friends see it too, see below.)
 - **Summary card at the top of your own lists**: number of wishes and total value (owner, 2.89; not on group wishlists since 2.90). The total value is no longer on Home.
 - **Home keeps its list sections** next to the "wishlists" page (owner, 2.90): one tap to any list beats a tidier Home.
 - **Lists on Home are blocks, two per row** (owner, 2.91, like GoWish's home): newest wish's photo, the number of wishes in a white circle top right (also 0), the name under the block. Empty list: "Empty" and "+ Add wish" (the wish form with that list chosen) on the theme's soft colour. Group wishlists use the phone's copy for their picture. "Recently opened" uses smaller blocks. Long press menu on Home only.
@@ -154,7 +154,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - The Notifications page lists everything: price changes, friend requests (tap: Friends), approvals, reserved-gift alerts, newest first, with the red dot.
 - A short, skippable 3-step welcome on first start: your name (photo optional), name your first wishlist, one line on how friends reserve gifts; then the permission questions.
 - The browser editor keeps to what givers need (lists for someone, friends' links); new personal features stay app-only.
-- Wish cards keep their buttons (pencil, Owned tick, bin, long-press menu).
+- Wish cards keep their buttons (pencil, Owned tick, bin, long-press menu). (2.105: the pencil became a Share button.)
 - The wish form always shows a small tip under the link field: share from a shop's app or browser to Wishlist (faster).
 - List settings grouped in sections: "About this list" (name, cover, note), "Who can see it", "Wishes" (categories, copy, export), "Danger zone" (delete).
 - Categories: one set for all your own lists; a category made on one list can be used on every list.
@@ -188,7 +188,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 ## Messages (2 November 2026, owner interviewed; built in 2.98; run `supabase-chat.sql`)
 - "Messages" replaces "Wishlists" in the bottom bar (Home, Messages, +, Price watch, Friends). Wishlists stay on Home and behind its number.
 - Chat only with friends; a WhatsApp-like list (picture, name, last message, time, unread bubble, newest on top, + to start a chat) and conversations in the selected style.
-- No push service: messages appear within ~3 s while a chat is open; when the app is closed a notification can take 15–30 minutes (background check). Push (Firebase) can come later.
+- No push service: messages appear within ~3 s while a chat is open; when the app is closed a notification can take 15–30 minutes (background check). Push (Firebase) can come later. (2.105: Firebase push built, see below.)
 - Send text and wishes (a small card; tapping opens it). No photos.
 - Ticks: one when sent, two coloured when read. No typing or last seen.
 - Deleting is always for everyone, and only your own messages.
@@ -216,3 +216,20 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **No flashing photos** (owner, 2.102): switching tabs or views must never reload a product photo that was already shown; toggles keep their style's shape when on; the bottom bar must not jump when coming back to the app (cause: keyboard of another app; the app now draws edge to edge).
 - **Number tiles follow the style** (owner, 2.103): the Wishlists / Wishes / Top wishes tiles next to the profile picture are a small card of the style in use (Quiet stays subtle).
 - **Friend code as six blocks** (owner, 2.104): three blocks, a dash, three blocks, in the style; capitals; paste works (also the whole shared message). Full code: wait for the button, no auto-send (owner).
+
+## Owner's list of 3 November 2026 (built in 2.105; owner interviewed with pop-up questions)
+- **New wishlists start on "My friends"**; existing "Only me" lists were switched to "My friends" once, **silently** (owner chose no message). A list you set to "Only me" yourself afterwards stays so.
+- **Long press a list on Home: Edit name · Visible to · Delete wishlist.** "Visible to" opens the same three radio choices as list settings (Only me / My friends / Friends + anyone with the link).
+- **Wishes keep the word "Private"** (owner changed their mind about "Hide": hidden sounds like hidden from yourself). In menus it is one short item **"Private" with a tick box** (ticked = private). The form switch stays "Private wish".
+- **Long press a wish: Edit, Private (tick).** Price history and Share stayed in it too (Claude kept them so price history is still reachable from a list; the owner may still remove them). Top wish left the menus: the star on the picture does that.
+- **Two per row ⋮: Edit, Private (tick), Share, Mark as owned, Delete.** Owned only here because it doesn't fit on the small card (owner). No "wish" after every word.
+- **Large cards: Share instead of the pencil** (owner: editing shouldn't be easier to reach than sharing). Edit is in the long-press menu.
+- **Sharing a wish: "Look what’s on my wishlist" + the shop link** (owner chose the shop link: it works for anyone whatever the list's visibility). Gift lists say "Look at this gift idea".
+- **"Wish marked as owned"** message (5 s, Undo), and "Wish marked as not owned".
+- **Back from a friend's page that was opened from a chat returns to that chat.**
+- **Gift lists line: "Plan gifts for someone, alone or together with others."** (owner chose it from three; replaces the explainer of 2.95 on Home and in the New wishlist choice; the gift list form keeps its own text).
+- **Friends see your list's cover photo** (app and friends' web page), with its text. Gift lists keep their cover on the phone only (not asked; would need a Supabase change). Settings text: "Personalise your wishlist with a cover photo at the top." (owner chose it from three; no "Optional").
+- **The note for friends has no Save button**: the keyboard's tick saves it with the green "Saved" tick, like names (owner); leaving the field saves too, so nothing typed is lost.
+- **"Read" only when really seen** (owner): the app is open, the chat is open and their newest message is on screen (or the chat was opened from the notification, which shows it). Fetching messages no longer marks them read.
+- **Instant message notifications with Firebase Cloud Messaging** (owner: yes, as long as it's free and needs no PC; it is free and set up in a browser). The push carries no text, so messages stay end-to-end encrypted. Until the owner has set up Firebase, the old 15–30 minute check stays.
+- **Wishlist groups get their own session** (owner): interview first, then build. What the owner asked for so far: "Wishlist groups" in the menu and on Home with "New group"; invite friends from your friend list (they get a notification and a message with a link to confirm) and share a link with people without the app; people without the app must first name and create their first wishlist (in the browser) before they can join; as frictionless as possible for app and web users. Earlier decisions in "Friends and Groups" still apply (one wishlist per member, organiser invites by default).

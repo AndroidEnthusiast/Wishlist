@@ -18,6 +18,16 @@ object Config {
     /** The Supabase storage bucket for pictures you add yourself (created by supabase-photos.sql). */
     const val PHOTO_BUCKET = "wish-photos"
 
+    /*
+     * Instant message notifications (Push.kt): the values of the Firebase project, from the Firebase console >
+     * Project settings > General (Web API key, Project ID, Project number = sender ID) and "Your apps" > the Android
+     * app (App ID). They are public, like the Supabase key. Empty: no push, the background check stays.
+     */
+    const val FCM_API_KEY = ""
+    const val FCM_APP_ID = ""
+    const val FCM_PROJECT_ID = ""
+    const val FCM_SENDER_ID = ""
+
     val enabled: Boolean
         get() = SUPABASE_URL.isNotBlank() && SUPABASE_KEY.isNotBlank()
 }

@@ -9,7 +9,11 @@ import java.net.URL
 
 class CloudException(message: String) : Exception(message)
 
-data class RemoteList(val name: String, val cats: List<String>, val wishes: List<Wish>, val about: String = "", val owner: String = "")
+data class RemoteList(
+    val name: String, val cats: List<String>, val wishes: List<Wish>, val about: String = "", val owner: String = "",
+    // The list's cover photo (2.105): its web address and its text (HeroEdit as JSON), or "".
+    val cover: String = "", val coverEdit: String = ""
+)
 
 /** A shared wishlist as an editor sees it: the list plus its public code (the one friends use). */
 data class RemoteShared(val code: String, val list: RemoteList)
@@ -111,16 +115,19 @@ object Cloud {
     }
 
     suspend fun pushList(
-        code: String, token: String, name: String, cats: List<String>, wishes: List<Wish>, about: String = ""
+        code: String, token: String, name: String, cats: List<String>, wishes: List<Wish>, about: String = "",
+        cover: String = "", coverEdit: String = ""
     ) {
         val items = JSONArray()
         // A private wish never leaves the phone (Repo.syncWishes leaves them out already; this makes sure).
         wishes.filter { !it.priv }.forEach { items.put(wishToJson(if (ImageStore.isLocal(it.image)) it.copy(image = "") else it)) }
-        if (about.isNotBlank()) {
-            items.put(
-                JSONObject().put("id", ABOUT_ITEM_ID).put("kind", "about").put("about", about)
-                    .put("url", "").put("title", "")
-            )
+        // The note and (since 2.105) the cover photo travel in the "about" item, so friends see them (older apps
+        // only read "about" and skip the rest).
+        if (about.isNotBlank() || cover.isNotEmpty()) {
+            val o = JSONObject().put("id", ABOUT_ITEM_ID).put("kind", "about").put("about", about)
+                .put("url", "").put("title", "")
+            if (cover.isNotEmpty()) o.put("cover", cover).put("cedit", coverEdit)
+            items.put(o)
         }
         rpc(
             "wl_sync_list",
@@ -159,16 +166,21 @@ object Cloud {
         val a = o.getJSONArray("items")
         val cs = o.optJSONArray("cats")
         var about = ""
+        var cover = ""
+        var coverEdit = ""
         val wishes = ArrayList<Wish>()
         for (i in 0 until a.length()) {
             val item = a.getJSONObject(i)
-            if (item.optString("kind") == "about") about = item.optString("about", "")
-            else wishes.add(wishFromJson(item))
+            if (item.optString("kind") == "about") {
+                about = item.optString("about", "")
+                cover = item.optString("cover", "")
+                coverEdit = item.optString("cedit", "")
+            } else wishes.add(wishFromJson(item))
         }
         return RemoteList(
             o.optString("name", "Wishlist"),
             if (cs == null) emptyList() else (0 until cs.length()).map { cs.getString(it) },
-            wishes, about, o.optString("owner", "")
+            wishes, about, o.optString("owner", ""), cover, coverEdit
         )
     }
 

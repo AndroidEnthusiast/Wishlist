@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -84,6 +85,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
     var copyDlg by remember { mutableStateOf(false) }
     var visBusy by remember { mutableStateOf(false) }
     var nameSaved by remember { mutableStateOf(0) }
+    var noteSaved by remember { mutableStateOf(0) }
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     BackHandler(onBack = onBack)
@@ -151,15 +153,28 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                 else tr("Shown at the top of your wishlist. For example your sizes, or things you don’t want."),
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
             )
-            OutlinedTextField(
-                about, { about = it.take(ABOUT_MAX) }, maxLines = 5, modifier = Modifier.fillMaxWidth(),
-                supportingText = { Text("${about.length}/$ABOUT_MAX") }, keyboardOptions = Capitalised)
-            Button(onClick = {
+            // No "Save note" button (owner, 2.105): like the list's name, the keyboard's tick saves it, with the green
+            // tick and "Saved" on the right. Leaving the field saves it too, so nothing typed is lost.
+            fun saveNote() {
+                if (about.trim() == Repo.about.trim()) return
                 Repo.setAbout(ctx, about)
                 about = Repo.about
-                scope.launch { snack.showToast(tr("Note saved")) }
-            }) { Text(tr("Save note")) }
-
+                noteSaved++
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    about, { about = it.take(ABOUT_MAX) }, maxLines = 5,
+                    modifier = Modifier.weight(1f).onFocusChanged { if (!it.isFocused) saveNote() },
+                    supportingText = { Text("${about.length}/$ABOUT_MAX") },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done, capitalization = KeyboardCapitalization.Sentences),
+                    keyboardActions = KeyboardActions(onDone = {
+                        saveNote()
+                        keyboard?.hide()
+                        focusManager.clearFocus()
+                    })
+                )
+                SavedFeedback(noteSaved)
+            }
 
             GroupTitle(tr("Who can see it"))
             if (shared != null) {

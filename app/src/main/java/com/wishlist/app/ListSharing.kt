@@ -50,10 +50,11 @@ object ListLink {
         off = prefs(c).getStringSet("link_off", null)?.toSet() ?: emptySet()
     }
 
-    /** Switches the link of the open list on or off, online first. */
+    /** Switches the friends' link of your list [id] (open or not) on or off, online first. */
     suspend fun set(c: Context, id: String, on: Boolean) {
-        val code = Repo.shareCode ?: return
-        val token = Repo.ownerToken ?: return
+        val d = Repo.mine(c, id)
+        val code = d.code ?: return
+        val token = d.token ?: return
         Cloud.rpc("wl_set_link", JSONObject().put("p_code", code).put("p_token", token).put("p_on", on))
         off = if (on) off - id else off + id
         prefs(c).edit().putStringSet("link_off", off).apply()
@@ -69,7 +70,89 @@ object ListLink {
 }
 
 /** The three choices. */
-private enum class Who { ME, FRIENDS, LINK }
+enum class Who { ME, FRIENDS, LINK }
+
+/*
+ * Who can see a list, for any of your own lists, open or not (2.105: also from the long-press menu on Home, "Visible
+ * to"). New lists start on "My friends" (owner, 3 November 2026); lists that were "Only me" before 2.105 were switched
+ * once, silently (owner). Switching needs the server: a list that couldn't be switched yet stays in [pending] and is
+ * tried again at the next start.
+ */
+object ListVisibility {
+    private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
+
+    /** Goes up on every change, so screens show the new choice. */
+    var version by mutableIntStateOf(0)
+        private set
+
+    fun of(c: Context, id: String): Who {
+        @Suppress("UNUSED_VARIABLE") val v = version
+        ListLink.load(c)
+        val d = Repo.mine(c, id)
+        return when {
+            d.code == null -> Who.ME
+            id in ListLink.off -> Who.FRIENDS
+            else -> Who.LINK
+        }
+    }
+
+    /** Sets [w] for your list [id]. Returns the message to show. Throws when the server can't be reached. */
+    suspend fun set(c: Context, id: String, w: Who): String {
+        dropPending(c, id)
+        if (w == Who.ME) {
+            if (Friends.isVisible(id)) Friends.setVisible(c, id, false)
+            Sync.unpublishFor(c, id)
+            Friends.forget(c, id)
+            ListLink.forget(c, id)
+            version++
+            return tr("Only you can see this wishlist now")
+        }
+        Sync.publishFor(c, id)
+        ListLink.set(c, id, w == Who.LINK)
+        Friends.setVisible(c, id, true)
+        version++
+        return if (w == Who.LINK) tr("Friends and anyone with the link can see this wishlist")
+        else tr("Only your friends can see this wishlist")
+    }
+
+    /** A new list: "My friends" (now, or at a later start when offline). */
+    fun startShared(c: Context, id: String) {
+        if (!Config.enabled) return
+        val p = prefs(c)
+        p.edit().putStringSet("vis_pending", (p.getStringSet("vis_pending", null).orEmpty() + id).toSet()).apply()
+        Sync.later { trySwitch(c) }
+    }
+
+    private fun dropPending(c: Context, id: String) {
+        val p = prefs(c)
+        val now = p.getStringSet("vis_pending", null) ?: return
+        if (id in now) p.edit().putStringSet("vis_pending", (now - id).toSet()).apply()
+    }
+
+    /**
+     * At every start: once (2.105) every "Only me" list is marked to become "My friends"; then each marked list is
+     * switched. Lists you set to "Only me" yourself after that stay so.
+     */
+    suspend fun trySwitch(c: Context) {
+        if (!Config.enabled) return
+        val p = prefs(c)
+        if (!p.getBoolean("vis_mig_2105", false)) {
+            val me = Repo.allMine(c).filter { it.code == null }.map { it.id }.toSet()
+            p.edit().putStringSet("vis_pending", (p.getStringSet("vis_pending", null).orEmpty() + me).toSet())
+                .putBoolean("vis_mig_2105", true).apply()
+        }
+        val todo = p.getStringSet("vis_pending", null)?.toSet().orEmpty()
+        for (id in todo) {
+            if (id !in Repo.mineIds) { dropPending(c, id); continue }
+            if (of(c, id) != Who.ME) { dropPending(c, id); continue }
+            try {
+                set(c, id, Who.FRIENDS)
+            } catch (e: Exception) {
+                return // offline: next start
+            }
+        }
+    }
+}
 
 /** List settings > "Who can see it", for a list of your own (the open one). */
 @Composable
@@ -82,39 +165,11 @@ fun WhoCanSeeSection(snack: SnackbarHostState) {
     Friends.load(ctx)
     val id = Repo.openMine
     val code = Repo.shareCode
-    val now = when {
-        code == null -> Who.ME
-        id in ListLink.off -> Who.FRIENDS
-        else -> Who.LINK
-    }
-    var busy by remember { mutableStateOf(false) }
-    var askPrivate by remember { mutableStateOf(false) }
-    var tick by remember { mutableIntStateOf(0) }
 
     // A list shared with a link before 2.95 wasn't visible to friends: the link choice includes friends, so it is now.
     LaunchedEffect(id, code) {
         if (code != null && !Friends.isVisible(id) && Config.enabled) {
             try { Friends.setVisible(ctx, id, true) } catch (e: Exception) {}
-        }
-    }
-
-    fun choose(w: Who) {
-        if (w == now || busy) return
-        if (w == Who.ME) { askPrivate = true; return }
-        busy = true
-        scope.launch {
-            val msg = try {
-                if (Repo.shareCode == null) Sync.publish(ctx)
-                ListLink.set(ctx, id, w == Who.LINK)
-                Friends.setVisible(ctx, id, true)
-                if (w == Who.LINK) tr("Friends and anyone with the link can see this wishlist")
-                else tr("Only your friends can see this wishlist")
-            } catch (e: Exception) {
-                tr("Couldn’t reach the server. Check your connection.")
-            }
-            busy = false
-            tick++
-            snack.showToast(msg)
         }
     }
 
@@ -126,12 +181,7 @@ fun WhoCanSeeSection(snack: SnackbarHostState) {
         Text(tr("Online sharing isn’t set up in this build yet."), color = cs.onSurfaceVariant)
         return
     }
-    Choice(tr("Only me"), tr("Nobody else sees this wishlist."), now == Who.ME, !busy) { choose(Who.ME) }
-    Choice(tr("My friends"), tr("Friends you added in the app."), now == Who.FRIENDS, !busy) { choose(Who.FRIENDS) }
-    Choice(
-        tr("Friends + anyone with the link"), tr("Also people without the app, in their browser."),
-        now == Who.LINK, !busy
-    ) { choose(Who.LINK) }
+    val now = WhoChoices(id, snack)
 
     if (now == Who.LINK && code != null) {
         Text(shareLink(code), color = cs.onSurface, modifier = Modifier.padding(top = 4.dp))
@@ -150,6 +200,45 @@ fun WhoCanSeeSection(snack: SnackbarHostState) {
     if (now != Who.ME && Sync.photoStatus.isNotEmpty()) {
         Text(Sync.photoStatus, color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
     }
+}
+
+/**
+ * The three radio choices for your list [id] (list settings, and "Visible to" in the long-press menu on Home), with
+ * the "Only you?" question. Returns the current choice.
+ */
+@Composable
+fun WhoChoices(id: String, snack: SnackbarHostState): Who {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var tick by remember { mutableIntStateOf(0) }
+    val now = remember(id, tick, ListVisibility.version, Repo.mineVersion, Repo.shareCode, ListLink.off) { ListVisibility.of(ctx, id) }
+    var busy by remember { mutableStateOf(false) }
+    var askPrivate by remember { mutableStateOf(false) }
+
+    fun go(w: Who) {
+        busy = true
+        scope.launch {
+            val msg = try {
+                ListVisibility.set(ctx, id, w)
+            } catch (e: Exception) {
+                tr("Couldn’t reach the server. Check your connection.")
+            }
+            busy = false
+            tick++
+            snack.showToast(msg)
+        }
+    }
+    fun choose(w: Who) {
+        if (w == now || busy) return
+        if (w == Who.ME) askPrivate = true else go(w)
+    }
+
+    Choice(tr("Only me"), tr("Nobody else sees this wishlist."), now == Who.ME, !busy) { choose(Who.ME) }
+    Choice(tr("My friends"), tr("Friends you added in the app."), now == Who.FRIENDS, !busy) { choose(Who.FRIENDS) }
+    Choice(
+        tr("Friends + anyone with the link"), tr("Also people without the app, in their browser."),
+        now == Who.LINK, !busy
+    ) { choose(Who.LINK) }
 
     if (askPrivate) {
         AlertDialog(
@@ -157,27 +246,12 @@ fun WhoCanSeeSection(snack: SnackbarHostState) {
             title = { Text(tr("Only you?")) },
             text = { Text(tr("Friends can no longer see this wishlist, its link stops working and all reservations on it are deleted. Sharing it again later makes a new link.")) },
             confirmButton = {
-                TextButton(onClick = {
-                    askPrivate = false
-                    busy = true
-                    scope.launch {
-                        val msg = try {
-                            if (Friends.isVisible(id)) Friends.setVisible(ctx, id, false)
-                            Sync.unpublish(ctx)
-                            Friends.forget(ctx, id)
-                            ListLink.forget(ctx, id)
-                            tr("Only you can see this wishlist now")
-                        } catch (e: Exception) {
-                            tr("Couldn’t reach the server. Check your connection.")
-                        }
-                        busy = false
-                        snack.showToast(msg)
-                    }
-                }) { Text(tr("Only me")) }
+                TextButton(onClick = { askPrivate = false; go(Who.ME) }) { Text(tr("Only me")) }
             },
             dismissButton = { TextButton(onClick = { askPrivate = false }) { Text(tr("Cancel")) } }
         )
     }
+    return now
 }
 
 @Composable

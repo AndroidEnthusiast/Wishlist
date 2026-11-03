@@ -34,6 +34,7 @@ try { var wlt = localStorage.getItem("wl_theme"); if (wlt === "light" || wlt ===
   <h1 id="name">Wishlist</h1>
 </header>
 <main>
+  <div class="cover" id="cover" hidden><img id="coverImg" alt=""><span id="coverText"></span></div>
   <p class="owner" id="owner" hidden></p>
   <p class="sub" id="sub" hidden></p>
   <p class="about" id="about" hidden></p>
@@ -258,6 +259,7 @@ function showCodeForm(msg) {
   $("chips").hidden = true;
   $("tools").hidden = true;
   $("about").hidden = true;
+  $("cover").hidden = true;
   $("note").hidden = true;
 }
 
@@ -306,7 +308,7 @@ function legacyCopy(text) {
 
 async function showInvite(key) {
   var v = $("view");
-  ["bar", "chips", "tools", "about", "note"].forEach(function (id) { $(id).hidden = true; });
+  ["bar", "chips", "tools", "about", "cover", "note"].forEach(function (id) { $(id).hidden = true; });
   $("name").textContent = T("Wishlist invitation");
   $("sub").textContent = "";
   v.textContent = "";
@@ -668,6 +670,7 @@ function render() {
   var ab = $("about");
   ab.textContent = list.about || "";
   ab.hidden = !list.about;
+  renderCover(list.cover, list.cedit);
   $("bar").hidden = false;
   renderChips();
   renderViews();
@@ -694,6 +697,38 @@ function render() {
   $("note").hidden = false;
 }
 
+// The cover photo at the top (2.105): the picture as the owner cut it out in the app, with its text on top in the
+// same place, size and colour (see HeroPicture in the app). Only pictures from our own storage are shown.
+function coverOk(url) {
+  return typeof url === "string" && url.indexOf(SUPABASE_URL.replace(/\/+$/, "") + "/storage/v1/object/public/") === 0;
+}
+function renderCover(url, cedit) {
+  var box = $("cover");
+  if (!coverOk(url)) { box.hidden = true; return; }
+  var e = {};
+  try { e = JSON.parse(cedit || "{}") || {}; } catch (x) { e = {}; }
+  $("coverImg").src = url;
+  var t = $("coverText");
+  var text = String(e.text || "").slice(0, 40);
+  t.textContent = text;
+  t.hidden = !text;
+  if (text) {
+    var c = Number(e.color);
+    if (!isFinite(c)) c = 0xFFFFFFFF;
+    var rgb = c % 0x1000000;
+    var r = (rgb >> 16) & 255, g = (rgb >> 8) & 255, b = rgb & 255;
+    t.style.color = "rgb(" + r + "," + g + "," + b + ")";
+    var light = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 > 0.5;
+    t.className = e.box ? "boxed" : "";
+    t.style.background = e.box ? (light ? "rgba(0,0,0,.45)" : "rgba(255,255,255,.75)") : "";
+    var num = function (v, d) { v = Number(v); return isFinite(v) ? v : d; };
+    t.style.left = (Math.min(1, Math.max(0, num(e.tx, 0.5))) * 100) + "%";
+    t.style.top = (Math.min(1, Math.max(0, num(e.ty, 0.75))) * 100) + "%";
+    t.style.fontSize = (150 * Math.min(0.6, Math.max(0.05, num(e.tsize, 0.16)))) + "px";
+  }
+  box.hidden = false;
+}
+
 async function refresh() {
   if (!code || busy) return;
   try {
@@ -703,13 +738,20 @@ async function refresh() {
     var m = {};
     (rs || []).forEach(function (x) { m[x.id] = x.mine; });
     // The note for friends travels as one extra item of kind "about". It is not a wish.
-    var about = "";
+    var about = "", cover = "", cedit = "";
     // Wishes in the bin (deleted, kept 30 days so they can be restored) are not on the list.
     l.items = (l.items || []).filter(function (w) {
-      if (w && w.kind === "about") { about = String(w.about || ""); return false; }
+      if (w && w.kind === "about") {
+        about = String(w.about || "");
+        // The list's cover photo (2.105) and its text travel in the same item.
+        cover = String(w.cover || ""); cedit = String(w.cedit || "");
+        return false;
+      }
       return !(w && w.bin);
     });
     l.about = about;
+    l.cover = cover;
+    l.cedit = cedit;
     // Remember what this browser reserved, and say so when one of those gifts is no longer on the list.
     var mine = readMyRes(), seen = {}, gone = [];
     l.items.forEach(function (w) { seen[w.id] = w; });

@@ -78,14 +78,14 @@ object ImageStore {
     }
 
     /** A smaller JPEG (at most 600 pixels, about 50 KB) of a stored picture, for the page friends see. */
-    suspend fun shareCopy(image: String): ByteArray? = withContext(Dispatchers.IO) {
+    suspend fun shareCopy(image: String, size: Int = 600): ByteArray? = withContext(Dispatchers.IO) {
         try {
             val path = Uri.parse(image).path ?: return@withContext null
             if (!File(path).exists()) return@withContext null
             val src = BitmapFactory.decodeFile(path) ?: return@withContext null
             val longest = max(src.width, src.height)
-            val bmp = if (longest > 600) {
-                val f = 600f / longest
+            val bmp = if (longest > size) {
+                val f = size.toFloat() / longest
                 Bitmap.createScaledBitmap(src, (src.width * f).toInt().coerceAtLeast(1), (src.height * f).toInt().coerceAtLeast(1), true)
             } else src
             val out = ByteArrayOutputStream()

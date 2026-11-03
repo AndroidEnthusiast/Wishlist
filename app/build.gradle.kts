@@ -10,8 +10,8 @@ android {
         applicationId = "com.wishlist.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 105
-        versionName = "2.104"
+        versionCode = 106
+        versionName = "2.105"
     }
     // The release key is NOT in this project. GitHub puts it in place while building, from the repository secrets
     // KEYSTORE_BASE64, KEYSTORE_PASSWORD and KEY_ALIAS (see .github/workflows/build.yml). Keep a copy of the key safe:
@@ -55,4 +55,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("org.jsoup:jsoup:1.17.2")
     implementation("io.coil-kt:coil-compose:2.6.0")
+    // Instant message notifications (Push.kt). Set up in code from Config, so no google-services plugin or file.
+    implementation("com.google.firebase:firebase-messaging:24.0.0")
 }

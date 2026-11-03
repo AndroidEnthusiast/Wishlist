@@ -47,7 +47,9 @@ import org.json.JSONObject
 /*
  * A cover photo for one wishlist (2.89, owner): optional, none by default. Set in the list's settings with the same
  * editor as the profile photo (rectangular frame), with a Preview of how it looks at the top of the list. Kept on this
- * phone only ("cover_m:<id>" for your own lists, "cover_s:<code>" for group wishlists): nobody else sees it.
+ * phone ("cover_m:<id>" for your own lists, "cover_s:<code>" for group wishlists). Since 2.105 (owner) the cover of
+ * your own list also goes online with it (Sync.pushData), so friends see it in the app and on the friends' page.
+ * Gift lists keep theirs on the phone.
  */
 
 data class ListCover(val image: String, val edit: HeroEdit, val cut: String)
@@ -84,12 +86,22 @@ object ListCovers {
         val o = JSONObject().put("img", image).put("edit", edit.toJson()).put("cut", cut)
         prefs(c).edit().putString("cover_$key", o.toString()).apply()
         version++
+        sendOnline(c, key)
+    }
+
+    /** A cover of your own list changed: the list goes online again with it (when it is online). */
+    private fun sendOnline(c: Context, key: String) {
+        if (!key.startsWith("m:")) return
+        val id = key.removePrefix("m:")
+        if (id == Repo.openMine) Sync.push()
+        else Repo.mine(c, id).takeIf { it.code != null }?.let { Sync.pushStored(c, it, Repo.binnedOf(id)) }
     }
 
     fun remove(c: Context, key: String) {
         get(c, key)?.let { ImageStore.delete(c, it.image); if (it.cut.isNotEmpty()) ImageStore.delete(c, it.cut) }
         prefs(c).edit().remove("cover_$key").apply()
         version++
+        if (key.startsWith("m:") && key.removePrefix("m:") in Repo.mineIds) sendOnline(c, key)
     }
 
     /** Your list [from] now lives under the id [to] (the original list was deleted and the next took its place). */
@@ -181,7 +193,7 @@ fun CoverSection(snack: androidx.compose.material3.SnackbarHostState) {
     }
 
     Text(
-        tr("Optional. Shown at the top of this wishlist. Only you see it."),
+        tr("Personalise your wishlist with a cover photo at the top."),
         style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
     )
     if (cover != null) ListCoverPicture(cover, Modifier.padding(vertical = 4.dp))

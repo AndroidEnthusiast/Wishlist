@@ -560,6 +560,10 @@ fun App(
         if (Config.enabled && Friends.hasProfile(ctx)) try { Friends.refresh(ctx) } catch (e: Exception) {}
         // Unread messages show as a red dot on Messages from the start.
         if (Config.enabled && Friends.hasProfile(ctx)) try { Chat.refresh(ctx) } catch (e: Exception) {}
+        // Instant message notifications (Push.kt), when Firebase is set up.
+        if (Friends.hasProfile(ctx)) Push.start(ctx)
+        // Lists waiting to become "My friends" (new lists, and the one-time switch of 2.105).
+        try { ListVisibility.trySwitch(ctx) } catch (e: Exception) {}
     }
 
     val openMenu: () -> Unit = { scope.launch { drawer.open() } }
@@ -847,6 +851,7 @@ fun App(
     if (welcome) WelcomeFlow { welcome = false }
     DeleteHost(snack)
     PrivateHost(snack)
+    OwnedHost(snack)
     if (askBackground) BackgroundQuestion()
     // A "Target price reached" alert (or its entry in Notifications): that wish's price history, the target lit up.
     HistoryNav.open?.let { id ->
@@ -1089,8 +1094,9 @@ fun HomeScreen(
                                 onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
                                 onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) })
                             ) {
-                                IconButton(onClick = { editing = w }) {
-                                    Icon(AppIcons.Edit, tr("Edit"), tint = look.cardMuted(w.id))
+                                // Share instead of the pencil (owner, 2.105): Edit is in the long-press menu.
+                                IconButton(onClick = { shareItem(ctx, w) }) {
+                                    Icon(AppIcons.Share, tr("Share"), tint = look.cardMuted(w.id))
                                 }
                                 if (inShared) {
                                     // Reserving takes the place of "got it" on a shared list.
@@ -1100,7 +1106,7 @@ fun HomeScreen(
                                         Button(onClick = { Shared.reserve(w, true) }) { Text(tr("Reserve")) }
                                     }
                                 } else {
-                                    IconButton(onClick = { Repo.replace(ctx, w.copy(got = !w.got)) }) {
+                                    IconButton(onClick = { OwnedFlow.toggle(ctx, w) }) {
                                         Icon(
                                             AppIcons.Check, tr("Mark as owned"),
                                             tint = if (w.got) cs.primary else look.cardMuted(w.id)
@@ -1128,9 +1134,9 @@ fun HomeScreen(
     menuId?.let { id -> source.firstOrNull { it.id == id } }?.let { w ->
         ItemMenuDialog(
             w,
+            onEdit = { menuId = null; editing = w },
             onHistory = if (inShared) null else ({ menuId = null; historyId = w.id }),
             onShare = { menuId = null; shareItem(ctx, w) },
-            onStar = if (inShared) null else ({ menuId = null; Repo.replace(ctx, w.copy(star = !w.star)) }),
             onPrivate = if (inShared) null else ({ menuId = null; togglePrivate(ctx, w) }),
             onClose = { menuId = null }
         )
@@ -1295,7 +1301,11 @@ fun CompactCard(
                     Icon(AppIcons.MoreVert, tr("More"), tint = muted)
                 }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    // ⋮ (owner, 2.105): Edit, Private (with a tick), Share, Mark as owned, Delete. No Top wish here: the
+                    // star on the picture does that. Owned is only here because it doesn't fit on the small card.
                     DropdownMenuItem(text = { Text(tr("Edit")) }, onClick = { menu = false; onEdit() })
+                    if (reserve == null) PrivateMenuItem(w.priv) { menu = false; togglePrivate(ctx, w) }
+                    DropdownMenuItem(text = { Text(tr("Share")) }, onClick = { menu = false; shareItem(ctx, w) })
                     if (reserve != null) {
                         when (reserve.state) {
                             true -> DropdownMenuItem(text = { Text(tr("Undo reservation")) }, onClick = { menu = false; reserve.set(false) })
@@ -1304,16 +1314,8 @@ fun CompactCard(
                         }
                     } else {
                         DropdownMenuItem(
-                            text = { Text(if (w.star) tr("Remove top wish") else tr("Top wish")) },
-                            onClick = { menu = false; Repo.replace(ctx, w.copy(star = !w.star)) }
-                        )
-                        DropdownMenuItem(
                             text = { Text(if (w.got) tr("Mark as not owned") else tr("Mark as owned")) },
-                            onClick = { menu = false; Repo.replace(ctx, w.copy(got = !w.got)) }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(if (w.priv) tr("Visible to friends") else tr("Make private")) },
-                            onClick = { menu = false; togglePrivate(ctx, w) }
+                            onClick = { menu = false; OwnedFlow.toggle(ctx, w) }
                         )
                     }
                     DropdownMenuItem(text = { Text(tr("Delete")) }, onClick = { menu = false; DeleteFlow.request(ctx, w) })

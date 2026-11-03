@@ -142,7 +142,8 @@ fun HubScreen(
     var renaming by remember { mutableStateOf<HubItem?>(null) }
     var deleting by remember { mutableStateOf<HubItem?>(null) }
     var leaving by remember { mutableStateOf<HubItem?>(null) }
-    // Long press on a list: Edit name, then Delete wishlist (or Leave wishlist on a group wishlist someone else made).
+    var visibleOf by remember { mutableStateOf<HubItem?>(null) }
+    // Long press on a list: Edit name, Visible to (own lists, 2.105), then Delete wishlist (or Leave wishlist on a group wishlist someone else made).
     fun actionsOf(item: HubItem): List<Triple<String, Boolean, () -> Unit>> {
         val group = item.key.startsWith("s:")
         val code = item.key.substringAfter(':')
@@ -156,9 +157,15 @@ fun HubScreen(
                 deleting = item
             }
         }
+        val onVisible: () -> Unit = { visibleOf = item }
         val edit = Triple(tr("Edit name"), false, onEdit)
         return if (group && !creator) listOf(edit, Triple(tr("Leave wishlist"), true, onLeave))
-        else listOf(edit, Triple(tr("Delete wishlist"), true, onDelete))
+        else if (group) listOf(edit, Triple(tr("Delete wishlist"), true, onDelete))
+        else listOfNotNull(
+            edit,
+            if (Config.enabled) Triple(tr("Visible to"), false, onVisible) else null,
+            Triple(tr("Delete wishlist"), true, onDelete)
+        )
     }
 
     // Your own lists, then the group wishlists, as blocks two per row (owner, 2.91). On Home with the + buttons and
@@ -172,7 +179,7 @@ fun HubScreen(
         HubTitle(tr("Gift lists"), addLabel = tr("New gift list"), onAdd = if (onHome) onNewGroup else null)
         if (groupItems.isEmpty()) {
             Text(
-                tr("Make a wishlist with other gift givers and surprise someone with a gift they’ll love."),
+                tr("Plan gifts for someone, alone or together with others."),
                 style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
@@ -217,6 +224,23 @@ fun HubScreen(
         }
     }
 
+    // "Visible to" (2.105, owner): the same three choices as in the list's settings, with radio buttons.
+    visibleOf?.let { item ->
+        AlertDialog(
+            onDismissRequest = { visibleOf = null },
+            title = { Text(tr("Visible to")) },
+            text = {
+                Column {
+                    Text(
+                        item.name, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    WhoChoices(item.key.substringAfter(':'), snack)
+                }
+            },
+            confirmButton = { TextButton(onClick = { visibleOf = null }) { Text(tr("Done")) } }
+        )
+    }
     renaming?.let { item ->
         val group = item.key.startsWith("s:")
         val code = item.key.substringAfter(':')
@@ -543,6 +567,8 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
                 else {
                     val id = Repo.createMine(ctx, name, notes)
                     Repo.copyInto(ctx, id, picked)
+                    // New lists start on "My friends" (owner, 2.105).
+                    ListVisibility.startShared(ctx, id)
                     onCreated(id)
                 }
             }) { Text(tr("Create")) }

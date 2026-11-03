@@ -26,7 +26,8 @@ import androidx.compose.ui.unit.sp
  *    gift, crop, light, new photo, colour ball) are drawn in this app's own code.
  *  - Fonts (2.97): Google Sans (built in) and Figtree, Rajdhani, Share Tech Mono, Bungee, Bricolage Grotesque, Caveat
  *    (downloaded from Google Fonts): SIL Open Font License 1.1.
- *  - Libraries: AndroidX / Jetpack Compose, Kotlin, Coil (Apache License 2.0).
+ *  - Libraries: AndroidX / Jetpack Compose, Kotlin, Coil, Firebase Cloud Messaging (Apache License 2.0; it uses
+ *    Google Play services on the phone, which come with Android).
  * The full texts are in res/raw (license_apache.txt, license_ofl.txt).
  */
 
@@ -50,7 +51,7 @@ fun LicencesDialog(onClose: () -> Unit) {
                     tr("Fonts"),
                     "Google Sans, Figtree, Rajdhani, Share Tech Mono, Bungee, Bricolage Grotesque, Caveat — SIL Open Font License 1.1"
                 )
-                Credit(tr("Building blocks"), "AndroidX, Jetpack Compose, Kotlin, Coil — Apache License 2.0")
+                Credit(tr("Building blocks"), "AndroidX, Jetpack Compose, Kotlin, Coil, Firebase Cloud Messaging — Apache License 2.0")
                 Text(
                     tr("Our own icons: menu, view buttons, prices, wishlist, gift, crop, light, new photo and the colour ball."),
                     style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant

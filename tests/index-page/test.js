@@ -282,6 +282,26 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   const cc2 = [...D(cv).querySelectorAll(".card.compact")];
   check("compact: star badge + note shown", !!cc2[0].querySelector(".badge.star") && [...D(cv).querySelectorAll(".card.compact .wnote")].length === 2);
 
+  check("no cover: cover hidden", D(ms).getElementById("cover").hidden);
+
+  // cover photo (2.105): travels in the about item, with its text, only from our own storage
+  const ab = items.find(i => i.kind === "about");
+  ab.cover = "https://aspnmvmsvwbezdltykgx.supabase.co/storage/v1/object/public/wish-photos/ABCD2345/cover_1.jpg";
+  ab.cedit = JSON.stringify({text: "Birthday <b>2026</b>", tx: 0.25, ty: 0.5, color: 4294959437, box: true, tsize: 0.2});
+  let co = await load("?c=ABCD2345");
+  const cov = D(co).getElementById("cover"), ct = D(co).getElementById("coverText");
+  check("cover shown at the top", !cov.hidden && D(co).getElementById("coverImg").getAttribute("src") === ab.cover);
+  check("cover text as text, placed and sized", ct.textContent === "Birthday <b>2026</b>" && !ct.querySelector("b") && ct.style.left === "25%" && ct.style.top === "50%" && ct.style.fontSize === "30px");
+  check("cover text colour and box", ct.style.color === "rgb(255, 225, 77)" && ct.className === "boxed" && ct.style.background !== "");
+  check("cover is not a wish", D(co).querySelectorAll(".card").length === 6);
+  ab.cedit = "not json";
+  co = await load("?c=ABCD2345");
+  check("cover with broken text data: picture, no text", !D(co).getElementById("cover").hidden && D(co).getElementById("coverText").hidden);
+  ab.cover = "https://evil.example/x.jpg";
+  co = await load("?c=ABCD2345");
+  check("cover from another site is not shown", D(co).getElementById("cover").hidden);
+  delete ab.cover; delete ab.cedit;
+
   // no note, no about
   items.splice(items.findIndex(i => i.kind === "about"), 1);
   let na = await load("?c=ABCD2345");

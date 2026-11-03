@@ -1,5 +1,8 @@
 package com.wishlist.app
 
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -144,6 +147,13 @@ fun FriendScreen(
                     )
                 }
                 r0 != null -> {
+                    // The list's cover photo, as its owner made it (2.105).
+                    if (r0.cover.isNotEmpty()) HeroPicture(
+                        r0.cover, HeroEdit.fromJson(r0.coverEdit),
+                        Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp).fillMaxWidth()
+                            .height(150.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp)),
+                        cut = r0.cover
+                    )
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)

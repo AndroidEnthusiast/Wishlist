@@ -244,6 +244,12 @@ object Alerts {
         nm.notify(nid, n)
     }
 
+    /** The chat with [id] was seen: its message notification goes. */
+    fun clearMessage(c: Context, id: String) {
+        val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        nm.cancel(id.hashCode() * 31 + 23)
+    }
+
     /** Shows an example alert. Returns false if notifications are switched off for the app. */
     fun sendTest(c: Context): Boolean {
         if (!NotificationManagerCompat.from(c).areNotificationsEnabled()) return false

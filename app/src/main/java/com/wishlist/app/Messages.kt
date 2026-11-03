@@ -1,5 +1,10 @@
 package com.wishlist.app
 
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
@@ -355,6 +360,39 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
     }
     LaunchedEffect(msgs.size) { if (msgs.isNotEmpty()) listState.animateScrollToItem(msgs.size - 1) }
 
+    // "Read" (owner, 2.105): only once you have really seen their newest message: the app is in front, this chat is
+    // open and the end of the conversation is on screen. Opening the chat from the notification does the same.
+    val lifeOwner = ctx as? LifecycleOwner
+    var resumed by remember {
+        mutableStateOf(lifeOwner?.lifecycle?.currentState?.isAtLeast(Lifecycle.State.RESUMED) ?: true)
+    }
+    DisposableEffect(lifeOwner) {
+        val obs = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) resumed = true
+            else if (event == Lifecycle.Event.ON_PAUSE) resumed = false
+        }
+        lifeOwner?.lifecycle?.addObserver(obs)
+        onDispose { lifeOwner?.lifecycle?.removeObserver(obs) }
+    }
+    val atEnd by remember {
+        derivedStateOf {
+            val info = listState.layoutInfo
+            val last = info.visibleItemsInfo.lastOrNull()
+            info.totalItemsCount == 0 || (last != null && last.index >= info.totalItemsCount - 1)
+        }
+    }
+    var seenUpTo by remember(peer) { mutableStateOf(0L) }
+    val newestTheirs = msgs.lastOrNull { !it.mine }?.id ?: 0L
+    LaunchedEffect(resumed, atEnd, newestTheirs) {
+        if (!resumed || !atEnd || newestTheirs <= seenUpTo) return@LaunchedEffect
+        delay(400) // really looked, not just passing through
+        try {
+            Chat.seen(ctx, peer, newestTheirs)
+            seenUpTo = newestTheirs
+        } catch (e: Exception) {
+        }
+    }
+
     fun send(content: ChatContent) {
         sending = true
         scope.launch {
@@ -379,7 +417,7 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.clip(RoundedCornerShape(12.dp)).then(
                             if (friend != null) Modifier.clickable(onClickLabel = tr("Open profile")) {
-                                FriendsNav.reset(); FriendsNav.person = peer; FriendsNav.openTab = true
+                                FriendsNav.reset(); FriendsNav.person = peer; FriendsNav.fromChat = peer; FriendsNav.openTab = true
                             } else Modifier
                         ).padding(end = 8.dp)
                     ) {

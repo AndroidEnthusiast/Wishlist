@@ -118,6 +118,25 @@ object Sync {
             }
         }
 
+        // The cover photo goes online too (owner, 2.105: friends see it): the cut-out picture, with its text.
+        val cover = ListCovers.get(c, "m:${d.id}")
+        val coverName = cover?.cut?.takeIf { it.isNotEmpty() && ImageStore.isLocal(it) }?.substringAfterLast('/')
+        var coverUrl = ""
+        if (cover != null && coverName != null) {
+            if (coverName !in up) {
+                val bytes = ImageStore.shareCopy(cover.cut, 1200)
+                if (bytes != null) try {
+                    Cloud.uploadPhoto(code, token, coverName, bytes)
+                    up = up + coverName
+                    Repo.setUploadedFor(c, d.id, up)
+                } catch (e: Exception) {
+                    problem = e.message ?: tr("unknown error")
+                }
+            }
+            if (coverName in up) coverUrl = Cloud.photoUrl(code, coverName)
+        }
+        val keep = mine.keys + listOfNotNull(coverName)
+
         val out = wishes.map { w ->
             if (!ImageStore.isLocal(w.image)) w
             else {
@@ -125,9 +144,12 @@ object Sync {
                 if (n in up) w.copy(image = Cloud.photoUrl(code, n)) else w.copy(image = "")
             }
         }
-        Cloud.pushList(code, token, d.name, d.cats, out, d.about)
+        Cloud.pushList(
+            code, token, d.name, d.cats, out, d.about,
+            coverUrl, if (coverUrl.isEmpty() || cover == null) "" else cover.edit.toJson()
+        )
 
-        for (n in up - mine.keys) {
+        for (n in up - keep) {
             try {
                 Cloud.deletePhoto(code, token, n)
                 up = up - n
@@ -187,6 +209,36 @@ object Sync {
             }
         }
         Cloud.deleteList(code, token)
+    }
+
+    /** Puts your list [id] online (open or not), when it isn't yet. */
+    suspend fun publishFor(c: Context, id: String) {
+        if (id == Repo.openMine) { publish(c); return }
+        val d = Repo.mine(c, id)
+        if (d.code != null) return
+        val code = newCode()
+        val token = UUID.randomUUID().toString()
+        Cloud.createList(code, token, d.name)
+        Repo.setShareFor(c, id, code, token)
+        val nd = Repo.mine(c, id)
+        lock.withLock { pushData(nd, (nd.wishes + Repo.binnedOf(id)).filter { !it.priv }, live = false) }
+    }
+
+    /** Takes your list [id] offline (open or not). */
+    suspend fun unpublishFor(c: Context, id: String) {
+        if (id == Repo.openMine) { unpublish(c); return }
+        val d = Repo.mine(c, id)
+        if (d.code == null) return
+        unpublishStored(d)
+        Repo.setShareFor(c, id, null, null)
+        Repo.setUploadedFor(c, id, emptySet())
+    }
+
+    /** Runs [block] in the background (errors are ignored). */
+    fun later(block: suspend () -> Unit) {
+        scope.launch {
+            try { block() } catch (e: Exception) {}
+        }
     }
 
     fun newCode(): String {
