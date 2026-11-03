@@ -10,8 +10,8 @@ android {
         applicationId = "com.wishlist.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 106
-        versionName = "2.105"
+        versionCode = 107
+        versionName = "2.106"
     }
     // The release key is NOT in this project. GitHub puts it in place while building, from the repository secrets
     // KEYSTORE_BASE64, KEYSTORE_PASSWORD and KEY_ALIAS (see .github/workflows/build.yml). Keep a copy of the key safe:

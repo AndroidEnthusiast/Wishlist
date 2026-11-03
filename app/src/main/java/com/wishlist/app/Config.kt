@@ -23,10 +23,10 @@ object Config {
      * Project settings > General (Web API key, Project ID, Project number = sender ID) and "Your apps" > the Android
      * app (App ID). They are public, like the Supabase key. Empty: no push, the background check stays.
      */
-    const val FCM_API_KEY = ""
-    const val FCM_APP_ID = ""
-    const val FCM_PROJECT_ID = ""
-    const val FCM_SENDER_ID = ""
+    const val FCM_API_KEY = "AIzaSyBdXo4kptWlwzpPUYR-JEoGDE8t8rqYpqc"
+    const val FCM_APP_ID = "1:173058587232:android:dd63c28f3e82f6308ce105"
+    const val FCM_PROJECT_ID = "wishlist-a2cd4"
+    const val FCM_SENDER_ID = "173058587232"
 
     val enabled: Boolean
         get() = SUPABASE_URL.isNotBlank() && SUPABASE_KEY.isNotBlank()
