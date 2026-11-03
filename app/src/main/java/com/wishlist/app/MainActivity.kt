@@ -541,6 +541,8 @@ fun App(
             ChatNav.openTab = false
             closeAll()
             messagesOpen = true
+            // Back from a friend's page opened from this chat: their page is cleared now that the chat shows.
+            if (FriendsNav.fromChat != null) FriendsNav.reset()
         }
     }
 

@@ -96,11 +96,14 @@ object FriendsNav {
 
     fun reset() { person = null; list = null; page = null; loaded = emptyMap(); fromChat = null }
 
-    /** Back from a friend's page: to the chat it was opened from, or to Friends. */
+    /**
+     * Back from a friend's page: to the chat it was opened from, or to Friends. Going back to the chat, their page
+     * stays until Messages is on screen and is only then cleared (MainActivity): clearing it first showed the
+     * Friends overview for a moment (owner, 2.107).
+     */
     fun leavePerson() {
         val back = fromChat
-        reset()
-        if (back != null) { ChatNav.peer = back; ChatNav.openTab = true }
+        if (back != null) { ChatNav.peer = back; ChatNav.openTab = true } else reset()
     }
 
     /** Opens the list with [code] if it belongs to a friend (for example from a "gift no longer on the list" alert). */

@@ -112,7 +112,8 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 ## Session of 3 November 2026: owner's list (v2.105)
 - Owner interviewed with pop-up questions (answers in DECISIONS.md, "Owner's list of 3 November 2026"). Built: "My friends" by default (+ silent one-time switch), "Visible to" on Home's long press, wish menus with "Private" ticks, Share instead of the pencil, "Wish marked as owned", back to the chat from a friend's page, "Other information" scroll fix, Gift lists line, cover photo for friends (app + web), note saves with the tick, honest read ticks, Firebase push (code ready, switched off until set up).
-- v2.106 (same session): the owner created the Firebase project and gave its values; they are in `Config.kt`.
+- v2.106 (same session): the owner created the Firebase project and gave its values; they are in `Config.kt`. The owner then did all the Firebase/Supabase steps (not yet confirmed working with two phones).
+- v2.107: Back from a friend's page (opened from a chat) goes straight to the chat, without flashing the Friends overview.
 - New: `supabase-push.sql` (owner must run it), Supabase function `push` (owner must deploy it), `Push.kt`, `Owned.kt`. Checked here: web suites, `tests/function/push_test.ts`, `tests/sql/push_test.sql` + `chat_test.sql` on a local PostgreSQL (pg_net replaced by a stand-in). The Android code could not be compiled here (no Android SDK; downloading one is blocked); bracket balance checked by hand, GitHub builds it.
 
 ## Next session
