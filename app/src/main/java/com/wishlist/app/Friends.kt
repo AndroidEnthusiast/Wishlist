@@ -26,7 +26,8 @@ import kotlin.math.min
  *  - Someone enters your code: a friend request. You approve or decline it in the Friends tab (and get a notification).
  *  - Each of your own lists has "Visible to friends" in its settings (off by default). Such a list goes online like a
  *    shared list (it gets its friends' link), and your friends can see it and reserve gifts. You never see reservations.
- *  - Per friend: "Hide my lists from …" (they aren't told) and "Unfollow" (you are no longer friends; they aren't told).
+ *  - Per friend: "Unfriend" (you are no longer friends; they aren't told). "Hide my lists from …" went in 2.108
+ *    (owner: private wishes are enough); supabase-groups.sql switched every hiding off.
  * Profiles belong to the phone (no e-mail accounts): a new phone starts again.
  */
 
@@ -383,14 +384,9 @@ object Friends {
         refresh(c)
     }
 
-    /** Unfollow a friend, or take back a request you sent. */
+    /** Unfriend a friend, or take back a request you sent. */
     suspend fun remove(c: Context, id: String) {
         Cloud.rpc("wl_fr_remove", base(c).put("p_other", id))
-        refresh(c)
-    }
-
-    suspend fun hide(c: Context, id: String, hide: Boolean) {
-        Cloud.rpc("wl_fr_hide", base(c).put("p_other", id).put("p_hide", hide))
         refresh(c)
     }
 

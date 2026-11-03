@@ -91,6 +91,8 @@ object ListVisibility {
         val d = Repo.mine(c, id)
         return when {
             d.code == null -> Who.ME
+            // Online only for wishlist groups (2.108): friends don't see it and its link is off.
+            id in ListLink.off && !Friends.isVisible(id) -> Who.ME
             id in ListLink.off -> Who.FRIENDS
             else -> Who.LINK
         }
@@ -101,6 +103,13 @@ object ListVisibility {
         dropPending(c, id)
         if (w == Who.ME) {
             if (Friends.isVisible(id)) Friends.setVisible(c, id, false)
+            // A list brought to a wishlist group stays online for the group (owner, 2.108): only friends and its link
+            // lose it.
+            if (Groups.groupsOf(c, id).isNotEmpty()) {
+                ListLink.set(c, id, false)
+                version++
+                return tr("Only you and your wishlist groups can see this wishlist now")
+            }
             Sync.unpublishFor(c, id)
             Friends.forget(c, id)
             ListLink.forget(c, id)
@@ -168,7 +177,8 @@ fun WhoCanSeeSection(snack: SnackbarHostState) {
 
     // A list shared with a link before 2.95 wasn't visible to friends: the link choice includes friends, so it is now.
     LaunchedEffect(id, code) {
-        if (code != null && !Friends.isVisible(id) && Config.enabled) {
+        // (Not a list that is online only for wishlist groups: its link is off, 2.108.)
+        if (code != null && !Friends.isVisible(id) && id !in ListLink.off && Config.enabled) {
             try { Friends.setVisible(ctx, id, true) } catch (e: Exception) {}
         }
     }
@@ -233,7 +243,12 @@ fun WhoChoices(id: String, snack: SnackbarHostState): Who {
         if (w == Who.ME) askPrivate = true else go(w)
     }
 
-    Choice(tr("Only me"), tr("Nobody else sees this wishlist."), now == Who.ME, !busy) { choose(Who.ME) }
+    val inGroups = remember(id, Groups.groups, Repo.mineVersion) { Groups.groupsOf(ctx, id) }
+    Choice(
+        tr("Only me"),
+        if (inGroups.isEmpty()) tr("Nobody else sees this wishlist.") else tr("Only your wishlist groups see it."),
+        now == Who.ME, !busy
+    ) { choose(Who.ME) }
     Choice(tr("My friends"), tr("Friends you added in the app."), now == Who.FRIENDS, !busy) { choose(Who.FRIENDS) }
     Choice(
         tr("Friends + anyone with the link"), tr("Also people without the app, in their browser."),
@@ -244,7 +259,12 @@ fun WhoChoices(id: String, snack: SnackbarHostState): Who {
         AlertDialog(
             onDismissRequest = { askPrivate = false },
             title = { Text(tr("Only you?")) },
-            text = { Text(tr("Friends can no longer see this wishlist, its link stops working and all reservations on it are deleted. Sharing it again later makes a new link.")) },
+            text = {
+                Text(
+                    if (inGroups.isEmpty()) tr("Friends can no longer see this wishlist, its link stops working and all reservations on it are deleted. Sharing it again later makes a new link.")
+                    else tr("Friends can no longer see this wishlist and its link stops working. Your wishlist groups still see it, and reservations stay.")
+                )
+            },
             confirmButton = {
                 TextButton(onClick = { askPrivate = false; go(Who.ME) }) { Text(tr("Only me")) }
             },

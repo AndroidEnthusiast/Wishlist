@@ -52,11 +52,13 @@ import kotlinx.coroutines.launch
 fun FriendScreen(
     f: Friend, snack: SnackbarHostState, onMenu: () -> Unit, onRemoved: () -> Unit,
     // A list of a friend from the Friends tab: loaded through the friendship (not the link), with a back arrow and
-    // no "Remove this list" (unfollowing is done on the friend).
+    // no "Remove this list" (unfriending is done on the friend).
     fetch: (suspend () -> RemoteList?)? = null,
     onBack: (() -> Unit)? = null,
     // Whose list it is ("Owned by …", 2.102): the friend's name, or what the list itself says (opened from a link).
-    ownerName: String? = null
+    ownerName: String? = null,
+    // Something more in the top bar: "Add friend" on the list of a wishlist group member (2.108).
+    extraAction: (@Composable () -> Unit)? = null
 ) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -130,6 +132,7 @@ fun FriendScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 actions = {
+                    extraAction?.invoke()
                     IconButton(onClick = { tick++ }) { Icon(AppIcons.Refresh, tr("Refresh")) }
                     if (onBack == null) IconButton(onClick = { confirmRemove = true }) { Icon(AppIcons.Delete, tr("Remove this list")) }
                 }

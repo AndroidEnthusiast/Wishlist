@@ -24,7 +24,8 @@ object Show {
         "nt_req" to true,        // friend requests
         "nt_ok" to true,         // your friend request was accepted
         "nt_bday" to false,      // friends' birthdays
-        "nt_msg" to true         // new messages
+        "nt_msg" to true,        // new messages
+        "nt_group" to true       // wishlist groups (2.108): invites, "No thanks", removed from a group
     )
 
     private val state = HashMap<String, androidx.compose.runtime.MutableState<Boolean>>()
@@ -58,6 +59,7 @@ object Show {
         "friend_req" -> "nt_req"
         "friend_ok" -> "nt_ok"
         "birthday" -> "nt_bday"
+        "group_invite", "group_declined", "group_removed" -> "nt_group"
         else -> null
     }
 }

@@ -189,6 +189,8 @@ class MainActivity : ComponentActivity() {
         const val OPEN_CHAT = "open_chat"
         /** A birthday alert: the friend (profile id) whose page to open. */
         const val OPEN_FRIEND = "open_friend"
+        /** A wishlist group alert (2.108): the group (or invite) to open, or "" for just the app. */
+        const val OPEN_GROUP = "open_group"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -273,6 +275,12 @@ class MainActivity : ComponentActivity() {
             FriendsNav.openTab = true
             return
         }
+        if (i != null && i.hasExtra(OPEN_GROUP)) {
+            val gid = i.getStringExtra(OPEN_GROUP).orEmpty()
+            i.removeExtra(OPEN_GROUP)
+            if (gid.isNotEmpty()) GroupNav.openInvite(gid, null)
+            return
+        }
         if (i != null && i.hasExtra(OPEN_FRIENDS)) {
             i.removeExtra(OPEN_FRIENDS)
             FriendsNav.reset()
@@ -292,11 +300,18 @@ class MainActivity : ComponentActivity() {
         }
         // An invite link that was opened (wishlist://join?j=KEY), for example from the button on the invite web page.
         if (i?.action == Intent.ACTION_VIEW) {
-            i.dataString?.let { Sync.parseInvite(it) }?.let { sharedInvite = it }
+            val d = i.dataString.orEmpty()
+            // Wishlist groups (2.108): a group link (wishlist://group?g=KEY) or a browser member's "My link".
+            Groups.parseMe(d)?.let { GroupNav.takeover = it; GroupNav.request++; return }
+            Groups.parseLink(d)?.let { GroupNav.openInvite(null, it); return }
+            Sync.parseInvite(d)?.let { sharedInvite = it }
             return
         }
         if (i?.action == Intent.ACTION_SEND) {
             val t = i.getStringExtra(Intent.EXTRA_TEXT).orEmpty()
+            // A group link or "My link" shared into the app (2.108).
+            Groups.parseMe(t)?.let { GroupNav.takeover = it; GroupNav.request++; return }
+            Groups.parseLink(t)?.let { GroupNav.openInvite(null, it); return }
             // An invite link shared into the app (the share sheet) opens the "Join" screen.
             val invite = if (t.uppercase().contains("J=")) Sync.parseInvite(t) else null
             val code = Sync.embeddedCode(t)
@@ -424,6 +439,9 @@ fun App(
     var messagesOpen by remember { mutableStateOf(false) }
     // Your profile (menu > Profile, or your picture on Friends): photo, name and friend code (FriendsUi.kt).
     var profileOpen by remember { mutableStateOf(false) }
+    // A wishlist group on screen (2.108, GroupsUi.kt), by its id.
+    var groupOpen by remember { mutableStateOf<String?>(null) }
+    var newWishGroup by remember { mutableStateOf(false) }
 
     /**
      * Closes every screen that lies on top of Home or a list (settings, bin, a friend's link list, a list's settings,
@@ -433,6 +451,7 @@ fun App(
     fun closeAll() {
         settings = false; binOpen = false; friendCode = null; listSettings = false
         pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false; messagesOpen = false
+        groupOpen = null
     }
     var createChoice by remember { mutableStateOf(false) }
     // "Add wish" from the bottom bar: the form with "Save to", starting at the list on screen (or the last one used).
@@ -546,6 +565,21 @@ fun App(
         }
     }
 
+    // Wishlist groups (2.108): open a group, or show its join screen (a link, an invite, a notification, a chat
+    // message), or move a browser member's list into the app.
+    LaunchedEffect(GroupNav.request) {
+        val g = GroupNav.open
+        if (g != null) {
+            GroupNav.open = null
+            closeAll(); hub = true; HubNav.page = null
+            groupOpen = g
+            scope.launch { drawer.close() }
+        }
+    }
+    BackHandler(enabled = !drawer.isOpen && groupOpen != null && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen && !profileOpen) {
+        groupOpen = null
+    }
+
     // Back from Profile goes to where you were (Friends, when you came from your picture there).
     BackHandler(enabled = !drawer.isOpen && profileOpen) { profileOpen = false }
     // A friend request alert was tapped: the Friends tab.
@@ -566,6 +600,8 @@ fun App(
         if (Friends.hasProfile(ctx)) Push.start(ctx)
         // Lists waiting to become "My friends" (new lists, and the one-time switch of 2.105).
         try { ListVisibility.trySwitch(ctx) } catch (e: Exception) {}
+        // Wishlist groups and invites (2.108).
+        if (Config.enabled && Friends.hasProfile(ctx)) try { Groups.refresh(ctx) } catch (e: Exception) {}
     }
 
     val openMenu: () -> Unit = { scope.launch { drawer.open() } }
@@ -586,11 +622,14 @@ fun App(
     // A page behind one of the numbers on Home (Overview.kt) has a back arrow too.
     val inOverview = hub && HubNav.page != null && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen &&
         !profileOpen && !pricesOpen && !friendsOpen && !messagesOpen
+    // A wishlist group has a back arrow too.
+    val inGroup = groupOpen != null && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen && !profileOpen &&
+        !pricesOpen && !friendsOpen && !messagesOpen
     // An open conversation has a back arrow too, and no bottom bar.
     val inChat = messagesOpen && ChatNav.peer != null && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen && !profileOpen
     ModalNavigationDrawer(
         drawerState = drawer,
-        gesturesEnabled = !inListSettings && !inThemer && !inFriend && !inOverview && !inChat,
+        gesturesEnabled = !inListSettings && !inThemer && !inFriend && !inOverview && !inChat && !inGroup,
         drawerContent = {
             val look = LocalLook.current
             ModalDrawerSheet(
@@ -621,7 +660,7 @@ fun App(
                         )
                     }
                     // Only the screen that is open is highlighted: one item at a time.
-                    val elsewhere = settings || binOpen || friendCode != null || notesOpen || pricesOpen || friendsOpen || profileOpen || messagesOpen
+                    val elsewhere = settings || binOpen || friendCode != null || notesOpen || pricesOpen || friendsOpen || profileOpen || messagesOpen || groupOpen != null
                     val onList = !elsewhere && !hub
                     DrawerItem(tr("Home"), AppIcons.Home, hub && !elsewhere) {
                         HubNav.page = null
@@ -648,6 +687,23 @@ fun App(
                     }
                     DrawerItem(tr("New wishlist"), AppIcons.Add, false) {
                         newMine = true
+                        scope.launch { drawer.close() }
+                    }
+                    // Wishlist groups (2.108), after your own lists like on Home.
+                    DrawerDivider()
+                    Text(
+                        tr("Wishlist groups"), style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 28.dp, top = 8.dp, bottom = 8.dp)
+                    )
+                    Groups.groups.forEach { g ->
+                        DrawerItem(g.name, AppIcons.Group, groupOpen == g.id && !settings && !binOpen && !notesOpen && !profileOpen) {
+                            GroupNav.openGroup(g.id)
+                            scope.launch { drawer.close() }
+                        }
+                    }
+                    DrawerItem(tr("New group"), AppIcons.Add, false) {
+                        newWishGroup = true
                         scope.launch { drawer.close() }
                     }
                     // Then the wishlists you make together with other givers (group wishlists).
@@ -730,11 +786,15 @@ fun App(
                         key.startsWith("c:") -> openFriend(key.removePrefix("c:"))
                         key.startsWith("r:") -> { FriendsNav.reset(); friendsOpen = true }
                         key.startsWith("p:") -> { FriendsNav.reset(); FriendsNav.person = key.removePrefix("p:"); friendsOpen = true }
+                        key.startsWith("g:") -> GroupNav.openInvite(key.removePrefix("g:"), null)
                     }
                 }
                 pricesOpen -> PricesScreen(snack, onProfile = { profileOpen = true })
                 friendsOpen -> FriendsScreen(snack, onProfile = { profileOpen = true }, onOpenLink = { friendCode = it })
                 messagesOpen -> MessagesScreen(snack, onProfile = { profileOpen = true })
+                groupOpen != null -> key(groupOpen) {
+                    GroupScreen(groupOpen!!, snack, onBack = { groupOpen = null; hub = true }, onOpenMine = { openMine(it) })
+                }
                 hub -> HubScreen(
                     snack,
                     onOpenMine = { openMine(it) },
@@ -742,7 +802,9 @@ fun App(
                     onNewMine = { newMine = true },
                     onNewGroup = { newShared = true },
                     onProfile = { profileOpen = true },
-                    onAddTo = { t -> addTarget = t; prefill = ""; adding = true }
+                    onAddTo = { t -> addTarget = t; prefill = ""; adding = true },
+                    onOpenWishGroup = { GroupNav.openGroup(it) },
+                    onNewWishGroup = { newWishGroup = true }
                 )
                 else -> key(Shared.active, Repo.openMine) {
                     HomeScreen(
@@ -786,7 +848,7 @@ fun App(
     }
 
     // The menu button lives above the menu so it can spin into an X and close it.
-    if (!inListSettings && !inThemer && !inFriend && !inOverview && !inChat) Box(
+    if (!inListSettings && !inThemer && !inFriend && !inOverview && !inChat && !inGroup) Box(
         Modifier.windowInsetsPadding(TopAppBarDefaults.windowInsets).height(64.dp).padding(start = 4.dp),
         contentAlignment = Alignment.CenterStart
     ) {
@@ -848,6 +910,33 @@ fun App(
                 scope.launch { snack.showToast(tr("“%s” is ready", Repo.mineName(id))) }
             },
             onClose = { newMine = false }
+        )
+    }
+    if (newWishGroup) {
+        NewGroupDialog(
+            onCreated = { gid ->
+                newWishGroup = false
+                GroupNav.inviteNow = gid
+                GroupNav.openGroup(gid)
+            },
+            onClose = { newWishGroup = false }
+        )
+    }
+    if (GroupNav.joinLink != null || GroupNav.joinGroup != null) key(GroupNav.joinLink, GroupNav.joinGroup) {
+        JoinGroupDialog(
+            GroupNav.joinLink, GroupNav.joinGroup,
+            onJoined = { gid -> GroupNav.joinLink = null; GroupNav.joinGroup = null; GroupNav.openGroup(gid) },
+            onClose = { GroupNav.joinLink = null; GroupNav.joinGroup = null }
+        )
+    }
+    GroupNav.takeover?.let { me ->
+        TakeoverDialog(
+            me, snack,
+            onDone = { id ->
+                GroupNav.takeover = null
+                if (id != null) openMine(id)
+            },
+            onClose = { GroupNav.takeover = null }
         )
     }
     if (welcome) WelcomeFlow { welcome = false }

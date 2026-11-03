@@ -4,7 +4,8 @@
 // load it and send the HTML back. The page then reads the title, picture and price out of it (web/parse.js).
 //
 // Safety:
-//  * Only people who hold a valid invite (edit) key of a shared list can use it. The key is checked in the database.
+//  * Only people who hold a valid invite (edit) key of a shared list, or a valid wishlist group link (2.108), can use
+//    it. The key is checked in the database.
 //  * It only loads public web addresses: no localhost, no private or internal network addresses, and every redirect
 //    is checked again. Only ports 80 and 443. At most 1.5 MB is read, and it gives up after 12 seconds.
 //
@@ -167,12 +168,17 @@ async function realKeyOk(key: string, apikey: string): Promise<boolean> {
   if (!base) return false;
   const headers: Record<string, string> = { "Content-Type": "application/json", apikey };
   if (apikey.startsWith("eyJ")) headers["Authorization"] = "Bearer " + apikey;
-  const r = await fetch(base.replace(/\/$/, "") + "/rest/v1/rpc/wl_sh_info", {
-    method: "POST", headers, body: JSON.stringify({ p_key: key }),
-  });
-  if (!r.ok) return false;
-  const t = (await r.text()).trim();
-  return t !== "" && t !== "null";
+  // An edit key of a gift list (wl_sh_info), or else the link of a wishlist group (wl_gr_info, browser members).
+  const ask = async (fn: string, body: Record<string, string>) => {
+    const r = await fetch(base.replace(/\/$/, "") + "/rest/v1/rpc/" + fn, {
+      method: "POST", headers, body: JSON.stringify(body),
+    });
+    if (!r.ok) return false;
+    const t = (await r.text()).trim();
+    return t !== "" && t !== "null";
+  };
+  if (await ask("wl_sh_info", { p_key: key })) return true;
+  return await ask("wl_gr_info", { p_link: key });
 }
 
 export const realDeps: Deps = { fetch: (u, i) => fetch(u, i), resolve: realResolve, keyOk: realKeyOk };

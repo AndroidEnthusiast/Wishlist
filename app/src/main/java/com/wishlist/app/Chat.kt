@@ -16,7 +16,9 @@ import org.json.JSONObject
  *    two phones).
  *  - No push service: the open chat asks every few seconds, the conversation list every few seconds while it is on
  *    screen, and the background check ([BinWorker], about every 30 minutes) notifies new messages.
- *  - A message is JSON before locking: {"t":"text","x":"…"} or {"t":"wish","title","price","cur","img","url"}.
+ *  - A message is JSON before locking: {"t":"text","x":"…"} or {"t":"wish","title","price","cur","img","url"}, or
+ *    (2.108) a group invitation {"t":"group","gid","name","link"} (ChatContent: text = group id, title = its name,
+ *    url = the group link).
  */
 
 /** What a message says, once unlocked. [readable] false: locked with another phone's key. */
@@ -103,7 +105,8 @@ object Chat {
 
     private fun parse(s: String): ChatContent = try {
         val j = JSONObject(s)
-        if (j.optString("t") == "wish") ChatContent(
+        if (j.optString("t") == "group") ChatContent(true, "group", j.optString("gid"), j.optString("name"), url = j.optString("link"))
+        else if (j.optString("t") == "wish") ChatContent(
             true, "wish", "", j.optString("title"), if (j.has("price") && !j.isNull("price")) j.optDouble("price") else null,
             j.optString("cur"), j.optString("img"), j.optString("url")
         ) else ChatContent(true, "text", j.optString("x"))
@@ -185,7 +188,9 @@ object Chat {
             ?: Cloud.rpc("wl_chat_key", base(c).put("p_other", other)).trim().removeSurrounding("\"")
         if (theirPub.isEmpty()) throw IllegalStateException("no key")
         val me = myId(c)
-        val plain = if (content.kind == "wish") JSONObject().put("t", "wish").put("title", content.title)
+        val plain = if (content.kind == "group") JSONObject().put("t", "group").put("gid", content.text)
+            .put("name", content.title).put("link", content.url).toString()
+        else if (content.kind == "wish") JSONObject().put("t", "wish").put("title", content.title)
             .put("price", content.price ?: JSONObject.NULL).put("cur", content.cur).put("img", content.img).put("url", content.url).toString()
         else JSONObject().put("t", "text").put("x", content.text).toString()
         val body = ChatCrypto.lock(keyWith(c, theirPub, other), plain, me, other)
@@ -218,6 +223,7 @@ object Chat {
     fun preview(m: ChatContent): String = when {
         !m.readable -> tr("This message can’t be read on this phone")
         m.kind == "wish" -> tr("Wish: %s", m.title)
+        m.kind == "group" -> tr("Invitation: %s", m.title)
         else -> m.text
     }
 }

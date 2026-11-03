@@ -539,7 +539,11 @@ private fun Bubble(m: ChatMessage, shape: androidx.compose.ui.graphics.Shape, on
         Column(
             Modifier.widthIn(max = 300.dp).lookSurface(look, shape, fill, raised = look.design != "neu" || m.mine, depth = 3.dp)
                 .combinedClickable(
-                    onClick = { if (m.content.kind == "wish" && m.content.url.isNotBlank()) try { uri.openUri(m.content.url) } catch (e: Exception) {} },
+                    onClick = {
+                        if (m.content.kind == "wish" && m.content.url.isNotBlank()) try { uri.openUri(m.content.url) } catch (e: Exception) {}
+                        // A group invitation (2.108): the join screen, or the group when you are in it already.
+                        if (m.content.kind == "group") GroupNav.openInvite(m.content.text, Groups.parseLink(m.content.url))
+                    },
                     onLongClick = onLongPress
                 )
                 .padding(horizontal = 12.dp, vertical = 8.dp)
@@ -561,6 +565,17 @@ private fun Bubble(m: ChatMessage, shape: androidx.compose.ui.graphics.Shape, on
                         Text(m.content.title, color = ink, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         m.content.price?.let { Text(money(it, m.content.cur), color = ink, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold) }
                         if (m.content.url.isNotBlank()) Text(tr("View in shop"), color = ink.copy(alpha = 0.8f), style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+                m.content.kind == "group" -> Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        Modifier.size(52.dp).clip(RoundedCornerShape(10.dp)).background(Color.White),
+                        contentAlignment = Alignment.Center
+                    ) { Icon(AppIcons.Group, null, tint = Color(0xFF8A8A92), modifier = Modifier.size(28.dp)) }
+                    Column(Modifier.padding(start = 10.dp).widthIn(max = 200.dp)) {
+                        Text(tr("Join my wishlist group"), color = ink.copy(alpha = 0.8f), style = MaterialTheme.typography.labelMedium)
+                        Text(m.content.title, color = ink, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        Text(if (m.mine) tr("Invitation sent") else tr("Tap to join"), color = ink.copy(alpha = 0.8f), style = MaterialTheme.typography.labelSmall)
                     }
                 }
                 else -> Text(m.content.text, color = ink, style = MaterialTheme.typography.bodyLarge)

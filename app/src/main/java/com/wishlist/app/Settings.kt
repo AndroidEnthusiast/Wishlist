@@ -208,6 +208,7 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
             SettingSwitch(tr("Reserved gift taken off a list"), tr("A gift you reserved is no longer on a friend’s list."), Show["nt_gone"]) { Show.set(ctx, "nt_gone", it) }
             SettingSwitch(tr("Friend requests"), tr("Someone wants to be your friend."), Show["nt_req"]) { Show.set(ctx, "nt_req", it) }
             SettingSwitch(tr("Friend request accepted"), tr("A friend approved your request."), Show["nt_ok"]) { Show.set(ctx, "nt_ok", it) }
+            SettingSwitch(tr("Wishlist groups"), tr("Invitations, and changes in your groups."), Show["nt_group"]) { Show.set(ctx, "nt_group", it) }
             SettingSwitch(tr("Friends’ birthdays"), tr("A few days before a friend’s birthday."), Show["nt_bday"]) { Show.set(ctx, "nt_bday", it) }
             SettingSwitch(tr("New messages"), tr("A friend sent you a message."), Show["nt_msg"]) { Show.set(ctx, "nt_msg", it) }
 

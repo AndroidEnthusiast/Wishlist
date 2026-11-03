@@ -23,6 +23,7 @@ object Alerts {
     private const val BIN_CHANNEL = "reserved_bin"
     private const val FRIENDS_CHANNEL = "friends"
     private const val MESSAGES_CHANNEL = "messages"
+    private const val GROUPS_CHANNEL = "groups"
 
     /** Creates the notification channel (high importance, so the alert pops up). Safe to call again and again. */
     fun ensureChannel(c: Context) {
@@ -208,6 +209,34 @@ object Alerts {
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val pi = PendingIntent.getActivity(c, nid, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val n = NotificationCompat.Builder(c, FRIENDS_CHANNEL)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+        nm.notify(nid, n)
+    }
+
+    /**
+     * Wishlist groups (2.108): an invite, "No thanks" or "You are removed from …". Tapping opens group [gid] (or its
+     * join screen for an invite); an empty [gid] only opens the app.
+     */
+    fun notifyGroup(c: Context, gid: String, title: String, text: String) {
+        if (!Show.on(c, "nt_group")) return
+        val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        nm.createNotificationChannel(
+            NotificationChannel(GROUPS_CHANNEL, tr("Wishlist groups"), NotificationManager.IMPORTANCE_HIGH).apply {
+                description = tr("Invitations, and changes in your groups.")
+            }
+        )
+        val nid = (gid + title).hashCode() * 31 + 29
+        val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_GROUP, gid)
+            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        val pi = PendingIntent.getActivity(c, nid, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val n = NotificationCompat.Builder(c, GROUPS_CHANNEL)
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle(title)
             .setContentText(text)

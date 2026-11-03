@@ -233,3 +233,22 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **"Read" only when really seen** (owner): the app is open, the chat is open and their newest message is on screen (or the chat was opened from the notification, which shows it). Fetching messages no longer marks them read.
 - **Instant message notifications with Firebase Cloud Messaging** (owner: yes, as long as it's free and needs no PC; it is free and set up in a browser). The push carries no text, so messages stay end-to-end encrypted. Until the owner has set up Firebase, the old 15–30 minute check stays.
 - **Wishlist groups get their own session** (owner): interview first, then build. What the owner asked for so far: "Wishlist groups" in the menu and on Home with "New group"; invite friends from your friend list (they get a notification and a message with a link to confirm) and share a link with people without the app; people without the app must first name and create their first wishlist (in the browser) before they can join; as frictionless as possible for app and web users. Earlier decisions in "Friends and Groups" still apply (one wishlist per member, organiser invites by default).
+
+## Wishlist groups (3 November 2026, owner interviewed; update 1 = groups, update 2 = group chat)
+- **"Hide my lists from …" is removed** (owner: private wishes are enough). Friends hidden before see the lists again (switched off quietly, for everyone). **"Unfollow" is now "Unfriend"** (still nobody is told).
+- **Group page**: the group's name and optional photo at the top, then each member as a block (picture, name, their list's newest wish); tap opens their list.
+- **Joining**: pick one of your own wishlists, or make a new one (empty, or with wishes copied from your other lists). Exactly one list per group. Gift lists can't be brought. The organiser also brings a list ("New group": name, then the list, then invite friends).
+- **One list can be in several groups**; reservations are per wish, so a gift reserved in one group is reserved in the other too.
+- **Swap your list**: group ⋮ > "Change my wishlist" (same picker as joining).
+- **Reservations in a group**: members see "Reserved" / "Reserved by you", never who. The list's owner never sees reservations.
+- **The group always sees the list you brought**, whatever its "Visible to" says (private wishes stay hidden). Friends outside the group still follow "Visible to".
+- **Leaving**: any member can leave; the organiser can remove members. The brought list stays yours. **The organiser must pick the next organiser before leaving** (no automatic choice); alone in the group, they can only delete it. Deleting the group is organiser-only and never deletes anyone's list.
+- **A removed member is told**: "You are removed from [group]".
+- **Name required, photo optional**; only the organiser changes them. Only the organiser invites unless "Members can invite too" is on.
+- **Invites**: friends from your friend list get a notification and a chat message with a link. Tapping either opens the join screen. An invite card also waits on Home under "Wishlist groups" with "Join" and "No thanks". **The organiser is told when someone says "No thanks".**
+- **Group link**: anyone with the link can join (no approval); the organiser can make a new link (the old one stops working).
+- **Members who aren't friends** see each other's name, picture and list, and can tap "Add friend" (normal request with approval). Messages stay friends-only; a group chat comes in update 2.
+- **Home order**: My wishlists, Wishlist groups (+ "New group"), Gift lists. Also in the side menu.
+- **Browser-only members**: open the group link, give their name and name their first wishlist, then join. The browser remembers them; they also get their own private "My link" (Copy, "Save this link to get back on another device") and a "Get the app" button. Their list: add by shop link (auto-fill) or by hand (name, price, picture, description, note), edit, delete, **top wish**. No categories, no price checks (app only).
+- **Browser member moves to the app (now, owner)**: opening "My link" in the app takes over their browser list and their group places.
+- **Group chat (update 2)**: only on the group page (not under Messages). End-to-end encrypted, browser members included, and browser members must be able to open the group link at any time and read the saved conversation. To discuss in update 2: the key must then travel in the member's link, so anyone holding that link could read the chat.

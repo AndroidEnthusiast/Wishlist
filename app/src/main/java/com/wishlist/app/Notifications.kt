@@ -66,6 +66,8 @@ data class PriceNote(
      * "gift_binned" (a gift you reserved was moved to the bin), "gift_gone" (a gift you reserved was taken off a friend's
      * list) and "birthday" (a friend's birthday is coming: [amount] = days to go). For these [title] is the person or the
      * gift, [image] a photo (or empty) and [listKey] where a tap goes: "r:<profile id>" (Friends), "p:<profile id>" (that friend), "s:<code>" or "c:<code>".
+     * Wishlist groups (2.108): "group_invite" ([title] the group, [currency] who invited), "group_declined" ([title]
+     * who, [currency] the group) and "group_removed" ([title] the group); [listKey] "g:<group id>" or "x:<group id>".
      */
     val kind: String = "price", val amount: Double = 0.0, val currency: String = ""
 )
@@ -128,11 +130,11 @@ object Notifications {
     @Synchronized
     fun add(
         c: Context, kind: String, listKey: String, title: String, image: String = "", wishId: Long = 0L,
-        amount: Double = 0.0, read: Boolean = false
+        amount: Double = 0.0, read: Boolean = false, extra: String = ""
     ) {
         load(c)
         val rest = all.filter { !(it.kind == kind && it.listKey == listKey && it.wishId == wishId) }
-        all = (listOf(PriceNote(wishId, listKey, title, image, 0.0, System.currentTimeMillis(), read, kind, amount)) + rest).take(100)
+        all = (listOf(PriceNote(wishId, listKey, title, image, 0.0, System.currentTimeMillis(), read, kind, amount, extra)) + rest).take(100)
         save(c)
     }
 
@@ -294,7 +296,7 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                                 if (person) ContentScale.Crop else ContentScale.Fit
                             )
                         } else PlaceholderIcon(
-                            when (n.kind) { "friend_req", "friend_ok" -> "friend"; "birthday" -> "birthday"; else -> "gift" }, 22.dp
+                            when (n.kind) { "friend_req", "friend_ok", "group_declined" -> "friend"; "birthday" -> "birthday"; else -> "gift" }, 22.dp
                         )
                     }
                     Column(Modifier.weight(1f).padding(start = 12.dp, end = 8.dp)) {
@@ -310,6 +312,9 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                                 "gift_binned" -> tr("Your reserved gift was moved to the bin")
                                 "gift_gone" -> tr("Your reserved gift was taken off the list")
                                 "birthday" -> tr("Birthday in %d days", n.amount.toInt())
+                                "group_invite" -> tr("%s invited you to this wishlist group", n.currency)
+                                "group_declined" -> tr("said no thanks to “%s”", n.currency)
+                                "group_removed" -> tr("You are removed from this wishlist group")
                                 else -> if (down) tr("decreased in price") else tr("increased in price")
                             },
                             style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id)

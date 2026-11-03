@@ -115,7 +115,10 @@ fun HubScreen(
     onNewGroup: () -> Unit,
     onProfile: () -> Unit = {},
     // "+ Add wish" on an empty list's block: the wish form, with that list chosen.
-    onAddTo: (String) -> Unit = {}
+    onAddTo: (String) -> Unit = {},
+    // Wishlist groups (2.108): open one, or make a new one.
+    onOpenWishGroup: (String) -> Unit = {},
+    onNewWishGroup: () -> Unit = {}
 ) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
@@ -175,6 +178,9 @@ fun HubScreen(
     fun ListsSection(onHome: Boolean) {
         HubTitle(tr("My wishlists"), addLabel = tr("New wishlist"), onAdd = if (onHome) onNewMine else null)
         BlockGrid(mineItems, onHome, ::actionsOf, onAddTo)
+
+        // Wishlist groups, right after your own lists (owner, 2.108).
+        GroupsHomeSection(onHome, onOpenWishGroup, onNewWishGroup)
 
         HubTitle(tr("Gift lists"), addLabel = tr("New gift list"), onAdd = if (onHome) onNewGroup else null)
         if (groupItems.isEmpty()) {
@@ -277,7 +283,8 @@ fun HubScreen(
             text = {
                 Text(
                     if (group) tr("Everyone on this gift list will lose it, with all its wishes and reservations. This can’t be undone.")
-                    else tr("The wishlist will be deleted and its wishes moved to the bin. You can restore them there for 30 days.")
+                    else tr("The wishlist will be deleted and its wishes moved to the bin. You can restore them there for 30 days.") +
+                        groupNote(ctx, code)
                 )
             },
             confirmButton = {
@@ -387,7 +394,7 @@ fun totalValue(wishes: List<Wish>): String? {
 
 /** A section title, with a small round + button when something can be added. */
 @Composable
-private fun HubTitle(text: String, addLabel: String? = null, small: Boolean = false, onAdd: (() -> Unit)? = null) {
+internal fun HubTitle(text: String, addLabel: String? = null, small: Boolean = false, onAdd: (() -> Unit)? = null) {
     val look = LocalLook.current
     Row(
         Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = if (small) 12.dp else 20.dp, bottom = 4.dp),

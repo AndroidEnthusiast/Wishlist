@@ -159,7 +159,7 @@ private fun countText(n: Int): String = when (n) {
 
 /**
  * The Friends tab: your code and "Add a friend", requests waiting for your approval, requests you sent, your friends
- * (tap: their wishlists; long press or ⋮: hide your lists from them, or unfollow) and lists you opened from a link.
+ * (tap: their wishlists; long press or ⋮: unfriend) and lists you opened from a link.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -169,7 +169,7 @@ fun FriendsScreen(snack: SnackbarHostState, onProfile: () -> Unit, onOpenLink: (
     val person = FriendsNav.person?.let { id -> Friends.state?.friends?.firstOrNull { it.id == id } }
     val list = FriendsNav.list
     if (FriendsNav.person != null && person == null && Friends.state != null) {
-        // No longer friends (unfollowed, here or by them).
+        // No longer friends (unfriended, here or by them).
         LaunchedEffect(Unit) { FriendsNav.reset() }
     }
     if (person != null && list != null) {
@@ -293,12 +293,7 @@ private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenL
                     FriendRow(
                         f,
                         onOpen = { FriendsNav.person = f.id },
-                        onHide = {
-                            act(if (f.hidden) tr("%s can see your lists again", f.name) else tr("Your lists are hidden from %s", f.name)) {
-                                Friends.hide(ctx, f.id, !f.hidden)
-                            }
-                        },
-                        onUnfollow = { unfollow = f }
+                        onUnfriend = { unfollow = f }
                     )
                 }
             } else if (!problem) item {
@@ -333,15 +328,15 @@ private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenL
     unfollow?.let { f ->
         AlertDialog(
             onDismissRequest = { unfollow = null },
-            title = { Text(tr("Unfollow %s?", f.name)) },
+            title = { Text(tr("Unfriend %s?", f.name)) },
             text = {
                 Text(tr("You’ll no longer be friends: you won’t see each other’s wishlists, and you’ll leave each other’s Friends. They aren’t told. You can add each other again with a friend code."))
             },
             confirmButton = {
                 TextButton(onClick = {
                     unfollow = null
-                    act(tr("You unfollowed %s", f.name)) { Friends.remove(ctx, f.id) }
-                }) { Text(tr("Unfollow"), color = cs.error) }
+                    act(tr("You and %s are no longer friends", f.name)) { Friends.remove(ctx, f.id) }
+                }) { Text(tr("Unfriend"), color = cs.error) }
             },
             dismissButton = { TextButton(onClick = { unfollow = null }) { Text(tr("Cancel")) } }
         )
@@ -409,10 +404,10 @@ private fun PersonRow(p: Person, line: String, buttons: @Composable () -> Unit) 
     }
 }
 
-/** A friend: tap opens their wishlists; long press or ⋮ opens a small menu (Hide my lists / Unfollow). */
+/** A friend: tap opens their wishlists; long press or ⋮ opens a small menu (Unfriend; "Hide my lists" went in 2.108). */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun FriendRow(f: Person, onOpen: () -> Unit, onHide: () -> Unit, onUnfollow: () -> Unit) {
+private fun FriendRow(f: Person, onOpen: () -> Unit, onUnfriend: () -> Unit) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
     val id = f.id.hashCode().toLong()
@@ -435,17 +430,12 @@ private fun FriendRow(f: Person, onOpen: () -> Unit, onHide: () -> Unit, onUnfol
                     },
                     style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id)
                 )
-                if (f.hidden) Text(tr("Your lists are hidden from them"), style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id))
             }
             IconButton(onClick = { menu = true }) { Icon(AppIcons.MoreVert, tr("More"), tint = look.cardMuted(id)) }
         }
         Box(Modifier.align(Alignment.TopEnd)) {
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                DropdownMenuItem(
-                    text = { Text(if (f.hidden) tr("Show my lists to %s", f.name) else tr("Hide my lists from %s", f.name)) },
-                    onClick = { menu = false; onHide() }
-                )
-                DropdownMenuItem(text = { Text(tr("Unfollow"), color = cs.error) }, onClick = { menu = false; onUnfollow() })
+                DropdownMenuItem(text = { Text(tr("Unfriend"), color = cs.error) }, onClick = { menu = false; onUnfriend() })
             }
         }
     }
@@ -547,13 +537,6 @@ private fun FriendPage(f: Person, snack: SnackbarHostState) {
                 HubItem("f:" + l.code, l.name, if (FriendsNav.loaded.containsKey(l.code)) ws.size else l.count, pic, false, "") { FriendsNav.list = l }
             }
             BlockGrid(items, onHome = false, actionsOf = { emptyList() }, onAddTo = {})
-            if (f.hidden) {
-                Text(
-                    tr("Your lists are hidden from %s. Change this with ⋮ on Friends.", f.name),
-                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-            }
         }
     }
 }

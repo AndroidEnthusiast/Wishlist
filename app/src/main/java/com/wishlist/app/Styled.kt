@@ -381,6 +381,18 @@ object AppIcons {
     val Search: ImageVector @Composable get() = v(Icons.Filled.Search, Icons.Outlined.Search, Icons.Rounded.Search, Icons.Sharp.Search)
     val Settings: ImageVector @Composable get() = v(Icons.Filled.Settings, Icons.Outlined.Settings, Icons.Rounded.Settings, Icons.Sharp.Settings)
     val Share: ImageVector @Composable get() = v(Icons.Filled.Share, Icons.Outlined.Share, Icons.Rounded.Share, Icons.Sharp.Share)
+    /** Wishlist groups (2.108): Google's Material "group" icon (Apache 2.0), drawn from its path here because the app
+     *  only includes the core icon set. One shape in every style. */
+    val Group: ImageVector get() = groupIcon
+}
+
+private val groupIcon: ImageVector by lazy {
+    ImageVector.Builder("Group", 24.dp, 24.dp, 24f, 24f).addPath(
+        androidx.compose.ui.graphics.vector.addPathNodes(
+            "M16,11c1.66,0 2.99,-1.34 2.99,-3S17.66,5 16,5c-1.66,0 -3,1.34 -3,3s1.34,3 3,3zM8,11c1.66,0 2.99,-1.34 2.99,-3S9.66,5 8,5C6.34,5 5,6.34 5,8s1.34,3 3,3zM8,13c-2.33,0 -7,1.17 -7,3.5L1,19h14v-2.5c0,-2.33 -4.67,-3.5 -7,-3.5zM16,13c-0.29,0 -0.62,0.02 -0.97,0.05 1.16,0.84 1.97,1.97 1.97,3.45L17,19h6v-2.5c0,-2.33 -4.67,-3.5 -7,-3.5z"
+        ),
+        fill = androidx.compose.ui.graphics.SolidColor(Color.Black)
+    ).build()
 }
 
 /**

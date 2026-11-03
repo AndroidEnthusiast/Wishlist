@@ -258,6 +258,11 @@ class BinWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, p
             Chat.poll(c)
         } catch (e: Exception) {
         }
+        // Wishlist group invites and news (Groups.kt, 2.108).
+        try {
+            Groups.poll(c)
+        } catch (e: Exception) {
+        }
         return Result.success()
     }
 }
