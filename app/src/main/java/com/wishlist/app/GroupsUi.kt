@@ -103,7 +103,7 @@ fun GroupsHomeSection(onHome: Boolean, onOpen: (String) -> Unit, onNew: () -> Un
         val pic = Groups.photos[g.id] ?: g.members.mapNotNull { it.list?.image?.takeIf { i -> i.isNotBlank() } }.firstOrNull()
         HubItem("g:" + g.id, g.name, g.members.size, pic, true, "") { onOpen(g.id) }
     }
-    BlockGrid(items, onHome = false, actionsOf = { emptyList() }, onAddTo = {})
+    BlockGrid(byRecent(items), onHome = false, actionsOf = { emptyList() }, onAddTo = {})
 }
 
 /** An invite on Home: who invited you, the group, "No thanks" and "Join". */

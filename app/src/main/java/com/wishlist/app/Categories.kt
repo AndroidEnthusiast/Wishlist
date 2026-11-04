@@ -1,5 +1,22 @@
 package com.wishlist.app
 
+import android.content.Context
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -135,10 +152,13 @@ fun DeleteCategoryDialog(name: String, onDeleted: () -> Unit, onClose: () -> Uni
         onDismissRequest = onClose,
         title = { Text(tr("Delete “%s”?", name), maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = {
+            // The wishes always stay (owner, 2.110: "write it better").
             Text(
                 if (n == 0) tr("No wishes are in this category.")
-                else if (own && lists > 1) tr("It goes from all your wishlists. %1\$d wishes on %2\$d wishlists stay, just without a category.", n, lists)
-                else tr("%d wish(es) stay on your list, just without a category.", n)
+                else (if (n == 1) tr("1 wish is in this category.") else tr("%d wishes are in this category.", n)) + " " +
+                    (if (!own) tr("They stay on this list, just without a category. This changes the list for everyone on it.")
+                    else if (lists > 1) tr("They stay on your wishlists, just without a category. The category goes from all your wishlists.")
+                    else tr("They stay on your wishlist, just without a category."))
             )
         },
         confirmButton = {
@@ -169,4 +189,82 @@ fun CategoryActionsDialog(name: String, onRenamed: (String) -> Unit, onDeleted: 
             dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
         )
     }
+}
+
+/** How many wishes have category [name]: on all your own lists (they share categories), or on this gift list. */
+fun catCount(c: Context, name: String): Int =
+    if (Shared.active == null) Repo.catUse(c, name).first else Repo.wishes.count { it.category == name }
+
+/**
+ * "Edit categories" (2.110, owner): opened from the category drop-down of the wish form, under "New category". It
+ * edits the categories of the list the wish is being saved to: the set all your own wishlists share, or the gift
+ * list's own set (shared with everyone on it). Add, rename (tap the name) and delete. A category no wish has is
+ * deleted at once; otherwise a short warning says how many wishes lose it (they stay). This replaced the categories
+ * part of List settings.
+ */
+@Composable
+fun EditCategoriesScreen(onRenamed: (String, String) -> Unit = { _, _ -> }, onClose: () -> Unit) {
+    val ctx = LocalContext.current
+    val cs = MaterialTheme.colorScheme
+    val look = LocalLook.current
+    var newCat by remember { mutableStateOf("") }
+    var renaming by remember { mutableStateOf<String?>(null) }
+    var deleting by remember { mutableStateOf<String?>(null) }
+    val own = Shared.active == null
+    val cats = Repo.cats
+    fun add() {
+        if (Repo.addCat(ctx, newCat) != null) newCat = ""
+    }
+    Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+        Surface(Modifier.fillMaxSize(), color = cs.background) {
+            Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().imePadding()) {
+                Row(Modifier.fillMaxWidth().height(64.dp).padding(start = 4.dp, end = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onClose) { Icon(AppIcons.ArrowBack, tr("Back")) }
+                    Text(
+                        tr("Edit categories"), style = MaterialTheme.typography.titleLarge, fontWeight = look.titleWeight,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                }
+                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
+                    Text(
+                        if (own) tr("These categories are shared by all your wishlists.")
+                        else tr("These categories are only for “%s”, and everyone on it sees them.", Repo.listName),
+                        style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
+                    )
+                    Row(Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedTextField(
+                            newCat, { newCat = it.take(40) }, label = { Text(tr("New category")) }, singleLine = true,
+                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(onDone = { add() }),
+                            modifier = Modifier.weight(1f)
+                        )
+                        Button(onClick = { add() }, enabled = newCat.isNotBlank(), modifier = Modifier.padding(start = 8.dp)) { Text(tr("Add")) }
+                    }
+                    if (cats.isEmpty()) Text(tr("No categories yet."), color = cs.onSurfaceVariant, modifier = Modifier.padding(vertical = 12.dp))
+                    cats.forEach { c ->
+                        val n = catCount(ctx, c)
+                        Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Column(
+                                Modifier.weight(1f).clip(RoundedCornerShape(12.dp))
+                                    .clickable(onClickLabel = tr("Rename")) { renaming = c }.padding(vertical = 8.dp, horizontal = 4.dp)
+                            ) {
+                                Text(c, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(
+                                    when (n) { 0 -> tr("No wishes"); 1 -> tr("1 wish"); else -> tr("%d wishes", n) },
+                                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
+                                )
+                            }
+                            IconButton(onClick = { renaming = c }) { Icon(AppIcons.Edit, tr("Rename %s", c), tint = cs.onSurfaceVariant) }
+                            IconButton(onClick = {
+                                // Nothing loses anything: gone at once. Otherwise say what happens first.
+                                if (catCount(ctx, c) == 0) Repo.removeCat(ctx, c) else deleting = c
+                            }) { Icon(AppIcons.Delete, tr("Delete %s", c), tint = cs.onSurfaceVariant) }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    renaming?.let { r -> RenameCategoryDialog(r, onRenamed = { n -> onRenamed(r, n) }, onClose = { renaming = null }) }
+    deleting?.let { d -> DeleteCategoryDialog(d, onDeleted = {}, onClose = { deleting = null }) }
 }

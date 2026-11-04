@@ -59,9 +59,12 @@ fun italics(s: String): AnnotatedString = buildAnnotatedString {
     }
 }
 
-/** The category of a wish as one drop-down field: no category, the categories of the list, and "New category". */
+/** The category of a wish as one drop-down field: no category, the categories of the list, "New category" and "Edit categories". */
 @Composable
-fun CategoryField(selected: String, cats: List<String>, onPick: (String) -> Unit, onNew: () -> Unit, modifier: Modifier = Modifier) {
+fun CategoryField(
+    selected: String, cats: List<String>, onPick: (String) -> Unit, onNew: () -> Unit, onEdit: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     var open by remember { mutableStateOf(false) }
     Box(modifier) {
         OutlinedTextField(
@@ -91,6 +94,12 @@ fun CategoryField(selected: String, cats: List<String>, onPick: (String) -> Unit
                 text = { Text(tr("New category")) },
                 leadingIcon = { Icon(AppIcons.Add, null) },
                 onClick = { open = false; onNew() }
+            )
+            // Add, rename and delete categories (2.110, owner): the only place, since List settings no longer has them.
+            DropdownMenuItem(
+                text = { Text(tr("Edit categories")) },
+                leadingIcon = { Icon(AppIcons.Edit, null) },
+                onClick = { open = false; onEdit() }
             )
         }
     }

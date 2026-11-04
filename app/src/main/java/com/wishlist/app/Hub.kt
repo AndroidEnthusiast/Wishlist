@@ -68,7 +68,7 @@ import java.io.File
 
 /*
  * The dashboard (since 2.64): the app's start screen. At the top a picture you can make your own (the pencil), then
- * "Recently opened" (swipe sideways), "My wishlists" with a + for a new one, and "Group wishlists" (lists you make
+  * "My wishlists" (since 2.110 each section starts with the list opened last) with a + for a new one, and "Group wishlists" (lists you make
  * together with other givers, for someone else) with a + for a new one. Tapping a list opens it; Back returns here.
  */
 
@@ -138,8 +138,6 @@ fun HubScreen(
             HubItem("s:" + l.code, l.name, ws.size, newest(ws), true, l.code) { onOpenGroup(l.code) }
         }
     }
-    val all = (mineItems + groupItems).associateBy { it.key }
-    val recentItems = Repo.recent.entries.sortedByDescending { it.value }.mapNotNull { all[it.key] }.take(10)
     val scope = rememberCoroutineScope()
     // Long press on a list (see the end of this screen).
     var renaming by remember { mutableStateOf<HubItem?>(null) }
@@ -177,7 +175,8 @@ fun HubScreen(
     @Composable
     fun ListsSection(onHome: Boolean) {
         HubTitle(tr("My wishlists"), addLabel = tr("New wishlist"), onAdd = if (onHome) onNewMine else null)
-        BlockGrid(mineItems, onHome, ::actionsOf, onAddTo)
+        // In every section the list opened last comes first (owner, 2.110, instead of a "Recently opened" row).
+        BlockGrid(byRecent(mineItems), onHome, ::actionsOf, onAddTo)
 
         // Wishlist groups, right after your own lists (owner, 2.108).
         GroupsHomeSection(onHome, onOpenWishGroup, onNewWishGroup)
@@ -190,7 +189,7 @@ fun HubScreen(
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
         }
-        BlockGrid(groupItems, onHome, ::actionsOf, onAddTo)
+        BlockGrid(byRecent(groupItems), onHome, ::actionsOf, onAddTo)
     }
 
     val page = HubNav.page
@@ -213,16 +212,6 @@ fun HubScreen(
         ) {
             // Your picture and name, and the numbers (2.89: the cover photo card is gone).
             ProfileSummary(onProfile)
-
-            if (recentItems.isNotEmpty()) {
-                HubTitle(tr("Recently opened"), small = true)
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    items(recentItems.size) { i -> RecentCard(recentItems[i], onAddTo) }
-                }
-            }
 
             ListsSection(onHome = true)
 
@@ -514,12 +503,6 @@ internal fun ListBlock(
     }
 }
 
-/** A list in "Recently opened": a smaller block (owner, 2.91). */
-@Composable
-private fun RecentCard(item: HubItem, onAddTo: (String) -> Unit) {
-    ListBlock(item, emptyList(), onAddTo, Modifier.width(112.dp), small = true)
-}
-
 /** A new wishlist of your own: a name (required) and notes about what it's for. */
 @Composable
 fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
@@ -586,3 +569,6 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
         CopyWishesDialog(null, onDone = { picked = it; picking = false }, onClose = { picking = false })
     }
 }
+
+/** Lists in the order they were last opened, newest first; never-opened ones keep their own order after them. */
+internal fun byRecent(items: List<HubItem>): List<HubItem> = items.sortedByDescending { Repo.recent[it.key] ?: 0L }

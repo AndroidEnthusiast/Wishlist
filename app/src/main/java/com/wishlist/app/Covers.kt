@@ -5,6 +5,15 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -104,6 +113,33 @@ object ListCovers {
         if (key.startsWith("m:") && key.removePrefix("m:") in Repo.mineIds) sendOnline(c, key)
     }
 
+    /**
+     * Takes the cover of [key] off the list but keeps its pictures, for Undo (2.110). Returns what [restore] needs, or
+     * null when there was none. [forget] then deletes the pictures for good.
+     */
+    fun detach(c: Context, key: String): String? {
+        val raw = prefs(c).getString("cover_$key", null) ?: return null
+        prefs(c).edit().remove("cover_$key").apply()
+        version++
+        if (key.startsWith("m:") && key.removePrefix("m:") in Repo.mineIds) sendOnline(c, key)
+        return raw
+    }
+
+    fun restore(c: Context, key: String, raw: String) {
+        prefs(c).edit().putString("cover_$key", raw).apply()
+        version++
+        sendOnline(c, key)
+    }
+
+    fun forget(c: Context, raw: String) {
+        try {
+            val o = JSONObject(raw)
+            ImageStore.delete(c, o.optString("img", ""))
+            o.optString("cut", "").takeIf { it.isNotEmpty() }?.let { ImageStore.delete(c, it) }
+        } catch (e: Exception) {
+        }
+    }
+
     /** Your list [from] now lives under the id [to] (the original list was deleted and the next took its place). */
     fun move(c: Context, from: String, to: String) {
         val p = prefs(c)
@@ -151,15 +187,101 @@ fun ListSummaryCard(wishes: List<Wish>, modifier: Modifier = Modifier) {
     }
 }
 
-/** The top of a list, above its filters: the cover photo (only when chosen) and, on your own lists, the summary card. */
+/**
+ * The top of a list, above its filters: the cover photo (only when chosen, with its ⋮ menu) and, on your own lists,
+ * the summary card.
+ */
 @Composable
-fun ListHeader(wishes: List<Wish>) {
+fun ListHeader(wishes: List<Wish>, snack: SnackbarHostState) {
     val ctx = LocalContext.current
     val cover = remember(ListCovers.version, Shared.active, Repo.openMine) { ListCovers.get(ctx, ListCovers.openKey()) }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        if (cover != null) ListCoverPicture(cover)
+        if (cover != null) Box {
+            ListCoverPicture(cover)
+            CoverMenu(cover, snack, Modifier.align(Alignment.BottomEnd).padding(6.dp))
+        }
         // Only on your own lists (owner, 2.90): a group wishlist's total isn't what its givers need.
         if (Shared.active == null && Show["show_summary"]) ListSummaryCard(wishes)
+    }
+}
+
+/**
+ * The ⋮ in the bottom right corner of a list's cover photo (owner, 2.110: there was no way to remove it from the list
+ * itself). Change: Choose a photo / Take a photo / Adjust this photo (the editor). Delete: gone at once, with Undo.
+ */
+@Composable
+private fun CoverMenu(cover: ListCover, snack: SnackbarHostState, modifier: Modifier = Modifier) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val key = ListCovers.openKey()
+    val fa = coverAspect()
+    var menu by remember { mutableStateOf(false) }
+    var change by remember { mutableStateOf(false) }
+    var pending by remember { mutableStateOf<String?>(null) }
+    var adjusting by remember { mutableStateOf(false) }
+    val pick = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) scope.launch { ImageStore.import(ctx, uri)?.let { pending = it } }
+    }
+    val cameraFile = remember { java.io.File(java.io.File(ctx.cacheDir, "share").apply { mkdirs() }, "cover_camera.jpg") }
+    val cameraUri = remember { androidx.core.content.FileProvider.getUriForFile(ctx, ctx.packageName + ".files", cameraFile) }
+    val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
+        if (ok) scope.launch { ImageStore.import(ctx, cameraUri)?.let { pending = it } }
+    }
+    fun save(img: String, e: HeroEdit) {
+        scope.launch {
+            ListCovers.set(ctx, key, img, e, renderCover(ctx, img, e, fa) ?: "")
+            snack.showToast(tr("Cover photo saved"))
+        }
+    }
+    fun delete() {
+        val raw = ListCovers.detach(ctx, key) ?: return
+        scope.launch {
+            snack.currentSnackbarData?.dismiss()
+            val r = snack.showToast(tr("Cover photo deleted"), actionLabel = tr("Undo"), duration = SnackbarDuration.Short)
+            if (r == SnackbarResult.ActionPerformed) ListCovers.restore(ctx, key, raw) else ListCovers.forget(ctx, raw)
+        }
+    }
+
+    Box(modifier) {
+        // A dark round backing so the dots show on any photo.
+        Box(
+            Modifier.size(36.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.45f)).clickable { menu = true },
+            contentAlignment = Alignment.Center
+        ) { Icon(AppIcons.MoreVert, tr("Cover photo options"), tint = Color.White, modifier = Modifier.size(22.dp)) }
+        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+            DropdownMenuItem(text = { Text(tr("Change")) }, leadingIcon = { Icon(AppIcons.Edit, null) }, onClick = { menu = false; change = true })
+            DropdownMenuItem(text = { Text(tr("Delete")) }, leadingIcon = { Icon(AppIcons.Delete, null) }, onClick = { menu = false; delete() })
+        }
+        DropdownMenu(expanded = change, onDismissRequest = { change = false }) {
+            DropdownMenuItem(text = { Text(tr("Choose a photo")) }, onClick = {
+                change = false; pick.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            })
+            DropdownMenuItem(text = { Text(tr("Take a photo")) }, onClick = {
+                change = false
+                try { camera.launch(cameraUri) } catch (e: Exception) { }
+            })
+            DropdownMenuItem(text = { Text(tr("Adjust this photo")) }, onClick = { change = false; adjusting = true })
+        }
+    }
+
+    val preview: @Composable (String, HeroEdit, () -> Unit) -> Unit = { img, e, close -> CoverPreview(img, e, close) }
+    pending?.let { img ->
+        HeroEditor(
+            img, HeroEdit(), preview = preview,
+            onSave = { chosen, e ->
+                pending = null
+                if (chosen != img) ImageStore.delete(ctx, img)
+                save(chosen, e)
+            },
+            onCancel = { pending = null; ImageStore.delete(ctx, img) }
+        )
+    }
+    if (adjusting) {
+        HeroEditor(
+            cover.image, cover.edit, preview = preview,
+            onSave = { chosen, e -> adjusting = false; save(chosen, e) },
+            onCancel = { adjusting = false }
+        )
     }
 }
 

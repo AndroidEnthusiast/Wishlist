@@ -637,11 +637,14 @@ object Repo {
         e.apply()
     }
 
-    /** Remembers that a list was opened, for "Recently opened" on the dashboard. */
+    /**
+     * Remembers that a list ("m:"/"s:") or a wishlist group ("g:") was opened: Home shows the one opened last first in
+     * its section (2.110; "Recently opened" was removed).
+     */
     @Synchronized
     fun touchRecent(c: Context, key: String) {
         recent = (recent + (key to System.currentTimeMillis())).entries
-            .sortedByDescending { it.value }.take(12).associate { it.key to it.value }
+            .sortedByDescending { it.value }.take(200).associate { it.key to it.value }
         persist(c)
     }
 

@@ -76,9 +76,6 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
     val shared = Shared.current
     var name by remember { mutableStateOf(Repo.listName) }
     var about by remember { mutableStateOf(Repo.about) }
-    var newCat by remember { mutableStateOf("") }
-    var delCat by remember { mutableStateOf<String?>(null) }
-    var renCat by remember { mutableStateOf<String?>(null) }
     var stopDlg by remember { mutableStateOf(false) }
     var manage by remember { mutableStateOf<String?>(null) }
     var deleteMineDlg by remember { mutableStateOf(false) }
@@ -199,30 +196,10 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                 WhoCanSeeSection(snack)
             }
 
-            GroupTitle(tr("Wishes"))
-            SectionTitle(tr("Categories"))
-            if (Repo.cats.isEmpty()) {
-                Text(tr("No categories yet."), color = cs.onSurfaceVariant)
-            }
-            Repo.cats.forEach { c ->
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text(c, Modifier.weight(1f))
-                    IconButton(onClick = { renCat = c }) {
-                        Icon(AppIcons.Edit, tr("Edit %s", c), tint = cs.onSurfaceVariant)
-                    }
-                    IconButton(onClick = { delCat = c }) {
-                        Icon(AppIcons.Delete, tr("Remove %s", c), tint = cs.onSurfaceVariant)
-                    }
-                }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(
-                    newCat, { newCat = it }, label = { Text(tr("New category")) },
-                    singleLine = true, modifier = Modifier.weight(1f), keyboardOptions = Capitalised)
-                Button(onClick = { Repo.addCat(ctx, newCat); newCat = "" }) { Text(tr("Add")) }
-            }
-
+            // Categories moved to the wish form's drop-down, "Edit categories" (owner, 2.110): your own lists share
+            // them, so they didn't belong to one list's settings.
             if (shared == null) {
+                GroupTitle(tr("Wishes"))
                 // Copy wishes from your other lists into this one (also offered when a list is made).
                 if (canCopyFromOthers(ctx, Repo.openMine)) {
                     TextButton(onClick = { copyDlg = true }) { Text(tr("Add wishes from your other lists")) }
@@ -246,8 +223,6 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
         }
     }
 
-    delCat?.let { dc -> DeleteCategoryDialog(dc, onDeleted = {}, onClose = { delCat = null }) }
-    renCat?.let { rc -> RenameCategoryDialog(rc, onRenamed = {}, onClose = { renCat = null }) }
     manage?.let { m -> SharedManageDialog(m, onClose = { manage = null }, onGone = { manage = null; onBack() }) }
     if (copyDlg) {
         val target = Repo.openMine

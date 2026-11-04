@@ -573,6 +573,8 @@ fun App(
             GroupNav.open = null
             closeAll(); hub = true; HubNav.page = null
             groupOpen = g
+            // Home puts the group you opened last first in its section (2.110).
+            Repo.touchRecent(ctx, "g:$g")
             scope.launch { drawer.close() }
         }
     }
@@ -627,9 +629,12 @@ fun App(
         !pricesOpen && !friendsOpen && !messagesOpen
     // An open conversation has a back arrow too, and no bottom bar.
     val inChat = messagesOpen && ChatNav.peer != null && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen && !profileOpen
+    // An open wishlist has a back arrow to Home instead of the menu button (owner, 2.110: "for some it's intuitive").
+    val inList = !hub && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen && !profileOpen &&
+        !pricesOpen && !friendsOpen && !messagesOpen && groupOpen == null
     ModalNavigationDrawer(
         drawerState = drawer,
-        gesturesEnabled = !inListSettings && !inThemer && !inFriend && !inOverview && !inChat && !inGroup,
+        gesturesEnabled = !inListSettings && !inThemer && !inFriend && !inOverview && !inChat && !inGroup && !inList,
         drawerContent = {
             val look = LocalLook.current
             ModalDrawerSheet(
@@ -812,7 +817,8 @@ fun App(
                         onAdd = { prefill = ""; adding = true },
                         onNewCat = { catDlg = true },
                         onInvite = { inviteDlg = true },
-                        onListSettings = { listSettings = true }
+                        onListSettings = { listSettings = true },
+                        onBack = { HubNav.page = null; closeAll(); hub = true }
                     )
                 }
             }
@@ -848,7 +854,7 @@ fun App(
     }
 
     // The menu button lives above the menu so it can spin into an X and close it.
-    if (!inListSettings && !inThemer && !inFriend && !inOverview && !inChat && !inGroup) Box(
+    if (!inListSettings && !inThemer && !inFriend && !inOverview && !inChat && !inGroup && !inList) Box(
         Modifier.windowInsetsPadding(TopAppBarDefaults.windowInsets).height(64.dp).padding(start = 4.dp),
         contentAlignment = Alignment.CenterStart
     ) {
@@ -956,14 +962,13 @@ fun App(
 @Composable
 fun HomeScreen(
     snack: SnackbarHostState, onMenu: () -> Unit, onAdd: () -> Unit, onNewCat: () -> Unit, onInvite: () -> Unit,
-    onListSettings: () -> Unit
+    onListSettings: () -> Unit, onBack: () -> Unit
 ) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
     var cat by remember { mutableStateOf("All") }
     var catMenu by remember { mutableStateOf(false) }
-    var catAction by remember { mutableStateOf<String?>(null) }
     var searching by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
     BackHandler(enabled = searching) { searching = false; query = "" }
@@ -1005,7 +1010,7 @@ fun HomeScreen(
         }
     }
     val inShared = Shared.active != null
-    // For "Recently opened" on the dashboard.
+    // Home puts the list opened last first in its section (2.110).
     LaunchedEffect(Shared.active, Repo.openMine) {
         Repo.touchRecent(ctx, Shared.active?.let { "s:$it" } ?: ("m:" + Repo.openMine))
     }
@@ -1067,7 +1072,8 @@ fun HomeScreen(
                 title = {
                     ListTitle(Repo.listName, Repo.wishes.size)
                 },
-                navigationIcon = { MenuSlot() },
+                // Back to Home (2.110, owner): the menu button gives way to this arrow on an open list.
+                navigationIcon = { IconButton(onClick = onBack) { Icon(AppIcons.ArrowBack, tr("Back to Home")) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
                 actions = {
                     IconButton(onClick = { if (searching) { searching = false; query = "" } else searching = true }) {
@@ -1113,15 +1119,10 @@ fun HomeScreen(
                             DropdownMenu(expanded = catMenu, onDismissRequest = { catMenu = false }) {
                                 (listOf("All") + Repo.cats).forEach { c ->
                                     val n = if (c == "All") Repo.wishes.size else Repo.wishes.count { it.category == c }
-                                    // Long press a category to edit or delete it ("All" can't be changed).
+                                    // Editing categories is in the wish form's "Edit categories" (2.110), not a long press here.
                                     CatMenuRow(
                                         text = catLabel(c) + " ($n)", bold = c == sel,
-                                        onClick = { cat = c; catMenu = false },
-                                        onLongClick = if (c == "All") null else ({
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            catMenu = false
-                                            catAction = c
-                                        })
+                                        onClick = { cat = c; catMenu = false }
                                     )
                                 }
                                 DropdownMenuItem(
@@ -1144,7 +1145,7 @@ fun HomeScreen(
             Box(Modifier.fillMaxSize().clipToBounds().nestedScroll(pull.nestedScrollConnection)) {
             if (list.isEmpty()) {
                 Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp)) {
-                    ListHeader(Repo.wishes)
+                    ListHeader(Repo.wishes, snack)
                     Spacer(Modifier.height(8.dp))
                     filters()
                     Text(
@@ -1164,7 +1165,7 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(gap),
                     verticalArrangement = Arrangement.spacedBy(gap)
                 ) {
-                    item(key = "header", span = { GridItemSpan(maxLineSpan) }) { ListHeader(Repo.wishes) }
+                    item(key = "header", span = { GridItemSpan(maxLineSpan) }) { ListHeader(Repo.wishes, snack) }
                     item(key = "filters", span = { GridItemSpan(maxLineSpan) }) { filters() }
                     gridItems(list, key = { it.id }) { w ->
                         val r = res[w.id]
@@ -1234,14 +1235,6 @@ fun HomeScreen(
     }
     historyId?.let { id -> Repo.wishes.firstOrNull { it.id == id } }?.let { w ->
         PriceHistoryDialog(w) { historyId = null }
-    }
-    catAction?.let { ca ->
-        CategoryActionsDialog(
-            name = ca,
-            onRenamed = { n -> if (cat == ca) cat = n },
-            onDeleted = {},
-            onClose = { catAction = null }
-        )
     }
 }
 
@@ -1582,6 +1575,7 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, sta
     // True after Save was tapped without a name: the name field turns red with a short message.
     var nameErr by remember { mutableStateOf(false) }
     var newCatDlg by remember { mutableStateOf(false) }
+    var editCats by remember { mutableStateOf(false) }
     // A picture picked in this dialog but not saved yet. It is deleted again if you cancel or replace it.
     var picked by remember { mutableStateOf("") }
 
@@ -1708,7 +1702,7 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, sta
                     )
                 }
                 // One line, however many categories there are (a row of chips got too long).
-                CategoryField(cat, Repo.cats, onPick = { cat = it }, onNew = { newCatDlg = true }, modifier = Modifier.fillMaxWidth())
+                CategoryField(cat, Repo.cats, onPick = { cat = it }, onNew = { newCatDlg = true }, onEdit = { editCats = true }, modifier = Modifier.fillMaxWidth())
                 // No "Top wish" on a shared list: nobody can say that for the person the gifts are for.
                 if (Shared.active == null) Row(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { if (!star) starFx.play(); star = !star }.padding(vertical = 4.dp),
@@ -1791,6 +1785,8 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, sta
 
     // A category made here is chosen for this wish straight away.
     if (newCatDlg) CategoryDialog(onAdded = { cat = it }) { newCatDlg = false }
+    // The picked category follows a rename there; a deleted one becomes "No category".
+    if (editCats) EditCategoriesScreen(onRenamed = { o, n -> if (cat == o) cat = n }) { editCats = false; if (cat.isNotEmpty() && cat !in Repo.cats) cat = "" }
 }
 
 /** The picture of a wish. Empty: a dashed block with a plus and "Add image". Filled: the picture, tap to change, X to remove. */

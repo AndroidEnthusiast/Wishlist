@@ -858,5 +858,22 @@ val NL: Map<String, String> = mapOf(
     "Couldn’t open that photo." to "Kan die foto niet openen.",
     "Couldn’t send the photo. Check your connection." to "Kan de foto niet versturen. Controleer je verbinding.",
     "This photo is no longer available" to "Deze foto is niet meer beschikbaar",
-    "Couldn’t load the photo. Tap to try again." to "Kan de foto niet laden. Tik om het opnieuw te proberen."
+    "Couldn’t load the photo. Tap to try again." to "Kan de foto niet laden. Tik om het opnieuw te proberen.",
+    // 2.110: back arrow, cover photo menu, Edit categories
+    "Back to Home" to "Terug naar Home",
+    "Cover photo deleted" to "Omslagfoto verwijderd",
+    "Cover photo options" to "Opties voor omslagfoto",
+    "Adjust this photo" to "Deze foto aanpassen",
+    "Edit categories" to "Categorieën bewerken",
+    "1 wish is in this category." to "1 wens heeft deze categorie.",
+    "%d wishes are in this category." to "%d wensen hebben deze categorie.",
+    "They stay on this list, just without a category. This changes the list for everyone on it." to "Ze blijven op deze lijst staan, alleen zonder categorie. Dit verandert de lijst voor iedereen erop.",
+    "They stay on your wishlists, just without a category. The category goes from all your wishlists." to "Ze blijven op je verlanglijstjes staan, alleen zonder categorie. De categorie verdwijnt van al je verlanglijstjes.",
+    "They stay on your wishlist, just without a category." to "Ze blijven op je verlanglijstje staan, alleen zonder categorie.",
+    "These categories are shared by all your wishlists." to "Deze categorieën gelden voor al je verlanglijstjes.",
+    "These categories are only for “%s”, and everyone on it sees them." to "Deze categorieën zijn alleen voor “%s”, en iedereen erop ziet ze.",
+    "Rename" to "Naam wijzigen",
+    "Rename %s" to "Naam van %s wijzigen",
+    "Delete %s" to "%s verwijderen",
+    "No wishes" to "Geen wensen"
 )
