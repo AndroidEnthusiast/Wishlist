@@ -86,3 +86,6 @@ jobs:
         id: deployment
         if: steps.web.outputs.found == 'yes'
         uses: actions/deploy-pages@v4
+        with:
+          # GitHub sometimes needs more than the default 10 minutes to publish (4 November 2026: three timeouts).
+          timeout: 1800000
