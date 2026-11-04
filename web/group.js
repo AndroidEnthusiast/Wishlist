@@ -526,7 +526,8 @@
     v.appendChild(el("p", "owner", T("Owned by {0}", member.name)));
     var ws = visible(other.items);
     if (!ws.length) { v.appendChild(el("div", "center", T("Nothing here yet."))); return; }
-    ws.sort(function (a, b) { return (b.star ? 1 : 0) - (a.star ? 1 : 0); });
+    // Owned wishes at the bottom (owner, 4 November 2026), then top wishes first.
+    ws.sort(function (a, b) { return (a.got ? 1 : 0) - (b.got ? 1 : 0) || (b.star ? 1 : 0) - (a.star ? 1 : 0); });
     var grid = el("div", "grid");
     ws.forEach(function (w) { grid.appendChild(card(w, false)); });
     v.appendChild(grid);

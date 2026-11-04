@@ -166,7 +166,8 @@ fun FriendScreen(
                         }
                     }
                     // Wishes in the owner's bin are not on the list.
-                    val shown = r0.wishes.filter { it.bin == 0L && (cat == "All" || it.category == cat) }
+                    // Owned wishes at the bottom (owner, 2.113): what's still wanted comes first.
+                    val shown = r0.wishes.filter { it.bin == 0L && (cat == "All" || it.category == cat) }.sortedBy { it.got }
                     if (shown.isEmpty()) {
                         Box(Modifier.fillMaxSize().padding(32.dp), Alignment.Center) {
                             Text(tr("Nothing here yet."), color = MaterialTheme.colorScheme.onSurfaceVariant)

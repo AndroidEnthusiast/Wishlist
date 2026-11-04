@@ -311,6 +311,7 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                                 "friend_ok" -> tr("approved your friend request")
                                 "gift_binned" -> tr("Your reserved gift was moved to the bin")
                                 "gift_gone" -> tr("Your reserved gift was taken off the list")
+                                "gift_owned" -> tr("Your reserved gift is already owned")
                                 "birthday" -> tr("Birthday in %d days", n.amount.toInt())
                                 "group_invite" -> tr("%s invited you to this wishlist group", n.currency)
                                 "group_declined" -> tr("said no thanks to “%s”", n.currency)

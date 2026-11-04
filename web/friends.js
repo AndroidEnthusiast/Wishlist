@@ -60,11 +60,15 @@ function readMyRes() {
 function writeMyRes(o) {
   try { localStorage.setItem(myResKey(), JSON.stringify(o)); } catch (e) { }
 }
-function noteGone(titles) {
+function noteGone(titles, owned) {
   var g = $("gone");
   g.textContent = "";
   titles.forEach(function (t) {
     g.appendChild(el("span", null, T("“{0}” is no longer on the list. Have a look for another gift.", t || T("Wish"))));
+    g.appendChild(document.createTextNode(" "));
+  });
+  (owned || []).forEach(function (t) {
+    g.appendChild(el("span", null, T("“{0}” is marked as owned: they already have it. Have a look for another gift.", t || T("Wish"))));
     g.appendChild(document.createTextNode(" "));
   });
   var ok = el("button", "link", "OK");
@@ -540,7 +544,9 @@ function visibleItems() {
   var rows = items.map(function (w, i) { return { w: w, i: i }; });
   var price = function (w) { return typeof w.price === "number" ? w.price : null; };
   rows.sort(function (a, b) {
-    var d = 0;
+    // Owned wishes always go to the bottom (owner, 4 November 2026), so the ones still wanted come first.
+    var d = (a.w.got ? 1 : 0) - (b.w.got ? 1 : 0);
+    if (d) return d;
     if (sortBy === "star") {
       d = (a.w.star && !a.w.got ? 0 : 1) - (b.w.star && !b.w.got ? 0 : 1);
     } else if (sortBy === "low" || sortBy === "high") {
@@ -673,13 +679,17 @@ async function refresh() {
     l.about = about;
     l.cover = cover;
     l.cedit = cedit;
-    // Remember what this browser reserved, and say so when one of those gifts is no longer on the list.
-    var mine = readMyRes(), seen = {}, gone = [];
+    // Remember what this browser reserved, and say so when one of those gifts is no longer on the list, or (owner,
+    // 4 November 2026) was marked as owned, so nobody buys a duplicate.
+    var mine = readMyRes(), seen = {}, gone = [], owned = [];
     l.items.forEach(function (w) { seen[w.id] = w; });
-    Object.keys(m).forEach(function (id) { if (m[id] === true && seen[id]) mine[id] = String(seen[id].title || ""); });
-    Object.keys(mine).forEach(function (id) { if (!seen[id]) { gone.push(mine[id]); delete mine[id]; } });
+    Object.keys(m).forEach(function (id) { if (m[id] === true && seen[id] && !seen[id].got) mine[id] = String(seen[id].title || ""); });
+    Object.keys(mine).forEach(function (id) {
+      if (!seen[id]) { gone.push(mine[id]); delete mine[id]; }
+      else if (seen[id].got) { owned.push(mine[id]); delete mine[id]; }
+    });
     writeMyRes(mine);
-    if (gone.length) noteGone(gone);
+    if (gone.length || owned.length) noteGone(gone, owned);
     list = l; res = m; state = "ok";
   } catch (e) {
     if (!list) state = "offline";

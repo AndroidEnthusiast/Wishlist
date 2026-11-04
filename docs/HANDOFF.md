@@ -137,8 +137,10 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - Then: **v2.112**: the floating Add wish button removed. The owner asked for ideas for a gift search that adds straight to a list; options given (search in the app's own browser with an Add button, shop APIs, or a gift-idea feed), nothing built yet.
 
+- Then: **v2.113**: wish menus (no long press on two per row, new ⋮ order, Private on large cards, Owned in their long press), owned wishes at the bottom and the reserver told, "Note for friends" in the new-list form. The shop page was discussed (shops shown with their own site icon, loaded live, owner's choice); the other choices are still open.
+
 ## Next session
-- **Gift search**: ask which option the owner picked (see the session of 4 November), then interview before building.
+- **Shop page** ("Find a gift"): decided so far: shops shown with their own site icon loaded live. Still to ask: which shops (fixed list, per country, users add their own), where the page lives, how adding works (in-app browser with an Add button), what browser users get, affiliate links or not.
 - **Check 2.111 on the phone**: the pinned top while scrolling (both views, with and without a cover photo, own list and gift list: no jump or double menu), the pulse when adding/deleting a wish, the "Saved!" lines, the long-press menu size, "Owned by you".
 - **Check 2.110 on the phone**: the ⋮ on a cover (Change, Delete, Undo), Edit categories from the + form and from sharing a link (own list and gift list; counts; warning; rename keeps the picked category), Home order after opening lists, the back arrow (and that the menu button is gone only on an open list).
 - **Photos in messages (2.109)**: did the owner run `supabase-chat.sql` again? Test with two phones: camera and gallery, the preview, sending, the photo arriving, full screen and zoom, deleting a photo message, a very large photo, and a phone that was offline. Not checked: how the preview and viewer look under the status bar on every phone.

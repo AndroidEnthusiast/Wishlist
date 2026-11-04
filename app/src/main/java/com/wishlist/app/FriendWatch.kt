@@ -5,7 +5,7 @@ import org.json.JSONObject
 
 /**
  * For givers: when a gift you reserved on a friend's wishlist is taken off it (the friend deleted it, or made it a
- * private wish), you get a notification nudging you to pick another gift. The friend never learns that it was reserved.
+ * private wish), or (2.113) the friend marked it as owned, you get a notification nudging you to pick another gift. The friend never learns that it was reserved.
  *
  * This phone remembers what it reserved on each friend's list (id -> title, "fres_<code>"), because once the wish is
  * gone online its reservation is gone too. [check] compares that with the list as friends see it now; it runs with the
@@ -48,10 +48,14 @@ object FriendWatch {
     fun check(c: Context, f: Friend, list: RemoteList, mine: Set<Long> = emptySet()) {
         val visible = list.wishes.filter { it.bin == 0L && !it.priv }.associateBy { it.id }
         var m = read(c, f.code)
-        for (id in mine) visible[id]?.let { if (id !in m) m = m + (id to it.title) }
+        // (An owned wish is not taken in again: its old reservation stays online and would be told about every time.)
+        for (id in mine) visible[id]?.takeIf { !it.got }?.let { if (id !in m) m = m + (id to it.title) }
         for ((id, title) in m) {
-            if (id in visible) continue
-            Alerts.notifyGiftGone(c, f.code, id, title, list.name.ifBlank { f.name })
+            val now = visible[id]
+            // Still on the list and not owned: nothing to say.
+            if (now != null && !now.got) continue
+            // Taken off, or (2.113, owner) marked as owned by the friend: say so once, so nobody buys a duplicate.
+            Alerts.notifyGiftGone(c, f.code, id, title, list.name.ifBlank { f.name }, owned = now != null)
             m = m - id
         }
         write(c, f.code, m)

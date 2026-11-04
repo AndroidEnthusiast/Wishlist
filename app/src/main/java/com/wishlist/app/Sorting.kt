@@ -23,8 +23,13 @@ fun sortShortName(mode: String): String = when (mode) {
     else -> "Newest"
 }
 
-/** Orders [list] by [mode]. Equal wishes keep their order. Wishes without a price go last in the price orders. */
-fun sortWishes(list: List<Wish>, mode: String): List<Wish> = when (mode) {
+/**
+ * Orders [list] by [mode]. Equal wishes keep their order. Wishes without a price go last in the price orders. Owned
+ * wishes always go to the bottom (owner, 2.113), so the ones still wanted come first.
+ */
+fun sortWishes(list: List<Wish>, mode: String): List<Wish> = sortByMode(list, mode).sortedBy { it.got }
+
+private fun sortByMode(list: List<Wish>, mode: String): List<Wish> = when (mode) {
     "star" -> list.sortedByDescending { it.star && !it.got }
     "low" -> list.sortedWith(compareBy<Wish>({ it.price == null }, { it.price }))
     "high" -> list.sortedWith(compareBy<Wish>({ it.price == null }, { -(it.price ?: 0.0) }))

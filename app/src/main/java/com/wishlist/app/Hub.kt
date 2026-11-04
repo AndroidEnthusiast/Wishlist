@@ -503,7 +503,7 @@ internal fun ListBlock(
     }
 }
 
-/** A new wishlist of your own: a name (required) and notes about what it's for. */
+/** A new wishlist of your own: a name (required) and, optionally, the note for friends shown at the top of the list. */
 @Composable
 fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
     val ctx = LocalContext.current
@@ -527,7 +527,9 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 OutlinedTextField(
                     notes, { notes = it.take(ABOUT_MAX) },
-                    label = { Text(tr("Notes")) }, placeholder = { Text(tr("What is this wishlist for?")) },
+                    // It is the list's note for friends (owner, 2.113: "Notes" didn't say what it does or where it shows).
+                    label = { Text(tr("Note for friends")) },
+                    supportingText = { Text(tr("Optional. Shown at the top of your list. For example your sizes, or things you don’t want.")) },
                     maxLines = 4, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 if (canCopy) {
                     Row(

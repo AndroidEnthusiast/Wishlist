@@ -1205,7 +1205,7 @@ fun HomeScreen(
                         GlowBox(w.id, small = view == "grid") {
                         when (view) {
                             "grid" -> CompactCard(
-                                w, onLongPress = { openMenu(w) },
+                                w, onLongPress = null, // everything is in its ⋮ menu (owner, 2.113)
                                 onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
                                 reserve = if (inShared) Reserving(r) { on -> Shared.reserve(w, on) } else null,
                                 onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) })
@@ -1230,10 +1230,12 @@ fun HomeScreen(
                                         Button(onClick = { Shared.reserve(w, true) }) { Text(tr("Reserve")) }
                                     }
                                 } else {
-                                    IconButton(onClick = { OwnedFlow.toggle(ctx, w) }) {
+                                    // Private on the card, owned in the long-press menu (owner, 2.113: private is changed
+                                    // often while making a list, owned once when the gift has arrived).
+                                    IconButton(onClick = { togglePrivate(ctx, w) }) {
                                         Icon(
-                                            AppIcons.Check, tr("Mark as owned"),
-                                            tint = if (w.got) cs.primary else look.cardMuted(w.id)
+                                            PrivateIcon, if (w.priv) tr("Make visible to friends") else tr("Make private"),
+                                            tint = if (w.priv) cs.primary else look.cardMuted(w.id)
                                         )
                                     }
                                 }
@@ -1264,10 +1266,11 @@ fun HomeScreen(
         ItemMenuDialog(
             w,
             onEdit = { menuId = null; editing = w },
-            // Large cards (owner, 2.111): no Share (the card has its share icon) and no Price history (Price watch has it).
-            onHistory = if (inShared || view != "grid") null else ({ menuId = null; historyId = w.id }),
-            onShare = if (view != "grid") null else ({ menuId = null; shareItem(ctx, w) }),
-            onPrivate = if (inShared) null else ({ menuId = null; togglePrivate(ctx, w) }),
+            // Only large cards have a long press (2.113): Edit and Mark as owned. Share and Private are on the card,
+            // Price history is on Price watch.
+            onHistory = null,
+            onShare = null,
+            onOwned = if (inShared) null else ({ menuId = null; OwnedFlow.toggle(ctx, w) }),
             onClose = { menuId = null }
         )
     }
@@ -1423,11 +1426,12 @@ fun CompactCard(
                     Icon(AppIcons.MoreVert, tr("More"), tint = muted)
                 }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                    // ⋮ (owner, 2.105): Edit, Private (with a tick), Share, Mark as owned, Delete. No Top wish here: the
-                    // star on the picture does that. Owned is only here because it doesn't fit on the small card.
+                    // ⋮ (owner, 2.113): Share, Edit, Private (with a tick), Mark as owned, Delete; on a gift list Reserve
+                    // takes the place of Private/owned. No Top wish here: the star on the picture does that. Two per row
+                    // has no long press any more: everything is in this menu.
+                    DropdownMenuItem(text = { Text(tr("Share")) }, onClick = { menu = false; shareItem(ctx, w) })
                     DropdownMenuItem(text = { Text(tr("Edit")) }, onClick = { menu = false; onEdit() })
                     if (reserve == null) PrivateMenuItem(w.priv) { menu = false; togglePrivate(ctx, w) }
-                    DropdownMenuItem(text = { Text(tr("Share")) }, onClick = { menu = false; shareItem(ctx, w) })
                     if (reserve != null) {
                         when (reserve.state) {
                             true -> DropdownMenuItem(text = { Text(tr("Undo reservation")) }, onClick = { menu = false; reserve.set(false) })

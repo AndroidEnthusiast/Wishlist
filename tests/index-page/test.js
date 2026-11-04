@@ -123,6 +123,19 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   await sleep(100);
   check("nothing gone: no note", dg2.window.document.getElementById("gone").hidden);
 
+  // a gift reserved here that the friend marked as owned (owner, 4 November 2026): say so once, and never again
+  store.reservations[3] = myDevice;
+  const dow = await load("?c=ABCD2345", w => { w.localStorage.setItem("wl_device", myDevice); w.localStorage.setItem("wl_res_ABCD2345", JSON.stringify({ 1: "Headphones", 3: "Bought already" })); });
+  await sleep(100);
+  const ownNote = dow.window.document.getElementById("gone");
+  check("owned gift: note shown", !ownNote.hidden && /“Bought already” is marked as owned: they already have it\. Have a look for another gift\./.test(ownNote.textContent));
+  check("owned gift: forgotten here", JSON.stringify(Object.keys(JSON.parse(dow.window.localStorage.getItem("wl_res_ABCD2345")))) === JSON.stringify(["1"]));
+  const dow2 = await load("?c=ABCD2345", w => { w.localStorage.setItem("wl_device", myDevice); w.localStorage.setItem("wl_res_ABCD2345", JSON.stringify({ 1: "Headphones" })); });
+  await sleep(100);
+  check("owned gift: not told again (its old reservation is still online)", dow2.window.document.getElementById("gone").hidden);
+  check("owned gift: listed at the bottom", [...dow2.window.document.querySelectorAll(".card h3, .card .title")].map(e => e.textContent).pop() === "Bought already" || [...dow2.window.document.querySelectorAll(".card")].pop().textContent.includes("Bought already"));
+  delete store.reservations[3];
+
   const d2 = await load("?c=ABCD2345");
   const c1b = d2.window.document.querySelectorAll(".card")[0];
   check("other visitor sees Reserved, no button", c1b.querySelector(".badge.status").textContent === "Reserved" && !c1b.querySelector("button.act"));
@@ -248,9 +261,9 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   check("sort: as listed", titles(ms).join("|") === "Cheap mug|Fancy watch|Book|Mystery|Reserved lamp|Old star got");
   check("sort choice saved", ms.window.localStorage.getItem("wl_sort") === "asis" && !D(ms).getElementById("filterDot").hidden);
   sel.value = "low"; fire(ms, sel, "change");
-  check("sort: price low to high, no price last", titles(ms).join("|") === "Old star got|Cheap mug|Book|Reserved lamp|Fancy watch|Mystery");
+  check("sort: price low to high, no price last, owned at the bottom", titles(ms).join("|") === "Cheap mug|Book|Reserved lamp|Fancy watch|Mystery|Old star got");
   sel.value = "high"; fire(ms, sel, "change");
-  check("sort: price high to low, no price last", titles(ms).join("|") === "Fancy watch|Reserved lamp|Book|Cheap mug|Old star got|Mystery");
+  check("sort: price high to low, no price last, owned at the bottom", titles(ms).join("|") === "Fancy watch|Reserved lamp|Book|Cheap mug|Mystery|Old star got");
   sel.value = "star"; fire(ms, sel, "change");
 
   const mp = D(ms).getElementById("maxp");
@@ -274,7 +287,7 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
 
   // sort is remembered on the next visit; junk is ignored
   let sr = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_sort", "low"));
-  check("remembered sort applies", D(sr).getElementById("sort").value === "low" && titles(sr)[0] === "Old star got");
+  check("remembered sort applies", D(sr).getElementById("sort").value === "low" && titles(sr)[0] === "Cheap mug");
   let sj = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_sort", "<x>"));
   check("junk sort falls back to most wanted first", titles(sj)[0] === "Fancy watch");
 
