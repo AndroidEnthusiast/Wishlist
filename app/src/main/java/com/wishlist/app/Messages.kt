@@ -9,6 +9,21 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import java.io.File
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -27,6 +42,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -332,6 +348,22 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
     var sending by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf<ChatMessage?>(null) }
     var wishPick by remember { mutableStateOf(false) }
+    // Photos (2.109): picked or taken, then shown full screen with Send (owner: a preview first); [viewing] is a
+    // photo opened from the chat.
+    var preview by remember { mutableStateOf<String?>(null) }
+    var viewing by remember { mutableStateOf<File?>(null) }
+    val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) scope.launch {
+            ImageStore.import(ctx, uri)?.let { preview = it } ?: snack.showToast(tr("Couldn’t open that photo."))
+        }
+    }
+    val cameraFile = remember { File(File(ctx.cacheDir, "share").apply { mkdirs() }, "chat_camera.jpg") }
+    val cameraUri = remember { androidx.core.content.FileProvider.getUriForFile(ctx, ctx.packageName + ".files", cameraFile) }
+    val takePhoto = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
+        if (ok) scope.launch {
+            ImageStore.import(ctx, cameraUri)?.let { preview = it } ?: snack.showToast(tr("Couldn’t open that photo."))
+        }
+    }
     val listState = rememberLazyListState()
 
     // Load, then ask for new messages (and read ticks) every 3 seconds while the chat is open.
@@ -393,6 +425,21 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
         }
     }
 
+    fun sendPhoto(image: String) {
+        sending = true
+        scope.launch {
+            try {
+                val content = ChatPhotos.upload(ctx, peer, image)
+                val m = Chat.send(ctx, peer, content)
+                msgs = (msgs + m).distinctBy { it.id }
+            } catch (e: Exception) {
+                snack.showToast(tr("Couldn’t send the photo. Check your connection."))
+            }
+            ImageStore.delete(ctx, image)
+            sending = false
+        }
+    }
+
     fun send(content: ChatContent) {
         sending = true
         scope.launch {
@@ -448,14 +495,17 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
                     items(msgs.size, key = { msgs[it].id }) { i ->
                         val m = msgs[i]
                         ChatRow(m, msgs.getOrNull(i - 1),
-                            onLongPress = if (m.mine) ({ deleting = m }) else null)
+                            onLongPress = if (m.mine) ({ deleting = m }) else null,
+                            onOpenPhoto = { viewing = it })
                     }
                 }
             }
             if (canSend) InputBar(
                 text, { text = it }, sending,
                 onSend = { if (text.isNotBlank()) send(ChatContent(true, "text", text.trim())) },
-                onWish = { wishPick = true }
+                onWish = { wishPick = true },
+                onGallery = { pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                onCamera = { try { takePhoto.launch(cameraUri) } catch (e: Exception) { } }
             ) else Text(
                 tr("You’re no longer friends, so you can’t send messages here."),
                 color = cs.onSurfaceVariant, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall,
@@ -475,6 +525,7 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
                     scope.launch {
                         try {
                             Chat.delete(ctx, m.id)
+                            ChatPhotos.forget(ctx, m.content)
                             msgs = msgs.filter { it.id != m.id }
                         } catch (e: Exception) {
                             snack.showToast(tr("Couldn’t reach the server. Check your connection."))
@@ -489,6 +540,10 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
         wishPick = false
         send(ChatContent(true, "wish", "", w.title, w.price, w.currency, if (ImageStore.isLocal(w.image)) "" else w.image, w.url))
     }, onClose = { wishPick = false })
+    preview?.let { img ->
+        PhotoPreview(img, onCancel = { preview = null; ImageStore.delete(ctx, img) }, onSend = { preview = null; sendPhoto(img) })
+    }
+    viewing?.let { f -> PhotoViewer(f, onClose = { viewing = null }) }
 }
 
 @Composable
@@ -512,14 +567,14 @@ private fun sameGroup(a: ChatMessage?, b: ChatMessage?) =
 
 /** One message, with the date chip above it when a new day starts. */
 @Composable
-private fun ChatRow(m: ChatMessage, prev: ChatMessage?, onLongPress: (() -> Unit)?) {
+private fun ChatRow(m: ChatMessage, prev: ChatMessage?, onLongPress: (() -> Unit)?, onOpenPhoto: (File) -> Unit) {
     val first = !sameGroup(prev, m)
     val newDay = prev == null || dayLabel(prev.at) != dayLabel(m.at)
     if (newDay) DayChip(dayLabel(m.at))
     // A small "tail": the corner nearest the sender is sharp on the first bubble of a group.
     val r = if (LocalLook.current.design == "neo" || LocalLook.current.design == "cyber") 10.dp else 16.dp
     val shape = if (m.mine) RoundedCornerShape(r, if (first) 2.dp else r, r, r) else RoundedCornerShape(if (first) 2.dp else r, r, r, r)
-    Bubble(m, shape, onLongPress = onLongPress, modifier = Modifier.padding(top = if (first && !newDay) 8.dp else 2.dp))
+    Bubble(m, shape, onLongPress = onLongPress, onOpenPhoto = onOpenPhoto, modifier = Modifier.padding(top = if (first && !newDay) 8.dp else 2.dp))
 }
 
 /**
@@ -528,10 +583,26 @@ private fun ChatRow(m: ChatMessage, prev: ChatMessage?, onLongPress: (() -> Unit
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun Bubble(m: ChatMessage, shape: androidx.compose.ui.graphics.Shape, onLongPress: (() -> Unit)?, modifier: Modifier = Modifier) {
+private fun Bubble(
+    m: ChatMessage, shape: androidx.compose.ui.graphics.Shape, onLongPress: (() -> Unit)?, onOpenPhoto: (File) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
     val uri = LocalUriHandler.current
+    val ctx = LocalContext.current
+    // A photo: this phone's copy, fetched and unlocked the first time (null while loading or when it is gone).
+    var photo by remember(m.id) { mutableStateOf<File?>(null) }
+    var photoState by remember(m.id) { mutableStateOf("loading") } // loading | ok | gone | offline
+    var photoTry by remember(m.id) { mutableStateOf(0) }
+    if (m.content.readable && m.content.kind == "photo") LaunchedEffect(m.id, photoTry) {
+        photoState = "loading"
+        photoState = try {
+            ChatPhotos.load(ctx, m.content)?.let { photo = it; "ok" } ?: "gone"
+        } catch (e: Exception) {
+            "offline"
+        }
+    }
     val fill = if (m.mine) look.accent else cs.surfaceVariant
     val ink = if (m.mine) look.onAccent else cs.onSurface
     Row(modifier.fillMaxWidth(), horizontalArrangement = if (m.mine) Arrangement.End else Arrangement.Start) {
@@ -543,6 +614,10 @@ private fun Bubble(m: ChatMessage, shape: androidx.compose.ui.graphics.Shape, on
                         if (m.content.kind == "wish" && m.content.url.isNotBlank()) try { uri.openUri(m.content.url) } catch (e: Exception) {}
                         // A group invitation (2.108): the join screen, or the group when you are in it already.
                         if (m.content.kind == "group") GroupNav.openInvite(m.content.text, Groups.parseLink(m.content.url))
+                        if (m.content.kind == "photo") {
+                            if (photoState == "ok") photo?.let(onOpenPhoto)
+                            else if (photoState == "offline") photoTry++
+                        }
                     },
                     onLongClick = onLongPress
                 )
@@ -578,6 +653,27 @@ private fun Bubble(m: ChatMessage, shape: androidx.compose.ui.graphics.Shape, on
                         Text(if (m.mine) tr("Invitation sent") else tr("Tap to join"), color = ink.copy(alpha = 0.8f), style = MaterialTheme.typography.labelSmall)
                     }
                 }
+                m.content.kind == "photo" -> {
+                    // The photo in its own shape (wide or tall), at most 240 dp wide.
+                    val ratio = if (m.content.w > 0 && m.content.h > 0) (m.content.w.toFloat() / m.content.h).coerceIn(0.6f, 1.8f) else 1f
+                    Box(
+                        Modifier.width(240.dp).aspectRatio(ratio).clip(RoundedCornerShape(12.dp)).background(ink.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        when (photoState) {
+                            "ok" -> AsyncImage(
+                                model = photo, contentDescription = tr("Photo"), contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                            "loading" -> CircularProgressIndicator(Modifier.size(24.dp), color = ink, strokeWidth = 2.dp)
+                            else -> Text(
+                                if (photoState == "gone") tr("This photo is no longer available") else tr("Couldn’t load the photo. Tap to try again."),
+                                color = ink.copy(alpha = 0.8f), textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                    }
+                }
                 else -> Text(m.content.text, color = ink, style = MaterialTheme.typography.bodyLarge)
             }
             Row(Modifier.align(Alignment.End).padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -594,9 +690,12 @@ private fun Bubble(m: ChatMessage, shape: androidx.compose.ui.graphics.Shape, on
     }
 }
 
-/** The bar to type in: a gift (send a wish), the text field, and send. */
+/** The bar to type in: a gift (send a wish), a camera (send a photo), the text field, and send. */
 @Composable
-private fun InputBar(text: String, onText: (String) -> Unit, sending: Boolean, onSend: () -> Unit, onWish: () -> Unit) {
+private fun InputBar(
+    text: String, onText: (String) -> Unit, sending: Boolean, onSend: () -> Unit, onWish: () -> Unit,
+    onGallery: () -> Unit, onCamera: () -> Unit
+) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
     Row(
@@ -605,6 +704,14 @@ private fun InputBar(text: String, onText: (String) -> Unit, sending: Boolean, o
     ) {
         // Bottom-aligned with the text box (it grows with long messages), lifted so its middle meets a one-line box's.
         IconButton(onClick = onWish, modifier = Modifier.padding(bottom = 4.dp)) { GiftIcon(cs.onSurfaceVariant) }
+        var photoMenu by remember { mutableStateOf(false) }
+        Box(Modifier.padding(bottom = 4.dp)) {
+            IconButton(onClick = { photoMenu = true }, enabled = !sending) { PhotoIcon(cs.onSurfaceVariant) }
+            DropdownMenu(expanded = photoMenu, onDismissRequest = { photoMenu = false }) {
+                DropdownMenuItem(text = { Text(tr("Take a photo")) }, onClick = { photoMenu = false; onCamera() })
+                DropdownMenuItem(text = { Text(tr("Choose from gallery")) }, onClick = { photoMenu = false; onGallery() })
+            }
+        }
         val shape = RoundedCornerShape(24.dp)
         TextField(
             text, onText, placeholder = { Text(tr("Message")) }, maxLines = 5,
@@ -664,4 +771,56 @@ private fun WishPicker(onPick: (Wish) -> Unit, onClose: () -> Unit) {
         },
         confirmButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
     )
+}
+
+/** The photo you are about to send, full screen on black, with Cancel and Send (owner, 2.109: a preview first). */
+@Composable
+private fun PhotoPreview(image: String, onCancel: () -> Unit, onSend: () -> Unit) {
+    val look = LocalLook.current
+    Dialog(onDismissRequest = onCancel, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+        Column(Modifier.fillMaxSize().background(Color.Black).statusBarsPadding().navigationBarsPadding()) {
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                AsyncImage(model = image, contentDescription = tr("Photo"), contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+            }
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = onCancel) { Text(tr("Cancel"), color = Color.White) }
+                Row(
+                    Modifier.lookSurface(look, look.fabShape, look.accent).clickable(onClick = onSend).padding(horizontal = 20.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(tr("Send"), color = look.onAccent, fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 8.dp))
+                    SendIcon(look.onAccent)
+                }
+            }
+        }
+    }
+}
+
+/** A photo from the chat, full screen on black: pinch to zoom, drag to move, double tap to reset; Back closes it. */
+@Composable
+private fun PhotoViewer(file: File, onClose: () -> Unit) {
+    var scale by remember { mutableFloatStateOf(1f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
+    Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+        Box(Modifier.fillMaxSize().background(Color.Black)) {
+            AsyncImage(
+                model = file, contentDescription = tr("Photo"), contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTransformGestures { _, pan, zoom, _ ->
+                            scale = (scale * zoom).coerceIn(1f, 5f)
+                            offset = if (scale == 1f) Offset.Zero else offset + pan
+                        }
+                    }
+                    .pointerInput(Unit) { detectTapGestures(onDoubleTap = { scale = 1f; offset = Offset.Zero }) }
+                    .graphicsLayer { scaleX = scale; scaleY = scale; translationX = offset.x; translationY = offset.y }
+            )
+            IconButton(onClick = onClose, modifier = Modifier.statusBarsPadding().padding(8.dp).align(Alignment.TopStart)) {
+                Icon(AppIcons.Close, tr("Close"), tint = Color.White)
+            }
+        }
+    }
 }

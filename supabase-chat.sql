@@ -134,3 +134,71 @@ grant execute on function
   wl_chat_delete(text, text, bigint),
   wl_chat_key(text, text, text)
 to anon;
+
+-- ---------------------------------------------------------------------------------------------------------------------
+-- Photos in messages (version 2.109, 4 November 2026). Run this whole file again; it only adds things.
+--  * The phone shrinks the photo and locks it with a new random key before sending. Only the locked photo is stored
+--    here (wl_chat_files.data); its key travels inside the locked message, so this server can't see the photo.
+--  * Only the two people in the conversation can fetch it, and only once its message was sent.
+--  * A photo is removed here after 30 days (the phones keep their own copy), or with its message when that is deleted.
+--    A photo whose message was never sent is removed after a day. At most 50 photos a day per person.
+
+create table if not exists wl_chat_files (
+  id text primary key,                                              -- a random name made here
+  a text not null references wl_profiles(id) on delete cascade,     -- sender
+  b text not null references wl_profiles(id) on delete cascade,     -- receiver
+  msg bigint references wl_messages(id) on delete cascade,          -- its message, once sent
+  data text not null,                                               -- the locked photo (base64)
+  created_at timestamptz not null default now()
+);
+create index if not exists wl_chat_files_time on wl_chat_files (created_at);
+create index if not exists wl_chat_files_msg on wl_chat_files (msg);
+create index if not exists wl_chat_files_a on wl_chat_files (a, created_at);
+alter table wl_chat_files enable row level security;
+
+-- Stores a locked photo for a friend; returns its name. The message that shows it is sent with wl_chat_send_photo.
+create or replace function wl_chat_file_put(p_id text, p_token text, p_other text, p_data text)
+returns text language plpgsql security definer set search_path = public as $$
+declare v text;
+begin
+  perform wl_pf_check(p_id, p_token);
+  if not wl_chat_ok(p_id, p_other, true) then raise exception 'not friends'; end if;
+  if length(coalesce(p_data, '')) < 100 or length(p_data) > 1000000 then raise exception 'bad photo'; end if;
+  delete from wl_chat_files
+    where created_at < now() - interval '30 days' or (msg is null and created_at < now() - interval '1 day');
+  if (select count(*) from wl_chat_files where a = p_id and created_at > now() - interval '1 day') >= 50 then
+    raise exception 'too many photos';
+  end if;
+  v := replace(gen_random_uuid()::text, '-', '');
+  insert into wl_chat_files (id, a, b, data) values (v, p_id, p_other, p_data);
+  return v;
+end $$;
+
+-- Sends the message for a stored photo (like wl_chat_send) and ties the photo to it, in one go.
+create or replace function wl_chat_send_photo(p_id text, p_token text, p_other text, p_body text, p_spk text, p_rpk text, p_file text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare r jsonb;
+begin
+  perform wl_pf_check(p_id, p_token);
+  if not exists (select 1 from wl_chat_files where id = p_file and a = p_id and b = p_other and msg is null) then
+    raise exception 'no photo';
+  end if;
+  r := wl_chat_send(p_id, p_token, p_other, p_body, p_spk, p_rpk);
+  update wl_chat_files set msg = (r->>'id')::bigint where id = p_file;
+  return r;
+end $$;
+
+-- A locked photo of a conversation you are in; null when it is gone (older than 30 days, or its message was deleted).
+create or replace function wl_chat_file_get(p_id text, p_token text, p_file text)
+returns text language plpgsql security definer set search_path = public as $$
+begin
+  perform wl_pf_check(p_id, p_token);
+  return (select data from wl_chat_files
+          where id = p_file and (a = p_id or b = p_id) and msg is not null and created_at > now() - interval '30 days');
+end $$;
+
+grant execute on function
+  wl_chat_file_put(text, text, text, text),
+  wl_chat_send_photo(text, text, text, text, text, text, text),
+  wl_chat_file_get(text, text, text)
+to anon;

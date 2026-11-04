@@ -850,5 +850,13 @@ val NL: Map<String, String> = mapOf(
     "Tap to join" to "Tik om mee te doen",
     "%s invited you to this wishlist group" to "%s nodigt je uit voor deze verlanglijstgroep",
     "said no thanks to “%s”" to "zei nee, bedankt tegen “%s”",
-    "You are removed from this wishlist group" to "Je bent uit deze verlanglijstgroep verwijderd"
+    "You are removed from this wishlist group" to "Je bent uit deze verlanglijstgroep verwijderd",
+    // 2.109: photos in messages
+    "Photo" to "Foto",
+    "Send" to "Versturen",
+    "Choose from gallery" to "Kies uit galerij",
+    "Couldn’t open that photo." to "Kan die foto niet openen.",
+    "Couldn’t send the photo. Check your connection." to "Kan de foto niet versturen. Controleer je verbinding.",
+    "This photo is no longer available" to "Deze foto is niet meer beschikbaar",
+    "Couldn’t load the photo. Tap to try again." to "Kan de foto niet laden. Tik om het opnieuw te proberen."
 )

@@ -62,3 +62,32 @@ fun PlaceholderIcon(kind: String = "gift", size: Dp = 24.dp, tint: Color = Mater
         else -> GiftIcon(tint, size)
     }
 }
+
+/** A camera, drawn in the same lines as [GiftIcon] (our own drawing): the chat's photo button (2.109). */
+@Composable
+fun PhotoIcon(tint: Color, size: Dp = 24.dp) {
+    Canvas(Modifier.size(size)) {
+        val u = this.size.width / 24f
+        val st = Stroke(1.8f * u, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        // The body with the bump on top.
+        val body = Path().apply {
+            moveTo(4.5f * u, 7.5f * u)
+            lineTo(7.6f * u, 7.5f * u)
+            lineTo(9.2f * u, 5f * u)
+            lineTo(14.8f * u, 5f * u)
+            lineTo(16.4f * u, 7.5f * u)
+            lineTo(19.5f * u, 7.5f * u)
+            quadraticBezierTo(21f * u, 7.5f * u, 21f * u, 9f * u)
+            lineTo(21f * u, 17.5f * u)
+            quadraticBezierTo(21f * u, 19f * u, 19.5f * u, 19f * u)
+            lineTo(4.5f * u, 19f * u)
+            quadraticBezierTo(3f * u, 19f * u, 3f * u, 17.5f * u)
+            lineTo(3f * u, 9f * u)
+            quadraticBezierTo(3f * u, 7.5f * u, 4.5f * u, 7.5f * u)
+            close()
+        }
+        drawPath(body, tint, style = st)
+        // The lens.
+        drawCircle(tint, 3.6f * u, Offset(12f * u, 13f * u), style = st)
+    }
+}

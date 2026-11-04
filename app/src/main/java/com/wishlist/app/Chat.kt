@@ -18,13 +18,15 @@ import org.json.JSONObject
  *    screen, and the background check ([BinWorker], about every 30 minutes) notifies new messages.
  *  - A message is JSON before locking: {"t":"text","x":"…"} or {"t":"wish","title","price","cur","img","url"}, or
  *    (2.108) a group invitation {"t":"group","gid","name","link"} (ChatContent: text = group id, title = its name,
- *    url = the group link).
+ *    url = the group link), or (2.109) a photo {"t":"photo","f":name online,"k":its key,"w","h"} (ChatContent: text =
+ *    the name, img = the key; see ChatPhotos.kt).
  */
 
 /** What a message says, once unlocked. [readable] false: locked with another phone's key. */
 data class ChatContent(
     val readable: Boolean, val kind: String = "text", val text: String = "",
-    val title: String = "", val price: Double? = null, val cur: String = "", val img: String = "", val url: String = ""
+    val title: String = "", val price: Double? = null, val cur: String = "", val img: String = "", val url: String = "",
+    val w: Int = 0, val h: Int = 0
 )
 
 data class ChatMessage(val id: Long, val mine: Boolean, val content: ChatContent, val at: Long, val read: Boolean)
@@ -106,6 +108,7 @@ object Chat {
     private fun parse(s: String): ChatContent = try {
         val j = JSONObject(s)
         if (j.optString("t") == "group") ChatContent(true, "group", j.optString("gid"), j.optString("name"), url = j.optString("link"))
+        else if (j.optString("t") == "photo") ChatContent(true, "photo", j.optString("f"), img = j.optString("k"), w = j.optInt("w"), h = j.optInt("h"))
         else if (j.optString("t") == "wish") ChatContent(
             true, "wish", "", j.optString("title"), if (j.has("price") && !j.isNull("price")) j.optDouble("price") else null,
             j.optString("cur"), j.optString("img"), j.optString("url")
@@ -190,15 +193,29 @@ object Chat {
         val me = myId(c)
         val plain = if (content.kind == "group") JSONObject().put("t", "group").put("gid", content.text)
             .put("name", content.title).put("link", content.url).toString()
+        else if (content.kind == "photo") JSONObject().put("t", "photo").put("f", content.text).put("k", content.img)
+            .put("w", content.w).put("h", content.h).toString()
         else if (content.kind == "wish") JSONObject().put("t", "wish").put("title", content.title)
             .put("price", content.price ?: JSONObject.NULL).put("cur", content.cur).put("img", content.img).put("url", content.url).toString()
         else JSONObject().put("t", "text").put("x", content.text).toString()
         val body = ChatCrypto.lock(keyWith(c, theirPub, other), plain, me, other)
+        val args = base(c).put("p_other", other).put("p_body", body).put("p_spk", myPublic(c)).put("p_rpk", theirPub)
         val r = JSONObject(
-            Cloud.rpc("wl_chat_send", base(c).put("p_other", other).put("p_body", body).put("p_spk", myPublic(c)).put("p_rpk", theirPub))
+            if (content.kind == "photo") Cloud.rpc("wl_chat_send_photo", args.put("p_file", content.text))
+            else Cloud.rpc("wl_chat_send", args)
         )
         return ChatMessage(r.optLong("id"), true, content, time(r.optString("at")), false)
     }
+
+    /** Stores a locked photo for [other] (ChatPhotos.upload); returns its name online. */
+    suspend fun putPhoto(c: Context, other: String, data: String): String =
+        Cloud.rpc("wl_chat_file_put", base(c).put("p_other", other).put("p_data", data)).trim().removeSurrounding("\"")
+            .takeIf { it.isNotEmpty() && it != "null" } ?: throw IllegalStateException("no photo name")
+
+    /** A locked photo of one of your conversations, or null when it is gone. */
+    suspend fun getPhoto(c: Context, name: String): String? =
+        Cloud.rpc("wl_chat_file_get", base(c).put("p_file", name)).trim().removeSurrounding("\"")
+            .takeIf { it.isNotEmpty() && it != "null" }
 
     suspend fun delete(c: Context, id: Long) {
         Cloud.rpc("wl_chat_delete", base(c).put("p_msg", id))
@@ -224,6 +241,7 @@ object Chat {
         !m.readable -> tr("This message can’t be read on this phone")
         m.kind == "wish" -> tr("Wish: %s", m.title)
         m.kind == "group" -> tr("Invitation: %s", m.title)
+        m.kind == "photo" -> "📷 " + tr("Photo")
         else -> m.text
     }
 }
