@@ -135,7 +135,10 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - Then (4 November, same session): **v2.111**: Dutch removed (app + web, tests too), long-press menu trimmed in large cards, "Owned by you", pinned summary + filters, summary card proportions and pulse, "Saved!" with circling lines, share text with "!". No script. Web suites all pass; the Kotlin is compiled by GitHub only, nothing seen on a phone.
 
+- Then: **v2.112**: the floating Add wish button removed. The owner asked for ideas for a gift search that adds straight to a list; options given (search in the app's own browser with an Add button, shop APIs, or a gift-idea feed), nothing built yet.
+
 ## Next session
+- **Gift search**: ask which option the owner picked (see the session of 4 November), then interview before building.
 - **Check 2.111 on the phone**: the pinned top while scrolling (both views, with and without a cover photo, own list and gift list: no jump or double menu), the pulse when adding/deleting a wish, the "Saved!" lines, the long-press menu size, "Owned by you".
 - **Check 2.110 on the phone**: the ⋮ on a cover (Change, Delete, Undo), Edit categories from the + form and from sharing a link (own list and gift list; counts; warning; rename keeps the picked category), Home order after opening lists, the back arrow (and that the menu button is gone only on an open list).
 - **Photos in messages (2.109)**: did the owner run `supabase-chat.sql` again? Test with two phones: camera and gallery, the preview, sending, the photo arriving, full screen and zoom, deleting a photo message, a very large photo, and a phone that was offline. Not checked: how the preview and viewer look under the status bar on every phone.

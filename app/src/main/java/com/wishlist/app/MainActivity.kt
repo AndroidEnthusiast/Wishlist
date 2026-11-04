@@ -1108,7 +1108,7 @@ fun HomeScreen(
                 }
             )
         },
-        floatingActionButton = { AddWishButton(onAdd) },
+        // No floating "Add wish" button any more (owner, 2.112): the + in the bottom bar does the same.
         snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
         // Behind the list: the blobs, glows or dots of the design (nothing in Material 3).
@@ -1184,7 +1184,7 @@ fun HomeScreen(
                         if (query.isNotBlank()) {
                             if (sel != "All") tr("No wishes match “%1\$s” in %2\$s.", query.trim(), catLabel(sel))
                             else tr("No wishes match “%s”.", query.trim())
-                        } else tr("Nothing here yet. Tap Add wish, or share a product link to Wishlist from your browser."),
+                        } else tr("Nothing here yet. Tap + below, or share a product link to Wishlist from your browser."),
                         color = cs.onSurfaceVariant, modifier = Modifier.padding(16.dp)
                     )
                 }
@@ -1193,7 +1193,7 @@ fun HomeScreen(
                 LazyVerticalGrid(
                     state = gridState,
                     columns = if (view == "grid") GridCells.Fixed(2) else GridCells.Adaptive(300.dp),
-                    contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 96.dp),
+                    contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 24.dp), // no floating button to keep clear of any more (2.112)
                     horizontalArrangement = Arrangement.spacedBy(gap),
                     verticalArrangement = Arrangement.spacedBy(gap)
                 ) {
