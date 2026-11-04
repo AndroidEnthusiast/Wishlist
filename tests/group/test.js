@@ -257,14 +257,6 @@ const A = "AAAAAAAAAAAAAAAAAAAA", AT = "tokA_tokA_tokA_tokA_", LINK = "LNKABCDEF
   check("broken link: clear message", (await x.page.locator(".center").innerText()) === "This group link isn’t complete. Ask for the link again.");
   await x.ctx.close();
 
-  // ---- Dutch ----
-  let nl = await open({ locale: "nl-NL" });
-  await nl.page.goto(web.base + "group.html?g=" + LINK);
-  await nl.page.waitForSelector(".gjoin");
-  check("Dutch join screen", (await nl.page.locator(".gtitle").innerText()) === "Doe mee met de verlanglijstgroep “Family 2026”");
-  check("Dutch: no JS errors", nl.errors.length === 0, nl.errors);
-  await nl.ctx.close();
-
   // ---- leaving ----
   await w2.page.getByRole("button", { name: "Leave group" }).click();
   await w2.page.locator(".dlg").getByRole("button", { name: "Leave" }).click();

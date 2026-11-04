@@ -4,6 +4,13 @@ import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.CircleShape
@@ -164,23 +171,38 @@ fun ListCoverPicture(cover: ListCover, modifier: Modifier = Modifier) {
 
 /**
  * The narrow card at the top of a list: how many wishes and their total value (the total moved here from Home, 2.89).
+ * Since 2.111 (owner) the number takes less room than the total, both centred in their part, and the number pulses
+ * when it goes up or down.
  */
 @Composable
 fun ListSummaryCard(wishes: List<Wish>, modifier: Modifier = Modifier) {
     val look = LocalLook.current
     val id = 11L
     val total = totalValue(wishes)
+    val count = wishes.size
+    val pulse = remember { Animatable(1f) }
+    var last by remember { mutableIntStateOf(count) }
+    LaunchedEffect(count) {
+        if (count == last) return@LaunchedEffect
+        last = count
+        pulse.snapTo(1f)
+        pulse.animateTo(1.35f, tween(140, easing = FastOutSlowInEasing))
+        pulse.animateTo(1f, spring(dampingRatio = 0.45f, stiffness = Spring.StiffnessMediumLow))
+    }
     Row(
         modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true))
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(Modifier.weight(1f)) {
-            Text(wishes.size.toString(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = look.cardInk(id))
-            Text(if (wishes.size == 1) tr("Wish") else tr("Wishes"), style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id))
+        Column(Modifier.weight(0.38f), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                count.toString(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = look.cardInk(id),
+                modifier = Modifier.graphicsLayer { scaleX = pulse.value; scaleY = pulse.value }
+            )
+            Text(if (count == 1) tr("Wish") else tr("Wishes"), style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id))
         }
         Box(Modifier.width(1.dp).height(32.dp).background(look.cardMuted(id).copy(alpha = 0.3f)))
-        Column(Modifier.weight(1f).padding(start = 16.dp)) {
+        Column(Modifier.weight(0.62f), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(total ?: "–", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = look.cardInk(id), maxLines = 1)
             Text(tr("Total value"), style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id))
         }
@@ -200,8 +222,7 @@ fun ListHeader(wishes: List<Wish>, snack: SnackbarHostState) {
             ListCoverPicture(cover)
             CoverMenu(cover, snack, Modifier.align(Alignment.BottomEnd).padding(6.dp))
         }
-        // Only on your own lists (owner, 2.90): a group wishlist's total isn't what its givers need.
-        if (Shared.active == null && Show["show_summary"]) ListSummaryCard(wishes)
+        // The summary card moved to the part that stays at the top while scrolling (MainActivity, 2.111).
     }
 }
 

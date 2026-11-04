@@ -1,35 +1,26 @@
 package com.wishlist.app
 
 import android.content.Context
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import java.util.Locale
 
 /**
- * The app's language: "en" (UK English) or "nl" (Dutch), chosen in App settings. The first time it follows the phone.
- * Every text on screen goes through [tr] with its English wording; the Dutch wording is in [NL] (NlStrings.kt).
- * A new text: write it with tr("…") and add its Dutch line to NL. Wishes themselves (titles from shops) are never translated.
+ * The app's language. Since 2.111 (owner, 4 November 2026) only UK English: Dutch was removed to keep every change
+ * small, and the Language setting went with it. Every text on screen still goes through [tr] with its English wording,
+ * so a full translation later only needs a dictionary here (the owner plans to ask for one some day). Wishes
+ * themselves (titles from shops) are never translated.
  */
 object Lang {
-    var code by mutableStateOf("en")
-        private set
+    /** Always "en" for now (dates and numbers use the UK style). */
+    val code: String = "en"
 
-    fun load(c: Context) {
-        val p = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
-        code = p.getString("lang", null) ?: if (Locale.getDefault().language == "nl") "nl" else "en"
-    }
-
-    fun set(c: Context, lang: String) {
-        code = if (lang == "nl") "nl" else "en"
-        c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE).edit().putString("lang", code).apply()
-    }
+    @Suppress("UNUSED_PARAMETER")
+    fun load(c: Context) {}
 }
 
-/** [en] in the chosen language. Reading it inside a screen redraws that screen when the language changes. */
-fun tr(en: String): String = if (Lang.code == "nl") NL[en] ?: en else en
+/** The text on screen: the English wording as it is (the hook for a later translation). */
+fun tr(en: String): String = en
 
-/** The same with placeholders: tr("Delete “%s”?", name). Use %1$s, %2$s when the Dutch order differs. */
+/** The same with placeholders: tr("Delete “%s”?", name). */
 fun tr(en: String, vararg args: Any?): String = String.format(Locale.ROOT, tr(en), *args)
 
 /** "All" is the category that shows every wish; it is stored as "All" and only shown translated. */

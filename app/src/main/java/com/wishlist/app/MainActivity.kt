@@ -15,6 +15,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -1042,6 +1045,15 @@ fun HomeScreen(
     // A wish tapped on "All your wishes" or "Top wishes": scroll to it (showing every category if it was hidden by
     // the filter or a search) and let it glow (owner, 2.91).
     val gridState = rememberLazyGridState()
+    // The item that holds the summary card and the filters: 1 with a cover photo above it, else 0 (see stickyTop).
+    val stickyIndex = if (remember(ListCovers.version, Shared.active, Repo.openMine) { ListCovers.get(ctx, ListCovers.openKey()) != null }) 1 else 0
+    val pinned by remember(stickyIndex) {
+        derivedStateOf {
+            gridState.firstVisibleItemIndex > stickyIndex ||
+                (gridState.firstVisibleItemIndex == stickyIndex && gridState.firstVisibleItemScrollOffset > 0)
+        }
+    }
+    var stickyHeight by remember { mutableIntStateOf(0) }
     LaunchedEffect(WishFocus.target, sel, query) {
         val t = WishFocus.target ?: return@LaunchedEffect
         val i = list.indexOfFirst { it.id == t }
@@ -1054,13 +1066,15 @@ fun HomeScreen(
         // The target is cleared only at the end: clearing it is a change of this effect's key, which would stop it
         // before the scroll and the glow (the bug in 2.91).
         delay(150)
-        // Two items come before the wishes: the cover and summary card, and the filters. Only scrolls when the wish
-        // isn't fully in sight (2.94: it also scrolled when it was, so the filters jumped away).
+        // Before the wishes: the cover photo (when there is one), then the summary card and filters (pinned at the
+        // top once scrolled, 2.111: the wish must not hide under them). Only scrolls when the wish isn't fully in sight
+        // (2.94: it also scrolled when it was, so the filters jumped away).
+        val pre = stickyIndex + 1
         val info = gridState.layoutInfo
-        val seen = info.visibleItemsInfo.firstOrNull { it.index == i + 2 }
-        val inSight = seen != null && seen.offset.y >= info.viewportStartOffset &&
+        val seen = info.visibleItemsInfo.firstOrNull { it.index == i + pre }
+        val inSight = seen != null && seen.offset.y >= info.viewportStartOffset + stickyHeight &&
             seen.offset.y + seen.size.height <= info.viewportEndOffset
-        if (!inSight) gridState.animateScrollToItem(i + 2)
+        if (!inSight) gridState.animateScrollToItem(i + pre, -stickyHeight)
         WishFocus.glow(t)
         WishFocus.target = null
     }
@@ -1070,7 +1084,14 @@ fun HomeScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    ListTitle(Repo.listName, Repo.wishes.size)
+                    // "Owned by you" under the name of your own lists, not on gift lists (owner, 2.111).
+                    Column {
+                        ListTitle(Repo.listName, Repo.wishes.size)
+                        if (!inShared) Text(
+                            tr("Owned by you"), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant,
+                            maxLines = 1
+                        )
+                    }
                 },
                 // Back to Home (2.110, owner): the menu button gives way to this arrow on an open list.
                 navigationIcon = { IconButton(onClick = onBack) { Icon(AppIcons.ArrowBack, tr("Back to Home")) } },
@@ -1096,7 +1117,9 @@ fun HomeScreen(
             if (searching) SearchField(query, { query = it }) { searching = false; query = "" }
             // The category and sort choices and the view buttons. Since 2.89 they scroll with the list, under the
             // cover photo (when chosen) and the summary card.
-            val filters: @Composable () -> Unit = {
+            // [live]: this copy may open the category menu (the list's own copy is hidden under the pinned one while
+            // that one shows, and the menu must open only once).
+            val filters: @Composable (Boolean) -> Unit = { live ->
                 Row(
                     Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 2.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -1116,7 +1139,7 @@ fun HomeScreen(
                                 )
                                 Icon(AppIcons.ArrowDropDown, tr("Choose category"))
                             }
-                            DropdownMenu(expanded = catMenu, onDismissRequest = { catMenu = false }) {
+                            DropdownMenu(expanded = catMenu && live, onDismissRequest = { catMenu = false }) {
                                 (listOf("All") + Repo.cats).forEach { c ->
                                     val n = if (c == "All") Repo.wishes.size else Repo.wishes.count { it.category == c }
                                     // Editing categories is in the wish form's "Edit categories" (2.110), not a long press here.
@@ -1140,14 +1163,23 @@ fun HomeScreen(
                     }
                 }
             }
+            // The top that stays in sight while scrolling (owner, 2.111): the summary card (your own lists) and the
+            // category, sort and view choices. The cover photo above it scrolls away.
+            val hasCover = remember(ListCovers.version, Shared.active, Repo.openMine) { ListCovers.get(ctx, ListCovers.openKey()) != null }
+            val stickyTop: @Composable (Boolean) -> Unit = { live ->
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    if (!inShared && Show["show_summary"]) ListSummaryCard(Repo.wishes)
+                    filters(live)
+                }
+            }
             // Pull down on the list to refresh it: the shops are asked for their prices now (and a shared list is
             // fetched again), so price changes show. This took the place of the refresh button in the top bar.
             Box(Modifier.fillMaxSize().clipToBounds().nestedScroll(pull.nestedScrollConnection)) {
             if (list.isEmpty()) {
                 Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp)) {
                     ListHeader(Repo.wishes, snack)
-                    Spacer(Modifier.height(8.dp))
-                    filters()
+                    if (hasCover) Spacer(Modifier.height(10.dp))
+                    stickyTop(true)
                     Text(
                         if (query.isNotBlank()) {
                             if (sel != "All") tr("No wishes match “%1\$s” in %2\$s.", query.trim(), catLabel(sel))
@@ -1165,8 +1197,8 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(gap),
                     verticalArrangement = Arrangement.spacedBy(gap)
                 ) {
-                    item(key = "header", span = { GridItemSpan(maxLineSpan) }) { ListHeader(Repo.wishes, snack) }
-                    item(key = "filters", span = { GridItemSpan(maxLineSpan) }) { filters() }
+                    if (hasCover) item(key = "header", span = { GridItemSpan(maxLineSpan) }) { ListHeader(Repo.wishes, snack) }
+                    item(key = "filters", span = { GridItemSpan(maxLineSpan) }) { stickyTop(!pinned) }
                     gridItems(list, key = { it.id }) { w ->
                         val r = res[w.id]
                         // A wish opened from "All your wishes" glows softly twice (WishFocus).
@@ -1214,6 +1246,11 @@ fun HomeScreen(
                     }
                 }
             }
+            // The pinned copy of the top, once the list's own copy starts to scroll away under it.
+            if (pinned && list.isNotEmpty()) Box(
+                Modifier.fillMaxWidth().background(cs.background).padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
+                    .onSizeChanged { stickyHeight = it.height }
+            ) { stickyTop(true) }
             // Only while pulling or refreshing: at rest the circle with the arrow must not show at all.
             if (pull.progress > 0f || pull.isRefreshing) {
                 PullToRefreshContainer(state = pull, modifier = Modifier.align(Alignment.TopCenter))
@@ -1227,8 +1264,9 @@ fun HomeScreen(
         ItemMenuDialog(
             w,
             onEdit = { menuId = null; editing = w },
-            onHistory = if (inShared) null else ({ menuId = null; historyId = w.id }),
-            onShare = { menuId = null; shareItem(ctx, w) },
+            // Large cards (owner, 2.111): no Share (the card has its share icon) and no Price history (Price watch has it).
+            onHistory = if (inShared || view != "grid") null else ({ menuId = null; historyId = w.id }),
+            onShare = if (view != "grid") null else ({ menuId = null; shareItem(ctx, w) }),
             onPrivate = if (inShared) null else ({ menuId = null; togglePrivate(ctx, w) }),
             onClose = { menuId = null }
         )

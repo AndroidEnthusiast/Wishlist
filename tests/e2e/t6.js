@@ -38,24 +38,22 @@ const IOS = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/
   check("iPhone: confetti too", (await t.page.locator(".inv canvas.confetti").count()) === 1);
   await t.page.screenshot({ path: "s_invite_iphone.png" });
   check("iPhone: the invitation fits on one screen (no scrolling), language and theme included", await t.page.evaluate(() => document.documentElement.scrollHeight <= innerHeight && document.documentElement.scrollWidth <= innerWidth) && await t.page.locator("#langs .themes").isVisible());
-  // the language and light/dark picked here go along to the editor, also into a browser that can't see them
-  await t.page.locator("#langs button", { hasText: "Nederlands" }).click();
-  await t.page.waitForSelector(".inv .btns");
-  await t.page.locator("#langs button", { hasText: "Donker" }).click();
-  check("the editor link carries the language at once", /edit\.html\?j=[A-Z0-9]+&l=nl$/.test(await t.page.locator(".inv .btns a").getAttribute("href")));
+  // light/dark picked here goes along to the editor, also into a browser that can't see it (English only since 4 November 2026)
+  await t.page.locator("#langs button", { hasText: "Dark" }).click();
+  check("no language switch any more", (await t.page.locator("#langs button", { hasText: "Nederlands" }).count()) === 0);
   await t.page.locator(".inv .btns a").click();
   await t.page.waitForURL(u => /edit\.html\?j=/.test(u.toString()));
   await t.page.waitForSelector(".card");
-  check("iPhone: the button opens the editor with the list, in Dutch and dark", (await t.page.locator("#name").innerText()) === "Our home" && t.page.url() === t.base + "edit.html?j=" + KEY + "&l=nl&t=dark" && await t.page.evaluate(() => document.documentElement.lang === "nl" && document.documentElement.getAttribute("data-theme") === "dark"));
+  check("iPhone: the button opens the editor with the list, in dark", (await t.page.locator("#name").innerText()) === "Our home" && t.page.url() === t.base + "edit.html?j=" + KEY + "&t=dark" && await t.page.evaluate(() => document.documentElement.getAttribute("data-theme") === "dark"));
   check("iPhone: no js errors", t.errors.length === 0, t.errors);
   await t.ctx.close();
 
   // a browser that never saw the invitation (another app's browser, a home-screen icon) follows the link
   t = await boot({ goto: false, ua: IOS });
-  await t.page.goto(t.base + "edit.html?j=" + KEY + "&l=nl&t=dark");
+  await t.page.goto(t.base + "edit.html?j=" + KEY + "&l=nl&t=dark"); // an old link with l=nl: just English
   await t.page.waitForSelector(".card");
   check("scripts and styles carry ?v= so a release reloads them", (await t.page.evaluate(() => [...document.querySelectorAll("script[src], link[rel=stylesheet]")].filter(e => !/fonts\.googleapis/.test(e.src || e.href)).every(e => /\?v=/.test(e.src || e.href)))));
-  check("fresh browser: editor in Dutch and dark from the link, and remembered", await t.page.evaluate(() => document.documentElement.lang === "nl" && document.documentElement.getAttribute("data-theme") === "dark" && localStorage.getItem("wl_lang") === "nl" && localStorage.getItem("wl_theme") === "dark") && /Wens toevoegen/.test(await t.page.locator("body").innerText()));
+  check("fresh browser: editor dark from the link, and remembered; an old l=nl shows English", await t.page.evaluate(() => document.documentElement.getAttribute("data-theme") === "dark" && localStorage.getItem("wl_theme") === "dark") && /Add wish/.test(await t.page.locator("body").innerText()));
   await t.ctx.close();
 
   // a browser that still has an old saved i18n.js (without prefsQuery) next to the new page: the invitation still shows
@@ -156,31 +154,10 @@ const IOS = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/
   check("friends page: price increase badge", /^\+20%/.test(await t.page.locator(".card", { hasText: "Kettle" }).locator(".badge").first().innerText()));
   await t.ctx.close();
 
-  // ---- Dutch: a Dutch browser gets Dutch pages; the switch at the bottom changes the language ----
+  // ---- a Dutch browser still gets English (Dutch removed, 4 November 2026) ----
   t = await boot({ locale: "nl-NL" });
   await t.page.waitForSelector(".card");
-  check("editor in Dutch", (await t.page.locator("#fab").innerText()).trim() === "Wens toevoegen" && (await t.page.locator(".card").getByRole("button", { name: "Reserveren", exact: true }).count()) === 3 && (await t.page.locator("html").getAttribute("lang")) === "nl");
-  check("editor in Dutch: labels too", (await t.page.locator("#listBtn").getAttribute("aria-label")) === "Instellingen verlanglijstje" && (await t.page.locator("#catBtn").innerText()).trim() === "Alle");
-  await t.page.screenshot({ path: "s_dutch_editor.png" });
-  const body = await t.page.locator("body").innerText();
-  check("editor in Dutch: no English left on the list", !/\b(Reserve|Add wish|Added by|No price|Edit categories)\b/.test(body), body.slice(0, 300));
-  await t.ctx.close();
-  t = await boot({ goto: false, locale: "nl-NL", ua: ANDROID });
-  await t.page.goto(t.base + "?j=" + KEY);
-  await t.page.waitForSelector(".inv .btns");
-  check("invitation in Dutch", (await t.page.locator(".inv h2").innerText()).trim() === "Je bent uitgenodigd om cadeaus toe te voegen voor:" && /Openen in de app/.test(await t.page.locator(".inv").innerText()));
-  await t.page.screenshot({ path: "s_dutch_invite.png" });
-  await t.page.getByRole("button", { name: "English", exact: true }).click();
-  await t.page.waitForSelector(".inv .btns");
-  check("switch back to English, remembered", (await t.page.locator(".inv h2").innerText()).trim() === "You’re invited to add gifts for:" && (await t.page.evaluate(() => localStorage.getItem("wl_lang"))) === "en");
-  await t.ctx.close();
-  t = await boot({ goto: false });
-  await t.page.goto(t.base + "?c=" + CODE);
-  await t.page.waitForSelector(".card");
-  await t.page.getByRole("button", { name: "Nederlands", exact: true }).click();
-  await t.page.waitForSelector(".card");
-  check("friends page in Dutch after the switch", /Reserveren/.test(await t.page.locator("#view").innerText()) && (await t.page.locator("#sort option[value=low]").innerText()) === "Prijs: laag naar hoog");
-  check("Dutch: no js errors", t.errors.length === 0, t.errors);
+  check("Dutch browser: English editor", (await t.page.locator("#fab").innerText()).trim() === "Add wish" && t.errors.length === 0, t.errors);
   await t.ctx.close();
 
   // ---- light or dark, chosen at the bottom of the page (or the device decides) ----

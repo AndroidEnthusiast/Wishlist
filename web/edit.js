@@ -1604,7 +1604,6 @@
   }
 
   function wire() {
-    $("drawer").appendChild(langSwitch()); // English · Nederlands
     $("drawer").appendChild(themeSwitch()); // System · Light · Dark
     $("search").addEventListener("input", function () { query = this.value; if (content) render(); });
     function closeSearch() { $("searchbar").hidden = true; if (query) { query = ""; $("search").value = ""; render(); } }

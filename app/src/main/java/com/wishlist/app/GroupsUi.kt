@@ -820,7 +820,7 @@ fun GroupSettingsDialog(g: Group, snack: SnackbarHostState, onDeleted: () -> Uni
                 scope.launch {
                     val msg = try {
                         Groups.settings(ctx, g.id, name, inviteAll)
-                        tr("Saved")
+                        tr("Saved!")
                     } catch (e: Exception) {
                         tr("Couldn’t do that. Check your connection.")
                     }

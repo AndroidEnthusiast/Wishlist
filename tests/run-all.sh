@@ -7,7 +7,6 @@ run() { echo "== $1"; shift; "$@" 2>&1 | tail -n 6; [ "${PIPESTATUS[0]}" -eq 0 ]
 DENO=./node_modules/.bin/deno
 [ -x "$DENO" ] || DENO=deno
 run "parse.js (reads product pages)" node parse/parse_test.js
-run "Dutch texts (app and web)" node i18n/test.js
 run "fetch-page helper (real Deno)"  "$DENO" run --allow-read --allow-env=SUPABASE_URL --allow-net=none function/test.ts
 run "push helper (real Deno)"  "$DENO" run --allow-read --allow-env --allow-net=none function/push_test.ts
 run "web pages only run their own scripts" node csp/test.js

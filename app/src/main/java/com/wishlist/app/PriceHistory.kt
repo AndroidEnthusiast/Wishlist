@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -67,32 +68,39 @@ private val DropGreen = Color(0xFF0B7A3E)
 /** Shares one wish as plain text: its name, price and link. Works in any app. */
 fun shareItem(c: Context, w: Wish) {
     // Owner, 2.105: "Look what’s on my wishlist" and the shop's link (it works for anyone, whoever can see the list).
-    val intro = if (Shared.active != null) tr("Look at this gift idea") else tr("Look what’s on my wishlist")
-    shareText(c, tr("Share"), if (w.url.isNotBlank()) intro + "\n" + w.url else intro + ": " + w.title)
+    // 2.111 (owner): with an exclamation mark at the end of the sentence.
+    val text = if (Shared.active != null) {
+        if (w.url.isNotBlank()) tr("Look at this gift idea") + "\n" + w.url else tr("Look at this gift idea") + ": " + w.title
+    } else {
+        if (w.url.isNotBlank()) tr("Look what’s on my wishlist!") + "\n" + w.url else tr("Look what’s on my wishlist: %s!", w.title)
+    }
+    shareText(c, tr("Share"), text)
 }
 
 /**
- * What a long press on a wish opens (owner, 2.105): Edit and Private (with a tick); Price history and Share stay too.
+ * What a long press on a wish opens (owner, 2.105): Edit and Private (with a tick); Price history and Share only in the
+ * two-per-row view (2.111: the large card has its own share icon, and Price watch has the history).
  * Top wish is the star on the picture. On a gift list there is no private wish and no price history (null).
  */
 @Composable
 fun ItemMenuDialog(
-    w: Wish, onEdit: () -> Unit, onHistory: (() -> Unit)?, onShare: () -> Unit, onPrivate: (() -> Unit)? = null, onClose: () -> Unit
+    w: Wish, onEdit: () -> Unit, onHistory: (() -> Unit)?, onShare: (() -> Unit)?, onPrivate: (() -> Unit)? = null, onClose: () -> Unit
 ) {
     val cs = MaterialTheme.colorScheme
+    // Tighter than a normal dialog (owner, 2.111: too much white space), but not cramped: a smaller title and rows.
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text(w.title, maxLines = 2, overflow = TextOverflow.Ellipsis) },
+        title = { Text(w.title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = {
             Column {
-                MenuRow(tr("Edit"), onEdit) { Icon(AppIcons.Edit, null, tint = cs.onSurfaceVariant) }
-                if (onPrivate != null) MenuRow(tr("Private"), onPrivate, trailing = {
+                MenuRow(tr("Edit"), onEdit, compact = true) { Icon(AppIcons.Edit, null, tint = cs.onSurfaceVariant) }
+                if (onPrivate != null) MenuRow(tr("Private"), onPrivate, compact = true, trailing = {
                     Checkbox(checked = w.priv, onCheckedChange = null)
                 }) {
                     Icon(PrivateIcon, null, tint = cs.onSurfaceVariant)
                 }
-                if (onHistory != null) MenuRow(tr("Price history"), onHistory) { HistoryIcon(cs.onSurfaceVariant) }
-                MenuRow(tr("Share"), onShare) { Icon(AppIcons.Share, null, tint = cs.onSurfaceVariant) }
+                if (onHistory != null) MenuRow(tr("Price history"), onHistory, compact = true) { HistoryIcon(cs.onSurfaceVariant) }
+                if (onShare != null) MenuRow(tr("Share"), onShare, compact = true) { Icon(AppIcons.Share, null, tint = cs.onSurfaceVariant) }
             }
         },
         confirmButton = {},
@@ -111,10 +119,13 @@ fun PrivateMenuItem(on: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-fun MenuRow(label: String, onClick: () -> Unit, trailing: (@Composable () -> Unit)? = null, icon: @Composable () -> Unit) {
+fun MenuRow(
+    label: String, onClick: () -> Unit, trailing: (@Composable () -> Unit)? = null, compact: Boolean = false,
+    icon: @Composable () -> Unit
+) {
     Row(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 14.dp),
+            .padding(horizontal = 8.dp, vertical = if (compact) 8.dp else 14.dp).heightIn(min = 40.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         icon()

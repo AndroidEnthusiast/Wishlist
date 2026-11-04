@@ -2,9 +2,8 @@ const { JSDOM } = require("jsdom");
 const fs = require("fs");
 const path = require("path");
 const WEB = path.join(__dirname, "..", "..", "web");
-// jsdom doesn't load script files here: put nl.js, i18n.js, theme.js and friends.js into the page, as a browser would load them.
+// jsdom doesn't load script files here: put i18n.js, theme.js and friends.js into the page, as a browser would load them.
 const html = fs.readFileSync(process.argv[2] || path.join(WEB, "index.html"), "utf8")
-  .replace('<script src="nl.js?v=dev"></script>', () => "<script>" + fs.readFileSync(path.join(WEB, "nl.js"), "utf8") + "</script>")
   .replace('<script src="i18n.js?v=dev"></script>', () => "<script>" + fs.readFileSync(path.join(WEB, "i18n.js"), "utf8") + "</script>")
   .replace('<script src="theme.js?v=dev"></script>', () => "<script>" + fs.readFileSync(path.join(WEB, "theme.js"), "utf8") + "</script>")
   .replace('<script src="friends.js?v=dev"></script>', () => "<script>" + fs.readFileSync(path.join(WEB, "friends.js"), "utf8") + "</script>");

@@ -728,7 +728,6 @@ $("avail").addEventListener("change", function () { onlyAvail = this.checked; re
 $("clearF").addEventListener("click", clearFilters);
 
 var invite = readInvite();
-$("langs").appendChild(langSwitch());
 $("langs").appendChild(themeSwitch());
 if (invite !== null) {
   showInvite(invite);

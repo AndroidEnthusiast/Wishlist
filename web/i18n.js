@@ -1,59 +1,24 @@
 /*
- * The language of the web pages: "en" (UK English) or "nl" (Dutch). It follows the browser, unless the visitor
- * picked one with the switch at the bottom of the page (remembered in this browser only, "wl_lang").
- * In the scripts every text goes through T("English text", values…) with {0}, {1} for the values. Fixed texts in the
- * HTML (and their aria-label, title and placeholder) are translated when the page loads, by their English wording.
- * A new text: write it in English and add its Dutch line to NL below. The wishes themselves are never translated.
- * The app has the same texts in NlStrings.kt.
+ * Texts and light/dark on the web pages. Since 4 November 2026 (owner) only UK English: Dutch was removed to keep
+ * every change small. In the scripts every text still goes through T("English text", values…) with {0}, {1} for the
+ * values, so a translation later only needs a dictionary here. The wishes themselves are never translated.
  */
 (function () {
   "use strict";
-  var NL = window.WL_NL || {};
-  // A link from the invitation can carry the choices made there: "l" (en / nl) and "t" (light / dark). They are
-  // remembered in this browser, as if picked here.
+  // A link from the invitation can carry the light/dark choice made there: "t" (light / dark). It is remembered in
+  // this browser, as if picked here. (An old link's "l=nl" is simply ignored.)
   (function fromLink() {
-    var q = /[?&]l=(en|nl)\b/.exec(location.search), t = /[?&]t=(light|dark)\b/.exec(location.search);
-    try {
-      if (q) localStorage.setItem("wl_lang", q[1]);
-      if (t) localStorage.setItem("wl_theme", t[1]);
-    } catch (e) { /* private mode: the page still follows the link below */ }
-    if (q) window.WL_LINK_LANG = q[1];
+    var t = /[?&]t=(light|dark)\b/.exec(location.search);
+    try { if (t) localStorage.setItem("wl_theme", t[1]); } catch (e) { /* private mode: the page still follows the link below */ }
     if (t) document.documentElement.setAttribute("data-theme", t[1]);
   })();
-  function pick() {
-    if (window.WL_LINK_LANG) return window.WL_LINK_LANG;
-    try { var v = localStorage.getItem("wl_lang"); if (v === "nl" || v === "en") return v; } catch (e) { /* private mode */ }
-    return /^nl\b/i.test(navigator.language || "") ? "nl" : "en";
-  }
-  var L = pick();
-  window.WL_LANG = L;
+  window.WL_LANG = "en";
   window.T = function (en) {
-    var s = L === "nl" && Object.prototype.hasOwnProperty.call(NL, en) ? NL[en] : en;
     var a = arguments;
-    return s.replace(/\{(\d)\}/g, function (m, i) { var v = a[+i + 1]; return v === undefined ? m : String(v); });
+    return en.replace(/\{(\d)\}/g, function (m, i) { var v = a[+i + 1]; return v === undefined ? m : String(v); });
   };
-  window.setLang = function (l) {
-    try { localStorage.setItem("wl_lang", l); } catch (e) { /* ignore */ }
-    location.reload();
-  };
-  // Fixed texts in the page: text, aria-label, title and placeholder, looked up by their English wording.
-  window.translatePage = function (root) {
-    if (L !== "nl") return;
-    var all = (root || document.body).querySelectorAll("*");
-    for (var i = 0; i < all.length; i++) {
-      var e = all[i];
-      if (e.tagName === "SCRIPT" || e.tagName === "STYLE") continue;
-      for (var c = e.firstChild; c; c = c.nextSibling) {
-        if (c.nodeType !== 3) continue;
-        var t = c.nodeValue.trim();
-        if (t && Object.prototype.hasOwnProperty.call(NL, t)) c.nodeValue = c.nodeValue.replace(t, NL[t]);
-      }
-      ["aria-label", "title", "placeholder"].forEach(function (k) {
-        var v = e.getAttribute(k);
-        if (v && Object.prototype.hasOwnProperty.call(NL, v)) e.setAttribute(k, NL[v]);
-      });
-    }
-  };
+  // Kept for a later translation of the fixed texts in the HTML; nothing to do in English.
+  window.translatePage = function () { };
   // Light or dark for this browser: "system" (the device decides), "light" or "dark".
   function themeNow() {
     try { var v = localStorage.getItem("wl_theme"); if (v === "light" || v === "dark") return v; } catch (e) { /* ignore */ }
@@ -64,7 +29,7 @@
     if (t === "system") document.documentElement.removeAttribute("data-theme");
     else document.documentElement.setAttribute("data-theme", t);
   };
-  // The small "System · Light · Dark" choice, under the language switch.
+  // The small "System · Light · Dark" choice at the bottom of the page.
   window.themeSwitch = function () {
     var p = document.createElement("p");
     p.className = "langs themes";
@@ -92,33 +57,13 @@
     mark();
     return p;
   };
-  // "&l=nl&t=dark": the choices made in this browser, for a link to another page of the site. Empty when nothing was picked.
+  // "&t=dark": the light/dark choice made in this browser, for a link to another page of the site. Empty when nothing was picked.
   window.prefsQuery = function () {
-    var out = "";
     try {
-      var l = localStorage.getItem("wl_lang"), t = localStorage.getItem("wl_theme");
-      if (l === "en" || l === "nl") out += "&l=" + l;
-      if (t === "light" || t === "dark") out += "&t=" + t;
+      var t = localStorage.getItem("wl_theme");
+      if (t === "light" || t === "dark") return "&t=" + t;
     } catch (e) { /* nothing remembered */ }
-    return out;
+    return "";
   };
-  // The small "English · Nederlands" switch.
-  window.langSwitch = function () {
-    var p = document.createElement("p");
-    p.className = "langs";
-    [["en", "English"], ["nl", "Nederlands"]].forEach(function (x, i) {
-      if (i) p.appendChild(document.createTextNode(" · "));
-      var b = document.createElement("button");
-      b.type = "button";
-      b.className = "link" + (L === x[0] ? " on" : "");
-      b.textContent = x[1];
-      b.setAttribute("lang", x[0]);
-      if (L === x[0]) b.setAttribute("aria-current", "true");
-      b.addEventListener("click", function () { if (L !== x[0]) window.setLang(x[0]); });
-      p.appendChild(b);
-    });
-    return p;
-  };
-  document.documentElement.lang = L;
-  if (document.body) window.translatePage(document.body);
+  document.documentElement.lang = "en-GB";
 })();

@@ -898,7 +898,6 @@
   }
 
   $("fab").addEventListener("click", function () { wishForm(null); });
-  $("langs").appendChild(langSwitch());
   $("langs").appendChild(themeSwitch());
   link = readLink();
   start();

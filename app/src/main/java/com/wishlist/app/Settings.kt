@@ -109,18 +109,6 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                 .padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            SectionTitle(tr("Language"))
-            // The names of the languages are shown in their own language, so you can always find yours.
-            listOf("en" to "English (UK)", "nl" to "Nederlands").forEach { (k, n) ->
-                Row(
-                    Modifier.fillMaxWidth().clickable { Lang.set(ctx, k) },
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(selected = Lang.code == k, onClick = { Lang.set(ctx, k) })
-                    Text(n)
-                }
-            }
-
             // No "Instant delete wishes" any more (owner, 2.95): deleting never asks, the bin and Undo are enough.
 
             SectionTitle(tr("Theme"))

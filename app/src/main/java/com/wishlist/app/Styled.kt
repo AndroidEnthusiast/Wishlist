@@ -21,6 +21,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import kotlin.math.sin
+import kotlin.math.cos
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -405,20 +407,41 @@ fun SavedFeedback(saves: Int, modifier: Modifier = Modifier, compact: Boolean = 
     val green = if (LocalLook.current.dark) Color(0xFF6FD39A) else Color(0xFF1E7B45)
     var visible by remember { mutableStateOf(false) }
     val draw = remember { Animatable(0f) }
+    // Little lines that circle around the tick once and fade (owner, 2.111: the tick alone wasn't always noticed).
+    val spin = remember { Animatable(0f) }
     LaunchedEffect(saves) {
         if (saves == 0) return@LaunchedEffect
         draw.snapTo(0f)
+        spin.snapTo(0f)
         visible = true
+        launch { spin.animateTo(1f, tween(900, easing = FastOutSlowInEasing)) }
         draw.animateTo(1f, tween(380, easing = FastOutSlowInEasing))
         delay(1100)
         visible = false
     }
     // compact: only the tick (where there is little room, like next to the target price).
-    Box(modifier.width(if (compact) 26.dp else 88.dp), contentAlignment = Alignment.CenterStart) {
+    Box(modifier.width(if (compact) 26.dp else 96.dp), contentAlignment = Alignment.CenterStart) {
         AnimatedVisibility(visible, enter = fadeIn(tween(120)), exit = fadeOut(tween(400))) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Canvas(Modifier.size(20.dp)) {
                     val u = size.width / 24f
+                    // Eight short lines around the tick (drawn a little outside the 20 dp, which is fine: no clipping),
+                    // turning a third of a circle while they fade out.
+                    val fade = (1f - spin.value).coerceIn(0f, 1f)
+                    if (fade > 0f) {
+                        val c = Offset(size.width / 2f, size.height / 2f)
+                        for (k in 0 until 8) {
+                            val a = Math.toRadians((k * 45.0) + spin.value * 120.0)
+                            val r1 = (13f + 2f * spin.value) * u
+                            val r2 = r1 + 4f * u
+                            drawLine(
+                                green.copy(alpha = 0.85f * fade),
+                                c + Offset((cos(a) * r1).toFloat(), (sin(a) * r1).toFloat()),
+                                c + Offset((cos(a) * r2).toFloat(), (sin(a) * r2).toFloat()),
+                                strokeWidth = 2f * u, cap = StrokeCap.Round
+                            )
+                        }
+                    }
                     val path = Path().apply {
                         moveTo(4.5f * u, 12.5f * u)
                         lineTo(9.5f * u, 17.5f * u)
@@ -431,8 +454,8 @@ fun SavedFeedback(saves: Int, modifier: Modifier = Modifier, compact: Boolean = 
                     drawPath(part, green, style = Stroke(2.6f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
                 }
                 if (!compact) Text(
-                    tr("Saved"), color = green, style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.padding(start = 4.dp)
+                    tr("Saved!"), color = green, style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.padding(start = 8.dp)
                 )
             }
         }
