@@ -39,7 +39,7 @@ class Fake {
         const items = Object.values(l.items).sort((a, c) => c.id - a.id);
         return { code, name: l.name, cats: l.cats, items: JSON.parse(JSON.stringify(items)) };
       }
-      case "wl_sh_info": { const f = this.byKey(b.p_key); return f ? { name: f[1].name, count: Object.values(f[1].items).filter(i => i.id > 0).length } : null; }
+      case "wl_sh_info": { const f = this.byKey(b.p_key); return f ? { name: f[1].name, count: Object.values(f[1].items).filter(i => i.id > 0 && !i.bin).length } : null; }
       case "wl_sh_put_item": {
         const [code, l] = this.need(b.p_key);
         const it = b.p_item; const id = Number(it.id);

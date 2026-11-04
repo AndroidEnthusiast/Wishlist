@@ -50,11 +50,13 @@ returns jsonb language sql stable security definer set search_path = public as $
 $$;
 
 -- Just enough for the invite page: the name and how many wishes. Null if the key is wrong.
+-- Wishes in the bin (field "bin" set and not 0) don't count (4 November 2026).
 create or replace function wl_sh_info(p_key text)
 returns jsonb language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
     'name', l.name,
-    'count', (select count(*) from wl_items i where i.list_code = l.code and i.id > 0)
+    'count', (select count(*) from wl_items i where i.list_code = l.code and i.id > 0
+                and coalesce(nullif(i.data->>'bin', ''), '0') in ('0', 'false'))
   ) from wl_lists l
   where p_key is not null and length(p_key) >= 16 and l.edit_key = p_key
 $$;

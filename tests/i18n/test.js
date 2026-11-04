@@ -10,7 +10,7 @@ function check(name, cond, extra) { total++; if (!cond) { fails++; console.log("
 const win = {}; new Function("window", fs.readFileSync(path.join(ROOT, "web", "nl.js"), "utf8"))(win);
 const NLW = win.WL_NL;
 const webKeys = new Set();
-for (const f of ["web/edit.js", "web/index.html", "web/group.js"]) {
+for (const f of ["web/edit.js", "web/index.html", "web/friends.js", "web/group.js"]) {
   const s = fs.readFileSync(path.join(ROOT, f), "utf8");
   for (const m of s.matchAll(/(?<![A-Za-z_.])T\("((?:[^"\\]|\\.)*)"/g)) webKeys.add(m[1]);
 }

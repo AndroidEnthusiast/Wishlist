@@ -4,10 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<script>
-// Light or dark as chosen with the switch at the bottom (this browser only); otherwise the device decides.
-try { var wlt = localStorage.getItem("wl_theme"); if (wlt === "light" || wlt === "dark") document.documentElement.setAttribute("data-theme", wlt); } catch (e) { }
-</script>
+<!-- Only scripts, pictures and connections listed here can run or load: a safety net if a bug ever lets someone's text in as code. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https: http: data: blob:; connect-src https://aspnmvmsvwbezdltykgx.supabase.co; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'">
+<script src="theme.js?v=dev"></script>
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
 <title>Wishlist</title>

@@ -238,3 +238,13 @@ body.menu-open .drawer { transform: none; visibility: visible; }
 .topbar.friends h1 { padding: 8px 0; white-space: normal; overflow-wrap: anywhere; }
 .bar .vbtn#filterBtn { color: var(--muted); margin-left: 0; }
 .bar .vbtn#filterBtn.on { background: var(--container); color: var(--on-container); }
+
+/* The bin (menu > Bin): one row per deleted wish with Restore. */
+.binlist { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.binrow { display: flex; align-items: center; gap: 12px; }
+.binpic { flex: none; width: 48px; height: 48px; border-radius: 10px; overflow: hidden; background: color-mix(in srgb, var(--fg) 8%, transparent); }
+.binpic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bintxt { flex: 1; min-width: 0; }
+.bintitle { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.binrow .act { flex: none; }
+.binempty { margin-top: 12px; }

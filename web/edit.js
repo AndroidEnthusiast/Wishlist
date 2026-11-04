@@ -22,6 +22,8 @@
     "NOK", "DKK", "PLN", "CZK", "HUF", "TRY", "ZAR", "SGD", "HKD", "AED"];
   var ABOUT_MAX = 300;
   var UNDO_MS = 4000;     // how long "Wish moved to the bin · Undo" shows
+  var DAY_MS = 24 * 60 * 60 * 1000;
+  var BIN_MS = 30 * DAY_MS; // a wish stays in the bin this long (BIN_DAYS in the app's Bin.kt)
   var PHOTO_SIDE = 600;
   var REFRESH_MS = 20000;
   var INVITE_RE = /^[A-HJ-NP-Z2-9]{20}$/;
@@ -307,17 +309,22 @@
   }
 
   function parseServer(r) {
-    var items = [], about = "";
+    var items = [], bin = [], about = "";
     (r.items || []).forEach(function (o) {
       if (o && o.kind === "about") about = String(o.about || "");
-      // Wishes in the bin are not on the list (the app shows them in its Bin for 30 days).
-      else if (o && Number(o.id) > 0 && !o.bin) items.push(normWish(o));
+      else if (o && Number(o.id) > 0) {
+        // Wishes in the bin are not on the list; they show in the Bin (menu) for 30 days, like in the app.
+        var w = normWish(o);
+        if (!w.bin) items.push(w);
+        else if (Date.now() - w.bin < BIN_MS) bin.push(w);
+      }
     });
     return {
       name: String(r.name || "Wishlist"),
       cats: (r.cats || []).map(String),
       about: about,
-      items: items
+      items: items,
+      bin: bin
     };
   }
 
@@ -447,7 +454,7 @@
 
   // ---- deleting: the wish goes to the bin at once (for everyone); Undo takes it out again ----
   // Only "bin" and "binBy" are written, so the picture and any reservation stay. Everyone on the list can restore it
-  // from the bin in the app for 30 days.
+  // from the bin (here or in the app) for 30 days.
 
   function binArgs(w, inBin) {
     return { p_key: key, p_item: wishJson(copyWish(w, inBin ? { bin: Date.now(), binBy: me } : { bin: 0, binBy: "" })), p_fields: ["bin", "binBy"] };
@@ -459,7 +466,10 @@
     if (i < 0) return null;
     var w = content.items[i];
     var before = content;
-    write(before, copyWish(before, { items: before.items.filter(function (x) { return x.id !== id; }) }), async function () {
+    write(before, copyWish(before, {
+      items: before.items.filter(function (x) { return x.id !== id; }),
+      bin: [copyWish(w, { bin: Date.now(), binBy: me })].concat((before.bin || []).filter(function (x) { return x.id !== id; }))
+    }), async function () {
       await rpc("wl_sh_put_item", binArgs(w, true));
     }, T("Couldn’t delete that wish. Check your connection and try again."));
     return { wish: w, index: i };
@@ -470,7 +480,8 @@
     var before = content;
     var items = before.items.filter(function (x) { return x.id !== t.wish.id; });
     items.splice(Math.min(Math.max(t.index, 0), items.length), 0, t.wish);
-    write(before, copyWish(before, { items: items }), async function () {
+    var bin = (before.bin || []).filter(function (x) { return x.id !== t.wish.id; });
+    write(before, copyWish(before, { items: items, bin: bin }), async function () {
       await rpc("wl_sh_put_item", binArgs(t.wish, false));
     });
   }
@@ -508,6 +519,54 @@
     trashed = t;
     render();
     showUndo(t);
+  }
+
+  // ---- the bin (menu > Bin): restore only (owner, 4 November 2026) ----
+  // Deleting for good stays in the app: a browser link can be passed on, and nobody should be able to wipe a list's
+  // bin by accident. Wishes older than 30 days are deleted for good by the app.
+
+  function restore(w) {
+    var before = content;
+    var back = copyWish(w, { bin: 0, binBy: "" });
+    write(before, copyWish(before, {
+      items: [back].concat(before.items.filter(function (x) { return x.id !== w.id; })),
+      bin: (before.bin || []).filter(function (x) { return x.id !== w.id; })
+    }), async function () {
+      await rpc("wl_sh_put_item", binArgs(w, false));
+    });
+    toast(T("“{0}” is back on the list.", w.title));
+  }
+
+  function openBin() {
+    var list = ((content && content.bin) || []).slice().sort(function (a, b) { return b.bin - a.bin; });
+    dialog({
+      title: T("Bin"),
+      body: function (b, api) {
+        b.appendChild(el("p", "hint", T("Deleted wishes stay here for 30 days. Then they are deleted for good.")));
+        if (!list.length) { b.appendChild(el("p", "binempty", T("The bin is empty."))); return; }
+        var box = el("div", "binlist");
+        list.forEach(function (w) {
+          var row = el("div", "binrow");
+          var pic = el("div", "binpic");
+          var img = safeUrl(w.image);
+          if (img) { var im = el("img"); im.src = img; im.alt = ""; im.loading = "lazy"; im.referrerPolicy = "no-referrer"; pic.appendChild(im); }
+          row.appendChild(pic);
+          var txt = el("div", "bintxt");
+          txt.appendChild(el("div", "bintitle", w.title));
+          var days = Math.max(1, Math.ceil((w.bin + BIN_MS - Date.now()) / DAY_MS));
+          var left = days === 1 ? T("1 day left") : T("{0} days left", days);
+          txt.appendChild(el("div", "hint", w.binBy ? T("Deleted by {0}", w.binBy) + " · " + left : left));
+          row.appendChild(txt);
+          var r = el("button", "act outline", T("Restore"));
+          r.type = "button";
+          r.addEventListener("click", function () { api.close(); restore(w); });
+          row.appendChild(r);
+          box.appendChild(row);
+        });
+        b.appendChild(box);
+      },
+      actions: [{ label: T("Close") }]
+    });
   }
 
   function askDelete(w) {
@@ -1596,6 +1655,7 @@
     }
     $("shareBtn").addEventListener("click", openShare);
     $("meBtn").addEventListener("click", fromDrawer(openSettings));
+    $("binBtn").addEventListener("click", fromDrawer(openBin));
     document.addEventListener("visibilitychange", function () { if (!document.hidden) refresh(); });
     window.addEventListener("online", refresh);
     setInterval(function () { if (!document.hidden) refresh(); }, REFRESH_MS);

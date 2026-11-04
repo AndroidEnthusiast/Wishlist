@@ -13,6 +13,8 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Show previews of visible changes** (an HTML mock-up or simulation) when the owner asks to see something before it is built.
 - **Push back and ask before building** (owner, 1 November 2026): don't just agree. Point out weak spots, offer a better option when there is one, and ask the open questions first (preferably as a pop-up with choices, AskUserQuestion) before building, so nothing has to be redone. Small, clear requests can be built straight away.
 - **Every feature is for a happy user** (owner, 4 November 2026): each change starts from who it is for and what gets better for them; be critical, not agreeable. Keep dead ends, safety and upkeep in mind for the part you touch, without auditing the whole app each session (see `CLAUDE.md`, "Who you are working with"). A review of 4 November 2026 found the web pages and database well protected; the open dead ends are listed in `docs/HANDOFF.md`.
+- **Browser editor Bin: restore only** (owner, 4 November 2026): menu > Bin lists a gift list's deleted wishes (30 days) with Restore. Deleting for good and emptying the bin stay in the app: a browser link can be passed on, and nobody should wipe a list's bin by accident.
+- **The web pages only run their own script files** (Content-Security-Policy, 4 November 2026): a safety net if a bug ever lets someone's text in as code.
 
 ## Language
 - **UK English everywhere, and everything also in Dutch.** App: App settings > Language (English (UK) / Nederlands). Web pages: a language switch. Wishes themselves are never translated.
