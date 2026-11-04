@@ -422,6 +422,8 @@ fun App(
     val drawer = rememberDrawerState(DrawerValue.Closed)
     var adding by remember { mutableStateOf(false) }
     var prefill by remember { mutableStateOf("") }
+    // What "Find a gift" already read from the shop page on screen (2.114), so the form needn't load it again.
+    var prefillMeta by remember { mutableStateOf<Meta?>(null) }
     var catDlg by remember { mutableStateOf(false) }
     var settings by remember { mutableStateOf(false) }
     // The bin (menu > Bin): deleted wishes of every list, for 30 days.
@@ -812,7 +814,8 @@ fun App(
                     onProfile = { profileOpen = true },
                     onAddTo = { t -> addTarget = t; prefill = ""; adding = true },
                     onOpenWishGroup = { GroupNav.openGroup(it) },
-                    onNewWishGroup = { newWishGroup = true }
+                    onNewWishGroup = { newWishGroup = true },
+                    onFound = { u, m -> addTarget = null; prefillMeta = m; prefill = u; adding = true }
                 )
                 else -> key(Shared.active, Repo.openMine) {
                     HomeScreen(
@@ -875,7 +878,8 @@ fun App(
     }
 
     if (adding) key(prefill) {
-        WishDialog(null, prefill, chooseList = prefill.isNotEmpty() || addTarget != null, startTarget = addTarget) {
+        WishDialog(null, prefill, chooseList = prefill.isNotEmpty() || addTarget != null, startTarget = addTarget, initialMeta = prefillMeta) {
+            prefillMeta = null
             adding = false; addTarget = null
         }
     }
@@ -1592,7 +1596,11 @@ fun WishCard(
 
 /** Adds a new wish, or edits [edit] when it is not null. */
 @Composable
-fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, startTarget: String? = null, onClose: () -> Unit) {
+fun WishDialog(
+    edit: Wish?, initialUrl: String, chooseList: Boolean = false, startTarget: String? = null,
+    // Already read from the page (Find a gift, 2.114): used instead of loading [initialUrl] again.
+    initialMeta: Meta? = null, onClose: () -> Unit
+) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     // Which wishlist was open when this dialog started. A wish shared in from the browser can be saved to another one.
@@ -1645,6 +1653,21 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, sta
         onClose()
     }
 
+    // Fills the form from what was read from a page (a link, or the shop page on screen in Find a gift).
+    fun useMeta(m: Meta?) {
+        if (m == null) {
+            err = tr("Couldn’t read that page. Fill in the details yourself.")
+        } else if (m.blocked) {
+            err = tr("The store blocked the automatic read. Enter the title and price yourself.")
+        } else {
+            title = m.title; desc = m.desc; cur = m.currency
+            // A picture you chose yourself is kept. Otherwise the image comes from the link.
+            if (!ImageStore.isLocal(image)) image = if (m.image.isNotEmpty() || edit == null) m.image else image
+            if (m.price != null || edit == null) price = m.price?.let { "%.2f".format(Locale.US, it) }.orEmpty()
+            if (m.price == null) err = tr("No price found on that page. Add it to track price drops.")
+        }
+    }
+
     fun go(raw: String) {
         val u = cleanUrl(raw)
         if (u == null) { err = tr("Enter a full product link"); return }
@@ -1652,17 +1675,7 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, sta
         scope.launch {
             val m = fetchMeta(u, ctx)
             busy = false
-            if (m == null) {
-                err = tr("Couldn’t read that page. Fill in the details yourself.")
-            } else if (m.blocked) {
-                err = tr("The store blocked the automatic read. Enter the title and price yourself.")
-            } else {
-                title = m.title; desc = m.desc; cur = m.currency
-                // A picture you chose yourself is kept. Otherwise the image comes from the link.
-                if (!ImageStore.isLocal(image)) image = if (m.image.isNotEmpty() || edit == null) m.image else image
-                if (m.price != null || edit == null) price = m.price?.let { "%.2f".format(Locale.US, it) }.orEmpty()
-                if (m.price == null) err = tr("No price found on that page. Add it to track price drops.")
-            }
+            useMeta(m)
         }
     }
     // A wish shared in from the browser goes where the last one went (My wishlist, private, or a shared list).
@@ -1679,7 +1692,9 @@ fun WishDialog(edit: Wish?, initialUrl: String, chooseList: Boolean = false, sta
     }
     LaunchedEffect(Unit) {
         if (chooseList && edit == null) pickTarget(startTarget ?: Repo.lastSaveTo)
-        if (edit == null && initialUrl.isNotEmpty()) go(initialUrl)
+        if (edit == null && initialUrl.isNotEmpty()) {
+            if (initialMeta != null) { url = initialUrl; useMeta(initialMeta) } else go(initialUrl)
+        }
     }
 
     AlertDialog(

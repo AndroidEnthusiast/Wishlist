@@ -118,7 +118,9 @@ fun HubScreen(
     onAddTo: (String) -> Unit = {},
     // Wishlist groups (2.108): open one, or make a new one.
     onOpenWishGroup: (String) -> Unit = {},
-    onNewWishGroup: () -> Unit = {}
+    onNewWishGroup: () -> Unit = {},
+    // "Find a gift" (2.114): a product found in a shop, for the add form (its link, and what was read from the page).
+    onFound: (String, Meta?) -> Unit = { _, _ -> }
 ) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
@@ -212,6 +214,9 @@ fun HubScreen(
         ) {
             // Your picture and name, and the numbers (2.89: the cover photo card is gone).
             ProfileSummary(onProfile)
+
+            // Web shops to find a gift in and add it with one button (owner, 2.114).
+            FindAGiftRow(onFound)
 
             ListsSection(onHome = true)
 

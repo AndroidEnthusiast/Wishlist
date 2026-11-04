@@ -1,0 +1,378 @@
+package com.wishlist.app
+
+import android.annotation.SuppressLint
+import android.content.Context
+import android.graphics.Bitmap
+import android.webkit.WebResourceRequest
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import coil.compose.AsyncImage
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
+import org.json.JSONArray
+import org.json.JSONObject
+import org.json.JSONTokener
+import org.jsoup.Jsoup
+import java.net.URI
+import kotlin.coroutines.resume
+
+/*
+ * "Find a gift" (2.114, owner): a row of web shops on Home. Tapping one opens the shop inside the app; on any product
+ * page the big "Add to wishlist" button reads the page that is open (with the same reading as a shared link, parsePage
+ * in Fetch.kt) and opens the add form filled in. Reading the page the person already sees also works for shops that
+ * block the app's own requests.
+ *  - A starter list of 20 shops in the Netherlands (owner's choice); "Add shop" adds your own, a long press removes one.
+ *    The list is kept on this phone ("shops" in the preferences), not online.
+ *  - Each shop shows the small icon its own website publishes, loaded live like a browser bookmark (owner's choice; we
+ *    never copy logos into the app). When it can't be loaded, a coloured tile with the first letter shows.
+ *  - App only: a web page can't show other shops inside itself; browser users keep pasting links (owner's choice).
+ *  - Plain links, no affiliate codes (owner: maybe discuss later).
+ */
+
+data class Shop(val name: String, val url: String) {
+    val host: String get() = try { URI(url).host?.removePrefix("www.") ?: "" } catch (e: Exception) { "" }
+}
+
+object Shops {
+    val starters = listOf(
+        Shop("bol.com", "https://www.bol.com/nl/nl/"),
+        Shop("Amazon", "https://www.amazon.nl/"),
+        Shop("Coolblue", "https://www.coolblue.nl/"),
+        Shop("Zalando", "https://www.zalando.nl/"),
+        Shop("IKEA", "https://www.ikea.com/nl/nl/"),
+        Shop("Wehkamp", "https://www.wehkamp.nl/"),
+        Shop("HEMA", "https://www.hema.nl/"),
+        Shop("de Bijenkorf", "https://www.debijenkorf.nl/"),
+        Shop("Intertoys", "https://www.intertoys.nl/"),
+        Shop("LEGO", "https://www.lego.com/nl-nl"),
+        Shop("Decathlon", "https://www.decathlon.nl/"),
+        Shop("Douglas", "https://www.douglas.nl/"),
+        Shop("Rituals", "https://www.rituals.com/nl-nl/"),
+        Shop("Blokker", "https://www.blokker.nl/"),
+        Shop("fonQ", "https://www.fonq.nl/"),
+        Shop("Nike", "https://www.nike.com/nl/"),
+        Shop("H&M", "https://www2.hm.com/nl_nl/"),
+        Shop("Etsy", "https://www.etsy.com/nl/"),
+        Shop("Bever", "https://www.bever.nl/"),
+        Shop("Apple", "https://www.apple.com/nl/")
+    )
+
+    private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
+
+    /** Goes up on every change, so Home redraws the row. */
+    var version by mutableIntStateOf(0)
+        private set
+
+    fun list(c: Context): List<Shop> {
+        @Suppress("UNUSED_VARIABLE") val v = version
+        val raw = prefs(c).getString("shops", null) ?: return starters
+        return try {
+            val a = JSONArray(raw)
+            (0 until a.length()).map { a.getJSONObject(it) }.map { Shop(it.optString("name"), it.optString("url")) }
+                .filter { it.url.startsWith("http") }
+        } catch (e: Exception) {
+            starters
+        }
+    }
+
+    private fun save(c: Context, l: List<Shop>) {
+        val a = JSONArray()
+        l.forEach { a.put(JSONObject().put("name", it.name).put("url", it.url)) }
+        prefs(c).edit().putString("shops", a.toString()).apply()
+        version++
+    }
+
+    /** Adds a shop by its web address ("coolblue.nl" is fine); null when that isn't a web address. */
+    fun add(c: Context, name: String, address: String): Shop? {
+        val u = cleanUrl(address.trim()) ?: return null
+        val s = Shop(name.trim().ifEmpty { Shop("", u).host }, u)
+        if (s.host.isEmpty()) return null
+        save(c, list(c).filter { it.host != s.host } + s)
+        return s
+    }
+
+    fun remove(c: Context, s: Shop) = save(c, list(c).filter { it.url != s.url })
+
+    /** Puts back the starter shops you removed (your own stay). */
+    fun restoreStarters(c: Context) {
+        val now = list(c)
+        save(c, now + starters.filter { st -> now.none { it.host == st.host } })
+    }
+}
+
+/** "Find a gift" on Home: the shops in a row (swipe sideways), with "Add shop" at the end. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun FindAGiftRow(onFound: (String, Meta?) -> Unit) {
+    val ctx = LocalContext.current
+    val cs = MaterialTheme.colorScheme
+    val shops = remember(Shops.version) { Shops.list(ctx) }
+    var open by remember { mutableStateOf<Shop?>(null) }
+    var adding by remember { mutableStateOf(false) }
+    var menuFor by remember { mutableStateOf<Shop?>(null) }
+    HubTitle(tr("Find a gift"))
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(shops.size) { i ->
+            val s = shops[i]
+            Box {
+                Column(
+                    Modifier.width(64.dp).clip(RoundedCornerShape(12.dp))
+                        .combinedClickable(onLongClickLabel = tr("Remove"), onLongClick = { menuFor = s }) { open = s },
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    ShopIcon(s, 52)
+                    Text(
+                        s.name, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.Center, modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+                DropdownMenu(expanded = menuFor == s, onDismissRequest = { menuFor = null }) {
+                    DropdownMenuItem(text = { Text(tr("Remove %s", s.name)) }, onClick = { menuFor = null; Shops.remove(ctx, s) })
+                }
+            }
+        }
+        item {
+            Column(
+                Modifier.width(64.dp).clip(RoundedCornerShape(12.dp)).combinedClickable { adding = true },
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    Modifier.size(52.dp).clip(RoundedCornerShape(14.dp)).background(cs.surfaceVariant),
+                    contentAlignment = Alignment.Center
+                ) { Icon(AppIcons.Add, null, tint = cs.onSurfaceVariant) }
+                Text(tr("Add shop"), style = MaterialTheme.typography.labelSmall, maxLines = 1, modifier = Modifier.padding(top = 4.dp))
+            }
+        }
+    }
+    open?.let { s -> ShopBrowser(s, onClose = { open = null }, onFound = { u, m -> open = null; onFound(u, m) }) }
+    if (adding) AddShopDialog(onClose = { adding = false })
+}
+
+/**
+ * The shop's own small icon from its website (a big "apple-touch-icon" first, else the "favicon"), or a coloured tile
+ * with its first letter when neither loads.
+ */
+@Composable
+fun ShopIcon(s: Shop, sizeDp: Int) {
+    val cs = MaterialTheme.colorScheme
+    val base = try { URI(s.url).let { "${it.scheme}://${it.host}" } } catch (e: Exception) { "" }
+    val tries = listOf("$base/apple-touch-icon.png", "$base/favicon.ico")
+    var at by remember(s.url) { mutableIntStateOf(0) }
+    Box(
+        Modifier.size(sizeDp.dp).clip(RoundedCornerShape(14.dp)).background(Color.White),
+        contentAlignment = Alignment.Center
+    ) {
+        if (base.isNotEmpty() && at < tries.size) AsyncImage(
+            model = tries[at], contentDescription = null, contentScale = ContentScale.Fit,
+            onError = { at++ },
+            modifier = Modifier.fillMaxSize().padding(6.dp)
+        ) else Box(
+            Modifier.fillMaxSize().background(cs.primaryContainer), contentAlignment = Alignment.Center
+        ) {
+            Text(
+                s.name.take(1).uppercase(), color = cs.onPrimaryContainer, fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleLarge
+            )
+        }
+    }
+}
+
+@Composable
+private fun AddShopDialog(onClose: () -> Unit) {
+    val ctx = LocalContext.current
+    var name by remember { mutableStateOf("") }
+    var address by remember { mutableStateOf("") }
+    var bad by remember { mutableStateOf(false) }
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text(tr("Add shop")) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    address, { address = it; bad = false }, label = { Text(tr("Web address")) }, singleLine = true,
+                    placeholder = { Text("shop.nl") }, isError = bad,
+                    supportingText = if (bad) ({ Text(tr("That isn’t a web address.")) }) else null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    name, { name = it.take(30) }, label = { Text(tr("Name (optional)")) }, singleLine = true,
+                    keyboardOptions = Capitalised, modifier = Modifier.fillMaxWidth()
+                )
+                TextButton(onClick = { Shops.restoreStarters(ctx); onClose() }) { Text(tr("Bring back removed shops")) }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { if (Shops.add(ctx, name, address) != null) onClose() else bad = true }) { Text(tr("Add")) }
+        },
+        dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
+    )
+}
+
+private fun decodeJsString(r: String?): String? {
+    if (r == null || r == "null") return null
+    return try { JSONTokener(r).nextValue() as? String } catch (e: Exception) { null }
+}
+
+/**
+ * A shop inside the app, full screen: ✕ closes it, Back goes back a page (or closes on the first one), and "Add to
+ * wishlist" reads the product on screen. Links that want to leave for another app (intent:, market:) are ignored, so
+ * the person stays here; the page gets no access to the app (no JavaScript bridge, no files).
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@SuppressLint("SetJavaScriptEnabled")
+@Composable
+fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Unit) {
+    val scope = rememberCoroutineScope()
+    val cs = MaterialTheme.colorScheme
+    val look = LocalLook.current
+    var web by remember { mutableStateOf<WebView?>(null) }
+    var progress by remember { mutableIntStateOf(0) }
+    var pageTitle by remember { mutableStateOf(shop.name) }
+    var reading by remember { mutableStateOf(false) }
+    var notProduct by remember { mutableStateOf<Pair<String, Meta?>?>(null) }
+
+    fun back() {
+        val w = web
+        if (w != null && w.canGoBack()) w.goBack() else onClose()
+    }
+
+    fun add() {
+        val w = web ?: return
+        val url = w.url ?: return
+        reading = true
+        scope.launch {
+            val html = withTimeoutOrNull(4000L) {
+                suspendCancellableCoroutine<String?> { cont ->
+                    w.evaluateJavascript("document.documentElement.outerHTML") { r -> if (cont.isActive) cont.resume(decodeJsString(r)) }
+                }
+            }
+            val meta = try {
+                html?.let { parsePage(Jsoup.parse(it, url), URI(url).host ?: "", 200) }
+            } catch (e: Exception) {
+                null
+            }
+            reading = false
+            // A product page has a price; otherwise it is probably a search result or the shop's front page.
+            if (meta != null && !meta.blocked && meta.price != null) onFound(url, meta)
+            else notProduct = url to meta?.takeIf { !it.blocked }
+        }
+    }
+
+    Dialog(onDismissRequest = { back() }, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+        Surface(Modifier.fillMaxSize(), color = cs.background) {
+            Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
+                Row(Modifier.fillMaxWidth().height(56.dp).padding(start = 4.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onClose) { Icon(AppIcons.Close, tr("Close shop")) }
+                    ShopIcon(shop, 28)
+                    Text(
+                        pageTitle, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(start = 10.dp).weight(1f)
+                    )
+                }
+                if (progress in 1..99) LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth())
+                AndroidView(
+                    factory = { c ->
+                        WebView(c).apply {
+                            settings.javaScriptEnabled = true
+                            settings.domStorageEnabled = true
+                            settings.allowFileAccess = false
+                            settings.allowContentAccess = false
+                            webViewClient = object : WebViewClient() {
+                                override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                                    val s = request.url.scheme ?: return true
+                                    return s != "http" && s != "https"
+                                }
+
+                                override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) { progress = 10 }
+                                override fun onPageFinished(view: WebView, url: String?) {
+                                    progress = 100
+                                    view.title?.takeIf { it.isNotBlank() }?.let { pageTitle = it }
+                                }
+                            }
+                            webChromeClient = object : android.webkit.WebChromeClient() {
+                                override fun onProgressChanged(view: WebView, p: Int) { progress = p }
+                            }
+                            loadUrl(shop.url)
+                            web = this
+                        }
+                    },
+                    onRelease = { it.stopLoading(); it.destroy() },
+                    modifier = Modifier.weight(1f).fillMaxWidth()
+                )
+                Box(Modifier.fillMaxWidth().padding(12.dp)) {
+                    Row(
+                        Modifier.fillMaxWidth().height(52.dp).lookSurface(look, look.fabShape, look.accent)
+                            .combinedClickable(enabled = !reading) { add() },
+                        horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(AppIcons.Add, null, tint = look.onAccent)
+                        Text(
+                            if (reading) tr("Reading this page…") else tr("Add to wishlist"),
+                            color = look.onAccent, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+                }
+            }
+        }
+        notProduct?.let { (u, m) ->
+            AlertDialog(
+                onDismissRequest = { notProduct = null },
+                title = { Text(tr("No product found here")) },
+                text = { Text(tr("Open a product first, then tap Add to wishlist. Or add this page anyway and fill in the details yourself.")) },
+                confirmButton = { TextButton(onClick = { notProduct = null; onFound(u, m) }) { Text(tr("Add anyway")) } },
+                dismissButton = { TextButton(onClick = { notProduct = null }) { Text(tr("OK")) } }
+            )
+        }
+    }
+}

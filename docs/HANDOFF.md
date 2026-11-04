@@ -139,8 +139,10 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - Then: **v2.113**: wish menus (no long press on two per row, new ⋮ order, Private on large cards, Owned in their long press), owned wishes at the bottom and the reserver told, "Note for friends" in the new-list form. The shop page was discussed (shops shown with their own site icon, loaded live, owner's choice); the other choices are still open.
 
+- Then: **v2.114 Find a gift** (row of 20 shops on Home, shop opens in the app, Add to wishlist reads the page). GitHub Pages timed out three times this evening; the workflow now waits 30 minutes, after which it published at once.
+
 ## Next session
-- **Shop page** ("Find a gift"): decided so far: shops shown with their own site icon loaded live. Still to ask: which shops (fixed list, per country, users add their own), where the page lives, how adding works (in-app browser with an Add button), what browser users get, affiliate links or not.
+- **Check Find a gift (2.114) on the phone**: do the shop icons load (some sites may only give the letter tile), do the shops work inside the app (cookie banners, logins, Amazon), does Add to wishlist read the product (title, picture, price) on each shop? Shops that read badly need a fix in `parsePage` (and `web/parse.js`, same logic). Affiliate links: owner wants to discuss later.
 - **Check 2.111 on the phone**: the pinned top while scrolling (both views, with and without a cover photo, own list and gift list: no jump or double menu), the pulse when adding/deleting a wish, the "Saved!" lines, the long-press menu size, "Owned by you".
 - **Check 2.110 on the phone**: the ⋮ on a cover (Change, Delete, Undo), Edit categories from the + form and from sharing a link (own list and gift list; counts; warning; rename keeps the picked category), Home order after opening lists, the back arrow (and that the menu button is gone only on an open list).
 - **Photos in messages (2.109)**: did the owner run `supabase-chat.sql` again? Test with two phones: camera and gallery, the preview, sending, the photo arriving, full screen and zoom, deleting a photo message, a very large photo, and a phone that was offline. Not checked: how the preview and viewer look under the status bar on every phone.
