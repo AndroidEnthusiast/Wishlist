@@ -145,6 +145,8 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - 5 November: **v2.116**: the shop stays open while adding, Back goes back a page, the product picture is read from the page on screen, sharper icons and white icons skipped.
 
+- 5 November: **v2.117**: shop icons no longer disappear after scrolling (the accepted icon is remembered).
+
 ## Next session
 - **Shops (2.116)**: ask whether Zalando's icon shows, whether icons are sharp, whether the picture is filled in on Add for each shop, and whether Back/✕ feel right.
 - **Check Find a gift (2.114) on the phone**: do the shop icons load (some sites may only give the letter tile), do the shops work inside the app (cookie banners, logins, Amazon), does Add to wishlist read the product (title, picture, price) on each shop? Shops that read badly need a fix in `parsePage` (and `web/parse.js`, same logic). Affiliate links: owner wants to discuss later.

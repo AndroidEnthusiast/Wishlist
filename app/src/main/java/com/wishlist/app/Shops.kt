@@ -55,6 +55,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import androidx.core.graphics.drawable.toBitmap
 import androidx.activity.compose.BackHandler
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -231,6 +232,24 @@ object ShopIcons {
 
     fun google(host: String) = "https://www.google.com/s2/favicons?domain=$host&sz=256"
 
+    // 2.117 (owner's recording: Zalando's icon showed, then vanished after scrolling): the icon that was accepted is
+    // remembered (here and on the phone), and icons that looked empty are never tried again, so a tile that scrolls
+    // away and back shows the same icon at once.
+    private val rejected = HashSet<String>()
+
+    fun accepted(c: Context, host: String): String? = prefs(c).getString("shopiconok_$host", null)
+
+    fun accept(c: Context, host: String, url: String) {
+        if (accepted(c, host) != url) prefs(c).edit().putString("shopiconok_$host", url).apply()
+    }
+
+    fun reject(c: Context, host: String, url: String) {
+        rejected.add(url)
+        if (accepted(c, host) == url) prefs(c).edit().remove("shopiconok_$host").apply()
+    }
+
+    fun isRejected(url: String) = url in rejected
+
     /**
      * True when a loaded icon would look empty on the tile: almost all of it see-through or white (2.116: Zalando's
      * icon is white on see-through). Then the next address is tried.
@@ -292,8 +311,10 @@ fun ShopIcon(s: Shop, sizeDp: Int) {
     var tries by remember(s.url) { mutableStateOf<List<String>?>(null) }
     var at by remember(s.url) { mutableIntStateOf(0) }
     LaunchedEffect(s.url) {
-        val d = ShopIcons.declared(ctx, s)
-        tries = listOfNotNull(d, "$base/apple-touch-icon.png", ShopIcons.google(s.host)).distinct()
+        val ok = ShopIcons.accepted(ctx, s.host)
+        val d = if (ok != null) null else ShopIcons.declared(ctx, s)
+        tries = listOfNotNull(ok, d, "$base/apple-touch-icon.png", ShopIcons.google(s.host)).distinct()
+            .filter { !ShopIcons.isRejected(it) }
         at = 0
     }
     val list = tries
@@ -309,8 +330,11 @@ fun ShopIcon(s: Shop, sizeDp: Int) {
             contentDescription = null, contentScale = ContentScale.Fit,
             onError = { at++ },
             onSuccess = { st ->
-                val b = (st.result.drawable as? android.graphics.drawable.BitmapDrawable)?.bitmap
-                if (b != null && ShopIcons.looksEmpty(b)) at++
+                val url = list[at]
+                // Any kind of picture (2.117: some weren't a plain bitmap, so an empty one slipped through).
+                val b = try { st.result.drawable.toBitmap(48, 48) } catch (e: Exception) { null }
+                if (b != null && ShopIcons.looksEmpty(b)) { ShopIcons.reject(ctx, s.host, url); at++ }
+                else ShopIcons.accept(ctx, s.host, url)
             },
             modifier = Modifier.fillMaxSize().padding(6.dp)
         ) else Box(
