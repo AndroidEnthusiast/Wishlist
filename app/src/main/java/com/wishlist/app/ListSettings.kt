@@ -158,10 +158,10 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
             SectionTitle(tr("Cover photo"))
             CoverSection(snack)
 
-            SectionTitle(tr("Note for friends"))
+            // "Description" (owner, 2.125; it was "Note for friends").
+            SectionTitle(tr("Description"))
             Text(
-                if (shared != null) tr("Shown at the top of the list. For example sizes, or things the person already has.")
-                else tr("Shown at the top of your wishlist. For example your sizes, or things you don’t want."),
+                if (shared != null) tr("Shown at the top of the list.") else tr("Shown at the top of your wishlist."),
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
             )
             // No "Save note" button (owner, 2.105): like the list's name, the keyboard's tick saves it, with the green

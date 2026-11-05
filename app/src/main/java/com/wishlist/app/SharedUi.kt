@@ -65,7 +65,8 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 OutlinedTextField(
                     notes, { notes = it.take(ABOUT_MAX) },
-                    label = { Text(tr("Notes")) }, placeholder = { Text(tr("What is this wishlist for?")) },
+                    label = { Text(tr("Description")) }, placeholder = { Text(tr("What is this wishlist for?")) },
+                    supportingText = { Text(tr("Shown at the top of the list.")) },
                     maxLines = 4, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 // The occasion (owner, 2.124): pick one first; only then its date is asked.
                 Text(tr("Occasion"), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)

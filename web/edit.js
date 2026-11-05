@@ -1626,7 +1626,7 @@
       if (!content) return;
       openMenu($("listBtn"), [
         { label: T("Rename list"), icon: "edit", onClick: openRename },
-        { label: T("Note for friends"), onClick: openAbout },
+        { label: T("Description"), onClick: openAbout },
         { label: T("Categories"), onClick: openCategories },
         { label: T("Share list"), icon: "share", onClick: openShare }
       ], true);
@@ -1648,11 +1648,11 @@
     function openAbout() {
       var ta, cnt;
       dialog({
-        title: T("Note for friends"),
+        title: T("Description"),
         body: function (b) {
           ta = el("textarea");
           ta.rows = 5; ta.maxLength = ABOUT_MAX; ta.value = content.about;
-          b.appendChild(field(T("Shown at the top of the friends’ page"), ta));
+          b.appendChild(field(T("Shown at the top of the list."), ta));
           cnt = el("p", "hint", ta.value.length + "/" + ABOUT_MAX);
           ta.addEventListener("input", function () { cnt.textContent = ta.value.length + "/" + ABOUT_MAX; });
           b.appendChild(cnt);

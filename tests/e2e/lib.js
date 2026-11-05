@@ -52,7 +52,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 // The editor is laid out like the app: a side menu, a category drop-down and a sort menu.
 async function openDrawer(t) { await t.page.locator("#menuBtn").click(); await t.page.locator("#drawer").waitFor({ state: "visible" }); }
 async function drawerItem(t, id) { await openDrawer(t); await t.page.locator(id).click(); }
-// The ⚙ in the top bar: the settings of this list (Rename list, Note for friends, Categories, Share list).
+// The ⚙ in the top bar: the settings of this list (Rename list, Description, Categories, Share list).
 async function listItem(t, label) { await t.page.locator("#listBtn").click(); await t.page.locator(".menu .mitem", { hasText: label }).click(); }
 async function catItems(t) {
   await t.page.locator("#catBtn").click();

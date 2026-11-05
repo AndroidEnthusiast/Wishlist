@@ -529,14 +529,14 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     name, { name = it.take(60); if (it.isNotBlank()) missing = false },
-                    label = { Text(tr("Name*")) }, singleLine = true, isError = missing,
+                    label = { Text(tr("Wishlist name*")) }, singleLine = true, isError = missing,
                     supportingText = if (missing) ({ Text(tr("What is this wishlist called?")) }) else null,
                     modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 OutlinedTextField(
                     notes, { notes = it.take(ABOUT_MAX) },
-                    // It is the list's note for friends (owner, 2.113: "Notes" didn't say what it does or where it shows).
-                    label = { Text(tr("Note for friends")) },
-                    supportingText = { Text(tr("Optional. Shown at the top of your list. For example your sizes, or things you don’t want.")) },
+                    // "Description" (owner, 2.125; it was "Note for friends", and "Notes" before 2.113).
+                    label = { Text(tr("Description")) },
+                    supportingText = { Text(tr("Shown at the top of your wishlist.")) },
                     maxLines = 4, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 // The occasion (owner, 2.124): pick one first; only then its date is asked.
                 Text(tr("Occasion"), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -554,12 +554,9 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
                         Icon(AppIcons.Add, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                         Column(Modifier.weight(1f).padding(start = 10.dp)) {
                             Text(tr("Add wishes from your other lists"), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
-                            Text(
-                                when (picked.size) {
-                                    0 -> tr("Optional")
-                                    1 -> tr("1 wish chosen")
-                                    else -> tr("%d wishes chosen", picked.size)
-                                },
+                            // No "Optional" (owner, 2.125: it suggested the rest isn't optional).
+                            if (picked.isNotEmpty()) Text(
+                                if (picked.size == 1) tr("1 wish chosen") else tr("%d wishes chosen", picked.size),
                                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }

@@ -541,13 +541,12 @@ private const val ICONS_JS = """(function(){
 /**
  * Cookie questions in the shop browser (owner, 2.124: "Refuse for me", on every shop). bol.com stayed behind a dark
  * layer: its cookie question didn't show on top of it, so nothing could be tapped. Run on the page a few times after
- * it loads; returns what it did ("refused", "settings", "saved", "veil" or "").
+ * it loads; returns what it did ("refused", "settings", "saved" or "").
  *  1. A button inside a cookie question that refuses or keeps only the necessary cookies is tapped.
  *  2. A question without such a button: its settings are opened ("settings"), and the next round saves them as they
  *     are, which is "only necessary" by law ("saved").
- *  3. With __VEIL__ true (a few seconds after loading): a dark layer that covers the middle of the screen while it has
- *     nothing in it (so nothing on the page can be tapped) is removed, and scrolling is switched back on.
  * Only buttons inside something that is about cookies are tapped, at most four times per page, and nothing is sent.
+ * Empty dark layers are GUARD_JS's job.
  */
 private const val CONSENT_JS = """(function(){
   var W=window.__wlc||(window.__wlc={n:0,settings:0});
@@ -597,25 +596,70 @@ private const val CONSENT_JS = """(function(){
   if(e){W.n++;e.click();return 'refused';}
   if(W.settings){e=find(SAVE);if(e){W.n++;W.settings=0;e.click();return 'saved';}}
   else{e=find(SETTINGS);if(e){W.n++;W.settings=1;e.click();return 'settings';}}
-  if(!__VEIL__) return '';
-  // An empty layer on top of everything in the middle of the screen: nothing below it can be tapped.
-  var w=innerWidth,h=innerHeight,hit=document.elementFromPoint(w/2,h/2);
-  if(!hit||hit===document.body||hit===document.documentElement) return '';
-  var v=null;
-  for(var p=hit;p&&p!==document.body;p=p.parentElement){
-    var s=getComputedStyle(p),r=p.getBoundingClientRect();
-    if((s.position==='fixed'||s.position==='absolute')&&r.width>=w*0.9&&r.height>=h*0.8){v=p;break;}
+  return '';
+})()"""
+
+/**
+ * Empty layers (owner, 2.125: bol.com put a grey layer back on every page; tapping cleared it, then it came back, so
+ * the shop felt broken). For every shop: a see-through dark or light layer that covers the middle of the screen while
+ * nothing on it can be seen or tapped is hidden at once, and kept hidden: the page is watched (MutationObserver), so a
+ * layer that comes back is hidden again before it shows. Never breaks the shop (owner): a layer that gets text,
+ * pictures or buttons is shown again at once (it is a real pop-up), and a layer with a pop-up on top of it (a menu, a
+ * size picker, a cookie question; checked in five places on the screen) is left alone. Scrolling that such a layer
+ * switched off comes back, and goes back to how it was when the layer is shown again. Installed once per page.
+ */
+private const val GUARD_JS = """(function(){
+  if(window.__wlg) return 'on';
+  var G=window.__wlg={hidden:[],saved:null,count:0};
+  function empty(v){return (v.innerText||'').trim()===''&&!v.querySelector('img,svg,video,iframe,canvas,input,button,select,textarea,a[href]');}
+  function tinted(v){
+    var s=getComputedStyle(v),m=/rgba?\(([^)]+)\)/.exec(s.backgroundColor||''),a=m?(m[1].split(',')[3]===undefined?1:+m[1].split(',')[3]):0;
+    return a>=0.1||(s.backdropFilter||s.webkitBackdropFilter||'none')!=='none';
   }
-  if(!v||(v.innerText||'').trim()!==''||v.querySelector('img,svg,video,iframe,canvas,input,button')) return '';
-  // It must be a tint you can see (a see-through dark or light colour, or a blur), not an invisible helper.
-  var vs=getComputedStyle(v),m=/rgba?\(([^)]+)\)/.exec(vs.backgroundColor||''),alpha=m?(m[1].split(',')[3]===undefined?1:+m[1].split(',')[3]):0;
-  if(alpha<0.1&&(vs.backdropFilter||vs.webkitBackdropFilter||'none')==='none') return '';
-  var others=[[w/2,h/4],[w/2,h*3/4],[w/4,h/2],[w*3/4,h/2]];
-  for(var k=0;k<others.length;k++){var o=document.elementFromPoint(others[k][0],others[k][1]);if(o&&o!==v&&!v.contains(o))return '';}
-  v.style.setProperty('display','none','important');
-  [document.documentElement,document.body].forEach(function(x){if(x){x.style.setProperty('overflow','auto','important');x.style.setProperty('position','static','important');}});
-  W.n++;
-  return 'veil';
+  function unlock(){
+    if(G.saved) return;
+    var de=document.documentElement,b=document.body;if(!b) return;
+    G.saved=[de.style.getPropertyValue('overflow'),de.style.getPropertyPriority('overflow'),b.style.getPropertyValue('overflow'),b.style.getPropertyPriority('overflow'),b.style.getPropertyValue('position'),b.style.getPropertyPriority('position'),b.style.getPropertyValue('top'),b.style.getPropertyPriority('top')];
+    var top=getComputedStyle(b).position==='fixed'?-parseInt(getComputedStyle(b).top||'0',10)||0:null;
+    if(getComputedStyle(de).overflow==='hidden') de.style.setProperty('overflow','auto','important');
+    if(getComputedStyle(b).overflow==='hidden') b.style.setProperty('overflow','auto','important');
+    if(top!==null){b.style.setProperty('position','static','important');b.style.setProperty('top','auto','important');window.scrollTo(0,top);}
+  }
+  function relock(){
+    var x=G.saved;if(!x) return;G.saved=null;
+    var de=document.documentElement,b=document.body;
+    function put(e,n,v,p){if(v) e.style.setProperty(n,v,p); else e.style.removeProperty(n);}
+    put(de,'overflow',x[0],x[1]);put(b,'overflow',x[2],x[3]);put(b,'position',x[4],x[5]);put(b,'top',x[6],x[7]);
+  }
+  function check(){
+    // A hidden layer that now has something on it is a real pop-up: show it again.
+    G.hidden=G.hidden.filter(function(v){
+      if(!v.isConnected) return false;
+      if(!empty(v)){v.style.removeProperty('display');return false;}
+      return true;
+    });
+    if(!G.hidden.length) relock();
+    var w=innerWidth,h=innerHeight;if(w<50||h<50) return;
+    var hit=document.elementFromPoint(w/2,h/2);
+    if(!hit||hit===document.body||hit===document.documentElement) return;
+    var v=null;
+    for(var p=hit;p&&p!==document.body&&p!==document.documentElement;p=p.parentElement){
+      var s=getComputedStyle(p),r=p.getBoundingClientRect();
+      if((s.position==='fixed'||s.position==='absolute')&&r.width>=w*0.9&&r.height>=h*0.8){v=p;break;}
+    }
+    if(!v||!empty(v)||!tinted(v)) return;
+    var pts=[[w/2,h/4],[w/2,h*3/4],[w/4,h/2],[w*3/4,h/2]];
+    for(var k=0;k<pts.length;k++){var o=document.elementFromPoint(pts[k][0],pts[k][1]);if(o&&o!==v&&!v.contains(o))return;}
+    v.style.setProperty('display','none','important');
+    G.hidden.push(v);G.count++;
+    unlock();
+  }
+  var t=0;
+  function soon(){if(t) return;t=setTimeout(function(){t=0;try{check();}catch(e){}},100);}
+  try{new MutationObserver(soon).observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style','hidden','open']});}catch(e){}
+  addEventListener('resize',soon);
+  try{check();}catch(e){}
+  return 'on';
 })()"""
 
 /** The page's own user agent without "; wv": some shops treat the in-app browser as "open our app" and get stuck (2.121). */
@@ -687,14 +731,15 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
         }
     }
 
-    // Cookie questions are refused for you (owner, 2.124), and an empty dark layer left on top is removed. Looked at
-    // for about 12 seconds after a page loads, as many shops show their question a moment later.
+    // Cookie questions are refused for you (owner, 2.124), and empty dark layers are kept away (GUARD_JS, 2.125). Looked
+    // at for about 12 seconds after a page loads, as many shops show their question a moment later.
     LaunchedEffect(loads) {
         if (loads == 0) return@LaunchedEffect
         for (round in 0 until 10) {
             kotlinx.coroutines.delay(if (round == 0) 600L else 1200L)
             val w = web ?: return@LaunchedEffect
-            js(w, CONSENT_JS.replace("__VEIL__", if (round >= 2) "true" else "false"))
+            js(w, GUARD_JS)
+            js(w, CONSENT_JS)
         }
     }
 
@@ -796,6 +841,8 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                                     }
 
                                     override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) { progress = 10 }
+                                    // The guard goes on as soon as the page shows, before a layer can flicker in.
+                                    override fun onPageCommitVisible(view: WebView, url: String?) { view.evaluateJavascript(GUARD_JS, null) }
                                     override fun onPageFinished(view: WebView, url: String?) {
                                         progress = 100
                                         view.title?.takeIf { it.isNotBlank() }?.let { pageTitle = it }
@@ -810,7 +857,14 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                                         loads++
                                     }
                                 }
+                                // Pages that ask for your location, camera or microphone get a "no" at once (owner, 2.125): a
+                                // page left waiting for an answer can sit behind a grey screen.
+                                settings.setGeolocationEnabled(false)
                                 webChromeClient = object : android.webkit.WebChromeClient() {
+                                    override fun onGeolocationPermissionsShowPrompt(
+                                        origin: String?, callback: android.webkit.GeolocationPermissions.Callback?
+                                    ) { callback?.invoke(origin, false, false) }
+                                    override fun onPermissionRequest(request: android.webkit.PermissionRequest?) { request?.deny() }
                                     override fun onProgressChanged(view: WebView, p: Int) { progress = p }
                                     override fun onReceivedTitle(view: WebView, title: String?) {
                                         title?.takeIf { it.isNotBlank() }?.let { pageTitle = it }

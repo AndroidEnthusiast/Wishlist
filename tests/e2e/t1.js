@@ -36,7 +36,7 @@ const { boot, done, check, summary, KEY, CODE, sleep, openDrawer, catItems } = r
   check("Add wish button", (await t.page.locator("#fab").innerText()).trim() === "Add wish");
   await t.page.locator("#listBtn").click();
   const lmenu = (await t.page.locator(".menu .mitem").allInnerTexts()).map(x => x.trim());
-  check("⚙ opens the list's settings", JSON.stringify(lmenu) === JSON.stringify(["Rename list", "Note for friends", "Categories", "Share list"]), lmenu);
+  check("⚙ opens the list's settings", JSON.stringify(lmenu) === JSON.stringify(["Rename list", "Description", "Categories", "Share list"]), lmenu);
   await t.page.keyboard.press("Escape");
   const chips = await catItems(t);
   check("category drop-down", JSON.stringify(chips) === JSON.stringify(["All (3)", "Home (1)", "Fashion (1)", "Books (0)", "New category…", "Edit categories"]), chips);

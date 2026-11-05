@@ -391,6 +391,33 @@ object Groups {
         refresh(c)
     }
 
+    /**
+     * Invitations sent while making a group (owner, 2.125): each friend on its own, so one that fails doesn't stop the
+     * others. Returns how many couldn't be sent; the group page then tells the organiser ([unsent]).
+     */
+    suspend fun inviteNew(c: Context, gid: String, ids: List<String>): Int {
+        val g = group(gid) ?: return ids.size
+        var failed = 0
+        for (id in ids) {
+            try {
+                Cloud.rpc("wl_gr_invite", base(c).put("p_group", g.id).put("p_friend", id))
+            } catch (e: Exception) {
+                failed++
+                continue
+            }
+            try {
+                Chat.send(c, id, ChatContent(true, "group", g.id, g.name, url = link(g.link)))
+            } catch (e: Exception) {
+            }
+        }
+        try { refresh(c) } catch (e: Exception) {}
+        unsent = if (failed > 0) unsent + (gid to failed) else unsent - gid
+        return failed
+    }
+
+    /** Invitations that couldn't be sent when a group was made, by group id (shown to the organiser until done). */
+    var unsent by mutableStateOf(mapOf<String, Int>())
+
     /** A brought list of someone in group [gid]. Null when it isn't in the group (any more). */
     suspend fun fetchList(c: Context, gid: String, code: String): RemoteList? {
         val t = Cloud.rpc("wl_gr_list", base(c).put("p_group", gid).put("p_code", code)).trim()

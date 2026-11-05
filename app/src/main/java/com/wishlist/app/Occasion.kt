@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -78,8 +79,8 @@ object Occasions {
         else -> o.name.ifBlank { tr("Occasion") }
     }
 
-    /** The label of a choice in the picker ("Your own…" for an own occasion). */
-    fun choiceLabel(kind: String): String = if (kind == "own") tr("Your own…") else label(Occasion(kind))
+    /** The label of a choice in the picker ("Custom", with a pencil, for your own occasion: owner, 2.125). */
+    fun choiceLabel(kind: String): String = if (kind == "own") tr("Custom") else label(Occasion(kind))
 
     private fun nthSunday(year: Int, month: Int, n: Int): LocalDate =
         LocalDate.of(year, month, 1).with(TemporalAdjusters.dayOfWeekInMonth(n, DayOfWeek.SUNDAY))
@@ -229,7 +230,11 @@ fun OccasionPicker(gift: Boolean, value: Occasion?, onChange: (Occasion?) -> Uni
                             onChange(Occasion(k, date = d))
                         }
                     },
-                    label = { Text(Occasions.choiceLabel(k)) }
+                    label = { Text(Occasions.choiceLabel(k)) },
+                    // A little pencil on "Custom": you type your own occasion there (owner, 2.125).
+                    trailingIcon = if (k == "own") ({
+                        androidx.compose.material3.Icon(AppIcons.Edit, null, modifier = Modifier.size(16.dp))
+                    }) else null
                 )
             }
         }
