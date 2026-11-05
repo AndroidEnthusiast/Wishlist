@@ -277,3 +277,8 @@ What the owner has decided, and why. Follow these unless the owner changes their
 
 ## Working together (4 November 2026)
 - **A changelog after every update** (owner): once an update is pushed, list everything that changed in bullets, so the owner knows what's new.
+
+## Compile and screenshots before a push (5 November 2026, owner interviewed)
+- **Screenshot tests run only here, by Claude**, not in the GitHub build (owner chose the cheap option; the app build stays as fast as before and can't fail on a picture). Setup: `bash tests/android-setup.sh`, then `gradle testDebugUnitTest` (see `tests/README.md`, "App screenshots").
+- **Default style only, light and dark** (owner): not all five styles.
+- **Show the owner pictures only when an update changes how a screen looks**, and keep it cheap in tokens (owner): only the screens that changed, as one small before/after picture, not every screen every time.
