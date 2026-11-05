@@ -542,9 +542,8 @@ private const val ICONS_JS = """(function(){
 private fun browserUserAgent(ua: String): String = ua.replace("; wv)", ")").replace(Regex("\\sVersion/\\d+(\\.\\d+)*"), "")
 
 /**
- * A shop inside the app, full screen. Top: ✕ closes it, ← goes back a page, ↻ reloads, ⋮ opens the page in the phone's
- * own browser (the way out when a shop doesn't work in here). The phone's Back goes back a page (or closes on the first
- * one). A floating "+ Add wish" (owner, 2.120; flat and smaller in 2.121) has colour only on a page where a product is
+ * A shop inside the app, full screen: ✕ closes it (owner, 2.122: no other buttons at the top), the phone's Back goes
+ * back a page (or closes on the first one). A floating "+ Add wish" (owner, 2.120; flat and smaller in 2.121) has colour only on a page where a product is
  * recognised; tapped elsewhere it says so, with "Add anyway" as a way out in case the product wasn't recognised.
  * Links that open another app (intent:) load their web address instead when they have one; others are ignored. The page
  * gets no access to the app (no JavaScript bridge, no files).
@@ -559,9 +558,7 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
     var web by remember { mutableStateOf<WebView?>(null) }
     var progress by remember { mutableIntStateOf(0) }
     var pageTitle by remember { mutableStateOf(shop.name) }
-    var canBack by remember { mutableStateOf(false) }
     var reading by remember { mutableStateOf(false) }
-    var menu by remember { mutableStateOf(false) }
     // The address of the page on screen when a product was recognised there (null: not a product page).
     var productAt by remember { mutableStateOf<String?>(null) }
     var checks by remember { mutableIntStateOf(0) }
@@ -596,7 +593,6 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
             kotlinx.coroutines.delay(wait)
             val w = web ?: return@LaunchedEffect
             val url = w.url ?: return@LaunchedEffect
-            canBack = w.canGoBack()
             if (productAt == url) return@LaunchedEffect
             val html = js(w, "document.documentElement.outerHTML") ?: continue
             val ok = withContext(Dispatchers.Default) {
@@ -664,28 +660,13 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
         BackHandler { back() }
         Surface(Modifier.fillMaxSize(), color = cs.background) {
             Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
-                Row(Modifier.fillMaxWidth().height(56.dp).padding(end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().height(56.dp).padding(start = 4.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onClose) { Icon(AppIcons.Close, tr("Close shop")) }
-                    IconButton(onClick = { web?.goBack() }, enabled = canBack) { Icon(AppIcons.ArrowBack, tr("Back")) }
-                    ShopIcon(shop, 26)
+                    ShopIcon(shop, 28)
                     Text(
-                        pageTitle, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        pageTitle, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(start = 10.dp).weight(1f)
                     )
-                    IconButton(onClick = { web?.reload() }) { Icon(AppIcons.Refresh, tr("Reload")) }
-                    Box {
-                        IconButton(onClick = { menu = true }) { Icon(AppIcons.MoreVert, tr("More")) }
-                        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                            DropdownMenuItem(text = { Text(tr("Open in your browser")) }, onClick = {
-                                menu = false
-                                val u = web?.url ?: shop.url
-                                try {
-                                    ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(u)))
-                                } catch (e: Exception) {
-                                }
-                            })
-                        }
-                    }
                 }
                 if (progress in 1..99) LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth())
                 // The page fills the screen; "+ Add wish" floats over its bottom-right corner (owner, 2.120).
@@ -725,13 +706,11 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                                     override fun onPageFinished(view: WebView, url: String?) {
                                         progress = 100
                                         view.title?.takeIf { it.isNotBlank() }?.let { pageTitle = it }
-                                        canBack = view.canGoBack()
                                         checks++
                                         learnIcons(view)
                                     }
 
                                     override fun doUpdateVisitedHistory(view: WebView, url: String?, isReload: Boolean) {
-                                        canBack = view.canGoBack()
                                         if (url != productAt) productAt = null
                                         checks++
                                     }
