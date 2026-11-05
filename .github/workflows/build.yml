@@ -47,7 +47,10 @@ jobs:
         run: |
           cp app/build/outputs/apk/release/app-release.apk Wishlist.apk
           gh release delete latest --cleanup-tag --yes || true
-          gh release create latest Wishlist.apk --title "Latest Wishlist app" --notes "Newest build. Download Wishlist.apk below." --target "${{ github.sha }}"
+          # If GitHub couldn't delete the old release (it answered "HTTP 500" on 5 November 2026), the new APK replaces
+          # the old file in it instead, so the download link always gives the newest app.
+          gh release create latest Wishlist.apk --title "Latest Wishlist app" --notes "Newest build. Download Wishlist.apk below." --target "${{ github.sha }}" \
+            || gh release upload latest Wishlist.apk --clobber
 
   pages:
     runs-on: ubuntu-latest
