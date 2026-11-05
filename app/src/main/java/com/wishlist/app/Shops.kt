@@ -72,7 +72,7 @@ import kotlin.coroutines.resume
 
 /*
  * "Find a gift" (2.114, owner): a row of web shops on Home. Tapping one opens the shop inside the app; on any product
- * page the big "Add to wishlist" button reads the page that is open (with the same reading as a shared link, parsePage
+ * page the floating "+ Add wish" button reads the page that is open (with the same reading as a shared link, parsePage
  * in Fetch.kt) and opens the add form filled in. Reading the page the person already sees also works for shops that
  * block the app's own requests.
  *  - A starter list of 20 shops in the Netherlands (owner's choice); "Add shop" adds your own, a long press removes one.
@@ -536,6 +536,9 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                     )
                 }
                 if (progress in 1..99) LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth())
+                // The page fills the screen; "+ Add wish" floats over its bottom-right corner (owner, 2.120: before, a
+                // full-width bar under the page).
+                Box(Modifier.weight(1f).fillMaxWidth()) {
                 AndroidView(
                     factory = { c ->
                         WebView(c).apply {
@@ -563,8 +566,22 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                         }
                     },
                     onRelease = { it.stopLoading(); it.destroy() },
-                    modifier = Modifier.weight(1f).fillMaxWidth()
+                    modifier = Modifier.fillMaxSize()
                 )
+                Row(
+                    Modifier.align(Alignment.BottomEnd).padding(16.dp).height(52.dp)
+                        .lookSurface(look, look.fabShape, look.accent, depth = 5.dp)
+                        .combinedClickable(enabled = !reading, onClickLabel = tr("Add wish")) { add() }
+                        .padding(start = 16.dp, end = 20.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(AppIcons.Add, null, tint = look.onAccent)
+                    Text(
+                        if (reading) tr("Reading this page…") else tr("Add wish"),
+                        color = look.onAccent, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+                }
                 addedNote?.let { n ->
                     Text(
                         "✓ $n", color = cs.onSecondaryContainer, style = MaterialTheme.typography.bodyMedium,
@@ -572,26 +589,13 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                         modifier = Modifier.fillMaxWidth().background(cs.secondaryContainer).padding(vertical = 8.dp, horizontal = 16.dp)
                     )
                 }
-                Box(Modifier.fillMaxWidth().padding(12.dp)) {
-                    Row(
-                        Modifier.fillMaxWidth().height(52.dp).lookSurface(look, look.fabShape, look.accent)
-                            .combinedClickable(enabled = !reading) { add() },
-                        horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(AppIcons.Add, null, tint = look.onAccent)
-                        Text(
-                            if (reading) tr("Reading this page…") else tr("Add to wishlist"),
-                            color = look.onAccent, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 8.dp)
-                        )
-                    }
-                }
             }
         }
         notProduct?.let { (u, m) ->
             AlertDialog(
                 onDismissRequest = { notProduct = null },
                 title = { Text(tr("No product found here")) },
-                text = { Text(tr("Open a product first, then tap Add to wishlist. Or add this page anyway and fill in the details yourself.")) },
+                text = { Text(tr("Open a product first, then tap Add wish. Or add this page anyway and fill in the details yourself.")) },
                 confirmButton = { TextButton(onClick = { notProduct = null; onFound(u, m) }) { Text(tr("Add anyway")) } },
                 dismissButton = { TextButton(onClick = { notProduct = null }) { Text(tr("OK")) } }
             )

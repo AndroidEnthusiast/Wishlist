@@ -67,8 +67,22 @@ internal fun currencyOf(text: String, host: String): String = when {
     host.endsWith(".ca") -> "CAD"
     host.endsWith(".com.au") -> "AUD"
     host.endsWith(".com.mx") -> "MXN"
-    else -> "USD"
+    text.contains("$") -> "USD"
+    // Nothing on the page says (owner, 2.120): the currency of the phone's country, else the euro. Before, this was $.
+    else -> localCurrency()
 }
+
+/** The currencies of the countries the phone (or browser) may be set to; other countries get the euro. Same list as web/parse.js. */
+private val COUNTRY_CURRENCY: Map<String, String> =
+    listOf("AT", "BE", "CY", "DE", "EE", "ES", "FI", "FR", "GR", "HR", "IE", "IT", "LT", "LU", "LV", "MT", "NL", "PT", "SI", "SK")
+        .associateWith { "EUR" } + mapOf(
+        "GB" to "GBP", "US" to "USD", "CA" to "CAD", "AU" to "AUD", "NZ" to "NZD", "JP" to "JPY", "CN" to "CNY",
+        "KR" to "KRW", "IN" to "INR", "MX" to "MXN", "BR" to "BRL", "CH" to "CHF", "SE" to "SEK", "NO" to "NOK",
+        "DK" to "DKK", "PL" to "PLN"
+    )
+
+/** The currency of the phone's country (Settings > Language and region), or the euro (owner, 2.120). */
+fun localCurrency(): String = COUNTRY_CURRENCY[java.util.Locale.getDefault().country.uppercase()] ?: "EUR"
 
 private val AMAZON_PRICE = listOf(
     "#corePriceDisplay_desktop_feature_div .priceToPay .a-offscreen",

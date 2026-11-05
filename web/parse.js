@@ -74,7 +74,26 @@
     if (endsWith(host, ".ca")) return "CAD";
     if (endsWith(host, ".com.au")) return "AUD";
     if (endsWith(host, ".com.mx")) return "MXN";
-    return "USD";
+    if (text.indexOf("$") >= 0) return "USD";
+    // Nothing on the page says (owner, 2.120): the currency of the browser's country, else the euro. Before, this was $.
+    return localCurrency();
+  }
+
+  // The currencies of the countries a browser may be set to; other countries get the euro. Same list as Fetch.kt.
+  var COUNTRY_CURRENCY = { GB: "GBP", US: "USD", CA: "CAD", AU: "AUD", NZ: "NZD", JP: "JPY", CN: "CNY", KR: "KRW",
+    IN: "INR", MX: "MXN", BR: "BRL", CH: "CHF", SE: "SEK", NO: "NOK", DK: "DKK", PL: "PLN" };
+  ["AT", "BE", "CY", "DE", "EE", "ES", "FI", "FR", "GR", "HR", "IE", "IT", "LT", "LU", "LV", "MT", "NL", "PT", "SI", "SK"]
+    .forEach(function (c) { COUNTRY_CURRENCY[c] = "EUR"; });
+
+  // The currency of the browser's country (its first language with a country, like "nl-NL"), or the euro.
+  function localCurrency() {
+    var langs = [];
+    try { langs = (typeof navigator !== "undefined" && (navigator.languages || [navigator.language])) || []; } catch (e) {}
+    for (var i = 0; i < langs.length; i++) {
+      var m = /^[a-z]{2,3}[-_]([A-Za-z]{2})\b/.exec(String(langs[i] || ""));
+      if (m) return COUNTRY_CURRENCY[m[1].toUpperCase()] || "EUR";
+    }
+    return "EUR";
   }
 
   var AMAZON_PRICE = [
@@ -197,7 +216,7 @@
   }
 
   var api = {
-    cleanUrl: cleanUrl, toNum: toNum, currencyOf: currencyOf, looksBlocked: looksBlocked,
+    cleanUrl: cleanUrl, toNum: toNum, currencyOf: currencyOf, localCurrency: localCurrency, looksBlocked: looksBlocked,
     parsePage: parsePage, readHelperAnswer: readHelperAnswer, hostOfUrl: hostOfUrl
   };
   root.WLParse = api;

@@ -1615,7 +1615,7 @@ fun WishDialog(
     var price by remember { mutableStateOf(edit?.price?.let { "%.2f".format(Locale.US, it) } ?: "") }
     var desc by remember { mutableStateOf(edit?.desc ?: "") }
     var image by remember { mutableStateOf(edit?.image ?: "") }
-    var cur by remember { mutableStateOf(edit?.currency ?: "USD") }
+    var cur by remember { mutableStateOf(edit?.currency ?: localCurrency()) }
     // A new wish starts without a category: you pick one yourself if you want (2.64).
     var cat by remember { mutableStateOf(edit?.category ?: "") }
     var note by remember { mutableStateOf(edit?.note ?: "") }

@@ -95,5 +95,16 @@ const ans = P.readHelperAnswer({ status: 200, url: "https://shop.example/x", htm
 check("helper answer", ans.title === "Hello" && ans.image === "https://shop.example/p.jpg");
 check("helper answer blocked 403", P.readHelperAnswer({ status: 403, url: "https://shop.example/x", html: "<html><title>Hi</title></html>" }).blocked === true);
 check("helper answer garbage", P.readHelperAnswer(null) === null && P.readHelperAnswer({}) === null);
+// 2.120 (owner): no currency on the page -> the browser's country, else the euro; "$" on the page stays USD.
+check("currency: $ on the page", P.currencyOf("$19.99", "www.nike.com") === "USD");
+check("currency: euro sign on a .com page", P.currencyOf("\u20ac 19,99", "www.nike.com") === "EUR");
+check("currency: nothing on the page -> local", P.currencyOf("19.99", "www.nike.com") === P.localCurrency());
+function langs(list) { Object.defineProperty(dom.window.navigator, "languages", { value: list, configurable: true }); }
+langs(["nl-NL", "nl"]); check("local currency nl-NL", P.localCurrency() === "EUR");
+langs(["en-GB"]); check("local currency en-GB", P.localCurrency() === "GBP");
+langs(["sv_SE"]); check("local currency sv_SE", P.localCurrency() === "SEK");
+langs(["en"]); check("local currency without a country -> euro", P.localCurrency() === "EUR");
+langs(["fr-ZZ"]); check("local currency unknown country -> euro", P.localCurrency() === "EUR");
+langs(["en-US"]); check("local currency en-US", P.localCurrency() === "USD");
 console.log(fails === 0 ? "ALL PASSED (" + n + " checks)" : fails + " FAILED of " + n);
 process.exit(fails ? 1 : 0);

@@ -59,6 +59,7 @@ abstract class ScreenshotBase(private val mode: String) {
             .putBoolean("welcomed", true).putBoolean("asked_background", true).commit()
         Repo.load(app)
         Repo.setTheme(app, mode)
+        HubNav.page = null // "All your wishes" from an earlier test would still be open
         if (Repo.myWishes.isEmpty()) samples(app).forEach { Repo.addMine(app, it) }
     }
 
@@ -104,16 +105,18 @@ abstract class ScreenshotBase(private val mode: String) {
     @Test fun home() { compose.waitForIdle(); compose.mainClock.autoAdvance = false; shot("home") }
     // The list's card on Home shows its number of wishes ("5"); its name is under the card. "5 Wishes" at the top
     // opens All your wishes.
-    @Test fun list() {
-        val all = compose.onAllNodes(hasText("My wishlist", substring = false), useUnmergedTree = true)
-        val name = all.onFirst()
-        name.assertExists()
-        compose.mainClock.autoAdvance = false
-        name.performTouchInput { click(androidx.compose.ui.geometry.Offset(centerX, top - 150f)) }
-        shot("list")
-    }
+    @Test fun list() { tapAbove("My wishlist", 150f); shot("list") }
     @Test fun allWishes() { tap("Wishes"); shot("all") }
     @Test fun addWish() { tap("Add wish"); shot("add") }
+
+    /** Taps just above a text: the card or tile it is the name of. */
+    private fun tapAbove(text: String, px: Float) {
+        compose.waitForIdle()
+        val name = compose.onAllNodes(hasText(text, substring = false), useUnmergedTree = true).onFirst()
+        name.assertExists()
+        compose.mainClock.autoAdvance = false
+        name.performTouchInput { click(androidx.compose.ui.geometry.Offset(centerX, top - px)) }
+    }
     @Test fun priceWatch() { tap("Price watch"); shot("prices") }
     @Test fun friends() { tap("Friends"); shot("friends") }
     @Test fun messages() { tap("Messages"); shot("messages") }

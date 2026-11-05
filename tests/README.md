@@ -12,7 +12,7 @@ The last line must say `ALL SUITES OK`. Each suite also exits with an error code
 
 | Folder | What it checks | Checks |
 |---|---|---|
-| `parse/parse_test.js` | `web/parse.js` reads product pages (prices, currencies, Amazon, JSON-LD, Funda, blocked pages); mirrors `Fetch.kt` | 54 |
+| `parse/parse_test.js` | `web/parse.js` reads product pages (prices, currencies, Amazon, JSON-LD, Funda, blocked pages); mirrors `Fetch.kt` | 63 |
 | `function/test.ts` | `supabase/functions/fetch-page/index.ts` in real Deno: private addresses, redirects, size and time limits, wrong keys, a group link as key | 101 |
 | `index-page/test.js` | `web/index.html` in jsdom: friends' page, invite page (Android vs. other devices), clipboard copy | 140 |
 | `e2e/t1.js` to `t6.js` | The browser editor `web/edit.html` in Chromium: viewing, the app-style top bar, side menu, category drop-down and sort menu, the three views, adding by link or by hand, editing one field, reservations (Reserve/Undo, someone faster, offline), delete/Undo, categories, list name and note, share dialog and the share picture with the list name, failed saves, sorting, search, offline copy, pictures, two people at once, old refresh answers, iPhone tip, invite redirects, the link-preview pages join/ and list/ and the friends' page of a shared list | 37 + 32 + 29 + 38 + 34 + 42 |

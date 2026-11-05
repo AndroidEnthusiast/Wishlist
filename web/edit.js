@@ -1556,7 +1556,7 @@
   }
 
   function mostUsedCurrency() {
-    var count = {}, best = "USD", n = 0;
+    var count = {}, best = P.localCurrency(), n = 0;
     (content ? content.items : []).forEach(function (w) {
       count[w.cur] = (count[w.cur] || 0) + 1;
       if (count[w.cur] > n) { n = count[w.cur]; best = w.cur; }

@@ -712,7 +712,7 @@
     var f = {
       url: edit ? edit.url || "" : "", title: edit ? edit.title || "" : "", desc: edit ? edit.desc || "" : "",
       image: edit ? edit.image || "" : "", price: edit && typeof edit.price === "number" ? edit.price.toFixed(2) : "",
-      cur: edit ? edit.cur || "EUR" : (lsGet("wl_cur") || "EUR"), note: edit ? edit.note || "" : ""
+      cur: edit ? edit.cur || "EUR" : (lsGet("wl_cur") || P.localCurrency()), note: edit ? edit.note || "" : ""
     };
     var blob = null, busy = false;
     var d = modal(edit ? T("Edit wish") : T("Add a wish"));
