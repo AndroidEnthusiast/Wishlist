@@ -29,9 +29,9 @@
   var INVITE_RE = /^[A-HJ-NP-Z2-9]{20}$/;
   // A shared wishlist is put together by several givers for someone else, so there is no "most wanted" here.
   var SORTS = [["new", "Newest first"], ["low", "Price: low to high"],
-    ["high", "Price: high to low"], ["az", "Name A–Z"]];
+    ["high", "Price: high to low"]]; // "Name A–Z" removed in 2.127 (owner), as in the app
   // Short names for the sort button when a sort is active (same as sortShortName in the app).
-  var SORT_SHORT = { low: "Price: low", high: "Price: high", az: "A–Z" };
+  var SORT_SHORT = { "new": "Newest", low: "Price: low", high: "Price: high" };
   // Rows (2.126, the default), Two per row, Large cards: the same order as the app.
   var VIEWS = ["rows", "grid", "list"];
   var VIEW_LABELS = { rows: "Rows", list: "Large cards", grid: "Two per row" };
@@ -812,8 +812,8 @@
     if (cat !== "All" && content.cats.indexOf(cat) < 0) cat = "All";
     $("catName").textContent = cat === "All" ? T("All") : cat;
     var sb = $("sortBtn");
-    sb.classList.toggle("on", sortBy !== "new");
-    $("sortName").textContent = SORT_SHORT[sortBy] ? T(SORT_SHORT[sortBy]) : "";
+    // The order always shows, also "Newest" (owner, 2.127), in the same plain style as the category button.
+    $("sortName").textContent = T(SORT_SHORT[sortBy] || "Newest");
     sb.setAttribute("aria-label", T("Sort: {0}", T((SORTS.filter(function (s2) { return s2[0] === sortBy; })[0] || SORTS[0])[1])));
   }
 

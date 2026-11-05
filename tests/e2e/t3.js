@@ -37,7 +37,7 @@ const settle = (t) => t.page.waitForFunction(() => window.__wl.pending() === 0);
   check("no Top wish sort", !(await t.page.evaluate(() => document.body.innerText)).includes("Top wishes first"));
   await t.page.locator("#sortBtn").click();
   const sorts = (await t.page.locator(".menu .mitem").allInnerTexts()).map(x => x.trim());
-  check("sort menu without Most wanted", JSON.stringify(sorts) === JSON.stringify(["Newest first", "Price: low to high", "Price: high to low", "Name A–Z"]), sorts);
+  check("sort menu without Most wanted", JSON.stringify(sorts) === JSON.stringify(["Newest first", "Price: low to high", "Price: high to low"]), sorts);
   await t.page.keyboard.press("Escape");
   check("no js errors", t.errors.length === 0, t.errors);
   await t.ctx.close();

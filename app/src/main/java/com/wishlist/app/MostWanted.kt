@@ -244,9 +244,9 @@ fun StarCorner(w: Wish, onToggle: (() -> Unit)?) {
  * the sparkles when it becomes most wanted.
  */
 @Composable
-fun StarToggle(starred: Boolean, onToggle: () -> Unit, modifier: Modifier = Modifier) {
+fun StarToggle(starred: Boolean, onToggle: () -> Unit, modifier: Modifier = Modifier, size: Dp = 34.dp) {
     val fx = rememberStarFx()
-    Box(modifier.size(34.dp).starSparkles(fx), contentAlignment = Alignment.Center) {
+    Box(modifier.size(size).starSparkles(fx), contentAlignment = Alignment.Center) {
         Box(
             Modifier.fillMaxSize().starPulse(fx).clip(CircleShape)
                 .background(if (starred) StarGold else Color.Black.copy(alpha = 0.45f))
@@ -254,7 +254,7 @@ fun StarToggle(starred: Boolean, onToggle: () -> Unit, modifier: Modifier = Modi
                 .clickable(role = Role.Button) { if (!starred) fx.play(); onToggle() },
             contentAlignment = Alignment.Center
         ) {
-            StarIcon(starred, if (starred) StarInk else Color.White, 20.dp)
+            StarIcon(starred, if (starred) StarInk else Color.White, size * 0.59f)
         }
     }
 }

@@ -68,27 +68,25 @@ private fun SortIcon(tint: Color) {
  */
 @Composable
 fun SortButton(mode: String, withStar: Boolean = true, onPick: (String) -> Unit) {
-    val cs = MaterialTheme.colorScheme
+    val look = LocalLook.current
     var open by remember { mutableStateOf(false) }
-    val changed = mode != "new"
+    // Always shows its order, also "Newest" (owner, 2.127: the default showed nothing while the others did), in the
+    // same chip as the category button next to it, so the two look alike and line up.
     Box {
         Row(
-            Modifier.height(44.dp).defaultMinSize(minWidth = 44.dp).clip(RoundedCornerShape(12.dp))
-                .background(if (changed) cs.primaryContainer else Color.Transparent)
-                .semantics { contentDescription = if (changed) tr("Sort: %s", tr(sortShortName(mode))) else tr("Sort") }
+            Modifier.height(40.dp).lookChip(look)
+                .semantics { contentDescription = tr("Sort: %s", tr(sortShortName(mode))) }
                 .clickable { open = true }
-                .padding(horizontal = if (changed) 12.dp else 11.dp),
+                .padding(start = 10.dp, end = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            SortIcon(if (changed) cs.onPrimaryContainer else cs.onSurfaceVariant)
-            if (changed) {
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    tr(sortShortName(mode)), style = MaterialTheme.typography.labelLarge,
-                    color = cs.onPrimaryContainer, maxLines = 1
-                )
-            }
+            SortIcon(look.chipContent(false))
+            Spacer(Modifier.width(6.dp))
+            Text(
+                tr(sortShortName(mode)), style = MaterialTheme.typography.labelLarge,
+                color = look.chipContent(false), maxLines = 1, softWrap = false
+            )
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             // A shared list has no "most wanted", so it can't be sorted by it either.

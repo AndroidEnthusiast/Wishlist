@@ -10,8 +10,8 @@ val SORT_OPTIONS: List<Pair<String, String>> = listOf(
     "new" to "Newest first",
     "star" to "Top wishes first",
     "low" to "Price: low to high",
-    "high" to "Price: high to low",
-    "az" to "Name A–Z"
+    "high" to "Price: high to low"
+    // "Name A–Z" was removed in 2.127 (owner); a saved "az" opens as Newest first.
 )
 
 /** Short names for the sort button when a sort is active. */
@@ -19,7 +19,6 @@ fun sortShortName(mode: String): String = when (mode) {
     "star" -> "Top wishes"
     "low" -> "Price: low"
     "high" -> "Price: high"
-    "az" -> "A–Z"
     else -> "Newest"
 }
 

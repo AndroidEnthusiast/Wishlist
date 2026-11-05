@@ -1194,9 +1194,12 @@ fun HomeScreen(
                                 )
                             }
                         }
+                        // Room between the category and the sort button (owner, 2.127: they touched).
+                        Spacer(Modifier.width(8.dp))
                         SortButton(sortMode, withStar = !inShared) { Repo.setSort(ctx, it) }
+                        Spacer(Modifier.width(8.dp))
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         // Rows first (owner, 2.126), then Two per row, then Large cards.
                         ViewButton("rows", tr("Rows"), view == "rows") { Repo.setView(ctx, "rows") }
                         ViewButton("grid", tr("Two per row"), view == "grid") { Repo.setView(ctx, "grid") }
@@ -1257,10 +1260,13 @@ fun HomeScreen(
                             ) { editing = w }
                             // The buttons of Rows and Large cards: Share, the eye (or Reserve on a gift list), Delete.
                             else -> {
+                            // Rows has smaller icons than the large cards (owner, 2.127: bigger than the private badge,
+                            // smaller than before); the tap area stays the same.
+                            val ico = if (view == "rows") 20.dp else 24.dp
                             val actions: @Composable RowScope.() -> Unit = {
                                 // Share instead of the pencil (owner, 2.105): Edit is in the long-press menu.
                                 IconButton(onClick = { shareItem(ctx, w) }) {
-                                    Icon(AppIcons.Share, tr("Share"), tint = look.cardMuted(w.id))
+                                    Icon(AppIcons.Share, tr("Share"), tint = look.cardMuted(w.id), modifier = Modifier.size(ico))
                                 }
                                 if (inShared) {
                                     // Reserving takes the place of "got it" on a shared list.
@@ -1272,10 +1278,10 @@ fun HomeScreen(
                                 } else {
                                     // Private on the card, owned in the long-press menu (owner, 2.113: private is changed
                                     // often while making a list, owned once when the gift has arrived).
-                                    PrivateToggle(w, look.cardMuted(w.id))
+                                    PrivateToggle(w, look.cardMuted(w.id), ico)
                                 }
                                 IconButton(onClick = { DeleteFlow.request(ctx, w) }) {
-                                    Icon(AppIcons.Delete, tr("Delete"), tint = look.cardMuted(w.id))
+                                    Icon(AppIcons.Delete, tr("Delete"), tint = look.cardMuted(w.id), modifier = Modifier.size(ico))
                                 }
                             }
                             if (view == "rows") RowCard(
@@ -1698,7 +1704,7 @@ fun RowCard(
                     horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     if (!w.got) {
-                        if (onStar != null) StarToggle(w.star, onStar)
+                        if (onStar != null) StarToggle(w.star, onStar, size = 28.dp)
                         else if (w.star) MostWantedBadge(false)
                     }
                     if (badge != null) StatusBadge(badge, small = true)
