@@ -306,5 +306,21 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Private eye** (owner, 2.126): open eye = visible, crossed-out eye = private, never blue.
 - **Shop browser** (owner, 2.126): "+ Add wish" always in colour. Bottom bar: more room around the + (own wider slot, labels one size smaller).
 - **Sorting** (owner, 2.127): no "Name A–Z". The sort button always names the order (also "Newest") and looks like the category button, with room between them. Rows' icons smaller than on large cards (bigger than the private badge).
+- **Review interview, 6 November 2026 (decided, not built yet; build in this order unless the owner says otherwise):**
+  - **#1 Giver reminder**: once, 7 days before a list's occasion, only to givers who reserved something there (push + Notifications page, tap opens the list). App only. Only lists with an occasion; a missed day is told once within 3 days after, never twice; a changed date counts as new.
+  - **#2 "Bought"**: no (owner: givers won't do the extra admin).
+  - **#3 Chip in**: not now, but **important: remind the owner** at the start of sessions until it is planned.
+  - **#4 Drawing names**: not now.
+  - **#5 Wish details**: Quantity (default 1, hidden); reserving a 2× wish asks "How many?", label "1 of 2 reserved" until all are taken (database change for app and web; old apps reserve all). One three-way choice: "Exactly this" / "Similar is fine" / nothing. The wish form becomes **one long scrolling page with small headings** (owner: don't hide or drop important fields; organise smartly).
+  - **#6 Received**: the day after a list's occasion, "Did you get any of your wishes?" with tick boxes (same catch-up rule as #1). Ticked wishes leave the list for friends; the giver who reserved it gets a **thank-you** ("Sam received the gift you reserved"), never the "pick another gift" message, and Sam never learns who.
+  - **#7 List kinds**: a short line under each Home section title.
+  - **#8 New lists**: the side menu's three "New …" items become one "New list" that opens a Create screen with three choices (My wishlist / Gift list / Group, one line each).
+  - **#9 Automatic backup**: not now.
+  - **#10 Chat**: keep and grow it: fix the photo and gift buttons' alignment with the text box, add reactions (long press) and replies (swipe to quote). Old apps: a reply shows as a normal message, a reaction as nothing.
+  - **#11 "What you see" switches**: keep as they are.
+  - **#12 Texts**: shorten every long text in the app; show the owner a before/after list in chat before pushing.
+  - **Private note about a friend**: one free text field on a friend's page, only on this phone (included in Backup), never online.
+  - **Sizes on the profile**: clothing and shoes; friends see them on your page and on the friends' web page; a wish's own size still wins.
+  - **Not now**: "Wrapped"-style gift overview (needs more thought), wishes without a link (photo / money towards), gift ideas per friend.
 - **Risks first** (owner, 5 November 2026): with every feature, think of what could spoil the experience and ask with options to mitigate it; fix for every case, not only the example reported.
 - **Occasions (first decision)**: in the New wishlist form, pick an occasion or type your own; only after picking one, ask for the date (not both at once). Own lists: Birthday (date from your profile when set), Christmas and Sinterklaas (dates fill themselves), Your own…. Gift lists: Birthday, Valentine's Day, Mother's Day, Father's Day, Anniversary, Your own…. Friends see "Birthday · in 3 weeks" at the top of the list. Very little text (owner).
