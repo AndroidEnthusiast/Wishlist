@@ -141,7 +141,10 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - Then: **v2.114 Find a gift** (row of 20 shops on Home, shop opens in the app, Add to wishlist reads the page). GitHub Pages timed out three times this evening; the workflow now waits 30 minutes, after which it published at once.
 
+- 5 November: **v2.115** shop icons. On the owner's phone 8 shops showed no icon (Zalando white, Coolblue a letter, de Bijenkorf, Decathlon, Douglas, Blokker, H&M, Bever); now the homepage's own icon, then Google's icon service, on light grey tiles. The shops' sites can't be reached from the Claude sandbox, so this wasn't seen working.
+
 ## Next session
+- **Shop icons (2.115)**: ask whether all 20 icons now show.
 - **Check Find a gift (2.114) on the phone**: do the shop icons load (some sites may only give the letter tile), do the shops work inside the app (cookie banners, logins, Amazon), does Add to wishlist read the product (title, picture, price) on each shop? Shops that read badly need a fix in `parsePage` (and `web/parse.js`, same logic). Affiliate links: owner wants to discuss later.
 - **Check 2.111 on the phone**: the pinned top while scrolling (both views, with and without a cover photo, own list and gift list: no jump or double menu), the pulse when adding/deleting a wish, the "Saved!" lines, the long-press menu size, "Owned by you".
 - **Check 2.110 on the phone**: the ⋮ on a cover (Change, Delete, Undo), Edit categories from the + form and from sharing a link (own list and gift list; counts; warning; rename keeps the picked category), Home order after opening lists, the back arrow (and that the menu button is gone only on an open list).

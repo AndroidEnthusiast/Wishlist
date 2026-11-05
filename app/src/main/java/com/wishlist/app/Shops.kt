@@ -55,6 +55,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
+import androidx.compose.runtime.LaunchedEffect
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONArray
@@ -71,8 +74,9 @@ import kotlin.coroutines.resume
  * block the app's own requests.
  *  - A starter list of 20 shops in the Netherlands (owner's choice); "Add shop" adds your own, a long press removes one.
  *    The list is kept on this phone ("shops" in the preferences), not online.
- *  - Each shop shows the small icon its own website publishes, loaded live like a browser bookmark (owner's choice; we
- *    never copy logos into the app). When it can't be loaded, a coloured tile with the first letter shows.
+ *  - Each shop shows the icon its own website publishes, loaded live like a browser bookmark (owner's choice; we never
+ *    copy logos into the app), with Google's icon service as the last resort (2.115, see [ShopIcons]). When nothing
+ *    loads, a coloured tile with the first letter shows.
  *  - App only: a web page can't show other shops inside itself; browser users keep pasting links (owner's choice).
  *  - Plain links, no affiliate codes (owner: maybe discuss later).
  */
@@ -200,21 +204,75 @@ fun FindAGiftRow(onFound: (String, Meta?) -> Unit) {
 }
 
 /**
- * The shop's own small icon from its website (a big "apple-touch-icon" first, else the "favicon"), or a coloured tile
- * with its first letter when neither loads.
+ * Where a shop's icon comes from (owner, 2.115: eight of the twenty didn't load). First the icon the shop's homepage
+ * itself names (what a browser shows on its tab: an apple-touch-icon, else the largest icon; SVG skipped, the app can't
+ * draw it), then the standard /apple-touch-icon.png, then Google's free icon service (it only gets the shop's web
+ * address). What the homepage named is remembered on the phone, so it is looked up once (again after a week if the
+ * homepage couldn't be read).
+ */
+object ShopIcons {
+    private const val UA =
+        "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
+    private const val WEEK = 7L * 24 * 60 * 60 * 1000
+    private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
+
+    fun google(host: String) = "https://www.google.com/s2/favicons?domain=$host&sz=128"
+
+    /** The icon the homepage names, or null. Known answers come straight from the phone's memory. */
+    suspend fun declared(c: Context, s: Shop): String? {
+        val key = "shopicon_" + s.host
+        val saved = prefs(c).getString(key, null)
+        if (saved != null) {
+            if (saved.startsWith("http")) return saved
+            val at = saved.substringAfter("none|", "0").toLongOrNull() ?: 0L
+            if (System.currentTimeMillis() - at < WEEK) return null
+        }
+        val found = withContext(Dispatchers.IO) {
+            try {
+                val d = Jsoup.connect(s.url).userAgent(UA).timeout(8000).followRedirects(true).get()
+                val links = d.select("link[rel][href]").filter { l ->
+                    val rel = l.attr("rel").lowercase()
+                    rel.contains("icon") && !l.attr("href").lowercase().substringBefore('?').endsWith(".svg") &&
+                        l.attr("type").lowercase() != "image/svg+xml" && rel != "mask-icon"
+                }
+                fun size(l: org.jsoup.nodes.Element): Int =
+                    Regex("(\\d+)x\\d+").find(l.attr("sizes"))?.groupValues?.get(1)?.toIntOrNull() ?: 0
+                val apple = links.filter { it.attr("rel").lowercase().contains("apple-touch-icon") }.maxByOrNull { size(it) }
+                (apple ?: links.maxByOrNull { size(it) })?.absUrl("href")?.takeIf { it.startsWith("http") }
+            } catch (e: Exception) {
+                null
+            }
+        }
+        prefs(c).edit().putString(key, found ?: ("none|" + System.currentTimeMillis())).apply()
+        return found
+    }
+}
+
+/**
+ * The shop's own icon (see [ShopIcons]) on a light grey tile (2.115: white icons vanished on white), or a coloured
+ * tile with its first letter when none loads.
  */
 @Composable
 fun ShopIcon(s: Shop, sizeDp: Int) {
+    val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     val base = try { URI(s.url).let { "${it.scheme}://${it.host}" } } catch (e: Exception) { "" }
-    val tries = listOf("$base/apple-touch-icon.png", "$base/favicon.ico")
+    // null while the homepage is being asked; then the list of addresses to try in turn.
+    var tries by remember(s.url) { mutableStateOf<List<String>?>(null) }
     var at by remember(s.url) { mutableIntStateOf(0) }
+    LaunchedEffect(s.url) {
+        val d = ShopIcons.declared(ctx, s)
+        tries = listOfNotNull(d, "$base/apple-touch-icon.png", ShopIcons.google(s.host)).distinct()
+    }
+    val list = tries
     Box(
-        Modifier.size(sizeDp.dp).clip(RoundedCornerShape(14.dp)).background(Color.White),
+        Modifier.size(sizeDp.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xFFEDEDF0)),
         contentAlignment = Alignment.Center
     ) {
-        if (base.isNotEmpty() && at < tries.size) AsyncImage(
-            model = tries[at], contentDescription = null, contentScale = ContentScale.Fit,
+        if (list == null) {
+            // Still looking: the plain tile.
+        } else if (base.isNotEmpty() && at < list.size) AsyncImage(
+            model = list[at], contentDescription = null, contentScale = ContentScale.Fit,
             onError = { at++ },
             modifier = Modifier.fillMaxSize().padding(6.dp)
         ) else Box(
