@@ -32,6 +32,8 @@ Notes
 
 ## App screenshots and shop icons (Android, since 5 November 2026)
 
+**Not in use:** they need Network access "Full", which the owner switched off again on 5 November 2026 (too slow). Only run them if the owner turns it on and asks.
+
 These run the real app code on a computer (Robolectric), not on a phone. A fresh cloud computer needs the Android SDK first (Network access must be "Full"): `bash tests/android-setup.sh` (about 1 minute). Maven Central answers cloud computers with "429 Too Many Requests", so the setup script also points Gradle on this computer (not the GitHub build) at Google's exact copy of Maven Central; with it, a build from an empty cache downloaded everything without one error (5 November 2026).
 
 - `gradle assembleDebug`: compiles the app (catches Kotlin errors before GitHub does).
