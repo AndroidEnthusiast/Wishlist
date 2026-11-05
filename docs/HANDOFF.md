@@ -149,6 +149,8 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - 5 November: **v2.118**: sharp icons (manifest icons, small ones skipped), the first product photo, the add form's tip removed. The owner was told how to switch the environment's Network access to Full, so the next session can install the Android SDK (compile before pushing), add Roborazzi screenshot tests and check the real shops before building.
 
+- 5 November: **v2.119**: fixed 2.118's icon bug (six shops lost their icon).
+
 ## Next session
 - **First, if Network access is Full now**: install the Android SDK (dl.google.com), make `gradle assembleDebug` work here, add Roborazzi screenshot tests for the main screens and a script that runs the app's icon finding and page reading against the 20 shops. Then compile and look at screenshots before every push (owner: fewer rounds of phone testing). Not possible here: an emulator (no /dev/kvm).
 - **Shops (2.116)**: ask whether Zalando's icon shows, whether icons are sharp, whether the picture is filled in on Add for each shop, and whether Back/✕ feel right.

@@ -237,21 +237,24 @@ object ShopIcons {
     // away and back shows the same icon at once.
     private val rejected = HashSet<String>()
 
-    fun accepted(c: Context, host: String): String? = prefs(c).getString("shopiconok2_$host", null)
+    fun accepted(c: Context, host: String): String? = prefs(c).getString("shopiconok3_$host", null)
 
     fun accept(c: Context, host: String, url: String) {
-        if (accepted(c, host) != url) prefs(c).edit().putString("shopiconok2_$host", url).apply()
+        if (accepted(c, host) != url) prefs(c).edit().putString("shopiconok3_$host", url).apply()
     }
 
     fun reject(c: Context, host: String, url: String) {
         rejected.add(url)
-        if (accepted(c, host) == url) prefs(c).edit().remove("shopiconok2_$host").apply()
+        if (accepted(c, host) == url) prefs(c).edit().remove("shopiconok3_$host").apply()
     }
 
     fun isRejected(url: String) = url in rejected
 
-    /** Icons smaller than this (pixels) look blurry on a 52 dp tile. */
-    const val SHARP = 96
+    /**
+     * Icons smaller than this (pixels) look blurry on a 52 dp tile (2.119: 64, not 96; 96 also passed over icons that
+     * looked fine, like Amazon's and HEMA's).
+     */
+    const val SHARP = 64
 
     /**
      * True when a loaded icon would look empty on the tile: almost all of it see-through or white (2.116: Zalando's
@@ -285,7 +288,7 @@ object ShopIcons {
         val found = withContext(Dispatchers.IO) {
             val out = ArrayList<String>()
             try {
-                val d = Jsoup.connect(s.url).userAgent(UA).timeout(8000).followRedirects(true).get()
+                val d = Jsoup.connect(s.url).userAgent(UA).timeout(5000).followRedirects(true).get()
                 fun notSvg(href: String, type: String) =
                     !href.lowercase().substringBefore('?').endsWith(".svg") && !type.lowercase().contains("svg")
                 fun sizeOf(sizes: String): Int =
@@ -293,7 +296,7 @@ object ShopIcons {
                 // 1. The web app manifest.
                 d.selectFirst("link[rel=manifest][href]")?.absUrl("href")?.takeIf { it.startsWith("http") }?.let { mu ->
                     try {
-                        val body = Jsoup.connect(mu).userAgent(UA).timeout(8000).ignoreContentType(true).execute().body()
+                        val body = Jsoup.connect(mu).userAgent(UA).timeout(5000).ignoreContentType(true).execute().body()
                         val icons = JSONObject(body).optJSONArray("icons")
                         if (icons != null) {
                             val list = (0 until icons.length()).mapNotNull { icons.optJSONObject(it) }
@@ -366,10 +369,12 @@ fun ShopIcon(s: Shop, sizeDp: Int) {
                 // the biggest of these in case no sharp one exists at all.
                 val px = minOf(dr.intrinsicWidth, dr.intrinsicHeight)
                 if (b != null && ShopIcons.looksEmpty(b)) { ShopIcons.reject(ctx, s.host, url); at++ }
-                else if (px in 1 until ShopIcons.SHARP && url != bestSmall) {
+                else if (px in 1 until ShopIcons.SHARP && url != bestSmall && url != ShopIcons.accepted(ctx, s.host)) {
+                    // Not thrown away (2.119: in 2.118 it was, so shops whose best icon is a little small showed
+                    // nothing after scrolling): kept as the fallback while a sharper one is looked for.
                     if (px > bestSmallPx) { bestSmall = url; bestSmallPx = px }
-                    ShopIcons.reject(ctx, s.host, url); at++
-                } else if (px == 0 || px >= ShopIcons.SHARP) ShopIcons.accept(ctx, s.host, url)
+                    at++
+                } else ShopIcons.accept(ctx, s.host, url) // sharp, or the best there is: remembered
             },
             modifier = Modifier.fillMaxSize().padding(6.dp)
         ) else Box(
