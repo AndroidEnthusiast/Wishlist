@@ -283,3 +283,4 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Default style only, light and dark** (owner): not all five styles.
 - **Show the owner pictures only when an update changes how a screen looks**, and keep it cheap in tokens (owner): only the screens that changed, as one small before/after picture, not every screen every time.
 - **No product-page check of the shops for now** (owner): from the cloud only about 9 of the 20 shops open, so products are tested on the phone.
+- **Full network access stays only if downloads work smoothly** (owner: "if Maven Central is ruining the full network access experience I don't want it"). Fixed the same day: `tests/android-setup.sh` makes Gradle on the cloud computer download from Google's copy of Maven Central. If downloads fail again, fix it or tell the owner plainly; switching Network access back means no compiling or screenshots here.

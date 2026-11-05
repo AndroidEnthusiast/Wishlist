@@ -32,7 +32,7 @@ Notes
 
 ## App screenshots and shop icons (Android, since 5 November 2026)
 
-These run the real app code on a computer (Robolectric), not on a phone. A fresh cloud computer needs the Android SDK first (Network access must be "Full"): `bash tests/android-setup.sh` (about 1 minute). Maven Central sometimes answers "429 Too Many Requests" on the first build; just run the command again.
+These run the real app code on a computer (Robolectric), not on a phone. A fresh cloud computer needs the Android SDK first (Network access must be "Full"): `bash tests/android-setup.sh` (about 1 minute). Maven Central answers cloud computers with "429 Too Many Requests", so the setup script also points Gradle on this computer (not the GitHub build) at Google's exact copy of Maven Central; with it, a build from an empty cache downloaded everything without one error (5 November 2026).
 
 - `gradle assembleDebug`: compiles the app (catches Kotlin errors before GitHub does).
 - `gradle testDebugUnitTest`: `app/src/test/.../ScreenshotTest.kt` opens the app with five sample wishes and saves Home, a list, All your wishes, the Add form, Price watch, Friends and Messages, light and dark (default style only, owner's choice), in `app/build/outputs/roborazzi/` (not committed). About 3 minutes. The pictures are close but not exact: Google Fonts don't download (a standard font is used), shop icons may be missing, no real phone, nothing moves. Look only at the screens your change touches, made small (owner: keep it cheap), and send the owner a small before/after picture when the look changed.
