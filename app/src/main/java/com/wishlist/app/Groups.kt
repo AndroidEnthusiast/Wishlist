@@ -175,7 +175,10 @@ object Groups {
         val told = p.getStringSet("gr_inv_told", null)?.toSet() ?: emptySet()
         for (v in ins) if (v.group !in told) {
             val who = v.byName.ifBlank { tr("Someone") }
-            if (!onScreen) Alerts.notifyGroup(c, v.group, tr("%1\$s invited you to “%2\$s”", who, v.name), tr("Pick the wishlist you want to bring, then join."))
+            if (!onScreen) Alerts.notifyGroup(
+                c, v.group, tr("%1\$s invited you to “%2\$s”", who, v.name), tr("Pick the wishlist you want to bring, then join."),
+                "group_invite", "g:" + v.group
+            )
             Notifications.add(c, "group_invite", "g:" + v.group, v.name, extra = who, read = onScreen)
         }
         p.edit().putStringSet("gr_inv_told", ins.map { it.group }.toSet()).apply()
@@ -193,7 +196,7 @@ object Groups {
                 }
                 "removed" -> {
                     // Always a notification: you might not be looking at the group when it goes (owner).
-                    Alerts.notifyGroup(c, "", tr("You are removed from “%s”", name), tr("The organiser removed you from this wishlist group."))
+                    Alerts.notifyGroup(c, "", tr("You are removed from “%s”", name), tr("The organiser removed you from this wishlist group."), "group_removed", "x:$gid")
                     Notifications.add(c, "group_removed", "x:$gid", name, read = onScreen)
                 }
             }

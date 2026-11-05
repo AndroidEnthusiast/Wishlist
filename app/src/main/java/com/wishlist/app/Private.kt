@@ -48,6 +48,35 @@ val PrivateIcon: ImageVector by lazy {
     ).build()
 }
 
+/**
+ * The open eye: "friends can see this wish" (owner, 2.126: the card's button shows an open eye on a visible wish and the
+ * crossed-out eye on a private one, never in blue). Google's Material icon "visibility" (outlined), Apache 2.0.
+ */
+val VisibleIcon: ImageVector by lazy {
+    ImageVector.Builder("visibility", 24.dp, 24.dp, 24f, 24f).addPath(
+        addPathNodes(
+            "M12 6c3.79 0 7.17 2.13 8.82 5.5C19.17 14.87 15.79 17 12 17s-7.17-2.13-8.82-5.5C4.83 8.13 8.21 6 12 6m0-2" +
+                "C7 4 2.73 7.11 1 11.5 2.73 15.89 7 19 12 19s9.27-3.11 11-7.5C21.27 7.11 17 4 12 4zm0 5c1.38 0 2.5 1.12" +
+                " 2.5 2.5S13.38 14 12 14s-2.5-1.12-2.5-2.5S10.62 9 12 9m0-2c-2.48 0-4.5 2.02-4.5 4.5S9.52 16 12 16" +
+                "s4.5-2.02 4.5-4.5S14.48 7 12 7z"
+        ),
+        fill = SolidColor(Color.Black)
+    ).build()
+}
+
+/** The private-or-visible button on a wish (large cards and Rows): the eye that says how it is now. */
+@Composable
+fun PrivateToggle(w: Wish, tint: Color) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    androidx.compose.material3.IconButton(onClick = { togglePrivate(ctx, w) }) {
+        Icon(
+            if (w.priv) PrivateIcon else VisibleIcon,
+            if (w.priv) tr("Private wish. Make visible to friends") else tr("Visible to friends. Make private"),
+            tint = tint
+        )
+    }
+}
+
 /** The round badge in the top left corner of a private wish, in both views. */
 @Composable
 fun PrivateBadge(modifier: Modifier = Modifier, size: Dp = 18.dp, onClick: (() -> Unit)? = null) {

@@ -26,6 +26,9 @@ const PAGES = {
   sheet: `${PRODUCTS}<div id="veil" style="${VEIL}"></div><div id="m" style="position:fixed;bottom:0;left:0;right:0;height:40%;background:#fff;z-index:100">Delivery <button>OK</button></div>`,
   drawer: `${PRODUCTS}<div id="veil" style="${VEIL}"></div><nav id="m" style="position:fixed;top:0;bottom:0;left:0;width:75%;background:#fff;z-index:100">Menu <a href="/x">Toys</a></nav>`,
   invisible: `${PRODUCTS}<div id="veil" style="position:fixed;inset:0;z-index:99"></div>`,
+  // bol.com after 2.125: a grey layer plus an invisible one on top that waits for a tap to close the pop-up.
+  catcher: `<style>body{overflow:hidden}</style>${PRODUCTS}<div id="veil" style="${VEIL}"></div><div id="catch" style="position:fixed;inset:0;z-index:100"></div><script>document.getElementById('catch').addEventListener('click',function(){window.closedBySite=1;document.getElementById('veil').remove();this.remove();document.body.style.overflow='auto';});</script>`,
+  deafCatcher: `${PRODUCTS}<div id="veil" style="${VEIL}"></div><div id="catch" style="position:fixed;inset:0;z-index:100"></div>`,
   veilWithText: `${PRODUCTS}<div id="veil" style="${VEIL};color:#fff">Loading your basket…</div>`,
 };
 (async () => {
@@ -53,7 +56,8 @@ const PAGES = {
   // ---- empty layers ----
   await open(PAGES.veil);
   check("guard installs once", (await guard()) === "on" && (await guard()) === "on");
-  check("empty grey layer hidden at once", !(await shown("#veil")));
+  await sleep(300);
+  check("empty grey layer hidden (after one tap on it)", !(await shown("#veil")));
   check("scrolling back on", (await p.evaluate(() => getComputedStyle(document.body).overflow)) === "auto");
   await p.click("#buy");
   check("the page can be tapped", (await p.evaluate(() => window.bought)) === 1);
@@ -72,6 +76,7 @@ const PAGES = {
 
   await open(PAGES.fixedbody);
   await guard();
+  await sleep(300);
   check("body pinned by the shop: unpinned", !(await shown("#veil")) && (await p.evaluate(() => getComputedStyle(document.body).position)) === "static");
 
   await open(PAGES.late);
@@ -80,6 +85,21 @@ const PAGES = {
   await p.evaluate(() => { const v = document.createElement("div"); v.id = "veil"; v.style.cssText = "position:fixed;inset:0;background:rgba(80,80,80,.5);z-index:99"; document.body.appendChild(v); });
   await sleep(250);
   check("layer that appears after loading: hidden", !(await shown("#veil")));
+
+  // the invisible layer that waits for a tap: tapped by the guard, so the shop closes its pop-up itself
+  await open(PAGES.catcher);
+  await guard();
+  await sleep(500);
+  check("invisible layer over a grey one: tapped once, the shop closes its pop-up", (await p.evaluate(() => window.closedBySite)) === 1);
+  let tapped = true;
+  try { await p.click("#buy", { timeout: 1500 }); } catch (e) { tapped = false; }
+  check("then the first real tap reaches the page", tapped && (await p.evaluate(() => window.bought)) === 1);
+  await open(PAGES.deafCatcher);
+  await guard();
+  await sleep(600);
+  tapped = true;
+  try { await p.click("#buy", { timeout: 1500 }); } catch (e) { tapped = false; }
+  check("an invisible layer that ignores the tap: hidden, the page can be tapped", tapped && !(await shown("#catch")));
 
   for (const [k, what] of [["modal", "a pop-up in the middle"], ["sheet", "a sheet at the bottom"], ["drawer", "a side menu"]]) {
     await open(PAGES[k]);

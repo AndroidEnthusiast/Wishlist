@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.ui.draw.drawWithContent
@@ -194,6 +195,8 @@ class MainActivity : ComponentActivity() {
         const val OPEN_FRIEND = "open_friend"
         /** A wishlist group alert (2.108): the group (or invite) to open, or "" for just the app. */
         const val OPEN_GROUP = "open_group"
+        /** A "gift you reserved is no longer on …" alert (2.126): where to go, as on the Notifications page ("c:"/"s:"). */
+        const val OPEN_NOTE = "open_note"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -259,6 +262,17 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handle(i: Intent?) {
+        // A tapped push notification: its line on the Notifications page is seen already (owner, 2.126: no red dot).
+        if (i != null && i.hasExtra(Alerts.NOTE_KIND)) {
+            val kind = i.getStringExtra(Alerts.NOTE_KIND).orEmpty()
+            if (kind.isNotEmpty()) Notifications.markRead(this, kind, i.getStringExtra(Alerts.NOTE_LIST).orEmpty(), i.getLongExtra(Alerts.NOTE_ID, 0L))
+            i.removeExtra(Alerts.NOTE_KIND)
+        }
+        if (i != null && i.hasExtra(OPEN_NOTE)) {
+            NoteNav.key = i.getStringExtra(OPEN_NOTE)
+            i.removeExtra(OPEN_NOTE)
+            return
+        }
         if (i != null && i.hasExtra(HISTORY_ID)) {
             HistoryNav.open = i.getLongExtra(HISTORY_ID, 0L)
             i.removeExtra(HISTORY_ID)
@@ -510,6 +524,30 @@ fun App(
                 snack.showToast(tr("Couldn’t reach the server. Check your connection."))
             }
         }
+    }
+
+    /**
+     * Opens where a notification happened (the Notifications page, or a tapped push): the list the wish is on, a
+     * friend's list, Friends, that friend, or a group invitation.
+     */
+    fun openNote(key: String) {
+        notesOpen = false; profileOpen = false
+        when {
+            key.startsWith("m:") -> key.removePrefix("m:").takeIf { it in Repo.mineIds }?.let { openMine(it) }
+            key.startsWith("s:") -> {
+                val code = key.removePrefix("s:")
+                if (Shared.lists.any { it.code == code }) openGroup(code)
+                else scope.launch { snack.showToast(tr("That gift list isn’t on this phone any more.")) }
+            }
+            key.startsWith("c:") -> openFriend(key.removePrefix("c:"))
+            key.startsWith("r:") -> { FriendsNav.reset(); friendsOpen = true }
+            key.startsWith("p:") -> { FriendsNav.reset(); FriendsNav.person = key.removePrefix("p:"); friendsOpen = true }
+            key.startsWith("g:") -> GroupNav.openInvite(key.removePrefix("g:"), null)
+        }
+    }
+    // A tapped "gift you reserved is no longer on …" push (2.126) opens that list.
+    LaunchedEffect(NoteNav.key) {
+        NoteNav.key?.let { k -> NoteNav.key = null; openNote(k) }
     }
 
     // The welcome comes first on the very first start (Welcome.kt); the permission questions after it.
@@ -796,18 +834,7 @@ fun App(
                 listSettings -> key(Shared.active, Repo.openMine) {
                     ListSettingsScreen(snack, onDeleted = { listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false; hub = true }) { listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false }
                 }
-                notesOpen -> NotificationsScreen(snack) { key ->
-                    notesOpen = false; profileOpen = false
-                    // Opens where it happened: the list the wish is on, a friend's list, Friends, or that friend.
-                    when {
-                        key.startsWith("m:") -> key.removePrefix("m:").takeIf { it in Repo.mineIds }?.let { openMine(it) }
-                        key.startsWith("s:") -> key.removePrefix("s:").takeIf { k -> Shared.lists.any { it.code == k } }?.let { openGroup(it) }
-                        key.startsWith("c:") -> openFriend(key.removePrefix("c:"))
-                        key.startsWith("r:") -> { FriendsNav.reset(); friendsOpen = true }
-                        key.startsWith("p:") -> { FriendsNav.reset(); FriendsNav.person = key.removePrefix("p:"); friendsOpen = true }
-                        key.startsWith("g:") -> GroupNav.openInvite(key.removePrefix("g:"), null)
-                    }
-                }
+                notesOpen -> NotificationsScreen(snack) { key -> openNote(key) }
                 pricesOpen -> PricesScreen(snack, onProfile = { profileOpen = true })
                 friendsOpen -> FriendsScreen(snack, onProfile = { profileOpen = true }, onOpenLink = { friendCode = it })
                 messagesOpen -> MessagesScreen(snack, onProfile = { profileOpen = true })
@@ -1170,8 +1197,10 @@ fun HomeScreen(
                         SortButton(sortMode, withStar = !inShared) { Repo.setSort(ctx, it) }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        ViewButton("list", tr("Large cards"), view == "list") { Repo.setView(ctx, "list") }
+                        // Rows first (owner, 2.126), then Two per row, then Large cards.
+                        ViewButton("rows", tr("Rows"), view == "rows") { Repo.setView(ctx, "rows") }
                         ViewButton("grid", tr("Two per row"), view == "grid") { Repo.setView(ctx, "grid") }
+                        ViewButton("list", tr("Large cards"), view == "list") { Repo.setView(ctx, "list") }
                     }
                 }
             }
@@ -1205,7 +1234,7 @@ fun HomeScreen(
                     )
                 }
             } else {
-                val gap = if (view == "grid") 12.dp else 16.dp
+                val gap = if (view == "list") 16.dp else 12.dp
                 LazyVerticalGrid(
                     state = gridState,
                     columns = if (view == "grid") GridCells.Fixed(2) else GridCells.Adaptive(300.dp),
@@ -1226,14 +1255,9 @@ fun HomeScreen(
                                 reserve = if (inShared) Reserving(r) { on -> Shared.reserve(w, on) } else null,
                                 onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) })
                             ) { editing = w }
-                            else -> WishCard(
-                                w,
-                                badge = if (inShared) reservedLabel(r) else if (w.got) tr("Owned") else null,
-                                dim = if (inShared) r == false else w.got,
-                                onLongPress = { openMenu(w) },
-                                onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
-                                onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) })
-                            ) {
+                            // The buttons of Rows and Large cards: Share, the eye (or Reserve on a gift list), Delete.
+                            else -> {
+                            val actions: @Composable RowScope.() -> Unit = {
                                 // Share instead of the pencil (owner, 2.105): Edit is in the long-press menu.
                                 IconButton(onClick = { shareItem(ctx, w) }) {
                                     Icon(AppIcons.Share, tr("Share"), tint = look.cardMuted(w.id))
@@ -1248,16 +1272,29 @@ fun HomeScreen(
                                 } else {
                                     // Private on the card, owned in the long-press menu (owner, 2.113: private is changed
                                     // often while making a list, owned once when the gift has arrived).
-                                    IconButton(onClick = { togglePrivate(ctx, w) }) {
-                                        Icon(
-                                            PrivateIcon, if (w.priv) tr("Make visible to friends") else tr("Make private"),
-                                            tint = if (w.priv) cs.primary else look.cardMuted(w.id)
-                                        )
-                                    }
+                                    PrivateToggle(w, look.cardMuted(w.id))
                                 }
                                 IconButton(onClick = { DeleteFlow.request(ctx, w) }) {
                                     Icon(AppIcons.Delete, tr("Delete"), tint = look.cardMuted(w.id))
                                 }
+                            }
+                            if (view == "rows") RowCard(
+                                w,
+                                badge = if (inShared) reservedLabel(r) else if (w.got) tr("Owned") else null,
+                                dim = if (inShared) r == false else w.got,
+                                onLongPress = { openMenu(w) },
+                                onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
+                                onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) }),
+                                actions = actions
+                            ) else WishCard(
+                                w,
+                                badge = if (inShared) reservedLabel(r) else if (w.got) tr("Owned") else null,
+                                dim = if (inShared) r == false else w.got,
+                                onLongPress = { openMenu(w) },
+                                onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
+                                onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) }),
+                                actions = actions
+                            )
                             }
                         }
                         }
@@ -1312,7 +1349,7 @@ fun ViewButton(kind: String, label: String, selected: Boolean, onClick: () -> Un
     }
 }
 
-/** Tiny drawn icons: two wide bars, a 2x2 grid, a 3x3 grid. */
+/** Tiny drawn icons that look like each view: Rows, Two per row (a 2x2 grid) and Large cards. */
 @Composable
 fun ViewIcon(kind: String, tint: Color) {
     Canvas(Modifier.size(22.dp)) {
@@ -1322,7 +1359,13 @@ fun ViewIcon(kind: String, tint: Color) {
             cornerRadius = CornerRadius(1.6f * u, 1.6f * u)
         )
         when (kind) {
-            "list" -> { box(3f, 4f, 18f, 7f); box(3f, 13f, 18f, 7f) }
+            // Large cards: one big picture with a line of text under it.
+            "list" -> { box(3f, 3f, 18f, 12f); box(3f, 17f, 18f, 2.5f); box(3f, 20.5f, 11f, 2.5f) }
+            // Rows: a small square with two lines next to it, twice.
+            "rows" -> {
+                box(3f, 3f, 8f, 8f); box(13f, 4f, 8f, 2.5f); box(13f, 7.5f, 5f, 2.5f)
+                box(3f, 13f, 8f, 8f); box(13f, 14f, 8f, 2.5f); box(13f, 17.5f, 5f, 2.5f)
+            }
             else -> { box(3f, 3f, 8f, 8f); box(13f, 3f, 8f, 8f); box(3f, 13f, 8f, 8f); box(13f, 13f, 8f, 8f) }
         }
     }
@@ -1429,12 +1472,8 @@ fun CompactCard(
                     w.title, style = MaterialTheme.typography.titleSmall,
                     maxLines = 2, overflow = TextOverflow.Ellipsis, color = ink
                 )
-                Text(
-                    if (newP != null) money(newP, w.currency) else tr("No price"),
-                    style = MaterialTheme.typography.titleMedium, fontWeight = look.priceWeight, fontFamily = look.display,
-                    maxLines = 1, color = if (drop) look.drop else if (rise) look.rise else ink,
-                    modifier = Modifier.padding(top = 2.dp, bottom = 6.dp)
-                )
+                // The old price crossed out next to it after a change (owner, 2.126).
+                PriceLine(w, MaterialTheme.typography.titleMedium, Modifier.padding(top = 2.dp, bottom = 6.dp))
                 // No "Added on" here (owner, 2.100): too busy on a list; it stays in Price watch.
             }
             Box {
@@ -1603,6 +1642,117 @@ fun WishCard(
             }
         }
         }
+    }
+}
+
+/**
+ * "Rows" (owner, 2.126; the default view for new installs): the picture on the left (a third of the width, square),
+ * on the right the shop and category, the name (two lines at most), the price with the old price crossed out after a
+ * change, and below them the buttons ([actions]: Share, the eye, Delete; on a gift list Share, Reserve, Delete). The
+ * Top wish star, Reserved / Owned and the private eye sit on the picture, as on the other views.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun RowCard(
+    w: Wish, badge: String? = null, dim: Boolean = false, onStar: (() -> Unit)? = null, onPrivate: (() -> Unit)? = null,
+    onLongPress: (() -> Unit)? = null, actions: @Composable RowScope.() -> Unit
+) {
+    val look = LocalLook.current
+    val ink = look.cardInk(w.id)
+    val muted = look.cardMuted(w.id)
+    val ui = LocalUriHandler.current
+    var viewing by remember { mutableStateOf(false) }
+    if (viewing) ImageViewer(w) { viewing = false }
+    val oldP = w.oldPrice
+    val newP = w.price
+    val drop = newP != null && oldP != null && oldP > newP
+    val rise = priceRose(w)
+    val label = listOf(host(w.url), w.category.takeIf { it.isNotBlank() && it != "All" })
+        .filter { !it.isNullOrBlank() }.joinToString(" · ")
+    Row(
+        Modifier.fillMaxWidth().alpha(if (dim) 0.6f else 1f).then(
+            if (onLongPress != null) Modifier.pointerInput(w.id) { detectTapGestures(onLongPress = { onLongPress() }) }
+            else Modifier
+        ).lookCard(look, w.id, look.cardShape(w.id, small = true)),
+        verticalAlignment = Alignment.Top
+    ) {
+        CompositionLocalProvider(LocalContentColor provides ink) {
+            Box(
+                Modifier.padding(look.inset(small = true)).fillMaxWidth(0.36f).aspectRatio(1f)
+                    .lookMat(look, look.pictureShape(w.id, small = true), look.pictureBg(w.id, w.image.isNotEmpty()), over = true)
+                    .combinedClickable(
+                        enabled = w.image.isNotEmpty() || w.url.isNotBlank() || onLongPress != null,
+                        onClickLabel = if (w.image.isNotEmpty()) tr("View picture") else null,
+                        onClick = {
+                            if (w.image.isNotEmpty()) viewing = true
+                            else if (w.url.isNotBlank()) { try { ui.openUri(w.url) } catch (e: Exception) { } }
+                        },
+                        onLongClick = onLongPress
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                if (w.image.isNotEmpty()) PhotoStage(w.image, w.title, small = true) else PlaceholderIcon("gift", 32.dp)
+                if (w.priv) PrivateBadge(Modifier.align(Alignment.BottomStart).padding(6.dp), size = 12.dp, onClick = onPrivate)
+                Column(
+                    Modifier.align(Alignment.TopEnd).padding(6.dp),
+                    horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    if (!w.got) {
+                        if (onStar != null) StarToggle(w.star, onStar)
+                        else if (w.star) MostWantedBadge(false)
+                    }
+                    if (badge != null) StatusBadge(badge, small = true)
+                }
+            }
+            Column(Modifier.weight(1f).padding(start = 4.dp, top = 10.dp, end = 8.dp, bottom = 2.dp)) {
+                Column(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).combinedClickable(
+                        enabled = w.url.isNotBlank() || onLongPress != null,
+                        onClickLabel = if (w.url.isNotBlank()) tr("View in shop") else null,
+                        onClick = { if (w.url.isNotBlank()) { try { ui.openUri(w.url) } catch (e: Exception) { } } },
+                        onLongClick = onLongPress
+                    )
+                ) {
+                    if (label.isNotEmpty()) Text(
+                        if (look.design == "cyber") label.uppercase() else label,
+                        style = MaterialTheme.typography.labelSmall, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis
+                    )
+                    Text(w.title, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis, color = ink)
+                    PriceLine(w, MaterialTheme.typography.titleMedium, Modifier.padding(top = 2.dp))
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                    actions()
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The price with, after a change, the old price crossed out next to it (owner, 2.126: also on Two per row and Rows,
+ * like the large cards). Wraps to a second line when both don't fit.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun PriceLine(w: Wish, style: androidx.compose.ui.text.TextStyle, modifier: Modifier = Modifier) {
+    val look = LocalLook.current
+    val ink = look.cardInk(w.id)
+    val oldP = w.oldPrice
+    val newP = w.price
+    val drop = newP != null && oldP != null && oldP > newP
+    val rise = priceRose(w)
+    FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.Center) {
+        Text(
+            if (newP != null) money(newP, w.currency) else tr("No price"),
+            style = style, fontWeight = look.priceWeight, fontFamily = look.display, maxLines = 1,
+            color = if (drop) look.drop else if (rise) look.rise else ink,
+            modifier = Modifier.alignByBaseline()
+        )
+        if ((drop || rise) && oldP != null) Text(
+            money(oldP, w.currency), style = MaterialTheme.typography.bodySmall, maxLines = 1,
+            textDecoration = TextDecoration.LineThrough, color = look.cardMuted(w.id),
+            modifier = Modifier.alignByBaseline()
+        )
     }
 }
 

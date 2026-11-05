@@ -12,14 +12,19 @@ const IOS = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/
   check("friends page: no js errors", t.errors.length === 0, t.errors);
   await t.ctx.close();
 
-  // 2.100: new visitors start with two per row, and a photo sits on a blur of itself (Blur stage) in both pages
+  // 2.126: new visitors start with Rows; a photo sits on a blur of itself (Blur stage) in both pages
   t = await boot({ goto: false, view: null });
   await t.page.goto(t.base + "?c=" + CODE);
   await t.page.waitForSelector(".card");
-  check("friends page: two per row by default", (await t.page.locator(".grid.two .card.compact").count()) === 3);
+  check("friends page: Rows by default", (await t.page.locator(".grid.rows .card.rowcard").count()) === 3);
+  await t.page.screenshot({ path: "shot_rows_friends.png" });
   await t.page.goto(t.url);
   await t.page.waitForSelector(".card");
-  check("editor: two per row by default", (await t.page.locator(".grid.two .card.compact").count()) === 3);
+  check("editor: Rows by default", (await t.page.locator(".grid.rows .card.rowcard").count()) === 3);
+  const rowBox = await t.page.evaluate(() => { const c = document.querySelector(".card.rowcard"), p = c.querySelector(".pic").getBoundingClientRect(), b = c.querySelector(".body").getBoundingClientRect(); return { picLeft: p.left < b.left, side: p.right <= b.left + 1, w: p.width / c.getBoundingClientRect().width }; });
+  check("editor Rows: picture on the left, details on the right", rowBox.picLeft && rowBox.side && rowBox.w > 0.3 && rowBox.w < 0.42, rowBox);
+  check("editor Rows: Edit, Reserve and Delete under the details", (await t.page.locator(".card.rowcard").first().locator(".actions button").count()) >= 3);
+  await t.page.screenshot({ path: "shot_rows_editor.png" });
   const stage = await t.page.evaluate(() => [...document.querySelectorAll(".pic")].filter(p => p.querySelector("img:not(.back)")).map(p => {
     const b = p.querySelector("img.back"), f = p.querySelector("img:not(.back)"), r = p.getBoundingClientRect();
     return { back: !!b && b.getAttribute("aria-hidden") === "true" && b.alt === "" && /blur/.test(getComputedStyle(b).filter) && b.src === f.src,

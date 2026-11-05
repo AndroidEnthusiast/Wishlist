@@ -32,8 +32,9 @@
     ["high", "Price: high to low"], ["az", "Name A–Z"]];
   // Short names for the sort button when a sort is active (same as sortShortName in the app).
   var SORT_SHORT = { low: "Price: low", high: "Price: high", az: "A–Z" };
-  var VIEWS = ["list", "grid"];
-  var VIEW_LABELS = { list: "Large cards", grid: "Two per row" };
+  // Rows (2.126, the default), Two per row, Large cards: the same order as the app.
+  var VIEWS = ["rows", "grid", "list"];
+  var VIEW_LABELS = { rows: "Rows", list: "Large cards", grid: "Two per row" };
 
   var P = window.WLParse;
   var $ = function (id) { return document.getElementById(id); };
@@ -106,7 +107,9 @@
       q.setAttribute("rx", 1.6);
       s.appendChild(q);
     }
-    if (kind === "list") { box(3, 4, 18, 7); box(3, 13, 18, 7); }
+    // Each icon looks like its view (2.126): Rows, Two per row, Large cards (same drawings as the app).
+    if (kind === "list") { box(3, 3, 18, 12); box(3, 17, 18, 2.5); box(3, 20.5, 11, 2.5); }
+    else if (kind === "rows") { box(3, 3, 8, 8); box(13, 4, 8, 2.5); box(13, 7.5, 5, 2.5); box(3, 13, 8, 8); box(13, 14, 8, 2.5); box(13, 17.5, 5, 2.5); }
     else { box(3, 3, 8, 8); box(13, 3, 8, 8); box(3, 13, 8, 8); box(13, 13, 8, 8); }
     return s;
   }
@@ -292,7 +295,7 @@
   var refreshing = false;
   var offlineSaid = false;
 
-  var view = VIEWS.indexOf(lsGet("wl_view")) >= 0 ? lsGet("wl_view") : "grid"; // two per row by default (owner, 2.100)
+  var view = VIEWS.indexOf(lsGet("wl_view")) >= 0 ? lsGet("wl_view") : "rows"; // Rows for new visitors (owner, 2.126)
   var sortBy = (SORTS.map(function (s) { return s[0]; }).indexOf(lsGet("wl_sort_ed")) >= 0) ? lsGet("wl_sort_ed") : "new";
   var cat = "All", query = "";
   var me = lsGet("wl_name") || "";
@@ -867,9 +870,9 @@
     return pic;
   }
 
-  function card(w, compact) {
+  function card(w, compact, rows) {
     var mine = res[w.id] === true, taken = res[w.id] === false;
-    var c = el("div", "card" + (compact ? " compact" : "") + (taken ? " dim" : ""));
+    var c = el("div", "card" + (compact ? " compact" : "") + (rows ? " rowcard" : "") + (taken ? " dim" : ""));
     c.setAttribute("data-id", String(w.id));
     var pic = pictureOf(w);
     var drop = isDrop(w), rise = isRise(w);
@@ -888,6 +891,8 @@
       var ct = el("div", "ctext");
       ct.appendChild(el("h2", "title", w.title));
       var cp = el("div", "price" + changeClass(w), w.price !== null ? money(w.price, w.cur) : T("No price"));
+      // The old price crossed out after a change, as on the large cards (owner, 2.126).
+      if (drop || rise) cp.appendChild(el("span", "old", money(w.old, w.cur)));
       ct.appendChild(cp);
       crow.appendChild(ct);
       var more = iconBtn("more", T("More"), function () {
@@ -908,10 +913,11 @@
     var meta = [hostOf(w.url), w.cat].filter(Boolean).join(" · ");
     if (!compact && meta) body.appendChild(el("div", "meta", meta));
     body.appendChild(el("h2", "title", w.title));
-    if (w.desc && !compact) body.appendChild(el("p", "desc", w.desc));
-    if (w.size) body.appendChild(el("span", "sizetag", T("Size {0}", w.size.slice(0, 8))));
-    if (w.note) body.appendChild(el("p", "wnote", T("Note: {0}", w.note)));
-    if (w.by && !compact) body.appendChild(el("div", "meta", T("Added by {0}", w.by)));
+    // Rows shows only the shop, name and price (owner, 2.126).
+    if (w.desc && !rows) body.appendChild(el("p", "desc", w.desc));
+    if (w.size && !rows) body.appendChild(el("span", "sizetag", T("Size {0}", w.size.slice(0, 8))));
+    if (w.note && !rows) body.appendChild(el("p", "wnote", T("Note: {0}", w.note)));
+    if (w.by && !rows) body.appendChild(el("div", "meta", T("Added by {0}", w.by)));
 
     var row = el("div", "row");
     var pr = el("div", "price" + changeClass(w), w.price !== null ? money(w.price, w.cur) : T("No price"));
@@ -985,8 +991,8 @@
       }
       v.appendChild(empty);
     } else {
-      var grid = el("div", "grid" + (view === "grid" ? " two" : ""));
-      shown.forEach(function (w) { grid.appendChild(card(w, view === "grid")); });
+      var grid = el("div", "grid" + (view === "grid" ? " two" : view === "rows" ? " rows" : ""));
+      shown.forEach(function (w) { grid.appendChild(card(w, view === "grid", view === "rows")); });
       v.appendChild(grid);
     }
   }

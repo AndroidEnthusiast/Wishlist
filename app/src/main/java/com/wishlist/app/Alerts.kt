@@ -24,14 +24,52 @@ object Alerts {
     private const val FRIENDS_CHANNEL = "friends"
     private const val MESSAGES_CHANNEL = "messages"
     private const val GROUPS_CHANNEL = "groups"
+    private const val BIRTHDAY_CHANNEL = "birthdays"
 
-    /** Creates the notification channel (high importance, so the alert pops up). Safe to call again and again. */
+    /** Where a tapped notification sits on the Notifications page: it is marked as read (owner, 2.126: no red dot). */
+    const val NOTE_KIND = "note_kind"
+    const val NOTE_LIST = "note_list"
+    const val NOTE_ID = "note_id"
+
+    private fun Intent.note(kind: String, list: String = "", id: Long = 0L): Intent =
+        putExtra(NOTE_KIND, kind).putExtra(NOTE_LIST, list).putExtra(NOTE_ID, id)
+
+    /**
+     * Creates every notification channel (high importance, so the alert pops up). Safe to call again and again. Each
+     * kind has its own channel with a clear name (owner, 2.126), so muting chats in Android's settings doesn't mute
+     * reserved gifts or group invitations.
+     */
     fun ensureChannel(c: Context) {
         val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         nm.deleteNotificationChannel("drops") // the older, quieter channel from earlier versions
-        val ch = NotificationChannel(CHANNEL, tr("Price changes"), NotificationManager.IMPORTANCE_HIGH)
-        ch.description = tr("Tells you when something on your wishlists gets cheaper or more expensive")
-        nm.createNotificationChannel(ch)
+        fun ch(id: String, name: String, about: String) =
+            nm.createNotificationChannel(NotificationChannel(id, name, NotificationManager.IMPORTANCE_HIGH).apply { description = about })
+        ch(CHANNEL, tr("Price changes"), tr("Tells you when something on your wishlists gets cheaper or more expensive"))
+        ch(BIN_CHANNEL, tr("Reserved gifts"), tr("Tells you when a gift you reserved is no longer on a wishlist"))
+        ch(FRIENDS_CHANNEL, tr("Friend requests"), tr("Someone wants to be your friend"))
+        ch(BIRTHDAY_CHANNEL, tr("Friends’ birthdays"), tr("A few days before a friend’s birthday"))
+        ch(GROUPS_CHANNEL, tr("Wishlist groups"), tr("Invitations, and being removed from a group"))
+        ch(MESSAGES_CHANNEL, tr("Messages"), tr("New messages from your friends"))
+    }
+
+    /**
+     * The notifications that always come (reserved gifts, group invitations) but that Android has blocked: their
+     * names, for the warning in App settings (owner, 2.126). Empty when all is well.
+     */
+    fun blockedImportant(c: Context): List<String> {
+        val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        ensureChannel(c)
+        if (!androidx.core.app.NotificationManagerCompat.from(c).areNotificationsEnabled()) return listOf(tr("All notifications"))
+        return listOf(BIN_CHANNEL to tr("Reserved gifts"), GROUPS_CHANNEL to tr("Wishlist groups"))
+            .filter { (id, _) -> nm.getNotificationChannel(id)?.importance == NotificationManager.IMPORTANCE_NONE }
+            .map { it.second }
+    }
+
+    /** Opens Android's notification settings for this app, where blocked notifications can be switched on again. */
+    fun openSettings(c: Context) {
+        val i = Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+            .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, c.packageName).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        try { c.startActivity(i) } catch (e: Exception) {}
     }
 
     /** Runs the price check in the background every [hours] hours. update=true applies a changed interval. */
@@ -93,7 +131,7 @@ object Alerts {
         if (lines.size > 6) style.setSummaryText(tr("and %d more", lines.size - 6))
         val id = if (drop) 7_000_001 else 7_000_002
         val pi = PendingIntent.getActivity(
-            c, id, Intent(c, MainActivity::class.java),
+            c, id, Intent(c, MainActivity::class.java).note("price"),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         val n = NotificationCompat.Builder(c, CHANNEL)
@@ -119,7 +157,7 @@ object Alerts {
         val pct = if (old > 0) Math.round((1 - now / old) * 100) else 0L
         val text = tr("%1\$s is now %2\$s (was %3\$s, -%4\$d%%)", item, money(now, currency), money(old, currency), pct)
         val pi = PendingIntent.getActivity(
-            c, id, Intent(c, MainActivity::class.java),
+            c, id, Intent(c, MainActivity::class.java).note("price"),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         val n = NotificationCompat.Builder(c, CHANNEL)
@@ -145,7 +183,7 @@ object Alerts {
         val pct = if (old > 0) Math.round((now / old - 1) * 100) else 0L
         val text = tr("%1\$s is now %2\$s (was %3\$s, +%4\$d%%)", item, money(now, currency), money(old, currency), pct)
         val pi = PendingIntent.getActivity(
-            c, id, Intent(c, MainActivity::class.java),
+            c, id, Intent(c, MainActivity::class.java).note("price"),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         val n = NotificationCompat.Builder(c, CHANNEL)
@@ -171,57 +209,25 @@ object Alerts {
         wm.enqueue(OneTimeWorkRequestBuilder<BinWorker>().setConstraints(net).build())
     }
 
-    /** Someone else moved a gift this phone reserved to the bin. Tapping the alert opens the bin at that gift. */
-    fun notifyBinned(c: Context, code: String, w: Wish, listName: String) {
-        val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        nm.createNotificationChannel(
-            NotificationChannel(BIN_CHANNEL, tr("Reserved gifts"), NotificationManager.IMPORTANCE_HIGH).apply {
-                description = tr("Tells you when a gift you reserved is moved to the bin or taken off a list")
-            }
-        )
-        Notifications.add(c, "gift_binned", "s:$code", w.title, w.image, w.id)
-        if (!Show.on(c, "nt_bin")) return // switched off in App settings > Notifications (2.101)
-        val id = code.hashCode() * 31 + w.id.hashCode() + 7
-        val text = if (w.binBy.isNotBlank()) tr("“%1\$s” on %2\$s was moved to the bin by %3\$s.", w.title, listName, w.binBy)
-        else tr("“%1\$s” on %2\$s was moved to the bin.", w.title, listName)
-        val open = Intent(c, MainActivity::class.java)
-            .putExtra(MainActivity.BIN_CODE, code).putExtra(MainActivity.BIN_ID, w.id)
-            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-        val pi = PendingIntent.getActivity(c, id, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-        val n = NotificationCompat.Builder(c, BIN_CHANNEL)
-            .setSmallIcon(R.drawable.ic_stat)
-            .setContentTitle(tr("Your reserved gift has been moved to the bin"))
-            .setContentText(text)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setContentIntent(pi)
-            .setAutoCancel(true)
-            .build()
-        nm.notify(id, n)
-    }
-
     /**
-     * A gift this phone reserved on a friend's wishlist was taken off it (deleted, or made private). Nudges you to
-     * pick another one; tapping opens that friend's list.
+     * A gift this phone reserved is no longer on the list it was on (owner, 2.126: one notification for all three
+     * cases, as for the giver the result is the same): taken off or made private by a friend, marked as owned by them
+     * ([owned]), or moved to the bin by someone else on a gift list ([gift]). Always told (no switch). [place] is
+     * "Sam’s wishlist" or “Mum’s 60th”. Tapping, here or on the Notifications page, opens that list to pick another gift.
      */
-    fun notifyGiftGone(c: Context, code: String, id: Long, title: String, listName: String, owned: Boolean = false) {
+    fun notifyGiftLost(c: Context, code: String, gift: Boolean, id: Long, title: String, image: String, place: String, owned: Boolean) {
+        val listKey = (if (gift) "s:" else "c:") + code
+        Notifications.add(c, "gift_lost", listKey, title, image, id, amount = if (owned) 1.0 else 0.0, extra = place)
+        ensureChannel(c)
         val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        nm.createNotificationChannel(
-            NotificationChannel(BIN_CHANNEL, tr("Reserved gifts"), NotificationManager.IMPORTANCE_HIGH).apply {
-                description = tr("Tells you when a gift you reserved is moved to the bin or taken off a list")
-            }
-        )
-        Notifications.add(c, if (owned) "gift_owned" else "gift_gone", "c:$code", title, "", id)
-        if (!Show.on(c, "nt_gone")) return
         val nid = code.hashCode() * 31 + id.hashCode() + 11
-        val text = if (owned) tr("“%1\$s” on %2\$s is marked as owned: they already have it. Have a look for another gift.", title, listName)
-            else tr("“%1\$s” was taken off %2\$s. Have a look for another gift.", title, listName)
-        val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.FRIEND_CODE, code)
+        val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_NOTE, listKey).note("gift_lost", listKey, id)
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val pi = PendingIntent.getActivity(c, nid, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val text = giftLostText(title, owned)
         val n = NotificationCompat.Builder(c, BIN_CHANNEL)
             .setSmallIcon(R.drawable.ic_stat)
-            .setContentTitle(if (owned) tr("A gift you reserved is already owned") else tr("A gift you reserved is no longer on the list"))
+            .setContentTitle(giftLostTitle(place))
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -231,22 +237,26 @@ object Alerts {
         nm.notify(nid, n)
     }
 
+    /** "A gift you reserved is no longer on Sam’s wishlist" (push and Notifications page). */
+    fun giftLostTitle(place: String) = tr("A gift you reserved is no longer on %s", place)
+
+    /** "“AirPods” was removed. Tap to pick another gift." (or "…is already owned. …"). */
+    fun giftLostText(title: String, owned: Boolean) =
+        if (owned) tr("“%s” is already owned. Tap to pick another gift.", title) else tr("“%s” was removed. Tap to pick another gift.", title)
+
     /**
      * Friends: someone sent you a friend request ([request]), or approved yours. Tapping opens the Friends tab.
      */
     fun notifyFriend(c: Context, id: String, name: String, request: Boolean) {
-        if (!Show.on(c, if (request) "nt_req" else "nt_ok")) return
+        if (request && !Show.on(c, "nt_req")) return
+        ensureChannel(c)
         val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        nm.createNotificationChannel(
-            NotificationChannel(FRIENDS_CHANNEL, tr("Friends"), NotificationManager.IMPORTANCE_HIGH).apply {
-                description = tr("Tells you about friend requests and birthdays")
-            }
-        )
         val nid = id.hashCode() * 31 + (if (request) 13 else 17)
         val who = name.ifBlank { tr("Someone") }
         val title = if (request) tr("%s wants to be your friend", who) else tr("%s approved your friend request", who)
         val text = if (request) tr("Open Friends to approve or decline.") else tr("You can now see the wishlists %s shares with friends.", who)
         val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_FRIENDS, true)
+            .note(if (request) "friend_req" else "friend_ok", (if (request) "r:" else "p:") + id)
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val pi = PendingIntent.getActivity(c, nid, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val n = NotificationCompat.Builder(c, FRIENDS_CHANNEL)
@@ -264,20 +274,16 @@ object Alerts {
     /** A friend's birthday is in [days] days (2.95). Tapping opens that friend's page. */
     fun notifyBirthday(c: Context, id: String, name: String, days: Int) {
         if (!Show.on(c, "nt_bday")) return
+        ensureChannel(c)
         val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        nm.createNotificationChannel(
-            NotificationChannel(FRIENDS_CHANNEL, tr("Friends"), NotificationManager.IMPORTANCE_HIGH).apply {
-                description = tr("Tells you about friend requests and birthdays")
-            }
-        )
         val nid = id.hashCode() * 31 + 19
         val who = name.ifBlank { tr("Someone") }
         val title = tr("%1\$s’s birthday is in %2\$d days", who, days)
         val text = tr("Have a look at %s’s wishlist for a gift they’ll love.", who)
-        val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_FRIEND, id)
+        val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_FRIEND, id).note("birthday", "p:$id")
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val pi = PendingIntent.getActivity(c, nid, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-        val n = NotificationCompat.Builder(c, FRIENDS_CHANNEL)
+        val n = NotificationCompat.Builder(c, BIRTHDAY_CHANNEL)
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle(title)
             .setContentText(text)
@@ -293,16 +299,12 @@ object Alerts {
      * Wishlist groups (2.108): an invite, "No thanks" or "You are removed from …". Tapping opens group [gid] (or its
      * join screen for an invite); an empty [gid] only opens the app.
      */
-    fun notifyGroup(c: Context, gid: String, title: String, text: String) {
-        if (!Show.on(c, "nt_group")) return
+    fun notifyGroup(c: Context, gid: String, title: String, text: String, noteKind: String = "", noteList: String = "") {
+        // Always told (owner, 2.126: invitations can't be switched off).
+        ensureChannel(c)
         val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        nm.createNotificationChannel(
-            NotificationChannel(GROUPS_CHANNEL, tr("Wishlist groups"), NotificationManager.IMPORTANCE_HIGH).apply {
-                description = tr("Invitations, and changes in your groups.")
-            }
-        )
         val nid = (gid + title).hashCode() * 31 + 29
-        val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_GROUP, gid)
+        val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_GROUP, gid).note(noteKind, noteList)
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val pi = PendingIntent.getActivity(c, nid, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val n = NotificationCompat.Builder(c, GROUPS_CHANNEL)
@@ -321,11 +323,7 @@ object Alerts {
     fun notifyMessage(c: Context, id: String, name: String, text: String) {
         if (!Show.on(c, "nt_msg")) return
         val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        nm.createNotificationChannel(
-            NotificationChannel(MESSAGES_CHANNEL, tr("Messages"), NotificationManager.IMPORTANCE_HIGH).apply {
-                description = tr("New messages from your friends")
-            }
-        )
+        ensureChannel(c)
         val nid = id.hashCode() * 31 + 23
         val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_CHAT, id)
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)

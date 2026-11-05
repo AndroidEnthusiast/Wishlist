@@ -193,14 +193,27 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
             SettingSwitch(tr("Price increases"), tr("A wish got more expensive."), Repo.notifyRises) { Repo.setNotifyRises(ctx, it) }
             CurrencySetting()
 
-            // Every kind of notification the app sends, each with its switch (owner, 2.101: "this helps me too to
-            // remember what notifications are being sent"). Off ones are also left off the Notifications page.
+            // Only the notifications you may switch off (owner, 2.126). Reserved gifts that are gone and wishlist group
+            // invitations always come; "friend request accepted" and group news only show on the Notifications page.
             SectionTitle(tr("Notifications"))
-            SettingSwitch(tr("Reserved gift moved to the bin"), tr("Someone moved a gift you reserved to the bin."), Show["nt_bin"]) { Show.set(ctx, "nt_bin", it) }
-            SettingSwitch(tr("Reserved gift taken off a list"), tr("A gift you reserved is no longer on a friend’s list."), Show["nt_gone"]) { Show.set(ctx, "nt_gone", it) }
+            // Android can still block them in its own settings: then say so, with a way to switch them back on.
+            var blocked by remember { mutableStateOf(Alerts.blockedImportant(ctx)) }
+            val lifeN = LocalLifecycleOwner.current
+            DisposableEffect(lifeN) {
+                val obs = LifecycleEventObserver { _, e -> if (e == Lifecycle.Event.ON_RESUME) blocked = Alerts.blockedImportant(ctx) }
+                lifeN.lifecycle.addObserver(obs)
+                onDispose { lifeN.lifecycle.removeObserver(obs) }
+            }
+            if (blocked.isNotEmpty()) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        tr("Android has blocked: %s. You may miss gifts that are gone or group invitations.", blocked.joinToString(", ")),
+                        style = MaterialTheme.typography.bodySmall, color = cs.error, modifier = Modifier.weight(1f).padding(end = 12.dp)
+                    )
+                    TextButton(onClick = { Alerts.openSettings(ctx) }) { Text(tr("Turn on")) }
+                }
+            }
             SettingSwitch(tr("Friend requests"), tr("Someone wants to be your friend."), Show["nt_req"]) { Show.set(ctx, "nt_req", it) }
-            SettingSwitch(tr("Friend request accepted"), tr("Shown in Notifications, without a buzz."), Show["nt_ok"]) { Show.set(ctx, "nt_ok", it) }
-            SettingSwitch(tr("Wishlist groups"), tr("Invitations. Other changes show in Notifications only."), Show["nt_group"]) { Show.set(ctx, "nt_group", it) }
             SettingSwitch(tr("Friends’ birthdays"), tr("A few days before a friend’s birthday."), Show["nt_bday"]) { Show.set(ctx, "nt_bday", it) }
             SettingSwitch(tr("New messages"), tr("A friend sent you a message."), Show["nt_msg"]) { Show.set(ctx, "nt_msg", it) }
 

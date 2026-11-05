@@ -54,12 +54,9 @@ object Show {
 
     /** Which notification switch covers a kind on the Notifications page (null: none, always shown). */
     fun keyFor(kind: String): String? = when (kind) {
-        "gift_binned" -> "nt_bin"
-        "gift_gone", "gift_owned" -> "nt_gone"
+        // Reserved gifts, "friend request accepted" and wishlist groups always show (owner, 2.126: no switches).
         "friend_req" -> "nt_req"
-        "friend_ok" -> "nt_ok"
         "birthday" -> "nt_bday"
-        "group_invite", "group_declined", "group_removed" -> "nt_group"
         else -> null
     }
 }

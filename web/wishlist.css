@@ -117,6 +117,23 @@ form.code input {
 /* view: two per row */
 .grid.two { gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (min-width: 720px) { .grid.two { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); } }
+/* Rows (owner, 2.126): the picture on the left (a third, square), the shop, name and price on the right, the buttons
+   under them. One per line on a phone, more side by side on a wide screen. */
+.grid.rows { gap: 12px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+.card.rowcard { flex-direction: row; border-radius: 16px; }
+.card.rowcard .pic { flex: 0 0 36%; aspect-ratio: 1 / 1; align-self: flex-start; margin: 8px; border-radius: 12px; }
+.card.rowcard .pic img:not(.back) { max-width: calc(100% - 14px); max-height: calc(100% - 14px); border-radius: 8px; }
+.card.rowcard .pic.empty { font-size: 2rem; }
+.card.rowcard .badge { top: 6px; padding: 2px 7px; font-size: .7rem; }
+.card.rowcard .badge.drop { left: 6px; }
+.card.rowcard .badge.status { right: 6px; }
+.card.rowcard .badges { top: 6px; right: 6px; }
+.card.rowcard .badge.star .lbl { display: none; }
+.card.rowcard .body { padding: 10px 12px 10px 4px; gap: 2px; min-width: 0; }
+.card.rowcard .title { font-size: .95rem; }
+.card.rowcard .row { flex-direction: column; align-items: stretch; gap: 6px; padding-top: 4px; }
+.card.rowcard .price { font-size: 1.1rem; }
+.card.rowcard .row > :not(.price) { align-self: flex-end; }
 .card.compact { border-radius: 16px; }
 .card.compact .pic { aspect-ratio: 1 / 1; }
 .card.compact .pic img:not(.back) { max-width: calc(100% - 18px); max-height: calc(100% - 18px); border-radius: 10px; }

@@ -165,9 +165,10 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   store.reservations = { 2: "someone-else" };
   const D = x => x.window.document;
   let v = await load("?c=ABCD2345");
-  check("bar visible with 2 view buttons", !D(v).getElementById("bar").hidden && D(v).querySelectorAll("#views .vbtn").length === 2);
-  check("default view: large cards selected", D(v).querySelectorAll("#views .vbtn")[0].classList.contains("on") && D(v).querySelector(".grid").className === "grid");
-  check("view buttons have labels", [...D(v).querySelectorAll("#views .vbtn")].map(b => b.getAttribute("aria-label")).join("|") === "Large cards|Two per row");
+  check("bar visible with 3 view buttons", !D(v).getElementById("bar").hidden && D(v).querySelectorAll("#views .vbtn").length === 3);
+  check("large cards (as saved) selected", D(v).querySelectorAll("#views .vbtn")[2].classList.contains("on") && D(v).querySelector(".grid").className === "grid");
+  check("view buttons in order, with labels (2.126)", [...D(v).querySelectorAll("#views .vbtn")].map(b => b.getAttribute("aria-label")).join("|") === "Rows|Two per row|Large cards");
+  check("each view button has its own icon", new Set([...D(v).querySelectorAll("#views .vbtn svg")].map(s => s.innerHTML)).size === 3);
   check("default cards are not compact, keep desc/meta", !D(v).querySelector(".card.compact") && !!D(v).querySelector(".card .meta"));
 
   D(v).querySelectorAll("#views .vbtn")[1].click();
@@ -190,19 +191,23 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   let rem = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_view", "grid"));
   check("remembered: opens in two per row", !!D(rem).querySelector(".grid.two") && D(rem).querySelectorAll("#views .vbtn")[1].classList.contains("on"));
   let junk = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_view", "<b>x</b>"));
-  check("junk stored value falls back to the default, two per row", D(junk).querySelector(".grid").className === "grid two");
+  check("junk stored value falls back to the default, Rows", D(junk).querySelector(".grid").className === "grid rows");
   let fresh = await load("?c=ABCD2345", null, null, true);
-  check("a new visitor starts with two per row (2.100)", !!D(fresh).querySelector(".grid.two") && D(fresh).querySelectorAll(".card.compact").length === 3);
+  check("a new visitor starts with Rows (2.126)", !!D(fresh).querySelector(".grid.rows") && D(fresh).querySelectorAll(".card.rowcard").length === 3 && D(fresh).querySelectorAll("#views .vbtn")[0].classList.contains("on"));
+  const rc = [...D(fresh).querySelectorAll(".card.rowcard")];
+  check("Rows: shop, name, price with the old price crossed out, and Reserve", rc[0].querySelector(".meta") && rc[0].querySelector(".title") && rc[0].querySelector(".price .old").textContent.includes("100") && !!(rc[0].querySelector("button.act") || rc[0].querySelector(".badge.status")));
+  check("Rows: statuses and the drop badge on the picture", !!rc[0].querySelector(".pic .badge.drop") && rc[2].querySelector(".pic .badge.status").textContent === "Owned");
+  check("Two per row also shows the old price crossed out", (await load("?c=ABCD2345", w => w.localStorage.setItem("wl_view", "grid"))).window.document.querySelector(".card.compact .price .old").textContent.includes("100"));
 
   // the removed "images only" view falls back to large cards
   let g2 = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_view", "gallery"));
-  check("old images-only choice opens as the default, two per row", D(g2).querySelector(".grid").className === "grid two" && D(g2).querySelectorAll(".card").length === 3 && !D(g2).querySelector(".tile"));
+  check("old images-only choice opens as the default, Rows", D(g2).querySelector(".grid").className === "grid rows" && D(g2).querySelectorAll(".card").length === 3 && !D(g2).querySelector(".tile"));
 
   // no categories: drop-down hidden, view buttons still there
   store.noCats = true;
   let nc = await load("?c=ABCD2345");
   store.noCats = false;
-  check("no categories: drop-down hidden, view buttons visible", D(nc).getElementById("chips").hidden && !D(nc).getElementById("bar").hidden && D(nc).querySelectorAll("#views .vbtn").length === 2);
+  check("no categories: drop-down hidden, view buttons visible", D(nc).getElementById("chips").hidden && !D(nc).getElementById("bar").hidden && D(nc).querySelectorAll("#views .vbtn").length === 3);
 
   // entry form / unshared list: no view buttons
   let ef = await load("");

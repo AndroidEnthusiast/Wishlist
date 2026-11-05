@@ -62,7 +62,7 @@ const { boot, done, check, summary, KEY, CODE, sleep, openDrawer, catItems } = r
   await t.page.waitForFunction(() => /Reserved by you/.test(document.querySelector(".card.compact[data-id='1002']").innerText));
   check("grid: ⋮ Reserve works", Object.keys(t.fake.res[CODE] || {}).join() === "1002");
   await t.page.screenshot({ path: "shot_grid.png" });
-  check("only two view buttons (Large cards, Two per row)", JSON.stringify(await t.page.locator("#views .vbtn").evaluateAll(bs => bs.map(b => b.getAttribute("aria-label")))) === JSON.stringify(["Large cards", "Two per row"]));
+  check("three view buttons, Rows first (2.126)", JSON.stringify(await t.page.locator("#views .vbtn").evaluateAll(bs => bs.map(b => b.getAttribute("aria-label")))) === JSON.stringify(["Rows", "Two per row", "Large cards"]));
   await t.ctx.close();
 
   // D. first-run name dialog

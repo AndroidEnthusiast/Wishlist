@@ -89,6 +89,7 @@ object Targets {
         val id = w.id.toInt() + 17
         val open = Intent(c, MainActivity::class.java)
             .putExtra(MainActivity.HISTORY_ID, w.id)
+            .putExtra(Alerts.NOTE_KIND, "target").putExtra(Alerts.NOTE_ID, w.id)
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val pi = PendingIntent.getActivity(c, id, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val text = tr("%1\$s is now %2\$s. Your target was %3\$s.", w.title, money(now, w.currency), money(target, w.currency))

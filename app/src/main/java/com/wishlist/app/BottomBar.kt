@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -83,12 +84,14 @@ fun AppBottomBar(
             .then(if (look.design == "chaos") Modifier.rotate(-0.8f) else Modifier)
     ) {
         Row(
-            frame.fillMaxWidth().height(72.dp).padding(horizontal = 6.dp), // 64 until 2.121 (owner: a little taller)
+            frame.fillMaxWidth().height(72.dp).padding(horizontal = 4.dp), // 64 until 2.121 (owner: a little taller)
             horizontalArrangement = Arrangement.SpaceAround, verticalAlignment = Alignment.CenterVertically
         ) {
             BarItem(tr("Home"), current == "home", onHome) { Icon(AppIcons.Home, null, tint = it, modifier = Modifier.size(26.dp)) }
             BarItem(tr("Messages"), current == "messages", onMessages, dot = messagesDot) { ChatIcon(it, 26.dp) }
-            // Add wish: only a + in the accent colour, no words.
+            // Add wish: only a + in the accent colour, no words. Its own wider slot (owner, 2.126: more breathing space,
+            // "Price watch" seemed closer to the + than "Messages"): the same room on both sides.
+            Box(Modifier.width(78.dp), contentAlignment = Alignment.Center) {
             Box(
                 Modifier.size(50.dp).then(
                     if (look.design == "quiet") Modifier.shadow(6.dp, CircleShape, clip = false, ambientColor = look.accent, spotColor = look.accent)
@@ -98,6 +101,7 @@ fun AppBottomBar(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(AppIcons.Add, tr("Add wish"), tint = look.onAccent, modifier = Modifier.size(30.dp))
+            }
             }
             BarItem(tr("Price watch"), current == "prices", onPrices) { PriceIcon(it, Modifier.size(26.dp)) }
             BarItem(tr("Friends"), current == "friends", onFriends, dot = friendsDot) { Icon(AppIcons.Person, null, tint = it, modifier = Modifier.size(26.dp)) }
@@ -121,7 +125,7 @@ private fun RowScope.BarItem(label: String, on: Boolean, onClick: () -> Unit, do
         Text(
             label, maxLines = 1, softWrap = false, overflow = TextOverflow.Visible, color = tint,
             fontWeight = if (on) FontWeight.Bold else FontWeight.Medium,
-            style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 0.sp), // labelSmall until 2.121
+            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.sp), // labelMedium in 2.121–2.125
             modifier = Modifier.padding(top = 3.dp)
         )
     }

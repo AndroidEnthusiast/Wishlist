@@ -227,7 +227,7 @@ object Bin {
                     continue
                 }
                 for (w in fresh) {
-                    if (res[w.id] == true) Alerts.notifyBinned(c, l.code, w, r.list.name.ifBlank { l.name })
+                    if (res[w.id] == true) Alerts.notifyGiftLost(c, l.code, gift = true, id = w.id, title = w.title, image = w.image, place = "“" + r.list.name.ifBlank { l.name } + "”", owned = false)
                 }
             }
             remember(c, l.code, (told + fresh.map { mark(it) }).intersect(marks))

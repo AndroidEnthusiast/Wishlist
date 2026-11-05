@@ -55,7 +55,9 @@ object FriendWatch {
             // Still on the list and not owned: nothing to say.
             if (now != null && !now.got) continue
             // Taken off, or (2.113, owner) marked as owned by the friend: say so once, so nobody buys a duplicate.
-            Alerts.notifyGiftGone(c, f.code, id, title, list.name.ifBlank { f.name }, owned = now != null)
+            // One notification for both (owner, 2.126), naming whose list it was.
+            val place = list.owner.takeIf { it.isNotBlank() }?.let { tr("%s’s wishlist", it) } ?: ("“" + list.name.ifBlank { f.name } + "”")
+            Alerts.notifyGiftLost(c, f.code, gift = false, id = id, title = title, image = now?.image.orEmpty(), place = place, owned = now != null)
             m = m - id
         }
         write(c, f.code, m)

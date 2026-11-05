@@ -602,7 +602,8 @@ private const val CONSENT_JS = """(function(){
 /**
  * Empty layers (owner, 2.125: bol.com put a grey layer back on every page; tapping cleared it, then it came back, so
  * the shop felt broken). For every shop: a see-through dark or light layer that covers the middle of the screen while
- * nothing on it can be seen or tapped is hidden at once, and kept hidden: the page is watched (MutationObserver), so a
+ * nothing on it can be seen or tapped is first tapped once (the shop closes its own pop-up, 2.126) and else hidden,
+ * and kept hidden; after one, an invisible layer that still blocks every tap is treated the same: the page is watched (MutationObserver), so a
  * layer that comes back is hidden again before it shows. Never breaks the shop (owner): a layer that gets text,
  * pictures or buttons is shown again at once (it is a real pop-up), and a layer with a pop-up on top of it (a menu, a
  * size picker, a cookie question; checked in five places on the screen) is left alone. Scrolling that such a layer
@@ -623,6 +624,8 @@ private const val GUARD_JS = """(function(){
     var top=getComputedStyle(b).position==='fixed'?-parseInt(getComputedStyle(b).top||'0',10)||0:null;
     if(getComputedStyle(de).overflow==='hidden') de.style.setProperty('overflow','auto','important');
     if(getComputedStyle(b).overflow==='hidden') b.style.setProperty('overflow','auto','important');
+    [de,b].forEach(function(e){var c=getComputedStyle(e);if(c.pointerEvents==='none'){G.pe=G.pe||[];G.pe.push([e,e.style.getPropertyValue('pointer-events'),e.style.getPropertyPriority('pointer-events')]);e.style.setProperty('pointer-events','auto','important');}
+      if(c.touchAction==='none'){G.ta=G.ta||[];G.ta.push([e,e.style.getPropertyValue('touch-action'),e.style.getPropertyPriority('touch-action')]);e.style.setProperty('touch-action','auto','important');}});
     if(top!==null){b.style.setProperty('position','static','important');b.style.setProperty('top','auto','important');window.scrollTo(0,top);}
   }
   function relock(){
@@ -630,6 +633,23 @@ private const val GUARD_JS = """(function(){
     var de=document.documentElement,b=document.body;
     function put(e,n,v,p){if(v) e.style.setProperty(n,v,p); else e.style.removeProperty(n);}
     put(de,'overflow',x[0],x[1]);put(b,'overflow',x[2],x[3]);put(b,'position',x[4],x[5]);put(b,'top',x[6],x[7]);
+    (G.pe||[]).forEach(function(r){put(r[0],'pointer-events',r[1],r[2]);});(G.ta||[]).forEach(function(r){put(r[0],'touch-action',r[1],r[2]);});G.pe=G.ta=null;
+  }
+  function tap(v,x,y){
+    var o={bubbles:true,cancelable:true,composed:true,clientX:x,clientY:y,screenX:x,screenY:y,button:0,view:window};
+    try{v.dispatchEvent(new PointerEvent('pointerdown',Object.assign({pointerType:'touch',isPrimary:true,pointerId:1},o)));}catch(e){}
+    try{var t=new Touch({identifier:1,target:v,clientX:x,clientY:y});v.dispatchEvent(new TouchEvent('touchstart',{bubbles:true,cancelable:true,touches:[t],targetTouches:[t],changedTouches:[t]}));v.dispatchEvent(new TouchEvent('touchend',{bubbles:true,cancelable:true,touches:[],targetTouches:[],changedTouches:[t]}));}catch(e){}
+    try{v.dispatchEvent(new PointerEvent('pointerup',Object.assign({pointerType:'touch',isPrimary:true,pointerId:1},o)));}catch(e){}
+    try{v.dispatchEvent(new MouseEvent('mousedown',o));v.dispatchEvent(new MouseEvent('mouseup',o));v.dispatchEvent(new MouseEvent('click',o));}catch(e){}
+  }
+  // An empty grey layer covering the screen under [v] (seen through the invisible layer on top of it).
+  function greyBelow(v,w,h){
+    var all=document.elementsFromPoint?document.elementsFromPoint(w/2,h/2):[];
+    for(var i=0;i<all.length;i++){var e=all[i];if(e===v||v.contains(e)||e===document.body||e===document.documentElement) continue;
+      var s=getComputedStyle(e),r=e.getBoundingClientRect();
+      if((s.position==='fixed'||s.position==='absolute')&&r.width>=w*0.9&&r.height>=h*0.8&&empty(e)&&tinted(e)) return true;
+      if(!empty(e)) return false;}
+    return false;
   }
   function check(){
     // A hidden layer that now has something on it is a real pop-up: show it again.
@@ -647,9 +667,15 @@ private const val GUARD_JS = """(function(){
       var s=getComputedStyle(p),r=p.getBoundingClientRect();
       if((s.position==='fixed'||s.position==='absolute')&&r.width>=w*0.9&&r.height>=h*0.8){v=p;break;}
     }
-    if(!v||!empty(v)||!tinted(v)) return;
+    if(!v||!empty(v)) return;
     var pts=[[w/2,h/4],[w/2,h*3/4],[w/4,h/2],[w*3/4,h/2]];
     for(var k=0;k<pts.length;k++){var o=document.elementFromPoint(pts[k][0],pts[k][1]);if(o&&o!==v&&!v.contains(o))return;}
+    // An invisible layer only counts once a tinted one was seen on this page (2.126: bol.com keeps a see-through layer
+    // over the page that waits for one tap; before, you had to tap once on every page).
+    if(!tinted(v)&&!G.count&&!greyBelow(v,w,h)) return;
+    // First tap it once, as a finger would: the shop then closes its own pop-up the normal way (scrolling and taps
+    // work again). It is empty, so the tap can only reach the shop's "tap outside" handler. Still there: hide it.
+    if(!v.__wlTapped){v.__wlTapped=1;tap(v,w/2,h/2);soon();return;}
     v.style.setProperty('display','none','important');
     G.hidden.push(v);G.count++;
     unlock();
@@ -877,18 +903,17 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                         onRelease = { it.stopLoading(); it.destroy() },
                         modifier = Modifier.fillMaxSize()
                     )
-                    val ready = productAt != null && productAt == web?.url
-                    // Flat (owner, 2.121: no shadow) and compact, so the products stay in view. Coloured only on a
-                    // product page.
+                    // Flat (owner, 2.121: no shadow) and compact, so the products stay in view. Always in colour (owner,
+                    // 2.126: no grey version); off a product page a tap says so, with "Add anyway".
                     Row(
                         Modifier.align(Alignment.BottomEnd).padding(14.dp).height(42.dp)
                             .clip(RoundedCornerShape(21.dp))
-                            .background(if (ready || reading) cs.primary else cs.surfaceVariant)
+                            .background(cs.primary)
                             .combinedClickable(enabled = !reading, onClickLabel = tr("Add wish")) { add() }
                             .padding(start = 12.dp, end = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        val fg = if (ready || reading) cs.onPrimary else cs.onSurfaceVariant.copy(alpha = 0.6f)
+                        val fg = cs.onPrimary
                         Icon(AppIcons.Add, null, tint = fg, modifier = Modifier.size(20.dp))
                         Text(
                             if (reading) tr("Reading…") else tr("Add wish"), color = fg,

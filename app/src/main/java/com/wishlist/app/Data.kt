@@ -110,7 +110,7 @@ object Repo {
     var myName by mutableStateOf("My wishlist")
         private set
     /** How the wishes are shown: "list" (large cards) or "grid" (two per row). */
-    var view by mutableStateOf("grid")
+    var view by mutableStateOf("rows")
         private set
     /** How the wishes are ordered: "new", "star", "low", "high" or "az" (see Sorting.kt). */
     var sort by mutableStateOf("new")
@@ -245,7 +245,9 @@ object Repo {
         // "gallery" (images only) was removed in 2.34: it falls back to the large cards.
         // Two per row is the default since 2.100 (owner); the large cards are the "details" view. Everyone who used an
         // older version has "view" saved already, so they keep what they had.
-        view = p.getString("view", "grid")?.takeIf { it == "list" } ?: "grid"
+        // Rows is the default for new installs since 2.126 (owner); a saved choice is kept (owner: nobody's screen
+        // changes by surprise).
+        view = p.getString("view", null)?.let { v -> if (v == "list" || v == "rows") v else "grid" } ?: "rows"
         sort = p.getString("sort", "new")?.takeIf { s -> SORT_OPTIONS.any { it.first == s } } ?: "new"
         myAbout = p.getString("about", "") ?: ""
         intervalHours = p.getInt("interval", 6).let { if (it in listOf(1, 3, 6, 12, 24)) it else 6 }

@@ -13,9 +13,10 @@ var $ = function (id) { return document.getElementById(id); };
 
 var code = null, list = null, res = {}, cat = "All", busy = false, state = "loading", memDevice = null;
 
-// How the list is laid out for this visitor: "list" (large cards) or "grid" (two per row).
-var VIEWS = ["list", "grid"];
-var VIEW_LABELS = { list: T("Large cards"), grid: T("Two per row") };
+// How the list is laid out for this visitor: "rows" (picture left, details right; 2.126), "grid" (two per row) or
+// "list" (large cards), in that order.
+var VIEWS = ["rows", "grid", "list"];
+var VIEW_LABELS = { rows: T("Rows"), list: T("Large cards"), grid: T("Two per row") };
 var view = loadView();
 
 // The friends' link of a shared wishlist goes through list/, which adds s=1. Such a list is put together by several
@@ -44,7 +45,7 @@ function loadView() {
     var v = localStorage.getItem("wl_view");
     if (VIEWS.indexOf(v) >= 0) return v;
   } catch (e) { }
-  return "grid"; // two per row by default (owner, 2.100); the large cards are the "details" view
+  return "rows"; // Rows by default for new visitors (owner, 2.126); a saved choice is kept
 }
 
 function saveView(v) {
@@ -441,7 +442,9 @@ function viewIcon(kind) {
     q.setAttribute("rx", 1.6);
     s.appendChild(q);
   }
-  if (kind === "list") { box(3, 4, 18, 7); box(3, 13, 18, 7); }
+  // Each icon looks like its view (2.126): Rows, Two per row, Large cards (same drawings as the app).
+  if (kind === "list") { box(3, 3, 18, 12); box(3, 17, 18, 2.5); box(3, 20.5, 11, 2.5); }
+  else if (kind === "rows") { box(3, 3, 8, 8); box(13, 4, 8, 2.5); box(13, 7.5, 5, 2.5); box(3, 13, 8, 8); box(13, 14, 8, 2.5); box(13, 17.5, 5, 2.5); }
   else { box(3, 3, 8, 8); box(13, 3, 8, 8); box(3, 13, 8, 8); box(13, 13, 8, 8); }
   return s;
 }
@@ -461,11 +464,12 @@ function renderViews() {
   });
 }
 
-function card(w, compact) {
+function card(w, compact, rows) {
   var r = res[w.id];
   var got = !!w.got;
   var dim = got || r === false;
-  var c = el("div", "card" + (compact ? " compact" : "") + (dim ? " dim" : ""));
+  // rows: the picture on the left, the shop, name and price on the right, the button below them (2.126).
+  var c = el("div", "card" + (compact ? " compact" : "") + (rows ? " rowcard" : "") + (dim ? " dim" : ""));
 
   var link = safeUrl(w.url);
   var pic = el(link ? "a" : "div", "pic" + (w.image && safeUrl(w.image) ? "" : " empty"));
@@ -498,9 +502,9 @@ function card(w, compact) {
   var meta = [hostOf(w.url), w.cat].filter(Boolean).join(" · ");
   if (!compact) body.appendChild(el("div", "meta", meta));
   body.appendChild(el("h2", "title", w.title || ""));
-  if (w.desc && !compact) body.appendChild(el("p", "desc", w.desc));
-  if (w.size) body.appendChild(el("span", "sizetag", T("Size {0}", String(w.size).slice(0, 8))));
-  if (w.note) body.appendChild(el("p", "wnote", T("Note: {0}", w.note)));
+  if (w.desc && !compact && !rows) body.appendChild(el("p", "desc", w.desc));
+  if (w.size && !rows) body.appendChild(el("span", "sizetag", T("Size {0}", String(w.size).slice(0, 8))));
+  if (w.note && !rows) body.appendChild(el("p", "wnote", T("Note: {0}", w.note)));
 
   var row = el("div", "row");
   var pr = el("div", "price" + changeClass(w), typeof w.price === "number" ? money(w.price, w.cur) : T("No price"));
@@ -621,8 +625,8 @@ function render() {
     }
     v.appendChild(empty);
   } else {
-    var g = el("div", "grid" + (view === "grid" ? " two" : ""));
-    shown.forEach(function (w) { g.appendChild(card(w, view === "grid")); });
+    var g = el("div", "grid" + (view === "grid" ? " two" : view === "rows" ? " rows" : ""));
+    shown.forEach(function (w) { g.appendChild(card(w, view === "grid", view === "rows")); });
     v.appendChild(g);
   }
   $("note").hidden = false;

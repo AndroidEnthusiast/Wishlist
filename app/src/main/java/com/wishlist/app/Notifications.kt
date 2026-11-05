@@ -51,6 +51,11 @@ import org.json.JSONObject
 import kotlin.math.abs
 import kotlin.math.roundToLong
 
+/** A tapped push notification that should open a place in the app (MainActivity.OPEN_NOTE, 2.126). */
+object NoteNav {
+    var key by mutableStateOf<String?>(null)
+}
+
 /** The red of the "something new" dot (menu button and the Notifications item). */
 val NewDot = Color(0xFFE53935)
 
@@ -136,6 +141,25 @@ object Notifications {
         val rest = all.filter { !(it.kind == kind && it.listKey == listKey && it.wishId == wishId) }
         all = (listOf(PriceNote(wishId, listKey, title, image, 0.0, System.currentTimeMillis(), read, kind, amount, extra)) + rest).take(100)
         save(c)
+    }
+
+    /**
+     * A push notification was tapped (owner, 2.126): its line on this page counts as seen, so no red dot. [kind]
+     * "price" marks every unseen price change (a price push can tell several).
+     */
+    @Synchronized
+    fun markRead(c: Context, kind: String, listKey: String, wishId: Long) {
+        load(c)
+        var changed = false
+        all = all.map { n ->
+            val hit = when (kind) {
+                "price" -> n.kind == "price"
+                "target" -> n.kind == "target" && n.wishId == wishId
+                else -> n.kind == kind && n.listKey == listKey && (wishId == 0L || n.wishId == wishId)
+            }
+            if (hit && !n.read) { changed = true; n.copy(read = true) } else n
+        }
+        if (changed) save(c)
     }
 
     /** True while there is something new to see (the red dots). */
@@ -300,12 +324,16 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                         )
                     }
                     Column(Modifier.weight(1f).padding(start = 12.dp, end = 8.dp)) {
+                        // A reserved gift that is gone (2.126): the same words as its push notification.
+                        val lost = n.kind == "gift_lost"
                         Text(
-                            n.title, style = MaterialTheme.typography.titleSmall, color = look.cardInk(id),
+                            if (lost) Alerts.giftLostTitle(n.currency) else n.title,
+                            style = MaterialTheme.typography.titleSmall, color = look.cardInk(id),
                             maxLines = 2, overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             when (n.kind) {
+                                "gift_lost" -> Alerts.giftLostText(n.title, n.amount > 0.5)
                                 "target" -> tr("reached your target price")
                                 "friend_req" -> tr("wants to be your friend")
                                 "friend_ok" -> tr("approved your friend request")
