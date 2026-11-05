@@ -21,6 +21,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import java.io.File
@@ -668,7 +669,7 @@ private fun ChatRow(
     Column(
         Modifier.fillMaxWidth().then(
             if (onReply != null) Modifier.pointerInput(m.id) {
-                androidx.compose.foundation.gestures.detectHorizontalDragGestures(
+                detectHorizontalDragGestures(
                     onDragEnd = {
                         if (drag.value > limit * 0.8f) onReply()
                         scope.launch { drag.animateTo(0f) }
