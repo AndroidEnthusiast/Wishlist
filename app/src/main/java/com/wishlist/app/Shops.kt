@@ -8,6 +8,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -128,8 +129,8 @@ object Shops {
     var version by mutableIntStateOf(0)
         private set
 
-    fun list(c: Context): List<Shop> {
-        @Suppress("UNUSED_VARIABLE") val v = version
+    /** Your shops in the order you added them (see [list] for the order on Home). */
+    private fun stored(c: Context): List<Shop> {
         val raw = prefs(c).getString("shops", null) ?: return starters
         return try {
             val a = JSONArray(raw)
@@ -138,6 +139,28 @@ object Shops {
         } catch (e: Exception) {
             starters
         }
+    }
+
+    /** The shops on Home: the one you opened last first (owner, 2.121), then the ones never opened, in their order. */
+    fun list(c: Context): List<Shop> {
+        @Suppress("UNUSED_VARIABLE") val v = version
+        val p = prefs(c)
+        return stored(c).withIndex().sortedWith(
+            compareByDescending<IndexedValue<Shop>> { p.getLong("shopopened_" + it.value.host, 0L) }.thenBy { it.index }
+        ).map { it.value }
+    }
+
+    /** Remembers that a shop was opened, for the order on Home. */
+    fun opened(c: Context, s: Shop) {
+        prefs(c).edit().putLong("shopopened_" + s.host, System.currentTimeMillis()).apply()
+        version++
+    }
+
+    /** The shop you already have with the same web address, if any (2.121: adding it again says so). */
+    fun existing(c: Context, address: String): Shop? {
+        val u = cleanUrl(address.trim()) ?: return null
+        val h = Shop("", u).host
+        return stored(c).firstOrNull { it.host == h }
     }
 
     private fun save(c: Context, l: List<Shop>) {
@@ -152,20 +175,20 @@ object Shops {
         val u = cleanUrl(address.trim()) ?: return null
         val s = Shop(name.trim().ifEmpty { Shop("", u).host }, u)
         if (s.host.isEmpty()) return null
-        save(c, list(c).filter { it.host != s.host } + s)
+        save(c, stored(c).filter { it.host != s.host } + s)
         return s
     }
 
-    fun remove(c: Context, s: Shop) = save(c, list(c).filter { it.url != s.url })
+    fun remove(c: Context, s: Shop) = save(c, stored(c).filter { it.url != s.url })
 
     /** Puts back the starter shops you removed (your own stay). */
     fun restoreStarters(c: Context) {
-        val now = list(c)
+        val now = stored(c)
         save(c, now + starters.filter { st -> now.none { it.host == st.host } })
     }
 }
 
-/** "Find a gift" on Home: the shops in a row (swipe sideways), with "Add shop" at the end. */
+/** "Shop for gifts" on Home (called "Find a gift" until 2.121): the shops in a row (swipe sideways), with "Add shop" at the end. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FindAGiftRow(onFound: (String, Meta?) -> Unit) {
@@ -175,7 +198,7 @@ fun FindAGiftRow(onFound: (String, Meta?) -> Unit) {
     var open by remember { mutableStateOf<Shop?>(null) }
     var adding by remember { mutableStateOf(false) }
     var menuFor by remember { mutableStateOf<Shop?>(null) }
-    HubTitle(tr("Find a gift"))
+    HubTitle(tr("Shop for gifts"))
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -185,7 +208,7 @@ fun FindAGiftRow(onFound: (String, Meta?) -> Unit) {
             Box {
                 Column(
                     Modifier.width(64.dp).clip(RoundedCornerShape(12.dp))
-                        .combinedClickable(onLongClickLabel = tr("Remove"), onLongClick = { menuFor = s }) { open = s },
+                        .combinedClickable(onLongClickLabel = tr("Remove"), onLongClick = { menuFor = s }) { open = s; Shops.opened(ctx, s) },
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     ShopIcon(s, 52)
@@ -204,10 +227,12 @@ fun FindAGiftRow(onFound: (String, Meta?) -> Unit) {
                 Modifier.width(64.dp).clip(RoundedCornerShape(12.dp)).combinedClickable { adding = true },
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // A tile like the shops' (owner, 2.121), with a frame so it reads as a button.
                 Box(
-                    Modifier.size(52.dp).clip(RoundedCornerShape(14.dp)).background(cs.surfaceVariant),
+                    Modifier.size(52.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xFFEDEDF0))
+                        .border(1.5.dp, Color(0xFFB9B9C3), RoundedCornerShape(14.dp)),
                     contentAlignment = Alignment.Center
-                ) { Icon(AppIcons.Add, null, tint = cs.onSurfaceVariant) }
+                ) { Icon(AppIcons.Add, null, tint = Color(0xFF44444C)) }
                 Text(tr("Add shop"), style = MaterialTheme.typography.labelSmall, maxLines = 1, modifier = Modifier.padding(top = 4.dp))
             }
         }
@@ -239,8 +264,31 @@ object ShopIcons {
 
     fun accepted(c: Context, host: String): String? = prefs(c).getString("shopiconok3_$host", null)
 
-    fun accept(c: Context, host: String, url: String) {
-        if (accepted(c, host) != url) prefs(c).edit().putString("shopiconok3_$host", url).apply()
+    fun accept(c: Context, host: String, url: String, px: Int = 0) {
+        if (accepted(c, host) != url) prefs(c).edit().putString("shopiconok3_$host", url).putInt("shopiconpx_$host", px).apply()
+    }
+
+    /** Goes up when a shop's icon was learnt from its page, so its tile looks again. */
+    var version by mutableIntStateOf(0)
+        private set
+
+    /**
+     * The icons a shop's page named while it was open in the shop browser (2.121), biggest first. Used when the biggest
+     * is sharper than the icon the tile shows now; then the tile tries them first.
+     */
+    fun learn(c: Context, host: String, found: List<Pair<String, Int>>) {
+        val big = found.filter { it.second >= SHARP }.sortedByDescending { it.second }.map { it.first }.distinct().take(3)
+        if (big.isEmpty()) return
+        val p = prefs(c)
+        val now = p.getInt("shopiconpx_$host", 0)
+        val best = found.maxOf { it.second }
+        if (accepted(c, host) != null && now >= best) return
+        val old = p.getString("shopicon3_$host", null)?.takeIf { it.startsWith("http") }?.split('\n').orEmpty()
+        val list = (big + old).distinct()
+        if (list == old && accepted(c, host) == null) return
+        p.edit().putString("shopicon3_$host", list.joinToString("\n")).remove("shopiconok3_$host").apply()
+        big.forEach { rejected.remove(it) }
+        version++
     }
 
     fun reject(c: Context, host: String, url: String) {
@@ -339,7 +387,7 @@ fun ShopIcon(s: Shop, sizeDp: Int) {
     // The biggest of the too-small icons, shown only when no sharp one exists.
     var bestSmall by remember(s.url) { mutableStateOf<String?>(null) }
     var bestSmallPx by remember(s.url) { mutableIntStateOf(0) }
-    LaunchedEffect(s.url) {
+    LaunchedEffect(s.url, ShopIcons.version) {
         val ok = ShopIcons.accepted(ctx, s.host)
         val d = if (ok != null) emptyList() else ShopIcons.declared(ctx, s)
         tries = (listOfNotNull(ok) + d + listOf("$base/apple-touch-icon.png", ShopIcons.google(s.host))).distinct()
@@ -374,7 +422,7 @@ fun ShopIcon(s: Shop, sizeDp: Int) {
                     // nothing after scrolling): kept as the fallback while a sharper one is looked for.
                     if (px > bestSmallPx) { bestSmall = url; bestSmallPx = px }
                     at++
-                } else ShopIcons.accept(ctx, s.host, url) // sharp, or the best there is: remembered
+                } else ShopIcons.accept(ctx, s.host, url, px) // sharp, or the best there is: remembered
             },
             modifier = Modifier.fillMaxSize().padding(6.dp)
         ) else Box(
@@ -394,15 +442,20 @@ private fun AddShopDialog(onClose: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
     var bad by remember { mutableStateOf(false) }
+    var twice by remember { mutableStateOf<String?>(null) }
     AlertDialog(
         onDismissRequest = onClose,
         title = { Text(tr("Add shop")) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
-                    address, { address = it; bad = false }, label = { Text(tr("Web address")) }, singleLine = true,
-                    placeholder = { Text("shop.nl") }, isError = bad,
-                    supportingText = if (bad) ({ Text(tr("That isn’t a web address.")) }) else null,
+                    address, { address = it; bad = false; twice = null }, label = { Text(tr("Web address")) }, singleLine = true,
+                    placeholder = { Text("shop.nl") }, isError = bad || twice != null,
+                    supportingText = when {
+                        bad -> ({ Text(tr("That isn’t a web address.")) })
+                        twice != null -> ({ Text(tr("%s is already in your shops.", twice!!)) })
+                        else -> null
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
@@ -413,7 +466,14 @@ private fun AddShopDialog(onClose: () -> Unit) {
             }
         },
         confirmButton = {
-            TextButton(onClick = { if (Shops.add(ctx, name, address) != null) onClose() else bad = true }) { Text(tr("Add")) }
+            TextButton(onClick = {
+                val have = Shops.existing(ctx, address)
+                when {
+                    have != null -> twice = have.name
+                    Shops.add(ctx, name, address) != null -> onClose()
+                    else -> bad = true
+                }
+            }) { Text(tr("Add")) }
         },
         dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
     )
@@ -453,22 +513,59 @@ private fun decodeJsString(r: String?): String? {
 }
 
 /**
- * A shop inside the app, full screen: ✕ closes it, Back goes back a page (or closes on the first one), and "Add to
- * wishlist" reads the product on screen. Links that want to leave for another app (intent:, market:) are ignored, so
- * the person stays here; the page gets no access to the app (no JavaScript bridge, no files).
+ * Reads the icons the shop's own page names, from the page on screen (2.121, owner: "beautiful full-size icons"). The
+ * phone's quiet lookup ([ShopIcons.declared]) is refused by several shops' bot checks (H&M, Amazon, HEMA, ...), but the
+ * page in the shop browser gets through, so it can tell which big icons the shop publishes (its web app manifest and
+ * its linked icons). Returns JSON: [{src, size}].
+ */
+private const val ICONS_JS = """(function(){
+  var out=[];
+  function size(s){var m=/(\d+)x\d+/g,b=0,r;while((r=m.exec(s||''))){b=Math.max(b,+r[1]);}return b;}
+  function svg(h,t){return /\.svg(\?|$)/i.test(h||'')||/svg/i.test(t||'');}
+  document.querySelectorAll('link[rel][href]').forEach(function(l){
+    var rel=(l.rel||'').toLowerCase();
+    if(rel.indexOf('icon')<0||rel==='mask-icon'||svg(l.href,l.type)) return;
+    out.push({src:l.href,size:Math.max(size(l.getAttribute('sizes')),rel.indexOf('apple-touch-icon')>=0?180:0)});
+  });
+  var m=document.querySelector('link[rel=manifest][href]');
+  if(!m) return Promise.resolve(JSON.stringify(out));
+  return fetch(m.href,{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
+    (j.icons||[]).forEach(function(ic){
+      if(!ic.src||svg(ic.src,ic.type)||/monochrome/.test(ic.purpose||'')) return;
+      out.push({src:new URL(ic.src,m.href).href,size:size(ic.sizes)});
+    });
+    return JSON.stringify(out);
+  }).catch(function(){return JSON.stringify(out);});
+})()"""
+
+/** The page's own user agent without "; wv": some shops treat the in-app browser as "open our app" and get stuck (2.121). */
+private fun browserUserAgent(ua: String): String = ua.replace("; wv)", ")").replace(Regex("\\sVersion/\\d+(\\.\\d+)*"), "")
+
+/**
+ * A shop inside the app, full screen. Top: ✕ closes it, ← goes back a page, ↻ reloads, ⋮ opens the page in the phone's
+ * own browser (the way out when a shop doesn't work in here). The phone's Back goes back a page (or closes on the first
+ * one). A floating "+ Add wish" (owner, 2.120; flat and smaller in 2.121) has colour only on a page where a product is
+ * recognised; tapped elsewhere it says so, with "Add anyway" as a way out in case the product wasn't recognised.
+ * Links that open another app (intent:) load their web address instead when they have one; others are ignored. The page
+ * gets no access to the app (no JavaScript bridge, no files).
  */
 @OptIn(ExperimentalFoundationApi::class)
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Unit) {
+    val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
-    val look = LocalLook.current
     var web by remember { mutableStateOf<WebView?>(null) }
     var progress by remember { mutableIntStateOf(0) }
     var pageTitle by remember { mutableStateOf(shop.name) }
+    var canBack by remember { mutableStateOf(false) }
     var reading by remember { mutableStateOf(false) }
-    var notProduct by remember { mutableStateOf<Pair<String, Meta?>?>(null) }
+    var menu by remember { mutableStateOf(false) }
+    // The address of the page on screen when a product was recognised there (null: not a product page).
+    var productAt by remember { mutableStateOf<String?>(null) }
+    var checks by remember { mutableIntStateOf(0) }
+    var hint by remember { mutableStateOf(false) }
     // "Added to …" for a moment after a wish from this shop was saved.
     val savesAtStart = remember { ShopNav.saves }
     var addedNote by remember { mutableStateOf<String?>(null) }
@@ -478,23 +575,64 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
         kotlinx.coroutines.delay(2500)
         addedNote = null
     }
+    LaunchedEffect(hint) { if (hint) { kotlinx.coroutines.delay(5000); hint = false } }
+
+    suspend fun js(w: WebView, code: String): String? = withTimeoutOrNull(4000L) {
+        suspendCancellableCoroutine<String?> { cont ->
+            w.evaluateJavascript(code) { r -> if (cont.isActive) cont.resume(decodeJsString(r)) }
+        }
+    }
 
     fun back() {
         val w = web
         if (w != null && w.canGoBack()) w.goBack() else onClose()
     }
 
-    fun add() {
+    // Is the page on screen a product? Looked at when a page has loaded or its address changed (shops that change
+    // pages without reloading), and again a little later, as many shops fill in the price after loading.
+    LaunchedEffect(checks) {
+        if (checks == 0) return@LaunchedEffect
+        for (wait in listOf(300L, 1500L, 3000L)) {
+            kotlinx.coroutines.delay(wait)
+            val w = web ?: return@LaunchedEffect
+            val url = w.url ?: return@LaunchedEffect
+            canBack = w.canGoBack()
+            if (productAt == url) return@LaunchedEffect
+            val html = js(w, "document.documentElement.outerHTML") ?: continue
+            val ok = withContext(Dispatchers.Default) {
+                try { parsePage(Jsoup.parse(html, url), URI(url).host ?: "", 200)?.let { !it.blocked && it.price != null } ?: false }
+                catch (e: Exception) { false }
+            }
+            if (web?.url != url) return@LaunchedEffect
+            productAt = if (ok) url else null
+            if (ok) return@LaunchedEffect
+        }
+    }
+
+    // The shop's own big icons, read from its page (see ICONS_JS), for its tile on Home.
+    fun learnIcons(w: WebView) {
+        val host = try { URI(w.url ?: "").host?.removePrefix("www.") } catch (e: Exception) { null } ?: return
+        if (host != shop.host) return
+        scope.launch {
+            val raw = js(w, ICONS_JS) ?: return@launch
+            try {
+                val a = JSONArray(raw)
+                val found = (0 until a.length()).map { a.getJSONObject(it) }
+                    .map { it.optString("src") to it.optInt("size") }.filter { it.first.startsWith("http") }
+                ShopIcons.learn(ctx, shop.host, found)
+            } catch (e: Exception) {
+            }
+        }
+    }
+
+    fun add(anyway: Boolean = false) {
         val w = web ?: return
         val url = w.url ?: return
+        if (!anyway && productAt != url) { hint = true; return }
+        hint = false
         reading = true
         scope.launch {
-            suspend fun js(code: String): String? = withTimeoutOrNull(4000L) {
-                suspendCancellableCoroutine<String?> { cont ->
-                    w.evaluateJavascript(code) { r -> if (cont.isActive) cont.resume(decodeJsString(r)) }
-                }
-            }
-            val html = js("document.documentElement.outerHTML")
+            val html = js(w, "document.documentElement.outerHTML")
             val read = try {
                 html?.let { parsePage(Jsoup.parse(it, url), URI(url).host ?: "", 200) }
             } catch (e: Exception) {
@@ -504,7 +642,7 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
             // that change pages without reloading keep an old "og:image" (or none), so the picture is taken from the
             // page itself: the first image in the product's own structured data, then the page's og:image when it
             // belongs to this page, then the first big picture in the page.
-            val pics = try { JSONObject(js(PICTURE_JS) ?: "{}") } catch (e: Exception) { JSONObject() }
+            val pics = try { JSONObject(js(w, PICTURE_JS) ?: "{}") } catch (e: Exception) { JSONObject() }
             fun abs(u: String): String = try { URI(url).resolve(u.trim()).toString() } catch (e: Exception) { "" }
             val ld = pics.optString("ld").takeIf { it.isNotBlank() }?.let { abs(it) }.orEmpty()
             val ogUrl = pics.optString("ogurl")
@@ -513,9 +651,8 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
             val picture = listOf(ld, if (ogFits) read?.image.orEmpty() else "", big).firstOrNull { it.startsWith("http") }.orEmpty()
             val meta = read?.let { if (picture.isNotEmpty()) it.copy(image = picture) else it }
             reading = false
-            // A product page has a price; otherwise it is probably a search result or the shop's front page.
-            if (meta != null && !meta.blocked && meta.price != null) onFound(url, meta)
-            else notProduct = url to meta?.takeIf { !it.blocked }
+            // "Add anyway": whatever could be read (or nothing), to fill in yourself.
+            onFound(url, meta?.takeIf { !it.blocked })
         }
     }
 
@@ -527,60 +664,122 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
         BackHandler { back() }
         Surface(Modifier.fillMaxSize(), color = cs.background) {
             Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
-                Row(Modifier.fillMaxWidth().height(56.dp).padding(start = 4.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().height(56.dp).padding(end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onClose) { Icon(AppIcons.Close, tr("Close shop")) }
-                    ShopIcon(shop, 28)
+                    IconButton(onClick = { web?.goBack() }, enabled = canBack) { Icon(AppIcons.ArrowBack, tr("Back")) }
+                    ShopIcon(shop, 26)
                     Text(
-                        pageTitle, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        pageTitle, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(start = 10.dp).weight(1f)
                     )
+                    IconButton(onClick = { web?.reload() }) { Icon(AppIcons.Refresh, tr("Reload")) }
+                    Box {
+                        IconButton(onClick = { menu = true }) { Icon(AppIcons.MoreVert, tr("More")) }
+                        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                            DropdownMenuItem(text = { Text(tr("Open in your browser")) }, onClick = {
+                                menu = false
+                                val u = web?.url ?: shop.url
+                                try {
+                                    ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(u)))
+                                } catch (e: Exception) {
+                                }
+                            })
+                        }
+                    }
                 }
                 if (progress in 1..99) LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth())
-                // The page fills the screen; "+ Add wish" floats over its bottom-right corner (owner, 2.120: before, a
-                // full-width bar under the page).
+                // The page fills the screen; "+ Add wish" floats over its bottom-right corner (owner, 2.120).
                 Box(Modifier.weight(1f).fillMaxWidth()) {
-                AndroidView(
-                    factory = { c ->
-                        WebView(c).apply {
-                            settings.javaScriptEnabled = true
-                            settings.domStorageEnabled = true
-                            settings.allowFileAccess = false
-                            settings.allowContentAccess = false
-                            webViewClient = object : WebViewClient() {
-                                override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-                                    val s = request.url.scheme ?: return true
-                                    return s != "http" && s != "https"
-                                }
+                    AndroidView(
+                        factory = { c ->
+                            WebView(c).apply {
+                                settings.javaScriptEnabled = true
+                                settings.domStorageEnabled = true
+                                settings.databaseEnabled = true
+                                settings.allowFileAccess = false
+                                settings.allowContentAccess = false
+                                settings.useWideViewPort = true
+                                settings.loadWithOverviewMode = true
+                                settings.userAgentString = browserUserAgent(settings.userAgentString)
+                                // Cookie questions and logins of several shops run on another site (2.121, owner's
+                                // recording: bol.com stayed behind a grey veil).
+                                android.webkit.CookieManager.getInstance().setAcceptCookie(true)
+                                android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+                                webViewClient = object : WebViewClient() {
+                                    override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                                        val u = request.url
+                                        val s = u.scheme ?: return true
+                                        if (s == "http" || s == "https") return false
+                                        // "Open in our app" links: their web address, when they have one.
+                                        if (s == "intent") {
+                                            val fallback = try {
+                                                android.content.Intent.parseUri(u.toString(), android.content.Intent.URI_INTENT_SCHEME)
+                                                    .getStringExtra("browser_fallback_url")
+                                            } catch (e: Exception) { null }
+                                            if (fallback != null && (fallback.startsWith("https://") || fallback.startsWith("http://"))) view.loadUrl(fallback)
+                                        }
+                                        return true
+                                    }
 
-                                override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) { progress = 10 }
-                                override fun onPageFinished(view: WebView, url: String?) {
-                                    progress = 100
-                                    view.title?.takeIf { it.isNotBlank() }?.let { pageTitle = it }
+                                    override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) { progress = 10 }
+                                    override fun onPageFinished(view: WebView, url: String?) {
+                                        progress = 100
+                                        view.title?.takeIf { it.isNotBlank() }?.let { pageTitle = it }
+                                        canBack = view.canGoBack()
+                                        checks++
+                                        learnIcons(view)
+                                    }
+
+                                    override fun doUpdateVisitedHistory(view: WebView, url: String?, isReload: Boolean) {
+                                        canBack = view.canGoBack()
+                                        if (url != productAt) productAt = null
+                                        checks++
+                                    }
                                 }
+                                webChromeClient = object : android.webkit.WebChromeClient() {
+                                    override fun onProgressChanged(view: WebView, p: Int) { progress = p }
+                                    override fun onReceivedTitle(view: WebView, title: String?) {
+                                        title?.takeIf { it.isNotBlank() }?.let { pageTitle = it }
+                                    }
+                                }
+                                loadUrl(shop.url)
+                                web = this
                             }
-                            webChromeClient = object : android.webkit.WebChromeClient() {
-                                override fun onProgressChanged(view: WebView, p: Int) { progress = p }
-                            }
-                            loadUrl(shop.url)
-                            web = this
-                        }
-                    },
-                    onRelease = { it.stopLoading(); it.destroy() },
-                    modifier = Modifier.fillMaxSize()
-                )
-                Row(
-                    Modifier.align(Alignment.BottomEnd).padding(16.dp).height(52.dp)
-                        .lookSurface(look, look.fabShape, look.accent, depth = 5.dp)
-                        .combinedClickable(enabled = !reading, onClickLabel = tr("Add wish")) { add() }
-                        .padding(start = 16.dp, end = 20.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(AppIcons.Add, null, tint = look.onAccent)
-                    Text(
-                        if (reading) tr("Reading this page…") else tr("Add wish"),
-                        color = look.onAccent, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 8.dp)
+                        },
+                        onRelease = { it.stopLoading(); it.destroy() },
+                        modifier = Modifier.fillMaxSize()
                     )
+                    val ready = productAt != null && productAt == web?.url
+                    // Flat (owner, 2.121: no shadow) and compact, so the products stay in view. Coloured only on a
+                    // product page.
+                    Row(
+                        Modifier.align(Alignment.BottomEnd).padding(14.dp).height(42.dp)
+                            .clip(RoundedCornerShape(21.dp))
+                            .background(if (ready || reading) cs.primary else cs.surfaceVariant)
+                            .combinedClickable(enabled = !reading, onClickLabel = tr("Add wish")) { add() }
+                            .padding(start = 12.dp, end = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val fg = if (ready || reading) cs.onPrimary else cs.onSurfaceVariant.copy(alpha = 0.6f)
+                        Icon(AppIcons.Add, null, tint = fg, modifier = Modifier.size(20.dp))
+                        Text(
+                            if (reading) tr("Reading…") else tr("Add wish"), color = fg,
+                            style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(start = 6.dp)
+                        )
+                    }
                 }
+                if (hint) {
+                    Row(
+                        Modifier.fillMaxWidth().background(cs.inverseSurface).padding(start = 16.dp, end = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            tr("No product recognised on this page."), color = cs.inverseOnSurface,
+                            style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f).padding(vertical = 12.dp)
+                        )
+                        TextButton(onClick = { add(anyway = true) }) { Text(tr("Add anyway"), color = cs.inversePrimary) }
+                    }
                 }
                 addedNote?.let { n ->
                     Text(
@@ -590,15 +789,6 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                     )
                 }
             }
-        }
-        notProduct?.let { (u, m) ->
-            AlertDialog(
-                onDismissRequest = { notProduct = null },
-                title = { Text(tr("No product found here")) },
-                text = { Text(tr("Open a product first, then tap Add wish. Or add this page anyway and fill in the details yourself.")) },
-                confirmButton = { TextButton(onClick = { notProduct = null; onFound(u, m) }) { Text(tr("Add anyway")) } },
-                dismissButton = { TextButton(onClick = { notProduct = null }) { Text(tr("OK")) } }
-            )
         }
     }
 }
