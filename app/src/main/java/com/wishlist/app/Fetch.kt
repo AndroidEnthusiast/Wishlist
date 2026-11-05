@@ -1,6 +1,8 @@
 package com.wishlist.app
 
 import android.content.Context
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
@@ -82,7 +84,22 @@ private val COUNTRY_CURRENCY: Map<String, String> =
     )
 
 /** The currency of the phone's country (Settings > Language and region), or the euro (owner, 2.120). */
-fun localCurrency(): String = COUNTRY_CURRENCY[java.util.Locale.getDefault().country.uppercase()] ?: "EUR"
+fun countryCurrency(): String = COUNTRY_CURRENCY[java.util.Locale.getDefault().country.uppercase()] ?: "EUR"
+
+/** The currency for new wishes: the one picked in App settings > Prices (2.122), else the phone country's. */
+fun localCurrency(): String = CurrencyChoice.chosen.ifEmpty { countryCurrency() }
+
+/** App settings > Prices > "Currency for new wishes" (owner, 2.122): "" is Automatic (the phone's country). */
+object CurrencyChoice {
+    var chosen by androidx.compose.runtime.mutableStateOf("")
+        private set
+    /** The choices besides Automatic. */
+    val all = listOf("EUR", "GBP", "USD", "CHF", "SEK", "NOK", "DKK", "PLN", "CAD", "AUD", "NZD", "JPY", "CNY", "KRW", "INR", "MXN", "BRL")
+
+    private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
+    fun load(c: Context) { chosen = prefs(c).getString("new_cur", "") ?: "" }
+    fun set(c: Context, cur: String) { chosen = cur; prefs(c).edit().putString("new_cur", cur).apply() }
+}
 
 private val AMAZON_PRICE = listOf(
     "#corePriceDisplay_desktop_feature_div .priceToPay .a-offscreen",

@@ -188,7 +188,7 @@ object Groups {
             when (n.optString("kind")) {
                 "declined" -> {
                     val who = n.optString("who").ifBlank { tr("Someone") }
-                    if (!onScreen) Alerts.notifyGroup(c, gid, tr("%1\$s said no thanks to “%2\$s”", who, name), tr("They won’t join the group for now."))
+                    // Only on the Notifications page, no buzz (owner, 2.122: group changes aren't urgent).
                     Notifications.add(c, "group_declined", "g:$gid", who, extra = name, read = onScreen)
                 }
                 "removed" -> {

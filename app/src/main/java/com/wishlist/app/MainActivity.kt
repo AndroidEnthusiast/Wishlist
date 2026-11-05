@@ -588,6 +588,14 @@ fun App(
         groupOpen = null
     }
 
+    // The bell at the top right (2.122): Notifications.
+    LaunchedEffect(NotesNav.open) {
+        if (NotesNav.open) {
+            NotesNav.open = false
+            closeAll(); notesOpen = true
+            scope.launch { drawer.close() }
+        }
+    }
     // Back from Profile goes to where you were (Friends, when you came from your picture there).
     BackHandler(enabled = !drawer.isOpen && profileOpen) { profileOpen = false }
     // A friend request alert was tapped: the Friends tab.
@@ -871,8 +879,7 @@ fun App(
         ) {
             Box {
                 AnimatedMenuIcon(menuOpen, MaterialTheme.colorScheme.onSurface)
-                // Something new in Notifications: a red dot on the menu button too.
-                if (Notifications.unread && !menuOpen) RedDot(Modifier.align(Alignment.TopEnd).offset(4.dp, (-3).dp))
+                // (Until 2.122 a red dot here showed news in Notifications; now the bell at the top right does.)
             }
         }
     }

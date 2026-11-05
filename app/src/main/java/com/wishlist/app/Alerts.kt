@@ -50,8 +50,71 @@ object Alerts {
         WorkManager.getInstance(c).enqueue(OneTimeWorkRequestBuilder<PriceWorker>().build())
     }
 
-    /** Title says a price dropped, the text says which item and by how much. */
+    /** One price change waiting to be told (see [collectPrices]). */
+    private class PriceAlert(val drop: Boolean, val id: Int, val item: String, val old: Double, val now: Double, val currency: String, val heading: String)
+    private val pending = ArrayList<PriceAlert>()
+    private var collecting = 0
+
+    /**
+     * Runs a price check and tells its price changes afterwards (owner, 2.122): one change is one notification as
+     * before; several drops become one "3 wishes got cheaper" (and several rises one "… more expensive"), listing them.
+     */
+    suspend fun <T> collectPrices(c: Context, check: suspend () -> T): T {
+        synchronized(pending) { collecting++ }
+        try {
+            return check()
+        } finally {
+            val now = synchronized(pending) {
+                collecting--
+                if (collecting > 0) emptyList() else pending.toList().also { pending.clear() }
+            }
+            try {
+                for (drop in listOf(true, false)) {
+                    val l = now.filter { it.drop == drop }
+                    when {
+                        l.size == 1 -> l[0].let { if (drop) postDrop(c, it.id, it.item, it.old, it.now, it.currency, it.heading) else postRise(c, it.id, it.item, it.old, it.now, it.currency, it.heading) }
+                        l.size > 1 -> postSummary(c, drop, l)
+                    }
+                }
+            } catch (e: Exception) {
+            }
+        }
+    }
+
+    private fun postSummary(c: Context, drop: Boolean, l: List<PriceAlert>) {
+        ensureChannel(c)
+        val title = if (drop) tr("%d wishes got cheaper", l.size) else tr("%d wishes got more expensive", l.size)
+        val lines = l.map { a ->
+            val pct = if (a.old > 0) Math.round(kotlin.math.abs(1 - a.now / a.old) * 100) else 0L
+            tr("%1\$s: %2\$s (%3\$s%4\$d%%)", a.item, money(a.now, a.currency), if (drop) "-" else "+", pct)
+        }
+        val style = NotificationCompat.InboxStyle()
+        lines.take(6).forEach { style.addLine(it) }
+        if (lines.size > 6) style.setSummaryText(tr("and %d more", lines.size - 6))
+        val id = if (drop) 7_000_001 else 7_000_002
+        val pi = PendingIntent.getActivity(
+            c, id, Intent(c, MainActivity::class.java),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        val n = NotificationCompat.Builder(c, CHANNEL)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle(title)
+            .setContentText(lines.joinToString(", "))
+            .setStyle(style)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+        (c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(id, n)
+    }
+
+    /** Title says a price dropped, the text says which item and by how much. During a check: told afterwards. */
     fun notifyDrop(c: Context, id: Int, item: String, old: Double, now: Double, currency: String, heading: String = tr("Price drop on your wishlist")) {
+        synchronized(pending) { if (collecting > 0) { pending.add(PriceAlert(true, id, item, old, now, currency, heading)); return } }
+        postDrop(c, id, item, old, now, currency, heading)
+    }
+
+    private fun postDrop(c: Context, id: Int, item: String, old: Double, now: Double, currency: String, heading: String) {
         ensureChannel(c)
         val pct = if (old > 0) Math.round((1 - now / old) * 100) else 0L
         val text = tr("%1\$s is now %2\$s (was %3\$s, -%4\$d%%)", item, money(now, currency), money(old, currency), pct)
@@ -73,6 +136,11 @@ object Alerts {
 
     /** A price went up (only when switched on in Settings). Title and text like [notifyDrop]. */
     fun notifyRise(c: Context, id: Int, item: String, old: Double, now: Double, currency: String, heading: String = tr("Price increase on your wishlist")) {
+        synchronized(pending) { if (collecting > 0) { pending.add(PriceAlert(false, id, item, old, now, currency, heading)); return } }
+        postRise(c, id, item, old, now, currency, heading)
+    }
+
+    private fun postRise(c: Context, id: Int, item: String, old: Double, now: Double, currency: String, heading: String) {
         ensureChannel(c)
         val pct = if (old > 0) Math.round((now / old - 1) * 100) else 0L
         val text = tr("%1\$s is now %2\$s (was %3\$s, +%4\$d%%)", item, money(now, currency), money(old, currency), pct)

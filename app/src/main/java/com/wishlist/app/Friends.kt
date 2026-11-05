@@ -241,7 +241,7 @@ object Friends {
             Notifications.add(c, "friend_req", "r:${r.id}", r.name.ifBlank { tr("Someone") }, photos[r.id] ?: "", read = onScreen)
         }
         for (f in s.friends) if (f.id in sent) {
-            if (!onScreen) Alerts.notifyFriend(c, f.id, f.name, request = false)
+            // "Friend request accepted": only on the Notifications page, no buzz (owner, 2.122).
             Notifications.add(c, "friend_ok", "p:${f.id}", f.name.ifBlank { tr("Someone") }, photos[f.id] ?: "", read = onScreen)
         }
         p.edit()

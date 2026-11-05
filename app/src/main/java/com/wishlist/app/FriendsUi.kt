@@ -134,12 +134,27 @@ fun Avatar(photo: String?, name: String, size: Dp) {
     }
 }
 
-/** Your profile picture at the top right of Home, Prices and Friends: opens your profile. */
+/**
+ * The top right of Home, Messages, Price watch and Friends: a bell for Notifications, with a red dot when something is
+ * new (owner, 2.122: before, news only showed in the side menu), and your profile picture, which opens your profile. The
+ * bell is the style's own icon (filled, outlined, rounded or sharp), like the other icons.
+ */
 @Composable
 fun ProfileButton(onProfile: () -> Unit) {
     val ctx = LocalContext.current
     Friends.load(ctx)
+    IconButton(onClick = { NotesNav.open = true }) {
+        Box {
+            Icon(AppIcons.Notifications, tr("Notifications"))
+            if (Notifications.unread) RedDot(Modifier.align(Alignment.TopEnd).offset(2.dp, (-2).dp))
+        }
+    }
     IconButton(onClick = onProfile) { Avatar(Friends.myPhoto, Shared.lastName, 32.dp) }
+}
+
+/** The bell at the top asks the app to show Notifications (see [ProfileButton]). */
+object NotesNav {
+    var open by mutableStateOf(false)
 }
 
 @Composable

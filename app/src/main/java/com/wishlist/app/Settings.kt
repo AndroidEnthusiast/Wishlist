@@ -28,6 +28,8 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -130,7 +132,8 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
             SettingSwitch(tr("Descriptions"), tr("The shop’s description on the large cards."), Show["show_desc"]) { Show.set(ctx, "show_desc", it) }
             SettingSwitch(tr("List summary"), tr("The number of wishes and the total value at the top of a list."), Show["show_summary"]) { Show.set(ctx, "show_summary", it) }
 
-            SectionTitle(tr("Price alerts"))
+            // Everything about prices in one place (owner, 2.122): how often, the alerts, and the currency.
+            SectionTitle(tr("Prices"))
             Text(
                 tr("Choose how often the app refreshes the prices of your wishes, to show any price drops or increases."),
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
@@ -186,17 +189,18 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                     TextButton(onClick = { Background.request(ctx) }) { Text(tr("Allow")) }
                 }
             }
+            SettingSwitch(tr("Price drops"), tr("A wish got cheaper."), Repo.notifyDrops) { Repo.setNotifyDrops(ctx, it) }
+            SettingSwitch(tr("Price increases"), tr("A wish got more expensive."), Repo.notifyRises) { Repo.setNotifyRises(ctx, it) }
+            CurrencySetting()
 
             // Every kind of notification the app sends, each with its switch (owner, 2.101: "this helps me too to
             // remember what notifications are being sent"). Off ones are also left off the Notifications page.
             SectionTitle(tr("Notifications"))
-            SettingSwitch(tr("Price drops"), tr("A wish got cheaper."), Repo.notifyDrops) { Repo.setNotifyDrops(ctx, it) }
-            SettingSwitch(tr("Price increases"), tr("A wish got more expensive."), Repo.notifyRises) { Repo.setNotifyRises(ctx, it) }
             SettingSwitch(tr("Reserved gift moved to the bin"), tr("Someone moved a gift you reserved to the bin."), Show["nt_bin"]) { Show.set(ctx, "nt_bin", it) }
             SettingSwitch(tr("Reserved gift taken off a list"), tr("A gift you reserved is no longer on a friend’s list."), Show["nt_gone"]) { Show.set(ctx, "nt_gone", it) }
             SettingSwitch(tr("Friend requests"), tr("Someone wants to be your friend."), Show["nt_req"]) { Show.set(ctx, "nt_req", it) }
-            SettingSwitch(tr("Friend request accepted"), tr("A friend approved your request."), Show["nt_ok"]) { Show.set(ctx, "nt_ok", it) }
-            SettingSwitch(tr("Wishlist groups"), tr("Invitations, and changes in your groups."), Show["nt_group"]) { Show.set(ctx, "nt_group", it) }
+            SettingSwitch(tr("Friend request accepted"), tr("Shown in Notifications, without a buzz."), Show["nt_ok"]) { Show.set(ctx, "nt_ok", it) }
+            SettingSwitch(tr("Wishlist groups"), tr("Invitations. Other changes show in Notifications only."), Show["nt_group"]) { Show.set(ctx, "nt_group", it) }
             SettingSwitch(tr("Friends’ birthdays"), tr("A few days before a friend’s birthday."), Show["nt_bday"]) { Show.set(ctx, "nt_bday", it) }
             SettingSwitch(tr("New messages"), tr("A friend sent you a message."), Show["nt_msg"]) { Show.set(ctx, "nt_msg", it) }
 
@@ -204,7 +208,8 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
             SectionTitle(tr("Backup"))
             BackupSection(snack)
 
-            SectionTitle(tr("Update the app"))
+            // Update, share and licences together (owner, 2.122: they were three sections).
+            SectionTitle(tr("About Wishlist"))
             val version = remember {
                 try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName.orEmpty() } catch (e: Exception) { "" }
             }
@@ -212,39 +217,33 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                 tr("You have version %s. Download the newest version and install it over this one: your wishes stay.", version),
                 color = cs.onSurfaceVariant
             )
-            // The browser downloads it straight away; open the download to install it.
-            Button(onClick = {
-                try {
-                    ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(Config.APK_URL)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                } catch (e: Exception) {
-                    scope.launch { snack.showToast(tr("Couldn’t open the download. Check your connection.")) }
-                }
-            }) { Text(tr("Download app")) }
-
-            SectionTitle(tr("About"))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // The browser downloads it straight away; open the download to install it.
+                Button(onClick = {
+                    try {
+                        ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(Config.APK_URL)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                    } catch (e: Exception) {
+                        scope.launch { snack.showToast(tr("Couldn’t open the download. Check your connection.")) }
+                    }
+                }) { Text(tr("Download app")) }
+                OutlinedButton(onClick = {
+                    scope.launch {
+                        try {
+                            shareApk(ctx)
+                        } catch (e: Exception) {
+                            snack.showToast(tr("Couldn’t share the app"))
+                        }
+                    }
+                }) { Text(tr("Share app")) }
+            }
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     tr("The icons, fonts and building blocks in Wishlist, and their licences."),
                     style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
                     modifier = Modifier.weight(1f).padding(end = 12.dp)
                 )
-                OutlinedButton(onClick = { licences = true }) { Text(tr("Licences")) }
+                TextButton(onClick = { licences = true }) { Text(tr("Licences")) }
             }
-
-            SectionTitle(tr("Share the app"))
-            Text(
-                tr("Share this app through your messaging app of choice."),
-                color = cs.onSurfaceVariant
-            )
-            Button(onClick = {
-                scope.launch {
-                    try {
-                        shareApk(ctx)
-                    } catch (e: Exception) {
-                        snack.showToast(tr("Couldn’t share the app"))
-                    }
-                }
-            }) { Text(tr("Share app (APK)")) }
         }
     }
     if (licences) LicencesDialog { licences = false }
@@ -262,5 +261,39 @@ private fun SettingSwitch(title: String, about: String, on: Boolean, onChange: (
             Text(about, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Switch(checked = on, onCheckedChange = onChange)
+    }
+}
+
+/**
+ * "Currency for new wishes" (owner, 2.122): Automatic (the phone's country, else the euro) or one you pick, for example
+ * when you live abroad. Also used for shop pages that don't say. Each wish's own currency can still be changed in its form.
+ */
+@Composable
+private fun CurrencySetting() {
+    val ctx = LocalContext.current
+    val cs = MaterialTheme.colorScheme
+    var open by remember { mutableStateOf(false) }
+    val chosen = CurrencyChoice.chosen
+    Row(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { open = true }.padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+            Text(tr("Currency for new wishes"), style = MaterialTheme.typography.bodyLarge)
+            Text(
+                if (chosen.isEmpty()) tr("Automatic: %s, from your phone’s country", currencySymbol(countryCurrency()) + " " + countryCurrency())
+                else "${currencySymbol(chosen)} $chosen",
+                style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
+            )
+        }
+        Box {
+            Icon(AppIcons.ArrowDropDown, null)
+            DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+                DropdownMenuItem(text = { Text(tr("Automatic (%s)", countryCurrency())) }, onClick = { open = false; CurrencyChoice.set(ctx, "") })
+                CurrencyChoice.all.forEach { cur ->
+                    DropdownMenuItem(text = { Text("${currencySymbol(cur)}  $cur") }, onClick = { open = false; CurrencyChoice.set(ctx, cur) })
+                }
+            }
+        }
     }
 }

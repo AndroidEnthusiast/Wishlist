@@ -196,6 +196,7 @@ object Repo {
 
     @Synchronized
     fun load(c: Context) {
+        CurrencyChoice.load(c) // App settings > Prices (2.122)
         if (loaded) return
         loaded = true
         val p = prefs(c)

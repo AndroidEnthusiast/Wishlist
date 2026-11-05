@@ -14,11 +14,14 @@ class PriceWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx,
     override suspend fun doWork(): Result {
         val c = applicationContext
         Repo.load(c)
-        PriceCheck.mine(c)
-        // Shared wishlists too: new prices go online for everyone, and every person on the list gets the alert.
-        try {
-            SharedPrices.check(c)
-        } catch (e: Exception) {
+        // All price changes of this check are told together afterwards (Alerts.collectPrices, 2.122).
+        Alerts.collectPrices(c) {
+            PriceCheck.mine(c)
+            // Shared wishlists too: new prices go online for everyone, and every person on the list gets the alert.
+            try {
+                SharedPrices.check(c)
+            } catch (e: Exception) {
+            }
         }
         Repo.setLastCheck(c, System.currentTimeMillis())
         // Make sure friends see the new prices even if the app is closed right after.
@@ -88,12 +91,12 @@ object PriceRefresh {
                 if (shared != null) {
                     if (!Shared.refresh(c)) tr("Couldn’t reach the server")
                     else {
-                        val n = SharedPrices.check(c, shared)
+                        val n = Alerts.collectPrices(c) { SharedPrices.check(c, shared) }
                         Shared.refresh(c)
                         if (n > 0) tr("Prices checked: %d cheaper", n) else tr("Prices checked")
                     }
                 } else {
-                    val n = PriceCheck.mine(c)
+                    val n = Alerts.collectPrices(c) { PriceCheck.mine(c) }
                     if (n > 0) tr("Prices checked: %d cheaper", n) else tr("Prices checked")
                 }
             } catch (e: CancellationException) {
