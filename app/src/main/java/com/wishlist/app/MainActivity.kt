@@ -424,6 +424,7 @@ fun App(
     var prefill by remember { mutableStateOf("") }
     // What "Find a gift" already read from the shop page on screen (2.114), so the form needn't load it again.
     var prefillMeta by remember { mutableStateOf<Meta?>(null) }
+    var fromShop by remember { mutableStateOf(false) }
     var catDlg by remember { mutableStateOf(false) }
     var settings by remember { mutableStateOf(false) }
     // The bin (menu > Bin): deleted wishes of every list, for 30 days.
@@ -815,7 +816,7 @@ fun App(
                     onAddTo = { t -> addTarget = t; prefill = ""; adding = true },
                     onOpenWishGroup = { GroupNav.openGroup(it) },
                     onNewWishGroup = { newWishGroup = true },
-                    onFound = { u, m -> addTarget = null; prefillMeta = m; prefill = u; adding = true }
+                    onFound = { u, m -> addTarget = null; prefillMeta = m; fromShop = true; prefill = u; adding = true }
                 )
                 else -> key(Shared.active, Repo.openMine) {
                     HomeScreen(
@@ -878,8 +879,8 @@ fun App(
     }
 
     if (adding) key(prefill) {
-        WishDialog(null, prefill, chooseList = prefill.isNotEmpty() || addTarget != null, startTarget = addTarget, initialMeta = prefillMeta) {
-            prefillMeta = null
+        WishDialog(null, prefill, chooseList = prefill.isNotEmpty() || addTarget != null, startTarget = addTarget, initialMeta = prefillMeta, fromShop = fromShop) {
+            prefillMeta = null; fromShop = false
             adding = false; addTarget = null
         }
     }
@@ -1599,7 +1600,10 @@ fun WishCard(
 fun WishDialog(
     edit: Wish?, initialUrl: String, chooseList: Boolean = false, startTarget: String? = null,
     // Already read from the page (Find a gift, 2.114): used instead of loading [initialUrl] again.
-    initialMeta: Meta? = null, onClose: () -> Unit
+    initialMeta: Meta? = null,
+    // Opened from a shop in Find a gift: saving tells the shop, which stays open (2.116).
+    fromShop: Boolean = false,
+    onClose: () -> Unit
 ) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -1821,6 +1825,7 @@ fun WishDialog(
                             )
                         )
                         if (chooseList) Repo.setLastSaveTo(ctx, Shared.active ?: MyLists.saveKey(Repo.openMine, false))
+                        if (fromShop) ShopNav.saved(Repo.listName)
                     } else {
                         Repo.replace(
                             ctx,

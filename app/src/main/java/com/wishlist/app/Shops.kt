@@ -54,6 +54,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.activity.compose.BackHandler
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
@@ -80,6 +82,16 @@ import kotlin.coroutines.resume
  *  - App only: a web page can't show other shops inside itself; browser users keep pasting links (owner's choice).
  *  - Plain links, no affiliate codes (owner: maybe discuss later).
  */
+
+/** A wish saved from a shop (2.116): the shop says "Added to …" and stays open. */
+object ShopNav {
+    var saves by mutableIntStateOf(0)
+        private set
+    var savedTo by mutableStateOf("")
+        private set
+
+    fun saved(listName: String) { savedTo = listName; saves++ }
+}
 
 data class Shop(val name: String, val url: String) {
     val host: String get() = try { URI(url).host?.removePrefix("www.") ?: "" } catch (e: Exception) { "" }
@@ -199,7 +211,8 @@ fun FindAGiftRow(onFound: (String, Meta?) -> Unit) {
             }
         }
     }
-    open?.let { s -> ShopBrowser(s, onClose = { open = null }, onFound = { u, m -> open = null; onFound(u, m) }) }
+    // The shop stays open under the add form (owner, 2.116): after Save or Cancel you are back where you were in it.
+    open?.let { s -> ShopBrowser(s, onClose = { open = null }, onFound = { u, m -> onFound(u, m) }) }
     if (adding) AddShopDialog(onClose = { adding = false })
 }
 
@@ -216,11 +229,27 @@ object ShopIcons {
     private const val WEEK = 7L * 24 * 60 * 60 * 1000
     private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
 
-    fun google(host: String) = "https://www.google.com/s2/favicons?domain=$host&sz=128"
+    fun google(host: String) = "https://www.google.com/s2/favicons?domain=$host&sz=256"
+
+    /**
+     * True when a loaded icon would look empty on the tile: almost all of it see-through or white (2.116: Zalando's
+     * icon is white on see-through). Then the next address is tried.
+     */
+    fun looksEmpty(b: Bitmap): Boolean {
+        val n = 16
+        var shown = 0
+        for (y in 0 until n) for (x in 0 until n) {
+            val px = b.getPixel(x * b.width / n, y * b.height / n)
+            val a = android.graphics.Color.alpha(px)
+            val r = android.graphics.Color.red(px); val g = android.graphics.Color.green(px); val bl = android.graphics.Color.blue(px)
+            if (a > 60 && !(r > 225 && g > 225 && bl > 225)) shown++
+        }
+        return shown < n * n * 4 / 100
+    }
 
     /** The icon the homepage names, or null. Known answers come straight from the phone's memory. */
     suspend fun declared(c: Context, s: Shop): String? {
-        val key = "shopicon_" + s.host
+        val key = "shopicon2_" + s.host // "2": looked up again with the sharper choice of 2.116
         val saved = prefs(c).getString(key, null)
         if (saved != null) {
             if (saved.startsWith("http")) return saved
@@ -237,8 +266,10 @@ object ShopIcons {
                 }
                 fun size(l: org.jsoup.nodes.Element): Int =
                     Regex("(\\d+)x\\d+").find(l.attr("sizes"))?.groupValues?.get(1)?.toIntOrNull() ?: 0
-                val apple = links.filter { it.attr("rel").lowercase().contains("apple-touch-icon") }.maxByOrNull { size(it) }
-                (apple ?: links.maxByOrNull { size(it) })?.absUrl("href")?.takeIf { it.startsWith("http") }
+                // The sharpest one (2.116: small ones looked blurry); with equal sizes an apple-touch-icon wins.
+                fun apple(l: org.jsoup.nodes.Element) = if (l.attr("rel").lowercase().contains("apple-touch-icon")) 1 else 0
+                links.maxWithOrNull(compareBy({ maxOf(size(it), if (apple(it) == 1) 180 else 0) }, { apple(it) }))
+                    ?.absUrl("href")?.takeIf { it.startsWith("http") }
             } catch (e: Exception) {
                 null
             }
@@ -263,6 +294,7 @@ fun ShopIcon(s: Shop, sizeDp: Int) {
     LaunchedEffect(s.url) {
         val d = ShopIcons.declared(ctx, s)
         tries = listOfNotNull(d, "$base/apple-touch-icon.png", ShopIcons.google(s.host)).distinct()
+        at = 0
     }
     val list = tries
     Box(
@@ -272,8 +304,14 @@ fun ShopIcon(s: Shop, sizeDp: Int) {
         if (list == null) {
             // Still looking: the plain tile.
         } else if (base.isNotEmpty() && at < list.size) AsyncImage(
-            model = list[at], contentDescription = null, contentScale = ContentScale.Fit,
+            // Software bitmaps, so [ShopIcons.looksEmpty] can read the pixels.
+            model = ImageRequest.Builder(ctx).data(list[at]).allowHardware(false).build(),
+            contentDescription = null, contentScale = ContentScale.Fit,
             onError = { at++ },
+            onSuccess = { st ->
+                val b = (st.result.drawable as? android.graphics.drawable.BitmapDrawable)?.bitmap
+                if (b != null && ShopIcons.looksEmpty(b)) at++
+            },
             modifier = Modifier.fillMaxSize().padding(6.dp)
         ) else Box(
             Modifier.fillMaxSize().background(cs.primaryContainer), contentAlignment = Alignment.Center
@@ -317,6 +355,30 @@ private fun AddShopDialog(onClose: () -> Unit) {
     )
 }
 
+/** Finds the product picture on the page on screen (see ShopBrowser's add). Returns JSON: ld, ogurl, img. */
+private const val PICTURE_JS = """(function(){
+  var best='', ba=0;
+  document.querySelectorAll('img').forEach(function(i){
+    var r=i.getBoundingClientRect();
+    if(r.width<120||r.height<120||r.bottom<0||r.top>innerHeight*1.5) return;
+    var s=i.currentSrc||i.src||''; if(!/^https?:/.test(s)) return;
+    if(r.width*r.height>ba){ba=r.width*r.height;best=s;}
+  });
+  var ld='';
+  document.querySelectorAll('script[type="application/ld+json"]').forEach(function(sc){
+    try{
+      var j=JSON.parse(sc.textContent); var all=[].concat(j['@graph']||j);
+      all.forEach(function(o){
+        if(ld||!o||!/Product/.test(String(o['@type']))) return;
+        var im=o.image; if(Array.isArray(im)) im=im[0]; if(im&&typeof im==='object') im=im.url||im.contentUrl;
+        if(typeof im==='string') ld=im;
+      });
+    }catch(e){}
+  });
+  var og=document.querySelector('meta[property="og:url"]');
+  return JSON.stringify({img:best, ld:ld, ogurl:og?og.content:''});
+})()"""
+
 private fun decodeJsString(r: String?): String? {
     if (r == null || r == "null") return null
     return try { JSONTokener(r).nextValue() as? String } catch (e: Exception) { null }
@@ -339,6 +401,15 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
     var pageTitle by remember { mutableStateOf(shop.name) }
     var reading by remember { mutableStateOf(false) }
     var notProduct by remember { mutableStateOf<Pair<String, Meta?>?>(null) }
+    // "Added to …" for a moment after a wish from this shop was saved.
+    val savesAtStart = remember { ShopNav.saves }
+    var addedNote by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(ShopNav.saves) {
+        if (ShopNav.saves == savesAtStart) return@LaunchedEffect
+        addedNote = tr("Added to %s", ShopNav.savedTo)
+        kotlinx.coroutines.delay(2500)
+        addedNote = null
+    }
 
     fun back() {
         val w = web
@@ -350,16 +421,29 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
         val url = w.url ?: return
         reading = true
         scope.launch {
-            val html = withTimeoutOrNull(4000L) {
+            suspend fun js(code: String): String? = withTimeoutOrNull(4000L) {
                 suspendCancellableCoroutine<String?> { cont ->
-                    w.evaluateJavascript("document.documentElement.outerHTML") { r -> if (cont.isActive) cont.resume(decodeJsString(r)) }
+                    w.evaluateJavascript(code) { r -> if (cont.isActive) cont.resume(decodeJsString(r)) }
                 }
             }
-            val meta = try {
+            val html = js("document.documentElement.outerHTML")
+            val read = try {
                 html?.let { parsePage(Jsoup.parse(it, url), URI(url).host ?: "", 200) }
             } catch (e: Exception) {
                 null
             }
+            // The product picture (owner, 2.116: it often stayed empty). Shops that change pages without reloading
+            // keep an old "og:image" (or none), so the picture is taken from what is on screen: the product's own
+            // structured data first, then the page's og:image when it belongs to this page, then the biggest picture
+            // in sight.
+            val pics = try { JSONObject(js(PICTURE_JS) ?: "{}") } catch (e: Exception) { JSONObject() }
+            fun abs(u: String): String = try { URI(url).resolve(u.trim()).toString() } catch (e: Exception) { "" }
+            val ld = pics.optString("ld").takeIf { it.isNotBlank() }?.let { abs(it) }.orEmpty()
+            val ogUrl = pics.optString("ogurl")
+            val ogFits = ogUrl.isBlank() || try { URI(abs(ogUrl)).path.trimEnd('/') == URI(url).path.trimEnd('/') } catch (e: Exception) { false }
+            val big = pics.optString("img").takeIf { it.isNotBlank() }?.let { abs(it) }.orEmpty()
+            val picture = listOf(ld, if (ogFits) read?.image.orEmpty() else "", big).firstOrNull { it.startsWith("http") }.orEmpty()
+            val meta = read?.let { if (picture.isNotEmpty()) it.copy(image = picture) else it }
             reading = false
             // A product page has a price; otherwise it is probably a search result or the shop's front page.
             if (meta != null && !meta.blocked && meta.price != null) onFound(url, meta)
@@ -367,7 +451,12 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
         }
     }
 
-    Dialog(onDismissRequest = { back() }, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+    Dialog(
+        onDismissRequest = { back() },
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false, dismissOnBackPress = false)
+    ) {
+        // Back (button or swipe) goes to the shop's previous page; only on the first page it closes (owner, 2.116).
+        BackHandler { back() }
         Surface(Modifier.fillMaxSize(), color = cs.background) {
             Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
                 Row(Modifier.fillMaxWidth().height(56.dp).padding(start = 4.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -408,6 +497,13 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                     onRelease = { it.stopLoading(); it.destroy() },
                     modifier = Modifier.weight(1f).fillMaxWidth()
                 )
+                addedNote?.let { n ->
+                    Text(
+                        "✓ $n", color = cs.onSecondaryContainer, style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.fillMaxWidth().background(cs.secondaryContainer).padding(vertical = 8.dp, horizontal = 16.dp)
+                    )
+                }
                 Box(Modifier.fillMaxWidth().padding(12.dp)) {
                     Row(
                         Modifier.fillMaxWidth().height(52.dp).lookSurface(look, look.fabShape, look.accent)
