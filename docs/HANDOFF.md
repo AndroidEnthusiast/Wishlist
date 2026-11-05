@@ -151,8 +151,10 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - 5 November: **v2.119**: fixed 2.118's icon bug (six shops lost their icon).
 
+- 5 November: the owner switched Network access to **Full** for this environment (all its sessions). Checked: dl.google.com answers; zalando.nl and bol.com answer 403 to plain requests (their own bot protection), so shop checks must use the installed Chromium. Keep secrets out of the environment (keystore and Supabase keys stay in GitHub secrets / Supabase).
+
 ## Next session
-- **First, if Network access is Full now**: install the Android SDK (dl.google.com), make `gradle assembleDebug` work here, add Roborazzi screenshot tests for the main screens and a script that runs the app's icon finding and page reading against the 20 shops. Then compile and look at screenshots before every push (owner: fewer rounds of phone testing). Not possible here: an emulator (no /dev/kvm).
+- **First (owner switched the environment's Network access to Full on 5 November; dl.google.com reachable, checked)**: install the Android SDK (dl.google.com), make `gradle assembleDebug` work here, add Roborazzi screenshot tests for the main screens and a script that runs the app's icon finding and page reading against the 20 shops. Then compile and look at screenshots before every push (owner: fewer rounds of phone testing). Not possible here: an emulator (no /dev/kvm).
 - **Shops (2.116)**: ask whether Zalando's icon shows, whether icons are sharp, whether the picture is filled in on Add for each shop, and whether Back/✕ feel right.
 - **Check Find a gift (2.114) on the phone**: do the shop icons load (some sites may only give the letter tile), do the shops work inside the app (cookie banners, logins, Amazon), does Add to wishlist read the product (title, picture, price) on each shop? Shops that read badly need a fix in `parsePage` (and `web/parse.js`, same logic). Affiliate links: owner wants to discuss later.
 - **Check 2.111 on the phone**: the pinned top while scrolling (both views, with and without a cover photo, own list and gift list: no jump or double menu), the pulse when adding/deleting a wish, the "Saved!" lines, the long-press menu size, "Owned by you".
