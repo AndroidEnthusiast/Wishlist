@@ -20,7 +20,7 @@ fun DeleteHost(snack: SnackbarHostState) {
             title = { Text(tr("Delete this wish?")) },
             text = {
                 Text(
-                    tr("Deleting this wish moves “%1\$s” to the bin. After %2\$d days it’s permanently deleted.", shorten(ask.title), BIN_DAYS) +
+                    tr("“%1\$s” goes to the bin. After %2\$d days it’s gone for good.", shorten(ask.title), BIN_DAYS) +
                         if (Shared.active != null) " " + tr("Everyone on the list can see it in the bin.") else ""
                 )
             },

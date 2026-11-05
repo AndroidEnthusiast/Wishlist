@@ -173,7 +173,7 @@ fun BackupSection(snack: SnackbarHostState) {
         if (uri != null) importing = uri
     }
     Text(
-        tr("Moving to a new phone? Export everything to one file: your wishlists, wishes, photos, profile, friends and the gift lists you’re on. Then import it on the new phone."),
+        tr("New phone? Export everything to one file, then import it there after installing the app."),
         style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
     )
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -183,14 +183,14 @@ fun BackupSection(snack: SnackbarHostState) {
         }
     }
     Text(
-        tr("The file holds your keys: whoever has it can act as you. Keep it somewhere safe, for example your own Google Drive."),
+        tr("Keep this file safe, for example in your Google Drive: whoever has it can act as you."),
         style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
     )
     importing?.let { uri ->
         AlertDialog(
             onDismissRequest = { importing = null },
             title = { Text(tr("Replace everything on this phone?")) },
-            text = { Text(tr("Everything in Wishlist on this phone is replaced by the backup, and the app starts again. This can’t be undone.")) },
+            text = { Text(tr("Everything on this phone will be replaced by the backup. This can’t be undone.")) },
             confirmButton = {
                 TextButton(onClick = {
                     importing = null

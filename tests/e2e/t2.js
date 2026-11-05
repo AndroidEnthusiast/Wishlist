@@ -25,6 +25,9 @@ const CHAIR = `<html><head><title>Chair - Shop</title><meta property="og:title" 
   await t.page.locator(".dlg .chips .chip", { hasText: "Home" }).click();
   await t.page.locator(".dlg").getByLabel("Size", { exact: true }).selectOption("L");
   await t.page.locator(".dlg").getByLabel("Note for givers", { exact: false }).fill("  Black  ");
+  // How many and "Similar is fine" (2.128)
+  await t.page.locator(".dlg").getByLabel("How many", { exact: true }).fill("2");
+  await t.page.locator(".dlg").getByLabel("Exactly this / Similar is fine", { exact: true }).selectOption("similar");
   await t.page.getByRole("button", { name: "Save" }).click();
   await t.page.waitForFunction(() => window.__wl.pending() === 0);
   check("dialog closed", (await t.page.locator(".dlg").count()) === 0);
@@ -35,13 +38,15 @@ const CHAIR = `<html><head><title>Chair - Shop</title><meta property="og:title" 
   const saved = t.fake.items(CODE).find(i => i.title === "Ergonomic chair");
   check("saved json", saved && saved.price === 149.99 && saved.cur === "EUR" && saved.cat === "Home" && saved.size === "L" && saved.note === "Black" && !saved.star && saved.by === "Sam" && saved.got === false && saved.old === null && saved.image === "https://img.example/chair.png" && saved.url === "https://www.shop.example/p/chair?utm=1" && saved.desc === "Comfy for long days", saved);
   check("saved id positive number", saved && Number.isInteger(saved.id) && saved.id > 0);
+  check("quantity and Similar is fine saved", saved && saved.qty === 2 && saved.exact === "similar", saved);
+  check("2× · Similar is fine on the card", /2× · Similar is fine/.test(await first.innerText()));
   check("no js errors", t.errors.length === 0, t.errors);
 
   // ---- blocked / no price / helper missing / manual ----
   await t.page.locator("#fab").click();
   await t.page.locator(".dlg input[type=url]").fill("https://www.shop.example/p/blocked");
-  await t.page.waitForFunction(() => /blocked/.test(document.querySelector(".dlg .err").textContent));
-  check("blocked message", /blocked the automatic read/.test(await t.page.locator(".dlg .err").innerText()));
+  await t.page.waitForFunction(() => /Couldn’t read this shop/.test(document.querySelector(".dlg .err").textContent));
+  check("blocked message", /Couldn’t read this shop’s page/.test(await t.page.locator(".dlg .err").innerText()));
   await t.page.evaluate(() => { const i = document.querySelector(".dlg input[type=url]"); i.value = "https://www.shop.example/p/noprice"; i.dispatchEvent(new ClipboardEvent("paste")); });
   await t.page.waitForFunction(() => /No price found/.test(document.querySelector(".dlg .err").textContent));
   check("title still filled with no price", (await get("Title")) === "Plain thing" && (await get("Price")) === "");

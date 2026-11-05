@@ -25,6 +25,7 @@ object Alerts {
     private const val MESSAGES_CHANNEL = "messages"
     private const val GROUPS_CHANNEL = "groups"
     private const val BIRTHDAY_CHANNEL = "birthdays"
+    private const val OCC_CHANNEL = "occasions"
 
     /** Where a tapped notification sits on the Notifications page: it is marked as read (owner, 2.126: no red dot). */
     const val NOTE_KIND = "note_kind"
@@ -50,6 +51,7 @@ object Alerts {
         ch(BIRTHDAY_CHANNEL, tr("Friends’ birthdays"), tr("A few days before a friend’s birthday"))
         ch(GROUPS_CHANNEL, tr("Wishlist groups"), tr("Invitations, and being removed from a group"))
         ch(MESSAGES_CHANNEL, tr("Messages"), tr("New messages from your friends"))
+        ch(OCC_CHANNEL, tr("Occasions"), tr("Reminders around birthdays and other occasions"))
     }
 
     /**
@@ -59,10 +61,14 @@ object Alerts {
     fun blockedImportant(c: Context): List<String> {
         val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         ensureChannel(c)
-        if (!androidx.core.app.NotificationManagerCompat.from(c).areNotificationsEnabled()) return listOf(tr("All notifications"))
-        return listOf(BIN_CHANNEL to tr("Reserved gifts"), GROUPS_CHANNEL to tr("Wishlist groups"))
-            .filter { (id, _) -> nm.getNotificationChannel(id)?.importance == NotificationManager.IMPORTANCE_NONE }
-            .map { it.second }
+        // Says how it really is (owner, 2.128 copy review).
+        if (!androidx.core.app.NotificationManagerCompat.from(c).areNotificationsEnabled())
+            return listOf(tr("Notifications are off for Wishlist. You’ll miss important updates about gifts you reserved and invitations."))
+        fun off(id: String) = nm.getNotificationChannel(id)?.importance == NotificationManager.IMPORTANCE_NONE
+        return listOfNotNull(
+            if (off(BIN_CHANNEL)) tr("Notifications about gifts you reserved are off. You’ll miss important updates about them.") else null,
+            if (off(GROUPS_CHANNEL)) tr("Group notifications are off. You’ll miss invitations.") else null
+        )
     }
 
     /** Opens Android's notification settings for this app, where blocked notifications can be switched on again. */
@@ -235,6 +241,56 @@ object Alerts {
             .setAutoCancel(true)
             .build()
         nm.notify(nid, n)
+    }
+
+    private fun post(c: Context, channel: String, nid: Int, open: Intent, title: String, text: String) {
+        ensureChannel(c)
+        val pi = PendingIntent.getActivity(c, nid, open.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val n = NotificationCompat.Builder(c, channel)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+        (c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(nid, n)
+    }
+
+    /** "7 days to Sam’s birthday 🎈" (owner, 2.128, playful): [what] is "Sam’s birthday" or “Mum’s 60th”. */
+    fun reminderTitle(days: Int, what: String) = if (days == 1) tr("1 day to %s 🎈", what) else tr("%1\$d days to %2\$s 🎈", days, what)
+
+    /** "Got the AirPods yet?" or "Got your 2 gifts yet?". */
+    fun reminderText(titles: List<String>) =
+        if (titles.size == 1) tr("Got the %s yet?", titles[0]) else tr("Got your %d gifts yet?", titles.size)
+
+    /**
+     * #1 (owner, 2.128): a giver reserved something on a list whose occasion is near. One push and a line on the
+     * Notifications page; tapping opens the list. Always told (it is about gifts you reserved).
+     */
+    fun notifyReminder(c: Context, code: String, gift: Boolean, days: Int, what: String, titles: List<String>) {
+        val listKey = (if (gift) "s:" else "c:") + code
+        val title = reminderTitle(days, what)
+        Notifications.add(c, "reminder", listKey, title, extra = reminderText(titles), amount = days.toDouble())
+        val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_NOTE, listKey).note("reminder", listKey)
+        post(c, OCC_CHANNEL, code.hashCode() * 31 + 41, open, title, reminderText(titles))
+    }
+
+    /** "Nailed it 🎉 · Sam got the AirPods you picked." (owner, 2.128): the owner received a gift you reserved. */
+    fun notifyThanks(c: Context, code: String, id: Long, gift: String, who: String) {
+        val text = tr("%1\$s got the %2\$s you picked.", who, gift)
+        Notifications.add(c, "thanks", "c:$code", tr("Nailed it 🎉"), wishId = id, extra = text)
+        val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_NOTE, "c:$code").note("thanks", "c:$code", id)
+        post(c, BIN_CHANNEL, code.hashCode() * 31 + id.hashCode() + 43, open, tr("Nailed it 🎉"), text)
+    }
+
+    /** #6 (owner, 2.128): the day after your list's occasion, "Did your wishes come true? ✨". Opens "What did you get?". */
+    fun notifyReceivedAsk(c: Context, listId: String, listName: String) {
+        val key = "q:$listId"
+        Notifications.add(c, "recv_ask", key, listName, extra = tr("Tick what you received."))
+        val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_NOTE, key).note("recv_ask", key)
+        post(c, OCC_CHANNEL, listId.hashCode() * 31 + 47, open, tr("Did your wishes come true? ✨"), tr("Tick what you received."))
     }
 
     /** "A gift you reserved is no longer on Sam’s wishlist" (push and Notifications page). */

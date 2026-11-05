@@ -43,6 +43,10 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -220,7 +224,7 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
             }
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 if (tab == 1) {
-                    if (friends.isEmpty()) Empty(tr("You can chat with friends. Add friends first: tap Friends in the bar at the bottom."))
+                    if (friends.isEmpty()) Empty(tr("Add friends to start chatting."))
                     else LazyColumn(
                         Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
@@ -244,7 +248,7 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
                     }
                 } else when {
                     !Config.enabled || !Friends.hasProfile(ctx) && list.isEmpty() -> Empty(
-                        tr("Chat with your friends here. Add friends first: tap Friends in the bar at the bottom.")
+                        tr("Add friends to start chatting.")
                     )
                     list.isEmpty() && !loaded -> CircularProgressIndicator(Modifier.align(Alignment.Center))
                     list.isEmpty() && problem -> Empty(tr("Couldn’t reach the server. Check your connection."))
@@ -348,6 +352,10 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
     var sending by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf<ChatMessage?>(null) }
     var wishPick by remember { mutableStateOf(false) }
+    // Reactions and replies (owner, 2.128): the long-press menu, the message being answered, and the emoji per message.
+    var menuFor by remember { mutableStateOf<ChatMessage?>(null) }
+    var replying by remember(peer) { mutableStateOf<ChatMessage?>(null) }
+    var reacts by remember(peer) { mutableStateOf<Map<Long, Pair<String, String>>>(emptyMap()) }
     // Photos (2.109): picked or taken, then shown full screen with Send (owner: a preview first); [viewing] is a
     // photo opened from the chat.
     var preview by remember { mutableStateOf<String?>(null) }
@@ -385,6 +393,8 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
                 }
             } catch (e: Exception) {
             }
+            // Reactions can change on any message, so they are fetched for the whole chat (every other round).
+            if (round % 2 == 0) try { reacts = Chat.reactions(ctx, peer) } catch (e: Exception) {}
             loading = false
             round++
             delay(3000)
@@ -440,13 +450,32 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
         }
     }
 
+    fun react(m: ChatMessage, emoji: String) {
+        val before = reacts
+        val now = reacts[m.id] ?: ("" to "")
+        // Tapping the emoji you already chose takes it off.
+        val mine = if (now.first == emoji) "" else emoji
+        reacts = reacts + (m.id to (mine to now.second))
+        scope.launch {
+            try {
+                Chat.react(ctx, peer, m.id, mine)
+            } catch (e: Exception) {
+                reacts = before
+                snack.showToast(
+                    if ((e.message ?: "").contains("wl_chat_react")) tr("Reactions need an update in Supabase first.")
+                    else tr("Couldn’t react. Check your connection.")
+                )
+            }
+        }
+    }
+
     fun send(content: ChatContent) {
         sending = true
         scope.launch {
             try {
                 val m = Chat.send(ctx, peer, content)
                 msgs = (msgs + m).distinctBy { it.id }
-                if (content.kind == "text") text = ""
+                if (content.kind == "text") { text = ""; replying = null }
             } catch (e: Exception) {
                 snack.showToast(tr("Couldn’t send. Check your connection."))
             }
@@ -485,7 +514,7 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 if (loading && msgs.isEmpty()) CircularProgressIndicator(Modifier.align(Alignment.Center))
                 else if (msgs.isEmpty()) Text(
-                    tr("Say hi! Messages are end-to-end encrypted: only you and %s can read them.", name),
+                    tr("The beginning of your conversation with %s", name),
                     color = cs.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.align(Alignment.Center).padding(32.dp)
                 )
                 else LazyColumn(
@@ -494,15 +523,45 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
                 ) {
                     items(msgs.size, key = { msgs[it].id }) { i ->
                         val m = msgs[i]
-                        ChatRow(m, msgs.getOrNull(i - 1),
-                            onLongPress = if (m.mine) ({ deleting = m }) else null,
+                        val r = reacts[m.id]
+                        ChatRow(m.copy(react = r?.first.orEmpty(), reactTheirs = r?.second.orEmpty()), msgs.getOrNull(i - 1), name,
+                            onLongPress = { menuFor = m },
+                            onReply = if (canSend) ({ replying = m }) else null,
                             onOpenPhoto = { viewing = it })
                     }
                 }
             }
+            // "Replying to Sam" with the quoted words and ✕, above the text box (owner, 2.128).
+            replying?.let { r ->
+                Row(
+                    Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 6.dp).background(cs.surfaceVariant, RoundedCornerShape(12.dp))
+                        .padding(start = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(Modifier.weight(1f).padding(vertical = 6.dp)) {
+                        Text(
+                            if (r.mine) tr("Replying to yourself") else tr("Replying to %s", name),
+                            style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = look.accent
+                        )
+                        Text(Chat.preview(r.content), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                    IconButton(onClick = { replying = null }) { Icon(AppIcons.Close, tr("Cancel reply")) }
+                }
+            }
             if (canSend) InputBar(
                 text, { text = it }, sending,
-                onSend = { if (text.isNotBlank()) send(ChatContent(true, "text", text.trim())) },
+                onSend = {
+                    if (text.isNotBlank()) {
+                        val r = replying
+                        send(
+                            if (r == null) ChatContent(true, "text", text.trim())
+                            else ChatContent(
+                                true, "text", text.trim(), replyTo = r.id, replyText = Chat.preview(r.content),
+                                replyBy = if (r.mine) Chat.me(ctx) else peer
+                            )
+                        )
+                    }
+                },
                 onWish = { wishPick = true },
                 onGallery = { pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
                 onCamera = { try { takePhoto.launch(cameraUri) } catch (e: Exception) { } }
@@ -514,6 +573,30 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
         }
     }
 
+    // Long press (owner, 2.128): five reactions, Reply, and Delete for your own messages.
+    menuFor?.let { m ->
+        val mineNow = reacts[m.id]?.first.orEmpty()
+        AlertDialog(
+            onDismissRequest = { menuFor = null },
+            text = {
+                Column {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                        listOf("❤️", "👍", "😂", "😮", "🎉").forEach { e ->
+                            Box(
+                                Modifier.size(48.dp).clip(CircleShape)
+                                    .background(if (e == mineNow) look.accent.copy(alpha = 0.25f) else Color.Transparent)
+                                    .clickable(onClickLabel = tr("React with %s", e)) { menuFor = null; react(m, e) },
+                                contentAlignment = Alignment.Center
+                            ) { Text(e, fontSize = 26.sp) }
+                        }
+                    }
+                    if (canSend) TextButton(onClick = { menuFor = null; replying = m }, modifier = Modifier.padding(top = 8.dp)) { Text(tr("Reply")) }
+                    if (m.mine) TextButton(onClick = { menuFor = null; deleting = m }) { Text(tr("Delete"), color = cs.error) }
+                }
+            },
+            confirmButton = { TextButton(onClick = { menuFor = null }) { Text(tr("Close")) } }
+        )
+    }
     deleting?.let { m ->
         AlertDialog(
             onDismissRequest = { deleting = null },
@@ -567,14 +650,50 @@ private fun sameGroup(a: ChatMessage?, b: ChatMessage?) =
 
 /** One message, with the date chip above it when a new day starts. */
 @Composable
-private fun ChatRow(m: ChatMessage, prev: ChatMessage?, onLongPress: (() -> Unit)?, onOpenPhoto: (File) -> Unit) {
+private fun ChatRow(
+    m: ChatMessage, prev: ChatMessage?, peerName: String, onLongPress: (() -> Unit)?, onReply: (() -> Unit)?,
+    onOpenPhoto: (File) -> Unit
+) {
     val first = !sameGroup(prev, m)
     val newDay = prev == null || dayLabel(prev.at) != dayLabel(m.at)
     if (newDay) DayChip(dayLabel(m.at))
     // A small "tail": the corner nearest the sender is sharp on the first bubble of a group.
     val r = if (LocalLook.current.design == "neo" || LocalLook.current.design == "cyber") 10.dp else 16.dp
     val shape = if (m.mine) RoundedCornerShape(r, if (first) 2.dp else r, r, r) else RoundedCornerShape(if (first) 2.dp else r, r, r, r)
-    Bubble(m, shape, onLongPress = onLongPress, onOpenPhoto = onOpenPhoto, modifier = Modifier.padding(top = if (first && !newDay) 8.dp else 2.dp))
+    // Swipe a message to the right to reply to it (owner, 2.128); it springs back.
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val limit = with(density) { 72.dp.toPx() }
+    val drag = remember(m.id) { androidx.compose.animation.core.Animatable(0f) }
+    val scope = rememberCoroutineScope()
+    Column(
+        Modifier.fillMaxWidth().then(
+            if (onReply != null) Modifier.pointerInput(m.id) {
+                androidx.compose.foundation.gestures.detectHorizontalDragGestures(
+                    onDragEnd = {
+                        if (drag.value > limit * 0.8f) onReply()
+                        scope.launch { drag.animateTo(0f) }
+                    },
+                    onDragCancel = { scope.launch { drag.animateTo(0f) } }
+                ) { change, d ->
+                    change.consume()
+                    scope.launch { drag.snapTo((drag.value + d).coerceIn(0f, limit)) }
+                }
+            } else Modifier
+        ).offset { androidx.compose.ui.unit.IntOffset(drag.value.toInt(), 0) }
+    ) {
+        Bubble(m, shape, peerName, onLongPress = onLongPress, onOpenPhoto = onOpenPhoto, modifier = Modifier.padding(top = if (first && !newDay) 8.dp else 2.dp))
+        // The reactions under the bubble, on its side.
+        val emojis = listOf(m.reactTheirs, m.react).filter { it.isNotEmpty() }
+        if (emojis.isNotEmpty()) Row(
+            Modifier.fillMaxWidth().padding(top = 2.dp, start = 8.dp, end = 8.dp),
+            horizontalArrangement = if (m.mine) Arrangement.End else Arrangement.Start
+        ) {
+            Text(
+                emojis.joinToString(" "), fontSize = 16.sp,
+                modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp)).padding(horizontal = 8.dp, vertical = 2.dp)
+            )
+        }
+    }
 }
 
 /**
@@ -584,7 +703,7 @@ private fun ChatRow(m: ChatMessage, prev: ChatMessage?, onLongPress: (() -> Unit
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun Bubble(
-    m: ChatMessage, shape: androidx.compose.ui.graphics.Shape, onLongPress: (() -> Unit)?, onOpenPhoto: (File) -> Unit,
+    m: ChatMessage, shape: androidx.compose.ui.graphics.Shape, peerName: String, onLongPress: (() -> Unit)?, onOpenPhoto: (File) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val look = LocalLook.current
@@ -623,6 +742,19 @@ private fun Bubble(
                 )
                 .padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
+            // The message this one answers: who wrote it and its first words, with a bar on the left.
+            if (m.content.replyTo > 0L) Row(
+                Modifier.padding(bottom = 6.dp).clip(RoundedCornerShape(8.dp)).background(ink.copy(alpha = 0.12f)).height(IntrinsicSize.Min)
+            ) {
+                Box(Modifier.width(3.dp).fillMaxHeight().background(ink.copy(alpha = 0.6f)))
+                Column(Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
+                    Text(
+                        if (m.content.replyBy == Chat.me(ctx)) tr("You") else peerName,
+                        color = ink, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold
+                    )
+                    Text(m.content.replyText, color = ink.copy(alpha = 0.85f), style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                }
+            }
             when {
                 !m.content.readable -> Text(
                     tr("This message can’t be read on this phone"), color = ink.copy(alpha = 0.75f),
@@ -702,11 +834,18 @@ private fun InputBar(
         Modifier.fillMaxWidth().navigationBarsPadding().padding(start = 8.dp, end = 8.dp, top = 6.dp, bottom = 8.dp),
         verticalAlignment = Alignment.Bottom
     ) {
-        // Bottom-aligned with the text box (it grows with long messages), lifted so its middle meets a one-line box's.
-        IconButton(onClick = onWish, modifier = Modifier.padding(bottom = 4.dp)) { GiftIcon(cs.onSurfaceVariant) }
+        // The gift and photo buttons each sit in a box exactly as tall as a one-line text box, so their middles line up
+        // with it and with each other in every style (owner, 2.128: they looked misaligned); bottom-aligned when the
+        // text box grows.
+        Box(Modifier.size(44.dp, 56.dp).clip(CircleShape).clickable(onClickLabel = tr("Send a wish"), onClick = onWish), contentAlignment = Alignment.Center) {
+            GiftIcon(cs.onSurfaceVariant)
+        }
         var photoMenu by remember { mutableStateOf(false) }
-        Box(Modifier.padding(bottom = 4.dp)) {
-            IconButton(onClick = { photoMenu = true }, enabled = !sending) { PhotoIcon(cs.onSurfaceVariant) }
+        Box(Modifier.size(44.dp, 56.dp), contentAlignment = Alignment.Center) {
+            Box(
+                Modifier.size(44.dp).clip(CircleShape).clickable(enabled = !sending, onClickLabel = tr("Send a photo")) { photoMenu = true },
+                contentAlignment = Alignment.Center
+            ) { PhotoIcon(cs.onSurfaceVariant) }
             DropdownMenu(expanded = photoMenu, onDismissRequest = { photoMenu = false }) {
                 DropdownMenuItem(text = { Text(tr("Take a photo")) }, onClick = { photoMenu = false; onCamera() })
                 DropdownMenuItem(text = { Text(tr("Choose from gallery")) }, onClick = { photoMenu = false; onGallery() })

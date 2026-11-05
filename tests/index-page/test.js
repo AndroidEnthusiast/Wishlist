@@ -7,6 +7,7 @@ const html = fs.readFileSync(process.argv[2] || path.join(WEB, "index.html"), "u
   .replace('<script src="i18n.js?v=dev"></script>', () => "<script>" + fs.readFileSync(path.join(WEB, "i18n.js"), "utf8") + "</script>")
   .replace('<script src="theme.js?v=dev"></script>', () => "<script>" + fs.readFileSync(path.join(WEB, "theme.js"), "utf8") + "</script>")
   .replace('<script src="occasion.js?v=dev"></script>', () => "<script>" + fs.readFileSync(path.join(WEB, "occasion.js"), "utf8") + "</script>")
+  .replace('<script src="reserve.js?v=dev"></script>', () => "<script>" + fs.readFileSync(path.join(WEB, "reserve.js"), "utf8") + "</script>")
   .replace('<script src="friends.js?v=dev"></script>', () => "<script>" + fs.readFileSync(path.join(WEB, "friends.js"), "utf8") + "</script>");
 
 const items = [
@@ -23,7 +24,9 @@ function fakeFetch(url, opts) {
   let out;
   if (fn === "wl_get_list") out = body.p_code === "ZZZZZZZZ" ? null : {name: "Sam's wishlist", owner: store.owner === undefined ? "" : store.owner, cats: store.noCats ? [] : ["Tech","Home","Books"], items};
   else if (fn === "wl_get_reservations")
-    out = Object.entries(store.reservations).map(([id, d]) => ({id: Number(id), mine: d === body.p_device}));
+    out = store.resRows ? store.resRows(body.p_device)
+      : Object.entries(store.reservations).map(([id, d]) => ({id: Number(id), mine: d === body.p_device}));
+  else if (fn === "wl_reserve_count") { store.counted = body; out = true; }
   else if (fn === "wl_sh_info") out = body.p_key === "ABCDEFGHJKLMNPQRSTUV" ? {name: store.inviteName || "Baby registry", count: store.inviteCount === undefined ? 3 : store.inviteCount} : null;
   else if (fn === "wl_reserve_item") {
     if (store.reservations[body.p_item]) out = false; else { store.reservations[body.p_item] = body.p_device; out = true; }
@@ -349,6 +352,44 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   check("passed occasion: line hidden", D(co).getElementById("occasion").hidden);
   delete ab.occ;
 
+  // ---------- 2.128: sizes, quantity, exactness, the thank-you ----------
+  ab.sz = {c: "M <b>", s: "43"};
+  items.push({id: 21, url: "", title: "Socks", desc: "", image: "", price: 5, old: null, cur: "EUR", cat: "Home", got: false, qty: 3, exact: "similar"});
+  store.resRows = dev => [{id: 21, mine: false, n: 1, my: 0, full: false}];
+  let q = await load("?c=ABCD2345");
+  const szEl = D(q).getElementById("sizes");
+  check("owner's sizes shown as text", !szEl.hidden && szEl.textContent === "Clothing M <b> · Shoes 43" && !szEl.querySelector("b"));
+  const sock = [...D(q).querySelectorAll(".card")].find(c => c.textContent.includes("Socks"));
+  check("3× and Similar is fine on the card", sock.querySelector(".tags").textContent === "3× · Similar is fine");
+  check("1 of 3 reserved, still reservable", sock.querySelector(".badge.status").textContent === "1 of 3 reserved" && sock.querySelector("button.act").textContent === "Reserve");
+  sock.querySelector("button.act").click();
+  await sleep(50);
+  const sock2 = [...D(q).querySelectorAll(".card")].find(c => c.textContent.includes("Socks"));
+  const picks = [...sock2.querySelectorAll(".howmany button")].map(b => b.textContent);
+  check("How many will you buy? offers what's free", /How many will you buy\?/.test(sock2.textContent) && picks.join(",") === "1,2,Cancel", picks);
+  sock2.querySelectorAll(".howmany button")[1].click();
+  await sleep(100);
+  check("reserving 2 sends the number", store.counted && store.counted.p_item === 21 && store.counted.p_n === 2);
+  store.resRows = dev => [{id: 21, mine: true, n: 3, my: 2, full: true}];
+  q = await load("?c=ABCD2345");
+  const sock3 = [...D(q).querySelectorAll(".card")].find(c => c.textContent.includes("Socks"));
+  check("You reserved 2, with Undo", sock3.querySelector(".badge.status").textContent === "You reserved 2" && sock3.querySelector("button.act").textContent === "Undo");
+  store.resRows = dev => [{id: 21, mine: false, n: 3, my: 0, full: true}];
+  q = await load("?c=ABCD2345");
+  const sock4 = [...D(q).querySelectorAll(".card")].find(c => c.textContent.includes("Socks"));
+  check("all taken: Reserved, no button", sock4.querySelector(".badge.status").textContent === "Reserved" && !sock4.querySelector("button.act"));
+  // the owner received a gift this browser reserved: a thank-you, not "pick another gift"
+  store.owner = "Sam";
+  q = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_res_ABCD2345", JSON.stringify({21: "Socks"})));
+  const sockItem = items.find(i => i.id === 21);
+  sockItem.bin = Date.now(); sockItem.recv = Date.now(); sockItem.got = true;
+  store.resRows = null;
+  q = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_res_ABCD2345", JSON.stringify({21: "Socks"})));
+  const thx = D(q).getElementById("gone");
+  check("received: Nailed it, with the owner's name", !thx.hidden && /Nailed it 🎉 Sam got the Socks you picked\./.test(thx.textContent) && !/no longer on the list/.test(thx.textContent), thx.textContent);
+  items.splice(items.findIndex(i => i.id === 21), 1);
+  delete ab.sz; delete store.owner;
+
   // no note, no about
   items.splice(items.findIndex(i => i.kind === "about"), 1);
   let na = await load("?c=ABCD2345");
@@ -419,7 +460,7 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
     check("invite: tap copies the invite link (the one the app understands)", c1.window.__copied.length === 1 && c1.window.__copied[0] === URLX);
     check("invite: the tap does not block the download", pv1 === false);
     const msg1 = c1.window.document.querySelector(".inv .copied");
-    check("invite: a message says the invitation was copied and names the list", msg1.hidden === false && msg1.textContent.includes("Invitation copied") && msg1.textContent.includes("“Baby registry”"));
+    check("invite: a message says the invitation was copied and names the list", msg1.hidden === false && msg1.textContent.startsWith("Copied.") && msg1.textContent.includes("“Baby registry”"));
     check("invite: copied text parses back to the same key (same rule as the app)", /[?&]J=([A-HJ-NP-Z2-9]{20})(?![A-Z0-9])/.exec(c1.window.__copied[0].toUpperCase())[1] === KEY);
     await tap(c1.window);
     check("invite: a second tap copies again (still one link)", c1.window.__copied.length === 2 && c1.window.__copied[1] === URLX);

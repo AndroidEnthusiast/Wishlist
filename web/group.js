@@ -253,7 +253,7 @@
     box.appendChild(el("h2", "gtitle", T("Join the wishlist group “{0}”", info.name)));
     box.appendChild(el("p", "sub", (info.organiser ? T("Organised by {0}", info.organiser) + " · " : "") +
       (info.count === 1 ? T("1 member") : T("{0} members", info.count))));
-    box.appendChild(el("p", "hint", T("Everyone in a group brings one wishlist, and you can all see each other’s wishlists and reserve gifts.")));
+    box.appendChild(el("p", "hint", T("Everyone shares one wishlist. You see each other’s lists and reserve gifts.")));
     var err = el("p", "err"); err.hidden = true;
     err.setAttribute("role", "status");
 
@@ -425,10 +425,10 @@
   function myLinkBox() {
     var box = el("div", "gbox");
     box.appendChild(el("h3", null, T("Your private link")));
-    box.appendChild(el("p", "hint", T("Save this link to get back to your wishlist on another device. Keep it to yourself: whoever has it can change your wishlist.")));
+    box.appendChild(el("p", "hint", T("Your private link for other devices. Don’t share it.")));
     box.appendChild(btn(T("Copy my link"), "outline", function () { copyText(myLink()); toast(T("Link copied")); }));
     if (isAndroid()) {
-      box.appendChild(el("p", "hint", T("Rather use the app? Install it, then open your private link in the app to move your wishlist there.")));
+      box.appendChild(el("p", "hint", T("Prefer the app? Install it and open your private link there.")));
       var row = el("div", "btnrow");
       var get = el("a", "act", T("Get the app")); get.href = APK_URL; row.appendChild(get);
       var open = el("a", "act outline", T("Move to the app")); open.href = appLink(); row.appendChild(open);
@@ -531,7 +531,7 @@
     var grid = el("div", "grid");
     ws.forEach(function (w) { grid.appendChild(card(w, false)); });
     v.appendChild(grid);
-    v.appendChild(el("p", "note", T("Tap Reserve on a gift you plan to buy so nobody gives the same gift twice. The list owner can’t see what’s reserved.")));
+    v.appendChild(el("p", "note", T("Reserve what you’ll buy, so nobody gives it twice. The owner can’t see it.")));
   }
 
   async function toggle(w, reserve) {
@@ -777,7 +777,7 @@
       try { m = P.readHelperAnswer(await loadShopPage(u)); } catch (e) { failed = true; }
       busy = false; fetchBtn.disabled = false; fetchBtn.textContent = T("Fetch details");
       if (failed || m === null) setErr(T("Couldn’t read that page. Fill in the details yourself."));
-      else if (m.blocked) setErr(T("The store blocked the automatic read. Enter the title and price yourself."));
+      else if (m.blocked) setErr(T("Couldn’t read this shop’s page. Fill in the name and price yourself."));
       else {
         title.value = m.title; desc.value = m.desc;
         if (m.currency) {

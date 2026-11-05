@@ -176,21 +176,14 @@ fun HubScreen(
     // the bottom bar).
     @Composable
     fun ListsSection(onHome: Boolean) {
-        HubTitle(tr("My wishlists"), addLabel = tr("New wishlist"), onAdd = if (onHome) onNewMine else null)
+        HubTitle(tr("My wishlists"), addLabel = tr("New wishlist"), line = tr("Things you’d love to get."), onAdd = if (onHome) onNewMine else null)
         // In every section the list opened last comes first (owner, 2.110, instead of a "Recently opened" row).
         BlockGrid(byRecent(mineItems), onHome, ::actionsOf, onAddTo)
 
         // Wishlist groups, right after your own lists (owner, 2.108).
         GroupsHomeSection(onHome, onOpenWishGroup, onNewWishGroup)
 
-        HubTitle(tr("Gift lists"), addLabel = tr("New gift list"), onAdd = if (onHome) onNewGroup else null)
-        if (groupItems.isEmpty()) {
-            Text(
-                tr("Plan gifts for someone, alone or together with others."),
-                style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-        }
+        HubTitle(tr("Gift lists"), addLabel = tr("New gift list"), line = tr("Collect gift ideas for someone with others."), onAdd = if (onHome) onNewGroup else null)
         BlockGrid(byRecent(groupItems), onHome, ::actionsOf, onAddTo)
     }
 
@@ -276,8 +269,8 @@ fun HubScreen(
             title = { Text(if (group) tr("Delete “%s” for everyone?", item.name) else tr("Delete “%s”?", item.name)) },
             text = {
                 Text(
-                    if (group) tr("Everyone on this gift list will lose it, with all its wishes and reservations. This can’t be undone.")
-                    else tr("The wishlist will be deleted and its wishes moved to the bin. You can restore them there for 30 days.") +
+                    if (group) tr("It will be deleted for everyone, with all wishes and reservations. This can’t be undone.")
+                    else tr("Deleting this wishlist will move all its wishes to the bin, where they can be restored within 30 days.") +
                         groupNote(ctx, code)
                 )
             },
@@ -388,8 +381,9 @@ fun totalValue(wishes: List<Wish>): String? {
 
 /** A section title, with a small round + button when something can be added. */
 @Composable
-internal fun HubTitle(text: String, addLabel: String? = null, small: Boolean = false, onAdd: (() -> Unit)? = null) {
+internal fun HubTitle(text: String, addLabel: String? = null, small: Boolean = false, line: String? = null, onAdd: (() -> Unit)? = null) {
     val look = LocalLook.current
+    Column {
     Row(
         Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = if (small) 12.dp else 20.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -407,6 +401,12 @@ internal fun HubTitle(text: String, addLabel: String? = null, small: Boolean = f
                 Icon(AppIcons.Add, addLabel, tint = look.chipContent(true), modifier = Modifier.size(18.dp))
             }
         }
+    }
+    // A short line under each Home section that says what it is (owner, 2.128).
+    if (line != null) Text(
+        line, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 6.dp)
+    )
     }
 }
 

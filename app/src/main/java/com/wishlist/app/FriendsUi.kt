@@ -270,7 +270,7 @@ private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenL
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             if (Shared.lastName.isBlank()) item {
-                Notice(tr("Add your name and a photo to your profile, so friends know it’s you."), tr("Go to profile"), onProfile)
+                Notice(tr("Add your name and photo so friends recognise you."), tr("Go to profile"), onProfile)
             }
             item { CodeCard(s?.code.orEmpty(), problem && s == null, onAdd = { adding = true }, onRetry = { tick++ }) }
             if (problem && s != null) item {
@@ -345,7 +345,7 @@ private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenL
             onDismissRequest = { unfollow = null },
             title = { Text(tr("Unfriend %s?", f.name)) },
             text = {
-                Text(tr("You’ll no longer be friends: you won’t see each other’s wishlists, and you’ll leave each other’s Friends. They aren’t told. You can add each other again with a friend code."))
+                Text(tr("You’ll stop seeing each other’s wishlists. They won’t be told, and you can add each other again later."))
             },
             confirmButton = {
                 TextButton(onClick = {
@@ -391,7 +391,7 @@ private fun CodeCard(code: String, offline: Boolean, onAdd: () -> Unit, onRetry:
             else -> CircularProgressIndicator(Modifier.size(28.dp))
         }
         Text(
-            tr("Give it to people you want as friends. When they enter it, you approve them first."),
+            tr("Share it with friends. You approve them first."),
             style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id)
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -485,6 +485,7 @@ private fun friendWishes(f: Person): List<Pair<Wish, FriendList>> =
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FriendPage(f: Person, snack: SnackbarHostState) {
+    val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
     LoadFriendLists(f)
@@ -536,6 +537,24 @@ private fun FriendPage(f: Person, snack: SnackbarHostState) {
                     if (f.bio.isNotBlank()) Text(tr("I like: %s", f.bio), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                 }
             }
+            // Their sizes (owner, 2.128).
+            Friends.sizes[f.id]?.let { sz ->
+                Text(sz, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 20.dp, vertical = 2.dp))
+            }
+            // A private note about this friend (owner, 2.128): only on this phone.
+            var note by remember(f.id) { mutableStateOf(Friends.note(ctx, f.id)) }
+            Text(
+                tr("Private note"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 12.dp)
+            )
+            Text(tr("Only you can see this."), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(horizontal = 20.dp))
+            OutlinedTextField(
+                // Saved as you type, on this phone only.
+                note, { note = it.take(500); Friends.setNote(ctx, f.id, note) }, maxLines = 5,
+                placeholder = { Text(tr("For example: loves tea, no candles")) },
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
+            )
             Text(
                 tr("Wishlists"), style = MaterialTheme.typography.titleLarge, fontWeight = look.titleWeight,
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 4.dp)
@@ -706,7 +725,7 @@ fun AddFriendDialog(onClose: (String?) -> Unit) {
         text = {
             val err = error
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(tr("Enter your friend’s code. They approve your request, then you see each other’s wishlists that are visible to friends."), color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+                Text(tr("Enter your friend’s code. Once they approve, you see each other’s wishlists."), color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
                 if (needName) OutlinedTextField(
                     name, { name = it.take(30); error = null }, singleLine = true, label = { Text(tr("Your name")) },
                     keyboardOptions = Capitalised
@@ -739,6 +758,9 @@ fun ProfileScreen(snack: SnackbarHostState) {
     var nameSaved by remember { mutableIntStateOf(0) }
     var bio by remember { mutableStateOf(Friends.myBio) }
     var bioSaved by remember { mutableIntStateOf(0) }
+    var clothing by remember { mutableStateOf(Friends.myClothing) }
+    var shoes by remember { mutableStateOf(Friends.myShoes) }
+    var sizesSaved by remember { mutableIntStateOf(0) }
     var photoMenu by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
     var newCodeDlg by remember { mutableStateOf(false) }
@@ -901,6 +923,29 @@ fun ProfileScreen(snack: SnackbarHostState) {
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
             )
 
+            // My sizes (owner, 2.128): clothing and shoes, seen by friends (their app and the friends' web page).
+            ProfileTitle(tr("My sizes"))
+            fun saveSizes() {
+                if (clothing.trim() == Friends.myClothing && shoes.trim() == Friends.myShoes) return
+                val cl = clothing; val sh = shoes
+                scope.launch { try { Friends.setSizes(ctx, cl, sh) } catch (e: Exception) {} }
+                sizesSaved++
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    clothing, { clothing = it.take(20) }, singleLine = true, label = { Text(tr("Clothing")) },
+                    modifier = Modifier.weight(1f).onFocusChanged { if (!it.isFocused) saveSizes() },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next, capitalization = KeyboardCapitalization.Characters)
+                )
+                OutlinedTextField(
+                    shoes, { shoes = it.take(10) }, singleLine = true, label = { Text(tr("Shoes")) },
+                    modifier = Modifier.weight(1f).onFocusChanged { if (!it.isFocused) saveSizes() },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { saveSizes(); keyboard?.hide(); focusManager.clearFocus() })
+                )
+                SavedFeedback(sizesSaved)
+            }
+
             ProfileTitle(tr("Your friend code"))
             val code = Friends.state?.code.orEmpty()
             when {
@@ -910,7 +955,7 @@ fun ProfileScreen(snack: SnackbarHostState) {
                 else -> CircularProgressIndicator(Modifier.size(28.dp))
             }
             Text(
-                tr("Give it to people you want as friends. When they enter it, you approve them first."),
+                tr("Share it with friends. You approve them first."),
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -931,11 +976,11 @@ fun ProfileScreen(snack: SnackbarHostState) {
                 color = if (shown.isEmpty()) cs.onSurfaceVariant else cs.onSurface
             )
             if (shown.isNotEmpty()) Text(
-                tr("Change this in a wishlist’s settings (⚙). Private wishes always stay hidden."),
+                tr("Change this in the list’s settings (⚙). Private wishes stay hidden."),
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
             )
             Text(
-                tr("Your profile belongs to this phone. Moving to a new phone? App settings > Backup takes your profile, friends and wishlists along."),
+                tr("New phone? Use App settings > Backup, then import the backup on your new phone."),
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 16.dp)
             )
         }

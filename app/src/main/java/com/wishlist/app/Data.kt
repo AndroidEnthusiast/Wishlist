@@ -42,7 +42,17 @@ data class Wish(
      * "Private wish" (My wishlist only): it stays on this phone and never goes online, so friends never see it. It is
      * stored as "priv" on the phone only: [Cloud.pushList] leaves such wishes out, and shared lists never have them.
      */
-    val priv: Boolean = false
+    val priv: Boolean = false,
+    /** How many the person would like (owner, 2.128); 1 = not shown. Stored as "qty" only when more than 1. */
+    val qty: Int = 1,
+    /** "exact" ("Exactly this"), "similar" ("Similar is fine") or "" (owner, 2.128). Stored as "exact". */
+    val exact: String = "",
+    /**
+     * Received after the occasion (owner, 2.128, "What did you get?"): when it was ticked (ms), else 0. Such a wish
+     * is in the "Received gifts" archive, not on the list; it stays online with "bin" too, so givers' phones learn
+     * it was received and say thank you instead of "pick another gift". Own lists only (not on gift lists).
+     */
+    val recv: Long = 0L
 )
 
 /** A wishlist that someone else shared with you. */
@@ -62,6 +72,9 @@ fun wishToJson(w: Wish): JSONObject = JSONObject().apply {
     if (w.binBy.isNotBlank()) put("binBy", w.binBy)
     if (w.checked > 0L) put("chk", w.checked)
     if (w.priv) put("priv", true)
+    if (w.qty > 1) put("qty", w.qty)
+    if (w.exact.isNotBlank()) put("exact", w.exact)
+    if (w.recv > 0L) put("recv", w.recv)
 }
 
 fun wishFromJson(o: JSONObject): Wish = Wish(
@@ -71,7 +84,9 @@ fun wishFromJson(o: JSONObject): Wish = Wish(
     if (o.isNull("old")) null else o.getDouble("old"),
     o.optString("cur", "USD"), o.optString("cat", ""), o.optBoolean("got"),
     o.optBoolean("star"), o.optString("note", ""), o.optString("size", ""), o.optString("by", ""),
-    o.optLong("bin", 0L), o.optString("binBy", ""), o.optLong("chk", 0L), o.optBoolean("priv")
+    o.optLong("bin", 0L), o.optString("binBy", ""), o.optLong("chk", 0L), o.optBoolean("priv"),
+    o.optInt("qty", 1).coerceIn(1, 99), o.optString("exact", "").takeIf { it == "exact" || it == "similar" }.orEmpty(),
+    o.optLong("recv", 0L)
 )
 
 object Repo {
@@ -737,6 +752,37 @@ object Repo {
             myWishes = myWishes.toMutableList().also { it.add(t.index.coerceIn(0, it.size), t.wish.copy(bin = 0L, binBy = "")) }
         }
         commit(c)
+    }
+
+    /**
+     * "What did you get?" (owner, 2.128): wishes [ids] of your list [listId] were received. They leave the list (also
+     * for friends) and go to "Received gifts": kept in the bin with "recv" (never cleaned up after 30 days), marked as
+     * owned, and online with "bin" and "recv", so givers' phones say thank you.
+     */
+    @Synchronized
+    fun receive(c: Context, listId: String, ids: Set<Long>) {
+        if (ids.isEmpty() || listId !in mineIds) return
+        val now = System.currentTimeMillis()
+        val src = if (listId == openMine) myWishes else MyLists.read(prefs(c), listId).wishes
+        val got = src.filter { it.id in ids }.map { it.copy(bin = now, recv = now, got = true) }
+        if (got.isEmpty()) return
+        myBin = got + myBin.filter { b -> got.none { it.id == b.id } }
+        binOwner = binOwner + got.associate { it.id to listId }
+        if (listId == openMine) {
+            myWishes = myWishes.filter { it.id !in ids }
+            commit(c)
+        } else {
+            updateMine(c, listId) { ws -> ws.filter { it.id !in ids } }
+            persist(c)
+            mine(c, listId).takeIf { it.code != null }?.let { Sync.pushStored(c, it, binnedOf(listId)) }
+        }
+    }
+
+    /** A received gift goes back on its list (from "Received gifts"), as it was before. */
+    @Synchronized
+    fun unreceive(c: Context, id: Long): Boolean {
+        myBin = myBin.map { if (it.id == id) it.copy(recv = 0L, got = false) else it }
+        return restoreMine(c, id)
     }
 
     /** Takes a wish out of the bin and puts it back at the top of My wishlist. */

@@ -244,3 +244,8 @@ body.inviting #langs .langs:last-child { margin-bottom: 16px; }
   text-shadow: 0 2px 8px rgba(0,0,0,.6); }
 .cover span.boxed { text-shadow: none; border-radius: 8px; padding: 4px 10px; }
 .cover span[hidden] { display: none; }
+/* "How many will you buy?" for a wish wanted more than once (2.128). */
+.howmany { width: 100%; }
+.howmany p { margin: 0 0 6px; font-size: .9rem; color: var(--muted); }
+.howmany .hmrow { display: flex; flex-wrap: wrap; gap: 6px; }
+.tags { color: var(--primary); font-size: .8rem; font-weight: 600; }

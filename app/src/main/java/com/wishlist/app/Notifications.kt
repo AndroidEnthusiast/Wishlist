@@ -280,7 +280,7 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
         if (notes.isEmpty()) {
             Box(Modifier.padding(pad).fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
                 Text(
-                    tr("No notifications yet. Price changes, friend requests and news about gifts you reserved show up here."),
+                    tr("Nothing new yet."),
                     color = cs.onSurfaceVariant, textAlign = TextAlign.Center
                 )
             }
@@ -334,6 +334,10 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                         Text(
                             when (n.kind) {
                                 "gift_lost" -> Alerts.giftLostText(n.title, n.amount > 0.5)
+                                // 2.128: the reminder for givers, the thank-you, and "Did your wishes come true?".
+                                "reminder", "thanks" -> n.currency
+                                "recv_ask" -> tr("Did your wishes come true? ✨") + " " + n.currency
+                                "owner" -> tr("You can renew the link and delete the list.")
                                 "target" -> tr("reached your target price")
                                 "friend_req" -> tr("wants to be your friend")
                                 "friend_ok" -> tr("approved your friend request")

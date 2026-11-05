@@ -38,7 +38,8 @@ object Bin {
 
     /** Everything in the bin, newest first: My wishlist's bin straight from the phone, and the shared bins. */
     val entries: List<BinEntry>
-        get() = (Repo.myBin.map { BinEntry(it, null, Repo.binListName(it.id)) } + shared).sortedByDescending { it.wish.bin }
+        // Received gifts (2.128) are in "Received gifts", not in the bin.
+        get() = (Repo.myBin.filter { it.recv == 0L }.map { BinEntry(it, null, Repo.binListName(it.id)) } + shared).sortedByDescending { it.wish.bin }
     var loading by mutableStateOf(false)
         private set
     /** True when the bin of a shared wishlist couldn't be loaded (no internet). */
@@ -101,7 +102,8 @@ object Bin {
     /** Deletes My wishlist's wishes that were in the bin too long. */
     private fun purgeMine(c: Context) {
         val now = System.currentTimeMillis()
-        val old = Repo.myBin.filter { expired(it, now) }.map { it.id }.toSet()
+        // Received gifts are kept (2.128).
+        val old = Repo.myBin.filter { it.recv == 0L && expired(it, now) }.map { it.id }.toSet()
         if (old.isNotEmpty()) Repo.dropFromBin(c, old)
     }
 
@@ -214,6 +216,12 @@ object Bin {
                 null
             } ?: continue
             val inBin = purgeShared(l, r.list.wishes)
+            // 7 days before the gift list's occasion (2.128): a reminder of what you reserved on it.
+            if (r.list.occ != null && Reminders.due(r.list.occ) != null) {
+                val res = try { Cloud.fetchReservations(l.code, Repo.deviceId) } catch (e: Exception) { emptyMap() }
+                val titles = r.list.wishes.filter { it.bin == 0L && res[it.id] == true }.map { it.title }
+                Reminders.giver(c, l.code, gift = true, occ = r.list.occ, owner = "", listName = r.list.name.ifBlank { l.name }, titles = titles)
+            }
             val mine = readSet(c, "shbh_${l.code}")
             val told = readSet(c, "shbn_${l.code}")
             val marks = inBin.map { mark(it) }.toSet()
@@ -246,6 +254,16 @@ class BinWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, p
         }
         try {
             FriendWatch.checkAll(c)
+        } catch (e: Exception) {
+        }
+        // A gift list handed to you by its creator (2.128).
+        try {
+            Members.claimAll(c)
+        } catch (e: Exception) {
+        }
+        // "Did your wishes come true?" the day after an occasion of your own lists (2.128).
+        try {
+            Reminders.checkMine(c)
         } catch (e: Exception) {
         }
         // Friend requests, and requests of yours that were approved (Friends.kt).

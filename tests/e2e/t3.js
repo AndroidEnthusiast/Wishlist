@@ -50,7 +50,7 @@ const settle = (t) => t.page.waitForFunction(() => window.__wl.pending() === 0);
   await t.page.waitForSelector(".card");
   await t.page.locator(".card[data-id='1001']").getByLabel("Delete", { exact: true }).click();
   check("asks first", (await t.page.locator(".dlg h2").innerText()) === "Delete this wish?");
-  check("says it goes to the bin", /Deleting this wish moves “Novel” to the bin\. After 30 days it’s permanently deleted\./.test(await t.page.locator(".dlg").innerText()));
+  check("says it goes to the bin", /“Novel” goes to the bin\. After 30 days it’s gone for good\./.test(await t.page.locator(".dlg").innerText()));
   await t.page.screenshot({ path: "shot_delete.png" });
   await t.page.getByRole("button", { name: "Cancel" }).click();
   check("cancel keeps it", (await t.page.locator(".card[data-id='1001']").count()) === 1 && binCalls(t).length === 0);

@@ -81,6 +81,12 @@ object Friends {
         myPhoto = p.getString("pf_photo", "") ?: ""
         myBirthday = p.getString("pf_bday", "") ?: ""
         myBio = p.getString("pf_bio", "") ?: ""
+        myClothing = p.getString("pf_sz_c", "") ?: ""
+        myShoes = p.getString("pf_sz_s", "") ?: ""
+        sizes = try {
+            val o = JSONObject(p.getString("fr_sizes", null) ?: "{}")
+            o.keys().asSequence().associateWith { o.optString(it) }
+        } catch (e: Exception) { emptyMap() }
         photoSrc = p.getString("pf_src", "") ?: ""
         photoEdit = HeroEdit.fromJson(p.getString("pf_edit", null))
         visible = p.getStringSet("fr_vis", null)?.toSet() ?: emptySet()
@@ -108,6 +114,9 @@ object Friends {
         return JSONObject().put("p_id", id).put("p_token", token)
     }
 
+    /** Your profile id and token for a call, or null when this phone has no profile online yet (Members.kt, 2.128). */
+    fun auth(c: Context): JSONObject? = if (hasProfile(c) && prefs(c).getBoolean("pf_made", false)) base(c) else null
+
     private fun str(t: String): String = t.trim().removeSurrounding("\"")
 
     /** Makes your profile online the first time; afterwards saves your name. */
@@ -121,6 +130,61 @@ object Friends {
             pushLists(c)
             if (myBirthday.isNotEmpty() || myBio.isNotEmpty()) pushAbout(c)
         } else if (p.getBoolean("pf_about_dirty", false)) pushAbout(c)
+        if (p.getBoolean("pf_sizes_dirty", false)) try { pushSizes(c) } catch (e: Exception) {}
+    }
+
+    // ---- sizes (owner, 2.128): clothing and shoes, seen by friends ----
+
+    var myClothing by mutableStateOf("")
+        private set
+    var myShoes by mutableStateOf("")
+        private set
+
+    /** Friends' sizes as "Clothing M · Shoes 43" by profile id (empty for friends without sizes). */
+    var sizes by mutableStateOf<Map<String, String>>(emptyMap())
+        private set
+
+    /** Your sizes as stored online and sent with your lists: {"c": clothing, "s": shoes}, or "" when none. */
+    fun sizesJson(): String =
+        if (myClothing.isBlank() && myShoes.isBlank()) "" else JSONObject().put("c", myClothing).put("s", myShoes).toString()
+
+    /** "Clothing M · Shoes 43" from sizes JSON, or "". */
+    fun sizesText(json: String): String = try {
+        val o = JSONObject(json)
+        listOfNotNull(
+            o.optString("c").takeIf { it.isNotBlank() }?.let { tr("Clothing %s", it.take(20)) },
+            o.optString("s").takeIf { it.isNotBlank() }?.let { tr("Shoes %s", it.take(10)) }
+        ).joinToString(" · ")
+    } catch (e: Exception) { "" }
+
+    /** Saves your sizes on the phone, then online and with your lists (offline: next time). */
+    suspend fun setSizes(c: Context, clothing: String, shoes: String) {
+        myClothing = clothing.trim().take(20); myShoes = shoes.trim().take(10)
+        prefs(c).edit().putString("pf_sz_c", myClothing).putString("pf_sz_s", myShoes).putBoolean("pf_sizes_dirty", true).apply()
+        Sync.push()
+        ensure(c)
+    }
+
+    private suspend fun pushSizes(c: Context) {
+        Cloud.rpc("wl_pf_sizes", base(c).put("p_sizes", sizesJson()))
+        prefs(c).edit().putBoolean("pf_sizes_dirty", false).apply()
+    }
+
+    /** Friends' sizes (supabase-features.sql); without the script nothing changes. */
+    private suspend fun loadSizes(c: Context) {
+        val t = try { Cloud.rpc("wl_fr_sizes", base(c)) } catch (e: Exception) { return }
+        val o = try { JSONObject(t) } catch (e: Exception) { return }
+        sizes = o.keys().asSequence().associateWith { sizesText(o.optString(it)) }.filterValues { it.isNotEmpty() }
+        prefs(c).edit().putString("fr_sizes", JSONObject(sizes).toString()).apply()
+    }
+
+    // ---- a private note about a friend (owner, 2.128): only on this phone, never online ----
+
+    fun note(c: Context, id: String): String = prefs(c).getString("fnote_$id", "") ?: ""
+
+    fun setNote(c: Context, id: String, text: String) {
+        val t = text.trim().take(500)
+        prefs(c).edit().apply { if (t.isEmpty()) remove("fnote_$id") else putString("fnote_$id", t) }.apply()
     }
 
     // ---- birthday and "I like…" (2.95) ----
@@ -210,6 +274,7 @@ object Friends {
         prefs(c).edit().putString("fr_state", t).apply()
         loadPhotos(c, s)
         notifyNews(c, s, onScreen = true)
+        loadSizes(c)
     }
 
     /** The background check: notifications for new requests and for requests that were approved. */

@@ -238,7 +238,9 @@
       image: String(o.image || ""), price: num(o.price), old: num(o.old), cur: String(o.cur || "USD"),
       cat: String(o.cat || ""), got: !!o.got, star: !!o.star, note: String(o.note || ""),
       size: String(o.size || ""), by: String(o.by || ""),
-      bin: num(o.bin) || 0, binBy: String(o.binBy || ""), chk: num(o.chk) || 0
+      bin: num(o.bin) || 0, binBy: String(o.binBy || ""), chk: num(o.chk) || 0,
+      // How many, and "Exactly this" / "Similar is fine" (2.128).
+      qty: WLRes.qty(o), exact: o.exact === "exact" || o.exact === "similar" ? o.exact : ""
     };
   }
 
@@ -256,10 +258,12 @@
     if (w.bin) o.bin = w.bin;
     if (w.binBy) o.binBy = w.binBy;
     if (w.chk) o.chk = w.chk;
+    if (w.qty > 1) o.qty = w.qty;
+    if (w.exact) o.exact = w.exact;
     return o;
   }
 
-  var FIELDS = ["url", "title", "desc", "image", "price", "old", "cur", "cat", "got", "star", "note", "size"];
+  var FIELDS = ["url", "title", "desc", "image", "price", "old", "cur", "cat", "got", "star", "note", "size", "qty", "exact"];
 
   // The names of the fields that differ between two versions of a wish. ("by" is only set when a wish is made; "bin"
   // and "binBy" only when a wish goes to the bin or comes back; "chk" only by the app's price check.)
@@ -302,6 +306,8 @@
   var instant = lsGet("wl_instant") === "1";
   // Reservations: wish id -> true (reserved here) or false (by someone else). Everyone on the list sees them.
   var res = {};
+  // Reservation numbers of wishes wanted more than once, and the wish whose "How many will you buy?" is open (2.128).
+  var cnt = {}, picking = null;
   var resBusy = false;
   var memDevice = null;
 
@@ -581,7 +587,7 @@
     if (instant) { deleteWish(w); return; }
     dialog({
       title: T("Delete this wish?"),
-      body: function (b) { b.appendChild(el("p", null, T("Deleting this wish moves “{0}” to the bin. After 30 days it’s permanently deleted.", w.title))); },
+      body: function (b) { b.appendChild(el("p", null, T("“{0}” goes to the bin. After 30 days it’s gone for good.", w.title))); },
       actions: [
         { label: T("Cancel"), cls: "outline" },
         { label: T("Delete"), cls: "danger", onClick: function () { deleteWish(w); } }
@@ -707,14 +713,34 @@
     try {
       var rs = await rpc("wl_get_reservations", { p_code: code, p_device: deviceId() });
       if (resBusy) return;
-      var m = {};
-      (rs || []).forEach(function (x) { m[x.id] = !!x.mine; });
-      if (JSON.stringify(m) !== JSON.stringify(res)) { res = m; render(); }
+      var rr = WLRes.parse(rs);
+      var m = rr.res;
+      if (JSON.stringify(m) !== JSON.stringify(res) || JSON.stringify(rr.cnt) !== JSON.stringify(cnt)) { res = m; cnt = rr.cnt; render(); }
     } catch (e) { /* keep what we have */ }
+  }
+
+  // A wish wanted more than once (2.128): reserve [n] of it (0 takes yours away).
+  async function reserveCount(w, n) {
+    if (resBusy) return;
+    picking = null; resBusy = true; render();
+    var msg = null;
+    try {
+      var ok = await rpc("wl_reserve_count", { p_code: code, p_item: w.id, p_device: deviceId(), p_n: n });
+      if (ok !== true) msg = T("Someone else just reserved that one.");
+    } catch (e) {
+      msg = T("Couldn’t save that. Check your connection and try again.");
+    }
+    resBusy = false;
+    if (msg) toast(msg);
+    loadRes();
   }
 
   async function reserve(w, on) {
     if (resBusy) return;
+    if (WLRes.qty(w) > 1) {
+      if (on) { picking = w.id; render(); } else reserveCount(w, 0);
+      return;
+    }
     var before = res;
     var after = {};
     Object.keys(res).forEach(function (k) { after[k] = res[k]; });
@@ -738,7 +764,7 @@
     loadRes();
   }
 
-  function resLabel(w) { return res[w.id] === true ? T("Reserved by you") : res[w.id] === false ? T("Reserved") : ""; }
+  function resLabel(w) { return WLRes.label(w, res[w.id], cnt[w.id], T("Reserved by you")); }
 
   // ---------- drop-down menus (category, sort, the ⋮ on small cards) ----------
 
@@ -880,7 +906,8 @@
     if (drop) pic.appendChild(el("span", "badge drop", "−" + Math.round((1 - w.price / w.old) * 100) + "%"));
     else if (rise) pic.appendChild(el("span", "badge drop rise", "+" + Math.round((w.price / w.old - 1) * 100) + "%"));
     var bx = el("div", "badges");
-    if (mine || taken) bx.appendChild(el("span", "badge status", resLabel(w)));
+    var rl = resLabel(w);
+    if (rl) bx.appendChild(el("span", "badge status", rl));
     if (bx.childNodes.length) pic.appendChild(bx);
     c.appendChild(pic);
 
@@ -890,6 +917,8 @@
       var crow = el("div", "crow");
       var ct = el("div", "ctext");
       ct.appendChild(el("h2", "title", w.title));
+      var ctg = WLRes.tags(w);
+      if (ctg) ct.appendChild(el("div", "tags", ctg));
       var cp = el("div", "price" + changeClass(w), w.price !== null ? money(w.price, w.cur) : T("No price"));
       // The old price crossed out after a change, as on the large cards (owner, 2.126).
       if (drop || rise) cp.appendChild(el("span", "old", money(w.old, w.cur)));
@@ -907,12 +936,15 @@
       more.setAttribute("aria-expanded", "false");
       crow.appendChild(more);
       body.appendChild(crow);
+      if (picking === w.id) body.appendChild(WLRes.picker(WLRes.free(w, cnt[w.id]), function (n) { reserveCount(w, n); }, function () { picking = null; render(); }));
       c.appendChild(body);
       return c;
     }
     var meta = [hostOf(w.url), w.cat].filter(Boolean).join(" · ");
     if (!compact && meta) body.appendChild(el("div", "meta", meta));
     body.appendChild(el("h2", "title", w.title));
+    var tg = WLRes.tags(w);
+    if (tg) body.appendChild(el("div", "tags", tg));
     // Rows shows only the shop, name and price (owner, 2.126).
     if (w.desc && !rows) body.appendChild(el("p", "desc", w.desc));
     if (w.size && !rows) body.appendChild(el("span", "sizetag", T("Size {0}", w.size.slice(0, 8))));
@@ -923,12 +955,16 @@
     var pr = el("div", "price" + changeClass(w), w.price !== null ? money(w.price, w.cur) : T("No price"));
     if (drop || rise) pr.appendChild(el("span", "old", money(w.old, w.cur)));
     row.appendChild(pr);
-    var act = el("div", "actions");
-    act.appendChild(iconBtn("edit", T("Edit"), function () { openWishForm(w); }));
-    if (mine) act.appendChild(textBtn(T("Undo"), "outline small", function () { reserve(w, false); }));
-    else if (!taken) act.appendChild(textBtn(T("Reserve"), "small", function () { reserve(w, true); }));
-    act.appendChild(iconBtn("del", T("Delete"), function () { askDelete(w); }));
-    row.appendChild(act);
+    if (picking === w.id) {
+      row.appendChild(WLRes.picker(WLRes.free(w, cnt[w.id]), function (n) { reserveCount(w, n); }, function () { picking = null; render(); }));
+    } else {
+      var act = el("div", "actions");
+      act.appendChild(iconBtn("edit", T("Edit"), function () { openWishForm(w); }));
+      if (mine) act.appendChild(textBtn(T("Undo"), "outline small", function () { reserve(w, false); }));
+      else if (!taken) act.appendChild(textBtn(T("Reserve"), "small", function () { reserve(w, true); }));
+      act.appendChild(iconBtn("del", T("Delete"), function () { askDelete(w); }));
+      row.appendChild(act);
+    }
     body.appendChild(row);
     c.appendChild(body);
     return c;
@@ -942,7 +978,7 @@
       v.textContent = "";
       var g = el("div", "inv");
       g.appendChild(el("h2", null, T("This invitation doesn’t work any more")));
-      g.appendChild(el("p", null, T("The invite link may have been replaced by a new one, or the list was deleted. Ask the person who invited you for the new link.")));
+      g.appendChild(el("p", null, T("This link was renewed or the list was deleted. Ask for the new link.")));
       v.appendChild(g);
       return;
     }
@@ -1098,7 +1134,7 @@
       title: first ? T("Welcome! What’s your name?") : T("Your name"),
       cancelable: !first,
       body: function (b) {
-        if (first) b.appendChild(el("p", null, T("You’re invited to edit “{0}” together. Your name is shown next to the wishes you add.", content.name)));
+        if (first) b.appendChild(el("p", null, T("You’re invited to edit “{0}” together.", content.name)));
         inp = textInput(me, T("Your name"), 30);
         b.appendChild(field(T("Your name"), inp));
       },
@@ -1321,7 +1357,7 @@
           s.appendChild(r);
           b.appendChild(s);
         }
-        block(T("Invite link"), T("Whoever opens it can add wishes and reserve gifts, like you. Only send it to people you trust."), inviteLink, "invite");
+        block(T("Invite link"), T("They can edit and reserve wishes. Only send it to people you trust."), inviteLink, "invite");
       },
       actions: [{ label: T("Done") }]
     });
@@ -1339,7 +1375,9 @@
       cur: edit ? edit.cur : (lsGet("wl_cur") || mostUsedCurrency()),
       cat: edit ? edit.cat : "",
       note: edit ? edit.note : "",
-      size: edit ? edit.size : ""
+      size: edit ? edit.size : "",
+      qty: edit ? edit.qty : 1,
+      exact: edit ? edit.exact : ""
     };
     var picked = ""; // a picture chosen in this form and not saved yet (a blob URL)
     var busy = false;
@@ -1381,7 +1419,7 @@
       if (failed || m === null) {
         setErr(T("Couldn’t read that page. Fill in the details yourself."));
       } else if (m.blocked) {
-        setErr(T("The store blocked the automatic read. Enter the title and price yourself."));
+        setErr(T("Couldn’t read this shop’s page. Fill in the name and price yourself."));
       } else {
         f.title = m.title; els.title.value = m.title;
         f.desc = m.desc; els.desc.value = m.desc;
@@ -1437,12 +1475,13 @@
       if (!edit) {
         mine = {
           id: newId(), url: u, title: title, desc: f.desc, image: f.image, price: p, old: null, cur: f.cur,
-          cat: f.cat, got: false, star: false, note: f.note.trim(), size: f.size, by: me
+          cat: f.cat, got: false, star: false, note: f.note.trim(), size: f.size, by: me, qty: f.qty, exact: f.exact
         };
       } else {
         mine = copyWish(edit, {
           url: u, title: title, desc: f.desc, image: f.image, price: p,
-          old: p === edit.price ? edit.old : null, cur: f.cur, cat: f.cat, note: f.note.trim(), size: f.size
+          old: p === edit.price ? edit.old : null, cur: f.cur, cat: f.cat, note: f.note.trim(), size: f.size,
+          qty: f.qty, exact: f.exact
         });
       }
       if (picked && f.image === picked) picked = ""; // now owned by the save (uploaded there)
@@ -1543,6 +1582,21 @@
         els.size.value = f.size;
         els.size.addEventListener("change", function () { f.size = els.size.value; });
         b.appendChild(field(T("Size"), els.size));
+
+        // How many, and "Exactly this" / "Similar is fine" (2.128), like the app.
+        var qe = el("div", "row2");
+        els.qty = el("input");
+        els.qty.type = "number"; els.qty.min = "1"; els.qty.max = "99"; els.qty.inputMode = "numeric"; els.qty.value = String(f.qty);
+        els.qty.addEventListener("input", function () { var n = Math.floor(Number(els.qty.value)); f.qty = n >= 1 && n <= 99 ? n : 1; });
+        qe.appendChild(field(T("How many"), els.qty));
+        els.exact = el("select");
+        [["", "—"], ["exact", T("Exactly this")], ["similar", T("Similar is fine")]].forEach(function (x) {
+          var o = el("option", null, x[1]); o.value = x[0]; els.exact.appendChild(o);
+        });
+        els.exact.value = f.exact;
+        els.exact.addEventListener("change", function () { f.exact = els.exact.value; });
+        qe.appendChild(field(T("Exactly this") + " / " + T("Similar is fine"), els.exact));
+        b.appendChild(qe);
 
         els.note = el("textarea");
         els.note.rows = 2; els.note.maxLength = 300; els.note.value = f.note;
@@ -1680,7 +1734,7 @@
     if (!ios || navigator.standalone || lsGet("wl_tip") === "1") return;
     var t = $("tip");
     t.textContent = "";
-    t.appendChild(el("span", null, T("Tip: tap the Share button in Safari, then “Add to Home Screen”, to open this list like an app.")));
+    t.appendChild(el("span", null, T("Tip: in Safari tap Share, then “Add to Home Screen”.")));
     var x = el("button", "link", "OK");
     x.type = "button";
     x.addEventListener("click", function () { t.hidden = true; lsSet("wl_tip", "1"); });

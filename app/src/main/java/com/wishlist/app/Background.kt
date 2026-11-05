@@ -63,7 +63,7 @@ fun BackgroundQuestion() {
         title = { Text(tr("Allow price checks in the background?")) },
         text = {
             Text(
-                tr("Then Wishlist can check prices while your phone is asleep, so price alerts arrive on time instead of when you open the app. Android asks you to confirm once.")
+                tr("So price alerts arrive on time, even when your phone sleeps.")
             )
         },
         confirmButton = {

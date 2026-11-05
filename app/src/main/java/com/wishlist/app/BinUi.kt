@@ -167,7 +167,7 @@ fun BinScreen(snack: SnackbarHostState) {
                             )
                             if (Shared.lists.isNotEmpty()) {
                                 Text(
-                                    tr("Everyone on a gift list sees its deleted wishes here and can restore them."),
+                                    tr("Everyone on a gift list can restore its deleted wishes."),
                                     style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
                                 )
                             }

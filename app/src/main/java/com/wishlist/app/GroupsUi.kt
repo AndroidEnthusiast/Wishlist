@@ -90,15 +90,8 @@ fun GroupsHomeSection(onHome: Boolean, onOpen: (String) -> Unit, onNew: () -> Un
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     Groups.load(ctx)
-    HubTitle(tr("Wishlist groups"), addLabel = tr("New group"), onAdd = if (onHome) onNew else null)
+    HubTitle(tr("Wishlist groups"), addLabel = tr("New group"), line = tr("See each other’s wishlists."), onAdd = if (onHome) onNew else null)
     if (onHome) Groups.invites.forEach { InviteCard(it) }
-    if (Groups.groups.isEmpty() && (!onHome || Groups.invites.isEmpty())) {
-        Text(
-            tr("See each other’s wishlists with family or friends."),
-            style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-    }
     val items = Groups.groups.map { g ->
         val pic = Groups.photos[g.id] ?: g.members.mapNotNull { it.list?.image?.takeIf { i -> i.isNotBlank() } }.firstOrNull()
         HubItem("g:" + g.id, g.name, g.members.size, pic, true, "") { onOpen(g.id) }
@@ -217,7 +210,7 @@ fun ListPickDialog(
                     }
                 }
                 Text(
-                    tr("Everyone in the group sees this wishlist, whatever “Visible to” says. Private wishes stay hidden."),
+                    tr("Everyone in the group always sees this wishlist. Private wishes are always hidden."),
                     style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
                     modifier = Modifier.padding(top = 8.dp)
                 )
@@ -303,7 +296,7 @@ fun NewGroupDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        tr("Everyone in a group brings one wishlist, and you can all see each other’s wishlists and reserve gifts."),
+                        tr("Everyone shares one wishlist. You see each other’s lists and reserve gifts."),
                         style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     OutlinedTextField(
@@ -1052,7 +1045,7 @@ fun TakeoverDialog(me: Triple<String, String, String>, snack: SnackbarHostState,
                         snack.toastSoon(tr("Your browser wishlist is in the app now"))
                     } catch (e: Exception) {
                         busy = false
-                        error = tr("Couldn’t move it. The link may have been used already, or check your connection.")
+                        error = tr("Couldn’t move it. Check your connection, or the link was already used.")
                     }
                 }
             }) { Text(tr("Move")) }

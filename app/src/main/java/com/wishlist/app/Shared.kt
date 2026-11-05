@@ -210,6 +210,8 @@ object Shared {
             return true
         }
         gone = false
+        // You're on this list's members (2.128), and maybe its new owner: once per list each time the app starts.
+        Members.seen(c, l)
         // Wishes in the bin are not on the list (the Bin screen shows them, see Bin.kt).
         val nc = SharedContent(r.list.name, r.list.cats, r.list.about, r.list.wishes.filter { it.bin == 0L }, r.list.occ)
         if (nc != content) content = nc
@@ -235,9 +237,35 @@ object Shared {
     }
 
     /** Reserves a wish of the open list ([on] = true) or takes this phone's reservation away again. */
+    /** A "2×" wish waiting for "How many will you buy?" (2.128); the dialog is on the list screen. */
+    var askCount by mutableStateOf<Wish?>(null)
+
+    /** Reserves [n] of [w] on the open list (0 takes yours away). */
+    fun reserveCount(w: Wish, n: Int) {
+        val l = current ?: return
+        if (resBusy) return
+        val before = reserved
+        reserved = if (n > 0) before + (w.id to true) else before - w.id
+        resBusy = true
+        scope.launch {
+            try {
+                if (!Cloud.reserveCount(l.code, w.id, Repo.deviceId, n)) notice = tr("Someone else just reserved that one.")
+            } catch (e: Exception) {
+                if (active == l.code) reserved = before
+                notice = tr("Couldn’t save that. Check your connection and try again.")
+            } finally {
+                resBusy = false
+            }
+            loadReservations(l.code)
+        }
+    }
+
     fun reserve(w: Wish, on: Boolean) {
         val l = current ?: return
         if (resBusy) return
+        // A wish wanted more than once asks how many first.
+        if (on && w.qty > 1) { askCount = w; return }
+        if (!on && w.qty > 1) { reserveCount(w, 0); return }
         val before = reserved
         reserved = if (on) before + (w.id to true) else before - w.id
         resBusy = true
@@ -317,6 +345,8 @@ object Shared {
         if (a.star != b.star) f.add("star")
         if (a.note != b.note) f.add("note")
         if (a.size != b.size) f.add("size")
+        if (a.qty != b.qty) f.add("qty")
+        if (a.exact != b.exact) f.add("exact")
         return f
     }
 
@@ -337,6 +367,8 @@ object Shared {
                 "star" -> w.copy(star = from.star)
                 "note" -> w.copy(note = from.note)
                 "size" -> w.copy(size = from.size)
+                "qty" -> w.copy(qty = from.qty)
+                "exact" -> w.copy(exact = from.exact)
                 else -> w
             }
         }
@@ -560,11 +592,19 @@ object Shared {
 
     /** Takes the list off this phone only. It stays online for everyone else. */
     fun leave(c: Context, code: String) {
+        // Off the list of members (2.128), so nobody picks you as its new owner later.
+        lists.firstOrNull { it.code == code }?.let { l -> scope.launch { Members.left(c, l.key) } }
         if (active == code) close()
         lists = lists.filter { it.code != code }
         saveLists(c)
         prefs(c).edit().remove(cacheKey(code)).remove("shp_$code").apply()
         Bin.forget(c, code)
+    }
+
+    /** This phone became the owner of list [code] (2.128): its new owner token. */
+    fun becameOwner(c: Context, code: String, token: String) {
+        lists = lists.map { if (it.code == code) it.copy(owner = token) else it }
+        saveLists(c)
     }
 
     /** Creator only: deletes the list online for everyone (wishes, reservations, pictures). */

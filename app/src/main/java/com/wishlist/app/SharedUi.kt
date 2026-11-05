@@ -1,5 +1,9 @@
 package com.wishlist.app
 
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.CircularProgressIndicator
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -55,7 +59,7 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    tr("Collect gift ideas together for someone you want to surprise. Everyone you invite can add ideas and reserve what they’ll buy, so no gift is bought twice."),
+                    tr("Collect gift ideas for someone with others. Reserve what you’ll buy, so nobody buys it twice."),
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 OutlinedTextField(
@@ -113,7 +117,7 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
                             onCreated(l.code)
                         } catch (e: Exception) {
                             busy = false
-                            err = tr("Couldn’t create it. Check your connection, and that the shared-lists script was run in Supabase. (%s)", (e.message ?: tr("no details")).take(90))
+                            err = tr("Couldn’t create it. Check your connection and try again.", (e.message ?: tr("no details")).take(90))
                         }
                     }
                 }
@@ -164,7 +168,7 @@ fun JoinDialog(key: String, onJoined: (String) -> Unit, onClose: () -> Unit) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (name != null) {
                     Text(
-                        tr("You’ll be able to add and change wishes and reserve gifts on this list, together with the other givers."),
+                        tr("Add wishes and reserve gifts together with the other givers."),
                         style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     // Your profile name is used (owner, 2.102); only asked when there is none yet (a brand-new install).
@@ -237,7 +241,7 @@ fun SharedShareDialog(onClose: () -> Unit) {
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    tr("They can add and change wishes and reserve gifts. Only send it to people you trust."),
+                    tr("They can edit and reserve wishes. Only send it to people you trust."),
                     style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
                 )
                 Text(invite, style = MaterialTheme.typography.bodySmall, color = cs.onSurface)
@@ -270,7 +274,7 @@ fun SharedManageDialog(confirm: String, onClose: () -> Unit, onGone: () -> Unit)
             title = { Text(tr("Make a new invite link?")) },
             text = {
                 Text(
-                    tr("The old invite link stops working. People who already joined must open the new link to get back in.")
+                    tr("The old link will stop working. Everyone needs the new link to get back in.")
                 )
             },
             confirmButton = {
@@ -289,7 +293,8 @@ fun SharedManageDialog(confirm: String, onClose: () -> Unit, onGone: () -> Unit)
             },
             dismissButton = { TextButton(enabled = !busy, onClick = onClose) { Text(tr("Cancel")) } }
         )
-        "leave" -> AlertDialog(
+        // The person who made the list picks a new owner first (owner, 2.128), or deletes it when nobody is left.
+        "leave" -> if (l.owner.isNotEmpty()) CreatorLeaveDialog(l, onClose, onGone) else AlertDialog(
             onDismissRequest = onClose,
             title = { Text(tr("Leave this wishlist?")) },
             text = {
@@ -343,10 +348,105 @@ fun SharedGoneNotice() {
     ) {
         Column(Modifier.padding(12.dp)) {
             Text(
-                tr("This wishlist can’t be opened any more. It was deleted, or its invite link was reset. Ask for a new invite link and open it: the app asks if you want to join again."),
+                tr("This list was deleted or its link was renewed. Ask for the new invite link."),
                 color = cs.onErrorContainer, style = MaterialTheme.typography.bodyMedium
             )
             TextButton(onClick = { Shared.current?.let { Shared.leave(ctx, it.code) } }) { Text(tr("Remove from my menu")) }
         }
+    }
+}
+
+/**
+ * Leaving a gift list you made (owner, 2.128): "Pick a new owner" from the members who use the app ("They can renew
+ * the link and delete the list."), or, with nobody to pick, "Delete “…” for everyone? This can’t be undone."
+ */
+@Composable
+private fun CreatorLeaveDialog(l: SharedList, onClose: () -> Unit, onGone: () -> Unit) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val cs = MaterialTheme.colorScheme
+    var members by remember { mutableStateOf<List<Member>?>(null) }
+    var state by remember { mutableStateOf("loading") } // loading | ok | offline | old
+    var picked by remember { mutableStateOf<String?>(null) }
+    var busy by remember { mutableStateOf(false) }
+    LaunchedEffect(l.code) {
+        state = try {
+            members = Members.list(ctx, l); "ok"
+        } catch (e: Exception) {
+            // Without the new script there is no member list: leave as before.
+            if ((e.message ?: "").contains("wl_sh_members")) "old" else "offline"
+        }
+    }
+    val ms = members.orEmpty()
+    when {
+        state == "old" -> AlertDialog(
+            onDismissRequest = onClose,
+            title = { Text(tr("Leave this wishlist?")) },
+            text = { Text(tr("It disappears from your menu. It stays for everyone else, and you can join again with the invite link.")) },
+            confirmButton = { TextButton(onClick = { Shared.leave(ctx, l.code); onGone() }) { Text(tr("Leave")) } },
+            dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
+        )
+        state == "loading" -> AlertDialog(
+            onDismissRequest = onClose, title = { Text(tr("Leave this wishlist?")) },
+            text = { CircularProgressIndicator() },
+            confirmButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
+        )
+        state == "offline" -> AlertDialog(
+            onDismissRequest = onClose, title = { Text(tr("Leave this wishlist?")) },
+            text = { Text(tr("Couldn’t reach the server. Check your connection.")) },
+            confirmButton = { TextButton(onClick = onClose) { Text(tr("OK")) } }
+        )
+        ms.isEmpty() -> AlertDialog(
+            onDismissRequest = { if (!busy) onClose() },
+            title = { Text(tr("Delete “%s” for everyone?", l.name)) },
+            text = { Text(tr("This can’t be undone.")) },
+            confirmButton = {
+                TextButton(enabled = !busy, onClick = {
+                    busy = true
+                    scope.launch {
+                        try {
+                            Shared.deleteForEveryone(ctx); onGone()
+                        } catch (e: Exception) {
+                            busy = false; toast(ctx, tr("Couldn’t delete it. Check your connection."))
+                        }
+                    }
+                }) { Text(tr("Delete"), color = cs.error) }
+            },
+            dismissButton = { TextButton(enabled = !busy, onClick = onClose) { Text(tr("Cancel")) } }
+        )
+        else -> AlertDialog(
+            onDismissRequest = { if (!busy) onClose() },
+            title = { Text(tr("Pick a new owner")) },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    Text(tr("They can renew the link and delete the list."), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                    ms.forEach { m ->
+                        Row(
+                            Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { picked = m.id }.padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            androidx.compose.material3.RadioButton(selected = picked == m.id, onClick = { picked = m.id })
+                            Text(m.name.ifBlank { tr("Someone") })
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(enabled = !busy && picked != null, onClick = {
+                    val to = picked ?: return@TextButton
+                    busy = true
+                    scope.launch {
+                        try {
+                            Members.handOver(ctx, l, to)
+                            Shared.leave(ctx, l.code)
+                            onGone()
+                        } catch (e: Exception) {
+                            busy = false; toast(ctx, tr("Couldn’t reach the server. Check your connection."))
+                        }
+                    }
+                }) { Text(tr("Leave")) }
+            },
+            dismissButton = { TextButton(enabled = !busy, onClick = onClose) { Text(tr("Cancel")) } }
+        )
     }
 }

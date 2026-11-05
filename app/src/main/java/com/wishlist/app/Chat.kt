@@ -26,10 +26,17 @@ import org.json.JSONObject
 data class ChatContent(
     val readable: Boolean, val kind: String = "text", val text: String = "",
     val title: String = "", val price: Double? = null, val cur: String = "", val img: String = "", val url: String = "",
-    val w: Int = 0, val h: Int = 0
+    val w: Int = 0, val h: Int = 0,
+    // A reply (owner, 2.128): the quoted message's id, a short copy of its text and who wrote it (profile id). Travels
+    // inside the text message, so older apps just show the message without the quote.
+    val replyTo: Long = 0L, val replyText: String = "", val replyBy: String = ""
 )
 
-data class ChatMessage(val id: Long, val mine: Boolean, val content: ChatContent, val at: Long, val read: Boolean)
+/** [react] / [reactTheirs]: the emoji you and your friend put on this message (owner, 2.128), or "". */
+data class ChatMessage(
+    val id: Long, val mine: Boolean, val content: ChatContent, val at: Long, val read: Boolean,
+    val react: String = "", val reactTheirs: String = ""
+)
 
 data class Conversation(
     val id: String, val name: String, val pv: Long, val pubkey: String, val friend: Boolean, val unread: Int,
@@ -112,7 +119,12 @@ object Chat {
         else if (j.optString("t") == "wish") ChatContent(
             true, "wish", "", j.optString("title"), if (j.has("price") && !j.isNull("price")) j.optDouble("price") else null,
             j.optString("cur"), j.optString("img"), j.optString("url")
-        ) else ChatContent(true, "text", j.optString("x"))
+        ) else j.optJSONObject("re").let { re ->
+            ChatContent(
+                true, "text", j.optString("x"),
+                replyTo = re?.optLong("id") ?: 0L, replyText = re?.optString("x").orEmpty(), replyBy = re?.optString("by").orEmpty()
+            )
+        }
     } catch (e: Exception) {
         ChatContent(false)
     }
@@ -197,7 +209,9 @@ object Chat {
             .put("w", content.w).put("h", content.h).toString()
         else if (content.kind == "wish") JSONObject().put("t", "wish").put("title", content.title)
             .put("price", content.price ?: JSONObject.NULL).put("cur", content.cur).put("img", content.img).put("url", content.url).toString()
-        else JSONObject().put("t", "text").put("x", content.text).toString()
+        else JSONObject().put("t", "text").put("x", content.text).apply {
+            if (content.replyTo > 0L) put("re", JSONObject().put("id", content.replyTo).put("x", content.replyText.take(120)).put("by", content.replyBy))
+        }.toString()
         val body = ChatCrypto.lock(keyWith(c, theirPub, other), plain, me, other)
         val args = base(c).put("p_other", other).put("p_body", body).put("p_spk", myPublic(c)).put("p_rpk", theirPub)
         val r = JSONObject(
@@ -216,6 +230,45 @@ object Chat {
     suspend fun getPhoto(c: Context, name: String): String? =
         Cloud.rpc("wl_chat_file_get", base(c).put("p_file", name)).trim().removeSurrounding("\"")
             .takeIf { it.isNotEmpty() && it != "null" }
+
+    /** This phone's profile id (to tell whose message a reply quotes). */
+    fun me(c: Context): String = myId(c)
+
+    /** True when the reactions script (supabase-features.sql) isn't there yet: then reactions are left out quietly. */
+    @Volatile private var noReactions = false
+
+    /**
+     * Puts emoji [emoji] on message [id] of the chat with [other], or takes yours off ("") (owner, 2.128). Locked like
+     * a message, so only the two of you can read it. Throws when offline or when the script wasn't run yet.
+     */
+    suspend fun react(c: Context, other: String, id: Long, emoji: String) {
+        val theirPub = conversations.firstOrNull { it.id == other }?.pubkey?.takeIf { it.isNotEmpty() }
+            ?: Cloud.rpc("wl_chat_key", base(c).put("p_other", other)).trim().removeSurrounding("\"")
+        val locked = if (emoji.isEmpty()) "" else ChatCrypto.lock(keyWith(c, theirPub, other), emoji, myId(c), other)
+        Cloud.rpc("wl_chat_react", base(c).put("p_msg", id).put("p_react", locked))
+    }
+
+    /** The reactions in the chat with [other]: message id to (yours, theirs). Empty without the script or offline. */
+    suspend fun reactions(c: Context, other: String): Map<Long, Pair<String, String>> {
+        if (noReactions) return emptyMap()
+        val t = try {
+            Cloud.rpc("wl_chat_reacts", base(c).put("p_other", other))
+        } catch (e: CloudException) {
+            if ((e.message ?: "").contains("wl_chat_reacts")) noReactions = true
+            return emptyMap()
+        }
+        val theirPub = conversations.firstOrNull { it.id == other }?.pubkey.orEmpty()
+        if (theirPub.isEmpty()) return emptyMap()
+        val key = keyWith(c, theirPub, other)
+        val me = myId(c)
+        val a = JSONArray(t)
+        return (0 until a.length()).associate { i ->
+            val o = a.getJSONObject(i)
+            fun open(s: String, from: String, to: String) =
+                if (s.isEmpty()) "" else try { ChatCrypto.unlock(key, s, from, to)?.take(8).orEmpty() } catch (e: Exception) { "" }
+            o.optLong("id") to (open(o.optString("mine"), me, other) to open(o.optString("theirs"), other, me))
+        }
+    }
 
     suspend fun delete(c: Context, id: Long) {
         Cloud.rpc("wl_chat_delete", base(c).put("p_msg", id))

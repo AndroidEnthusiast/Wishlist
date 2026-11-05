@@ -434,7 +434,7 @@ object Groups {
     fun link(key: String): String = Config.SHARE_URL.trimEnd('/') + "/group/?g=" + key
 
     fun share(c: Context, g: Group) {
-        val text = tr("Join my wishlist group “%1\$s” on Wishlist, so we can see each other’s wishlists: %2\$s", g.name, link(g.link))
+        val text = tr("Join my wishlist group “%1\$s”: %2\$s", g.name, link(g.link))
         val i = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
         c.startActivity(Intent.createChooser(i, tr("Share group link")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }

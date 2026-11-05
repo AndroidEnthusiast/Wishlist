@@ -193,7 +193,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                 val invite = inviteLink(shared.key)
                 SectionTitle(tr("Invite people"))
                 Text(
-                    tr("They can add and change wishes and reserve gifts. Only send it to people you trust."),
+                    tr("They can edit and reserve wishes. Only send it to people you trust."),
                     style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -255,7 +255,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
         AlertDialog(
             onDismissRequest = { deleteMineDlg = false },
             title = { Text(tr("Delete “%s”?", Repo.listName)) },
-            text = { Text(tr("The wishlist will be deleted and its wishes moved to the bin. You can restore them there for 30 days.") + groupNote(ctx, Repo.openMine)) },
+            text = { Text(tr("Deleting this wishlist will move all its wishes to the bin, where they can be restored within 30 days.") + groupNote(ctx, Repo.openMine)) },
             confirmButton = {
                 TextButton(onClick = {
                     deleteMineDlg = false
@@ -281,8 +281,8 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
             title = { Text(tr("Stop sharing?")) },
             text = {
                 Text(
-                    if (Friends.isVisible(Repo.openMine)) tr("The link stops working, your friends can no longer see this list, and all reservations are deleted. Sharing again later creates a new link.")
-                    else tr("The link stops working and all reservations are deleted. Sharing again later creates a new link.")
+                    if (Friends.isVisible(Repo.openMine)) tr("Friends will lose access, the link will stop working and reservations will be deleted.")
+                    else tr("Friends will lose access, the link will stop working and reservations will be deleted.")
                 )
             },
             confirmButton = {

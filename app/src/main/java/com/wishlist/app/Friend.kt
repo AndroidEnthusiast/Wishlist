@@ -69,6 +69,8 @@ fun FriendScreen(
     var cat by remember(f.code) { mutableStateOf("All") }
     var tick by remember { mutableStateOf(0) }
     var confirmRemove by remember { mutableStateOf(false) }
+    // A 2× wish asks "How many will you buy?" (2.128).
+    var askFor by remember { mutableStateOf<Wish?>(null) }
 
     // Load now, then refresh every 20 seconds while this screen is open.
     LaunchedEffect(f.code, tick) {
@@ -92,7 +94,24 @@ fun FriendScreen(
         }
     }
 
+    fun reserveCount(w: Wish, n: Int) {
+        scope.launch {
+            busy = w.id
+            var msg: String? = null
+            try {
+                if (!Cloud.reserveCount(f.code, w.id, Repo.deviceId, n)) msg = tr("Someone else just reserved that one.")
+                else if (n > 0) FriendWatch.reserved(ctx, f.code, w) else FriendWatch.unreserved(ctx, f.code, w.id)
+                res = Cloud.fetchReservations(f.code, Repo.deviceId)
+            } catch (e: Exception) {
+                msg = tr("No connection. Try again.")
+            }
+            busy = null
+            msg?.let { snack.showToast(it) }
+        }
+    }
+
     fun toggle(w: Wish, reserve: Boolean) {
+        if (w.qty > 1) { if (reserve) askFor = w else reserveCount(w, 0); return }
         scope.launch {
             busy = w.id
             var msg: String? = null
@@ -211,12 +230,7 @@ fun FriendScreen(
                                 GlowBox(w.id, small = false) {
                                 WishCard(
                                     w,
-                                    badge = when {
-                                        w.got -> tr("Owned")
-                                        r == true -> tr("Reserved by you")
-                                        r == false -> tr("Reserved")
-                                        else -> null
-                                    },
+                                    badge = if (w.got) tr("Owned") else reserveLabel(f.code, w, r),
                                     dim = w.got || r == false
                                 ) {
                                     if (!w.got) {
@@ -247,6 +261,12 @@ fun FriendScreen(
         }
     }
 
+    askFor?.let { w ->
+        ReserveCountDialog(
+            ResCounts.free(f.code, w), ResCounts.of(f.code, w.id)?.my ?: 1,
+            onPick = { n -> askFor = null; reserveCount(w, n) }, onClose = { askFor = null }
+        )
+    }
     if (confirmRemove) {
         AlertDialog(
             onDismissRequest = { confirmRemove = false },

@@ -130,7 +130,7 @@ fun WelcomeFlow(onDone: () -> Unit) {
                             PlaceholderIcon("gift", 56.dp, LocalLook.current.accent)
                             Text(tr("Your first wishlist"), style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 12.dp))
                             Text(
-                                tr("Give it a name, for example “Birthday” or “Christmas”. You can make more wishlists later."),
+                                tr("Give it a name, like “Birthday”. You can change it later."),
                                 style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
                             )
@@ -143,7 +143,7 @@ fun WelcomeFlow(onDone: () -> Unit) {
                             PlaceholderIcon("secret", 56.dp, LocalLook.current.accent)
                             Text(tr("Gifts stay a surprise"), style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 12.dp))
                             Text(
-                                tr("Share your wishlist with friends. They tap Reserve on a gift they’ll buy, so nobody gives the same gift twice, and you never see what they reserve."),
+                                tr("Friends reserve what they’ll buy, so nobody gives the same gift twice. You never see what’s reserved."),
                                 style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(top = 8.dp)
                             )

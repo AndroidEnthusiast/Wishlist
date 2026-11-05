@@ -443,6 +443,9 @@ fun App(
     var settings by remember { mutableStateOf(false) }
     // The bin (menu > Bin): deleted wishes of every list, for 30 days.
     var binOpen by remember { mutableStateOf(false) }
+    // "Received gifts" and "What did you get?" for one of your lists (2.128).
+    var receivedOpen by remember { mutableStateOf(false) }
+    var receivedAsk by remember { mutableStateOf<String?>(null) }
     // The settings of the open list (its ⚙), apart from the app's Settings in the menu.
     var listSettings by remember { mutableStateOf(false) }
     var friendCode by remember { mutableStateOf<String?>(null) }
@@ -543,6 +546,7 @@ fun App(
             key.startsWith("r:") -> { FriendsNav.reset(); friendsOpen = true }
             key.startsWith("p:") -> { FriendsNav.reset(); FriendsNav.person = key.removePrefix("p:"); friendsOpen = true }
             key.startsWith("g:") -> GroupNav.openInvite(key.removePrefix("g:"), null)
+            key.startsWith("q:") -> receivedAsk = key.removePrefix("q:")
         }
     }
     // A tapped "gift you reserved is no longer on …" push (2.126) opens that list.
@@ -742,10 +746,6 @@ fun App(
                             scope.launch { drawer.close() }
                         }
                     }
-                    DrawerItem(tr("New wishlist"), AppIcons.Add, false) {
-                        newMine = true
-                        scope.launch { drawer.close() }
-                    }
                     // Wishlist groups (2.108), after your own lists like on Home.
                     DrawerDivider()
                     Text(
@@ -758,10 +758,6 @@ fun App(
                             GroupNav.openGroup(g.id)
                             scope.launch { drawer.close() }
                         }
-                    }
-                    DrawerItem(tr("New group"), AppIcons.Add, false) {
-                        newWishGroup = true
-                        scope.launch { drawer.close() }
                     }
                     // Then the wishlists you make together with other givers (group wishlists).
                     DrawerDivider()
@@ -776,8 +772,9 @@ fun App(
                             scope.launch { drawer.close() }
                         }
                     }
-                    DrawerItem(tr("New gift list"), AppIcons.Add, false) {
-                        newShared = true
+                    // One "New list" instead of three (owner, 2.128): it opens the choice of My wishlist, Gift list or Group.
+                    DrawerItem(tr("New list"), AppIcons.Add, false) {
+                        createChoice = true
                         scope.launch { drawer.close() }
                     }
                     DrawerDivider()
@@ -802,6 +799,11 @@ fun App(
                     }
                     DrawerItem(tr("Bin"), AppIcons.Delete, binOpen) {
                         closeAll(); binOpen = true
+                        scope.launch { drawer.close() }
+                    }
+                    // Under Bin (owner, 2.128): wishes you received after an occasion.
+                    DrawerItem(tr("Received gifts"), AppIcons.Favorite, false) {
+                        receivedOpen = true
                         scope.launch { drawer.close() }
                     }
                     DrawerItem(tr("App settings"), AppIcons.Settings, settings) {
@@ -918,10 +920,22 @@ fun App(
             adding = false; addTarget = null
         }
     }
+    if (receivedOpen) ReceivedScreen { receivedOpen = false }
+    receivedAsk?.let { id -> ReceivedDialog(id) { receivedAsk = null } }
+    // "How many will you buy?" for a 2× wish on a gift list (2.128).
+    Shared.askCount?.let { w ->
+        val code = Shared.active.orEmpty()
+        ReserveCountDialog(
+            ResCounts.free(code, w), ResCounts.of(code, w.id)?.my ?: 1,
+            onPick = { n -> Shared.askCount = null; Shared.reserveCount(w, n) },
+            onClose = { Shared.askCount = null }
+        )
+    }
     if (createChoice) {
         CreateChoiceDialog(
             onMine = { createChoice = false; newMine = true },
             onGroup = { createChoice = false; newShared = true },
+            onWishGroup = { createChoice = false; newWishGroup = true },
             onClose = { createChoice = false }
         )
     }
@@ -1232,7 +1246,7 @@ fun HomeScreen(
                         if (query.isNotBlank()) {
                             if (sel != "All") tr("No wishes match “%1\$s” in %2\$s.", query.trim(), catLabel(sel))
                             else tr("No wishes match “%s”.", query.trim())
-                        } else tr("Nothing here yet. Tap + below, or share a product link to Wishlist from your browser."),
+                        } else tr("Nothing here yet. Tap +, or share a product from any shop to Wishlist."),
                         color = cs.onSurfaceVariant, modifier = Modifier.padding(16.dp)
                     )
                 }
@@ -1255,7 +1269,7 @@ fun HomeScreen(
                             "grid" -> CompactCard(
                                 w, onLongPress = null, // everything is in its ⋮ menu (owner, 2.113)
                                 onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
-                                reserve = if (inShared) Reserving(r) { on -> Shared.reserve(w, on) } else null,
+                                reserve = if (inShared) Reserving(r, reserveLabel(Shared.active.orEmpty(), w, r)) { on -> Shared.reserve(w, on) } else null,
                                 onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) })
                             ) { editing = w }
                             // The buttons of Rows and Large cards: Share, the eye (or Reserve on a gift list), Delete.
@@ -1286,7 +1300,7 @@ fun HomeScreen(
                             }
                             if (view == "rows") RowCard(
                                 w,
-                                badge = if (inShared) reservedLabel(r) else if (w.got) tr("Owned") else null,
+                                badge = if (inShared) reserveLabel(Shared.active.orEmpty(), w, r) else if (w.got) tr("Owned") else null,
                                 dim = if (inShared) r == false else w.got,
                                 onLongPress = { openMenu(w) },
                                 onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
@@ -1294,7 +1308,7 @@ fun HomeScreen(
                                 actions = actions
                             ) else WishCard(
                                 w,
-                                badge = if (inShared) reservedLabel(r) else if (w.got) tr("Owned") else null,
+                                badge = if (inShared) reserveLabel(Shared.active.orEmpty(), w, r) else if (w.got) tr("Owned") else null,
                                 dim = if (inShared) r == false else w.got,
                                 onLongPress = { openMenu(w) },
                                 onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
@@ -1378,7 +1392,13 @@ fun ViewIcon(kind: String, tint: Color) {
 }
 
 /** Reserving a wish on a shared list. [state]: true = reserved on this phone, false = by someone else, null = still free. */
-class Reserving(val state: Boolean?, val set: (Boolean) -> Unit)
+class Reserving(val state: Boolean?, val label: String? = null, val set: (Boolean) -> Unit)
+
+/** "2×" and "Exactly this" / "Similar is fine" (owner, 2.128), as one short line, or "". */
+fun wishTags(w: Wish): String = listOfNotNull(
+    if (w.qty > 1) "${w.qty}×" else null,
+    when (w.exact) { "exact" -> tr("Exactly this"); "similar" -> tr("Similar is fine"); else -> null }
+).joinToString(" · ")
 
 /** The label for a reservation on a shared list, or null when the wish is still free. */
 fun reservedLabel(r: Boolean?): String? = when (r) {
@@ -1458,7 +1478,7 @@ fun CompactCard(
                 if (onStar != null) StarToggle(w.star, onStar, Modifier.align(Alignment.TopEnd).padding(6.dp))
                 else if (w.star) MostWantedBadge(false, Modifier.align(Alignment.TopEnd).padding(8.dp))
             }
-            val status = if (w.got) tr("Owned") else reservedLabel(reserve?.state)
+            val status = if (w.got) tr("Owned") else reserve?.label ?: reservedLabel(reserve?.state)
             if (status != null) {
                 StatusBadge(status, small = true, modifier = Modifier.align(Alignment.TopEnd).padding(8.dp))
             }
@@ -1478,6 +1498,10 @@ fun CompactCard(
                     w.title, style = MaterialTheme.typography.titleSmall,
                     maxLines = 2, overflow = TextOverflow.Ellipsis, color = ink
                 )
+                    // "2×" and "Exactly this" / "Similar is fine" (owner, 2.128).
+                    wishTags(w).takeIf { it.isNotEmpty() }?.let { t ->
+                        Text(t, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = ink)
+                    }
                 // The old price crossed out next to it after a change (owner, 2.126).
                 PriceLine(w, MaterialTheme.typography.titleMedium, Modifier.padding(top = 2.dp, bottom = 6.dp))
                 // No "Added on" here (owner, 2.100): too busy on a list; it stays in Price watch.
@@ -1611,6 +1635,10 @@ fun WishCard(
                     w.title, style = MaterialTheme.typography.titleMedium,
                     maxLines = 2, overflow = TextOverflow.Ellipsis, color = ink
                 )
+                    // "2×" and "Exactly this" / "Similar is fine" (owner, 2.128).
+                    wishTags(w).takeIf { it.isNotEmpty() }?.let { t ->
+                        Text(t, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = ink)
+                    }
                 if (Show["show_desc"] && w.desc.isNotBlank()) {
                     Text(
                         w.desc, style = MaterialTheme.typography.bodyMedium,
@@ -1724,6 +1752,10 @@ fun RowCard(
                         style = MaterialTheme.typography.labelSmall, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis
                     )
                     Text(w.title, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis, color = ink)
+                        // "2×" and "Exactly this" / "Similar is fine" (owner, 2.128).
+                        wishTags(w).takeIf { it.isNotEmpty() }?.let { t ->
+                            Text(t, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = ink)
+                        }
                     PriceLine(w, MaterialTheme.typography.titleMedium, Modifier.padding(top = 2.dp))
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
@@ -1787,6 +1819,9 @@ fun WishDialog(
     var cat by remember { mutableStateOf(edit?.category ?: "") }
     var note by remember { mutableStateOf(edit?.note ?: "") }
     var sizeSel by remember { mutableStateOf(edit?.size ?: "") }
+    // How many, and "Exactly this" / "Similar is fine" (owner, 2.128).
+    var qty by remember { mutableStateOf(edit?.qty ?: 1) }
+    var exact by remember { mutableStateOf(edit?.exact ?: "") }
     var star by remember { mutableStateOf(edit?.star ?: false) }
     // "Private wish": only on this phone, friends never see it (My wishlist only). Off unless chosen.
     var priv by remember { mutableStateOf(edit?.priv ?: false) }
@@ -1829,7 +1864,7 @@ fun WishDialog(
         if (m == null) {
             err = tr("Couldn’t read that page. Fill in the details yourself.")
         } else if (m.blocked) {
-            err = tr("The store blocked the automatic read. Enter the title and price yourself.")
+            err = tr("Couldn’t read this shop’s page. Fill in the name and price yourself.")
         } else {
             title = m.title; desc = m.desc; cur = m.currency
             // A picture you chose yourself is kept. Otherwise the image comes from the link.
@@ -1873,7 +1908,9 @@ fun WishDialog(
         properties = DialogProperties(dismissOnClickOutside = false),
         title = { Text(if (edit == null) tr("Add a wish") else tr("Edit wish")) },
         text = {
+            // One scrolling page with three headings (owner, 2.128): Wish, Details, Visibility. Nothing folded away.
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                FormHeading(tr("Wish"))
                 if (chooseList && edit == null) {
                     SaveToField(
                         targets = targets, selected = Shared.active ?: MyLists.saveKey(Repo.openMine, false),
@@ -1925,8 +1962,18 @@ fun WishDialog(
                         modifier = Modifier.width(104.dp)
                     )
                 }
+                FormHeading(tr("Details"))
                 // One line, however many categories there are (a row of chips got too long).
                 CategoryField(cat, Repo.cats, onPick = { cat = it }, onNew = { newCatDlg = true }, onEdit = { editCats = true }, modifier = Modifier.fillMaxWidth())
+                QuantityField(qty) { qty = it }
+                ExactField(exact) { exact = it }
+                SizeField(sizeSel, { sizeSel = it }, Modifier.fillMaxWidth())
+                OutlinedTextField(
+                    note, { note = it }, label = { Text(tr("Note for givers (colour, details, …)")) },
+                    maxLines = 3, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
+                OutlinedTextField(
+                    desc, { desc = it }, label = { Text(tr("Description")) },
+                    maxLines = 3, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 // No "Top wish" on a shared list: nobody can say that for the person the gifts are for.
                 if (Shared.active == null) Row(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { if (!star) starFx.play(); star = !star }.padding(vertical = 4.dp),
@@ -1943,6 +1990,7 @@ fun WishDialog(
                     Switch(checked = star, onCheckedChange = { star = it })
                 }
                 // Private wish: My wishlist only (a shared list is for the givers, there is nothing to hide there).
+                if (Shared.active == null) FormHeading(tr("Visibility"))
                 if (Shared.active == null) Row(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { priv = !priv }.padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -1956,16 +2004,6 @@ fun WishDialog(
                         )
                     }
                     Switch(checked = priv, onCheckedChange = { priv = it })
-                }
-                // "Other information" (description, size, note for givers) folds away, so the switches above stay in sight.
-                ProductInfo {
-                    OutlinedTextField(
-                        desc, { desc = it }, label = { Text(tr("Description")) },
-                        maxLines = 3, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
-                    SizeField(sizeSel, { sizeSel = it }, Modifier.fillMaxWidth())
-                    OutlinedTextField(
-                        note, { note = it }, label = { Text(tr("Note for givers (colour, details, …)")) },
-                        maxLines = 3, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 }
             }
         },
@@ -1984,7 +2022,7 @@ fun WishDialog(
                             Wish(
                                 System.currentTimeMillis(), u, title.trim(), desc, image, p, null, cur, cat,
                                 star = star && Shared.active == null, note = note.trim(), size = sizeSel, by = Repo.authorName,
-                                priv = priv && Shared.active == null
+                                priv = priv && Shared.active == null, qty = qty, exact = exact
                             )
                         )
                         if (chooseList) Repo.setLastSaveTo(ctx, Shared.active ?: MyLists.saveKey(Repo.openMine, false))
@@ -1996,7 +2034,7 @@ fun WishDialog(
                                 url = u, title = title.trim(), desc = desc, image = image, price = p,
                                 oldPrice = if (p == edit.price) edit.oldPrice else null,
                                 currency = cur, category = cat, star = star && Shared.active == null, note = note.trim(), size = sizeSel,
-                                priv = priv && Shared.active == null
+                                priv = priv && Shared.active == null, qty = qty, exact = exact
                             ),
                             base = edit
                         )

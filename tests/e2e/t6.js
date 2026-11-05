@@ -113,7 +113,7 @@ const IOS = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/
   t = await boot({ goto: false, ua: ANDROID });
   await t.page.goto(t.base + "join/?j=" + KEY);
   await t.page.waitForSelector(".inv .btns");
-  check("join/: opens the invitation", t.page.url() === t.base + "?j=" + KEY && /Accept the invitation to add gift ideas/.test(await t.page.locator(".inv").innerText()));
+  check("join/: opens the invitation", t.page.url() === t.base + "?j=" + KEY && /Add gift ideas and reserve gifts together/.test(await t.page.locator(".inv").innerText()));
   await t.ctx.close();
 
   // list/ goes on to the friends' page of a shared list: no most wanted, wording for givers
@@ -123,7 +123,7 @@ const IOS = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/
   check("list/: friends' page with the list", t.page.url() === t.base + "?c=" + CODE + "&s=1" && (await t.page.locator(".card").count()) === 3);
   check("list/: no most wanted label (even on a wish starred earlier)", (await t.page.locator(".badge.star").count()) === 0);
   check("list/: no most wanted sort", (await t.page.locator('#sort option[value="star"]').count()) === 0 && (await t.page.locator("#sort").inputValue()) === "asis");
-  check("list/: givers see reservations", /Everyone who puts this list together sees/.test(await t.page.locator("#note").innerText()) && !/owner/.test(await t.page.locator("#note").innerText()));
+  check("list/: givers see reservations", /so nobody buys it twice/.test(await t.page.locator("#note").innerText()) && !/owner/.test(await t.page.locator("#note").innerText()));
   check("list/: no js errors", t.errors.length === 0, t.errors);
   await t.ctx.close();
   // the own list still has its most wanted

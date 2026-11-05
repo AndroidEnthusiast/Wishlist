@@ -184,7 +184,7 @@ fun WhoCanSeeSection(snack: SnackbarHostState) {
     }
 
     Text(
-        tr("Whoever can see it can reserve gifts. You never see what they reserve. Private wishes always stay hidden."),
+        tr("They can reserve gifts; you never see what. Private wishes stay hidden."),
         style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
     )
     if (!Config.enabled) {
@@ -203,7 +203,7 @@ fun WhoCanSeeSection(snack: SnackbarHostState) {
             }) { Text(tr("Copy link")) }
         }
         Text(
-            tr("Don’t open your own link in a browser, or you’ll see what’s reserved."),
+            tr("Don’t open your own link: you’d see what’s reserved."),
             color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall
         )
     }
@@ -261,8 +261,8 @@ fun WhoChoices(id: String, snack: SnackbarHostState): Who {
             title = { Text(tr("Only you?")) },
             text = {
                 Text(
-                    if (inGroups.isEmpty()) tr("Friends can no longer see this wishlist, its link stops working and all reservations on it are deleted. Sharing it again later makes a new link.")
-                    else tr("Friends can no longer see this wishlist and its link stops working. Your wishlist groups still see it, and reservations stay.")
+                    if (inGroups.isEmpty()) tr("Friends will lose access, the link will stop working and reservations will be deleted.")
+                    else tr("Friends will lose access and the link will stop working. Your groups still see it; reservations stay.")
                 )
             },
             confirmButton = {

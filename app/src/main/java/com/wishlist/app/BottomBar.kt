@@ -193,17 +193,21 @@ fun PriceIcon(tint: Color, modifier: Modifier = Modifier.size(24.dp)) {
     }
 }
 
-/** "New list": your own wishlist or a group wishlist (the same forms as the + buttons on the dashboard). */
+/**
+ * "New list" (owner, 2.128: one item in the side menu instead of three): your own wishlist, a gift list or a wishlist
+ * group, each with the same line as its section on Home; the same forms as the + buttons on Home.
+ */
 @Composable
-fun CreateChoiceDialog(onMine: () -> Unit, onGroup: () -> Unit, onClose: () -> Unit) {
+fun CreateChoiceDialog(onMine: () -> Unit, onGroup: () -> Unit, onWishGroup: () -> Unit, onClose: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text(tr("Create")) },
+        title = { Text(tr("New list")) },
         text = {
             Column {
-                Choice(tr("New wishlist"), tr("Create a new personal wishlist")) { onMine() }
-                Choice(tr("New gift list"), tr("Plan gifts for someone, alone or together with others.")) { onGroup() }
+                Choice(tr("My wishlist"), tr("Things you’d love to get.")) { onMine() }
+                Choice(tr("Gift list"), tr("Collect gift ideas for someone with others.")) { onGroup() }
+                Choice(tr("Group"), tr("See each other’s wishlists.")) { onWishGroup() }
             }
         },
         confirmButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }

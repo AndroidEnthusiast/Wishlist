@@ -54,6 +54,13 @@ object FriendWatch {
             val now = visible[id]
             // Still on the list and not owned: nothing to say.
             if (now != null && !now.got) continue
+            // Received by the friend after the occasion (2.128): a thank-you, not "pick another gift".
+            val recv = list.wishes.firstOrNull { it.id == id && it.recv > 0L }
+            if (recv != null) {
+                Alerts.notifyThanks(c, f.code, id, title, list.owner.ifBlank { list.name.ifBlank { f.name } })
+                m = m - id
+                continue
+            }
             // Taken off, or (2.113, owner) marked as owned by the friend: say so once, so nobody buys a duplicate.
             // One notification for both (owner, 2.126), naming whose list it was.
             val place = list.owner.takeIf { it.isNotBlank() }?.let { tr("%s’s wishlist", it) } ?: ("“" + list.name.ifBlank { f.name } + "”")
@@ -61,11 +68,17 @@ object FriendWatch {
             m = m - id
         }
         write(c, f.code, m)
+        // 7 days before the list's occasion (2.128): a reminder of what you reserved there.
+        val titles = m.keys.mapNotNull { visible[it]?.takeIf { w -> !w.got }?.title }
+        Reminders.giver(c, f.code, gift = false, occ = list.occ, owner = list.owner, listName = list.name.ifBlank { f.name }, titles = titles)
     }
 
     /** The background check of every friend's list. A list that can't be loaded (or isn't shared any more) is skipped. */
     suspend fun checkAll(c: Context) {
-        for (f in Repo.friends.toList()) {
+        // Every list this phone reserved on (also friends' lists opened from the Friends tab).
+        val codes = prefs(c).all.keys.filter { it.startsWith("fres_") }.map { it.removePrefix("fres_") }
+        for (code in codes) {
+            val f = Repo.friends.firstOrNull { it.code == code } ?: Friend(code, "")
             if (read(c, f.code).isEmpty()) continue
             val list = try {
                 Cloud.fetchList(f.code)

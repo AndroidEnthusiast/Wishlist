@@ -118,7 +118,7 @@ object Cloud {
 
     suspend fun pushList(
         code: String, token: String, name: String, cats: List<String>, wishes: List<Wish>, about: String = "",
-        cover: String = "", coverEdit: String = "", occ: Occasion? = null
+        cover: String = "", coverEdit: String = "", occ: Occasion? = null, sizes: String = ""
     ) {
         val items = JSONArray()
         // A private wish never leaves the phone (Repo.syncWishes leaves them out already; this makes sure).
@@ -126,11 +126,13 @@ object Cloud {
         // The note and (since 2.105) the cover photo travel in the "about" item, so friends see them (older apps
         // only read "about" and skip the rest).
         // The occasion too (Occasion.kt): older apps skip it.
-        if (about.isNotBlank() || cover.isNotEmpty() || occ != null) {
+        // Your sizes too (owner, 2.128: friends see them, also on the friends' web page).
+        if (about.isNotBlank() || cover.isNotEmpty() || occ != null || sizes.isNotEmpty()) {
             val o = JSONObject().put("id", ABOUT_ITEM_ID).put("kind", "about").put("about", about)
                 .put("url", "").put("title", "")
             if (cover.isNotEmpty()) o.put("cover", cover).put("cedit", coverEdit)
             if (occ != null) o.put("occ", occ.toJson())
+            if (sizes.isNotEmpty()) o.put("sz", JSONObject(sizes))
             items.put(o)
         }
         rpc(
@@ -268,16 +270,34 @@ object Cloud {
     }
 
     /** Item id -> true if reserved by this phone, false if reserved by someone else. */
+    /**
+     * Reservations of list [code]: true = this phone reserved it, false = taken by others. A "2×" wish (2.128) that
+     * still has a free one and isn't yours is left out (so it can be reserved); its numbers are in [ResCounts].
+     */
     suspend fun fetchReservations(code: String, device: String): Map<Long, Boolean> {
         val t = rpc("wl_get_reservations", JSONObject().put("p_code", code).put("p_device", device))
         val a = JSONArray(t)
         val m = HashMap<Long, Boolean>()
+        val counts = HashMap<Long, ResCount>()
         for (i in 0 until a.length()) {
             val o = a.getJSONObject(i)
-            m[o.getLong("id")] = o.getBoolean("mine")
+            val id = o.getLong("id")
+            val mine = o.getBoolean("mine")
+            // Before supabase-setup.sql of 6 November 2026 there are no numbers: one reservation takes the wish.
+            val c = ResCount(o.optInt("my", if (mine) 1 else 0), o.optInt("n", 1), o.optBoolean("full", true))
+            counts[id] = c
+            if (mine) m[id] = true else if (c.full) m[id] = false
         }
+        ResCounts.put(code, counts)
         return m
     }
+
+    /** Reserves [n] of a wish for this phone (0 takes it away). False when that many aren't free any more. */
+    suspend fun reserveCount(code: String, item: Long, device: String, n: Int): Boolean =
+        rpc(
+            "wl_reserve_count",
+            JSONObject().put("p_code", code).put("p_item", item).put("p_device", device).put("p_n", n)
+        ).trim() == "true"
 
     /** False if somebody else got there first. */
     suspend fun reserve(code: String, item: Long, device: String): Boolean =

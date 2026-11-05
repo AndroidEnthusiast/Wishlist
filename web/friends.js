@@ -12,6 +12,9 @@ var APK_URL = "https://github.com/AndroidEnthusiast/Wishlist/releases/download/l
 var $ = function (id) { return document.getElementById(id); };
 
 var code = null, list = null, res = {}, cat = "All", busy = false, state = "loading", memDevice = null;
+// Reservation numbers for wishes wanted more than once (2.128): cnt[id] = {my, n, full}; picking = the wish whose
+// "How many will you buy?" is open.
+var cnt = {}, picking = null;
 
 // How the list is laid out for this visitor: "rows" (picture left, details right; 2.126), "grid" (two per row) or
 // "list" (large cards), in that order.
@@ -61,9 +64,14 @@ function readMyRes() {
 function writeMyRes(o) {
   try { localStorage.setItem(myResKey(), JSON.stringify(o)); } catch (e) { }
 }
-function noteGone(titles, owned) {
+function noteGone(titles, owned, thanks) {
   var g = $("gone");
   g.textContent = "";
+  // The owner received it after the occasion (2.128): a thank-you instead of "pick another gift".
+  (thanks || []).forEach(function (t) {
+    g.appendChild(el("span", null, T("Nailed it 🎉 {0} got the {1} you picked.", list && list.owner ? String(list.owner).slice(0, 30) : T("They"), t || T("gift"))));
+    g.appendChild(document.createTextNode(" "));
+  });
   titles.forEach(function (t) {
     g.appendChild(el("span", null, T("“{0}” is no longer on the list. Have a look for another gift.", t || T("Wish"))));
     g.appendChild(document.createTextNode(" "));
@@ -184,7 +192,7 @@ function showCodeForm(msg) {
   $("bar").hidden = true;
   $("chips").hidden = true;
   $("tools").hidden = true;
-  $("about").hidden = true;
+  $("about").hidden = true; $("sizes").hidden = true; $("occasion").hidden = true;
   $("cover").hidden = true;
   $("note").hidden = true;
 }
@@ -234,7 +242,7 @@ function legacyCopy(text) {
 
 async function showInvite(key) {
   var v = $("view");
-  ["bar", "chips", "tools", "about", "cover", "note"].forEach(function (id) { $(id).hidden = true; });
+  ["bar", "chips", "tools", "about", "cover", "note", "sizes", "occasion"].forEach(function (id) { $(id).hidden = true; });
   $("name").textContent = T("Wishlist invitation");
   $("sub").textContent = "";
   v.textContent = "";
@@ -259,7 +267,7 @@ async function showInvite(key) {
   var box = el("div", "inv");
   if (!info) {
     box.appendChild(el("h2", null, T("This invitation doesn’t work")));
-    box.appendChild(el("p", null, T("The link may be incomplete, or the person who sent it made a new one. Ask them for a new invite link.")));
+    box.appendChild(el("p", null, T("This link is incomplete or outdated. Ask for a new one.")));
     v.appendChild(box);
     return;
   }
@@ -273,7 +281,7 @@ async function showInvite(key) {
   var ln = el("p", "listname", nm + " 🎁");
   ln.style.cssText = "margin:0 0 12px;font-size:1.25rem;line-height:1.3;font-weight:800;color:var(--fg);overflow-wrap:anywhere";
   box.appendChild(ln);
-  box.appendChild(el("p", null, T("Accept the invitation to add gift ideas, reserve gifts so nobody buys the same one twice, and leave notes for the other givers.")));
+  box.appendChild(el("p", null, T("Add gift ideas and reserve gifts together, so nobody buys the same one twice.")));
   var n = Number(info.count) || 0;
   box.appendChild(el("p", null, n === 1 ? T("1 wish so far") : T("{0} wishes so far", n)));
 
@@ -302,7 +310,7 @@ async function showInvite(key) {
   // The app looks for it the first time it starts. The download itself carries on whatever happens here.
   dl.addEventListener("click", function () {
     copyText(inviteUrl(key));
-    done.textContent = T("Invitation copied. Install the app and open it: it will offer to join “{0}”.", nm);
+    done.textContent = T("Copied. Install and open the app to join “{0}”.", nm);
     done.hidden = false;
   });
   btns.appendChild(dl);
@@ -491,7 +499,7 @@ function card(w, compact, rows) {
   // Plus and minus, not arrows (it isn't a stock trade).
   if (drop) pic.appendChild(el("span", "badge drop", "−" + Math.round((1 - w.price / w.old) * 100) + "%"));
   else if (rise) pic.appendChild(el("span", "badge drop rise", "+" + Math.round((w.price / w.old - 1) * 100) + "%"));
-  var status = got ? T("Owned") : r === true ? T("Reserved by you") : r === false ? T("Reserved") : "";
+  var status = got ? T("Owned") : WLRes.label(w, r, cnt[w.id], T("Reserved by you"));
   var bx = el("div", "badges");
   if (w.star && !got && !SHARED_LIST) bx.appendChild(starBadge());
   if (status) bx.appendChild(el("span", "badge status", status));
@@ -502,6 +510,8 @@ function card(w, compact, rows) {
   var meta = [hostOf(w.url), w.cat].filter(Boolean).join(" · ");
   if (!compact) body.appendChild(el("div", "meta", meta));
   body.appendChild(el("h2", "title", w.title || ""));
+  var tg = WLRes.tags(w);
+  if (tg) body.appendChild(el("div", "tags", tg));
   if (w.desc && !compact && !rows) body.appendChild(el("p", "desc", w.desc));
   if (w.size && !rows) body.appendChild(el("span", "sizetag", T("Size {0}", String(w.size).slice(0, 8))));
   if (w.note && !rows) body.appendChild(el("p", "wnote", T("Note: {0}", w.note)));
@@ -511,7 +521,9 @@ function card(w, compact, rows) {
   if (drop || rise) pr.appendChild(el("span", "old", money(w.old, w.cur)));
   row.appendChild(pr);
 
-  if (!got) {
+  if (!got && picking === w.id) {
+    row.appendChild(WLRes.picker(WLRes.free(w, cnt[w.id]), function (n) { reserveCount(w, n); }, function () { picking = null; render(); }));
+  } else if (!got) {
     if (r === undefined) {
       var b = el("button", "act small", T("Reserve"));
       b.type = "button"; b.disabled = busy;
@@ -601,6 +613,13 @@ function render() {
   var oc = $("occasion");
   oc.textContent = window.occasionLine ? window.occasionLine(list.occ) : "";
   oc.hidden = !oc.textContent;
+  // The owner's sizes (2.128), as text: "Clothing M · Shoes 43".
+  var sz = $("sizes");
+  var parts = [];
+  if (list.sz && String(list.sz.c || "").trim()) parts.push(T("Clothing {0}", String(list.sz.c).trim().slice(0, 20)));
+  if (list.sz && String(list.sz.s || "").trim()) parts.push(T("Shoes {0}", String(list.sz.s).trim().slice(0, 10)));
+  sz.textContent = parts.join(" · ");
+  sz.hidden = !parts.length;
   $("sub").textContent = T("Reserve a gift so nobody gives the same gift twice.");
   var ab = $("about");
   ab.textContent = list.about || "";
@@ -671,9 +690,12 @@ async function refresh() {
     if (l === null) { state = "gone"; list = null; render(); return; }
     var rs = await rpc("wl_get_reservations", { p_code: code, p_device: deviceId() });
     var m = {};
-    (rs || []).forEach(function (x) { m[x.id] = x.mine; });
+    var rr = WLRes.parse(rs);
+    m = rr.res; cnt = rr.cnt;
     // The note for friends travels as one extra item of kind "about". It is not a wish.
-    var about = "", cover = "", cedit = "", occ = null;
+    var about = "", cover = "", cedit = "", occ = null, sz = null, received = {};
+    // Wishes the owner received after the occasion are in the bin with "recv" (2.128): remember them for the thank-you.
+    (l.items || []).forEach(function (w) { if (w && w.bin && w.recv) received[w.id] = true; });
     // Wishes in the bin (deleted, kept 30 days so they can be restored) are not on the list.
     l.items = (l.items || []).filter(function (w) {
       if (w && w.kind === "about") {
@@ -681,6 +703,8 @@ async function refresh() {
         // The list's cover photo (2.105) and its text travel in the same item.
         cover = String(w.cover || ""); cedit = String(w.cedit || "");
         occ = w.occ && typeof w.occ === "object" ? w.occ : null;
+        // The owner's sizes (2.128): {c: clothing, s: shoes}.
+        sz = w.sz && typeof w.sz === "object" ? w.sz : null;
         return false;
       }
       return !(w && w.bin);
@@ -689,25 +713,49 @@ async function refresh() {
     l.cover = cover;
     l.cedit = cedit;
     l.occ = occ;
+    l.sz = sz;
     // Remember what this browser reserved, and say so when one of those gifts is no longer on the list, or (owner,
     // 4 November 2026) was marked as owned, so nobody buys a duplicate.
-    var mine = readMyRes(), seen = {}, gone = [], owned = [];
+    var mine = readMyRes(), seen = {}, gone = [], owned = [], thanks = [];
     l.items.forEach(function (w) { seen[w.id] = w; });
     Object.keys(m).forEach(function (id) { if (m[id] === true && seen[id] && !seen[id].got) mine[id] = String(seen[id].title || ""); });
     Object.keys(mine).forEach(function (id) {
-      if (!seen[id]) { gone.push(mine[id]); delete mine[id]; }
+      if (!seen[id] && received[id]) { thanks.push(mine[id]); delete mine[id]; }
+      else if (!seen[id]) { gone.push(mine[id]); delete mine[id]; }
       else if (seen[id].got) { owned.push(mine[id]); delete mine[id]; }
     });
     writeMyRes(mine);
-    if (gone.length || owned.length) noteGone(gone, owned);
     list = l; res = m; state = "ok";
+    if (gone.length || owned.length || thanks.length) noteGone(gone, owned, thanks);
   } catch (e) {
     if (!list) state = "offline";
   }
   render();
 }
 
+// Reserve [n] of a wish wanted more than once (0 takes yours away).
+async function reserveCount(w, n) {
+  picking = null; busy = true; render();
+  var msg = null;
+  try {
+    var ok = await rpc("wl_reserve_count", { p_code: code, p_item: w.id, p_device: deviceId(), p_n: n });
+    if (ok !== true) msg = T("Someone else just reserved that one.");
+    if (n === 0) { var mine = readMyRes(); delete mine[w.id]; writeMyRes(mine); }
+    busy = false;
+    await refresh();
+  } catch (e) {
+    busy = false;
+    msg = T("No connection. Try again.");
+    render();
+  }
+  if (msg) toast(msg);
+}
+
 async function toggle(w, reserve) {
+  if (WLRes.qty(w) > 1) {
+    if (reserve) { picking = w.id; render(); } else reserveCount(w, 0);
+    return;
+  }
   busy = true; render();
   var msg = null;
   try {
@@ -755,7 +803,7 @@ if (invite !== null) {
   if (SHARED_LIST) {
     var starOpt = $("sort").querySelector('option[value="star"]');
     if (starOpt) starOpt.remove();
-    $("note").textContent = T("Tap Reserve on a gift you plan to buy. Everyone who puts this list together sees what’s reserved, so nobody gives the same gift twice.");
+    $("note").textContent = T("Reserve what you’ll buy, so nobody buys it twice.");
   }
   code = readCode();
   if (!code) {

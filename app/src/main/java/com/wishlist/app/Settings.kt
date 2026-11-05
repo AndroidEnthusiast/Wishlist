@@ -135,7 +135,7 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
             // Everything about prices in one place (owner, 2.122): how often, the alerts, and the currency.
             SectionTitle(tr("Prices"))
             Text(
-                tr("Choose how often the app refreshes the prices of your wishes, to show any price drops or increases."),
+                tr("How often prices should be checked for drops and rises."),
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
             )
             // "Check every" with the choices next to each other, as boxes that finish the sentence.
@@ -207,7 +207,7 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
             if (blocked.isNotEmpty()) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        tr("Android has blocked: %s. You may miss gifts that are gone or group invitations.", blocked.joinToString(", ")),
+                        blocked.joinToString("\n"),
                         style = MaterialTheme.typography.bodySmall, color = cs.error, modifier = Modifier.weight(1f).padding(end = 12.dp)
                     )
                     TextButton(onClick = { Alerts.openSettings(ctx) }) { Text(tr("Turn on")) }

@@ -76,21 +76,75 @@ returns jsonb language sql stable security definer set search_path = public as $
 $$;
 
 -- Only friends' phones ever call this one. The owner's app never does.
+-- Quantity (6 November 2026, version 2.128): a wish can be wanted more than once ("qty" in the wish, 1 to 99), and
+-- every giver reserves how many they'll buy. So a wish can now have one reservation per giver, each with a number n.
+alter table wl_reservations add column if not exists n int not null default 1;
+do $$
+begin
+  if (select count(*) from information_schema.key_column_usage
+      where table_name = 'wl_reservations' and constraint_name = 'wl_reservations_pkey') = 2 then
+    alter table wl_reservations drop constraint wl_reservations_pkey;
+    alter table wl_reservations add primary key (list_code, item_id, device);
+  end if;
+end $$;
+
+-- How many of a wish are wanted (1 when not set).
+create or replace function wl_qty(p_code text, p_item bigint)
+returns int language sql stable security definer set search_path = public as $$
+  select greatest(1, least(99, coalesce((
+    select case when (data->>'qty') ~ '^[0-9]{1,2}$' then (data->>'qty')::int end
+    from wl_items where list_code = p_code and id = p_item), 1)))
+$$;
+revoke execute on function wl_qty(text, bigint) from public, anon;
+
+-- One line per reserved wish (older apps read only "id" and "mine"): "n" how many are reserved, "my" how many by this
+-- device, "full" when all are taken.
 create or replace function wl_get_reservations(p_code text, p_device text)
 returns jsonb language sql stable security definer set search_path = public as $$
-  select coalesce(
-    jsonb_agg(jsonb_build_object('id', r.item_id, 'mine', r.device = p_device)),
-    '[]'::jsonb)
-  from wl_reservations r where r.list_code = p_code
+  select coalesce(jsonb_agg(jsonb_build_object('id', x.item_id, 'mine', x.mine, 'n', x.n, 'my', x.my, 'full', x.n >= x.q)), '[]'::jsonb)
+  from (
+    select r.item_id, bool_or(r.device = p_device) as mine, sum(r.n)::int as n,
+           coalesce(sum(r.n) filter (where r.device = p_device), 0)::int as my, wl_qty(p_code, r.item_id) as q
+    from wl_reservations r where r.list_code = p_code group by r.item_id
+  ) x
 $$;
 
+-- Reserve (the way older apps do it): everything that is still free. False when nothing is left.
 create or replace function wl_reserve_item(p_code text, p_item bigint, p_device text)
 returns boolean language plpgsql security definer set search_path = public as $$
+declare v_q int; v_taken int;
 begin
-  insert into wl_reservations (list_code, item_id, device) values (p_code, p_item, p_device);
+  perform 1 from wl_items where list_code = p_code and id = p_item for update;
+  if not found then return false; end if;
+  v_q := wl_qty(p_code, p_item);
+  select coalesce(sum(n), 0) into v_taken from wl_reservations where list_code = p_code and item_id = p_item;
+  if v_taken >= v_q then return false; end if;
+  insert into wl_reservations (list_code, item_id, device, n) values (p_code, p_item, p_device, v_q - v_taken);
   return true;
 exception when unique_violation or foreign_key_violation then
   return false;
+end $$;
+
+-- Reserve [p_n] of a wish for this device (2.128), replacing its earlier number; 0 takes it away. False when that
+-- many aren't free any more.
+create or replace function wl_reserve_count(p_code text, p_item bigint, p_device text, p_n int)
+returns boolean language plpgsql security definer set search_path = public as $$
+declare v_q int; v_others int;
+begin
+  if coalesce(p_device, '') = '' then return false; end if;
+  perform 1 from wl_items where list_code = p_code and id = p_item for update;
+  if not found then return false; end if;
+  if coalesce(p_n, 0) <= 0 then
+    delete from wl_reservations where list_code = p_code and item_id = p_item and device = p_device;
+    return true;
+  end if;
+  v_q := wl_qty(p_code, p_item);
+  select coalesce(sum(n), 0) into v_others from wl_reservations
+    where list_code = p_code and item_id = p_item and device <> p_device;
+  if v_others + p_n > v_q then return false; end if;
+  insert into wl_reservations (list_code, item_id, device, n) values (p_code, p_item, p_device, p_n)
+  on conflict (list_code, item_id, device) do update set n = excluded.n, created_at = now();
+  return true;
 end $$;
 
 create or replace function wl_unreserve_item(p_code text, p_item bigint, p_device text)
@@ -105,5 +159,6 @@ grant execute on function
   wl_get_list(text),
   wl_get_reservations(text, text),
   wl_reserve_item(text, bigint, text),
+  wl_reserve_count(text, bigint, text, int),
   wl_unreserve_item(text, bigint, text)
 to anon;
