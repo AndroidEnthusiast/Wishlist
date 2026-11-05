@@ -1734,11 +1734,7 @@ fun WishDialog(
                 if (err.isNotEmpty()) {
                     Text(err, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 }
-                // Always shown (owner, 2.95): the fastest way to add a wish, which most people don't know.
-                if (edit == null) Text(
-                    tr("Faster: in a shop’s app or your browser, tap Share and choose Wishlist."),
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                // (No tip under the link any more: removed by the owner, 2.118.)
                 ImageBlock(image, onPick = { pickImage() }, onRemove = {
                     if (picked.isNotEmpty() && picked == image) { ImageStore.delete(ctx, picked); picked = "" }
                     image = ""

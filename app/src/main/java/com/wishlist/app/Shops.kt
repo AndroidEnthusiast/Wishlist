@@ -237,18 +237,21 @@ object ShopIcons {
     // away and back shows the same icon at once.
     private val rejected = HashSet<String>()
 
-    fun accepted(c: Context, host: String): String? = prefs(c).getString("shopiconok_$host", null)
+    fun accepted(c: Context, host: String): String? = prefs(c).getString("shopiconok2_$host", null)
 
     fun accept(c: Context, host: String, url: String) {
-        if (accepted(c, host) != url) prefs(c).edit().putString("shopiconok_$host", url).apply()
+        if (accepted(c, host) != url) prefs(c).edit().putString("shopiconok2_$host", url).apply()
     }
 
     fun reject(c: Context, host: String, url: String) {
         rejected.add(url)
-        if (accepted(c, host) == url) prefs(c).edit().remove("shopiconok_$host").apply()
+        if (accepted(c, host) == url) prefs(c).edit().remove("shopiconok2_$host").apply()
     }
 
     fun isRejected(url: String) = url in rejected
+
+    /** Icons smaller than this (pixels) look blurry on a 52 dp tile. */
+    const val SHARP = 96
 
     /**
      * True when a loaded icon would look empty on the tile: almost all of it see-through or white (2.116: Zalando's
@@ -266,34 +269,54 @@ object ShopIcons {
         return shown < n * n * 4 / 100
     }
 
-    /** The icon the homepage names, or null. Known answers come straight from the phone's memory. */
-    suspend fun declared(c: Context, s: Shop): String? {
-        val key = "shopicon2_" + s.host // "2": looked up again with the sharper choice of 2.116
+    /**
+     * The icons the homepage names, sharpest first (2.118, owner: every icon must be sharp): the largest icon of the
+     * shop's web app manifest (shops list their app icons there, usually 192 or 512 pixels), then the largest icon
+     * linked in the page. Known answers come straight from the phone's memory.
+     */
+    suspend fun declared(c: Context, s: Shop): List<String> {
+        val key = "shopicon3_" + s.host // "3": looked up again with the manifest of 2.118
         val saved = prefs(c).getString(key, null)
         if (saved != null) {
-            if (saved.startsWith("http")) return saved
+            if (saved.startsWith("http")) return saved.split('\n').filter { it.startsWith("http") }
             val at = saved.substringAfter("none|", "0").toLongOrNull() ?: 0L
-            if (System.currentTimeMillis() - at < WEEK) return null
+            if (System.currentTimeMillis() - at < WEEK) return emptyList()
         }
         val found = withContext(Dispatchers.IO) {
+            val out = ArrayList<String>()
             try {
                 val d = Jsoup.connect(s.url).userAgent(UA).timeout(8000).followRedirects(true).get()
+                fun notSvg(href: String, type: String) =
+                    !href.lowercase().substringBefore('?').endsWith(".svg") && !type.lowercase().contains("svg")
+                fun sizeOf(sizes: String): Int =
+                    Regex("(\\d+)x\\d+").findAll(sizes).mapNotNull { it.groupValues[1].toIntOrNull() }.maxOrNull() ?: 0
+                // 1. The web app manifest.
+                d.selectFirst("link[rel=manifest][href]")?.absUrl("href")?.takeIf { it.startsWith("http") }?.let { mu ->
+                    try {
+                        val body = Jsoup.connect(mu).userAgent(UA).timeout(8000).ignoreContentType(true).execute().body()
+                        val icons = JSONObject(body).optJSONArray("icons")
+                        if (icons != null) {
+                            val list = (0 until icons.length()).mapNotNull { icons.optJSONObject(it) }
+                                .filter { notSvg(it.optString("src"), it.optString("type")) && !it.optString("purpose").contains("monochrome") }
+                                .sortedByDescending { sizeOf(it.optString("sizes")) }
+                            list.firstOrNull()?.let { ic -> out.add(URI(mu).resolve(ic.optString("src")).toString()) }
+                        }
+                    } catch (e: Exception) {
+                    }
+                }
+                // 2. The icons linked in the page.
                 val links = d.select("link[rel][href]").filter { l ->
                     val rel = l.attr("rel").lowercase()
-                    rel.contains("icon") && !l.attr("href").lowercase().substringBefore('?').endsWith(".svg") &&
-                        l.attr("type").lowercase() != "image/svg+xml" && rel != "mask-icon"
+                    rel.contains("icon") && rel != "mask-icon" && notSvg(l.attr("href"), l.attr("type"))
                 }
-                fun size(l: org.jsoup.nodes.Element): Int =
-                    Regex("(\\d+)x\\d+").find(l.attr("sizes"))?.groupValues?.get(1)?.toIntOrNull() ?: 0
-                // The sharpest one (2.116: small ones looked blurry); with equal sizes an apple-touch-icon wins.
-                fun apple(l: org.jsoup.nodes.Element) = if (l.attr("rel").lowercase().contains("apple-touch-icon")) 1 else 0
-                links.maxWithOrNull(compareBy({ maxOf(size(it), if (apple(it) == 1) 180 else 0) }, { apple(it) }))
-                    ?.absUrl("href")?.takeIf { it.startsWith("http") }
+                fun apple(l: org.jsoup.nodes.Element) = l.attr("rel").lowercase().contains("apple-touch-icon")
+                links.sortedWith(compareByDescending<org.jsoup.nodes.Element> { maxOf(sizeOf(it.attr("sizes")), if (apple(it)) 180 else 0) })
+                    .map { it.absUrl("href") }.filter { it.startsWith("http") }.take(3).forEach { out.add(it) }
             } catch (e: Exception) {
-                null
             }
+            out.distinct()
         }
-        prefs(c).edit().putString(key, found ?: ("none|" + System.currentTimeMillis())).apply()
+        prefs(c).edit().putString(key, if (found.isNotEmpty()) found.joinToString("\n") else "none|" + System.currentTimeMillis()).apply()
         return found
     }
 }
@@ -310,10 +333,13 @@ fun ShopIcon(s: Shop, sizeDp: Int) {
     // null while the homepage is being asked; then the list of addresses to try in turn.
     var tries by remember(s.url) { mutableStateOf<List<String>?>(null) }
     var at by remember(s.url) { mutableIntStateOf(0) }
+    // The biggest of the too-small icons, shown only when no sharp one exists.
+    var bestSmall by remember(s.url) { mutableStateOf<String?>(null) }
+    var bestSmallPx by remember(s.url) { mutableIntStateOf(0) }
     LaunchedEffect(s.url) {
         val ok = ShopIcons.accepted(ctx, s.host)
-        val d = if (ok != null) null else ShopIcons.declared(ctx, s)
-        tries = listOfNotNull(ok, d, "$base/apple-touch-icon.png", ShopIcons.google(s.host)).distinct()
+        val d = if (ok != null) emptyList() else ShopIcons.declared(ctx, s)
+        tries = (listOfNotNull(ok) + d + listOf("$base/apple-touch-icon.png", ShopIcons.google(s.host))).distinct()
             .filter { !ShopIcons.isRejected(it) }
         at = 0
     }
@@ -324,17 +350,26 @@ fun ShopIcon(s: Shop, sizeDp: Int) {
     ) {
         if (list == null) {
             // Still looking: the plain tile.
-        } else if (base.isNotEmpty() && at < list.size) AsyncImage(
+        } else if (base.isNotEmpty() && (at < list.size || bestSmall != null)) AsyncImage(
             // Software bitmaps, so [ShopIcons.looksEmpty] can read the pixels.
-            model = ImageRequest.Builder(ctx).data(list[at]).allowHardware(false).build(),
+            model = ImageRequest.Builder(ctx).data(if (at < list.size) list[at] else bestSmall).allowHardware(false)
+                // Its real size (not shrunk to the tile first), so a small icon can be recognised.
+                .size(coil.size.Size.ORIGINAL).build(),
             contentDescription = null, contentScale = ContentScale.Fit,
-            onError = { at++ },
+            onError = { if (at < list.size) at++ else bestSmall = null },
             onSuccess = { st ->
-                val url = list[at]
+                val url = if (at < list.size) list[at] else bestSmall.orEmpty()
                 // Any kind of picture (2.117: some weren't a plain bitmap, so an empty one slipped through).
-                val b = try { st.result.drawable.toBitmap(48, 48) } catch (e: Exception) { null }
+                val dr = st.result.drawable
+                val b = try { dr.toBitmap(48, 48) } catch (e: Exception) { null }
+                // Too small to look sharp on the tile (2.118, owner: Rituals was blurry): try the next one, but keep
+                // the biggest of these in case no sharp one exists at all.
+                val px = minOf(dr.intrinsicWidth, dr.intrinsicHeight)
                 if (b != null && ShopIcons.looksEmpty(b)) { ShopIcons.reject(ctx, s.host, url); at++ }
-                else ShopIcons.accept(ctx, s.host, url)
+                else if (px in 1 until ShopIcons.SHARP && url != bestSmall) {
+                    if (px > bestSmallPx) { bestSmall = url; bestSmallPx = px }
+                    ShopIcons.reject(ctx, s.host, url); at++
+                } else if (px == 0 || px >= ShopIcons.SHARP) ShopIcons.accept(ctx, s.host, url)
             },
             modifier = Modifier.fillMaxSize().padding(6.dp)
         ) else Box(
@@ -381,13 +416,17 @@ private fun AddShopDialog(onClose: () -> Unit) {
 
 /** Finds the product picture on the page on screen (see ShopBrowser's add). Returns JSON: ld, ogurl, img. */
 private const val PICTURE_JS = """(function(){
-  var best='', ba=0;
-  document.querySelectorAll('img').forEach(function(i){
-    var r=i.getBoundingClientRect();
-    if(r.width<120||r.height<120||r.bottom<0||r.top>innerHeight*1.5) return;
-    var s=i.currentSrc||i.src||''; if(!/^https?:/.test(s)) return;
-    if(r.width*r.height>ba){ba=r.width*r.height;best=s;}
-  });
+  // The FIRST big picture in the page (owner, 2.118: the first product photo is the clean one; later ones show
+  // dimensions or details), in the upper part of the page, also when a gallery slide is off to the side.
+  var best='';
+  var imgs=document.querySelectorAll('img');
+  for(var k=0;k<imgs.length&&!best;k++){
+    var i=imgs[k], r=i.getBoundingClientRect();
+    if(r.width<150||r.height<150) continue;
+    if(r.top+scrollY>innerHeight*2) continue;
+    var s=i.currentSrc||i.src||''; if(!/^https?:/.test(s)) continue;
+    best=s;
+  }
   var ld='';
   document.querySelectorAll('script[type="application/ld+json"]').forEach(function(sc){
     try{
@@ -456,10 +495,10 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
             } catch (e: Exception) {
                 null
             }
-            // The product picture (owner, 2.116: it often stayed empty). Shops that change pages without reloading
-            // keep an old "og:image" (or none), so the picture is taken from what is on screen: the product's own
-            // structured data first, then the page's og:image when it belongs to this page, then the biggest picture
-            // in sight.
+            // The product picture (owner, 2.116: it often stayed empty; 2.118: always the FIRST product photo). Shops
+            // that change pages without reloading keep an old "og:image" (or none), so the picture is taken from the
+            // page itself: the first image in the product's own structured data, then the page's og:image when it
+            // belongs to this page, then the first big picture in the page.
             val pics = try { JSONObject(js(PICTURE_JS) ?: "{}") } catch (e: Exception) { JSONObject() }
             fun abs(u: String): String = try { URI(url).resolve(u.trim()).toString() } catch (e: Exception) { "" }
             val ld = pics.optString("ld").takeIf { it.isNotBlank() }?.let { abs(it) }.orEmpty()
