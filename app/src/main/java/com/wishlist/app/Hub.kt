@@ -515,6 +515,8 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var missing by remember { mutableStateOf(false) }
+    var occ by remember { mutableStateOf<Occasion?>(null) }
+    var occMissing by remember { mutableStateOf(false) }
     // Optional: wishes from your other lists, copied in when the list is made.
     var picked by remember { mutableStateOf(listOf<Wish>()) }
     var picking by remember { mutableStateOf(false) }
@@ -524,7 +526,7 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
         properties = DialogProperties(dismissOnClickOutside = false),
         title = { Text(tr("New wishlist")) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     name, { name = it.take(60); if (it.isNotBlank()) missing = false },
                     label = { Text(tr("Name*")) }, singleLine = true, isError = missing,
@@ -536,6 +538,13 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
                     label = { Text(tr("Note for friends")) },
                     supportingText = { Text(tr("Optional. Shown at the top of your list. For example your sizes, or things you don’t want.")) },
                     maxLines = 4, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
+                // The occasion (owner, 2.124): pick one first; only then its date is asked.
+                Text(tr("Occasion"), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                OccasionPicker(gift = false, value = occ) { occ = it; occMissing = false }
+                if (occMissing) Text(
+                    if (occ?.kind == "own" && occ?.name.isNullOrBlank()) tr("Give it a name and a date.") else tr("Choose the date."),
+                    color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall
+                )
                 if (canCopy) {
                     Row(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { picking = true }
@@ -561,8 +570,10 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
         confirmButton = {
             TextButton(onClick = {
                 if (name.isBlank()) missing = true
+                else if (!Occasions.complete(occ)) occMissing = true
                 else {
                     val id = Repo.createMine(ctx, name, notes)
+                    occ?.let { Occasions.setMine(ctx, id, it) }
                     Repo.copyInto(ctx, id, picked)
                     // New lists start on "My friends" (owner, 2.105).
                     ListVisibility.startShared(ctx, id)

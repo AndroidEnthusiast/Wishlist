@@ -22,7 +22,7 @@ async function boot(opts) {
   if (!boot.web) boot.web = await serveWeb(WEB);
   const fake = opts.fake || new Fake();
   if (!opts.fake) fake.makeList(CODE, KEY, "Our home", ["Home", "Fashion", "Books"], opts.items || sample());
-  if (opts.about) fake.lists[CODE].items[0] = { id: 0, kind: "about", about: opts.about, url: "", title: "" };
+  if (opts.about || opts.occ) fake.lists[CODE].items[0] = Object.assign({ id: 0, kind: "about", about: opts.about || "", url: "", title: "" }, opts.occ ? { occ: opts.occ } : {});
   const ctx = await boot.browser.newContext({
     viewport: opts.viewport || { width: 390, height: 844 }, deviceScaleFactor: 2,
     userAgent: opts.ua, locale: opts.locale, colorScheme: opts.dark ? "dark" : "light", reducedMotion: opts.reduced ? "reduce" : "no-preference",

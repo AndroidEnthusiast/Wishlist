@@ -146,7 +146,8 @@ object Sync {
         }
         Cloud.pushList(
             code, token, d.name, d.cats, out, d.about,
-            coverUrl, if (coverUrl.isEmpty() || cover == null) "" else cover.edit.toJson()
+            coverUrl, if (coverUrl.isEmpty() || cover == null) "" else cover.edit.toJson(),
+            Occasions.ofMine(c, d.id)
         )
 
         for (n in up - keep) {

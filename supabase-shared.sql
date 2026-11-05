@@ -105,20 +105,32 @@ begin
   update wl_lists set updated_at = now() where code = v_code;
 end $$;
 
--- Name, categories and the note for friends (kept as the special item with id 0, like on a normal list).
+-- The special item with id 0 (like on a normal list): the note for friends and (since 5 November 2026) the list's
+-- occasion, {"k": kind, "n": own name, "d": date} (Occasion.kt in the app, web/occasion.js). Empty note and no
+-- occasion: the item goes. Only used by the functions below (not callable from outside).
+create or replace function wl_sh_write_about(p_code text, p_about text, p_occ jsonb)
+returns void language plpgsql security definer set search_path = public as $$
+declare v jsonb;
+begin
+  if coalesce(p_about, '') = '' and p_occ is null then
+    delete from wl_items where list_code = p_code and id = 0;
+    return;
+  end if;
+  v := jsonb_build_object('id', 0, 'kind', 'about', 'about', left(coalesce(p_about, ''), 300), 'url', '', 'title', '');
+  if p_occ is not null then v := v || jsonb_build_object('occ', p_occ); end if;
+  insert into wl_items (list_code, id, data) values (p_code, 0, v)
+  on conflict (list_code, id) do update set data = excluded.data;
+end $$;
+revoke execute on function wl_sh_write_about(text, text, jsonb) from public, anon;
+
+-- Name, categories and the note for friends.
 create or replace function wl_sh_set_meta(p_key text, p_name text, p_cats jsonb, p_about text)
 returns void language plpgsql security definer set search_path = public as $$
 declare v_code text;
 begin
   v_code := wl_sh_code(p_key);
   update wl_lists set name = p_name, cats = p_cats, updated_at = now() where code = v_code;
-  if coalesce(p_about, '') = '' then
-    delete from wl_items where list_code = v_code and id = 0;
-  else
-    insert into wl_items (list_code, id, data)
-    values (v_code, 0, jsonb_build_object('id', 0, 'kind', 'about', 'about', left(p_about, 300), 'url', '', 'title', ''))
-    on conflict (list_code, id) do update set data = excluded.data;
-  end if;
+  perform wl_sh_write_about(v_code, p_about, (select data->'occ' from wl_items where list_code = v_code and id = 0));
 end $$;
 
 -- The same, but one small step at a time (version 2.16 uses these; set_meta above stays for older apps).
@@ -135,13 +147,23 @@ returns void language plpgsql security definer set search_path = public as $$
 declare v_code text;
 begin
   v_code := wl_sh_code(p_key);
-  if coalesce(p_about, '') = '' then
-    delete from wl_items where list_code = v_code and id = 0;
-  else
-    insert into wl_items (list_code, id, data)
-    values (v_code, 0, jsonb_build_object('id', 0, 'kind', 'about', 'about', left(p_about, 300), 'url', '', 'title', ''))
-    on conflict (list_code, id) do update set data = excluded.data;
+  -- The occasion stays (also when an older app changes the note).
+  perform wl_sh_write_about(v_code, p_about, (select data->'occ' from wl_items where list_code = v_code and id = 0));
+  update wl_lists set updated_at = now() where code = v_code;
+end $$;
+
+-- The list's occasion (null removes it). Only the known fields are kept, each short; the note stays.
+create or replace function wl_sh_set_occasion(p_key text, p_occ jsonb)
+returns void language plpgsql security definer set search_path = public as $$
+declare v_code text; v_occ jsonb;
+begin
+  v_code := wl_sh_code(p_key);
+  if p_occ is not null and jsonb_typeof(p_occ) = 'object' and coalesce(p_occ->>'k', '') <> '' then
+    v_occ := jsonb_build_object('k', left(p_occ->>'k', 20));
+    if coalesce(p_occ->>'n', '') <> '' then v_occ := v_occ || jsonb_build_object('n', left(p_occ->>'n', 40)); end if;
+    if coalesce(p_occ->>'d', '') <> '' then v_occ := v_occ || jsonb_build_object('d', left(p_occ->>'d', 10)); end if;
   end if;
+  perform wl_sh_write_about(v_code, (select data->>'about' from wl_items where list_code = v_code and id = 0), v_occ);
   update wl_lists set updated_at = now() where code = v_code;
 end $$;
 
@@ -227,6 +249,7 @@ grant execute on function
   wl_sh_set_meta(text, text, jsonb, text),
   wl_sh_set_name(text, text),
   wl_sh_set_about(text, text),
+  wl_sh_set_occasion(text, jsonb),
   wl_sh_cat_add(text, text),
   wl_sh_cat_rename(text, text, text),
   wl_sh_cat_remove(text, text),

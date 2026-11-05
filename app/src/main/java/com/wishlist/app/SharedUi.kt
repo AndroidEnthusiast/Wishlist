@@ -41,6 +41,8 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var missing by remember { mutableStateOf(false) }
+    var occ by remember { mutableStateOf<Occasion?>(null) }
+    var occMissing by remember { mutableStateOf(false) }
     // "Added by" uses your profile name (owner, 2.102): not asked here.
     val me = Shared.lastName
     var busy by remember { mutableStateOf(false) }
@@ -51,7 +53,7 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
         properties = DialogProperties(dismissOnClickOutside = false),
         title = { Text(tr("Create a gift list for someone")) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     tr("Collect gift ideas together for someone you want to surprise. Everyone you invite can add ideas and reserve what they’ll buy, so no gift is bought twice."),
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -65,6 +67,13 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
                     notes, { notes = it.take(ABOUT_MAX) },
                     label = { Text(tr("Notes")) }, placeholder = { Text(tr("What is this wishlist for?")) },
                     maxLines = 4, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
+                // The occasion (owner, 2.124): pick one first; only then its date is asked.
+                Text(tr("Occasion"), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                OccasionPicker(gift = true, value = occ) { occ = it; occMissing = false }
+                if (occMissing) Text(
+                    if (occ?.kind == "own" && occ?.name.isNullOrBlank()) tr("Give it a name and a date.") else tr("Choose the date."),
+                    color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall
+                )
                 if (err.isNotEmpty()) {
                     Text(err, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 }
@@ -78,6 +87,10 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
                         missing = true
                         return@TextButton
                     }
+                    if (!Occasions.complete(occ)) {
+                        occMissing = true
+                        return@TextButton
+                    }
                     busy = true; err = ""
                     scope.launch {
                         try {
@@ -86,6 +99,13 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
                             if (notes.isNotBlank()) {
                                 try {
                                     Cloud.shAbout(l.key, notes.trim().take(ABOUT_MAX))
+                                } catch (e: Exception) {
+                                }
+                            }
+                            // The occasion too; without the new script it can be added later in the list's settings.
+                            occ?.let {
+                                try {
+                                    Cloud.shOccasion(l.key, it)
                                 } catch (e: Exception) {
                                 }
                             }

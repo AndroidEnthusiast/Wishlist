@@ -172,10 +172,11 @@ fun ListCoverPicture(cover: ListCover, modifier: Modifier = Modifier) {
 /**
  * The narrow card at the top of a list: how many wishes and their total value (the total moved here from Home, 2.89).
  * Since 2.111 (owner) the number takes less room than the total, both centred in their part, and the number pulses
- * when it goes up or down.
+ * when it goes up or down. [occasion] ("Birthday · in 3 weeks", owner, 2.124) shows as a line below them; with
+ * [counts] false (gift lists, or the summary switched off) the card shows only that line.
  */
 @Composable
-fun ListSummaryCard(wishes: List<Wish>, modifier: Modifier = Modifier) {
+fun ListSummaryCard(wishes: List<Wish>, modifier: Modifier = Modifier, occasion: String? = null, counts: Boolean = true) {
     val look = LocalLook.current
     val id = 11L
     val total = totalValue(wishes)
@@ -189,22 +190,32 @@ fun ListSummaryCard(wishes: List<Wish>, modifier: Modifier = Modifier) {
         pulse.animateTo(1.35f, tween(140, easing = FastOutSlowInEasing))
         pulse.animateTo(1f, spring(dampingRatio = 0.45f, stiffness = Spring.StiffnessMediumLow))
     }
-    Row(
+    if (!counts && occasion == null) return
+    Column(
         modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true))
             .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(Modifier.weight(0.38f), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                count.toString(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = look.cardInk(id),
-                modifier = Modifier.graphicsLayer { scaleX = pulse.value; scaleY = pulse.value }
-            )
-            Text(if (count == 1) tr("Wish") else tr("Wishes"), style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id))
+        if (counts) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(0.38f), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    count.toString(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = look.cardInk(id),
+                    modifier = Modifier.graphicsLayer { scaleX = pulse.value; scaleY = pulse.value }
+                )
+                Text(if (count == 1) tr("Wish") else tr("Wishes"), style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id))
+            }
+            Box(Modifier.width(1.dp).height(32.dp).background(look.cardMuted(id).copy(alpha = 0.3f)))
+            Column(Modifier.weight(0.62f), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(total ?: "–", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = look.cardInk(id), maxLines = 1)
+                Text(tr("Total value"), style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id))
+            }
         }
-        Box(Modifier.width(1.dp).height(32.dp).background(look.cardMuted(id).copy(alpha = 0.3f)))
-        Column(Modifier.weight(0.62f), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(total ?: "–", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = look.cardInk(id), maxLines = 1)
-            Text(tr("Total value"), style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id))
+        if (occasion != null) {
+            if (counts) Box(Modifier.padding(vertical = 8.dp).fillMaxWidth().height(1.dp).background(look.cardMuted(id).copy(alpha = 0.3f)))
+            Text(
+                occasion, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = look.cardInk(id),
+                maxLines = 1, overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }
@@ -385,6 +396,7 @@ fun CoverSection(snack: androidx.compose.material3.SnackbarHostState) {
  */
 @Composable
 fun CoverPreview(img: String, edit: HeroEdit, onClose: () -> Unit) {
+    val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
     val wishes = Repo.wishes
@@ -401,7 +413,8 @@ fun CoverPreview(img: String, edit: HeroEdit, onClose: () -> Unit) {
             ) {
                 // The photo exactly as in the frame now (worked out from the edit, as on the list).
                 HeroPicture(img, edit, Modifier.fillMaxWidth().height(150.dp).clip(RoundedCornerShape(24.dp)))
-                if (Shared.active == null) ListSummaryCard(wishes)
+                val occ = remember(Occasions.version) { Occasions.line(Occasions.ofOpen(ctx)) }
+                ListSummaryCard(wishes, occasion = occ, counts = Shared.active == null)
                 wishes.take(4).forEach { w ->
                     val id = w.id
                     Row(

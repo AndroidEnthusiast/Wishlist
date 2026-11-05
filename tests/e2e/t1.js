@@ -17,9 +17,11 @@ const { boot, done, check, summary, KEY, CODE, sleep, openDrawer, catItems } = r
   await t.ctx.close();
 
   // C. loads the list
-  t = await boot({ about: "Sizes are small. Thanks!" });
+  t = await boot({ about: "Sizes are small. Thanks!", occ: { k: "christmas" } });
   await t.page.waitForSelector(".card");
   check("title", (await t.page.locator("#name").innerText()) === "Our home");
+  // The occasion (5 November 2026): shown at the top, set in the app only.
+  check("occasion shown at the top", /^Christmas · (today|tomorrow|in \d+ (days|weeks|months))$/.test((await t.page.locator("#occasion").innerText()).trim()), await t.page.locator("#occasion").innerText());
   check("3 cards", (await t.page.locator(".card").count()) === 3);
   check("about in the side menu", /Sizes are small/.test(await t.page.locator("#about").textContent()));
   check("editing as Sam", /Editing as Sam/.test(await t.page.locator("#who").textContent()));

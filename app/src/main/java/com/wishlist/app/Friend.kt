@@ -125,6 +125,13 @@ fun FriendScreen(
                             tr("Owned by %s", owner), style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis
                         )
+                        // The list's occasion (owner, 2.124), e.g. "Birthday · in 3 weeks".
+                        Occasions.line(remote?.occ)?.let { o ->
+                            Text(
+                                o, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary, maxLines = 1, overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
                 },
                 navigationIcon = {

@@ -58,7 +58,10 @@ class Fake {
       case "wl_sh_set_name": { const [, l] = this.need(b.p_key); l.name = b.p_name; return null; }
       case "wl_sh_set_about": {
         const [, l] = this.need(b.p_key);
-        if (!b.p_about) delete l.items[0]; else l.items[0] = { id: 0, kind: "about", about: b.p_about.slice(0, 300), url: "", title: "" };
+        // Like supabase-shared.sql: the occasion stays.
+        const occ = l.items[0] && l.items[0].occ;
+        if (!b.p_about && !occ) delete l.items[0];
+        else l.items[0] = Object.assign({ id: 0, kind: "about", about: (b.p_about || "").slice(0, 300), url: "", title: "" }, occ ? { occ } : {});
         return null;
       }
       case "wl_sh_cat_add": { const [, l] = this.need(b.p_key); if (!b.p_name.trim()) throw Object.assign(new Error("bad name"), { status: 400 }); if (!l.cats.includes(b.p_name)) l.cats.push(b.p_name); return null; }

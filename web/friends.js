@@ -593,6 +593,10 @@ function render() {
   var ow = $("owner");
   ow.textContent = list.owner ? T("Owned by {0}", String(list.owner).slice(0, 30)) : "";
   ow.hidden = !list.owner;
+  // The list's occasion (owner, 5 November 2026): "Birthday · in 3 weeks" (occasion.js).
+  var oc = $("occasion");
+  oc.textContent = window.occasionLine ? window.occasionLine(list.occ) : "";
+  oc.hidden = !oc.textContent;
   $("sub").textContent = T("Reserve a gift so nobody gives the same gift twice.");
   var ab = $("about");
   ab.textContent = list.about || "";
@@ -665,13 +669,14 @@ async function refresh() {
     var m = {};
     (rs || []).forEach(function (x) { m[x.id] = x.mine; });
     // The note for friends travels as one extra item of kind "about". It is not a wish.
-    var about = "", cover = "", cedit = "";
+    var about = "", cover = "", cedit = "", occ = null;
     // Wishes in the bin (deleted, kept 30 days so they can be restored) are not on the list.
     l.items = (l.items || []).filter(function (w) {
       if (w && w.kind === "about") {
         about = String(w.about || "");
         // The list's cover photo (2.105) and its text travel in the same item.
         cover = String(w.cover || ""); cedit = String(w.cedit || "");
+        occ = w.occ && typeof w.occ === "object" ? w.occ : null;
         return false;
       }
       return !(w && w.bin);
@@ -679,6 +684,7 @@ async function refresh() {
     l.about = about;
     l.cover = cover;
     l.cedit = cedit;
+    l.occ = occ;
     // Remember what this browser reserved, and say so when one of those gifts is no longer on the list, or (owner,
     // 4 November 2026) was marked as owned, so nobody buys a duplicate.
     var mine = readMyRes(), seen = {}, gone = [], owned = [];

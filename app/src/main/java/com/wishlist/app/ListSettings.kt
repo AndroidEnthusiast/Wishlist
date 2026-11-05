@@ -83,6 +83,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
     var visBusy by remember { mutableStateOf(false) }
     var nameSaved by remember { mutableStateOf(0) }
     var noteSaved by remember { mutableStateOf(0) }
+    var occDlg by remember { mutableStateOf(false) }
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     BackHandler(onBack = onBack)
@@ -139,6 +140,19 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
 
                 // No "Your name on this list" any more (owner, 2.102): your profile name is always used.
             }
+
+            // The list's occasion (owner, 2.124): shown at the top of the list as "Birthday · in 3 weeks".
+            SectionTitle(tr("Occasion"))
+            val occ = Occasions.ofOpen(ctx)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    if (occ == null) tr("None") else Occasions.label(occ) + " · " + Occasions.dateText(occ),
+                    style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f)
+                )
+                OutlinedButton(onClick = { occDlg = true }) { Text(if (occ == null) tr("Add") else tr("Change")) }
+            }
+            if (occ != null) TextButton(onClick = { Occasions.setOpen(ctx, null) }) { Text(tr("Remove occasion")) }
+            if (occDlg) OccasionDialog(gift = shared != null, onClose = { occDlg = false })
 
             // An optional cover photo at the top of the list (2.89): none until you choose one.
             SectionTitle(tr("Cover photo"))

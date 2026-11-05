@@ -486,6 +486,7 @@ object Repo {
         persist(c)
         Friends.forget(c, id)
         ListCovers.remove(c, "m:$id")
+        Occasions.forget(c, id)
         ListLink.forget(c, id)
         val p = prefs(c)
         val d = MyLists.read(p, id)
@@ -505,6 +506,7 @@ object Repo {
             val nd = MyLists.read(p, next)
             Friends.moveId(c, next, MAIN_LIST)
             ListCovers.move(c, "m:$next", "m:$MAIN_LIST")
+            Occasions.move(c, next, MAIN_LIST)
             MyLists.write(e, nd.copy(id = MAIN_LIST))
             e.remove(MyLists.blobKey(next))
             copies = (copies - next).let { m -> copies[next]?.let { m + (MAIN_LIST to it) } ?: m }

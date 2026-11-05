@@ -32,7 +32,9 @@ data class SharedContent(
     val name: String = "",
     val cats: List<String> = emptyList(),
     val about: String = "",
-    val wishes: List<Wish> = emptyList()
+    val wishes: List<Wish> = emptyList(),
+    /** The list's occasion (Occasion.kt), or null. */
+    val occ: Occasion? = null
 )
 
 /**
@@ -151,7 +153,8 @@ object Shared {
                 o.optString("name", ""),
                 if (cs == null) emptyList() else (0 until cs.length()).map { cs.getString(it) },
                 o.optString("about", ""),
-                if (items == null) emptyList() else (0 until items.length()).map { wishFromJson(items.getJSONObject(it)) }
+                if (items == null) emptyList() else (0 until items.length()).map { wishFromJson(items.getJSONObject(it)) },
+                Occasion.fromJson(o.optJSONObject("occ"))
             )
         } catch (e: Exception) {
             null
@@ -167,6 +170,7 @@ object Shared {
         ct.wishes.forEach { items.put(wishToJson(it)) }
         val o = JSONObject().put("name", ct.name).put("cats", JSONArray(ct.cats))
             .put("about", ct.about).put("items", items)
+        ct.occ?.let { o.put("occ", it.toJson()) }
         prefs(c).edit().putString(cacheKey(code), o.toString()).apply()
     }
 
@@ -207,7 +211,7 @@ object Shared {
         }
         gone = false
         // Wishes in the bin are not on the list (the Bin screen shows them, see Bin.kt).
-        val nc = SharedContent(r.list.name, r.list.cats, r.list.about, r.list.wishes.filter { it.bin == 0L })
+        val nc = SharedContent(r.list.name, r.list.cats, r.list.about, r.list.wishes.filter { it.bin == 0L }, r.list.occ)
         if (nc != content) content = nc
         writeCache(c, l.code, nc)
         if (r.list.name != l.name) {
@@ -256,7 +260,10 @@ object Shared {
 
     // ---- changing the open list: shown at once, saved online one wish at a time, undone if saving fails ----
 
-    private fun write(c: Context, l: SharedList, before: SharedContent, after: SharedContent, job: suspend () -> Unit) {
+    private fun write(
+        c: Context, l: SharedList, before: SharedContent, after: SharedContent,
+        failed: (Exception) -> String? = { null }, job: suspend () -> Unit
+    ) {
         content = after
         stamp.incrementAndGet()
         pending.incrementAndGet()
@@ -266,7 +273,7 @@ object Shared {
                 lock.withLock { job() }
                 ok = true
             } catch (e: Exception) {
-                notice = tr("Couldn’t save that. Check your connection and try again.")
+                notice = failed(e) ?: tr("Couldn’t save that. Check your connection and try again.")
             } finally {
                 pending.decrementAndGet()
             }
@@ -421,7 +428,7 @@ object Shared {
         if (active == l.code && content.wishes.none { it.id == back.id }) {
             val before = content
             val after = before.copy(wishes = before.wishes.toMutableList().also { it.add(t.index.coerceIn(0, it.size), back) })
-            write(c, l, before, after, job)
+            write(c, l, before, after, job = job)
         } else {
             scope.launch {
                 try {
@@ -459,6 +466,18 @@ object Shared {
         val before = content
         val after = before.copy(about = about)
         write(c, l, before, after) { Cloud.shAbout(l.key, about) }
+    }
+
+    /** The occasion of the open gift list (null removes it); everyone on it sees it. */
+    fun setOccasion(c: Context, occ: Occasion?) {
+        val l = current ?: return
+        val before = content
+        val after = before.copy(occ = occ)
+        // Without the script of 5 November 2026 the online function doesn't exist yet: say so.
+        val noScript: (Exception) -> String? = { e ->
+            if ((e.message ?: "").contains("wl_sh_set_occasion")) tr("Occasions need an update in Supabase first: run supabase-shared.sql again.") else null
+        }
+        write(c, l, before, after, noScript) { Cloud.shOccasion(l.key, occ) }
     }
 
     /** [name] is already cleaned and known to be new (Repo.addCat checks that). */
@@ -535,7 +554,7 @@ object Shared {
         }
         lists = if (old != null) lists.map { if (it.code == r.code) l else it } else lists + l
         saveLists(c)
-        writeCache(c, r.code, SharedContent(r.list.name, r.list.cats, r.list.about, r.list.wishes))
+        writeCache(c, r.code, SharedContent(r.list.name, r.list.cats, r.list.about, r.list.wishes, r.list.occ))
         return l
     }
 

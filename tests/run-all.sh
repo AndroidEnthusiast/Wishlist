@@ -10,6 +10,7 @@ run "parse.js (reads product pages)" node parse/parse_test.js
 run "fetch-page helper (real Deno)"  "$DENO" run --allow-read --allow-env=SUPABASE_URL --allow-net=none function/test.ts
 run "push helper (real Deno)"  "$DENO" run --allow-read --allow-env --allow-net=none function/push_test.ts
 run "web pages only run their own scripts" node csp/test.js
+run "shop browser cookie script (Shops.kt)" node shop/consent_test.js
 run "index.html (friends page + invite page)" node index-page/test.js
 # Needs PostgreSQL (WL_PG, see README.md); without it this one says SKIPPED.
 run "group page against the real SQL (web/group.html)" node group/test.js

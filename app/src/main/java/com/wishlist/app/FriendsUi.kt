@@ -860,7 +860,7 @@ fun ProfileScreen(snack: SnackbarHostState) {
 
             // Birthday (day and month, no year) and "I like…", both seen by friends (2.95).
             ProfileTitle(tr("Birthday"))
-            BirthdayPicker(Friends.myBirthday) { b ->
+            DayMonthPicker(Friends.myBirthday) { b ->
                 scope.launch {
                     try {
                         Friends.setAbout(ctx, b, Friends.myBio)
@@ -987,9 +987,12 @@ fun ProfileScreen(snack: SnackbarHostState) {
     }
 }
 
-/** Day and month of your birthday (no year), each a drop-down; "Remove" clears it. [onChange] gets "MM-DD" or "". */
+/**
+ * Day and month (no year), each a drop-down; "Remove" clears it ([removable]). [onChange] gets "MM-DD" or "". Your
+ * birthday on Profile, and an occasion's date (Occasion.kt).
+ */
 @Composable
-private fun BirthdayPicker(value: String, onChange: (String) -> Unit) {
+fun DayMonthPicker(value: String, removable: Boolean = true, onChange: (String) -> Unit) {
     val look = LocalLook.current
     val m = Regex("^(\\d{2})-(\\d{2})$").find(value)
     var month by remember(value) { mutableIntStateOf(m?.groupValues?.get(1)?.toInt() ?: 0) }
@@ -1030,7 +1033,7 @@ private fun BirthdayPicker(value: String, onChange: (String) -> Unit) {
                 }
             }
         }
-        if (value.isNotEmpty()) TextButton(onClick = { day = 0; month = 0; onChange("") }) { Text(tr("Remove")) }
+        if (removable && value.isNotEmpty()) TextButton(onClick = { day = 0; month = 0; onChange("") }) { Text(tr("Remove")) }
     }
 }
 

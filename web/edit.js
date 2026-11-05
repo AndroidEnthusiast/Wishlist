@@ -309,9 +309,13 @@
   }
 
   function parseServer(r) {
-    var items = [], bin = [], about = "";
+    var items = [], bin = [], about = "", occ = null;
     (r.items || []).forEach(function (o) {
-      if (o && o.kind === "about") about = String(o.about || "");
+      if (o && o.kind === "about") {
+        about = String(o.about || "");
+        // The list's occasion: shown here, set in the app (owner, 5 November 2026).
+        occ = o.occ && typeof o.occ === "object" ? o.occ : null;
+      }
       else if (o && Number(o.id) > 0) {
         // Wishes in the bin are not on the list; they show in the Bin (menu) for 30 days, like in the app.
         var w = normWish(o);
@@ -323,6 +327,7 @@
       name: String(r.name || "Wishlist"),
       cats: (r.cats || []).map(String),
       about: about,
+      occ: occ,
       items: items,
       bin: bin
     };
@@ -962,6 +967,9 @@
     var ab = $("about");
     ab.textContent = content.about || "";
     ab.hidden = !content.about;
+    var oc = $("occasion");
+    oc.textContent = window.occasionLine ? window.occasionLine(content.occ) : "";
+    oc.hidden = !oc.textContent;
     renderPicker();
     renderViews();
     var shown = visibleItems();

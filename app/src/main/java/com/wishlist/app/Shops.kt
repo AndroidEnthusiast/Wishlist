@@ -538,6 +538,86 @@ private const val ICONS_JS = """(function(){
   }).catch(function(){return JSON.stringify(out);});
 })()"""
 
+/**
+ * Cookie questions in the shop browser (owner, 2.124: "Refuse for me", on every shop). bol.com stayed behind a dark
+ * layer: its cookie question didn't show on top of it, so nothing could be tapped. Run on the page a few times after
+ * it loads; returns what it did ("refused", "settings", "saved", "veil" or "").
+ *  1. A button inside a cookie question that refuses or keeps only the necessary cookies is tapped.
+ *  2. A question without such a button: its settings are opened ("settings"), and the next round saves them as they
+ *     are, which is "only necessary" by law ("saved").
+ *  3. With __VEIL__ true (a few seconds after loading): a dark layer that covers the middle of the screen while it has
+ *     nothing in it (so nothing on the page can be tapped) is removed, and scrolling is switched back on.
+ * Only buttons inside something that is about cookies are tapped, at most four times per page, and nothing is sent.
+ */
+private const val CONSENT_JS = """(function(){
+  var W=window.__wlc||(window.__wlc={n:0,settings:0});
+  if(W.n>=4) return '';
+  var REFUSE=[/^(alle(s)? )?(cookies )?weiger(en)?( alle)?( cookies)?$/,/^(alleen|enkel|uitsluitend) (de )?(strikt )?(noodzakelijke|functionele|essenti[eë]le|basis)( cookies)?( (accepteren|toestaan|gebruiken))?$/,
+    /^(nee,? )?niet akkoord$/,/^(doorgaan|ga verder) zonder( te)? accepteren$/,/^(reject|decline|deny|refuse)( all)?( cookies)?$/,
+    /^(use |accept |allow )?(only )?(strictly )?(necessary|essential|required)( cookies)?( only)?$/,/^continue without accepting$/,/^(alle )?ablehnen$/,/^nur (notwendige|essenzielle)( cookies)?( akzeptieren)?$/];
+  var SETTINGS=[/^(cookie[- ]?)?(instellingen|voorkeuren)( (aanpassen|wijzigen|beheren|bekijken))?$/,/^(zelf )?(instellen|aanpassen|kiezen)$/,/^meer opties$/,
+    /^(manage|customi[sz]e|change)( (cookies|preferences|options|settings|choices))?$/,/^(cookie )?(settings|preferences)$/,/^more options$/,/^einstellungen$/];
+  var SAVE=[/^(mijn )?(keuze|voorkeuren|instellingen|selectie)( (opslaan|bevestigen))$/,/^(opslaan|bewaren|bevestig( (mijn )?keuze)?)$/,
+    /^(save|confirm)( (my )?(choices|preferences|settings|selection))?$/,/^auswahl (speichern|best[aä]tigen)$/,/^speichern$/];
+  var ABOUT=/cookie|consent|privacy|gdpr|\bcmp\b|onetrust|didomi|cookiebot|usercentrics|truste|qc-cmp|sp_message|toestemming/i;
+  function txt(e){return (e.innerText||e.value||e.getAttribute('aria-label')||'').replace(/\s+/g,' ').trim().toLowerCase();}
+  function shown(e){var r=e.getBoundingClientRect();if(r.width<2||r.height<2)return false;var s=getComputedStyle(e);return s.visibility!=='hidden'&&s.display!=='none'&&+s.opacity>0.05;}
+  function parent(e){return e.parentElement||(e.getRootNode&&e.getRootNode().host)||null;}
+  function aboutCookies(e){
+    for(var p=e,i=0;p&&i<15;p=parent(p),i++){
+      if(p.nodeType!==1) continue;
+      var a=(p.id||'')+' '+(typeof p.className==='string'?p.className:'')+' '+(p.getAttribute('aria-label')||'')+' '+(p.getAttribute('aria-labelledby')||'');
+      if(ABOUT.test(a)) return true;
+      var s=getComputedStyle(p);
+      if((p.getAttribute('role')==='dialog'||p.getAttribute('aria-modal')==='true'||p.tagName==='DIALOG'||s.position==='fixed'||s.position==='sticky')&&/cookie/i.test((p.textContent||'').slice(0,4000))) return true;
+    }
+    return false;
+  }
+  function buttons(){
+    var out=[],roots=[document];
+    try{for(var f=0;f<window.frames.length;f++){try{if(window.frames[f].document)roots.push(window.frames[f].document);}catch(e){}}}catch(e){}
+    for(var r=0;r<roots.length&&r<40;r++){
+      var all=roots[r].querySelectorAll('*');
+      for(var i=0;i<all.length;i++){
+        var el=all[i];
+        if(el.shadowRoot&&roots.length<40) roots.push(el.shadowRoot);
+        var t=el.tagName;
+        if(t==='BUTTON'||(t==='A'&&el.getAttribute('role')==='button')||el.getAttribute('role')==='button'||(t==='INPUT'&&/^(button|submit)$/i.test(el.type))||(t==='A'&&/^#|^javascript:/i.test(el.getAttribute('href')||'#'))) out.push(el);
+      }
+    }
+    return out;
+  }
+  function find(list){
+    var b=buttons();
+    for(var i=0;i<b.length;i++){var t=txt(b[i]);if(!t||t.length>60)continue;
+      for(var j=0;j<list.length;j++) if(list[j].test(t)&&shown(b[i])&&aboutCookies(b[i])) return b[i];}
+    return null;
+  }
+  var e=find(REFUSE);
+  if(e){W.n++;e.click();return 'refused';}
+  if(W.settings){e=find(SAVE);if(e){W.n++;W.settings=0;e.click();return 'saved';}}
+  else{e=find(SETTINGS);if(e){W.n++;W.settings=1;e.click();return 'settings';}}
+  if(!__VEIL__) return '';
+  // An empty layer on top of everything in the middle of the screen: nothing below it can be tapped.
+  var w=innerWidth,h=innerHeight,hit=document.elementFromPoint(w/2,h/2);
+  if(!hit||hit===document.body||hit===document.documentElement) return '';
+  var v=null;
+  for(var p=hit;p&&p!==document.body;p=p.parentElement){
+    var s=getComputedStyle(p),r=p.getBoundingClientRect();
+    if((s.position==='fixed'||s.position==='absolute')&&r.width>=w*0.9&&r.height>=h*0.8){v=p;break;}
+  }
+  if(!v||(v.innerText||'').trim()!==''||v.querySelector('img,svg,video,iframe,canvas,input,button')) return '';
+  // It must be a tint you can see (a see-through dark or light colour, or a blur), not an invisible helper.
+  var vs=getComputedStyle(v),m=/rgba?\(([^)]+)\)/.exec(vs.backgroundColor||''),alpha=m?(m[1].split(',')[3]===undefined?1:+m[1].split(',')[3]):0;
+  if(alpha<0.1&&(vs.backdropFilter||vs.webkitBackdropFilter||'none')==='none') return '';
+  var others=[[w/2,h/4],[w/2,h*3/4],[w/4,h/2],[w*3/4,h/2]];
+  for(var k=0;k<others.length;k++){var o=document.elementFromPoint(others[k][0],others[k][1]);if(o&&o!==v&&!v.contains(o))return '';}
+  v.style.setProperty('display','none','important');
+  [document.documentElement,document.body].forEach(function(x){if(x){x.style.setProperty('overflow','auto','important');x.style.setProperty('position','static','important');}});
+  W.n++;
+  return 'veil';
+})()"""
+
 /** The page's own user agent without "; wv": some shops treat the in-app browser as "open our app" and get stuck (2.121). */
 private fun browserUserAgent(ua: String): String = ua.replace("; wv)", ")").replace(Regex("\\sVersion/\\d+(\\.\\d+)*"), "")
 
@@ -562,6 +642,8 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
     // The address of the page on screen when a product was recognised there (null: not a product page).
     var productAt by remember { mutableStateOf<String?>(null) }
     var checks by remember { mutableIntStateOf(0) }
+    // Goes up when a page has loaded or its address changed: the cookie question is looked at again (CONSENT_JS).
+    var loads by remember { mutableIntStateOf(0) }
     var hint by remember { mutableStateOf(false) }
     // "Added to …" for a moment after a wish from this shop was saved.
     val savesAtStart = remember { ShopNav.saves }
@@ -602,6 +684,17 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
             if (web?.url != url) return@LaunchedEffect
             productAt = if (ok) url else null
             if (ok) return@LaunchedEffect
+        }
+    }
+
+    // Cookie questions are refused for you (owner, 2.124), and an empty dark layer left on top is removed. Looked at
+    // for about 12 seconds after a page loads, as many shops show their question a moment later.
+    LaunchedEffect(loads) {
+        if (loads == 0) return@LaunchedEffect
+        for (round in 0 until 10) {
+            kotlinx.coroutines.delay(if (round == 0) 600L else 1200L)
+            val w = web ?: return@LaunchedEffect
+            js(w, CONSENT_JS.replace("__VEIL__", if (round >= 2) "true" else "false"))
         }
     }
 
@@ -707,12 +800,14 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                                         progress = 100
                                         view.title?.takeIf { it.isNotBlank() }?.let { pageTitle = it }
                                         checks++
+                                        loads++
                                         learnIcons(view)
                                     }
 
                                     override fun doUpdateVisitedHistory(view: WebView, url: String?, isReload: Boolean) {
                                         if (url != productAt) productAt = null
                                         checks++
+                                        loads++
                                     }
                                 }
                                 webChromeClient = object : android.webkit.WebChromeClient() {

@@ -87,6 +87,15 @@ const q = (t, sel) => t.page.locator(sel);
   await t.page.getByRole("button", { name: "Save", exact: true }).click();
   await settle(t);
   check("empty note removes it", !t.fake.lists[CODE].items[0] && (await q(t, "#about").isHidden()));
+  // A note change in the browser keeps the list's occasion (set in the app), like supabase-shared.sql does.
+  t.fake.lists[CODE].items[0] = { id: 0, kind: "about", about: "", url: "", title: "", occ: { k: "sinterklaas" } };
+  await listItem(t, "Note for friends");
+  await q(t, ".dlg textarea").fill("Hi");
+  await t.page.getByRole("button", { name: "Save", exact: true }).click();
+  await settle(t);
+  const it0 = t.fake.lists[CODE].items[0];
+  check("note change keeps the occasion", it0 && it0.about === "Hi" && it0.occ && it0.occ.k === "sinterklaas" && /^Sinterklaas · /.test(await q(t, "#occasion").innerText()), it0);
+  delete t.fake.lists[CODE].items[0];
   await q(t, "#shareBtn").click();
   const links = await q(t, ".shareblock input").evaluateAll(a => a.map(i => i.value));
   check("invite link (through join/ for its preview)", links[0] === t.base + "join/?j=" + KEY, links);

@@ -6,6 +6,7 @@ const WEB = path.join(__dirname, "..", "..", "web");
 const html = fs.readFileSync(process.argv[2] || path.join(WEB, "index.html"), "utf8")
   .replace('<script src="i18n.js?v=dev"></script>', () => "<script>" + fs.readFileSync(path.join(WEB, "i18n.js"), "utf8") + "</script>")
   .replace('<script src="theme.js?v=dev"></script>', () => "<script>" + fs.readFileSync(path.join(WEB, "theme.js"), "utf8") + "</script>")
+  .replace('<script src="occasion.js?v=dev"></script>', () => "<script>" + fs.readFileSync(path.join(WEB, "occasion.js"), "utf8") + "</script>")
   .replace('<script src="friends.js?v=dev"></script>', () => "<script>" + fs.readFileSync(path.join(WEB, "friends.js"), "utf8") + "</script>");
 
 const items = [
@@ -315,6 +316,33 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   co = await load("?c=ABCD2345");
   check("cover from another site is not shown", D(co).getElementById("cover").hidden);
   delete ab.cover; delete ab.cedit;
+
+  // occasion (5 November 2026): travels in the about item, shown under the name as text
+  check("no occasion: line hidden", D(co).getElementById("occasion").hidden);
+  const soon = new Date(); soon.setDate(soon.getDate() + 10);
+  const ymd = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  ab.occ = {k: "own", n: "<b>Party</b>", d: ymd(soon)};
+  co = await load("?c=ABCD2345");
+  const occEl = D(co).getElementById("occasion");
+  check("own occasion shown with countdown, as text", !occEl.hidden && occEl.textContent === "<b>Party</b> · in 10 days" && !occEl.querySelector("b"));
+  check("occasion is not a wish", D(co).querySelectorAll(".card").length === 6);
+  const OL = (o, y, m, d) => co.window.occasionLine(o, new Date(y, m - 1, d));
+  check("Christmas from 5 November: in 7 weeks", OL({k: "christmas"}, 2026, 11, 5) === "Christmas · in 7 weeks");
+  check("Sinterklaas on the day: today", OL({k: "sinterklaas"}, 2026, 12, 5) === "Sinterklaas · today");
+  check("Christmas moves on to next year", OL({k: "christmas"}, 2026, 12, 26) === "Christmas · in 12 months");
+  check("Mother's Day: 2nd Sunday of May", OL({k: "mother"}, 2027, 5, 1) === "Mother’s Day · in 8 days");
+  check("Father's Day: 3rd Sunday of June", OL({k: "father"}, 2026, 6, 21) === "Father’s Day · today");
+  check("Valentine's Day tomorrow", OL({k: "valentine"}, 2026, 2, 13) === "Valentine’s Day · tomorrow");
+  check("birthday just passed: next year", OL({k: "birthday", d: "07-14"}, 2026, 7, 15) === "Birthday · in 12 months");
+  check("birthday on 29 February in another year: the 28th", OL({k: "birthday", d: "02-29"}, 2027, 2, 27) === "Birthday · tomorrow");
+  check("anniversary in 3 weeks", OL({k: "anniversary", d: "03-26"}, 2027, 3, 5) === "Anniversary · in 3 weeks");
+  check("own occasion passed: nothing", OL({k: "own", n: "Party", d: "2026-11-04"}, 2026, 11, 5) === "");
+  check("own occasion without a name", OL({k: "own", d: "2026-11-06"}, 2026, 11, 5) === "Occasion · tomorrow");
+  check("unknown or broken occasions: nothing", OL({k: "zzz"}, 2026, 1, 1) === "" && OL(null, 2026, 1, 1) === "" && OL("x", 2026, 1, 1) === "" && OL({k: "birthday", d: "13-40"}, 2026, 1, 1) === "");
+  ab.occ = {k: "own", n: "Party", d: "2001-01-01"};
+  co = await load("?c=ABCD2345");
+  check("passed occasion: line hidden", D(co).getElementById("occasion").hidden);
+  delete ab.occ;
 
   // no note, no about
   items.splice(items.findIndex(i => i.kind === "about"), 1);

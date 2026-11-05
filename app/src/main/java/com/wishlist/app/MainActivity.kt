@@ -1180,7 +1180,11 @@ fun HomeScreen(
             val hasCover = remember(ListCovers.version, Shared.active, Repo.openMine) { ListCovers.get(ctx, ListCovers.openKey()) != null }
             val stickyTop: @Composable (Boolean) -> Unit = { live ->
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    if (!inShared && Show["show_summary"]) ListSummaryCard(Repo.wishes)
+                    // The occasion shows in the summary card (owner, 2.124); on a gift list, or with the summary
+                    // switched off, the card shows only the occasion.
+                    val occ = Occasions.line(Occasions.ofOpen(ctx))
+                    val counts = !inShared && Show["show_summary"]
+                    if (counts || occ != null) ListSummaryCard(Repo.wishes, occasion = occ, counts = counts)
                     filters(live)
                 }
             }
