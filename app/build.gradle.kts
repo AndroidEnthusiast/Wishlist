@@ -10,8 +10,8 @@ android {
         applicationId = "com.wishlist.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 132
-        versionName = "2.131"
+        versionCode = 133
+        versionName = "2.132"
     }
     // The release key is NOT in this project. GitHub puts it in place while building, from the repository secrets
     // KEYSTORE_BASE64, KEYSTORE_PASSWORD and KEY_ALIAS (see .github/workflows/build.yml). Keep a copy of the key safe:
@@ -67,8 +67,6 @@ dependencies {
     implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.activity:activity-compose:1.9.0")
     implementation("androidx.core:core-ktx:1.13.1")
-    // The shop guard runs at the very start of every page (2.130, no flicker of a dark layer).
-    implementation("androidx.webkit:webkit:1.11.0")
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("org.jsoup:jsoup:1.17.2")

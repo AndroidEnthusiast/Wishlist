@@ -243,16 +243,10 @@ fun FindAGiftRow(onFound: (String, Meta?) -> Unit) {
 }
 
 /**
- * Where a shop's icon comes from (owner, 2.115: eight of the twenty didn't load). First the icon the shop's homepage
- * itself names (what a browser shows on its tab: an apple-touch-icon, else the largest icon; SVG skipped, the app can't
- * draw it), then the standard /apple-touch-icon.png, then Google's free icon service (it only gets the shop's web
- * address). What the homepage named is remembered on the phone, so it is looked up once (again after a week if the
- * homepage couldn't be read).
+ * Where a shop's icon comes from: only Google's free icon service (owner, 6 November 2026, after bol.com blocked "unusual
+ * traffic"): the app never asks the shops themselves for their icon; Google only gets the shop's web address.
  */
 object ShopIcons {
-    private const val UA =
-        "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
-    private const val WEEK = 7L * 24 * 60 * 60 * 1000
     private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
 
     fun google(host: String) = "https://www.google.com/s2/favicons?domain=$host&sz=256"
@@ -262,34 +256,17 @@ object ShopIcons {
     // away and back shows the same icon at once.
     private val rejected = HashSet<String>()
 
-    fun accepted(c: Context, host: String): String? = prefs(c).getString("shopiconok3_$host", null)
+    /** The icon that was accepted earlier, when it came from Google's service (one from a shop's own site isn't used). */
+    fun accepted(c: Context, host: String): String? =
+        prefs(c).getString("shopiconok3_$host", null)?.takeIf { it.startsWith("https://www.google.com/s2/favicons") }
 
     fun accept(c: Context, host: String, url: String, px: Int = 0) {
         if (accepted(c, host) != url) prefs(c).edit().putString("shopiconok3_$host", url).putInt("shopiconpx_$host", px).apply()
     }
 
-    /** Goes up when a shop's icon was learnt from its page, so its tile looks again. */
+    /** Goes up when the tiles should look again. */
     var version by mutableIntStateOf(0)
         private set
-
-    /**
-     * The icons a shop's page named while it was open in the shop browser (2.121), biggest first. Used when the biggest
-     * is sharper than the icon the tile shows now; then the tile tries them first.
-     */
-    fun learn(c: Context, host: String, found: List<Pair<String, Int>>) {
-        val big = found.filter { it.second >= SHARP }.sortedByDescending { it.second }.map { it.first }.distinct().take(3)
-        if (big.isEmpty()) return
-        val p = prefs(c)
-        val now = p.getInt("shopiconpx_$host", 0)
-        val best = found.maxOf { it.second }
-        if (accepted(c, host) != null && now >= best) return
-        val old = p.getString("shopicon3_$host", null)?.takeIf { it.startsWith("http") }?.split('\n').orEmpty()
-        val list = (big + old).distinct()
-        if (list == old && accepted(c, host) == null) return
-        p.edit().putString("shopicon3_$host", list.joinToString("\n")).remove("shopiconok3_$host").apply()
-        big.forEach { rejected.remove(it) }
-        version++
-    }
 
     fun reject(c: Context, host: String, url: String) {
         rejected.add(url)
@@ -320,56 +297,6 @@ object ShopIcons {
         return shown < n * n * 4 / 100
     }
 
-    /**
-     * The icons the homepage names, sharpest first (2.118, owner: every icon must be sharp): the largest icon of the
-     * shop's web app manifest (shops list their app icons there, usually 192 or 512 pixels), then the largest icon
-     * linked in the page. Known answers come straight from the phone's memory.
-     */
-    suspend fun declared(c: Context, s: Shop): List<String> {
-        val key = "shopicon3_" + s.host // "3": looked up again with the manifest of 2.118
-        val saved = prefs(c).getString(key, null)
-        if (saved != null) {
-            if (saved.startsWith("http")) return saved.split('\n').filter { it.startsWith("http") }
-            val at = saved.substringAfter("none|", "0").toLongOrNull() ?: 0L
-            if (System.currentTimeMillis() - at < WEEK) return emptyList()
-        }
-        val found = withContext(Dispatchers.IO) {
-            val out = ArrayList<String>()
-            try {
-                val d = Jsoup.connect(s.url).userAgent(UA).timeout(5000).followRedirects(true).get()
-                fun notSvg(href: String, type: String) =
-                    !href.lowercase().substringBefore('?').endsWith(".svg") && !type.lowercase().contains("svg")
-                fun sizeOf(sizes: String): Int =
-                    Regex("(\\d+)x\\d+").findAll(sizes).mapNotNull { it.groupValues[1].toIntOrNull() }.maxOrNull() ?: 0
-                // 1. The web app manifest.
-                d.selectFirst("link[rel=manifest][href]")?.absUrl("href")?.takeIf { it.startsWith("http") }?.let { mu ->
-                    try {
-                        val body = Jsoup.connect(mu).userAgent(UA).timeout(5000).ignoreContentType(true).execute().body()
-                        val icons = JSONObject(body).optJSONArray("icons")
-                        if (icons != null) {
-                            val list = (0 until icons.length()).mapNotNull { icons.optJSONObject(it) }
-                                .filter { notSvg(it.optString("src"), it.optString("type")) && !it.optString("purpose").contains("monochrome") }
-                                .sortedByDescending { sizeOf(it.optString("sizes")) }
-                            list.firstOrNull()?.let { ic -> out.add(URI(mu).resolve(ic.optString("src")).toString()) }
-                        }
-                    } catch (e: Exception) {
-                    }
-                }
-                // 2. The icons linked in the page.
-                val links = d.select("link[rel][href]").filter { l ->
-                    val rel = l.attr("rel").lowercase()
-                    rel.contains("icon") && rel != "mask-icon" && notSvg(l.attr("href"), l.attr("type"))
-                }
-                fun apple(l: org.jsoup.nodes.Element) = l.attr("rel").lowercase().contains("apple-touch-icon")
-                links.sortedWith(compareByDescending<org.jsoup.nodes.Element> { maxOf(sizeOf(it.attr("sizes")), if (apple(it)) 180 else 0) })
-                    .map { it.absUrl("href") }.filter { it.startsWith("http") }.take(3).forEach { out.add(it) }
-            } catch (e: Exception) {
-            }
-            out.distinct()
-        }
-        prefs(c).edit().putString(key, if (found.isNotEmpty()) found.joinToString("\n") else "none|" + System.currentTimeMillis()).apply()
-        return found
-    }
 }
 
 /**
@@ -388,10 +315,8 @@ fun ShopIcon(s: Shop, sizeDp: Int) {
     var bestSmall by remember(s.url) { mutableStateOf<String?>(null) }
     var bestSmallPx by remember(s.url) { mutableIntStateOf(0) }
     LaunchedEffect(s.url, ShopIcons.version) {
-        val ok = ShopIcons.accepted(ctx, s.host)
-        val d = if (ok != null) emptyList() else ShopIcons.declared(ctx, s)
-        tries = (listOfNotNull(ok) + d + listOf("$base/apple-touch-icon.png", ShopIcons.google(s.host))).distinct()
-            .filter { !ShopIcons.isRejected(it) }
+        // Only Google's icon service (owner, 6 November 2026): the shops themselves are never asked.
+        tries = listOf(ShopIcons.google(s.host)).filter { !ShopIcons.isRejected(it) }
         at = 0
     }
     val list = tries
@@ -513,229 +438,6 @@ private fun decodeJsString(r: String?): String? {
 }
 
 /**
- * Reads the icons the shop's own page names, from the page on screen (2.121, owner: "beautiful full-size icons"). The
- * phone's quiet lookup ([ShopIcons.declared]) is refused by several shops' bot checks (H&M, Amazon, HEMA, ...), but the
- * page in the shop browser gets through, so it can tell which big icons the shop publishes (its web app manifest and
- * its linked icons). Returns JSON: [{src, size}].
- */
-private const val ICONS_JS = """(function(){
-  var out=[];
-  function size(s){var m=/(\d+)x\d+/g,b=0,r;while((r=m.exec(s||''))){b=Math.max(b,+r[1]);}return b;}
-  function svg(h,t){return /\.svg(\?|$)/i.test(h||'')||/svg/i.test(t||'');}
-  document.querySelectorAll('link[rel][href]').forEach(function(l){
-    var rel=(l.rel||'').toLowerCase();
-    if(rel.indexOf('icon')<0||rel==='mask-icon'||svg(l.href,l.type)) return;
-    out.push({src:l.href,size:Math.max(size(l.getAttribute('sizes')),rel.indexOf('apple-touch-icon')>=0?180:0)});
-  });
-  var m=document.querySelector('link[rel=manifest][href]');
-  if(!m) return Promise.resolve(JSON.stringify(out));
-  return fetch(m.href,{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
-    (j.icons||[]).forEach(function(ic){
-      if(!ic.src||svg(ic.src,ic.type)||/monochrome/.test(ic.purpose||'')) return;
-      out.push({src:new URL(ic.src,m.href).href,size:size(ic.sizes)});
-    });
-    return JSON.stringify(out);
-  }).catch(function(){return JSON.stringify(out);});
-})()"""
-
-/**
- * Cookie questions in the shop browser (owner, 2.124: "Refuse for me", on every shop). bol.com stayed behind a dark
- * layer: its cookie question didn't show on top of it, so nothing could be tapped. Run on the page a few times after
- * it loads; returns what it did ("refused", "settings", "saved" or "").
- *  1. A button inside a cookie question that refuses or keeps only the necessary cookies is tapped.
- *  2. A question without such a button: its settings are opened ("settings"), and the next round saves them as they
- *     are, which is "only necessary" by law ("saved").
- * Only buttons inside something that is about cookies are tapped, at most four times per page, and nothing is sent.
- * Empty dark layers are GUARD_JS's job.
- */
-private const val CONSENT_JS = """(function(){
-  var W=window.__wlc||(window.__wlc={n:0,settings:0});
-  if(W.n>=4) return '';
-  var REFUSE=[/^(alle(s)? )?(cookies )?weiger(en)?( alle)?( cookies)?$/,/^(alleen|enkel|uitsluitend) (de )?(strikt )?(noodzakelijke|functionele|essenti[eë]le|basis)( cookies)?( (accepteren|toestaan|gebruiken))?$/,
-    /^(nee,? )?niet akkoord$/,/^(doorgaan|ga verder) zonder( te)? accepteren$/,/^(reject|decline|deny|refuse)( all)?( cookies)?$/,
-    /^(use |accept |allow )?(only )?(strictly )?(necessary|essential|required)( cookies)?( only)?$/,/^continue without accepting$/,/^(alle )?ablehnen$/,/^nur (notwendige|essenzielle)( cookies)?( akzeptieren)?$/];
-  var SETTINGS=[/^(cookie[- ]?)?(instellingen|voorkeuren)( (aanpassen|wijzigen|beheren|bekijken))?$/,/^(zelf )?(instellen|aanpassen|kiezen)$/,/^meer opties$/,
-    /^(manage|customi[sz]e|change)( (cookies|preferences|options|settings|choices))?$/,/^(cookie )?(settings|preferences)$/,/^more options$/,/^einstellungen$/];
-  var SAVE=[/^(mijn )?(keuze|voorkeuren|instellingen|selectie)( (opslaan|bevestigen))$/,/^(opslaan|bewaren|bevestig( (mijn )?keuze)?)$/,
-    /^(save|confirm)( (my )?(choices|preferences|settings|selection))?$/,/^auswahl (speichern|best[aä]tigen)$/,/^speichern$/];
-  var ABOUT=/cookie|consent|privacy|gdpr|\bcmp\b|onetrust|didomi|cookiebot|usercentrics|truste|qc-cmp|sp_message|toestemming/i;
-  function txt(e){return (e.innerText||e.value||e.getAttribute('aria-label')||'').replace(/\s+/g,' ').trim().toLowerCase();}
-  function shown(e){var r=e.getBoundingClientRect();if(r.width<2||r.height<2)return false;var s=getComputedStyle(e);return s.visibility!=='hidden'&&s.display!=='none'&&+s.opacity>0.05;}
-  function parent(e){return e.parentElement||(e.getRootNode&&e.getRootNode().host)||null;}
-  function aboutCookies(e){
-    for(var p=e,i=0;p&&i<15;p=parent(p),i++){
-      if(p.nodeType!==1) continue;
-      var a=(p.id||'')+' '+(typeof p.className==='string'?p.className:'')+' '+(p.getAttribute('aria-label')||'')+' '+(p.getAttribute('aria-labelledby')||'');
-      if(ABOUT.test(a)) return true;
-      var s=getComputedStyle(p);
-      if((p.getAttribute('role')==='dialog'||p.getAttribute('aria-modal')==='true'||p.tagName==='DIALOG'||s.position==='fixed'||s.position==='sticky')&&/cookie/i.test((p.textContent||'').slice(0,4000))) return true;
-    }
-    return false;
-  }
-  function buttons(){
-    var out=[],roots=[document];
-    try{for(var f=0;f<window.frames.length;f++){try{if(window.frames[f].document)roots.push(window.frames[f].document);}catch(e){}}}catch(e){}
-    for(var r=0;r<roots.length&&r<40;r++){
-      var all=roots[r].querySelectorAll('*');
-      for(var i=0;i<all.length;i++){
-        var el=all[i];
-        if(el.shadowRoot&&roots.length<40) roots.push(el.shadowRoot);
-        var t=el.tagName;
-        if(t==='BUTTON'||(t==='A'&&el.getAttribute('role')==='button')||el.getAttribute('role')==='button'||(t==='INPUT'&&/^(button|submit)$/i.test(el.type))||(t==='A'&&/^#|^javascript:/i.test(el.getAttribute('href')||'#'))) out.push(el);
-      }
-    }
-    return out;
-  }
-  function find(list){
-    var b=buttons();
-    for(var i=0;i<b.length;i++){var t=txt(b[i]);if(!t||t.length>60)continue;
-      for(var j=0;j<list.length;j++) if(list[j].test(t)&&shown(b[i])&&aboutCookies(b[i])) return b[i];}
-    return null;
-  }
-  var e=find(REFUSE);
-  if(e){W.n++;e.click();return 'refused';}
-  if(W.settings){e=find(SAVE);if(e){W.n++;W.settings=0;e.click();return 'saved';}}
-  else{e=find(SETTINGS);if(e){W.n++;W.settings=1;e.click();return 'settings';}}
-  return '';
-})()"""
-
-/**
- * Empty layers (owner, 2.125: bol.com put a grey layer back on every page; tapping cleared it, then it came back, so
- * the shop felt broken). For every shop: a see-through dark or light layer that covers the middle of the screen while
- * nothing on it can be seen or tapped is first tapped once (the shop closes its own pop-up, 2.126) and else hidden,
- * and kept hidden; after one, an invisible layer that still blocks every tap is treated the same: the page is watched (MutationObserver), so a
- * layer that comes back is hidden again before it shows. Never breaks the shop (owner): a layer that gets text,
- * pictures or buttons is shown again at once (it is a real pop-up), and a layer with a pop-up on top of it (a menu, a
- * size picker, a cookie question; checked in five places on the screen) is left alone. Scrolling that such a layer
- * switched off comes back, and goes back to how it was when the layer is shown again. Installed once per page.
- */
-private const val GUARD_JS = """(function(){
-  // Only the page itself, never the frames inside it (ads, payments, cookie frames): as before 2.130, when it ran only
-  // after a page loaded (2.131: since 2.130 it also starts at the beginning of every page, which reaches every frame).
-  try{if(window.top!==window) return 'frame';}catch(e){return 'frame';}
-  if(window.__wlg) return 'on';
-  var G=window.__wlg={hidden:[],saved:null,count:0};
-  function empty(v){return (v.innerText||'').trim()===''&&!v.querySelector('img,svg,video,iframe,canvas,input,button,select,textarea,a[href]');}
-  function tinted(v){
-    var s=getComputedStyle(v),m=/rgba?\(([^)]+)\)/.exec(s.backgroundColor||''),a=m?(m[1].split(',')[3]===undefined?1:+m[1].split(',')[3]):0;
-    return a>=0.1||(s.backdropFilter||s.webkitBackdropFilter||'none')!=='none';
-  }
-  function unlock(){
-    if(G.saved) return;
-    var de=document.documentElement,b=document.body;if(!b) return;
-    G.saved=[de.style.getPropertyValue('overflow'),de.style.getPropertyPriority('overflow'),b.style.getPropertyValue('overflow'),b.style.getPropertyPriority('overflow'),b.style.getPropertyValue('position'),b.style.getPropertyPriority('position'),b.style.getPropertyValue('top'),b.style.getPropertyPriority('top')];
-    var top=getComputedStyle(b).position==='fixed'?-parseInt(getComputedStyle(b).top||'0',10)||0:null;
-    if(getComputedStyle(de).overflow==='hidden') de.style.setProperty('overflow','auto','important');
-    if(getComputedStyle(b).overflow==='hidden') b.style.setProperty('overflow','auto','important');
-    [de,b].forEach(function(e){var c=getComputedStyle(e);if(c.pointerEvents==='none'){G.pe=G.pe||[];G.pe.push([e,e.style.getPropertyValue('pointer-events'),e.style.getPropertyPriority('pointer-events')]);e.style.setProperty('pointer-events','auto','important');}
-      if(c.touchAction==='none'){G.ta=G.ta||[];G.ta.push([e,e.style.getPropertyValue('touch-action'),e.style.getPropertyPriority('touch-action')]);e.style.setProperty('touch-action','auto','important');}});
-    if(top!==null){b.style.setProperty('position','static','important');b.style.setProperty('top','auto','important');window.scrollTo(0,top);}
-  }
-  function relock(){
-    var x=G.saved;if(!x) return;G.saved=null;
-    var de=document.documentElement,b=document.body;
-    function put(e,n,v,p){if(v) e.style.setProperty(n,v,p); else e.style.removeProperty(n);}
-    put(de,'overflow',x[0],x[1]);put(b,'overflow',x[2],x[3]);put(b,'position',x[4],x[5]);put(b,'top',x[6],x[7]);
-    (G.pe||[]).forEach(function(r){put(r[0],'pointer-events',r[1],r[2]);});(G.ta||[]).forEach(function(r){put(r[0],'touch-action',r[1],r[2]);});G.pe=G.ta=null;
-  }
-  function tap(v,x,y){
-    var o={bubbles:true,cancelable:true,composed:true,clientX:x,clientY:y,screenX:x,screenY:y,button:0,view:window};
-    try{v.dispatchEvent(new PointerEvent('pointerdown',Object.assign({pointerType:'touch',isPrimary:true,pointerId:1},o)));}catch(e){}
-    try{var t=new Touch({identifier:1,target:v,clientX:x,clientY:y});v.dispatchEvent(new TouchEvent('touchstart',{bubbles:true,cancelable:true,touches:[t],targetTouches:[t],changedTouches:[t]}));v.dispatchEvent(new TouchEvent('touchend',{bubbles:true,cancelable:true,touches:[],targetTouches:[],changedTouches:[t]}));}catch(e){}
-    try{v.dispatchEvent(new PointerEvent('pointerup',Object.assign({pointerType:'touch',isPrimary:true,pointerId:1},o)));}catch(e){}
-    try{v.dispatchEvent(new MouseEvent('mousedown',o));v.dispatchEvent(new MouseEvent('mouseup',o));v.dispatchEvent(new MouseEvent('click',o));}catch(e){}
-  }
-  // An empty grey layer covering the screen under [v] (seen through the invisible layer on top of it).
-  function greyBelow(v,w,h){
-    var all=document.elementsFromPoint?document.elementsFromPoint(w/2,h/2):[];
-    for(var i=0;i<all.length;i++){var e=all[i];if(e===v||v.contains(e)||e===document.body||e===document.documentElement) continue;
-      var s=getComputedStyle(e),r=e.getBoundingClientRect();
-      if((s.position==='fixed'||s.position==='absolute')&&r.width>=w*0.9&&r.height>=h*0.8&&empty(e)&&tinted(e)) return true;
-      if(!empty(e)) return false;}
-    return false;
-  }
-  function check(){
-    // A hidden layer that now has something on it is a real pop-up: show it again.
-    G.hidden=G.hidden.filter(function(v){
-      if(!v.isConnected) return false;
-      if(!empty(v)){v.style.removeProperty('display');v.style.removeProperty('opacity');v.__wlKeep=1;return false;}
-      return true;
-    });
-    if(!G.hidden.length) relock();
-    var w=innerWidth,h=innerHeight;if(w<50||h<50) return;
-    var hit=document.elementFromPoint(w/2,h/2);
-    if(!hit||hit===document.body||hit===document.documentElement) return;
-    var v=null;
-    for(var p=hit;p&&p!==document.body&&p!==document.documentElement;p=p.parentElement){
-      var s=getComputedStyle(p),r=p.getBoundingClientRect();
-      if((s.position==='fixed'||s.position==='absolute')&&r.width>=w*0.9&&r.height>=h*0.8){v=p;break;}
-    }
-    if(!v||!empty(v)||v.__wlKeep) return;
-    var pts=[[w/2,h/4],[w/2,h*3/4],[w/4,h/2],[w*3/4,h/2]];
-    for(var k=0;k<pts.length;k++){var o=document.elementFromPoint(pts[k][0],pts[k][1]);if(o&&o!==v&&!v.contains(o))return;}
-    // An invisible layer only counts once a tinted one was seen on this page (2.126: bol.com keeps a see-through layer
-    // over the page that waits for one tap; before, you had to tap once on every page).
-    if(!tinted(v)&&!G.count&&!greyBelow(v,w,h)) return;
-    // First tap it once, as a finger would: the shop then closes its own pop-up the normal way (scrolling and taps
-    // work again). It is empty, so the tap can only reach the shop's "tap outside" handler. Still there: hide it.
-    if(!v.__wlTapped){v.__wlTapped=1;tap(v,w/2,h/2);soon();return;}
-    v.style.setProperty('display','none','important');
-    G.hidden.push(v);G.count++;
-    unlock();
-  }
-  // 2.130 (owner: bol.com still flickered on every new page): a new empty dark layer is made see-through (opacity 0)
-  // in the same moment it appears, before the screen draws it (MutationObserver runs before the next paint). 2.131: it
-  // stays on top and tappable, so check() taps it exactly as before and the shop closes its own pop-up (2.130 hid it
-  // with visibility, and bol.com's page then stayed blocked: you could scroll but not tap). A layer under a real
-  // pop-up, or one that gets content, is made visible again.
-  G.quick=[];
-  function cover(e){
-    if(!e||e.nodeType!==1||e===document.body||e===document.documentElement||e.__wlQ) return false;
-    var s=getComputedStyle(e);if(s.position!=='fixed'&&s.position!=='absolute') return false;
-    if(s.display==='none'||s.visibility==='hidden'||+s.opacity<0.05) return false;
-    var r=e.getBoundingClientRect(),w=innerWidth,h=innerHeight;
-    return r.width>=w*0.9&&r.height>=h*0.8&&r.top<h*0.2&&empty(e)&&tinted(e);
-  }
-  function quick(e){e.__wlQ=1;e.style.setProperty('opacity','0','important');G.quick.push(e);}
-  function unquick(e){e.style.removeProperty('opacity');e.__wlQ=0;e.__wlKeep=1;}
-  // Something else that isn't empty sits over the middle of the screen in a fixed place: a real pop-up.
-  function popupOver(v){
-    var w=innerWidth,h=innerHeight,pts=[[w/2,h/2],[w/2,h/4],[w/2,h*3/4]];
-    for(var k=0;k<pts.length;k++){var all=document.elementsFromPoint?document.elementsFromPoint(pts[k][0],pts[k][1]):[];
-      for(var i=0;i<all.length;i++){var e=all[i];if(e===v||v.contains(e)||e===document.body||e===document.documentElement) continue;
-        for(var p=e;p&&p!==document.body;p=p.parentElement){var s=getComputedStyle(p);
-          if((s.position==='fixed'||s.position==='sticky')&&p!==v&&!p.contains(v)&&!empty(p)){var r=p.getBoundingClientRect();if(r.width<w*0.98||r.height<h*0.95) return true;}}
-        break;}}
-    return false;
-  }
-  function settle(){
-    G.quick=G.quick.filter(function(v){
-      if(!v.isConnected) return false;
-      // It got something on it, or a real pop-up uses it as its background: show it again.
-      if(!empty(v)||popupOver(v)){unquick(v);return false;}
-      // Still on screen and empty: check() taps it once, then hides it (as before 2.130). Watched until it is gone.
-      return getComputedStyle(v).display!=='none';
-    });
-  }
-  function scan(list){
-    for(var i=0;i<list.length;i++){var m=list[i];
-      if(m.type==='attributes'){if(!m.target.__wlKeep&&cover(m.target)) quick(m.target);}
-      else for(var j=0;j<m.addedNodes.length;j++){var n=m.addedNodes[j];if(n.nodeType!==1) continue;
-        if(!n.__wlKeep&&cover(n)) quick(n);
-        if(n.children&&n.children.length<40) for(var c=0;c<n.children.length;c++) if(!n.children[c].__wlKeep&&cover(n.children[c])) quick(n.children[c]);}}
-  }
-  var t=0;
-  function soon(){if(t) return;t=setTimeout(function(){t=0;try{settle();check();}catch(e){}},100);}
-  try{new MutationObserver(function(list){try{scan(list);}catch(e){}soon();}).observe(document,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style','hidden','open']});}catch(e){}
-  addEventListener('resize',soon);
-  try{check();}catch(e){}
-  return 'on';
-})()"""
-
-/** The page's own user agent without "; wv": some shops treat the in-app browser as "open our app" and get stuck (2.121). */
-private fun browserUserAgent(ua: String): String = ua.replace("; wv)", ")").replace(Regex("\\sVersion/\\d+(\\.\\d+)*"), "")
-
-/**
  * A shop inside the app, full screen: ✕ closes it (owner, 2.122: no other buttons at the top), the phone's Back goes
  * back a page (or closes on the first one). A floating "+ Add wish" (owner, 2.120; flat and smaller in 2.121) has colour only on a page where a product is
  * recognised; tapped elsewhere it says so, with "Add anyway" as a way out in case the product wasn't recognised.
@@ -756,8 +458,6 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
     // The address of the page on screen when a product was recognised there (null: not a product page).
     var productAt by remember { mutableStateOf<String?>(null) }
     var checks by remember { mutableIntStateOf(0) }
-    // Goes up when a page has loaded or its address changed: the cookie question is looked at again (CONSENT_JS).
-    var loads by remember { mutableIntStateOf(0) }
     var hint by remember { mutableStateOf(false) }
     // "Added to …" for a moment after a wish from this shop was saved.
     val savesAtStart = remember { ShopNav.saves }
@@ -798,34 +498,6 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
             if (web?.url != url) return@LaunchedEffect
             productAt = if (ok) url else null
             if (ok) return@LaunchedEffect
-        }
-    }
-
-    // Cookie questions are refused for you (owner, 2.124), and empty dark layers are kept away (GUARD_JS, 2.125). Looked
-    // at for about 12 seconds after a page loads, as many shops show their question a moment later.
-    LaunchedEffect(loads) {
-        if (loads == 0) return@LaunchedEffect
-        for (round in 0 until 10) {
-            kotlinx.coroutines.delay(if (round == 0) 600L else 1200L)
-            val w = web ?: return@LaunchedEffect
-            js(w, GUARD_JS)
-            js(w, CONSENT_JS)
-        }
-    }
-
-    // The shop's own big icons, read from its page (see ICONS_JS), for its tile on Home.
-    fun learnIcons(w: WebView) {
-        val host = try { URI(w.url ?: "").host?.removePrefix("www.") } catch (e: Exception) { null } ?: return
-        if (host != shop.host) return
-        scope.launch {
-            val raw = js(w, ICONS_JS) ?: return@launch
-            try {
-                val a = JSONArray(raw)
-                val found = (0 until a.length()).map { a.getJSONObject(it) }
-                    .map { it.optString("src") to it.optInt("size") }.filter { it.first.startsWith("http") }
-                ShopIcons.learn(ctx, shop.host, found)
-            } catch (e: Exception) {
-            }
         }
     }
 
@@ -881,71 +553,33 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                 Box(Modifier.weight(1f).fillMaxWidth()) {
                     AndroidView(
                         factory = { c ->
+                            // Plain, like a normal browser (owner, 6 November 2026: every bol.com "fix" since 2.121
+                            // removed; the page is never changed or tapped by the app).
                             WebView(c).apply {
                                 settings.javaScriptEnabled = true
-                                // The guard at the very start of every page and frame (owner, 2.130: no flicker of a
-                                // dark layer on a new page). Older WebViews without this still get it as before.
-                                try {
-                                    if (androidx.webkit.WebViewFeature.isFeatureSupported(androidx.webkit.WebViewFeature.DOCUMENT_START_SCRIPT))
-                                        androidx.webkit.WebViewCompat.addDocumentStartJavaScript(this, GUARD_JS, setOf("*"))
-                                } catch (e: Exception) {
-                                }
                                 settings.domStorageEnabled = true
-                                settings.databaseEnabled = true
                                 settings.allowFileAccess = false
                                 settings.allowContentAccess = false
-                                settings.useWideViewPort = true
-                                settings.loadWithOverviewMode = true
-                                settings.userAgentString = browserUserAgent(settings.userAgentString)
-                                // Cookie questions and logins of several shops run on another site (2.121, owner's
-                                // recording: bol.com stayed behind a grey veil).
-                                android.webkit.CookieManager.getInstance().setAcceptCookie(true)
-                                android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
                                 webViewClient = object : WebViewClient() {
                                     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-                                        val u = request.url
-                                        val s = u.scheme ?: return true
-                                        if (s == "http" || s == "https") return false
-                                        // "Open in our app" links: their web address, when they have one.
-                                        if (s == "intent") {
-                                            val fallback = try {
-                                                android.content.Intent.parseUri(u.toString(), android.content.Intent.URI_INTENT_SCHEME)
-                                                    .getStringExtra("browser_fallback_url")
-                                            } catch (e: Exception) { null }
-                                            if (fallback != null && (fallback.startsWith("https://") || fallback.startsWith("http://"))) view.loadUrl(fallback)
-                                        }
-                                        return true
+                                        val s = request.url.scheme ?: return true
+                                        return s != "http" && s != "https"
                                     }
 
                                     override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) { progress = 10 }
-                                    // The guard goes on as soon as the page shows, before a layer can flicker in.
-                                    override fun onPageCommitVisible(view: WebView, url: String?) { view.evaluateJavascript(GUARD_JS, null) }
                                     override fun onPageFinished(view: WebView, url: String?) {
                                         progress = 100
                                         view.title?.takeIf { it.isNotBlank() }?.let { pageTitle = it }
                                         checks++
-                                        loads++
-                                        learnIcons(view)
                                     }
 
                                     override fun doUpdateVisitedHistory(view: WebView, url: String?, isReload: Boolean) {
                                         if (url != productAt) productAt = null
                                         checks++
-                                        loads++
                                     }
                                 }
-                                // Pages that ask for your location, camera or microphone get a "no" at once (owner, 2.125): a
-                                // page left waiting for an answer can sit behind a grey screen.
-                                settings.setGeolocationEnabled(false)
                                 webChromeClient = object : android.webkit.WebChromeClient() {
-                                    override fun onGeolocationPermissionsShowPrompt(
-                                        origin: String?, callback: android.webkit.GeolocationPermissions.Callback?
-                                    ) { callback?.invoke(origin, false, false) }
-                                    override fun onPermissionRequest(request: android.webkit.PermissionRequest?) { request?.deny() }
                                     override fun onProgressChanged(view: WebView, p: Int) { progress = p }
-                                    override fun onReceivedTitle(view: WebView, title: String?) {
-                                        title?.takeIf { it.isNotBlank() }?.let { pageTitle = it }
-                                    }
                                 }
                                 loadUrl(shop.url)
                                 web = this
