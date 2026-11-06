@@ -90,13 +90,13 @@ fun GroupsHomeSection(onHome: Boolean, onOpen: (String) -> Unit, onNew: () -> Un
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     Groups.load(ctx)
-    HubTitle(tr("Wishlist groups"), addLabel = tr("New group"), line = tr("See each other’s wishlists."), onAdd = if (onHome) onNew else null)
+    HubTitle(tr("Wishlist groups"), line = tr("See each other’s wishlists."))
     if (onHome) Groups.invites.forEach { InviteCard(it) }
     val items = Groups.groups.map { g ->
         val pic = Groups.photos[g.id] ?: g.members.mapNotNull { it.list?.image?.takeIf { i -> i.isNotBlank() } }.firstOrNull()
         HubItem("g:" + g.id, g.name, g.members.size, pic, true, "") { onOpen(g.id) }
     }
-    BlockGrid(byRecent(items), onHome = false, actionsOf = { emptyList() }, onAddTo = {})
+    BlockGrid(byRecent(items), onHome = false, actionsOf = { emptyList() }, onAddTo = {}, newLabel = tr("New group"), onNew = if (onHome) onNew else null)
 }
 
 /** An invite on Home: who invited you, the group, "No thanks" and "Join". */

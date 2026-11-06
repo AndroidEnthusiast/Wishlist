@@ -844,7 +844,9 @@ fun App(
                     onAddTo = { t -> addTarget = t; prefill = ""; adding = true },
                     onOpenWishGroup = { GroupNav.openGroup(it) },
                     onNewWishGroup = { newWishGroup = true },
-                    onFound = { u, m -> addTarget = null; prefillMeta = m; fromShop = true; prefill = u; adding = true }
+                    onFound = { u, m -> addTarget = null; prefillMeta = m; fromShop = true; prefill = u; adding = true },
+                    onFriends = { FriendsNav.reset(); closeAll(); friendsOpen = true },
+                    onReserved = { reservedOpen = true }
                 )
                 else -> key(Shared.active, Repo.openMine) {
                     HomeScreen(

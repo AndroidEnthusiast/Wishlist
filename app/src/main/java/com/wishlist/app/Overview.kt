@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -133,13 +134,19 @@ private fun placedWishes(): List<Placed> {
         .sortedByDescending { it.w.id }
 }
 
-/** Your picture and name on the left; the three numbers next to it. */
+/**
+ * Your picture and name on the left; the three numbers next to it (owner, 2.134: the most interesting ones, each
+ * tappable): Wishes (all your wishes), Friends (the Friends tab) and Reserved (gifts you reserved, "Gifts I reserved").
+ */
 @Composable
-fun ProfileSummary(onProfile: () -> Unit) {
+fun ProfileSummary(onProfile: () -> Unit, onFriends: () -> Unit = {}, onReserved: () -> Unit = {}) {
     val ctx = LocalContext.current
     Friends.load(ctx)
     val all = placedWishes()
-    val lists = Repo.mineIds.size + Shared.lists.size
+    val friends = Friends.state?.friends?.size ?: 0
+    // What the phone remembers at once, then checked online (gift lists included).
+    var reserved by remember { mutableIntStateOf(ReservedGifts.remembered(ctx).sumOf { it.titles.size }) }
+    LaunchedEffect(Unit) { try { reserved = ReservedGifts.load(ctx).sumOf { it.titles.size } } catch (e: Exception) {} }
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -156,10 +163,9 @@ fun ProfileSummary(onProfile: () -> Unit) {
             )
         }
         Row(Modifier.weight(1f).padding(start = 8.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-            Stat(lists, if (lists == 1) tr("Wishlist") else tr("Wishlists")) { HubNav.page = "lists" }
             Stat(all.size, if (all.size == 1) tr("Wish") else tr("Wishes")) { HubNav.page = "wishes" }
-            val top = all.count { it.starred }
-            Stat(top, if (top == 1) tr("Top wish") else tr("Top wishes")) { HubNav.page = "top" }
+            Stat(friends, if (friends == 1) tr("Friend") else tr("Friends"), onFriends)
+            Stat(reserved, tr("Reserved"), onReserved)
         }
     }
 }

@@ -51,6 +51,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -120,7 +121,10 @@ fun HubScreen(
     onOpenWishGroup: (String) -> Unit = {},
     onNewWishGroup: () -> Unit = {},
     // "Find a gift" (2.114): a product found in a shop, for the add form (its link, and what was read from the page).
-    onFound: (String, Meta?) -> Unit = { _, _ -> }
+    onFound: (String, Meta?) -> Unit = { _, _ -> },
+    // The Friends and Reserved tiles (owner, 2.134).
+    onFriends: () -> Unit = {},
+    onReserved: () -> Unit = {}
 ) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
@@ -176,15 +180,15 @@ fun HubScreen(
     // the bottom bar).
     @Composable
     fun ListsSection(onHome: Boolean) {
-        HubTitle(tr("My wishlists"), addLabel = tr("New wishlist"), line = tr("Things you’d love to get."), onAdd = if (onHome) onNewMine else null)
+        HubTitle(tr("My wishlists"), line = tr("Things you’d love to get."))
         // In every section the list opened last comes first (owner, 2.110, instead of a "Recently opened" row).
-        BlockGrid(byRecent(mineItems), onHome, ::actionsOf, onAddTo)
+        BlockGrid(byRecent(mineItems), onHome, ::actionsOf, onAddTo, tr("New wishlist"), if (onHome) onNewMine else null)
 
         // Wishlist groups, right after your own lists (owner, 2.108).
         GroupsHomeSection(onHome, onOpenWishGroup, onNewWishGroup)
 
-        HubTitle(tr("Gift lists"), addLabel = tr("New gift list"), line = tr("Collect gift ideas for someone with others."), onAdd = if (onHome) onNewGroup else null)
-        BlockGrid(byRecent(groupItems), onHome, ::actionsOf, onAddTo)
+        HubTitle(tr("Gift lists"), line = tr("Collect gift ideas for someone with others."))
+        BlockGrid(byRecent(groupItems), onHome, ::actionsOf, onAddTo, tr("New gift list"), if (onHome) onNewGroup else null)
     }
 
     val page = HubNav.page
@@ -206,7 +210,7 @@ fun HubScreen(
                 .padding(bottom = 32.dp)
         ) {
             // Your picture and name, and the numbers (2.89: the cover photo card is gone).
-            ProfileSummary(onProfile)
+            ProfileSummary(onProfile, onFriends, onReserved)
 
             // Web shops to find a gift in and add it with one button (owner, 2.114).
             FindAGiftRow(onFound)
@@ -414,17 +418,52 @@ internal fun HubTitle(text: String, addLabel: String? = null, small: Boolean = f
 @Composable
 internal fun BlockGrid(
     items: List<HubItem>, onHome: Boolean, actionsOf: (HubItem) -> List<Triple<String, Boolean, () -> Unit>>,
-    onAddTo: (String) -> Unit
+    onAddTo: (String) -> Unit,
+    // "+ New …" as the last block (owner, 2.134): a new list appears right where you tapped.
+    newLabel: String? = null, onNew: (() -> Unit)? = null
 ) {
+    val cells: List<HubItem?> = items + (if (onNew != null) listOf(null) else emptyList())
     Column(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        items.chunked(2).forEach { row ->
+        cells.chunked(2).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 row.forEach { item ->
-                    ListBlock(item, if (onHome) actionsOf(item) else emptyList(), onAddTo, Modifier.weight(1f), small = false)
+                    if (item == null) NewBlock(newLabel.orEmpty(), onNew ?: {}, Modifier.weight(1f))
+                    else ListBlock(item, if (onHome) actionsOf(item) else emptyList(), onAddTo, Modifier.weight(1f), small = false)
                 }
                 if (row.size == 1) Spacer(Modifier.weight(1f))
             }
         }
+    }
+}
+
+/** The dashed "+ New …" block at the end of a section on Home (owner, 2.134). */
+@Composable
+private fun NewBlock(label: String, onClick: () -> Unit, modifier: Modifier) {
+    val cs = MaterialTheme.colorScheme
+    val shape = RoundedCornerShape(20.dp)
+    Column(modifier) {
+        Box(
+            Modifier.fillMaxWidth().aspectRatio(1f).clip(shape)
+                .drawBehind {
+                    val w = 1.5.dp.toPx()
+                    drawRoundRect(
+                        color = cs.outline, topLeft = androidx.compose.ui.geometry.Offset(w / 2, w / 2),
+                        size = androidx.compose.ui.geometry.Size(size.width - w, size.height - w),
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(20.dp.toPx()),
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(
+                            width = w, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(14f, 10f))
+                        )
+                    )
+                }
+                .clickable(onClickLabel = label, onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(AppIcons.Add, null, tint = cs.primary, modifier = Modifier.size(36.dp))
+        }
+        Text(
+            label, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = cs.primary,
+            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp, start = 2.dp, end = 2.dp)
+        )
     }
 }
 
