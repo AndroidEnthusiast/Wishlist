@@ -1243,6 +1243,18 @@ fun HomeScreen(
             // The top that stays in sight while scrolling (owner, 2.111): the summary card (your own lists) and the
             // category, sort and view choices. The cover photo above it scrolls away.
             val hasCover = remember(ListCovers.version, Shared.active, Repo.openMine) { ListCovers.get(ctx, ListCovers.openKey()) != null }
+            // "Viewed 23 times" (owner, 2.136): only your own lists that are online; read when the list opens and on
+            // every pull to refresh. Offline or before supabase-features.sql: nothing is shown.
+            var views by remember(Repo.openMine, Shared.active) { mutableIntStateOf(0) }
+            LaunchedEffect(Repo.openMine, Shared.active, pull.isRefreshing) {
+                if (inShared) return@LaunchedEffect
+                val d = Repo.mine(ctx, Repo.openMine)
+                val code = d.code ?: return@LaunchedEffect
+                val token = d.token ?: return@LaunchedEffect
+                views = try {
+                    Cloud.rpc("wl_view_count", org.json.JSONObject().put("p_code", code).put("p_token", token)).trim().toIntOrNull() ?: 0
+                } catch (e: Exception) { views }
+            }
             val stickyTop: @Composable (Boolean) -> Unit = { live ->
                 // More room between the summary and the choices (owner, 2.130: calmer, without making things smaller).
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -1250,7 +1262,7 @@ fun HomeScreen(
                     // switched off, the card shows only the occasion.
                     val occ = Occasions.line(Occasions.ofOpen(ctx))
                     val counts = !inShared && Show["show_summary"]
-                    if (counts || occ != null) ListSummaryCard(Repo.wishes, occasion = occ, counts = counts)
+                    if (counts || occ != null) ListSummaryCard(Repo.wishes, occasion = occ, counts = counts, views = views)
                     filters(live)
                 }
             }

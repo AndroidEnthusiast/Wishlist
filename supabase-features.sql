@@ -134,6 +134,47 @@ begin
   return v_t;
 end $$;
 
+-- ---------- "Viewed 23 times" (owner, 6 November 2026, 2.136) ----------
+-- Every time someone opens a wishlist (friends in the app, the friends' web page, group and gift exchange members) it
+-- counts once; the same phone or browser opening it again within 10 minutes counts once. No names, no devices kept
+-- longer than a day. Only the list's owner can read the number (owner token).
+create table if not exists wl_list_views (
+  list_code text primary key references wl_lists(code) on delete cascade,
+  n int not null default 0
+);
+create table if not exists wl_list_view_last (
+  list_code text not null references wl_lists(code) on delete cascade,
+  device text not null,
+  at timestamptz not null default now(),
+  primary key (list_code, device)
+);
+alter table wl_list_views enable row level security;
+alter table wl_list_view_last enable row level security;
+
+create or replace function wl_view(p_code text, p_device text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if coalesce(p_device, '') = '' or length(p_device) > 80 then return; end if;
+  if not exists (select 1 from wl_lists where code = p_code) then return; end if;
+  if exists (select 1 from wl_list_view_last where list_code = p_code and device = p_device and at > now() - interval '10 minutes') then
+    return;
+  end if;
+  insert into wl_list_view_last (list_code, device, at) values (p_code, p_device, now())
+    on conflict (list_code, device) do update set at = now();
+  insert into wl_list_views (list_code, n) values (p_code, 1)
+    on conflict (list_code) do update set n = wl_list_views.n + 1;
+  -- Now and then: forget devices of more than a day ago (only the 10-minute rule needs them).
+  if random() < 0.02 then delete from wl_list_view_last where at < now() - interval '1 day'; end if;
+end $$;
+
+create or replace function wl_view_count(p_code text, p_token text)
+returns int language sql stable security definer set search_path = public as $$
+  select coalesce((select v.n from wl_list_views v join wl_lists l on l.code = v.list_code
+                   where v.list_code = p_code and l.owner_token = p_token), 0)
+$$;
+
+grant execute on function wl_view(text, text), wl_view_count(text, text) to anon;
+
 grant execute on function
   wl_chat_react(text, text, bigint, text),
   wl_chat_reacts(text, text, text),

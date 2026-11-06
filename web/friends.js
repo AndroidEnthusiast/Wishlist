@@ -683,11 +683,14 @@ function renderCover(url, cedit) {
   box.hidden = false;
 }
 
+// "Viewed 23 times" for the owner (2.136): once per page visit, never on the automatic refresh.
+var viewSent = false;
 async function refresh() {
   if (!code || busy) return;
   try {
     var l = await rpc("wl_get_list", { p_code: code });
     if (l === null) { state = "gone"; list = null; render(); return; }
+    if (!viewSent) { viewSent = true; rpc("wl_view", { p_code: code, p_device: deviceId() }).catch(function () {}); }
     var rs = await rpc("wl_get_reservations", { p_code: code, p_device: deviceId() });
     var m = {};
     var rr = WLRes.parse(rs);

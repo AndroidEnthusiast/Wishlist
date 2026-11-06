@@ -494,6 +494,8 @@
 
   async function openMember(m) {
     member = m;
+    // "Viewed 23 times" for its owner (2.136): one view per open.
+    if (m.list && m.list.code) rpc("wl_view", { p_code: m.list.code, p_device: deviceId() }).catch(function () {});
     screen = "member";
     setTitle(m.list.name);
     backTo(function () { member = null; other = null; showGroup(); });

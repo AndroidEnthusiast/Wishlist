@@ -74,6 +74,10 @@ fun FriendScreen(
     // A 2× wish asks "How many will you buy?" (2.128).
     var askFor by remember { mutableStateOf<Wish?>(null) }
 
+    // "Viewed 23 times" for the owner (2.136): one view each time this list is opened, never on the refresh below.
+    LaunchedEffect(f.code) {
+        try { Cloud.rpc("wl_view", org.json.JSONObject().put("p_code", f.code).put("p_device", Repo.deviceId)) } catch (e: Exception) {}
+    }
     // Load now, then refresh every 20 seconds while this screen is open.
     LaunchedEffect(f.code, tick) {
         while (true) {

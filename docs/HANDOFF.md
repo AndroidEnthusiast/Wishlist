@@ -181,7 +181,7 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - 6 November (late): the owner started a **page-by-page review**, Home first (decisions in DECISIONS, "Home review"). **2.134** built it. Next: continue the review with the next page (ask the owner which; likely an open wishlist, then the menu's pages).
 
-- 6 November (late): review of the wishlist page (DECISIONS, "Wishlist page review"); **2.135** built it. Not yet looked at on this page with the owner: the cover photo, the summary card's numbers, search, pull to refresh, the empty list text.
+- 6 November (late): review of the wishlist page (DECISIONS, "Wishlist page review"); **2.135** built it. Then the rest of the page: description, empty text, search and cover stay; **2.136** adds "Viewed 23 times" (run `supabase-features.sql` again). Next in the review: ask the owner which page comes next; review every page as rigorously (owner: "every other page should be viewed rigorously").
 
 ## Next session
 - **Continue the page-by-page review** (owner): Home is done (2.134). Same approach for each page: list every element, its copy and what it does; say what's missing, illogical or could be better from a user's point of view; ask with pop-ups; then build. The "Top wishes" page is no longer reached from Home's tiles (still reachable? ask whether it should get a place, e.g. a filter on All your wishes).

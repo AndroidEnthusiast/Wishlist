@@ -489,6 +489,8 @@
 
   async function openGiftee() {
     screen = "list";
+    // "Viewed 23 times" for its owner (2.136): one view per open.
+    if (x.me.giftee && x.me.giftee.list && x.me.giftee.list.code) rpc("wl_view", { p_code: x.me.giftee.list.code, p_device: deviceId() }).catch(function () {});
     backTo(function () { showExchange(); });
     center(T("Loading…"));
     await loadGiftee();
