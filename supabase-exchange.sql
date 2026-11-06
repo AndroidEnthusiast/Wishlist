@@ -533,7 +533,8 @@ begin
   perform wl_gx_check_member(p_id, p_token, p_gx);
   perform 1 from wl_gx where id = p_gx for update;
   if exists (select 1 from wl_gx where id = p_gx and organiser = p_id) then
-    if coalesce(p_next, '') = '' or p_next = p_id or not wl_gx_is_member(p_gx, p_next) then
+    if coalesce(p_next, '') = '' or p_next = p_id or not wl_gx_is_member(p_gx, p_next)
+       or coalesce((select web from wl_profiles where id = p_next), true) then
       raise exception 'pick the next organiser';
     end if;
     update wl_gx set organiser = p_next where id = p_gx;
@@ -560,6 +561,8 @@ returns void language plpgsql security definer set search_path = public as $$
 begin
   perform wl_gx_check_org(p_id, p_token, p_gx);
   if p_next = p_id or not wl_gx_is_member(p_gx, p_next) then raise exception 'not a member'; end if;
+  -- Only people with the app can organise (drawing names and rules are in the app).
+  if coalesce((select web from wl_profiles where id = p_next), true) then raise exception 'needs the app'; end if;
   update wl_gx set organiser = p_next where id = p_gx;
   perform wl_gx_news_add(p_next, 'organiser', p_gx, '');
 end $$;

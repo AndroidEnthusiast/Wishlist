@@ -315,6 +315,11 @@ select pg_temp.fails($q$select wl_gx_reveal('BBBBBBBBBBBBBBBBBBBB','tokB_tokB_to
 select pg_temp.ok(wl_gx_reveal(:A, :X), 'reveal after the date');
 select pg_temp.ok((select bool_and(m->>'gave_to' is not null) from jsonb_array_elements(wl_gx_get(:B, :X)->'members') m), 'everyone sees who had whom');
 select pg_temp.fails($q$select wl_gx_handover('AAAAAAAAAAAAAAAAAAAA','tokA_tokA_tokA_tokA_','GX00000000000000001','ZZZZZZZZZZZZZZZZZZZZ')$q$, 'hand over only to a member');
+select wl_gr_web_profile('VVVVVVVVVVVVVVVVVVVV', 'tokV_tokV_tokV_tokV_', 'Vic');
+select wl_create_list('LISTV001','ownerV_ownerV_ownerV','Vic list');
+select wl_gx_join('VVVVVVVVVVVVVVVVVVVV', 'tokV_tokV_tokV_tokV_', 'LINKX000000000000001', '', 'LISTV001', 'ownerV_ownerV_ownerV') is not null;
+select pg_temp.fails($q$select wl_gx_handover('AAAAAAAAAAAAAAAAAAAA','tokA_tokA_tokA_tokA_','GX00000000000000001','VVVVVVVVVVVVVVVVVVVV')$q$, 'a browser member can''t organise');
+select wl_gx_leave('VVVVVVVVVVVVVVVVVVVV', 'tokV_tokV_tokV_tokV_', :X, '');
 select wl_gx_handover(:A, :X, 'CCCCCCCCCCCCCCCCCCCC');
 select pg_temp.ok(wl_gx_get(:A, :X)->>'organiser' = 'CCCCCCCCCCCCCCCCCCCC', 'handed over');
 select pg_temp.ok(wl_gx_state(:C)->>'news' like '%organiser%', 'new organiser told');

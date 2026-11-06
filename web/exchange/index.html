@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Wishlist</title>
+<link rel="icon" href="../icon.png">
+<!-- The link of a gift exchange (2.129): …/exchange/?x=KEY. Link previews (WhatsApp, Messages...) read these lines without running the page; then it goes on to the exchange page. -->
+<meta name="description" content="Draw names with friends: everyone secretly buys a gift for one person, from their wishlist.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Join our gift exchange 🎁">
+<meta property="og:description" content="Draw names with friends: everyone secretly buys a gift for one person, from their wishlist.">
+<meta property="og:image" content="https://androidenthusiast.github.io/Wishlist/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Join our gift exchange 🎁">
+<meta name="twitter:description" content="Draw names with friends: everyone secretly buys a gift for one person, from their wishlist.">
+<meta name="twitter:image" content="https://androidenthusiast.github.io/Wishlist/og.png">
+<script>
+// Straight on to the exchange page, keeping the key from the link.
+location.replace("../exchange.html" + location.search);
+</script>
+</head>
+<body>
+<p><a id="go" href="../exchange.html">Open the gift exchange</a></p>
+<script>document.getElementById("go").href = "../exchange.html" + location.search;</script>
+</body>
+</html>

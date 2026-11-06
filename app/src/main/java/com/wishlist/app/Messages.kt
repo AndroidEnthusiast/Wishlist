@@ -734,6 +734,8 @@ private fun Bubble(
                         if (m.content.kind == "wish" && m.content.url.isNotBlank()) try { uri.openUri(m.content.url) } catch (e: Exception) {}
                         // A group invitation (2.108): the join screen, or the group when you are in it already.
                         if (m.content.kind == "group") GroupNav.openInvite(m.content.text, Groups.parseLink(m.content.url))
+                        // A gift exchange invitation (2.129).
+                        if (m.content.kind == "exchange") ExchangeNav.openInvite(m.content.text, Exchanges.parseLink(m.content.url))
                         if (m.content.kind == "photo") {
                             if (photoState == "ok") photo?.let(onOpenPhoto)
                             else if (photoState == "offline") photoTry++
@@ -775,13 +777,14 @@ private fun Bubble(
                         if (m.content.url.isNotBlank()) Text(tr("View in shop"), color = ink.copy(alpha = 0.8f), style = MaterialTheme.typography.labelSmall)
                     }
                 }
-                m.content.kind == "group" -> Row(verticalAlignment = Alignment.CenterVertically) {
+                m.content.kind == "group" || m.content.kind == "exchange" -> Row(verticalAlignment = Alignment.CenterVertically) {
+                    val gx = m.content.kind == "exchange"
                     Box(
                         Modifier.size(52.dp).clip(RoundedCornerShape(10.dp)).background(Color.White),
                         contentAlignment = Alignment.Center
-                    ) { Icon(AppIcons.Group, null, tint = Color(0xFF8A8A92), modifier = Modifier.size(28.dp)) }
+                    ) { Icon(if (gx) AppIcons.Swap else AppIcons.Group, null, tint = Color(0xFF8A8A92), modifier = Modifier.size(28.dp)) }
                     Column(Modifier.padding(start = 10.dp).widthIn(max = 200.dp)) {
-                        Text(tr("Join my wishlist group"), color = ink.copy(alpha = 0.8f), style = MaterialTheme.typography.labelMedium)
+                        Text(if (gx) tr("Join my gift exchange") else tr("Join my wishlist group"), color = ink.copy(alpha = 0.8f), style = MaterialTheme.typography.labelMedium)
                         Text(m.content.title, color = ink, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         Text(if (m.mine) tr("Invitation sent") else tr("Tap to join"), color = ink.copy(alpha = 0.8f), style = MaterialTheme.typography.labelSmall)
                     }

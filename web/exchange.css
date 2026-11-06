@@ -1,0 +1,53 @@
+/* The gift exchange page (exchange.html, 2.129): only what wishlist.css, edit.css and group.css don't have. */
+.xcover { position: relative; height: 150px; border-radius: 24px; overflow: hidden; margin: 4px 0 12px;
+  background: linear-gradient(135deg, #1B5E20, #C62828); }
+.xcover.t-sint { background: linear-gradient(135deg, #B71C1C, #E0A100); }
+.xcover.t-bday { background: linear-gradient(135deg, #E91E63, #7E57C2); }
+.xcover.t-office { background: linear-gradient(135deg, #1565C0, #00897B); }
+.xcover.t-plain { background: linear-gradient(135deg, #455A64, #7E57C2); }
+.xe { position: absolute; font-size: 26px; line-height: 1; }
+.xe0 { left: 8%; top: 15%; transform: rotate(-12deg); }
+.xe1 { left: 78%; top: 10%; transform: rotate(14deg); }
+.xe2 { left: 62%; top: 62%; transform: rotate(-8deg); }
+.xe3 { left: 20%; top: 66%; transform: rotate(10deg); }
+.xe4 { left: 90%; top: 70%; transform: rotate(-16deg); }
+.xctitle { position: absolute; left: 0; right: 0; bottom: 0; margin: 0; padding: 16px; color: #fff;
+  background: linear-gradient(transparent, rgba(0,0,0,.6)); }
+.xcount { font-weight: 700; color: var(--primary); font-size: 1.1rem; margin: 6px 0 2px; }
+.xinfo { margin: 2px 0; }
+.xmsg { margin: 14px 0; padding: 14px 16px; border-radius: 18px; background: var(--card); font-size: 1.05rem; }
+.xh { margin: 22px 0 8px; font-size: 1.1rem; }
+.xnote { margin-top: 16px; }
+.xpeople, .xpairs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.xpeople li { display: flex; align-items: center; gap: 10px; }
+.xpn { font-weight: 600; }
+.xpt { color: var(--muted); font-size: .85rem; }
+.xpairs li { font-size: 1.05rem; }
+.xwrap { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; margin: 16px 0 0; padding: 24px 16px;
+  border: 0; border-radius: 24px; background: var(--card); color: var(--fg); font: inherit; cursor: pointer; text-align: center; }
+.xwrap strong { font-size: 1.25rem; }
+.xgift { font-size: 72px; line-height: 1; display: inline-block; animation: xwiggle .42s ease-in-out infinite alternate; }
+.xwrap:disabled .xgift { animation: none; }
+@keyframes xwiggle { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+.xgiftee { align-items: center; text-align: center; }
+.xgname { font-size: 1.5rem !important; }
+.xsanta { display: flex; align-items: center; gap: 12px; width: 100%; margin: 12px 0 0; padding: 14px 16px; border-radius: 18px;
+  border: 0; background: var(--card); color: var(--fg); font: inherit; text-align: left; cursor: pointer; }
+.xse { font-size: 26px; }
+.xst { display: flex; flex-direction: column; flex: 1; }
+.xdot { width: 9px; height: 9px; border-radius: 50%; background: #E53935; display: inline-block; margin-left: 8px; flex: none; }
+.xorg { margin-top: 18px; }
+.xleave { margin-top: 18px; }
+.xchat { display: flex; flex-direction: column; gap: 8px; }
+.xmsgs { display: flex; flex-direction: column; gap: 6px; min-height: 160px; max-height: 50vh; overflow-y: auto; padding: 4px 0; }
+.xbub { align-self: flex-start; max-width: 85%; padding: 9px 14px; border-radius: 18px; background: var(--card);
+  white-space: pre-wrap; overflow-wrap: anywhere; }
+.xbub.mine { align-self: flex-end; background: var(--primary); color: var(--on-primary); }
+.xin { width: 100%; box-sizing: border-box; font: inherit; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--line, #8888);
+  background: transparent; color: var(--fg); resize: vertical; }
+.dfoot .xin { flex: 1 1 100%; }
+.confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 50; }
+.confetti i { position: absolute; top: -20px; width: 10px; height: 16px; border-radius: 2px; opacity: .95;
+  animation: xfall 2s linear forwards; }
+@keyframes xfall { to { transform: translateY(110vh) rotate(540deg); opacity: .4; } }
+@media (prefers-reduced-motion: reduce) { .xgift { animation: none; } }

@@ -155,6 +155,8 @@ fun ListPickDialog(
     title: String, confirm: String, current: String?, onClose: () -> Unit,
     extra: (@Composable () -> Unit)? = null,
     dismissLabel: String? = null, onDismissAction: (() -> Unit)? = null,
+    // The line under the choices (a gift exchange says who sees the list, 2.129).
+    note: String? = null,
     onPick: suspend (String, Boolean) -> String?
 ) {
     val ctx = LocalContext.current
@@ -210,7 +212,7 @@ fun ListPickDialog(
                     }
                 }
                 Text(
-                    tr("Everyone in the group always sees this wishlist. Private wishes are always hidden."),
+                    note ?: tr("Everyone in the group always sees this wishlist. Private wishes are always hidden."),
                     style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
                     modifier = Modifier.padding(top = 8.dp)
                 )
@@ -347,7 +349,10 @@ fun NewGroupDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
 
 /** Choose friends (the new-group form): ticks, then Done. */
 @Composable
-private fun PickFriendsDialog(friends: List<Person>, start: List<String>, onDone: (List<String>) -> Unit, onClose: () -> Unit) {
+fun PickFriendsDialog(
+    friends: List<Person>, start: List<String>, onDone: (List<String>) -> Unit, onClose: () -> Unit,
+    note: String = tr("They get an invitation when the group is made.")
+) {
     var picked by remember { mutableStateOf(start.toSet()) }
     AlertDialog(
         onDismissRequest = onClose,
@@ -355,7 +360,7 @@ private fun PickFriendsDialog(friends: List<Person>, start: List<String>, onDone
         text = {
             Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
                 Text(
-                    tr("They get an invitation when the group is made."),
+                    note,
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 6.dp)
                 )

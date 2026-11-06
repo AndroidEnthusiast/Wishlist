@@ -26,6 +26,7 @@
                 <data android:scheme="wishlist" android:host="join" />
                 <!-- Wishlist groups (2.108): a group link, and a browser member's "My link". -->
                 <data android:scheme="wishlist" android:host="group" />
+                <data android:scheme="wishlist" android:host="exchange" />
                 <data android:scheme="wishlist" android:host="me" />
             </intent-filter>
             <intent-filter>

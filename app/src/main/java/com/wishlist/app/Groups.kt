@@ -469,6 +469,8 @@ object Groups {
         // Read the list before the browser profile goes.
         val remote = if (code.isNotEmpty()) Cloud.fetchList(code) else null
         val p = prefs(c)
+        // Their gift exchanges move first (2.129): the browser profile is deleted by wl_gr_takeover.
+        Exchanges.takeover(c, webId, webToken)
         Cloud.rpc(
             "wl_gr_takeover", JSONObject().put("p_web", webId).put("p_web_token", webToken).put("p_web_device", webDevice)
                 .put("p_id", p.getString("pf_id", "")).put("p_token", p.getString("pf_token", "")).put("p_device", Repo.deviceId)

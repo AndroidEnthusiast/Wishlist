@@ -14,6 +14,7 @@ run "shop browser page scripts: cookies and empty layers (Shops.kt)" node shop/c
 run "index.html (friends page + invite page)" node index-page/test.js
 # Needs PostgreSQL (WL_PG, see README.md); without it this one says SKIPPED.
 run "group page against the real SQL (web/group.html)" node group/test.js
+run "gift exchange page against the real SQL (web/exchange.html)" node exchange/test.js
 for t in e2e/t1.js e2e/t2.js e2e/t3.js e2e/t4.js e2e/t5.js e2e/t6.js e2e/t7.js; do run "browser editor $t" node "$t"; done
 [ "$fail" -eq 0 ] && echo "ALL SUITES OK" || echo "SOMETHING FAILED"
 exit $fail

@@ -281,6 +281,11 @@ class BinWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, p
             Groups.poll(c)
         } catch (e: Exception) {
         }
+        // Gift exchange news, anonymous messages and the exchange day (Exchange.kt, 2.129).
+        try {
+            Exchanges.poll(c)
+        } catch (e: Exception) {
+        }
         return Result.success()
     }
 }

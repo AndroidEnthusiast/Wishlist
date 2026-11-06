@@ -24,6 +24,7 @@ object Alerts {
     private const val FRIENDS_CHANNEL = "friends"
     private const val MESSAGES_CHANNEL = "messages"
     private const val GROUPS_CHANNEL = "groups"
+    private const val EXCHANGE_CHANNEL = "exchange"
     private const val BIRTHDAY_CHANNEL = "birthdays"
     private const val OCC_CHANNEL = "occasions"
 
@@ -51,6 +52,7 @@ object Alerts {
         ch(BIRTHDAY_CHANNEL, tr("Friends’ birthdays"), tr("A few days before a friend’s birthday"))
         ch(GROUPS_CHANNEL, tr("Wishlist groups"), tr("Invitations, and being removed from a group"))
         ch(MESSAGES_CHANNEL, tr("Messages"), tr("New messages from your friends"))
+        ch(EXCHANGE_CHANNEL, tr("Gift exchange"), tr("Invitations, names drawn, anonymous messages and the exchange day"))
         ch(OCC_CHANNEL, tr("Occasions"), tr("Reminders around birthdays and other occasions"))
     }
 
@@ -67,7 +69,8 @@ object Alerts {
         fun off(id: String) = nm.getNotificationChannel(id)?.importance == NotificationManager.IMPORTANCE_NONE
         return listOfNotNull(
             if (off(BIN_CHANNEL)) tr("Notifications about gifts you reserved are off. You’ll miss important updates about them.") else null,
-            if (off(GROUPS_CHANNEL)) tr("Group notifications are off. You’ll miss invitations.") else null
+            if (off(GROUPS_CHANNEL)) tr("Group notifications are off. You’ll miss invitations.") else null,
+            if (off(EXCHANGE_CHANNEL)) tr("Gift exchange notifications are off. You’ll miss invitations and the draw.") else null
         )
     }
 
@@ -364,6 +367,29 @@ object Alerts {
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val pi = PendingIntent.getActivity(c, nid, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val n = NotificationCompat.Builder(c, GROUPS_CHANNEL)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+        nm.notify(nid, n)
+    }
+
+    /**
+     * Gift exchange news (2.129): an invitation, names drawn, an anonymous message, the exchange day. Always told, like
+     * group invitations. Tapping opens the exchange ([gx]; empty: the list of exchanges).
+     */
+    fun notifyExchange(c: Context, gx: String, title: String, text: String, noteKind: String = "", noteList: String = "", msg: Boolean = false) {
+        ensureChannel(c)
+        val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val nid = (gx + (if (msg) "msg" else title)).hashCode() * 31 + 37
+        val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_EXCHANGE, gx).note(noteKind, noteList)
+            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        val pi = PendingIntent.getActivity(c, nid, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val n = NotificationCompat.Builder(c, EXCHANGE_CHANNEL)
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle(title)
             .setContentText(text)

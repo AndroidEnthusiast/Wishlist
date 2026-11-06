@@ -348,7 +348,10 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                                 "group_invite" -> tr("%s invited you to this wishlist group", n.currency)
                                 "group_declined" -> tr("said no thanks to “%s”", n.currency)
                                 "group_removed" -> tr("You are removed from this wishlist group")
-                                else -> if (down) tr("decreased in price") else tr("increased in price")
+                                // Gift exchange (2.129): the invite says who; the others carry their own line.
+                                "gx_invite" -> tr("%s invited you to this gift exchange", n.currency)
+                                else -> if (n.kind.startsWith("gx_")) n.currency
+                                    else if (down) tr("decreased in price") else tr("increased in price")
                             },
                             style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id)
                         )

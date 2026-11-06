@@ -386,6 +386,36 @@ object AppIcons {
     /** Wishlist groups (2.108): Google's Material "group" icon (Apache 2.0), drawn from its path here because the app
      *  only includes the core icon set. One shape in every style. */
     val Group: ImageVector get() = groupIcon
+    /** Received gifts and gift lists (2.129): Google's Material "redeem" gift-box icon, drawn from its path. */
+    val Gift: ImageVector get() = giftIcon
+    /** Gifts I reserved (2.129): Google's Material "shopping bag" icon (outlined), drawn from its path. */
+    val Bag: ImageVector get() = bagIcon
+    /** Gift exchange (2.129): Google's Material "swap horiz" icon, drawn from its path. */
+    val Swap: ImageVector get() = swapIcon
+}
+
+private fun pathIcon(name: String, d: String): ImageVector =
+    ImageVector.Builder(name, 24.dp, 24.dp, 24f, 24f).addPath(
+        androidx.compose.ui.graphics.vector.addPathNodes(d),
+        fill = androidx.compose.ui.graphics.SolidColor(Color.Black)
+    ).build()
+
+private val giftIcon: ImageVector by lazy {
+    pathIcon(
+        "Gift",
+        "M20,6h-2.18c0.11,-0.31 0.18,-0.65 0.18,-1 0,-1.66 -1.34,-3 -3,-3 -1.05,0 -1.96,0.54 -2.5,1.35l-0.5,0.67 -0.5,-0.68C10.96,2.54 10.05,2 9,2 7.34,2 6,3.34 6,5c0,0.35 0.07,0.69 0.18,1H4c-1.11,0 -1.99,0.89 -1.99,2L2,19c0,1.11 0.89,2 2,2h16c1.11,0 2,-0.89 2,-2V8c0,-1.11 -0.89,-2 -2,-2zM15,4c0.55,0 1,0.45 1,1s-0.45,1 -1,1 -1,-0.45 -1,-1 0.45,-1 1,-1zM9,4c0.55,0 1,0.45 1,1s-0.45,1 -1,1 -1,-0.45 -1,-1 0.45,-1 1,-1zM20,19H4v-2h16v2zM20,14H4V8h5.08L7,10.83 8.62,12 11,8.76l1,-1.36 1,1.36L15.38,12 17,10.83 14.92,8H20v6z"
+    )
+}
+
+private val bagIcon: ImageVector by lazy {
+    pathIcon(
+        "Bag",
+        "M18,6h-2c0,-2.21 -1.79,-4 -4,-4S8,3.79 8,6H6c-1.1,0 -2,0.9 -2,2v12c0,1.1 0.9,2 2,2h12c1.1,0 2,-0.9 2,-2V8c0,-1.1 -0.9,-2 -2,-2zM12,4c1.1,0 2,0.9 2,2h-4c0,-1.1 0.9,-2 2,-2zM18,20H6V8h2v2c0,0.55 0.45,1 1,1s1,-0.45 1,-1V8h4v2c0,0.55 0.45,1 1,1s1,-0.45 1,-1V8h2v12z"
+    )
+}
+
+private val swapIcon: ImageVector by lazy {
+    pathIcon("Swap", "M6.99,11L3,15l3.99,4v-3H14v-2H6.99v-3zM21,9l-3.99,-4v3H10v2h7.01v3L21,9z")
 }
 
 private val groupIcon: ImageVector by lazy {

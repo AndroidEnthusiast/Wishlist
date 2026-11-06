@@ -37,7 +37,15 @@ object FriendWatch {
     fun unreserved(c: Context, code: String, id: Long) = write(c, code, read(c, code) - id)
 
     /** The friend's list was removed from this phone. */
-    fun forget(c: Context, code: String) = prefs(c).edit().remove(key(code)).apply()
+    fun forget(c: Context, code: String) = prefs(c).edit().remove(key(code)).remove("fresn_$code").apply()
+
+    /** Every list this phone reserved on: code -> (wish id -> title), for "Gifts I reserved" (2.129). */
+    fun all(c: Context): Map<String, Map<Long, String>> =
+        prefs(c).all.keys.filter { it.startsWith("fres_") }.map { it.removePrefix("fres_") }
+            .associateWith { read(c, it) }.filterValues { it.isNotEmpty() }
+
+    /** How a list is called on "Gifts I reserved": "Sam’s wishlist" or its name, remembered when it was last seen. */
+    fun label(c: Context, code: String): String = prefs(c).getString("fresn_$code", null).orEmpty()
 
     /**
      * Compares what this phone reserved on friend [f]'s list with the list now ([list] when it was just fetched, else
@@ -48,6 +56,8 @@ object FriendWatch {
     fun check(c: Context, f: Friend, list: RemoteList, mine: Set<Long> = emptySet()) {
         val visible = list.wishes.filter { it.bin == 0L && !it.priv }.associateBy { it.id }
         var m = read(c, f.code)
+        val label = list.owner.takeIf { it.isNotBlank() }?.let { tr("%s’s wishlist", it) } ?: list.name.ifBlank { f.name }
+        if (label.isNotBlank() && label != label(c, f.code)) prefs(c).edit().putString("fresn_${f.code}", label).apply()
         // (An owned wish is not taken in again: its old reservation stays online and would be told about every time.)
         for (id in mine) visible[id]?.takeIf { !it.got }?.let { if (id !in m) m = m + (id to it.title) }
         for ((id, title) in m) {

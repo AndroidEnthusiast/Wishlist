@@ -115,6 +115,8 @@ object Chat {
     private fun parse(s: String): ChatContent = try {
         val j = JSONObject(s)
         if (j.optString("t") == "group") ChatContent(true, "group", j.optString("gid"), j.optString("name"), url = j.optString("link"))
+        // A gift exchange invitation (2.129); "x" holds a plain line with the link for older apps.
+        else if (j.optString("t") == "exchange") ChatContent(true, "exchange", j.optString("gid"), j.optString("name"), url = j.optString("link"))
         else if (j.optString("t") == "photo") ChatContent(true, "photo", j.optString("f"), img = j.optString("k"), w = j.optInt("w"), h = j.optInt("h"))
         else if (j.optString("t") == "wish") ChatContent(
             true, "wish", "", j.optString("title"), if (j.has("price") && !j.isNull("price")) j.optDouble("price") else null,
@@ -205,6 +207,9 @@ object Chat {
         val me = myId(c)
         val plain = if (content.kind == "group") JSONObject().put("t", "group").put("gid", content.text)
             .put("name", content.title).put("link", content.url).toString()
+        else if (content.kind == "exchange") JSONObject().put("t", "exchange").put("gid", content.text)
+            .put("name", content.title).put("link", content.url)
+            .put("x", tr("Join my gift exchange “%1\$s”: %2\$s", content.title, content.url)).toString()
         else if (content.kind == "photo") JSONObject().put("t", "photo").put("f", content.text).put("k", content.img)
             .put("w", content.w).put("h", content.h).toString()
         else if (content.kind == "wish") JSONObject().put("t", "wish").put("title", content.title)
@@ -293,7 +298,7 @@ object Chat {
     fun preview(m: ChatContent): String = when {
         !m.readable -> tr("This message can’t be read on this phone")
         m.kind == "wish" -> tr("Wish: %s", m.title)
-        m.kind == "group" -> tr("Invitation: %s", m.title)
+        m.kind == "group" || m.kind == "exchange" -> tr("Invitation: %s", m.title)
         m.kind == "photo" -> "📷 " + tr("Photo")
         else -> m.text
     }

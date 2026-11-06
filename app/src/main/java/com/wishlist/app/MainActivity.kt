@@ -195,6 +195,8 @@ class MainActivity : ComponentActivity() {
         const val OPEN_FRIEND = "open_friend"
         /** A wishlist group alert (2.108): the group (or invite) to open, or "" for just the app. */
         const val OPEN_GROUP = "open_group"
+        /** A gift exchange notification (2.129): the exchange's id, or "" for the list of exchanges. */
+        const val OPEN_EXCHANGE = "open_exchange"
         /** A "gift you reserved is no longer on …" alert (2.126): where to go, as on the Notifications page ("c:"/"s:"). */
         const val OPEN_NOTE = "open_note"
     }
@@ -298,6 +300,12 @@ class MainActivity : ComponentActivity() {
             if (gid.isNotEmpty()) GroupNav.openInvite(gid, null)
             return
         }
+        if (i != null && i.hasExtra(OPEN_EXCHANGE)) {
+            val gx = i.getStringExtra(OPEN_EXCHANGE).orEmpty()
+            i.removeExtra(OPEN_EXCHANGE)
+            ExchangeNav.openInvite(gx.ifEmpty { null }, null)
+            return
+        }
         if (i != null && i.hasExtra(OPEN_FRIENDS)) {
             i.removeExtra(OPEN_FRIENDS)
             FriendsNav.reset()
@@ -321,6 +329,8 @@ class MainActivity : ComponentActivity() {
             // Wishlist groups (2.108): a group link (wishlist://group?g=KEY) or a browser member's "My link".
             Groups.parseMe(d)?.let { GroupNav.takeover = it; GroupNav.request++; return }
             Groups.parseLink(d)?.let { GroupNav.openInvite(null, it); return }
+            // Gift exchange (2.129): wishlist://exchange?x=KEY.
+            Exchanges.parseLink(d)?.let { ExchangeNav.openInvite(null, it); return }
             Sync.parseInvite(d)?.let { sharedInvite = it }
             return
         }
@@ -329,6 +339,7 @@ class MainActivity : ComponentActivity() {
             // A group link or "My link" shared into the app (2.108).
             Groups.parseMe(t)?.let { GroupNav.takeover = it; GroupNav.request++; return }
             Groups.parseLink(t)?.let { GroupNav.openInvite(null, it); return }
+            Exchanges.parseLink(t)?.let { ExchangeNav.openInvite(null, it); return }
             // An invite link shared into the app (the share sheet) opens the "Join" screen.
             val invite = if (t.uppercase().contains("J=")) Sync.parseInvite(t) else null
             val code = Sync.embeddedCode(t)
@@ -446,6 +457,11 @@ fun App(
     // "Received gifts" and "What did you get?" for one of your lists (2.128).
     var receivedOpen by remember { mutableStateOf(false) }
     var receivedAsk by remember { mutableStateOf<String?>(null) }
+    // "Gifts I reserved" (menu, 2.129, Reserved.kt).
+    var reservedOpen by remember { mutableStateOf(false) }
+    // Gift exchange (menu, 2.129, ExchangeUi.kt): your exchanges, or one of them (ExchangeNav.open).
+    var exchangesOpen by remember { mutableStateOf(false) }
+    var newExchange by remember { mutableStateOf(false) }
     // The settings of the open list (its ⚙), apart from the app's Settings in the menu.
     var listSettings by remember { mutableStateOf(false) }
     var friendCode by remember { mutableStateOf<String?>(null) }
@@ -474,7 +490,7 @@ fun App(
     fun closeAll() {
         settings = false; binOpen = false; friendCode = null; listSettings = false
         pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false; messagesOpen = false
-        groupOpen = null
+        groupOpen = null; exchangesOpen = false
     }
     var createChoice by remember { mutableStateOf(false) }
     // "Add wish" from the bottom bar: the form with "Save to", starting at the list on screen (or the last one used).
@@ -547,6 +563,8 @@ fun App(
             key.startsWith("p:") -> { FriendsNav.reset(); FriendsNav.person = key.removePrefix("p:"); friendsOpen = true }
             key.startsWith("g:") -> GroupNav.openInvite(key.removePrefix("g:"), null)
             key.startsWith("q:") -> receivedAsk = key.removePrefix("q:")
+            // Gift exchange (2.129): "e:<id>", or "e:" for the list of exchanges.
+            key.startsWith("e:") -> ExchangeNav.openInvite(key.removePrefix("e:").ifEmpty { null }, null)
         }
     }
     // A tapped "gift you reserved is no longer on …" push (2.126) opens that list.
@@ -630,6 +648,19 @@ fun App(
         groupOpen = null
     }
 
+    // Gift exchange (2.129): a link, an invitation, a notification or the menu asked for it.
+    LaunchedEffect(ExchangeNav.show) {
+        if (ExchangeNav.show) {
+            ExchangeNav.show = false
+            closeAll(); hub = true; HubNav.page = null
+            exchangesOpen = true
+            scope.launch { drawer.close() }
+        }
+    }
+    BackHandler(enabled = !drawer.isOpen && exchangesOpen && ExchangeNav.open == null && !settings && !binOpen && friendCode == null && !notesOpen && !profileOpen) {
+        exchangesOpen = false; hub = true
+    }
+
     // The bell at the top right (2.122): Notifications.
     LaunchedEffect(NotesNav.open) {
         if (NotesNav.open) {
@@ -660,6 +691,9 @@ fun App(
         try { ListVisibility.trySwitch(ctx) } catch (e: Exception) {}
         // Wishlist groups and invites (2.108).
         if (Config.enabled && Friends.hasProfile(ctx)) try { Groups.refresh(ctx) } catch (e: Exception) {}
+        // Gift exchanges and their invitations (2.129): the red dot on the menu item.
+        Exchanges.load(ctx)
+        if (Config.enabled && Friends.hasProfile(ctx)) try { Exchanges.refresh(ctx) } catch (e: Exception) {}
     }
 
     val openMenu: () -> Unit = { scope.launch { drawer.open() } }
@@ -685,12 +719,15 @@ fun App(
         !pricesOpen && !friendsOpen && !messagesOpen
     // An open conversation has a back arrow too, and no bottom bar.
     val inChat = messagesOpen && ChatNav.peer != null && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen && !profileOpen
+    // An open gift exchange has a back arrow too (2.129).
+    val inExchange = exchangesOpen && ExchangeNav.open != null && !settings && !binOpen && friendCode == null && !listSettings &&
+        !notesOpen && !profileOpen && !pricesOpen && !friendsOpen && !messagesOpen
     // An open wishlist has a back arrow to Home instead of the menu button (owner, 2.110: "for some it's intuitive").
     val inList = !hub && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen && !profileOpen &&
         !pricesOpen && !friendsOpen && !messagesOpen && groupOpen == null
     ModalNavigationDrawer(
         drawerState = drawer,
-        gesturesEnabled = !inListSettings && !inThemer && !inFriend && !inOverview && !inChat && !inGroup && !inList,
+        gesturesEnabled = !inListSettings && !inThemer && !inFriend && !inOverview && !inChat && !inGroup && !inList && !inExchange,
         drawerContent = {
             val look = LocalLook.current
             ModalDrawerSheet(
@@ -721,91 +758,48 @@ fun App(
                         )
                     }
                     // Only the screen that is open is highlighted: one item at a time.
-                    val elsewhere = settings || binOpen || friendCode != null || notesOpen || pricesOpen || friendsOpen || profileOpen || messagesOpen || groupOpen != null
-                    val onList = !elsewhere && !hub
+                    // The menu holds no lists (owner, 2.129): Home and the Friends tab show them. Three groups with
+                    // dividers and no headings: main actions, your things, settings.
+                    val elsewhere = settings || binOpen || friendCode != null || notesOpen || pricesOpen || friendsOpen || profileOpen || messagesOpen || groupOpen != null || exchangesOpen
                     DrawerItem(tr("Home"), AppIcons.Home, hub && !elsewhere) {
                         HubNav.page = null
                         closeAll(); hub = true
                         scope.launch { drawer.close() }
                     }
-                    DrawerItem(tr("Profile"), AppIcons.Person, profileOpen) {
-                        closeAll()
-                        profileOpen = true
-                        scope.launch { drawer.close() }
-                    }
-                    // Your own wishlists, then a way to make a new one.
-                    DrawerDivider()
-                    Text(
-                        tr("My wishlists"), style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 28.dp, top = 8.dp, bottom = 8.dp)
-                    )
-                    Repo.mineIds.forEach { id ->
-                        DrawerItem(Repo.mineName(id), AppIcons.Favorite, onList && Shared.active == null && Repo.openMine == id) {
-                            openMine(id)
-                            scope.launch { drawer.close() }
-                        }
-                    }
-                    // Wishlist groups (2.108), after your own lists like on Home.
-                    DrawerDivider()
-                    Text(
-                        tr("Wishlist groups"), style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 28.dp, top = 8.dp, bottom = 8.dp)
-                    )
-                    Groups.groups.forEach { g ->
-                        DrawerItem(g.name, AppIcons.Group, groupOpen == g.id && !settings && !binOpen && !notesOpen && !profileOpen) {
-                            GroupNav.openGroup(g.id)
-                            scope.launch { drawer.close() }
-                        }
-                    }
-                    // Then the wishlists you make together with other givers (group wishlists).
-                    DrawerDivider()
-                    Text(
-                        tr("Gift lists"), style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 28.dp, top = 8.dp, bottom = 8.dp)
-                    )
-                    Shared.lists.forEach { sl ->
-                        DrawerItem(sl.name, AppIcons.Share, onList && Shared.active == sl.code) {
-                            openGroup(sl.code)
-                            scope.launch { drawer.close() }
-                        }
-                    }
-                    // One "New list" instead of three (owner, 2.128): it opens the choice of My wishlist, Gift list or Group.
+                    // One "New list" (owner, 2.128): it opens the choice of My wishlist, Gift list or Group.
                     DrawerItem(tr("New list"), AppIcons.Add, false) {
                         createChoice = true
                         scope.launch { drawer.close() }
                     }
+                    DrawerItem(tr("Gifts I reserved"), AppIcons.Bag, reservedOpen) {
+                        reservedOpen = true
+                        scope.launch { drawer.close() }
+                    }
+                    DrawerItem(tr("Gift exchange"), AppIcons.Swap, exchangesOpen && !settings && !binOpen && !notesOpen && !profileOpen, dot = Exchanges.unread) {
+                        ExchangeNav.open = null
+                        closeAll(); hub = true; exchangesOpen = true
+                        scope.launch { drawer.close() }
+                    }
                     DrawerDivider()
-                    if (Repo.friends.isNotEmpty()) {
-                        Text(
-                            tr("Friends’ lists"), style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(start = 28.dp, top = 16.dp, bottom = 8.dp)
-                        )
-                        Repo.friends.forEach { f ->
-                            DrawerItem(f.name, AppIcons.Person, !settings && !binOpen && !notesOpen && friendCode == f.code) {
-                                closeAll(); friendCode = f.code
-                                scope.launch { drawer.close() }
-                            }
-                        }
-                        Spacer(Modifier.height(8.dp))
+                    DrawerItem(tr("Profile"), AppIcons.Person, profileOpen) {
+                        closeAll()
+                        profileOpen = true
+                        scope.launch { drawer.close() }
                     }
                     DrawerItem(tr("Notifications"), AppIcons.Notifications, notesOpen && !settings && !binOpen, dot = Notifications.unread) {
                         closeAll()
                         notesOpen = true
                         scope.launch { drawer.close() }
                     }
+                    DrawerItem(tr("Received gifts"), AppIcons.Gift, receivedOpen) {
+                        receivedOpen = true
+                        scope.launch { drawer.close() }
+                    }
                     DrawerItem(tr("Bin"), AppIcons.Delete, binOpen) {
                         closeAll(); binOpen = true
                         scope.launch { drawer.close() }
                     }
-                    // Under Bin (owner, 2.128): wishes you received after an occasion.
-                    DrawerItem(tr("Received gifts"), AppIcons.Favorite, false) {
-                        receivedOpen = true
-                        scope.launch { drawer.close() }
-                    }
+                    DrawerDivider()
                     DrawerItem(tr("App settings"), AppIcons.Settings, settings) {
                         closeAll(); settings = true
                         scope.launch { drawer.close() }
@@ -840,6 +834,7 @@ fun App(
                 pricesOpen -> PricesScreen(snack, onProfile = { profileOpen = true })
                 friendsOpen -> FriendsScreen(snack, onProfile = { profileOpen = true }, onOpenLink = { friendCode = it })
                 messagesOpen -> MessagesScreen(snack, onProfile = { profileOpen = true })
+                exchangesOpen -> ExchangesScreen(snack, onOpenMine = { openMine(it) }, onNew = { newExchange = true })
                 groupOpen != null -> key(groupOpen) {
                     GroupScreen(groupOpen!!, snack, onBack = { groupOpen = null; hub = true }, onOpenMine = { openMine(it) })
                 }
@@ -898,7 +893,7 @@ fun App(
     }
 
     // The menu button lives above the menu so it can spin into an X and close it.
-    if (!inListSettings && !inThemer && !inFriend && !inOverview && !inChat && !inGroup && !inList) Box(
+    if (!inListSettings && !inThemer && !inFriend && !inOverview && !inChat && !inGroup && !inList && !inExchange) Box(
         Modifier.windowInsetsPadding(TopAppBarDefaults.windowInsets).height(64.dp).padding(start = 4.dp),
         contentAlignment = Alignment.CenterStart
     ) {
@@ -921,6 +916,32 @@ fun App(
         }
     }
     if (receivedOpen) ReceivedScreen { receivedOpen = false }
+    // "Gifts I reserved" (2.129): tapping a list opens it where it lives (a friend, a group, a gift exchange, a gift list).
+    if (reservedOpen) ReservedScreen(onClose = { reservedOpen = false }) { g ->
+        reservedOpen = false
+        if (g.gift) {
+            if (Shared.lists.any { it.code == g.code }) openGroup(g.code)
+        } else {
+            val group = Groups.groups.firstOrNull { gr -> gr.members.any { it.list?.code == g.code } }
+            val exchange = Exchanges.list.firstOrNull { it.me.giftee?.list?.code == g.code }
+            when {
+                group != null -> GroupNav.openGroup(group.id)
+                exchange != null -> ExchangeNav.openExchange(exchange.id)
+                else -> openFriend(g.code)
+            }
+        }
+    }
+    if (newExchange) NewExchangeDialog(
+        onCreated = { gx -> newExchange = false; ExchangeNav.inviteNow = gx; ExchangeNav.openExchange(gx) },
+        onClose = { newExchange = false }
+    )
+    if (ExchangeNav.joinLink != null || ExchangeNav.joinGx != null) key(ExchangeNav.joinLink, ExchangeNav.joinGx) {
+        JoinExchangeDialog(
+            ExchangeNav.joinLink, ExchangeNav.joinGx,
+            onJoined = { gx -> ExchangeNav.joinLink = null; ExchangeNav.joinGx = null; ExchangeNav.openExchange(gx) },
+            onClose = { ExchangeNav.joinLink = null; ExchangeNav.joinGx = null }
+        )
+    }
     receivedAsk?.let { id -> ReceivedDialog(id) { receivedAsk = null } }
     // "How many will you buy?" for a 2× wish on a gift list (2.128).
     Shared.askCount?.let { w ->

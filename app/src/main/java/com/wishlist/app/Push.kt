@@ -87,7 +87,8 @@ class PushService : FirebaseMessagingService() {
             withTimeoutOrNull(9_000) {
                 try {
                     Repo.load(c)
-                    Chat.poll(c)
+                    // A gift exchange's anonymous message (2.129) says {t: "gx"}; everything else is a chat message.
+                    if (message.data["t"] == "gx") Exchanges.poll(c) else Chat.poll(c)
                 } catch (e: Exception) {
                 }
             }

@@ -157,6 +157,9 @@ fun ReceivedList(modifier: Modifier = Modifier) {
 /** The "Received gifts" page (side menu, under Bin): full screen, ← closes it. */
 @Composable
 fun ReceivedScreen(onClose: () -> Unit) {
+    // "Mark as received" at any time (owner, 2.129), not only after an occasion: pick a list, then tick.
+    var pickList by remember { mutableStateOf(false) }
+    var askList by remember { mutableStateOf<String?>(null) }
     androidx.compose.ui.window.Dialog(
         onDismissRequest = onClose,
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
@@ -167,8 +170,32 @@ fun ReceivedScreen(onClose: () -> Unit) {
                     androidx.compose.material3.IconButton(onClick = onClose) { androidx.compose.material3.Icon(AppIcons.ArrowBack, tr("Back")) }
                     Text(tr("Received gifts"), style = MaterialTheme.typography.titleLarge, fontWeight = LocalLook.current.titleWeight)
                 }
+                TextButton(
+                    onClick = { if (Repo.mineIds.size == 1) askList = Repo.mineIds.first() else pickList = true },
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                ) {
+                    androidx.compose.material3.Icon(AppIcons.Add, null)
+                    Text(tr("Mark as received"), modifier = Modifier.padding(start = 6.dp))
+                }
                 ReceivedList()
             }
         }
+        if (pickList) AlertDialog(
+            onDismissRequest = { pickList = false },
+            title = { Text(tr("Which wishlist?")) },
+            text = {
+                Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
+                    Repo.mineIds.forEach { id ->
+                        Text(
+                            Repo.mineName(id), maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                                .clickable { pickList = false; askList = id }.padding(vertical = 12.dp, horizontal = 8.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { pickList = false }) { Text(tr("Cancel")) } }
+        )
+        askList?.let { id -> ReceivedDialog(id) { askList = null } }
     }
 }

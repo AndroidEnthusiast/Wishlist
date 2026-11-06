@@ -200,3 +200,19 @@ Kept as they are (short enough or needed): “That’s your own list. Friends re
 | C16 | Private note on a friend’s page | Section “My note” · hint “Only you can see this.” · placeholder “For example: loves tea, no candles” |
 | C17 | Chat: reply | Menu item “Reply” · above the text box “Replying to Sam” with ✕ |
 | C18 | Chat: reactions | Long press shows ❤️ 👍 😂 😮 🎉 and “Reply”, “Delete” |
+
+## New in 2.129 (side menu, Gifts I reserved, Gift exchange): not reviewed with the owner yet
+| # | Where | Text |
+|---|---|---|
+| D1 | Side menu | Home · New list · Gifts I reserved · Gift exchange — Profile · Notifications · Received gifts · Bin — App settings |
+| D2 | Gifts I reserved, empty | Nothing reserved yet. Reserve a gift on a friend’s wishlist and it shows here. |
+| D3 | Received gifts | “+ Mark as received” · “Which wishlist?” |
+| D4 | Gift exchange, empty | Draw names with friends: everyone secretly buys a gift for one person. · Nobody ever draws themselves, and the person you draw sees only your wishlist, never who drew them. · “New gift exchange” |
+| D5 | “Only me” list when joining | **Show to your Secret Santa?** · This list is set to Only me. Only your Secret Santa will see it. · “Show it” / “Back” |
+| D6 | Rules | Only you see the rules. Nobody ever draws themselves. · “Anna and Ben won’t draw each other” · “Anna won’t draw Ben” · “Both ways: They won’t draw each other, like a couple.” · refused: “This rule would make the draw impossible. Anna would have nobody left to draw.” |
+| D7 | Draw | **Draw names now?** Everyone gets one name. Rules can’t change after this. · **Ben hasn’t joined yet** Draw without them? They can still join later and get a name. |
+| D8 | Your name | Your name is ready · Tap the gift to open it. Make sure nobody is looking! · You’re buying for · “See their wishlist” · “Ask Ben anonymously” |
+| D9 | Chats | You and Ben: They don’t see your name. Ask about sizes, colours, anything. · Your Secret Santa: You don’t know who this is. They’re buying your gift. |
+| D10 | Draw check (organiser) | ✓ Everyone has someone ✓ Nobody has themselves ✓ All rules kept · “3 of 4 have opened their name” · “Add to the draw”: Everyone has seen their name, so one person gets Dana instead. They’ll be told. |
+| D11 | Notifications | Names are drawn in “…” · Your name changed in “…” · Your Secret Santa wrote · 7 days to “…” 🎄 Got something for Ben yet? · Today is the exchange! 🎄 |
+| D12 | Wishlist of your giftee | Label “Over budget” |

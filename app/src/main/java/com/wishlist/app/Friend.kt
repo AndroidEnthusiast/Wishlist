@@ -58,7 +58,9 @@ fun FriendScreen(
     // Whose list it is ("Owned by …", 2.102): the friend's name, or what the list itself says (opened from a link).
     ownerName: String? = null,
     // Something more in the top bar: "Add friend" on the list of a wishlist group member (2.108).
-    extraAction: (@Composable () -> Unit)? = null
+    extraAction: (@Composable () -> Unit)? = null,
+    // A gift exchange's budget (2.129): wishes that cost more get "Over budget" on your giftee's list.
+    overBudget: ((Wish) -> Boolean)? = null
 ) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -230,7 +232,8 @@ fun FriendScreen(
                                 GlowBox(w.id, small = false) {
                                 WishCard(
                                     w,
-                                    badge = if (w.got) tr("Owned") else reserveLabel(f.code, w, r),
+                                    badge = if (w.got) tr("Owned") else reserveLabel(f.code, w, r)
+                                        ?: if (overBudget?.invoke(w) == true) tr("Over budget") else null,
                                     dim = w.got || r == false
                                 ) {
                                     if (!w.got) {
