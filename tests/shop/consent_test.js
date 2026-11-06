@@ -118,7 +118,7 @@ const PAGES = {
   // The guard runs at the start of the page (as addDocumentStartJavaScript does in the app). A dark empty layer that the
   // shop adds while the page loads, or later as a new "page" in the same tab, must never be drawn: every frame is
   // sampled with requestAnimationFrame from the very start.
-  const SAMPLER = `window.__seen=[];(function f(){var v=document.getElementById('veil');if(v){var s=getComputedStyle(v);if(s.display!=='none'&&s.visibility!=='hidden')window.__seen.push(performance.now());}requestAnimationFrame(f);})();`;
+  const SAMPLER = `window.__seen=[];(function f(){var v=document.getElementById('veil');if(v){var s=getComputedStyle(v);if(s.display!=='none'&&s.visibility!=='hidden'&&+s.opacity>0.05)window.__seen.push(performance.now());}requestAnimationFrame(f);})();`;
   async function startPage(body) {
     if (p) await p.close();
     p = await b.newPage({ viewport: { width: 400, height: 800 } });
@@ -142,10 +142,29 @@ const PAGES = {
   check("...and the page can be tapped", tapped2);
   await startPage(`<html><body>${PRODUCTS}<script>setTimeout(function(){var v=document.createElement('div');v.id='veil';v.setAttribute('style','${VEIL}');document.body.appendChild(v);var m=document.createElement('div');m.id='m';m.setAttribute('style','position:fixed;top:20%;left:5%;right:5%;height:60%;background:#fff;z-index:100');m.textContent='Choose a size';document.body.appendChild(m);},120);</script></body></html>`);
   await sleep(500);
-  check("a real pop-up keeps its dark background", (await shown("#veil")) && (await p.evaluate(() => getComputedStyle(document.getElementById('veil')).visibility)) === "visible" && (await shown("#m")));
+  check("a real pop-up keeps its dark background", (await shown("#veil")) && (await p.evaluate(() => +getComputedStyle(document.getElementById('veil')).opacity)) === 1 && (await shown("#m")));
   await startPage(`<html><body>${PRODUCTS}<script>setTimeout(function(){var v=document.createElement('div');v.id='veil';v.setAttribute('style','${VEIL}');document.body.appendChild(v);setTimeout(function(){v.textContent='Loading your basket…';},150);},100);</script></body></html>`);
   await sleep(600);
-  check("a layer that gets text a moment later shows again", (await shown("#veil")) && (await p.evaluate(() => getComputedStyle(document.getElementById('veil')).visibility)) === "visible");
+  check("a layer that gets text a moment later shows again", (await shown("#veil")) && (await p.evaluate(() => +getComputedStyle(document.getElementById('veil')).opacity)) === 1);
+  // 2.131 (owner: bol.com could scroll but nothing could be tapped after 2.130): bol.com's set-up from the start of a
+  // page: a grey layer plus an invisible one on top that closes the pop-up (and unlocks the page) when tapped, and a
+  // page that stays locked (pointer-events off) until then. The shop must close it itself and every button must work.
+  for (const delay of [0, 120]) {
+    const add = `var v=document.createElement('div');v.id='veil';v.setAttribute('style','${VEIL}');var c=document.createElement('div');c.id='catch';c.setAttribute('style','position:fixed;inset:0;z-index:100');c.addEventListener('click',function(){window.closedBySite=1;v.remove();c.remove();document.getElementById('main').style.pointerEvents='';});document.getElementById('main').style.pointerEvents='none';document.body.appendChild(v);document.body.appendChild(c);`;
+    await startPage(`<html><body><div id="main">${PRODUCTS}</div><script>${delay ? "setTimeout(function(){" + add + "}," + delay + ");" : add}</script></body></html>`);
+    await sleep(700);
+    check("bol.com set-up (" + (delay ? "a new page" : "page start") + "): the grey layer is never drawn", (await p.evaluate(() => window.__seen.length)) === 0, await p.evaluate(() => window.__seen.length));
+    check("bol.com set-up (" + (delay ? "a new page" : "page start") + "): the shop closed its own pop-up", (await p.evaluate(() => window.closedBySite)) === 1);
+    let ok = true;
+    try { await p.click("#buy", { timeout: 1500 }); } catch (e) { ok = false; }
+    check("bol.com set-up (" + (delay ? "a new page" : "page start") + "): buttons work", ok && (await p.evaluate(() => window.bought)) === 1);
+  }
+
+  // 2.131: never inside a frame of the page (ads, payments, cookie frames), only the page itself.
+  await startPage(`<html><body>${PRODUCTS}<iframe id="f" srcdoc="<div id=v style='position:fixed;inset:0;background:rgba(0,0,0,.45)'></div>"></iframe></body></html>`);
+  await sleep(400);
+  const fr = p.frames().find(f => f !== p.mainFrame());
+  check("the guard leaves frames inside the page alone", !!fr && (await fr.evaluate(() => !window.__wlg && getComputedStyle(document.getElementById('v')).opacity === '1')));
 
   await b.close();
   console.log(fails ? fails + " FAILED of " + total : "ALL SHOP SCRIPT CHECKS OK (" + total + " checks)");

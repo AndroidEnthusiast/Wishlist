@@ -610,6 +610,9 @@ private const val CONSENT_JS = """(function(){
  * switched off comes back, and goes back to how it was when the layer is shown again. Installed once per page.
  */
 private const val GUARD_JS = """(function(){
+  // Only the page itself, never the frames inside it (ads, payments, cookie frames): as before 2.130, when it ran only
+  // after a page loaded (2.131: since 2.130 it also starts at the beginning of every page, which reaches every frame).
+  try{if(window.top!==window) return 'frame';}catch(e){return 'frame';}
   if(window.__wlg) return 'on';
   var G=window.__wlg={hidden:[],saved:null,count:0};
   function empty(v){return (v.innerText||'').trim()===''&&!v.querySelector('img,svg,video,iframe,canvas,input,button,select,textarea,a[href]');}
@@ -655,7 +658,7 @@ private const val GUARD_JS = """(function(){
     // A hidden layer that now has something on it is a real pop-up: show it again.
     G.hidden=G.hidden.filter(function(v){
       if(!v.isConnected) return false;
-      if(!empty(v)){v.style.removeProperty('display');v.style.removeProperty('visibility');v.__wlKeep=1;return false;}
+      if(!empty(v)){v.style.removeProperty('display');v.style.removeProperty('opacity');v.__wlKeep=1;return false;}
       return true;
     });
     if(!G.hidden.length) relock();
@@ -680,18 +683,21 @@ private const val GUARD_JS = """(function(){
     G.hidden.push(v);G.count++;
     unlock();
   }
-  // 2.130 (owner: bol.com still flickered on every new page): a new empty dark layer is made invisible in the same
-  // moment it appears, before the screen draws it (MutationObserver runs before the next paint). check() then decides
-  // as before; a layer under a real pop-up, or one that gets content, is shown again.
+  // 2.130 (owner: bol.com still flickered on every new page): a new empty dark layer is made see-through (opacity 0)
+  // in the same moment it appears, before the screen draws it (MutationObserver runs before the next paint). 2.131: it
+  // stays on top and tappable, so check() taps it exactly as before and the shop closes its own pop-up (2.130 hid it
+  // with visibility, and bol.com's page then stayed blocked: you could scroll but not tap). A layer under a real
+  // pop-up, or one that gets content, is made visible again.
   G.quick=[];
   function cover(e){
     if(!e||e.nodeType!==1||e===document.body||e===document.documentElement||e.__wlQ) return false;
     var s=getComputedStyle(e);if(s.position!=='fixed'&&s.position!=='absolute') return false;
-    if(s.display==='none'||s.visibility==='hidden') return false;
+    if(s.display==='none'||s.visibility==='hidden'||+s.opacity<0.05) return false;
     var r=e.getBoundingClientRect(),w=innerWidth,h=innerHeight;
     return r.width>=w*0.9&&r.height>=h*0.8&&r.top<h*0.2&&empty(e)&&tinted(e);
   }
-  function quick(e){e.__wlQ=1;e.style.setProperty('visibility','hidden','important');G.quick.push(e);}
+  function quick(e){e.__wlQ=1;e.style.setProperty('opacity','0','important');G.quick.push(e);}
+  function unquick(e){e.style.removeProperty('opacity');e.__wlQ=0;e.__wlKeep=1;}
   // Something else that isn't empty sits over the middle of the screen in a fixed place: a real pop-up.
   function popupOver(v){
     var w=innerWidth,h=innerHeight,pts=[[w/2,h/2],[w/2,h/4],[w/2,h*3/4]];
@@ -706,10 +712,9 @@ private const val GUARD_JS = """(function(){
     G.quick=G.quick.filter(function(v){
       if(!v.isConnected) return false;
       // It got something on it, or a real pop-up uses it as its background: show it again.
-      if(!empty(v)||popupOver(v)){v.style.removeProperty('visibility');v.__wlQ=0;v.__wlKeep=1;return false;}
-      if(!v.__wlTapped){v.__wlTapped=1;tap(v,innerWidth/2,innerHeight/2);}
-      if(getComputedStyle(v).display!=='none'){v.style.setProperty('display','none','important');G.hidden.push(v);G.count++;unlock();}
-      return false;
+      if(!empty(v)||popupOver(v)){unquick(v);return false;}
+      // Still on screen and empty: check() taps it once, then hides it (as before 2.130). Watched until it is gone.
+      return getComputedStyle(v).display!=='none';
     });
   }
   function scan(list){
