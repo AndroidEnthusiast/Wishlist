@@ -106,5 +106,16 @@ langs(["sv_SE"]); check("local currency sv_SE", P.localCurrency() === "SEK");
 langs(["en"]); check("local currency without a country -> euro", P.localCurrency() === "EUR");
 langs(["fr-ZZ"]); check("local currency unknown country -> euro", P.localCurrency() === "EUR");
 langs(["en-US"]); check("local currency en-US", P.localCurrency() === "USD");
+// Wish names without the shop and article numbers (owner, 6 November 2026); same rules as cleanTitle in Fetch.kt.
+const CT = P.cleanTitle;
+check("title: Amazon suffix", CT("Mortal Shell II - PS5 : Amazon.nl: PC & Video Games", "www.amazon.nl") === "Mortal Shell II - PS5");
+check("title: Marktplaats number and suffix", CT("Zwarte metalen kandelaar voor 5 kaarsen (m2434550716) — Marktplaats", "link.marktplaats.nl") === "Zwarte metalen kandelaar voor 5 kaarsen");
+check("title: Zalando suffix", CT("Barbour AMESBURY - Longsleeve - fig/lichtgroen - Zalando.nl", "www.zalando.nl") === "Barbour AMESBURY - Longsleeve - fig/lichtgroen");
+check("title: shop at the start", CT("bol.com | LEGO Technic 42115", "www.bol.com") === "LEGO Technic 42115");
+check("title: model numbers without brackets stay", CT("LEGO Technic 42115 Lamborghini", "www.lego.com") === "LEGO Technic 42115 Lamborghini");
+check("title: nothing to clean", CT("Sony WH-1000XM5 - Zwart", "www.coolblue.nl") === "Sony WH-1000XM5 - Zwart");
+check("title: only the shop's name stays", CT("Amazon.nl", "www.amazon.nl") === "Amazon.nl");
+check("title: short brackets stay", CT("T-shirt (2 pack)", "www.hm.com") === "T-shirt (2 pack)");
+check("title: from a page", P.parsePage(new JSDOM('<html><head><title>Kandelaar (m2434550716) \u2014 Marktplaats</title></head></html>').window.document, "www.marktplaats.nl", 200, "https://www.marktplaats.nl/x").title === "Kandelaar");
 console.log(fails === 0 ? "ALL PASSED (" + n + " checks)" : fails + " FAILED of " + n);
 process.exit(fails ? 1 : 0);

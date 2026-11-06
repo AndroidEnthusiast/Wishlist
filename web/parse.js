@@ -124,6 +124,30 @@
     try { return new URL(v, base).href; } catch (e) { return ""; }
   }
 
+  // The shop's own name in its web address: "link.marktplaats.nl" -> "marktplaats", "www.bol.com" -> "bol".
+  function shopWord(host) {
+    var parts = String(host || "").toLowerCase().replace(/^www\./, "").split(".").filter(function (x) { return x; });
+    return parts.length >= 2 ? parts[parts.length - 2] : (parts[0] || "");
+  }
+  // A wish name without the shop (owner, 6 November 2026): article numbers in brackets go, and so does a part that
+  // names the shop at the end or the start. Same rules as cleanTitle in Fetch.kt.
+  function cleanTitle(title, host) {
+    var word = shopWord(host);
+    var t = String(title || "").replace(/\s*[(\[][^)\]]*\d{5,}[^)\]]*[)\]]/g, "").replace(/\s+/g, " ").trim();
+    if (word.length >= 3) {
+      for (;;) {
+        var re = /\s+[|\-–—:·]\s+/g, m, seps = [];
+        while ((m = re.exec(t))) seps.push({ start: m.index, end: m.index + m[0].length });
+        if (!seps.length) break;
+        var last = seps[seps.length - 1], first = seps[0];
+        if (t.slice(last.end).toLowerCase().indexOf(word) >= 0) t = t.slice(0, last.start).trim();
+        else if (t.slice(0, first.start).toLowerCase().indexOf(word) >= 0) t = t.slice(first.end).trim();
+        else break;
+      }
+    }
+    return t || String(title || "").trim();
+  }
+
   /**
    * Reads a loaded page (a Document). host: the shop's host name (after redirects). status: the HTTP status the shop
    * answered. base: the page's address, for turning a relative picture address into a full one.
@@ -201,7 +225,7 @@
     }
     if (!title.trim()) return null;
     return {
-      title: title.slice(0, 120),
+      title: cleanTitle(title, host).slice(0, 120),
       desc: m("og:description", "twitter:description", "description").slice(0, 200),
       image: image, price: price, currency: cur || currencyOf("", host), blocked: false
     };
@@ -217,7 +241,7 @@
 
   var api = {
     cleanUrl: cleanUrl, toNum: toNum, currencyOf: currencyOf, localCurrency: localCurrency, looksBlocked: looksBlocked,
-    parsePage: parsePage, readHelperAnswer: readHelperAnswer, hostOfUrl: hostOfUrl
+    parsePage: parsePage, readHelperAnswer: readHelperAnswer, hostOfUrl: hostOfUrl, cleanTitle: cleanTitle
   };
   root.WLParse = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;

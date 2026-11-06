@@ -72,7 +72,9 @@ fun WelcomeFlow(onDone: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     var step by remember { mutableIntStateOf(1) }
     var name by remember { mutableStateOf(Shared.lastName) }
-    var listName by remember { mutableStateOf(tr("My wishlist")) }
+    // Follows your name until you type your own list name (owner, 2.135: "Jorai's wishlist", never "My wishlist").
+    var listName by remember { mutableStateOf("") }
+    var listEdited by remember { mutableStateOf(false) }
     var pending by remember { mutableStateOf<String?>(null) }
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) scope.launch { ImageStore.import(ctx, uri)?.let { pending = it } }
@@ -87,9 +89,12 @@ fun WelcomeFlow(onDone: () -> Unit) {
                 Shared.setAppName(ctx, name)
                 scope.launch { try { Friends.nameChanged(ctx) } catch (e: Exception) {} }
             }
-            2 -> if (listName.isNotBlank()) Repo.renameMine(ctx, Repo.openMine, listName)
+            2 -> listName.ifBlank { NameGate.defaultListName() }.let { Repo.renameMine(ctx, Repo.openMine, it) }
         }
-        if (step == 3) finish() else step++
+        if (step == 3) finish() else {
+            if (step == 1 && !listEdited) listName = tr("%s’s wishlist", name.trim())
+            step++
+        }
     }
 
     Dialog(onDismissRequest = {}, properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnBackPress = false)) {
@@ -98,7 +103,8 @@ fun WelcomeFlow(onDone: () -> Unit) {
                 // Top: the step and Skip (skips the whole welcome).
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(tr("Step %1\$d of %2\$d", step, 3), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
-                    TextButton(onClick = { finish() }) { Text(tr("Skip")) }
+                    // Skip only once your name is there (owner, 2.135: everyone has a name, friends see it).
+                    if (step > 1 || Shared.lastName.isNotBlank()) TextButton(onClick = { finish() }) { Text(tr("Skip")) }
                 }
                 Column(
                     Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
@@ -135,7 +141,7 @@ fun WelcomeFlow(onDone: () -> Unit) {
                                 modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
                             )
                             OutlinedTextField(
-                                listName, { listName = it.take(60) }, singleLine = true, label = { Text(tr("Name of the wishlist")) },
+                                listName, { listName = it.take(60); listEdited = true }, singleLine = true, label = { Text(tr("Name of the wishlist")) },
                                 keyboardOptions = Capitalised, modifier = Modifier.fillMaxWidth()
                             )
                         }
@@ -151,7 +157,7 @@ fun WelcomeFlow(onDone: () -> Unit) {
                     }
                 }
                 Spacer(Modifier.height(16.dp))
-                Button(onClick = { next() }, modifier = Modifier.fillMaxWidth()) {
+                Button(enabled = step != 1 || name.isNotBlank(), onClick = { next() }, modifier = Modifier.fillMaxWidth()) {
                     Text(if (step == 3) tr("Start") else tr("Next"))
                 }
             }

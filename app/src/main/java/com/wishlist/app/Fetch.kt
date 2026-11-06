@@ -129,6 +129,40 @@ internal fun looksBlocked(title: String): Boolean {
     ).any { t.contains(it) }
 }
 
+/** The shop's own name in its web address: "link.marktplaats.nl" -> "marktplaats", "www.bol.com" -> "bol". */
+internal fun shopWord(host: String): String {
+    val parts = host.lowercase().removePrefix("www.").split('.').filter { it.isNotEmpty() }
+    return if (parts.size >= 2) parts[parts.size - 2] else parts.firstOrNull().orEmpty()
+}
+
+private val TITLE_SEP = Regex("\\s+[|\\-–—:·]\\s+")
+private val ARTICLE_NO = Regex("\\s*[(\\[][^)\\]]*\\d{5,}[^)\\]]*[)\\]]")
+
+/**
+ * A wish name without the shop (owner, 6 November 2026): article numbers in brackets go ("(m2434550716)"), and so does
+ * a part that names the shop, at the end or the start ("… : Amazon.nl: PC & Video Games", "… — Marktplaats",
+ * "bol.com | …"). The shop is still on the card's shop line. Same rules as cleanTitle in web/parse.js.
+ */
+fun cleanTitle(title: String, host: String): String {
+    val word = shopWord(host)
+    var t = title.replace(ARTICLE_NO, "").replace(Regex("\\s+"), " ").trim()
+    if (word.length >= 3) {
+        while (true) {
+            val seps = TITLE_SEP.findAll(t).toList()
+            if (seps.isEmpty()) break
+            val last = seps.last()
+            val first = seps.first()
+            when {
+                t.substring(last.range.last + 1).lowercase().contains(word) -> t = t.substring(0, last.range.first).trim()
+                t.substring(0, first.range.first).lowercase().contains(word) -> t = t.substring(first.range.last + 1).trim()
+                else -> break
+            }
+        }
+        // A name that is only the shop's name ("Amazon.nl") stays as it was.
+    }
+    return t.ifBlank { title.trim() }
+}
+
 /** Reads title, image, description and price out of a loaded page. Returns blocked=true for anti-bot pages. */
 internal fun parsePage(d: Document, host: String, status: Int): Meta? {
     val isAmazon = host.contains("amazon.")
@@ -194,7 +228,7 @@ internal fun parsePage(d: Document, host: String, status: Int): Meta? {
     }
     return if (title.isBlank()) null
     else Meta(
-        title.take(120),
+        cleanTitle(title, host).take(120),
         m("og:description", "twitter:description", "description").take(200),
         image, price, cur.ifEmpty { currencyOf("", host) }
     )

@@ -691,6 +691,8 @@ fun App(
         try { ListVisibility.trySwitch(ctx) } catch (e: Exception) {}
         // Wishlist groups and invites (2.108).
         if (Config.enabled && Friends.hasProfile(ctx)) try { Groups.refresh(ctx) } catch (e: Exception) {}
+        // Wish names without article numbers and the shop's name, once (owner, 2.135).
+        try { Repo.cleanTitlesOnce(ctx) } catch (e: Exception) {}
         // Gift exchanges and their invitations (2.129): the red dot on the menu item.
         Exchanges.load(ctx)
         if (Config.enabled && Friends.hasProfile(ctx)) try { Exchanges.refresh(ctx) } catch (e: Exception) {}
@@ -913,6 +915,9 @@ fun App(
             adding = false; addTarget = null
         }
     }
+    // Joining asks for your name first when it's missing (owner, 2.135).
+    val needName = (joinDlg != null || GroupNav.joinLink != null || GroupNav.joinGroup != null || ExchangeNav.joinLink != null || ExchangeNav.joinGx != null) && !NameGate.hasName()
+    LaunchedEffect(needName) { if (needName) NameGate.ensure {} }
     if (receivedOpen) ReceivedScreen { receivedOpen = false }
     // "Gifts I reserved" (2.129): tapping a list opens it where it lives (a friend, a group, a gift exchange, a gift list).
     if (reservedOpen) ReservedScreen(onClose = { reservedOpen = false }) { g ->
@@ -933,7 +938,7 @@ fun App(
         onCreated = { gx -> newExchange = false; ExchangeNav.inviteNow = gx; ExchangeNav.openExchange(gx) },
         onClose = { newExchange = false }
     )
-    if (ExchangeNav.joinLink != null || ExchangeNav.joinGx != null) key(ExchangeNav.joinLink, ExchangeNav.joinGx) {
+    if (!needName && (ExchangeNav.joinLink != null || ExchangeNav.joinGx != null)) key(ExchangeNav.joinLink, ExchangeNav.joinGx) {
         JoinExchangeDialog(
             ExchangeNav.joinLink, ExchangeNav.joinGx,
             onJoined = { gx -> ExchangeNav.joinLink = null; ExchangeNav.joinGx = null; ExchangeNav.openExchange(gx) },
@@ -971,7 +976,7 @@ fun App(
             onClose = { newShared = false }
         )
     }
-    joinDlg?.let { inviteKey ->
+    if (!needName) joinDlg?.let { inviteKey ->
         JoinDialog(
             key = inviteKey,
             onJoined = { code ->
@@ -1003,7 +1008,7 @@ fun App(
             onClose = { newWishGroup = false }
         )
     }
-    if (GroupNav.joinLink != null || GroupNav.joinGroup != null) key(GroupNav.joinLink, GroupNav.joinGroup) {
+    if (!needName && (GroupNav.joinLink != null || GroupNav.joinGroup != null)) key(GroupNav.joinLink, GroupNav.joinGroup) {
         JoinGroupDialog(
             GroupNav.joinLink, GroupNav.joinGroup,
             onJoined = { gid -> GroupNav.joinLink = null; GroupNav.joinGroup = null; GroupNav.openGroup(gid) },
@@ -1021,6 +1026,9 @@ fun App(
         )
     }
     if (welcome) WelcomeFlow { welcome = false }
+    // Everyone has a name (owner, 2.135): asked once at the start when it's missing, and before sharing.
+    LaunchedEffect(welcome) { if (!welcome) NameGate.askAtStart() }
+    NameGate.Host()
     DeleteHost(snack)
     PrivateHost(snack)
     OwnedHost(snack)
@@ -1156,14 +1164,9 @@ fun HomeScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    // "Owned by you" under the name of your own lists, not on gift lists (owner, 2.111).
-                    Column {
-                        ListTitle(Repo.listName, Repo.wishes.size)
-                        if (!inShared) Text(
-                            tr("Owned by you"), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant,
-                            maxLines = 1
-                        )
-                    }
+                    // No "Owned by you" any more (owner, 2.135): friends see "Owned by Jorai", and a list is never
+                    // called "My wishlist" when shared (NameGate).
+                    ListTitle(Repo.listName, Repo.wishes.size)
                 },
                 // Back to Home (2.110, owner): the menu button gives way to this arrow on an open list.
                 navigationIcon = { IconButton(onClick = onBack) { Icon(AppIcons.ArrowBack, tr("Back to Home")) } },
@@ -1174,7 +1177,7 @@ fun HomeScreen(
                     }
                     // The settings of this list. Refreshing is pulling down on the list.
                     IconButton(onClick = onListSettings) { Icon(AppIcons.Settings, tr("Wishlist settings")) }
-                    IconButton(onClick = { if (inShared) onInvite() else startShare(ctx, scope, snack) }) {
+                    IconButton(onClick = { if (inShared) NameGate.ensure(onInvite) else NameGate.ensureListName { startShare(ctx, scope, snack) } }) {
                         Icon(AppIcons.Share, if (inShared) tr("Invite or share") else tr("Share wishlist"))
                     }
                 }
@@ -1295,8 +1298,9 @@ fun HomeScreen(
                             // smaller than before); the tap area stays the same.
                             val ico = if (view == "rows") 20.dp else 24.dp
                             val actions: @Composable RowScope.() -> Unit = {
-                                // Share instead of the pencil (owner, 2.105): Edit is in the long-press menu.
-                                IconButton(onClick = { shareItem(ctx, w) }) {
+                                // The bin stays, the rest is in one ⋮ (owner, 2.135: calmer rows).
+                                if (!inShared) WishMoreButton(w, look.cardMuted(w.id), ico) { editing = w }
+                                else IconButton(onClick = { shareItem(ctx, w) }) {
                                     Icon(AppIcons.Share, tr("Share"), tint = look.cardMuted(w.id), modifier = Modifier.size(ico))
                                 }
                                 if (inShared) {
@@ -1306,10 +1310,6 @@ fun HomeScreen(
                                     } else if (r == null) {
                                         Button(onClick = { Shared.reserve(w, true) }) { Text(tr("Reserve")) }
                                     }
-                                } else {
-                                    // Private on the card, owned in the long-press menu (owner, 2.113: private is changed
-                                    // often while making a list, owned once when the gift has arrived).
-                                    PrivateToggle(w, look.cardMuted(w.id), ico)
                                 }
                                 IconButton(onClick = { DeleteFlow.request(ctx, w) }) {
                                     Icon(AppIcons.Delete, tr("Delete"), tint = look.cardMuted(w.id), modifier = Modifier.size(ico))
@@ -1383,6 +1383,25 @@ fun ViewButton(kind: String, label: String, selected: Boolean, onClick: () -> Un
         contentAlignment = Alignment.Center
     ) {
         ViewIcon(kind, look.chipContent(selected))
+    }
+}
+
+/** ⋮ on a wish of your own list (owner, 2.135): Edit, Share, Private (with its tick), Mark as owned. The bin stays next to it. */
+@Composable
+fun WishMoreButton(w: Wish, tint: Color, ico: androidx.compose.ui.unit.Dp, onEdit: () -> Unit) {
+    val ctx = LocalContext.current
+    var menu by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { menu = true }) { Icon(AppIcons.MoreVert, tr("More"), tint = tint, modifier = Modifier.size(ico)) }
+        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+            DropdownMenuItem(text = { Text(tr("Edit")) }, onClick = { menu = false; onEdit() })
+            DropdownMenuItem(text = { Text(tr("Share")) }, onClick = { menu = false; shareItem(ctx, w) })
+            PrivateMenuItem(w.priv) { menu = false; togglePrivate(ctx, w) }
+            DropdownMenuItem(
+                text = { Text(if (w.got) tr("Mark as not owned") else tr("Mark as owned")) },
+                onClick = { menu = false; OwnedFlow.toggle(ctx, w) }
+            )
+        }
     }
 }
 

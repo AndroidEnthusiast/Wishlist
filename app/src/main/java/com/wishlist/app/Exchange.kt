@@ -580,6 +580,8 @@ object Exchanges {
     fun link(key: String): String = Config.SHARE_URL.trimEnd('/') + "/exchange/?x=" + key
 
     fun share(c: Context, x: Exchange) {
+        // A name first (owner, 2.135): friends see who shares it.
+        if (!NameGate.hasName()) { NameGate.ensure { share(c, x) }; return }
         val text = tr("Join my gift exchange “%1\$s”: %2\$s", x.name, link(x.link))
         val i = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
         c.startActivity(Intent.createChooser(i, tr("Share exchange link")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))

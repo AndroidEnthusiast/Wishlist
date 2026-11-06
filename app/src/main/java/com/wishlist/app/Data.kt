@@ -591,6 +591,22 @@ object Repo {
      * A list that isn't open is saved straight to storage and, when it has a friends' link, sent online.
      */
     @Synchronized
+    /**
+     * Once (owner, 2.135): the names of the wishes on your own lists without article numbers and the shop's name
+     * ([cleanTitle]); a wish without a shop link keeps its name. Lists online are updated as after any change.
+     */
+    fun cleanTitlesOnce(c: Context) {
+        val p = prefs(c)
+        if (p.getBoolean("titles_clean_2135", false)) return
+        fun clean(w: Wish): Wish {
+            val host = try { java.net.URI(w.url).host.orEmpty() } catch (e: Exception) { "" }
+            return if (host.isEmpty()) w else cleanTitle(w.title, host).let { t -> if (t == w.title) w else w.copy(title = t) }
+        }
+        // Only lists where a name really changes are saved (and sent online).
+        for (id in mineIds) if (mine(c, id).wishes.any { clean(it) != it }) updateMine(c, id) { ws -> ws.map(::clean) }
+        p.edit().putBoolean("titles_clean_2135", true).apply()
+    }
+
     fun updateMine(c: Context, id: String, change: (List<Wish>) -> List<Wish>) {
         if (id == openMine) {
             myWishes = change(myWishes)

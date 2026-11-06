@@ -196,7 +196,7 @@ fun WhoCanSeeSection(snack: SnackbarHostState) {
     if (now == Who.LINK && code != null) {
         Text(shareLink(code), color = cs.onSurface, modifier = Modifier.padding(top = 4.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { startShare(ctx, scope, snack) }) { Text(tr("Share link")) }
+            Button(onClick = { NameGate.ensureListName { startShare(ctx, scope, snack) } }) { Text(tr("Share link")) }
             OutlinedButton(onClick = {
                 clip.setText(AnnotatedString(shareLink(code)))
                 scope.launch { snack.showToast(tr("Link copied")) }
