@@ -1409,6 +1409,8 @@
       if (u === null) { setErr(T("Enter a full product link.")); return; }
       f.url = u; els.url.value = u;
       busy = true; setErr(""); els.fetchBtn.disabled = true; els.fetchBtn.textContent = T("Reading…");
+      // The same product already on this list (owner, 2.137): said under the link; saving still works.
+      var dup = !edit && ((content && content.items) || []).some(function (w) { return !w.bin && P.cleanUrl(w.url || "") === u; });
       var m = null, failed = false;
       try {
         m = P.readHelperAnswer(await loadShopPage(u));
@@ -1422,8 +1424,9 @@
         setErr(T("Couldn’t read this shop’s page. Fill in the name and price yourself."));
       } else {
         f.title = m.title; els.title.value = m.title;
-        f.desc = m.desc; els.desc.value = m.desc;
+        // The shop's sales text no longer fills Description (owner, 2.137): it stays free for your own words.
         setCurrency(m.currency);
+        if (dup) setErr(T("This item is already on “{0}”", (content && content.name) || T("this list")));
         // A picture you chose yourself is kept. Otherwise the picture comes from the link.
         if (!picked) {
           if (m.image || !edit) f.image = m.image;
@@ -1598,10 +1601,8 @@
         qe.appendChild(field(T("Exactly this") + " / " + T("Similar is fine"), els.exact));
         b.appendChild(qe);
 
-        els.note = el("textarea");
-        els.note.rows = 2; els.note.maxLength = 300; els.note.value = f.note;
-        els.note.addEventListener("input", function () { f.note = els.note.value; });
-        b.appendChild(field(T("Note for givers (colour, details, …)"), els.note));
+        // No "Note for givers" field any more (owner, 2.137, like the app): Description is for your own words. A note
+        // written before stays with the wish and keeps showing.
 
         var cf = el("div", "fld");
         cf.appendChild(el("span", "flab", T("Category")));

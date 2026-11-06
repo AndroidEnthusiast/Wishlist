@@ -15,7 +15,9 @@ const CHAIR = `<html><head><title>Chair - Shop</title><meta property="og:title" 
   await t.page.waitForFunction(() => { const i = [...document.querySelectorAll(".dlg input")].find(x => x.value === "Ergonomic chair"); return !!i; });
   const get = async (label) => t.page.locator(".dlg").getByLabel(label, { exact: true }).inputValue();
   check("title filled", (await get("Title")) === "Ergonomic chair");
-  check("description filled", (await get("Description")) === "Comfy for long days");
+  // 2.137 (owner): the shop's sales text no longer fills Description; it stays free for your own words.
+  check("description not filled by the shop", (await get("Description")) === "");
+  check("no Note for givers field any more (2.137)", (await t.page.locator(".dlg").getByLabel("Note for givers", { exact: false }).count()) === 0);
   check("price filled", (await get("Price")) === "149.99");
   check("currency EUR", (await get("Currency")) === "EUR");
   check("picture shown", (await t.page.locator(".dlg .picbox img").count()) === 1);
@@ -24,7 +26,7 @@ const CHAIR = `<html><head><title>Chair - Shop</title><meta property="og:title" 
   // pick category, size, note
   await t.page.locator(".dlg .chips .chip", { hasText: "Home" }).click();
   await t.page.locator(".dlg").getByLabel("Size", { exact: true }).selectOption("L");
-  await t.page.locator(".dlg").getByLabel("Note for givers", { exact: false }).fill("  Black  ");
+  await t.page.locator(".dlg").getByLabel("Description", { exact: true }).fill("Black");
   // How many and "Similar is fine" (2.128)
   await t.page.locator(".dlg").getByLabel("How many", { exact: true }).fill("2");
   await t.page.locator(".dlg").getByLabel("Exactly this / Similar is fine", { exact: true }).selectOption("similar");
@@ -36,8 +38,15 @@ const CHAIR = `<html><head><title>Chair - Shop</title><meta property="og:title" 
   const put = t.fake.calls("wl_sh_put_item").pop();
   check("new wish: all of it is sent (no p_fields)", put && put.body.p_fields === undefined);
   const saved = t.fake.items(CODE).find(i => i.title === "Ergonomic chair");
-  check("saved json", saved && saved.price === 149.99 && saved.cur === "EUR" && saved.cat === "Home" && saved.size === "L" && saved.note === "Black" && !saved.star && saved.by === "Sam" && saved.got === false && saved.old === null && saved.image === "https://img.example/chair.png" && saved.url === "https://www.shop.example/p/chair?utm=1" && saved.desc === "Comfy for long days", saved);
+  check("saved json", saved && saved.price === 149.99 && saved.cur === "EUR" && saved.cat === "Home" && saved.size === "L" && !("note" in saved) && !saved.star && saved.by === "Sam" && saved.got === false && saved.old === null && saved.image === "https://img.example/chair.png" && saved.url === "https://www.shop.example/p/chair?utm=1" && saved.desc === "Black", saved);
   check("saved id positive number", saved && Number.isInteger(saved.id) && saved.id > 0);
+  // 2.137 (owner): the same product again says so (saving still works).
+  await t.page.locator("#fab").click();
+  await t.page.waitForSelector(".dlg");
+  await t.page.locator(".dlg input[type=url]").fill("https://www.shop.example/p/chair?utm=1");
+  await t.page.waitForFunction(() => { const e = document.querySelector(".dlg .err"); return e && !e.hidden && /already on/.test(e.textContent); });
+  check("duplicate: already on this list", /This item is already on/.test(await t.page.locator(".dlg .err").innerText()));
+  await t.page.getByRole("button", { name: "Cancel" }).click();
   check("quantity and Similar is fine saved", saved && saved.qty === 2 && saved.exact === "similar", saved);
   check("2× · Similar is fine on the card", /2× · Similar is fine/.test(await first.innerText()));
   check("no js errors", t.errors.length === 0, t.errors);

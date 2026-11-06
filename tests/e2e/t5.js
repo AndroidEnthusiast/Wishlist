@@ -15,15 +15,15 @@ const delayPuts = (fake, ms) => { fake.hooks.wl_sh_put_item = async () => { awai
   await card(a, 1003).getByLabel("Edit", { exact: true }).click();
   await card(b, 1003).getByLabel("Edit", { exact: true }).click();
   await lab(a, "Price").fill("30");
-  await lab(b, "Note for givers (colour, details, …)").fill("Black, please");
+  await lab(b, "Description").fill("Black, please");
   await a.page.getByRole("button", { name: "Save", exact: true }).click();
   await b.page.getByRole("button", { name: "Save", exact: true }).click();
   await settle(a); await settle(b);
   const lamp = a.fake.lists[CODE].items[1003];
-  check("both edits kept online (price + note)", lamp.price === 30 && lamp.note === "Black, please", lamp);
+  check("both edits kept online (price + description)", lamp.price === 30 && lamp.desc === "Black, please", lamp);
   await a.page.evaluate(() => window.__wl.refresh()); await b.page.evaluate(() => window.__wl.refresh());
   await sleep(300);
-  check("A sees B's note", /Black, please/.test(await card(a, 1003).innerText()));
+  check("B's description is online for A too", a.fake.lists[CODE].items[1003].desc === "Black, please");
   check("B sees A's price", /30/.test(await card(b, 1003).innerText()) && !/39\.50/.test(await card(b, 1003).innerText()));
   check("no js errors (two people)", a.errors.length === 0 && b.errors.length === 0, [a.errors, b.errors]);
   await a.ctx.close(); await b.ctx.close();
@@ -52,13 +52,13 @@ const delayPuts = (fake, ms) => { fake.hooks.wl_sh_put_item = async () => { awai
   await card(a, 1002).getByLabel("Edit", { exact: true }).click();
   await card(b, 1002).getByLabel("Edit", { exact: true }).click();
   await lab(a, "Title").fill("Green shirt");
-  await dlg(b).getByLabel("Note for givers").fill("Cotton");
+  await dlg(b).getByLabel("Description", { exact: true }).fill("Cotton");
   await a.page.getByRole("button", { name: "Save", exact: true }).click();
   await b.page.getByRole("button", { name: "Save", exact: true }).click();
   await settle(a); await settle(b);
   await sleep(300);
   const sh = a.fake.lists[CODE].items[1002];
-  check("title and note on the same wish both kept", sh.title === "Green shirt" && sh.note === "Cotton", sh);
+  check("title and description on the same wish both kept", sh.title === "Green shirt" && sh.desc === "Cotton", sh);
   await a.ctx.close(); await b.ctx.close();
 
   // ---- a slow, old answer from the server must not undo what you just did ----

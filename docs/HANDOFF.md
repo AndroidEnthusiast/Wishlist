@@ -183,6 +183,8 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - 6 November (late): review of the wishlist page (DECISIONS, "Wishlist page review"); **2.135** built it. Then the rest of the page: description, empty text, search and cover stay; **2.136** adds "Viewed 23 times" (run `supabase-features.sql` again). Next in the review: ask the owner which page comes next; review every page as rigorously (owner: "every other page should be viewed rigorously").
 
+- 6 November (night): review of the Add wish form; **2.137**. Next in the review: ask the owner; candidates in order of use: Price watch, Friends, Messages, a friend's list, App settings, list settings, Profile, Gift exchange.
+
 ## Next session
 - **Continue the page-by-page review** (owner): Home is done (2.134). Same approach for each page: list every element, its copy and what it does; say what's missing, illogical or could be better from a user's point of view; ask with pop-ups; then build. The "Top wishes" page is no longer reached from Home's tiles (still reachable? ask whether it should get a place, e.g. a filter on All your wishes).
 - **2.132: the shop browser is plain again** (owner: remove every bol.com fix). Owner checked it the same evening: "It looks good again." Ask whether all shop icons show (Google's service only). Don't add bol.com workarounds without asking.

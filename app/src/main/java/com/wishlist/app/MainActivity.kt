@@ -1940,12 +1940,30 @@ fun WishDialog(
         } else if (m.blocked) {
             err = tr("Couldn’t read this shop’s page. Fill in the name and price yourself.")
         } else {
-            title = m.title; desc = m.desc; cur = m.currency
+            // The shop's sales text no longer fills Description (owner, 2.137): it stays free for your own words.
+            title = m.title; cur = m.currency
             // A picture you chose yourself is kept. Otherwise the image comes from the link.
             if (!ImageStore.isLocal(image)) image = if (m.image.isNotEmpty() || edit == null) m.image else image
             if (m.price != null || edit == null) price = m.price?.let { "%.2f".format(Locale.US, it) }.orEmpty()
             if (m.price == null) err = tr("No price found on that page. Add it to track price drops.")
         }
+    }
+
+    // The same product already on one of your lists (owner, 2.137): said under the link; saving still works.
+    val dupOf = remember(url) {
+        val u = cleanUrl(url)
+        if (u == null || edit != null) null
+        else Repo.allMine(ctx).firstOrNull { d -> d.wishes.any { w -> w.bin == 0L && cleanUrl(w.url) == u } }
+            ?.let { if (it.name == "My wishlist") tr(it.name) else it.name }
+    }
+    // A product link on the clipboard (owner, 2.137): offered with one tap, never pasted by itself.
+    val clip = remember {
+        if (edit != null || initialUrl.isNotEmpty()) null else try {
+            val cm = ctx.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+            val c = cm.primaryClip
+            val t = if (c != null && c.itemCount > 0) c.getItemAt(0).coerceToText(ctx)?.toString() else null
+            t?.let { Regex("https?://\\S+").find(it)?.value }?.let { cleanUrl(it) }
+        } catch (e: Exception) { null }
     }
 
     fun go(raw: String) {
@@ -1992,6 +2010,20 @@ fun WishDialog(
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
+                if (clip != null && url.isBlank()) {
+                    val host = try { java.net.URI(clip).host.orEmpty().removePrefix("www.") } catch (e: Exception) { "" }
+                    Row(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.secondaryContainer)
+                            .clickable { go(clip) }.padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("📋", modifier = Modifier.padding(end = 10.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(tr("Paste the link you copied"), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                            if (host.isNotEmpty()) Text(host, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                        }
+                    }
+                }
                 OutlinedTextField(
                     url,
                     { new ->
@@ -2012,6 +2044,7 @@ fun WishDialog(
                 if (err.isNotEmpty()) {
                     Text(err, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 }
+                dupOf?.let { Text(tr("This item is already on “%s”", it), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
                 // (No tip under the link any more: removed by the owner, 2.118.)
                 ImageBlock(image, onPick = { pickImage() }, onRemove = {
                     if (picked.isNotEmpty() && picked == image) { ImageStore.delete(ctx, picked); picked = "" }
@@ -2042,9 +2075,8 @@ fun WishDialog(
                 QuantityField(qty) { qty = it }
                 ExactField(exact) { exact = it }
                 SizeField(sizeSel, { sizeSel = it }, Modifier.fillMaxWidth())
-                OutlinedTextField(
-                    note, { note = it }, label = { Text(tr("Note for givers (colour, details, …)")) },
-                    maxLines = 3, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
+                // No "Note for givers" field any more (owner, 2.137): Description is for your own words now. A note
+                // written before stays with the wish and keeps showing.
                 OutlinedTextField(
                     desc, { desc = it }, label = { Text(tr("Description")) },
                     maxLines = 3, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
