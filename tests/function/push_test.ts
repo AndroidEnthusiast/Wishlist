@@ -22,10 +22,12 @@ const claims = JSON.parse(new TextDecoder().decode(unb(c)));
 check("jwt claims", claims.iss === "a@b" && claims.aud === "https://oauth2.googleapis.com/token" && claims.exp - claims.iat === 3600 && claims.scope.includes("firebase.messaging"));
 
 const NOW = Date.parse("2026-11-03T12:00:00Z");
-function world(opts: { pushed?: boolean; age?: number; token?: string; fcmStatus?: number; fcmBody?: string } = {}) {
+function world(opts: { pushed?: boolean; age?: number; token?: string; fcmStatus?: number; fcmBody?: string; fromSanta?: boolean } = {}) {
   const calls: { url: string; init: RequestInit }[] = [];
   const msg = { id: 7, b: "BOB", pushed: opts.pushed ?? false, created_at: new Date(NOW - (opts.age ?? 1000)).toISOString() };
   let tokenRow: string | null = opts.token === undefined ? "TOKEN-BOB" : opts.token;
+  const gxmsg = { pushed: false, from_santa: opts.fromSanta ?? true };
+  const pushAsked: string[] = [];
   const deps = {
     now: () => NOW,
     env: (k: string) => ({ SUPABASE_URL: "https://x.supabase.co/", SUPABASE_SERVICE_ROLE_KEY: "eyJsecret", FCM_SERVICE_ACCOUNT: SA } as any)[k],
@@ -38,7 +40,13 @@ function world(opts: { pushed?: boolean; age?: number; token?: string; fcmStatus
         msg.pushed = true;
         return new Response(JSON.stringify([{ b: msg.b, created_at: msg.created_at }]), { status: 200 });
       }
+      if (url.startsWith("https://x.supabase.co/rest/v1/wl_gx_msgs")) {
+        if (!url.includes("id=eq.9") || gxmsg.pushed) return new Response("[]", { status: 200 });
+        gxmsg.pushed = true;
+        return new Response(JSON.stringify([{ gx_id: "GX1", santa: "SANTA", giftee: "BOB", from_santa: gxmsg.from_santa, created_at: msg.created_at }]), { status: 200 });
+      }
       if (url.startsWith("https://x.supabase.co/rest/v1/wl_push")) {
+        pushAsked.push(url);
         if (init.method === "DELETE") { tokenRow = null; return new Response(null, { status: 204 }); }
         return new Response(JSON.stringify(tokenRow ? [{ token: tokenRow }] : []), { status: 200 });
       }
@@ -49,7 +57,7 @@ function world(opts: { pushed?: boolean; age?: number; token?: string; fcmStatus
       return new Response("unexpected " + url, { status: 500 });
     },
   };
-  return { deps, calls, msg, get tokenRow() { return tokenRow; } };
+  return { deps, calls, msg, pushAsked, get tokenRow() { return tokenRow; } };
 }
 const post = (body: unknown) => new Request("https://f/push", { method: "POST", body: JSON.stringify(body) });
 
@@ -88,6 +96,25 @@ w = world();
 const noSa = { ...w.deps, env: (k: string) => (k === "FCM_SERVICE_ACCOUNT" ? "" : w.deps.env(k)) };
 r = await handle(post({ id: 7 }), noSa);
 check("no service account: error, nothing sent", r.status === 500 && w.calls.length === 0);
+
+// Gift exchange messages ({"gx": id}): to the other person of the pair, naming only the exchange.
+w = world();
+r = await handle(post({ gx: 9 }), w.deps);
+check("gift exchange: sends a push", r.status === 200 && (await r.json()).sent === true);
+const gsend = JSON.parse(String(w.calls.find((x) => x.url.includes("messages:send"))!.init.body));
+check("gift exchange: names the exchange, not the Santa", gsend.message.data.t === "gx" && gsend.message.data.g === "GX1" && !JSON.stringify(gsend).includes("SANTA"));
+check("gift exchange: Santa's message goes to the giftee", w.pushAsked.some((u) => u.includes("id=eq.BOB")));
+check("gift exchange: never touches normal messages", !w.calls.some((x) => x.url.includes("wl_messages")));
+r = await handle(post({ gx: 9 }), w.deps);
+check("gift exchange: only once", (await r.json()).skipped === "done_or_gone");
+w = world({ fromSanta: false });
+await handle(post({ gx: 9 }), w.deps);
+check("gift exchange: giftee's answer goes to the Santa", w.pushAsked.some((u) => u.includes("id=eq.SANTA")));
+for (const bad of [{ gx: "x" }, { gx: 0 }, { gx: 9, id: 7 }]) {
+  w = world();
+  r = await handle(post(bad), w.deps);
+  check("gift exchange: odd body handled safely " + JSON.stringify(bad), (r.status === 400 && w.calls.length === 0) || !w.calls.some((x) => x.url.includes("wl_gx_msgs")));
+}
 
 console.log(fails ? `${fails} of ${n} push checks FAILED` : `push function: all ${n} checks passed`);
 if (fails) Deno.exit(1);
