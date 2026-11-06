@@ -759,7 +759,7 @@ fun App(
                     }
                     // Only the screen that is open is highlighted: one item at a time.
                     // The menu holds no lists (owner, 2.129): Home and the Friends tab show them. Three groups with
-                    // dividers and no headings: main actions, your things, settings.
+                    // dividers and no headings (owner, 2.130): the core features, your things, then Bin and settings.
                     val elsewhere = settings || binOpen || friendCode != null || notesOpen || pricesOpen || friendsOpen || profileOpen || messagesOpen || groupOpen != null || exchangesOpen
                     DrawerItem(tr("Home"), AppIcons.Home, hub && !elsewhere) {
                         HubNav.page = null
@@ -771,35 +771,31 @@ fun App(
                         createChoice = true
                         scope.launch { drawer.close() }
                     }
-                    DrawerItem(tr("Gifts I reserved"), AppIcons.Bag, reservedOpen) {
-                        reservedOpen = true
-                        scope.launch { drawer.close() }
-                    }
                     DrawerItem(tr("Gift exchange"), AppIcons.Swap, exchangesOpen && !settings && !binOpen && !notesOpen && !profileOpen, dot = Exchanges.unread) {
                         ExchangeNav.open = null
                         closeAll(); hub = true; exchangesOpen = true
                         scope.launch { drawer.close() }
                     }
+                    // Your things (owner, 2.130). Notifications is not in the menu: the bell on Home.
                     DrawerDivider()
                     DrawerItem(tr("Profile"), AppIcons.Person, profileOpen) {
                         closeAll()
                         profileOpen = true
                         scope.launch { drawer.close() }
                     }
-                    DrawerItem(tr("Notifications"), AppIcons.Notifications, notesOpen && !settings && !binOpen, dot = Notifications.unread) {
-                        closeAll()
-                        notesOpen = true
+                    DrawerItem(tr("Gifts I reserved"), AppIcons.Bag, reservedOpen) {
+                        reservedOpen = true
                         scope.launch { drawer.close() }
                     }
                     DrawerItem(tr("Received gifts"), AppIcons.Gift, receivedOpen) {
                         receivedOpen = true
                         scope.launch { drawer.close() }
                     }
+                    DrawerDivider()
                     DrawerItem(tr("Bin"), AppIcons.Delete, binOpen) {
                         closeAll(); binOpen = true
                         scope.launch { drawer.close() }
                     }
-                    DrawerDivider()
                     DrawerItem(tr("App settings"), AppIcons.Settings, settings) {
                         closeAll(); settings = true
                         scope.launch { drawer.close() }
@@ -1201,9 +1197,10 @@ fun HomeScreen(
                     // Left: what you see and in which order (category, sort). Right: how it looks (view buttons).
                     Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.weight(1f, fill = false)) {
+                            // Plain text, no filled chip (owner, 2.130: a calmer top).
                             Row(
-                                Modifier.lookChip(look).clickable { catMenu = true }
-                                    .padding(start = 12.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
+                                Modifier.clip(RoundedCornerShape(20.dp)).clickable { catMenu = true }
+                                    .padding(start = 8.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
@@ -1231,22 +1228,19 @@ fun HomeScreen(
                         }
                         // Room between the category and the sort button (owner, 2.127: they touched).
                         Spacer(Modifier.width(8.dp))
-                        SortButton(sortMode, withStar = !inShared) { Repo.setSort(ctx, it) }
+                        SortButton(sortMode, withStar = !inShared, quiet = true) { Repo.setSort(ctx, it) }
                         Spacer(Modifier.width(8.dp))
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        // Rows first (owner, 2.126), then Two per row, then Large cards.
-                        ViewButton("rows", tr("Rows"), view == "rows") { Repo.setView(ctx, "rows") }
-                        ViewButton("grid", tr("Two per row"), view == "grid") { Repo.setView(ctx, "grid") }
-                        ViewButton("list", tr("Large cards"), view == "list") { Repo.setView(ctx, "list") }
-                    }
+                    // One icon for the view (owner, 2.130): it shows the view in use and opens Rows, Two per row, Large cards.
+                    ViewMenuButton(view) { Repo.setView(ctx, it) }
                 }
             }
             // The top that stays in sight while scrolling (owner, 2.111): the summary card (your own lists) and the
             // category, sort and view choices. The cover photo above it scrolls away.
             val hasCover = remember(ListCovers.version, Shared.active, Repo.openMine) { ListCovers.get(ctx, ListCovers.openKey()) != null }
             val stickyTop: @Composable (Boolean) -> Unit = { live ->
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                // More room between the summary and the choices (owner, 2.130: calmer, without making things smaller).
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     // The occasion shows in the summary card (owner, 2.124); on a gift list, or with the summary
                     // switched off, the card shows only the occasion.
                     val occ = Occasions.line(Occasions.ofOpen(ctx))
@@ -1387,6 +1381,32 @@ fun ViewButton(kind: String, label: String, selected: Boolean, onClick: () -> Un
         contentAlignment = Alignment.Center
     ) {
         ViewIcon(kind, look.chipContent(selected))
+    }
+}
+
+/** The view in use as one icon; tapping it opens the three views with their names (owner, 2.130). */
+@Composable
+fun ViewMenuButton(view: String, onPick: (String) -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    var open by remember { mutableStateOf(false) }
+    val names = listOf("rows" to tr("Rows"), "grid" to tr("Two per row"), "list" to tr("Large cards"))
+    Box {
+        Box(
+            Modifier.size(44.dp).clip(CircleShape)
+                .semantics { contentDescription = tr("View: %s", names.firstOrNull { it.first == view }?.second ?: "") }
+                .clickable { open = true },
+            contentAlignment = Alignment.Center
+        ) { ViewIcon(view, cs.onSurfaceVariant) }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            names.forEach { (k, label) ->
+                DropdownMenuItem(
+                    text = { Text(label, fontWeight = if (k == view) FontWeight.Bold else FontWeight.Normal) },
+                    leadingIcon = { ViewIcon(k, if (k == view) cs.primary else cs.onSurfaceVariant) },
+                    trailingIcon = if (k == view) ({ Icon(AppIcons.Check, null) }) else null,
+                    onClick = { open = false; onPick(k) }
+                )
+            }
+        }
     }
 }
 

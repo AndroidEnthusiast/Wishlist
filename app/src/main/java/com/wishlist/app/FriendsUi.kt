@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -1033,53 +1034,83 @@ fun ProfileScreen(snack: SnackbarHostState) {
 }
 
 /**
- * Day and month (no year), each a drop-down; "Remove" clears it ([removable]). [onChange] gets "MM-DD" or "". Your
- * birthday on Profile, and an occasion's date (Occasion.kt).
+ * Day and month (no year). One button shows the date ("24 December", or "Pick a date"); tapping it opens the picker
+ * (owner, 2.130): first a grid of the days 1–31, then a grid of the 12 months, where months without that day are greyed
+ * out. "Remove" clears it ([removable]). [onChange] gets "MM-DD" or "". Your birthday on Profile, an occasion's date
+ * (Occasion.kt) and a gift exchange's date.
  */
 @Composable
 fun DayMonthPicker(value: String, removable: Boolean = true, onChange: (String) -> Unit) {
     val look = LocalLook.current
     val m = Regex("^(\\d{2})-(\\d{2})$").find(value)
-    var month by remember(value) { mutableIntStateOf(m?.groupValues?.get(1)?.toInt() ?: 0) }
-    var day by remember(value) { mutableIntStateOf(m?.groupValues?.get(2)?.toInt() ?: 0) }
-    var dayMenu by remember { mutableStateOf(false) }
-    var monthMenu by remember { mutableStateOf(false) }
-    val locale = if (Lang.code == "nl") java.util.Locale("nl") else java.util.Locale.UK
-    fun monthName(n: Int) = java.time.Month.of(n).getDisplayName(java.time.format.TextStyle.FULL, locale)
-    fun send(d: Int, mo: Int) {
-        if (d > 0 && mo > 0) {
-            // A day the month doesn't have (31 April) becomes its last day.
-            val last = java.time.Month.of(mo).length(true)
-            onChange("%02d-%02d".format(mo, minOf(d, last)))
-        }
-    }
+    val month = m?.groupValues?.get(1)?.toInt() ?: 0
+    val day = m?.groupValues?.get(2)?.toInt() ?: 0
+    var open by remember { mutableStateOf(false) }
+    fun monthName(n: Int) = java.time.Month.of(n).getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.UK)
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Box {
-            Text(
-                if (day > 0) day.toString() else tr("Day"), style = MaterialTheme.typography.titleMedium,
-                color = look.chipContent(false),
-                modifier = Modifier.lookChip(look).clickable { dayMenu = true }.padding(horizontal = 16.dp, vertical = 10.dp)
-            )
-            DropdownMenu(expanded = dayMenu, onDismissRequest = { dayMenu = false }) {
-                (1..31).forEach { d ->
-                    DropdownMenuItem(text = { Text(d.toString()) }, onClick = { dayMenu = false; day = d; send(d, month) })
-                }
-            }
-        }
-        Box {
-            Text(
-                if (month > 0) monthName(month) else tr("Month"), style = MaterialTheme.typography.titleMedium,
-                color = look.chipContent(false),
-                modifier = Modifier.lookChip(look).clickable { monthMenu = true }.padding(horizontal = 16.dp, vertical = 10.dp)
-            )
-            DropdownMenu(expanded = monthMenu, onDismissRequest = { monthMenu = false }) {
-                (1..12).forEach { mo ->
-                    DropdownMenuItem(text = { Text(monthName(mo)) }, onClick = { monthMenu = false; month = mo; send(day, mo) })
-                }
-            }
-        }
-        if (removable && value.isNotEmpty()) TextButton(onClick = { day = 0; month = 0; onChange("") }) { Text(tr("Remove")) }
+        Text(
+            if (day > 0 && month > 0) "$day " + monthName(month) else tr("Pick a date"), style = MaterialTheme.typography.titleMedium,
+            color = look.chipContent(false),
+            modifier = Modifier.lookChip(look).clickable { open = true }.padding(horizontal = 16.dp, vertical = 10.dp)
+        )
+        if (removable && value.isNotEmpty()) TextButton(onClick = { onChange("") }) { Text(tr("Remove")) }
     }
+    if (open) DayMonthDialog(day, month, onPick = { d, mo -> open = false; onChange("%02d-%02d".format(mo, d)) }, onClose = { open = false })
+}
+
+@Composable
+private fun PickCell(label: String, on: Boolean, enabled: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Box(
+        modifier.height(44.dp).clip(RoundedCornerShape(22.dp))
+            .background(if (on) cs.primary else Color.Transparent)
+            .clickable(enabled = enabled, onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            label, style = MaterialTheme.typography.titleSmall,
+            color = when { on -> cs.onPrimary; enabled -> cs.onSurface; else -> cs.onSurface.copy(alpha = 0.3f) }
+        )
+    }
+}
+
+/** The picker itself: days 1–31, then the months (the ones without that day greyed out). */
+@Composable
+private fun DayMonthDialog(startDay: Int, startMonth: Int, onPick: (Int, Int) -> Unit, onClose: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    var day by remember { mutableIntStateOf(0) }
+    fun monthShort(n: Int) = java.time.Month.of(n).getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.UK)
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text(if (day == 0) tr("Pick a day") else tr("Pick a month")) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                if (day == 0) {
+                    (1..31).chunked(7).forEach { row ->
+                        Row(Modifier.fillMaxWidth()) {
+                            row.forEach { d -> PickCell(d.toString(), d == startDay, true, Modifier.weight(1f)) { day = d } }
+                            repeat(7 - row.size) { Spacer(Modifier.weight(1f)) }
+                        }
+                    }
+                } else {
+                    Text("$day …", style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                    (1..12).chunked(3).forEach { row ->
+                        Row(Modifier.fillMaxWidth()) {
+                            row.forEach { mo ->
+                                // A month without this day (31 → February) can't be picked; 29 February can.
+                                val ok = day <= java.time.Month.of(mo).length(true)
+                                PickCell(monthShort(mo), mo == startMonth && day == startDay, ok, Modifier.weight(1f)) { onPick(day, mo) }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            if (day != 0) TextButton(onClick = { day = 0 }) { Text(tr("Back")) }
+            else TextButton(onClick = onClose) { Text(tr("Cancel")) }
+        }
+    )
 }
 
 @Composable

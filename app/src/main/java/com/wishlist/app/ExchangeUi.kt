@@ -1109,16 +1109,22 @@ fun ExchangeSettingsDialog(x: Exchange, snack: SnackbarHostState, onCancelled: (
     var handing by remember { mutableStateOf(false) }
     var cancelling by remember { mutableStateOf(false) }
     val currency = x.currency.ifBlank { CurrencyChoice.chosen.ifEmpty { countryCurrency() } }
+    // The photo goes through the same editor as a wishlist's cover (owner, 2.130): crop, move, zoom.
+    var pending by remember { mutableStateOf<String?>(null) }
+    val fa = coverAspect()
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) {
-            busy = true
-            scope.launch {
-                try { Exchanges.setPhoto(ctx, x.id, uri) } catch (e: Exception) { snack.toastSoon(tr("Couldn’t do that. Check your connection.")) }
-                busy = false
-            }
+        if (uri != null) scope.launch { ImageStore.import(ctx, uri)?.let { pending = it } }
+    }
+    fun photo(done: String, block: suspend () -> Unit) {
+        busy = true
+        scope.launch {
+            val msg = try { block(); done } catch (e: Exception) { tr("Couldn’t do that. Check your connection.") }
+            busy = false
+            snack.toastSoon(msg)
         }
     }
-    AlertDialog(
+    // While the photo editor is open, these settings step aside (what you typed is kept).
+    if (pending == null) AlertDialog(
         onDismissRequest = { if (!busy) onClose() },
         properties = DialogProperties(dismissOnClickOutside = false),
         title = { Text(tr("Exchange settings")) },
@@ -1129,14 +1135,13 @@ fun ExchangeSettingsDialog(x: Exchange, snack: SnackbarHostState, onCancelled: (
                     budget, { budget = it }, currency, day, { day = it }, message, { message = it }
                 )
                 Text(tr("Cover"), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
+                GxCover(theme, Exchanges.photos[x.id], Modifier.padding(vertical = 6.dp).fillMaxWidth().height(110.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TextButton(enabled = !busy, onClick = { pick.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) { Text(tr("Choose photo")) }
+                    OutlinedButton(enabled = !busy, onClick = { pick.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) {
+                        Text(if (Exchanges.photos[x.id] == null) tr("Choose a photo") else tr("New photo"))
+                    }
                     if (Exchanges.photos[x.id] != null) TextButton(enabled = !busy, onClick = {
-                        busy = true
-                        scope.launch {
-                            try { Exchanges.setPhoto(ctx, x.id, null) } catch (e: Exception) { snack.toastSoon(tr("Couldn’t do that. Check your connection.")) }
-                            busy = false
-                        }
+                        photo(tr("Back to the theme’s cover")) { Exchanges.setPhoto(ctx, x.id, null, HeroEdit(), fa) }
                     }) { Text(tr("Use the theme")) }
                 }
                 if (x.members.any { it.id != Exchanges.myId(ctx) && !it.web }) TextButton(enabled = !busy, onClick = { handing = true }) { Text(tr("Hand over to someone else")) }
@@ -1161,6 +1166,20 @@ fun ExchangeSettingsDialog(x: Exchange, snack: SnackbarHostState, onCancelled: (
         },
         dismissButton = { TextButton(enabled = !busy, onClick = onClose) { Text(tr("Cancel")) } }
     )
+    pending?.let { img ->
+        HeroEditor(
+            img, HeroEdit(),
+            onSave = { chosen, e ->
+                pending = null
+                photo(tr("Cover photo saved")) {
+                    Exchanges.setPhoto(ctx, x.id, chosen, e, fa)
+                    ImageStore.delete(ctx, chosen)
+                    if (chosen != img) ImageStore.delete(ctx, img)
+                }
+            },
+            onCancel = { pending = null; ImageStore.delete(ctx, img) }
+        )
+    }
     if (handing) GxPickPersonDialog(
         x, title = tr("Hand over to…"), text = tr("They can draw names, set rules and invite people. You stay in the exchange."),
         confirm = tr("Hand over"), onClose = { handing = false }

@@ -67,25 +67,26 @@ private fun SortIcon(tint: Color) {
  * Opens the list of orders. When a sort is active it is highlighted and says which one.
  */
 @Composable
-fun SortButton(mode: String, withStar: Boolean = true, onPick: (String) -> Unit) {
+fun SortButton(mode: String, withStar: Boolean = true, quiet: Boolean = false, onPick: (String) -> Unit) {
     val look = LocalLook.current
     var open by remember { mutableStateOf(false) }
     // Always shows its order, also "Newest" (owner, 2.127: the default showed nothing while the others did), in the
     // same chip as the category button next to it, so the two look alike and line up.
     Box {
         Row(
-            Modifier.height(40.dp).lookChip(look)
+            // [quiet]: plain text without the filled chip (owner, 2.130: a calmer list top).
+            Modifier.height(40.dp).then(if (quiet) Modifier.clip(RoundedCornerShape(20.dp)) else Modifier.lookChip(look))
                 .semantics { contentDescription = tr("Sort: %s", tr(sortShortName(mode))) }
                 .clickable { open = true }
                 .padding(start = 10.dp, end = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            SortIcon(look.chipContent(false))
+            SortIcon(if (quiet) MaterialTheme.colorScheme.onSurface else look.chipContent(false))
             Spacer(Modifier.width(6.dp))
             Text(
                 tr(sortShortName(mode)), style = MaterialTheme.typography.labelLarge,
-                color = look.chipContent(false), maxLines = 1, softWrap = false
+                color = if (quiet) MaterialTheme.colorScheme.onSurface else look.chipContent(false), maxLines = 1, softWrap = false
             )
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {

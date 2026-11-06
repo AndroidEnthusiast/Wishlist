@@ -341,15 +341,23 @@ object Exchanges {
         photos = out
     }
 
-    /** The organiser's own photo instead of the drawn cover ([uri] from the photo picker), or null to remove it. */
-    suspend fun setPhoto(c: Context, gx: String, uri: Uri?) {
-        val b64 = if (uri == null) "" else withContext(Dispatchers.IO) {
-            val bmp = c.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) } ?: throw CloudException("photo")
-            val w = minOf(900, bmp.width)
-            val small = Bitmap.createScaledBitmap(bmp, w, (bmp.height * w / bmp.width.toFloat()).toInt().coerceAtLeast(1), true)
-            val out = java.io.ByteArrayOutputStream()
-            small.compress(Bitmap.CompressFormat.JPEG, 80, out)
-            Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
+    /**
+     * The organiser's own photo instead of the drawn cover, after the same editor as a wishlist's cover (owner, 2.130):
+     * [src] cut as [edit] in the frame [fa], sent as a small JPEG. Null [src]: back to the theme's cover.
+     */
+    suspend fun setPhoto(c: Context, gx: String, src: String?, edit: HeroEdit, fa: Float) {
+        val b64 = if (src == null) "" else {
+            val cut = renderCover(c, src, edit, fa) ?: throw CloudException("photo")
+            withContext(Dispatchers.IO) {
+                val f = File(Uri.parse(cut).path ?: throw CloudException("photo"))
+                val bmp = BitmapFactory.decodeFile(f.path) ?: throw CloudException("photo")
+                f.delete()
+                val w = minOf(900, bmp.width)
+                val small = Bitmap.createScaledBitmap(bmp, w, (bmp.height * w / bmp.width.toFloat()).toInt().coerceAtLeast(1), true)
+                val out = java.io.ByteArrayOutputStream()
+                small.compress(Bitmap.CompressFormat.JPEG, 80, out)
+                Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
+            }
         }
         Cloud.rpc("wl_gx_set_photo", base(c).put("p_gx", gx).put("p_photo", b64))
         refresh(c)

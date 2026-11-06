@@ -114,6 +114,39 @@ const PAGES = {
   await guard();
   check("a layer with text on it is left alone", await shown("#veil"));
 
+  // ---- 2.130: no flicker on a new page (owner, bol.com) ----
+  // The guard runs at the start of the page (as addDocumentStartJavaScript does in the app). A dark empty layer that the
+  // shop adds while the page loads, or later as a new "page" in the same tab, must never be drawn: every frame is
+  // sampled with requestAnimationFrame from the very start.
+  const SAMPLER = `window.__seen=[];(function f(){var v=document.getElementById('veil');if(v){var s=getComputedStyle(v);if(s.display!=='none'&&s.visibility!=='hidden')window.__seen.push(performance.now());}requestAnimationFrame(f);})();`;
+  async function startPage(body) {
+    if (p) await p.close();
+    p = await b.newPage({ viewport: { width: 400, height: 800 } });
+    await p.addInitScript(GUARD);
+    await p.addInitScript(SAMPLER);
+    await p.route("https://shop.test/**", r => r.fulfill({ status: 200, headers: { "content-type": "text/html" }, body }));
+    await p.goto("https://shop.test/page");
+  }
+  await startPage(`<html><body>${PRODUCTS}<div id="veil" style="${VEIL}"></div></body></html>`);
+  await sleep(400);
+  check("a layer in the page itself is never drawn", (await p.evaluate(() => window.__seen.length)) === 0, await p.evaluate(() => window.__seen.length));
+  check("...and hidden for good", !(await shown("#veil")));
+  await startPage(`<html><body>${PRODUCTS}<script>setTimeout(function(){var v=document.createElement('div');v.id='veil';v.setAttribute('style','${VEIL}');document.body.appendChild(v);},120);</script></body></html>`);
+  await sleep(500);
+  check("a layer added a moment later (a new page in the shop) is never drawn", (await p.evaluate(() => window.__seen.length)) === 0, await p.evaluate(() => window.__seen.length));
+  await startPage(`<html><body>${PRODUCTS}<div id="veil" style="display:none;${VEIL}"></div><script>setTimeout(function(){document.getElementById('veil').style.display='block';},120);</script></body></html>`);
+  await sleep(500);
+  check("a hidden layer that is switched on is never drawn", (await p.evaluate(() => window.__seen.length)) === 0, await p.evaluate(() => window.__seen.length));
+  let tapped2 = true;
+  try { await p.click("#buy", { timeout: 1500 }); } catch (e) { tapped2 = false; }
+  check("...and the page can be tapped", tapped2);
+  await startPage(`<html><body>${PRODUCTS}<script>setTimeout(function(){var v=document.createElement('div');v.id='veil';v.setAttribute('style','${VEIL}');document.body.appendChild(v);var m=document.createElement('div');m.id='m';m.setAttribute('style','position:fixed;top:20%;left:5%;right:5%;height:60%;background:#fff;z-index:100');m.textContent='Choose a size';document.body.appendChild(m);},120);</script></body></html>`);
+  await sleep(500);
+  check("a real pop-up keeps its dark background", (await shown("#veil")) && (await p.evaluate(() => getComputedStyle(document.getElementById('veil')).visibility)) === "visible" && (await shown("#m")));
+  await startPage(`<html><body>${PRODUCTS}<script>setTimeout(function(){var v=document.createElement('div');v.id='veil';v.setAttribute('style','${VEIL}');document.body.appendChild(v);setTimeout(function(){v.textContent='Loading your basket…';},150);},100);</script></body></html>`);
+  await sleep(600);
+  check("a layer that gets text a moment later shows again", (await shown("#veil")) && (await p.evaluate(() => getComputedStyle(document.getElementById('veil')).visibility)) === "visible");
+
   await b.close();
   console.log(fails ? fails + " FAILED of " + total : "ALL SHOP SCRIPT CHECKS OK (" + total + " checks)");
   process.exit(fails ? 1 : 0);

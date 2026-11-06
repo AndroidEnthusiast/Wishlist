@@ -655,7 +655,7 @@ private const val GUARD_JS = """(function(){
     // A hidden layer that now has something on it is a real pop-up: show it again.
     G.hidden=G.hidden.filter(function(v){
       if(!v.isConnected) return false;
-      if(!empty(v)){v.style.removeProperty('display');return false;}
+      if(!empty(v)){v.style.removeProperty('display');v.style.removeProperty('visibility');v.__wlKeep=1;return false;}
       return true;
     });
     if(!G.hidden.length) relock();
@@ -667,7 +667,7 @@ private const val GUARD_JS = """(function(){
       var s=getComputedStyle(p),r=p.getBoundingClientRect();
       if((s.position==='fixed'||s.position==='absolute')&&r.width>=w*0.9&&r.height>=h*0.8){v=p;break;}
     }
-    if(!v||!empty(v)) return;
+    if(!v||!empty(v)||v.__wlKeep) return;
     var pts=[[w/2,h/4],[w/2,h*3/4],[w/4,h/2],[w*3/4,h/2]];
     for(var k=0;k<pts.length;k++){var o=document.elementFromPoint(pts[k][0],pts[k][1]);if(o&&o!==v&&!v.contains(o))return;}
     // An invisible layer only counts once a tinted one was seen on this page (2.126: bol.com keeps a see-through layer
@@ -680,9 +680,48 @@ private const val GUARD_JS = """(function(){
     G.hidden.push(v);G.count++;
     unlock();
   }
+  // 2.130 (owner: bol.com still flickered on every new page): a new empty dark layer is made invisible in the same
+  // moment it appears, before the screen draws it (MutationObserver runs before the next paint). check() then decides
+  // as before; a layer under a real pop-up, or one that gets content, is shown again.
+  G.quick=[];
+  function cover(e){
+    if(!e||e.nodeType!==1||e===document.body||e===document.documentElement||e.__wlQ) return false;
+    var s=getComputedStyle(e);if(s.position!=='fixed'&&s.position!=='absolute') return false;
+    if(s.display==='none'||s.visibility==='hidden') return false;
+    var r=e.getBoundingClientRect(),w=innerWidth,h=innerHeight;
+    return r.width>=w*0.9&&r.height>=h*0.8&&r.top<h*0.2&&empty(e)&&tinted(e);
+  }
+  function quick(e){e.__wlQ=1;e.style.setProperty('visibility','hidden','important');G.quick.push(e);}
+  // Something else that isn't empty sits over the middle of the screen in a fixed place: a real pop-up.
+  function popupOver(v){
+    var w=innerWidth,h=innerHeight,pts=[[w/2,h/2],[w/2,h/4],[w/2,h*3/4]];
+    for(var k=0;k<pts.length;k++){var all=document.elementsFromPoint?document.elementsFromPoint(pts[k][0],pts[k][1]):[];
+      for(var i=0;i<all.length;i++){var e=all[i];if(e===v||v.contains(e)||e===document.body||e===document.documentElement) continue;
+        for(var p=e;p&&p!==document.body;p=p.parentElement){var s=getComputedStyle(p);
+          if((s.position==='fixed'||s.position==='sticky')&&p!==v&&!p.contains(v)&&!empty(p)){var r=p.getBoundingClientRect();if(r.width<w*0.98||r.height<h*0.95) return true;}}
+        break;}}
+    return false;
+  }
+  function settle(){
+    G.quick=G.quick.filter(function(v){
+      if(!v.isConnected) return false;
+      // It got something on it, or a real pop-up uses it as its background: show it again.
+      if(!empty(v)||popupOver(v)){v.style.removeProperty('visibility');v.__wlQ=0;v.__wlKeep=1;return false;}
+      if(!v.__wlTapped){v.__wlTapped=1;tap(v,innerWidth/2,innerHeight/2);}
+      if(getComputedStyle(v).display!=='none'){v.style.setProperty('display','none','important');G.hidden.push(v);G.count++;unlock();}
+      return false;
+    });
+  }
+  function scan(list){
+    for(var i=0;i<list.length;i++){var m=list[i];
+      if(m.type==='attributes'){if(!m.target.__wlKeep&&cover(m.target)) quick(m.target);}
+      else for(var j=0;j<m.addedNodes.length;j++){var n=m.addedNodes[j];if(n.nodeType!==1) continue;
+        if(!n.__wlKeep&&cover(n)) quick(n);
+        if(n.children&&n.children.length<40) for(var c=0;c<n.children.length;c++) if(!n.children[c].__wlKeep&&cover(n.children[c])) quick(n.children[c]);}}
+  }
   var t=0;
-  function soon(){if(t) return;t=setTimeout(function(){t=0;try{check();}catch(e){}},100);}
-  try{new MutationObserver(soon).observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style','hidden','open']});}catch(e){}
+  function soon(){if(t) return;t=setTimeout(function(){t=0;try{settle();check();}catch(e){}},100);}
+  try{new MutationObserver(function(list){try{scan(list);}catch(e){}soon();}).observe(document,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style','hidden','open']});}catch(e){}
   addEventListener('resize',soon);
   try{check();}catch(e){}
   return 'on';
@@ -839,6 +878,13 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                         factory = { c ->
                             WebView(c).apply {
                                 settings.javaScriptEnabled = true
+                                // The guard at the very start of every page and frame (owner, 2.130: no flicker of a
+                                // dark layer on a new page). Older WebViews without this still get it as before.
+                                try {
+                                    if (androidx.webkit.WebViewFeature.isFeatureSupported(androidx.webkit.WebViewFeature.DOCUMENT_START_SCRIPT))
+                                        androidx.webkit.WebViewCompat.addDocumentStartJavaScript(this, GUARD_JS, setOf("*"))
+                                } catch (e: Exception) {
+                                }
                                 settings.domStorageEnabled = true
                                 settings.databaseEnabled = true
                                 settings.allowFileAccess = false
