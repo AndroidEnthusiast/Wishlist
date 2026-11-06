@@ -434,7 +434,8 @@ object Exchanges {
     suspend fun leave(c: Context, gx: String, next: String?) {
         Cloud.rpc("wl_gx_leave", base(c).put("p_gx", gx).put("p_next", next ?: ""))
         list = list.filter { it.id != gx }
-        refresh(c)
+        // Done online: a reload that fails now doesn't make it look as if leaving failed (owner, 2.133).
+        try { refresh(c) } catch (e: Exception) {}
     }
 
     suspend fun remove(c: Context, gx: String, member: String) {
@@ -457,7 +458,9 @@ object Exchanges {
     suspend fun cancel(c: Context, gx: String) {
         Cloud.rpc("wl_gx_cancel", base(c).put("p_gx", gx))
         list = list.filter { it.id != gx }
-        refresh(c)
+        // Done online: a reload that fails now doesn't make it look as if cancelling failed (owner, 2.133: the page
+        // said "Couldn't do that" and stayed on the cancelled exchange).
+        try { refresh(c) } catch (e: Exception) {}
     }
 
     /** Invites friends [ids] (organiser): online, plus a chat message with the link. Returns how many failed. */

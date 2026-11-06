@@ -645,8 +645,11 @@ fun ExchangeScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, on
         snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
         if (x == null) {
-            Box(Modifier.padding(pad).fillMaxSize().padding(32.dp), Alignment.Center) {
+            // Cancelled, left or removed: back to the list of exchanges by itself (owner, 2.133: no dead end).
+            LaunchedEffect(gid) { delay(1500); onBack() }
+            Column(Modifier.padding(pad).fillMaxSize().padding(32.dp), Arrangement.Center, Alignment.CenterHorizontally) {
                 Text(tr("This gift exchange isn’t available any more."), color = cs.onSurfaceVariant)
+                TextButton(onClick = onBack, modifier = Modifier.padding(top = 8.dp)) { Text(tr("Back to gift exchanges")) }
             }
             return@Scaffold
         }
