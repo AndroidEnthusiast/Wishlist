@@ -344,7 +344,7 @@ fun NewGroupDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
             null
         }
     }
-    if (pickingFriends) PickFriendsDialog(friends, friendIds, onDone = { friendIds = it; pickingFriends = false }) { pickingFriends = false }
+    if (pickingFriends) PickFriendsDialog(friends, friendIds, onDone = { friendIds = it; pickingFriends = false }, onClose = { pickingFriends = false })
 }
 
 /** Choose friends (the new-group form): ticks, then Done. */
