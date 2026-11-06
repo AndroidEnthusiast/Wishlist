@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Wishlist</title>
+<link rel="icon" href="../icon.png">
+<!-- A friend link (2.139): …/friend/?f=CODE&n=Name. Link previews read these lines; on Android the page opens the app,
+     which asks "Send … a friend request?". Without the app it explains how to get it. -->
+<meta name="description" content="Be friends on Wishlist: see each other's wishlists and reserve gifts.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Let's be friends on Wishlist 🎁">
+<meta property="og:description" content="See each other's wishlists and reserve gifts, so nobody gives the same gift twice.">
+<meta property="og:image" content="https://androidenthusiast.github.io/Wishlist/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="../wishlist.css">
+<style>
+body { font-family: system-ui, sans-serif; margin: 0; padding: 32px 20px; text-align: center; }
+main { max-width: 420px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; align-items: center; }
+a.btn { display: inline-block; padding: 12px 22px; border-radius: 24px; background: #3f6fd0; color: #fff; text-decoration: none; font-weight: 600; }
+a.btn.outline { background: none; color: #3f6fd0; border: 1.5px solid #3f6fd0; }
+.code { font-size: 1.6rem; font-weight: 700; letter-spacing: 3px; }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="title">Let's be friends on Wishlist 🎁</h1>
+  <p id="lead">See each other's wishlists and reserve gifts, so nobody gives the same gift twice.</p>
+  <a class="btn" id="open" href="#">Open in the Wishlist app</a>
+  <p>No app yet? Get it for Android, then tap this link again, or enter this friend code under Friends &gt; Add a friend:</p>
+  <div class="code" id="code"></div>
+  <a class="btn outline" href="https://github.com/AndroidEnthusiast/Wishlist/releases/download/latest/Wishlist.apk">Get the app</a>
+</main>
+<script>
+// Only a 6-letter code and a short name are read from the link; the name is shown as text, never as HTML.
+(function () {
+  var q = new URLSearchParams(location.search);
+  var code = String(q.get("f") || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+  var name = String(q.get("n") || "").slice(0, 30);
+  if (code.length !== 6) { document.getElementById("lead").textContent = "This friend link isn't complete. Ask for it again."; return; }
+  if (name) document.getElementById("title").textContent = name + " wants to be friends on Wishlist 🎁";
+  document.getElementById("code").textContent = code.slice(0, 3) + "-" + code.slice(3);
+  var app = "wishlist://friend?f=" + code + (name ? "&n=" + encodeURIComponent(name) : "");
+  document.getElementById("open").href = app;
+  if (/Android/i.test(navigator.userAgent || "")) location.href = app;
+})();
+</script>
+</body>
+</html>

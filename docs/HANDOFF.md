@@ -187,6 +187,8 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 
 - 6 November (night): Price watch review; **2.138**. Not checked: the reserved prices on a phone (they fill in as friends' lists are opened; gifts reserved before 2.138 start from the first price seen after the update).
 
+- 6 November (night): Friends review; **2.139**. Not checked: the friend link on a phone (Chrome on Android should open wishlist://friend from the page; some browsers ask first).
+
 ## Next session
 - **Continue the page-by-page review** (owner): Home is done (2.134). Same approach for each page: list every element, its copy and what it does; say what's missing, illogical or could be better from a user's point of view; ask with pop-ups; then build. The "Top wishes" page is no longer reached from Home's tiles (still reachable? ask whether it should get a place, e.g. a filter on All your wishes).
 - **2.132: the shop browser is plain again** (owner: remove every bol.com fix). Owner checked it the same evening: "It looks good again." Ask whether all shop icons show (Google's service only). Don't add bol.com workarounds without asking.

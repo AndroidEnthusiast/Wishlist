@@ -77,6 +77,38 @@ import coil.compose.AsyncImage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+/**
+ * "3 new wishes" on a friend's row (owner, 2.139): wishes they added that you haven't seen yet. What you've seen is
+ * what was on their lists the last time you opened their page (kept on this phone). The first time a friend is counted,
+ * everything counts as seen, so nobody starts with a pile of "new" wishes.
+ */
+object FriendNews {
+    var counts by mutableStateOf<Map<String, Int>>(emptyMap())
+        private set
+    private fun prefs(c: android.content.Context) = c.applicationContext.getSharedPreferences("wishlist", android.content.Context.MODE_PRIVATE)
+    private fun ids(lists: Collection<RemoteList>) =
+        lists.flatMap { it.wishes }.filter { it.bin == 0L && it.id != ABOUT_ITEM_ID && !it.got }.map { it.id.toString() }.toSet()
+
+    suspend fun refresh(c: android.content.Context, friends: List<Person>) {
+        val out = HashMap<String, Int>()
+        for (f in friends) {
+            val lists = f.lists.mapNotNull { l -> try { Friends.fetchList(c, f.id, l.code) } catch (e: Exception) { null } }
+            if (lists.size < f.lists.size && f.lists.isNotEmpty()) { counts[f.id]?.let { out[f.id] = it }; continue }
+            val now = ids(lists)
+            val seen = prefs(c).getStringSet("fseen_" + f.id, null)
+            if (seen == null) { prefs(c).edit().putStringSet("fseen_" + f.id, now).apply(); out[f.id] = 0 }
+            else out[f.id] = (now - seen).size
+        }
+        counts = out
+    }
+
+    /** Their page was opened and their lists loaded: everything on them is seen now. */
+    fun markSeen(c: android.content.Context, id: String, lists: Collection<RemoteList>) {
+        prefs(c).edit().putStringSet("fseen_$id", ids(lists)).apply()
+        counts = counts + (id to 0)
+    }
+}
+
 /** Where you are inside the Friends tab: a friend's page, and one of their lists. */
 object FriendsNav {
     var person by mutableStateOf<String?>(null)
@@ -85,6 +117,10 @@ object FriendsNav {
     var page by mutableStateOf<String?>(null)
     /** The lists of the friend whose page is open, as loaded (for the blocks and the numbers). */
     var loaded by mutableStateOf<Map<String, RemoteList>>(emptyMap())
+
+    /** A friend link that was opened (owner, 2.139): their code and the name in the link. */
+    var addCode by mutableStateOf<String?>(null)
+    var addName by mutableStateOf("")
 
     /** Set when a friend request alert is tapped: MainActivity opens the Friends tab. */
     var openTab by mutableStateOf(false)
@@ -235,6 +271,13 @@ private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenL
         }
     }
 
+    // "3 new wishes" (owner, 2.139): their lists are looked at when this tab opens (not on every refresh).
+    LaunchedEffect(tick, Friends.state?.friends?.map { it.id }) {
+        Friends.state?.friends?.let { try { FriendNews.refresh(ctx, it) } catch (e: Exception) {} }
+    }
+    // A friend link was tapped (owner, 2.139): "Send Jorai a friend request?".
+    LaunchedEffect(FriendsNav.addCode) { if (FriendsNav.addCode != null) adding = true }
+
     fun act(done: String, block: suspend () -> Unit) {
         scope.launch {
             try {
@@ -273,7 +316,7 @@ private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenL
             if (Shared.lastName.isBlank()) item {
                 Notice(tr("Add your name and photo so friends recognise you."), tr("Go to profile"), onProfile)
             }
-            item { CodeCard(s?.code.orEmpty(), problem && s == null, onAdd = { adding = true }, onRetry = { tick++ }) }
+            item { CodeCard(s?.code.orEmpty(), problem && s == null, onAdd = { adding = true }, onRetry = { tick++ }, small = s?.friends?.isNotEmpty() == true) }
             if (problem && s != null) item {
                 Text(tr("Couldn’t reach the server. Check your connection."), color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             }
@@ -305,7 +348,9 @@ private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenL
                         modifier = Modifier.padding(start = 4.dp)
                     )
                 }
-                items(s.friends, key = { "f" + it.id }) { f ->
+                // Friends with new wishes first (owner, 2.139), then by name.
+                val ordered = s.friends.sortedWith(compareByDescending<Person> { FriendNews.counts[it.id] ?: 0 }.thenBy { it.name.lowercase() })
+                items(ordered, key = { "f" + it.id }) { f ->
                     FriendRow(
                         f,
                         onOpen = { FriendsNav.person = f.id },
@@ -337,10 +382,11 @@ private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenL
         }
     }
 
-    if (adding) AddFriendDialog { msg ->
+    if (adding) AddFriendDialog(onClose = { msg ->
         adding = false
+        FriendsNav.addCode = null
         if (msg != null) scope.launch { snack.showToast(msg) }
-    }
+    }, prefill = FriendsNav.addCode.orEmpty(), prefillName = FriendsNav.addName)
     unfollow?.let { f ->
         AlertDialog(
             onDismissRequest = { unfollow = null },
@@ -374,10 +420,25 @@ private fun Notice(text: String, button: String, onClick: () -> Unit) {
 
 /** Your friend code, with Share and Add a friend. */
 @Composable
-private fun CodeCard(code: String, offline: Boolean, onAdd: () -> Unit, onRetry: () -> Unit) {
+private fun CodeCard(code: String, offline: Boolean, onAdd: () -> Unit, onRetry: () -> Unit, small: Boolean = false) {
     val ctx = LocalContext.current
     val look = LocalLook.current
     val id = 3L
+    // Once you have friends: one slim row (owner, 2.139).
+    if (small && !offline && code.isNotEmpty()) {
+        Row(
+            Modifier.fillMaxWidth().padding(top = 8.dp).lookCard(look, id, look.cardShape(id, small = true)).padding(start = 14.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(tr("Your code"), style = MaterialTheme.typography.labelSmall, color = look.cardMuted(id))
+                Text(Friends.pretty(code), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = look.cardInk(id), letterSpacing = 1.sp)
+            }
+            TextButton(onClick = { Friends.shareCode(ctx, code) }) { Text(tr("Share")) }
+            TextButton(onClick = onAdd) { Text(tr("Add a friend")) }
+        }
+        return
+    }
     Column(
         Modifier.fillMaxWidth().padding(top = 8.dp).lookCard(look, id, look.cardShape(id, small = false)).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -438,7 +499,22 @@ private fun FriendRow(f: Person, onOpen: () -> Unit, onUnfriend: () -> Unit) {
             Avatar(Friends.photos[f.id], f.name, 52.dp)
             Column(Modifier.weight(1f).padding(start = 12.dp)) {
                 Text(f.name.ifBlank { tr("Someone") }, style = MaterialTheme.typography.titleMedium, color = look.cardInk(id), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(
+                // Their birthday when it's within 60 days, and wishes they added since you last looked (owner, 2.139).
+                val days = Friends.daysUntil(f.birthday)
+                val fresh = FriendNews.counts[f.id] ?: 0
+                if (days != null && days <= 60) Text(
+                    "🎂 " + when (days) { 0 -> tr("Birthday today!"); 1 -> tr("Birthday tomorrow"); else -> tr("Birthday in %d days", days) },
+                    style = MaterialTheme.typography.bodySmall, color = look.cardInk(id)
+                )
+                if (fresh > 0) Row(verticalAlignment = Alignment.CenterVertically) {
+                    RedDot()
+                    Text(
+                        if (fresh == 1) tr("1 new wish") else tr("%d new wishes", fresh),
+                        style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = look.cardInk(id),
+                        modifier = Modifier.padding(start = 6.dp)
+                    )
+                }
+                if ((days == null || days > 60) && fresh == 0) Text(
                     when (f.lists.size) {
                         0 -> tr("No wishlists to see yet")
                         1 -> tr("1 wishlist")
@@ -470,6 +546,8 @@ private fun LoadFriendLists(f: Person) {
             }
         }
         FriendsNav.loaded = out
+        // Opening their page counts as seeing their new wishes (owner, 2.139).
+        if (out.size == f.lists.size) FriendNews.markSeen(ctx, f.id, out.values)
     }
 }
 
@@ -680,13 +758,13 @@ private fun FriendWishesPage(f: Person, page: String, snack: SnackbarHostState) 
  * [onClose] gets the message to show (the screen behind shows it: this dialog is gone by then).
  */
 @Composable
-fun AddFriendDialog(onClose: (String?) -> Unit) {
+fun AddFriendDialog(onClose: (String?) -> Unit, prefill: String = "", prefillName: String = "") {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
     val needName = remember { Shared.lastName.isBlank() }
     var name by remember { mutableStateOf("") }
-    var code by remember { mutableStateOf("") }
+    var code by remember { mutableStateOf(prefill) }
     var error by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
     val focus = remember { FocusRequester() }
@@ -722,11 +800,15 @@ fun AddFriendDialog(onClose: (String?) -> Unit) {
 
     AlertDialog(
         onDismissRequest = { onClose(null) },
-        title = { Text(tr("Add a friend")) },
+        title = { Text(if (prefill.isNotEmpty()) tr("Send %s a friend request?", prefillName.ifBlank { tr("them") }) else tr("Add a friend")) },
         text = {
             val err = error
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(tr("Enter your friend’s code. Once they approve, you see each other’s wishlists."), color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    if (prefill.isNotEmpty()) tr("Once they approve, you see each other’s wishlists.")
+                    else tr("Enter your friend’s code. Once they approve, you see each other’s wishlists."),
+                    color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium
+                )
                 if (needName) OutlinedTextField(
                     name, { name = it.take(30); error = null }, singleLine = true, label = { Text(tr("Your name")) },
                     keyboardOptions = Capitalised
@@ -987,10 +1069,10 @@ fun ProfileScreen(snack: SnackbarHostState) {
         }
     }
 
-    if (adding) AddFriendDialog { msg ->
+    if (adding) AddFriendDialog(onClose = { msg ->
         adding = false
         if (msg != null) scope.launch { snack.showToast(msg) }
-    }
+    })
     pending?.let { img ->
         HeroEditor(
             img, HeroEdit(), round = true,

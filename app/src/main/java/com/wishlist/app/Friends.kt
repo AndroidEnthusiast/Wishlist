@@ -512,10 +512,22 @@ object Friends {
 
     // ---- sharing your code ----
 
+    /** A friend link (…/friend/?f=CODE&n=Name, or wishlist://friend?f=…): the code and the name, or null. */
+    fun parseFriendLink(s: String): Pair<String, String>? {
+        val m = Regex("[?&]f=([A-Za-z0-9]{6})(?![A-Za-z0-9])").find(s) ?: return null
+        val n = Regex("[?&]n=([^&\\s#]+)").find(s)?.groupValues?.get(1)?.let {
+            try { java.net.URLDecoder.decode(it, "UTF-8") } catch (e: Exception) { "" }
+        }.orEmpty().take(30)
+        return m.groupValues[1].uppercase() to n
+    }
+
     fun shareCode(c: Context, code: String) {
+        // A link that adds you with one tap (owner, 2.139); the code still works by hand.
+        val link = Config.SHARE_URL.trimEnd('/') + "/friend/?f=" + code +
+            (if (Shared.lastName.isNotBlank()) "&n=" + java.net.URLEncoder.encode(Shared.lastName, "UTF-8") else "")
         val text = tr(
-            "Let’s be friends on Wishlist, so we can see each other’s wishlists. My friend code is %1\$s. In the app, tap Friends and then Add a friend. No app yet? Get it here: %2\$s",
-            pretty(code), Config.APK_URL
+            "Let’s be friends on Wishlist, so we can see each other’s wishlists. Tap to add me: %1\$s (or enter my friend code %2\$s under Friends > Add a friend).",
+            link, pretty(code)
         )
         val i = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
         c.startActivity(Intent.createChooser(i, tr("Share your friend code")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))

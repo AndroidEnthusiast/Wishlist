@@ -263,6 +263,14 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** A friend link: the Friends tab with "Send … a friend request?" (owner, 2.139). */
+    private fun openFriendLink(code: String, name: String) {
+        FriendsNav.reset()
+        FriendsNav.addName = name
+        FriendsNav.addCode = code
+        FriendsNav.openTab = true
+    }
+
     private fun handle(i: Intent?) {
         // A tapped push notification: its line on the Notifications page is seen already (owner, 2.126: no red dot).
         if (i != null && i.hasExtra(Alerts.NOTE_KIND)) {
@@ -331,6 +339,8 @@ class MainActivity : ComponentActivity() {
             Groups.parseLink(d)?.let { GroupNav.openInvite(null, it); return }
             // Gift exchange (2.129): wishlist://exchange?x=KEY.
             Exchanges.parseLink(d)?.let { ExchangeNav.openInvite(null, it); return }
+            // A friend link (2.139): wishlist://friend?f=CODE&n=Name.
+            if (d.startsWith("wishlist://friend")) Friends.parseFriendLink(d)?.let { (c, n) -> openFriendLink(c, n); return }
             Sync.parseInvite(d)?.let { sharedInvite = it }
             return
         }
@@ -340,6 +350,7 @@ class MainActivity : ComponentActivity() {
             Groups.parseMe(t)?.let { GroupNav.takeover = it; GroupNav.request++; return }
             Groups.parseLink(t)?.let { GroupNav.openInvite(null, it); return }
             Exchanges.parseLink(t)?.let { ExchangeNav.openInvite(null, it); return }
+            if (t.contains("/friend/?f=")) Friends.parseFriendLink(t)?.let { (c, n) -> openFriendLink(c, n); return }
             // An invite link shared into the app (the share sheet) opens the "Join" screen.
             val invite = if (t.uppercase().contains("J=")) Sync.parseInvite(t) else null
             val code = Sync.embeddedCode(t)
