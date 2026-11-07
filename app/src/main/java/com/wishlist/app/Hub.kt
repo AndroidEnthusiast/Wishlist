@@ -173,6 +173,7 @@ fun HubScreen(
     var deleting by remember { mutableStateOf<HubItem?>(null) }
     var leaving by remember { mutableStateOf<HubItem?>(null) }
     var visibleOf by remember { mutableStateOf<HubItem?>(null) }
+    var sharingCollab by remember { mutableStateOf<SharedList?>(null) }
     // Long press on a list: Edit name, Visible to (own lists, 2.105), then Delete wishlist (or Leave wishlist on a group wishlist someone else made).
     fun actionsOf(item: HubItem): List<Triple<String, Boolean, () -> Unit>> {
         val group = item.key.startsWith("s:")
@@ -191,8 +192,12 @@ fun HubScreen(
         // Share first on your own lists (owner, 7 November 2026): it opens the share card (HomeShare.kt).
         val onShare: () -> Unit = { NameGate.ensure { ShareNav.list = code } }
         val edit = Triple(tr("Edit name"), false, onEdit)
-        return if (group && !creator) listOf(edit, Triple(tr("Leave wishlist"), true, onLeave))
-        else if (group) listOf(edit, Triple(tr("Delete wishlist"), true, onDelete))
+        // A collab wishlist's Share is its invitation: the link and Invite Friends (owner, 7 November 2026). No
+        // "Visible to": only people with the invitation are on it.
+        val onShareCollab: () -> Unit = { NameGate.ensure { sharingCollab = Shared.lists.firstOrNull { it.code == code } } }
+        val shareCollab = Triple(tr("Share"), false, onShareCollab)
+        return if (group && !creator) listOf(shareCollab, edit, Triple(tr("Leave wishlist"), true, onLeave))
+        else if (group) listOf(shareCollab, edit, Triple(tr("Delete wishlist"), true, onDelete))
         else listOfNotNull(
             Triple(tr("Share"), false, onShare),
             edit,
@@ -218,7 +223,7 @@ fun HubScreen(
 
         if (groupItems.isNotEmpty()) {
             HubTitle(tr("Collab wishlists"), onMore = more)
-            HubBlocks(byRecent(groupItems), onHome, ::actionsOf, onAddTo, tr("New collab wishlist"), if (onHome) onNewGroup else null)
+            HubBlocks(byRecent(groupItems), onHome, ::actionsOf, onAddTo, tr("New collab wishlist"), if (onHome) onNewGroup else null, dots = true)
         }
     }
 
@@ -253,6 +258,7 @@ fun HubScreen(
         }
     }
 
+    sharingCollab?.let { l -> androidx.compose.runtime.key(l.code) { SharedShareDialog(l) { sharingCollab = null } } }
     // "Visible to" (2.105, owner): the same three choices as in the list's settings, with radio buttons.
     visibleOf?.let { item ->
         AlertDialog(

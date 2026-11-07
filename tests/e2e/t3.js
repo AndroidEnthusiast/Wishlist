@@ -14,7 +14,7 @@ const settle = (t) => t.page.waitForFunction(() => window.__wl.pending() === 0);
   check("reserved online with this browser's device id", !!dev && dev === await t.page.evaluate(() => localStorage.getItem("wl_device")));
   check("no wish change for a reservation", t.fake.calls("wl_sh_put_item").length === 0);
   await t.page.screenshot({ path: "shot_reserved.png" });
-  await t.page.locator(".card[data-id='1002']").getByRole("button", { name: "Undo", exact: true }).click();
+  await t.page.locator(".card[data-id='1002']").getByRole("button", { name: "Unreserve", exact: true }).click();
   await t.page.waitForFunction(() => !/Reserved/.test(document.querySelector(".card[data-id='1002']").innerText));
   check("undo reservation", !t.fake.res[CODE][1002]);
   // two givers at once: the second one is told

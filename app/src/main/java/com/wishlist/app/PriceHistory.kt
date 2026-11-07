@@ -66,10 +66,11 @@ import kotlin.math.abs
 private val DropGreen = Color(0xFF0B7A3E)
 
 /** Shares one wish as plain text: its name, price and link. Works in any app. */
-fun shareItem(c: Context, w: Wish) {
+fun shareItem(c: Context, w: Wish, idea: Boolean = Shared.active != null) {
     // Owner, 2.105: "Look what’s on my wishlist" and the shop's link (it works for anyone, whoever can see the list).
-    // 2.111 (owner): with an exclamation mark at the end of the sentence.
-    val text = if (Shared.active != null) {
+    // 2.111 (owner): with an exclamation mark at the end of the sentence. [idea]: a collab wishlist or someone else's
+    // list (owner, 7 November 2026: a Friend's wish is shared as a gift idea with its shop link).
+    val text = if (idea) {
         if (w.url.isNotBlank()) tr("Look at this gift idea") + "\n" + w.url else tr("Look at this gift idea") + ": " + w.title
     } else {
         if (w.url.isNotBlank()) tr("Look what’s on my wishlist!") + "\n" + w.url else tr("Look what’s on my wishlist: %s!", w.title)

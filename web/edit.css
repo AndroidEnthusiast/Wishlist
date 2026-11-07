@@ -280,7 +280,8 @@ button.badge.wlt-ask { border: 0; font: inherit; cursor: pointer; text-decoratio
   border: 1px solid var(--outline); background: var(--bg); color: var(--fg);
 }
 .wlt-tabs { display: flex; gap: 2px; overflow-x: auto; margin: 8px 0 4px; }
-.wlt-tab { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 10px; border: 0; background: transparent; font-size: 1.25rem; cursor: pointer; }
+.wlt-tab { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 10px; border: 0; background: transparent; color: var(--muted); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.wlt-more { min-width: 32px; justify-content: center; font-weight: 600; }
 .wlt-emoji { display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); overflow-y: auto; min-height: 120px; flex: 1 1 auto; }
 .wlt-gh { grid-column: 1 / -1; font-size: .8rem; font-weight: 600; color: var(--muted); padding: 8px 4px 4px; }
 .wlt-e { height: 42px; border: 0; background: transparent; border-radius: 10px; font-size: 1.5rem; cursor: pointer; }

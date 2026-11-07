@@ -226,13 +226,14 @@ fun JoinDialog(key: String, onJoined: (String) -> Unit, onClose: () -> Unit) {
  * it can add wishes and reserve gifts). Managing the list is in its settings.
  */
 @Composable
-fun SharedShareDialog(onClose: () -> Unit) {
+fun SharedShareDialog(list: SharedList? = null, onClose: () -> Unit) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val clip = LocalClipboardManager.current
     val cs = MaterialTheme.colorScheme
-    val l = Shared.current ?: return
-    val title = Repo.listName
+    // [list]: a collab wishlist shared from its ⋮ on Home (owner, 7 November 2026), else the open one.
+    val l = list ?: Shared.current ?: return
+    val title = if (list != null) list.name else Repo.listName
     val invite = inviteLink(l.key)
     // Invite Friends in the app (owner, 7 November 2026): an invitation to accept, besides the link.
     var inviting by remember { mutableStateOf(false) }

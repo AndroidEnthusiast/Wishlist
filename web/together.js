@@ -185,7 +185,8 @@
           });
         }
         groups.forEach(function (g, i) {
-          var t = el("button", "wlt-tab", g.list[0] ? g.list[0].c : "?");
+          var t = el("button", "wlt-tab");
+          t.appendChild(groupIcon(i));
           t.type = "button"; t.title = T_(g.name); t.setAttribute("aria-label", T_(g.name));
           t.addEventListener("click", function () { search.value = ""; all(); if (heads[i]) grid.scrollTop = heads[i].offsetTop - grid.offsetTop; });
           tabs.appendChild(t);
@@ -220,6 +221,51 @@
       row.appendChild(button(T_("Close"), "", close));
       box.appendChild(row);
     });
+  }
+
+  // Every reaction on a wish with who (owner, 7 November 2026: the "+N" circle shows them all).
+  function everyone(list) {
+    var by = {};
+    list.forEach(function (r) { (by[r.e] = by[r.e] || []).push(r); });
+    dialog(T_("Reactions"), function (box, close) {
+      Object.keys(by).sort(function (a, b) { return by[b].length - by[a].length; }).forEach(function (e) {
+        var p = el("p", "wlt-p");
+        p.appendChild(el("span", "wlt-ce", e));
+        p.appendChild(document.createTextNode(" " + by[e].length + " · " + by[e].map(function (r) {
+          return r.m ? T_("You") : (String(r.n || "").trim() || T_("Someone"));
+        }).join(", ")));
+        box.appendChild(p);
+      });
+      var row = el("div", "wlt-row");
+      row.appendChild(button(T_("Close"), "", close));
+      box.appendChild(row);
+    });
+  }
+
+  // The emoji groups' tabs: simple grey line icons (owner, 7 November 2026: emoji there looked tappable). Same
+  // drawings as the app (GroupIcon in Reactions.kt), our own.
+  var GROUP_ICONS = [
+    "M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M8 14.5Q12 18.5 16 14.5M9 10h.01M15 10h.01",
+    "M12 4.4a3.6 3.6 0 1 0 0 7.2a3.6 3.6 0 1 0 0-7.2M5 20Q5 13.5 12 13.5Q19 13.5 19 20",
+    "M5 19Q4 6 19 5Q19 19 5 19M5 19L13 11",
+    "M5 9L16 9L15 18Q14.8 19.5 13 19.5L8 19.5Q6.2 19.5 6 18L5 9M16 11Q20 11 19.5 13.5Q19 15.5 15.5 15.5M9 6.5L9 4.5M12 6.5L12 4.5",
+    "M4 16L4 12.5L6.5 8L17.5 8L20 12.5L20 16L4 16M4 12.5L20 12.5M8 17h.01M16 17h.01",
+    "M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M3 12L21 12M12 3Q7 12 12 21M12 3Q17 12 12 21",
+    "M9 16Q9 14 7.5 12.5Q5 10 6 7Q7.5 3.5 12 3.5Q16.5 3.5 18 7Q19 10 16.5 12.5Q15 14 15 16L9 16M9.5 19L14.5 19M10.5 21.5L13.5 21.5",
+    "M12 20Q3 14 3.5 9Q4 4.5 8 4.5Q10.5 4.5 12 7Q13.5 4.5 16 4.5Q20 4.5 20.5 9Q21 14 12 20",
+    "M6 21L6 4M6 4.5Q9 3 12 4.5Q15 6 18 4.5L18 12.5Q15 14 12 12.5Q9 11 6 12.5"
+  ];
+  function groupIcon(i) {
+    var NS = "http://www.w3.org/2000/svg";
+    var s = document.createElementNS(NS, "svg");
+    s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("width", "22"); s.setAttribute("height", "22");
+    s.setAttribute("aria-hidden", "true");
+    var p = document.createElementNS(NS, "path");
+    p.setAttribute("d", GROUP_ICONS[Math.min(i, GROUP_ICONS.length - 1)]);
+    p.setAttribute("fill", "none"); p.setAttribute("stroke", "currentColor"); p.setAttribute("stroke-width", "1.8");
+    p.setAttribute("stroke-linecap", "round"); p.setAttribute("stroke-linejoin", "round");
+    s.appendChild(p);
+    return s;
   }
 
   // ---------- "Is it still being bought?" ----------
@@ -280,14 +326,17 @@
     },
 
     // Under a wish: the reactions and (when [canReact]) the "+ react" pill. Null when there is nothing to show.
-    bar: function (code, w, canReact) {
+    // [max]: at most this many reactions as chips, the rest in a "+N" circle that lists them all (owner, 7 November 2026).
+    bar: function (code, w, canReact, max) {
+      max = max || 3;
       if (!cfg || missing || !code) return null;
       var list = (reacts[code] || []).filter(function (r) { return r.i === w.id; });
       if (!list.length && !canReact) return null;
       var bar = el("div", "wlt-bar");
       var by = {};
       list.forEach(function (r) { (by[r.e] = by[r.e] || []).push(r); });
-      Object.keys(by).sort(function (a, b) { return by[b].length - by[a].length; }).forEach(function (e) {
+      var keys = Object.keys(by).sort(function (a, b) { return by[b].length - by[a].length; });
+      keys.slice(0, max).forEach(function (e) {
         var mine = by[e].some(function (r) { return r.m; });
         var chip = el("button", "wlt-chip" + (mine ? " mine" : ""));
         chip.type = "button";
@@ -309,8 +358,15 @@
         });
         bar.appendChild(chip);
       });
+      if (keys.length > max) {
+        var more = el("button", "wlt-chip wlt-more", "+" + (keys.length - max));
+        more.type = "button";
+        more.setAttribute("aria-label", T_("All reactions"));
+        more.addEventListener("click", function () { everyone(list); });
+        bar.appendChild(more);
+      }
       if (canReact) {
-        var add = el("button", "wlt-add", "+ " + T_("react"));
+        var add = el("button", "wlt-add", "+ " + T_("React"));
         add.type = "button";
         add.addEventListener("click", function () { withName(function () { picker(function (e) { setReact(code, w.id, e); }); }); });
         bar.appendChild(add);

@@ -3,6 +3,11 @@ package com.wishlist.app
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -70,7 +75,9 @@ fun FriendScreen(
     var remote by remember(f.code) { mutableStateOf<RemoteList?>(null) }
     var res by remember(f.code) { mutableStateOf<Map<Long, Boolean>>(emptyMap()) }
     var state by remember(f.code) { mutableStateOf("loading") }
-    var busy by remember(f.code) { mutableStateOf<Long?>(null) }
+    // Wishes whose reservation is on its way to the server (owner, 7 November 2026): only their button waits; the label
+    // changes at once and goes back if the server says no.
+    var pending by remember(f.code) { mutableStateOf<Set<Long>>(emptySet()) }
     var cat by remember(f.code) { mutableStateOf("All") }
     var tick by remember { mutableStateOf(0) }
     var confirmRemove by remember { mutableStateOf(false) }
@@ -99,7 +106,8 @@ fun FriendScreen(
                 } else {
                     val m = Cloud.fetchReservations(f.code, Repo.deviceId)
                     remote = r
-                    res = m
+                    // A tap still on its way keeps what it shows.
+                    res = if (pending.isEmpty()) m else m.toMutableMap().apply { pending.forEach { id -> res[id]?.let { put(id, it) } ?: remove(id) } }
                     FriendWatch.check(ctx, f, r, m.filterValues { it }.keys, FriendWatch.movedFrom(ctx, f.code, r))
                     state = "ok"
                     if (fetch == null && r.name != f.name) Repo.renameFriend(ctx, f.code, r.name)
@@ -112,39 +120,50 @@ fun FriendScreen(
     }
 
     fun reserveCount(w: Wish, n: Int) {
+        val before = res[w.id]
+        res = if (n > 0) res + (w.id to true) else res - w.id
+        pending = pending + w.id
         scope.launch {
-            busy = w.id
             var msg: String? = null
             try {
                 if (!Cloud.reserveCount(f.code, w.id, Repo.deviceId, n)) msg = tr("Someone else just reserved that one.")
                 else if (n > 0) FriendWatch.reserved(ctx, f.code, w) else FriendWatch.unreserved(ctx, f.code, w.id)
-                res = Cloud.fetchReservations(f.code, Repo.deviceId)
             } catch (e: Exception) {
                 msg = tr("No connection. Try again.")
+                res = if (before == null) res - w.id else res + (w.id to before)
             }
-            busy = null
+            pending = pending - w.id
+            try { res = Cloud.fetchReservations(f.code, Repo.deviceId) } catch (e: Exception) {}
             msg?.let { snack.showToast(it) }
         }
     }
 
+    // Reserve shows "Reserved by you" and Unreserve at once (owner, 7 November 2026: it took too long, and every
+    // Reserve button went grey); the server is asked in the background and a "no" puts it back with a message.
     fun toggle(w: Wish, reserve: Boolean) {
         if (w.qty > 1) { if (reserve) askFor = w else reserveCount(w, 0); return }
+        if (w.id in pending) return
+        val before = res[w.id]
+        res = if (reserve) res + (w.id to true) else res - w.id
+        pending = pending + w.id
         scope.launch {
-            busy = w.id
             var msg: String? = null
+            var failed = false
             try {
                 if (reserve) {
-                    if (!Cloud.reserve(f.code, w.id, Repo.deviceId)) msg = tr("Someone else just reserved that one.")
+                    if (!Cloud.reserve(f.code, w.id, Repo.deviceId)) { msg = tr("Someone else just reserved that one."); failed = true }
                     else FriendWatch.reserved(ctx, f.code, w)
                 } else {
                     Cloud.unreserve(f.code, w.id, Repo.deviceId)
                     FriendWatch.unreserved(ctx, f.code, w.id)
                 }
-                res = Cloud.fetchReservations(f.code, Repo.deviceId)
             } catch (e: Exception) {
                 msg = tr("No connection. Try again.")
+                failed = true
             }
-            busy = null
+            if (failed) res = if (before == null) res - w.id else res + (w.id to before)
+            pending = pending - w.id
+            try { res = Cloud.fetchReservations(f.code, Repo.deviceId) } catch (e: Exception) {}
             msg?.let { snack.showToast(it) }
         }
     }
@@ -159,7 +178,7 @@ fun FriendScreen(
                         val owner = ownerName?.takeIf { it.isNotBlank() } ?: remote?.owner
                         // "Owned by …" only when the list's name doesn't say whose it is (owner, 7 November 2026).
                         if (!owner.isNullOrBlank() && !nameSaysOwner(f.name, owner)) Text(
-                            tr("Owned by %s", owner), style = MaterialTheme.typography.labelMedium,
+                            tr("Wishlist of %s", owner), style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis
                         )
                         // The list's occasion (owner, 2.124), e.g. "Birthday · in 3 weeks".
@@ -197,36 +216,52 @@ fun FriendScreen(
                 }
                 r0 != null -> {
                     // The list's cover photo, as its owner made it (2.105).
-                    if (r0.cover.isNotEmpty()) HeroPicture(
-                        r0.cover, HeroEdit.fromJson(r0.coverEdit),
-                        Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp).fillMaxWidth()
-                            .height(150.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp)),
-                        cut = r0.cover
-                    )
                     // Only the categories that wishes on this list carry (owner, 7 November 2026); none at all: no row,
                     // the wishes move up. A category that empties while you look at it falls back to All.
                     val onList = r0.wishes.filter { it.bin == 0L }
                     val usedCats = r0.cats.filter { c -> onList.any { it.category == c } }
                     if (cat != "All" && cat !in usedCats) cat = "All"
-                    if (usedCats.isNotEmpty()) LazyRow(
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(listOf("All") + usedCats) { c ->
-                            FilterChip(selected = c == cat, onClick = { cat = c }, label = { Text(catLabel(c)) })
+                    val hasCover = r0.cover.isNotEmpty()
+                    // The cover scrolls away with the wishes; the categories stay pinned at the top (owner, 7 November 2026).
+                    val cover: @Composable (Modifier) -> Unit = { m ->
+                        HeroPicture(
+                            r0.cover, HeroEdit.fromJson(r0.coverEdit),
+                            m.fillMaxWidth().height(150.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp)),
+                            cut = r0.cover
+                        )
+                    }
+                    val catRow: @Composable (PaddingValues) -> Unit = { pv ->
+                        LazyRow(contentPadding = pv, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            items(listOf("All") + usedCats) { c ->
+                                FilterChip(selected = c == cat, onClick = { cat = c }, label = { Text(catLabel(c)) })
+                            }
                         }
                     }
                     // Wishes in the owner's bin are not on the list.
                     // Owned wishes at the bottom (owner, 2.113): what's still wanted comes first.
                     val shown = onList.filter { cat == "All" || it.category == cat }.sortedBy { it.got }
                     if (shown.isEmpty()) {
-                        Box(Modifier.fillMaxSize().padding(32.dp), Alignment.Center) {
-                            Text(tr("Nothing here yet."), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+                            if (hasCover) cover(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp))
+                            if (usedCats.isNotEmpty()) catRow(PaddingValues(horizontal = 16.dp))
+                            Text(
+                                tr("Nothing here yet."), color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.fillMaxWidth().padding(32.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
                         }
                     } else {
+                        // Before the wishes in the grid: the cover (when there is one) and the categories (when used).
+                        val pre = (if (hasCover) 1 else 0) + (if (usedCats.isNotEmpty()) 1 else 0)
+                        val catIndex = if (hasCover) 1 else 0
                         // A wish tapped on a friend's "Wishes" or "Top wishes" page: scroll to it if it isn't in
                         // sight and let it glow (2.95, like your own lists).
                         val gridState = rememberLazyGridState()
+                        val pinned by remember(catIndex, usedCats.isNotEmpty()) {
+                            derivedStateOf {
+                                usedCats.isNotEmpty() && (gridState.firstVisibleItemIndex > catIndex ||
+                                    (gridState.firstVisibleItemIndex == catIndex && gridState.firstVisibleItemScrollOffset > 0))
+                            }
+                        }
                         LaunchedEffect(WishFocus.target, cat, shown.size) {
                             val t = WishFocus.target ?: return@LaunchedEffect
                             val i = shown.indexOfFirst { it.id == t }
@@ -236,35 +271,41 @@ fun FriendScreen(
                             }
                             delay(150)
                             val info = gridState.layoutInfo
-                            val seen = info.visibleItemsInfo.firstOrNull { it.index == i }
+                            val seen = info.visibleItemsInfo.firstOrNull { it.index == i + pre }
                             val inSight = seen != null && seen.offset.y >= info.viewportStartOffset &&
                                 seen.offset.y + seen.size.height <= info.viewportEndOffset
-                            if (!inSight) gridState.animateScrollToItem(i)
+                            if (!inSight) gridState.animateScrollToItem(i + pre)
                             WishFocus.glow(t)
                             WishFocus.target = null
                         }
+                        Box(Modifier.fillMaxSize()) {
                         androidx.compose.runtime.CompositionLocalProvider(LocalWishDeco provides deco) {
                         LazyVerticalGrid(
                             state = gridState,
                             columns = if (Repo.view == "grid") GridCells.Fixed(2) else GridCells.Adaptive(300.dp),
-                            contentPadding = PaddingValues(16.dp, 12.dp, 16.dp, 32.dp),
+                            contentPadding = PaddingValues(16.dp, if (pre == 0) 12.dp else 0.dp, 16.dp, 32.dp),
                             horizontalArrangement = Arrangement.spacedBy(if (Repo.view == "list") 16.dp else 12.dp),
                             verticalArrangement = Arrangement.spacedBy(if (Repo.view == "list") 16.dp else 12.dp)
                         ) {
+                            if (hasCover) item(key = "cover", span = { GridItemSpan(maxLineSpan) }) { cover(Modifier) }
+                            if (usedCats.isNotEmpty()) item(key = "cats", span = { GridItemSpan(maxLineSpan) }) {
+                                catRow(PaddingValues(0.dp))
+                            }
                             gridItems(shown, key = { it.id }) { w ->
                                 val r = res[w.id]
                                 val label = if (w.got) tr("Owned") else reserveLabel(f.code, w, r)
                                     ?: if (overBudget?.invoke(w) == true) tr("Over budget") else null
                                 val actions: @Composable RowScope.() -> Unit = {
+                                    // Share this gift idea: its shop link (owner, 7 November 2026).
+                                    IconButton(onClick = { shareItem(ctx, w, idea = true) }) {
+                                        Icon(AppIcons.Share, tr("Share"), tint = LocalLook.current.cardMuted(w.id))
+                                    }
                                     if (!w.got) {
+                                        // "Unreserve" says exactly what it does (owner: "Undo" could be forgotten).
                                         if (r == null) {
-                                            Button(onClick = { toggle(w, true) }, enabled = busy == null) {
-                                                Text(tr("Reserve"))
-                                            }
+                                            Button(onClick = { toggle(w, true) }) { Text(tr("Reserve")) }
                                         } else if (r == true) {
-                                            OutlinedButton(onClick = { toggle(w, false) }, enabled = busy == null) {
-                                                Text(tr("Undo"))
-                                            }
+                                            OutlinedButton(onClick = { toggle(w, false) }) { Text(tr("Unreserve")) }
                                         }
                                     }
                                 }
@@ -279,6 +320,11 @@ fun FriendScreen(
                                 }
                                 }
                             }
+                        }
+                        }
+                        // The pinned copy of the categories once the list's own row scrolls away under it.
+                        if (pinned) Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).padding(vertical = 4.dp)) {
+                            catRow(PaddingValues(horizontal = 16.dp))
                         }
                         }
                     }

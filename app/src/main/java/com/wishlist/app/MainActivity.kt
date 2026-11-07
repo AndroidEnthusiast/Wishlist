@@ -1491,7 +1491,7 @@ fun HomeScreen(
                                 if (inShared) {
                                     // Reserving takes the place of "got it" on a shared list.
                                     if (r == true) {
-                                        OutlinedButton(onClick = { Shared.reserve(w, false) }) { Text(tr("Undo")) }
+                                        OutlinedButton(onClick = { Shared.reserve(w, false) }) { Text(tr("Unreserve")) }
                                     } else if (r == null) {
                                         Button(onClick = { Shared.reserve(w, true) }) { Text(tr("Reserve")) }
                                     }
@@ -1761,8 +1761,6 @@ fun CompactCard(
                 // The old price crossed out next to it after a change (owner, 2.126).
                 PriceLine(w, MaterialTheme.typography.titleMedium, Modifier.padding(top = 2.dp, bottom = 6.dp))
                 // No "Added on" here (owner, 2.100): too busy on a list; it stays in Price watch.
-                // Reactions (2.142): only on lists that show them (LocalWishDeco).
-                ReactionBar(w, Modifier.padding(bottom = 6.dp))
             }
             // The ⋮ lines up with the first line of the name, the bin under it (owner, 7 November 2026: Delete left the
             // menu). The 48 dp touch areas stay; only the icons move up next to the name.
@@ -1775,12 +1773,12 @@ fun CompactCard(
                     // ⋮ (owner, 2.113): Share, Edit, Private (with a tick), Mark as owned, Move to…; on a collab wishlist
                     // Reserve takes the place of Private/owned. No Top wish here: the star on the picture does that.
                     // Delete is the bin under the ⋮ (owner, 7 November 2026).
-                    DropdownMenuItem(text = { Text(tr("Share")) }, onClick = { menu = false; shareItem(ctx, w) })
+                    DropdownMenuItem(text = { Text(tr("Share")) }, onClick = { menu = false; shareItem(ctx, w, idea = readOnly || reserve != null) })
                     if (!readOnly) DropdownMenuItem(text = { Text(tr("Edit")) }, onClick = { menu = false; onEdit() })
                     if (reserve == null && !readOnly) PrivateMenuItem(w.priv) { menu = false; togglePrivate(ctx, w) }
                     if (reserve != null) {
                         when (reserve.state) {
-                            true -> DropdownMenuItem(text = { Text(tr("Undo reservation")) }, onClick = { menu = false; reserve.set(false) })
+                            true -> DropdownMenuItem(text = { Text(tr("Unreserve")) }, onClick = { menu = false; reserve.set(false) })
                             null -> DropdownMenuItem(text = { Text(tr("Reserve")) }, onClick = { menu = false; reserve.set(true) })
                             else -> {}
                         }
@@ -1798,6 +1796,9 @@ fun CompactCard(
             }
             }
         }
+        // Reactions under the name, as wide as the card, sized for it (owner, 7 November 2026): 2 at most, then "+N",
+        // and "+ React" on lists where you react.
+        ReactionBar(w, Modifier.padding(start = 10.dp, end = 6.dp, bottom = 6.dp), max = 2, compact = true)
         }
     }
 }
@@ -1921,8 +1922,7 @@ fun WishCard(
                 }
                 // No "Added on" here (owner, 2.100): too busy on a list; it stays in Price watch.
             }
-            // The size label and the reactions share one row (owner, 7 November 2026; LocalWishDeco).
-            ReactionBar(w, lead = if (w.size.isNotBlank()) ({ SizeTag(w.size) }) else null)
+            if (w.size.isNotBlank()) Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) { SizeTag(w.size) }
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Row(Modifier.weight(1f), verticalAlignment = Alignment.Bottom) {
                     Text(
@@ -1940,6 +1940,8 @@ fun WishCard(
                 }
                 actions()
             }
+            // The reactions on their own line under the price (owner, 7 November 2026): 3 at most, then "+N".
+            ReactionBar(w, max = 3)
         }
         }
     }
@@ -2004,7 +2006,8 @@ fun RowCard(
                     if (badge != null) TappableBadge(w, badge, small = true)
                 }
             }
-            Column(Modifier.weight(1f).padding(start = 4.dp, top = 10.dp, end = 8.dp, bottom = 2.dp)) {
+            // Room under the buttons, so Reserve never touches the card's edge (owner, 7 November 2026).
+            Column(Modifier.weight(1f).padding(start = 4.dp, top = 10.dp, end = 8.dp, bottom = 10.dp)) {
                 Column(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).combinedClickable(
                         enabled = w.url.isNotBlank() || onLongPress != null,
@@ -2024,10 +2027,20 @@ fun RowCard(
                         }
                     PriceLine(w, MaterialTheme.typography.titleMedium, Modifier.padding(top = 2.dp))
                 }
-                // Reactions (2.142): only on lists that show them (LocalWishDeco).
-                ReactionBar(w)
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-                    actions()
+                // Reactions (2.142): only on lists that show them (LocalWishDeco). Where you only see them (your own
+                // list) they share the line with ⋮ and the bin, 2 at most then "+N" (owner, 7 November 2026); where you
+                // react too, they keep their own line above Reserve.
+                val deco = LocalWishDeco.current
+                if (deco != null && !deco.canReact) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.weight(1f)) { ReactionBar(w, max = 2, compact = true) }
+                        actions()
+                    }
+                } else {
+                    ReactionBar(w)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                        actions()
+                    }
                 }
             }
         }

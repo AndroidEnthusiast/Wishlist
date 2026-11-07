@@ -84,7 +84,7 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   check("no Owned by when the name already says whose it is (7 November 2026)", own.window.document.getElementById("owner").hidden);
   store.owner = "Robin <b>R</b>";
   own = await load("?c=abcd2345");
-  check("Owned by the owner's name, as text (2.102)", own.window.document.getElementById("owner").textContent === "Owned by Robin <b>R</b>" && !own.window.document.getElementById("owner").hidden && !own.window.document.querySelector("#owner b"));
+  check("Owned by the owner's name, as text (2.102)", own.window.document.getElementById("owner").textContent === "Wishlist of Robin <b>R</b>" && !own.window.document.getElementById("owner").hidden && !own.window.document.querySelector("#owner b"));
   delete store.owner;
   check("HTML in title is not injected", !doc.querySelector(".title b") && doc.body.innerHTML.includes("&lt;b&gt;X"));
   check("javascript: link not used", ![...doc.querySelectorAll("a")].some(a => a.href.startsWith("javascript")));
@@ -113,7 +113,7 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   cards[0].querySelector("button.act").click();
   await sleep(100);
   let c1 = d.window.document.querySelectorAll(".card")[0];
-  check("after Reserve: Reserved by you + Undo", c1.querySelector(".badge.status").textContent === "Reserved by you" && c1.querySelector("button.act").textContent === "Undo");
+  check("after Reserve: Reserved by you + Unreserve", c1.querySelector(".badge.status").textContent === "Reserved by you" && c1.querySelector("button.act").textContent === "Unreserve");
   const myDevice = d.window.localStorage.getItem("wl_device");
   check("device id stored and used", !!myDevice && store.reservations[1] === myDevice);
 
@@ -173,6 +173,14 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   check("race: toast shown", d.window.document.getElementById("toast").textContent.includes("Someone else"));
   check("race: item now Reserved", d.window.document.querySelectorAll(".card")[0].querySelector(".badge.status").textContent === "Reserved");
 
+  // Share a gift idea (7 November 2026): only for a safe shop link; copies the link without a share sheet.
+  const cardsNow = d.window.document.querySelectorAll(".card");
+  check("share: a button on a wish with a shop link", !!cardsNow[0].querySelector("button.share[aria-label='Share']"));
+  check("share: none on a javascript: link", !cardsNow[1].querySelector("button.share"));
+  cardsNow[0].querySelector("button.share").click();
+  await sleep(50);
+  check("share: link copied without a share sheet", d.window.document.getElementById("toast").textContent.includes("Link copied"));
+
   pickCat(d.window.document, "Books");
   check("filter Books -> 1 card", d.window.document.querySelectorAll(".card").length === 1);
 
@@ -203,7 +211,7 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   check("choice saved in localStorage", v.window.localStorage.getItem("wl_view") === "grid");
   cc[0].querySelector("button.act").click();
   await sleep(100);
-  check("compact: Reserve works and view stays", D(v).querySelectorAll(".card.compact")[0].querySelector("button.act").textContent === "Undo" && !!D(v).querySelector(".grid.two"));
+  check("compact: Reserve works and view stays", D(v).querySelectorAll(".card.compact")[0].querySelector("button.act").textContent === "Unreserve" && !!D(v).querySelector(".grid.two"));
   pickCat(D(v), "Books");
   check("compact: category filter keeps the view", D(v).querySelectorAll(".card.compact").length === 1 && !!D(v).querySelector(".grid.two"));
   pickCat(D(v), "All");
@@ -403,7 +411,7 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   store.resRows = dev => [{id: 21, mine: true, n: 3, my: 2, full: true}];
   q = await load("?c=ABCD2345");
   const sock3 = [...D(q).querySelectorAll(".card")].find(c => c.textContent.includes("Socks"));
-  check("You reserved 2, with Undo", sock3.querySelector(".badge.status").textContent === "You reserved 2" && sock3.querySelector("button.act").textContent === "Undo");
+  check("You reserved 2, with Unreserve", sock3.querySelector(".badge.status").textContent === "You reserved 2" && sock3.querySelector("button.act").textContent === "Unreserve");
   store.resRows = dev => [{id: 21, mine: false, n: 3, my: 0, full: true}];
   q = await load("?c=ABCD2345");
   const sock4 = [...D(q).querySelectorAll(".card")].find(c => c.textContent.includes("Socks"));

@@ -189,7 +189,7 @@ async function attach(ctx) {
   await s.page.getByRole("button", { name: "Yes, I’m buying it" }).click();
   await s.page.waitForFunction(() => document.getElementById("toast").className === "show");
   check("answered", (await s.page.locator("#toast").innerText()).startsWith("Thanks!"));
-  check("still reserved by Sam", (await lamp.getByRole("button", { name: "Undo" }).count()) === 1);
+  check("still reserved by Sam", (await lamp.getByRole("button", { name: "Unreserve" }).count()) === 1);
   check("the asker hears it's still being bought", rpc("wl_news_web", { p_device: "otherdevice1", p_code: "ZQELSTW2" })[0].kind === "ask_yes");
 
   // ---- no answer within 2 days: the reservation ends; Sam sees it on the next visit ----

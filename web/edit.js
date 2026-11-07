@@ -968,7 +968,7 @@
     } else {
       var act = el("div", "actions");
       act.appendChild(iconBtn("edit", T("Edit"), function () { openWishForm(w); }));
-      if (mine) act.appendChild(textBtn(T("Undo"), "outline small", function () { reserve(w, false); }));
+      if (mine) act.appendChild(textBtn(T("Unreserve"), "outline small", function () { reserve(w, false); }));
       else if (!taken) act.appendChild(textBtn(T("Reserve"), "small", function () { reserve(w, true); }));
       act.appendChild(iconBtn("del", T("Delete"), function () { askDelete(w); }));
       row.appendChild(act);

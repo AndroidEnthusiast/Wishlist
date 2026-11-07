@@ -250,3 +250,6 @@ body.inviting #langs .langs:last-child { margin-bottom: 16px; }
 .howmany p { margin: 0 0 6px; font-size: .9rem; color: var(--muted); }
 .howmany .hmrow { display: flex; flex-wrap: wrap; gap: 6px; }
 .tags { color: var(--primary); font-size: .8rem; font-weight: 600; }
+/* Share a gift idea (7 November 2026): an icon button just before Reserve. */
+.row .vbtn.share { margin-left: auto; color: var(--muted); display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+.card.rowcard .row .vbtn.share, .card.compact .row .vbtn.share { align-self: flex-end; margin-left: 0; }

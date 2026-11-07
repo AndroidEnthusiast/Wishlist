@@ -454,6 +454,29 @@ function starBadge() {
   return b;
 }
 
+// The share icon (Google's Material "share", Apache 2.0), for sharing a gift idea's shop link.
+function shareIcon() {
+  var NS = "http://www.w3.org/2000/svg";
+  var s = document.createElementNS(NS, "svg");
+  s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("aria-hidden", "true");
+  s.setAttribute("width", "22"); s.setAttribute("height", "22");
+  var p = document.createElementNS(NS, "path");
+  p.setAttribute("fill", "currentColor");
+  p.setAttribute("d", "M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z");
+  s.appendChild(p);
+  return s;
+}
+
+// Share a gift idea (owner, 7 November 2026): the phone's share sheet with the shop link, else the link is copied.
+function shareWish(w) {
+  var u = safeUrl(w.url);
+  if (!u) return;
+  var text = T("Look at this gift idea");
+  if (navigator.share) { navigator.share({ text: text, url: u }).catch(function () { }); return; }
+  copyText(u);
+  toast(T("Link copied"));
+}
+
 function viewIcon(kind) {
   var NS = "http://www.w3.org/2000/svg";
   var s = document.createElementNS(NS, "svg");
@@ -534,7 +557,7 @@ function card(w, compact, rows) {
   if (w.note && !rows) body.appendChild(el("p", "wnote", T("Note: {0}", w.note)));
 
   // Reactions (owner, 7 November 2026): "😍 2" and "+ react".
-  var rb = window.WLT ? WLT.bar(code, w, true) : null;
+  var rb = window.WLT ? WLT.bar(code, w, true, compact ? 2 : 3) : null;
   if (rb) body.appendChild(rb);
 
   var row = el("div", "row");
@@ -542,6 +565,13 @@ function card(w, compact, rows) {
   if (drop || rise) pr.appendChild(el("span", "old", money(w.old, w.cur)));
   row.appendChild(pr);
 
+  if (safeUrl(w.url) && !(picking === w.id)) {
+    var sh = el("button", "vbtn share");
+    sh.type = "button"; sh.title = T("Share"); sh.setAttribute("aria-label", T("Share"));
+    sh.appendChild(shareIcon());
+    sh.addEventListener("click", function () { shareWish(w); });
+    row.appendChild(sh);
+  }
   if (!got && picking === w.id) {
     row.appendChild(WLRes.picker(WLRes.free(w, cnt[w.id]), function (n) { reserveCount(w, n); }, function () { picking = null; render(); }));
   } else if (!got) {
@@ -551,7 +581,7 @@ function card(w, compact, rows) {
       b.addEventListener("click", function () { toggle(w, true); });
       row.appendChild(b);
     } else if (r === true) {
-      var u = el("button", "act outline small", T("Undo"));
+      var u = el("button", "act outline small", T("Unreserve"));
       u.type = "button"; u.disabled = busy;
       u.addEventListener("click", function () { toggle(w, false); });
       row.appendChild(u);
@@ -638,7 +668,7 @@ function render() {
   // Whose list this is (2.102): the owner's profile name, sent by their app (supabase-friends.sql).
   var ow = $("owner");
   var showOwner = list.owner && !nameSaysOwner(list.name, list.owner);
-  ow.textContent = showOwner ? T("Owned by {0}", String(list.owner).slice(0, 30)) : "";
+  ow.textContent = showOwner ? T("Wishlist of {0}", String(list.owner).slice(0, 30)) : "";
   ow.hidden = !showOwner;
   // The list's occasion (owner, 5 November 2026): "Birthday · in 3 weeks" (occasion.js).
   var oc = $("occasion");
@@ -729,6 +759,8 @@ async function refresh() {
     var m = {};
     var rr = WLRes.parse(rs);
     m = rr.res; cnt = rr.cnt;
+    // A tap still on its way keeps what it shows.
+    Object.keys(pend).forEach(function (id) { if (res[id] === undefined) delete m[id]; else m[id] = res[id]; });
     // The note for friends travels as one extra item of kind "about". It is not a wish.
     var about = "", cover = "", cedit = "", occ = null, sz = null, received = {};
     // Wishes the owner received after the occasion are in the bin with "recv" (2.128): remember them for the thank-you.
@@ -807,30 +839,38 @@ async function reserveCount(w, n) {
   if (msg) toast(msg);
 }
 
+// Reserve and Unreserve change the button at once (owner, 7 November 2026: it took too long and every Reserve button
+// went grey); the server is asked in the background and a "no" puts it back with a message.
+var pend = {};
 async function toggle(w, reserve) {
   if (WLRes.qty(w) > 1) {
     if (reserve) { picking = w.id; render(); } else reserveCount(w, 0);
     return;
   }
-  busy = true; render();
-  var msg = null;
+  if (pend[w.id]) return;
+  var before = res[w.id];
+  if (reserve) res[w.id] = true; else delete res[w.id];
+  pend[w.id] = true;
+  render();
+  var msg = null, failed = false;
   try {
     if (reserve) {
       var ok = await rpc("wl_reserve_item", { p_code: code, p_item: w.id, p_device: deviceId() });
-      if (ok !== true) msg = T("Someone else just reserved that one.");
+      if (ok !== true) { msg = T("Someone else just reserved that one."); failed = true; }
     } else {
       await rpc("wl_unreserve_item", { p_code: code, p_item: w.id, p_device: deviceId() });
       var mine = readMyRes();
       delete mine[w.id];
       writeMyRes(mine);
     }
-    busy = false;
-    await refresh();
   } catch (e) {
-    busy = false;
     msg = T("No connection. Try again.");
-    render();
+    failed = true;
   }
+  if (failed) { if (before === undefined) delete res[w.id]; else res[w.id] = before; }
+  delete pend[w.id];
+  // The list as it is now (after "someone else just reserved it" that shows Reserved).
+  await refresh();
   if (msg) toast(msg);
 }
 

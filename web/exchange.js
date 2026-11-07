@@ -509,7 +509,7 @@
   function drawGiftee() {
     var v = view();
     setTitle(other.name || T("Wishlist"));
-    v.appendChild(el("p", "owner", T("Owned by {0}", x.me.giftee.name)));
+    v.appendChild(el("p", "owner", T("Wishlist of {0}", x.me.giftee.name)));
     var ws = visible(other.items);
     if (!ws.length) { v.appendChild(el("div", "center", T("Nothing here yet. Ask them anonymously what they’d like."))); return; }
     ws.sort(function (a, b) { return (a.got ? 1 : 0) - (b.got ? 1 : 0) || (b.star ? 1 : 0) - (a.star ? 1 : 0); });
@@ -573,7 +573,7 @@
       row.appendChild(acts);
     } else if (!got) {
       if (r === undefined) row.appendChild(btn(T("Reserve"), "small", function () { toggle(w, true); }));
-      else if (r === true) row.appendChild(btn(T("Undo"), "outline small", function () { toggle(w, false); }));
+      else if (r === true) row.appendChild(btn(T("Unreserve"), "outline small", function () { toggle(w, false); }));
     }
     body.appendChild(row);
     c.appendChild(body);

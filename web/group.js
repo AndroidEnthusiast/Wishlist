@@ -539,7 +539,7 @@
   function drawMember() {
     var v = view();
     setTitle(other.name || member.list.name);
-    if (!nameSaysOwner(other.name || member.list.name, member.name)) v.appendChild(el("p", "owner", T("Owned by {0}", member.name)));
+    if (!nameSaysOwner(other.name || member.list.name, member.name)) v.appendChild(el("p", "owner", T("Wishlist of {0}", member.name)));
     var qp = window.WLT ? WLT.panel(member.list.code) : null;
     if (qp) v.appendChild(qp);
     var ws = visible(other.items);
@@ -614,7 +614,7 @@
       row.appendChild(acts);
     } else if (!got) {
       if (r === undefined) row.appendChild(btn(T("Reserve"), "small", function () { toggle(w, true); }));
-      else if (r === true) row.appendChild(btn(T("Undo"), "outline small", function () { toggle(w, false); }));
+      else if (r === true) row.appendChild(btn(T("Unreserve"), "outline small", function () { toggle(w, false); }));
     }
     body.appendChild(row);
     c.appendChild(body);

@@ -9,6 +9,10 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -236,7 +240,13 @@ fun ReactionsLoader(code: String?) {
  */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
-fun ReactionBar(w: Wish, modifier: Modifier = Modifier, lead: (@Composable () -> Unit)? = null) {
+fun ReactionBar(
+    w: Wish, modifier: Modifier = Modifier, lead: (@Composable () -> Unit)? = null,
+    // At most this many reactions as chips; the rest in a "+N" circle that lists them all (owner, 7 November 2026).
+    max: Int = 3,
+    // Smaller chips for narrow places (Rows next to its buttons, Two per row).
+    compact: Boolean = false
+) {
     val deco0 = LocalWishDeco.current
     // [lead] (the size label) shares the row (owner, 7 November 2026); without reactions it stands alone.
     if (deco0 == null || Reactions.missing) {
@@ -260,11 +270,15 @@ fun ReactionBar(w: Wish, modifier: Modifier = Modifier, lead: (@Composable () ->
         scope.launch { msg = Reactions.set(ctx, deco.code, w.id, e) }
     }
     val byEmoji = rx.groupBy { it.emoji }.entries.sortedByDescending { it.value.size }
+    val shown = byEmoji.take(max)
+    val hidden = byEmoji.size - shown.size
+    var all by remember { mutableStateOf(false) }
+    val pad = if (compact) 8.dp else 10.dp
     // One row of chips, all the same height (docs/STYLE.md: chips 28 dp, a 48 dp touch area for the ones you tap).
-    FlowRow(modifier.padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(modifier.padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 8.dp)) {
         // Every item is 48 dp tall (the tap area) with the visible chip centred in it, so the row lines up.
         if (lead != null) Box(Modifier.heightIn(min = 48.dp), contentAlignment = Alignment.Center) { lead() }
-        byEmoji.forEach { (e, l) ->
+        shown.forEach { (e, l) ->
             val mine = l.any { it.mine }
             Row(
                 Modifier.minimumInteractiveComponentSize().heightIn(min = CHIP_HEIGHT).clip(CircleShape)
@@ -274,21 +288,49 @@ fun ReactionBar(w: Wish, modifier: Modifier = Modifier, lead: (@Composable () ->
                         onClick = { if (deco.canReact) react(if (mine) "" else e) else who = e },
                         onLongClick = { who = e }
                     )
-                    .padding(horizontal = 10.dp),
+                    .padding(horizontal = pad),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(e, fontSize = 15.sp)
+                Text(e, fontSize = if (compact) 14.sp else 15.sp)
                 Text(" ${l.size}", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = ink)
             }
         }
+        // "+2": the reactions that don't fit; tapping it lists every reaction, the shown ones too.
+        if (hidden > 0) Box(
+            Modifier.minimumInteractiveComponentSize().size(CHIP_HEIGHT).clip(CircleShape)
+                .background(ink.copy(alpha = 0.07f)).border(1.dp, ink.copy(alpha = 0.12f), CircleShape)
+                .clickable(onClickLabel = tr("All reactions")) { all = true },
+            contentAlignment = Alignment.Center
+        ) {
+            Text("+$hidden", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = ink, maxLines = 1)
+        }
         if (deco.canReact) Row(
             Modifier.minimumInteractiveComponentSize().heightIn(min = CHIP_HEIGHT).clip(CircleShape).border(1.dp, ink.copy(alpha = 0.25f), CircleShape)
-                .clickable(onClickLabel = tr("React")) { picking = true }.padding(horizontal = 12.dp),
+                .clickable(onClickLabel = tr("React")) { picking = true }.padding(horizontal = if (compact) 10.dp else 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("+ " + tr("react"), style = MaterialTheme.typography.labelMedium, color = ink.copy(alpha = 0.8f))
+            Text("+ " + tr("React"), style = MaterialTheme.typography.labelMedium, color = ink.copy(alpha = 0.8f), maxLines = 1)
         }
     }
+    // Every reaction on this wish, with who (owner: the "+N" circle shows them all).
+    if (all) AlertDialog(
+        onDismissRequest = { all = false },
+        title = { Text(tr("Reactions")) },
+        text = {
+            Column(Modifier.heightIn(max = 400.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                byEmoji.forEach { (e, l) ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(e, fontSize = 22.sp)
+                        Text(
+                            " ${l.size} · " + l.joinToString(", ") { if (it.mine) tr("You") else it.name.ifBlank { tr("Someone") } },
+                            style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = { all = false }) { Text(tr("Close")) } }
+    )
     who?.let { e ->
         val names = rx.filter { it.emoji == e }.map { if (it.mine) tr("You") else it.name.ifBlank { tr("Someone") } }
         AlertDialog(
@@ -335,7 +377,10 @@ fun EmojiPickerDialog(onPick: (String) -> Unit, onClose: () -> Unit) {
                         Box(
                             Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).clickable { scope.launch { grid.scrollToItem(starts[g] ?: 0) } },
                             contentAlignment = Alignment.Center
-                        ) { Text(groups[g].emoji.first().char, fontSize = 20.sp) }
+                        ) {
+                            // Grey drawn icons for the groups (owner, 7 November 2026: emoji there looked tappable).
+                            GroupIcon(g, cs.onSurfaceVariant, Modifier.size(22.dp).semantics { contentDescription = tr(groups[g].name) })
+                        }
                     }
                 }
                 val q = query.trim().lowercase()
@@ -375,4 +420,61 @@ private fun EmojiCell(e: String, name: String, onPick: (String) -> Unit) {
         Modifier.size(42.dp).clip(RoundedCornerShape(10.dp)).clickable(onClickLabel = name) { onPick(e) },
         contentAlignment = Alignment.Center
     ) { Text(e, fontSize = 24.sp) }
+}
+
+/**
+ * The emoji groups' tabs as simple grey line icons, drawn here (our own drawings): a smiley, a person, a leaf, a cup,
+ * a car, a ball, a light bulb, a heart and a flag, in the order of assets/emoji.txt.
+ */
+@Composable
+fun GroupIcon(i: Int, color: androidx.compose.ui.graphics.Color, modifier: Modifier = Modifier) {
+    androidx.compose.foundation.Canvas(modifier) {
+        val u = size.minDimension / 24f
+        val st = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.8f * u, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round)
+        fun o(x: Float, y: Float) = androidx.compose.ui.geometry.Offset(x * u, y * u)
+        fun path(b: androidx.compose.ui.graphics.Path.() -> Unit) = androidx.compose.ui.graphics.Path().apply(b)
+        fun androidx.compose.ui.graphics.Path.m(x: Float, y: Float) = moveTo(x * u, y * u)
+        fun androidx.compose.ui.graphics.Path.l(x: Float, y: Float) = lineTo(x * u, y * u)
+        fun androidx.compose.ui.graphics.Path.q(a: Float, b: Float, x: Float, y: Float) = quadraticBezierTo(a * u, b * u, x * u, y * u)
+        when (i) {
+            0 -> { // smiley
+                drawCircle(color, 9f * u, o(12f, 12f), style = st)
+                drawCircle(color, 1.3f * u, o(9f, 10f)); drawCircle(color, 1.3f * u, o(15f, 10f))
+                drawPath(path { m(8f, 14.5f); q(12f, 18.5f, 16f, 14.5f) }, color, style = st)
+            }
+            1 -> { // person
+                drawCircle(color, 3.6f * u, o(12f, 8f), style = st)
+                drawPath(path { m(5f, 20f); q(5f, 13.5f, 12f, 13.5f); q(19f, 13.5f, 19f, 20f) }, color, style = st)
+            }
+            2 -> { // leaf
+                drawPath(path { m(5f, 19f); q(4f, 6f, 19f, 5f); q(19f, 19f, 5f, 19f) }, color, style = st)
+                drawPath(path { m(5f, 19f); l(13f, 11f) }, color, style = st)
+            }
+            3 -> { // cup
+                drawPath(path { m(5f, 9f); l(16f, 9f); l(15f, 18f); q(14.8f, 19.5f, 13f, 19.5f); l(8f, 19.5f); q(6.2f, 19.5f, 6f, 18f); l(5f, 9f) }, color, style = st)
+                drawPath(path { m(16f, 11f); q(20f, 11f, 19.5f, 13.5f); q(19f, 15.5f, 15.5f, 15.5f) }, color, style = st)
+                drawPath(path { m(9f, 6.5f); l(9f, 4.5f); m(12f, 6.5f); l(12f, 4.5f) }, color, style = st)
+            }
+            4 -> { // car
+                drawPath(path { m(4f, 16f); l(4f, 12.5f); l(6.5f, 8f); l(17.5f, 8f); l(20f, 12.5f); l(20f, 16f); l(4f, 16f) }, color, style = st)
+                drawCircle(color, 1.8f * u, o(8f, 17f)); drawCircle(color, 1.8f * u, o(16f, 17f))
+                drawPath(path { m(4f, 12.5f); l(20f, 12.5f) }, color, style = st)
+            }
+            5 -> { // ball
+                drawCircle(color, 9f * u, o(12f, 12f), style = st)
+                drawPath(path { m(3f, 12f); l(21f, 12f); m(12f, 3f); q(7f, 12f, 12f, 21f); m(12f, 3f); q(17f, 12f, 12f, 21f) }, color, style = st)
+            }
+            6 -> { // light bulb
+                drawPath(path { m(9f, 16f); q(9f, 14f, 7.5f, 12.5f); q(5f, 10f, 6f, 7f); q(7.5f, 3.5f, 12f, 3.5f); q(16.5f, 3.5f, 18f, 7f); q(19f, 10f, 16.5f, 12.5f); q(15f, 14f, 15f, 16f); l(9f, 16f) }, color, style = st)
+                drawPath(path { m(9.5f, 19f); l(14.5f, 19f); m(10.5f, 21.5f); l(13.5f, 21.5f) }, color, style = st)
+            }
+            7 -> { // heart
+                drawPath(path { m(12f, 20f); q(3f, 14f, 3.5f, 9f); q(4f, 4.5f, 8f, 4.5f); q(10.5f, 4.5f, 12f, 7f); q(13.5f, 4.5f, 16f, 4.5f); q(20f, 4.5f, 20.5f, 9f); q(21f, 14f, 12f, 20f) }, color, style = st)
+            }
+            else -> { // flag
+                drawPath(path { m(6f, 21f); l(6f, 4f) }, color, style = st)
+                drawPath(path { m(6f, 4.5f); q(9f, 3f, 12f, 4.5f); q(15f, 6f, 18f, 4.5f); l(18f, 12.5f); q(15f, 14f, 12f, 12.5f); q(9f, 11f, 6f, 12.5f) }, color, style = st)
+            }
+        }
+    }
 }

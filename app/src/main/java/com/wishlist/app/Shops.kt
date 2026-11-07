@@ -744,11 +744,11 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                         pageTitle, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(start = 10.dp).weight(1f)
                     )
-                    // "+ My shops" while the site isn't one of yours; "✓ In My shops" right after adding it.
+                    // "+ Add shop" while the site isn't one of yours; "✓ In My shops" right after adding it.
                     if (!known || justAdded == host) {
                         val added = justAdded == host
                         TextButton(onClick = { if (!added) addSite(host) }) {
-                            Text(if (added) "✓ " + tr("In My shops") else "+ " + tr("My shops"), maxLines = 1)
+                            Text(if (added) "✓ " + tr("In My shops") else "+ " + tr("Add shop"), maxLines = 1)
                         }
                     }
                 }
@@ -827,14 +827,15 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                 }
                 offer?.let { h ->
                     Row(
-                        Modifier.fillMaxWidth().background(cs.inverseSurface).padding(start = 16.dp, end = 4.dp),
+                        Modifier.fillMaxWidth().background(cs.inverseSurface).padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             tr("Add %s to My shops?", h), color = cs.inverseOnSurface, style = MaterialTheme.typography.bodyMedium,
                             maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).padding(vertical = 12.dp)
                         )
-                        TextButton(onClick = { addSite(h) }) { Text(tr("Add"), color = cs.inversePrimary) }
+                        // A filled accent button, so it stands out on the dark bar (owner, 7 November 2026).
+                        Button(onClick = { addSite(h) }) { Text(tr("Add shop")) }
                         IconButton(onClick = { offer = null }) { Icon(AppIcons.Close, tr("Not now"), tint = cs.inverseOnSurface) }
                     }
                 }
