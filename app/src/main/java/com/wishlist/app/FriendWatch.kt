@@ -59,7 +59,7 @@ object FriendWatch {
         val label = list.owner.takeIf { it.isNotBlank() }?.let { tr("%s’s wishlist", it) } ?: list.name.ifBlank { f.name }
         if (label.isNotBlank() && label != label(c, f.code)) prefs(c).edit().putString("fresn_${f.code}", label).apply()
         // (An owned wish is not taken in again: its old reservation stays online and would be told about every time.)
-        for (id in mine) visible[id]?.takeIf { !it.got }?.let { if (id !in m) m = m + (id to it.title) }
+        for (id in mine) visible[id]?.takeIf { !it.got }?.let { if (id !in m) m = m + (id to it.label) }
         for ((id, title) in m) {
             val now = visible[id]
             // Still on the list and not owned: nothing to say.
@@ -79,7 +79,7 @@ object FriendWatch {
         }
         write(c, f.code, m)
         // 7 days before the list's occasion (2.128): a reminder of what you reserved there.
-        val titles = m.keys.mapNotNull { visible[it]?.takeIf { w -> !w.got }?.title }
+        val titles = m.keys.mapNotNull { visible[it]?.takeIf { w -> !w.got }?.label }
         Reminders.giver(c, f.code, gift = false, occ = list.occ, owner = list.owner, listName = list.name.ifBlank { f.name }, titles = titles)
     }
 

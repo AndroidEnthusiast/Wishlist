@@ -340,7 +340,7 @@ private fun WishLine(p: Placed, onOpen: () -> Unit, onUnstar: (() -> Unit)?) {
             else PlaceholderIcon("gift", 20.dp)
         }
         Column(Modifier.weight(1f).padding(start = 12.dp, end = 8.dp)) {
-            Text(w.title, style = MaterialTheme.typography.bodyLarge, color = look.cardInk(id), maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(w.label, style = MaterialTheme.typography.bodyLarge, color = look.cardInk(id), maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(
                 tr("Added to %s", p.listNames.joinToString(", ")), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold,
                 color = look.cardMuted(id), maxLines = 1, overflow = TextOverflow.Ellipsis

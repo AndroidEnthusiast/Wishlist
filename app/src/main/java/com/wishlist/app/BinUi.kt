@@ -316,14 +316,14 @@ private fun BinRow(e: BinEntry, enabled: Boolean, glow: Int, onRestore: () -> Un
                 ) {
                     if (w.image.isNotEmpty()) {
                         AsyncImage(
-                            model = w.image, contentDescription = w.title, contentScale = ContentScale.Fit,
+                            model = w.image, contentDescription = w.label, contentScale = ContentScale.Fit,
                             modifier = Modifier.fillMaxSize().padding(4.dp)
                         )
                     } else PlaceholderIcon("gift", 28.dp)
                 }
                 Column(Modifier.weight(1f).padding(start = 12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
-                        w.title, style = MaterialTheme.typography.titleMedium,
+                        w.label, style = MaterialTheme.typography.titleMedium,
                         maxLines = 2, overflow = TextOverflow.Ellipsis, color = cs.onSurface
                     )
                     val from = listOfNotNull(e.listName, w.price?.let { money(it, w.currency) }).joinToString(" · ")

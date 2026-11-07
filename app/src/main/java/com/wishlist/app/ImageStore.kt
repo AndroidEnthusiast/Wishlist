@@ -96,6 +96,28 @@ object ImageStore {
         }
     }
 
+    /**
+     * Cuts the part [l],[t],[r],[b] (0..1 of the width and height) out of a picture this app stored, as a new picture;
+     * the old one is deleted (owner, 7 November 2026: the free crop of your own wish photo). Null on failure.
+     */
+    suspend fun crop(c: Context, image: String, l: Float, t: Float, r: Float, b: Float): String? = withContext(Dispatchers.IO) {
+        try {
+            val path = Uri.parse(image).path ?: return@withContext null
+            val src = BitmapFactory.decodeFile(path) ?: return@withContext null
+            val x = (l * src.width).toInt().coerceIn(0, src.width - 1)
+            val y = (t * src.height).toInt().coerceIn(0, src.height - 1)
+            val w = ((r - l) * src.width).toInt().coerceIn(1, src.width - x)
+            val h = ((b - t) * src.height).toInt().coerceIn(1, src.height - y)
+            val out = Bitmap.createBitmap(src, x, y, w, h)
+            val file = File(dir(c), "wish_" + System.currentTimeMillis() + ".jpg")
+            FileOutputStream(file).use { out.compress(Bitmap.CompressFormat.JPEG, 88, it) }
+            delete(c, image)
+            Uri.fromFile(file).toString()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     /** Deletes a picture this app stored. Web links and anything outside the app's own folder are left alone. */
     fun delete(c: Context, image: String) {
         if (!isLocal(image)) return

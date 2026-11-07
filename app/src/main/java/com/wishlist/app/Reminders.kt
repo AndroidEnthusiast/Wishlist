@@ -115,7 +115,7 @@ fun ReceivedDialog(listId: String, onClose: () -> Unit) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Checkbox(checked = w.id in picked, onCheckedChange = { on -> picked = if (on) picked + w.id else picked - w.id })
-                        Text(w.title, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                        Text(w.label, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                     }
                 }
             }
@@ -144,7 +144,7 @@ fun ReceivedList(modifier: Modifier = Modifier) {
         items.forEach { w ->
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(w.title, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(w.label, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     val d = java.time.Instant.ofEpochMilli(w.recv).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
                     Text(
                         Repo.binListName(w.id) + " · " + d.dayOfMonth + " " + d.month.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.UK) + " " + d.year,

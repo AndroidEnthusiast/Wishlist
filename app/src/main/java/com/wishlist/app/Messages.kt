@@ -637,7 +637,7 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
     }
     if (wishPick) WishPicker(onPick = { w ->
         wishPick = false
-        send(ChatContent(true, "wish", "", w.title, w.price, w.currency, if (ImageStore.isLocal(w.image)) "" else w.image, w.url))
+        send(ChatContent(true, "wish", "", w.label, w.price, w.currency, if (ImageStore.isLocal(w.image)) "" else w.image, w.url))
     }, onClose = { wishPick = false })
     preview?.let { img ->
         PhotoPreview(img, onCancel = { preview = null; ImageStore.delete(ctx, img) }, onSend = { preview = null; sendPhoto(img) })
@@ -920,7 +920,7 @@ private fun WishPicker(onPick: (Wish) -> Unit, onClose: () -> Unit) {
                                     if (w.image.isNotBlank()) WishImage(w.image, Modifier.fillMaxSize().padding(2.dp))
                                     else GiftIcon(Color(0xFF8A8A92), 20.dp)
                                 }
-                                Text(w.title, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 10.dp))
+                                Text(w.label, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 10.dp))
                             }
                         }
                     }

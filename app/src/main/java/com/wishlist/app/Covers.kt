@@ -437,7 +437,7 @@ fun CoverPreview(img: String, edit: HeroEdit, onClose: () -> Unit) {
                             else PlaceholderIcon("gift", 20.dp)
                         }
                         Text(
-                            w.title, style = MaterialTheme.typography.bodyLarge, color = look.cardInk(id), maxLines = 1,
+                            w.label, style = MaterialTheme.typography.bodyLarge, color = look.cardInk(id), maxLines = 1,
                             overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 12.dp)
                         )
                     }

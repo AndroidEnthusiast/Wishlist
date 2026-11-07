@@ -91,7 +91,7 @@ fun ItemMenuDialog(
     // Tighter than a normal dialog (owner, 2.111: too much white space), but not cramped: a smaller title and rows.
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text(w.title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis) },
+        title = { Text(w.label, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = {
             Column {
                 MenuRow(tr("Edit"), onEdit, compact = true) { Icon(AppIcons.Edit, null, tint = cs.onSurfaceVariant) }
@@ -177,7 +177,7 @@ fun PriceHistoryDialog(w: Wish, highlight: Boolean = false, showAll: Boolean = t
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
-                    w.title, style = MaterialTheme.typography.titleSmall, color = cs.onSurfaceVariant,
+                    w.label, style = MaterialTheme.typography.titleSmall, color = cs.onSurfaceVariant,
                     maxLines = 2, overflow = TextOverflow.Ellipsis
                 )
                 if (points.isEmpty()) {

@@ -69,7 +69,7 @@ fun ImageViewer(w: Wish, onClose: () -> Unit) {
     ) {
         Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.94f))) {
             AsyncImage(
-                model = w.image, contentDescription = w.title, contentScale = ContentScale.Fit,
+                model = w.image, contentDescription = w.label, contentScale = ContentScale.Fit,
                 modifier = Modifier.fillMaxSize().padding(vertical = 72.dp)
                     .onSizeChanged { box = it }
                     .pointerInput(Unit) {
@@ -106,7 +106,7 @@ fun ImageViewer(w: Wish, onClose: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    w.title, color = Color.White, style = MaterialTheme.typography.titleMedium,
+                    w.label, color = Color.White, style = MaterialTheme.typography.titleMedium,
                     maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center
                 )
                 if (w.url.isNotBlank()) {

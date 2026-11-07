@@ -138,7 +138,7 @@ fun CopyWishesDialog(targetId: String?, onDone: (List<Wish>) -> Unit, onClose: (
                                         }
                                         Column(Modifier.weight(1f).padding(start = 12.dp, end = 8.dp)) {
                                             Text(
-                                                w.title, style = MaterialTheme.typography.bodyMedium, color = cs.onSurface,
+                                                w.label, style = MaterialTheme.typography.bodyMedium, color = cs.onSurface,
                                                 maxLines = 2, overflow = TextOverflow.Ellipsis
                                             )
                                             w.price?.let {

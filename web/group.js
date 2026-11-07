@@ -574,7 +574,7 @@
     var body = el("div", "body");
     var meta = hostOf(w.url);
     if (meta) body.appendChild(el("div", "meta", meta));
-    body.appendChild(el("h2", "title", w.title || ""));
+    body.appendChild(nameEl(w));
     if (w.desc) body.appendChild(el("p", "desc", w.desc));
     if (w.size) body.appendChild(el("span", "sizetag", T("Size {0}", String(w.size).slice(0, 8))));
     if (w.note) body.appendChild(el("p", "wnote", T("Note: {0}", w.note)));
@@ -800,7 +800,10 @@
     d.foot.appendChild(btn(T("Cancel"), "outline", d.close));
     var save = btn(T("Save"), "", async function () {
       var t = title.value.trim();
-      if (!t) { setErr(T("Give the wish a title.")); title.focus(); return; }
+      // A name is only needed for a wish with a link (owner, 7 November 2026).
+      if (!t && (url.value.trim() || (!f.image && !blob))) {
+        setErr(url.value.trim() ? T("Give the wish a title.") : T("Add a name, a photo or a link.")); title.focus(); return;
+      }
       var pt = price.value.trim().replace(",", ".");
       var p = pt === "" ? null : Number(pt);
       if (p !== null && !isFinite(p)) p = null;

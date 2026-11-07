@@ -175,7 +175,7 @@ object Notifications {
         val pct = (now - was) / was * 100
         // The newest change of a wish on a list replaces an older one, so the page doesn't fill up with one wish.
         val rest = all.filter { !(it.wishId == w.id && it.listKey == listKey && it.kind == "price") }
-        all = (listOf(PriceNote(w.id, listKey, w.title, w.image, pct, System.currentTimeMillis(), false)) + rest).take(100)
+        all = (listOf(PriceNote(w.id, listKey, w.label, w.image, pct, System.currentTimeMillis(), false)) + rest).take(100)
         save(c)
     }
 
@@ -184,7 +184,7 @@ object Notifications {
     fun targetReached(c: Context, listKey: String, w: Wish, target: Double) {
         load(c)
         val rest = all.filter { !(it.wishId == w.id && it.kind == "target") }
-        all = (listOf(PriceNote(w.id, listKey, w.title, w.image, 0.0, System.currentTimeMillis(), false, "target", target, w.currency)) + rest).take(100)
+        all = (listOf(PriceNote(w.id, listKey, w.label, w.image, 0.0, System.currentTimeMillis(), false, "target", target, w.currency)) + rest).take(100)
         save(c)
     }
 

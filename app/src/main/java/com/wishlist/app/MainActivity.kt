@@ -1575,7 +1575,7 @@ fun CompactCard(
             contentAlignment = Alignment.Center
         ) {
             if (w.image.isNotEmpty()) {
-                PhotoStage(w.image, w.title, small = true)
+                PhotoStage(w.image, w.label, small = true)
             } else PlaceholderIcon("gift", 36.dp)
             // Top left: the price change.
             Row(
@@ -1612,8 +1612,8 @@ fun CompactCard(
                 )
             ) {
                 Text(
-                    w.title, style = MaterialTheme.typography.titleSmall,
-                    maxLines = 2, overflow = TextOverflow.Ellipsis, color = ink
+                    w.label, style = MaterialTheme.typography.titleSmall,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis, color = if (w.title.isBlank()) ink.copy(alpha = 0.55f) else ink
                 )
                     // "2×" and "Exactly this" / "Similar is fine" (owner, 2.128).
                     wishTags(w).takeIf { it.isNotEmpty() }?.let { t ->
@@ -1701,7 +1701,7 @@ fun WishCard(
             contentAlignment = Alignment.Center
         ) {
             if (w.image.isNotEmpty()) {
-                PhotoStage(w.image, w.title, small = false)
+                PhotoStage(w.image, w.label, small = false)
             } else PlaceholderIcon("gift", 48.dp)
             // Top left: the price change.
             Row(
@@ -1749,8 +1749,8 @@ fun WishCard(
                     )
                 }
                 Text(
-                    w.title, style = MaterialTheme.typography.titleMedium,
-                    maxLines = 2, overflow = TextOverflow.Ellipsis, color = ink
+                    w.label, style = MaterialTheme.typography.titleMedium,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis, color = if (w.title.isBlank()) ink.copy(alpha = 0.55f) else ink
                 )
                     // "2×" and "Exactly this" / "Similar is fine" (owner, 2.128).
                     wishTags(w).takeIf { it.isNotEmpty() }?.let { t ->
@@ -1842,7 +1842,7 @@ fun RowCard(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                if (w.image.isNotEmpty()) PhotoStage(w.image, w.title, small = true) else PlaceholderIcon("gift", 32.dp)
+                if (w.image.isNotEmpty()) PhotoStage(w.image, w.label, small = true) else PlaceholderIcon("gift", 32.dp)
                 if (w.priv) PrivateBadge(Modifier.align(Alignment.BottomStart).padding(6.dp), size = 12.dp, onClick = onPrivate)
                 Column(
                     Modifier.align(Alignment.TopEnd).padding(6.dp),
@@ -1868,7 +1868,7 @@ fun RowCard(
                         if (look.design == "cyber") label.uppercase() else label,
                         style = MaterialTheme.typography.labelSmall, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis
                     )
-                    Text(w.title, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis, color = ink)
+                    Text(w.label, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis, color = if (w.title.isBlank()) ink.copy(alpha = 0.55f) else ink)
                         // "2×" and "Exactly this" / "Similar is fine" (owner, 2.128).
                         wishTags(w).takeIf { it.isNotEmpty() }?.let { t ->
                             Text(t, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = ink)
@@ -1952,20 +1952,22 @@ fun WishDialog(
     // A picture picked in this dialog but not saved yet. It is deleted again if you cancel or replace it.
     var picked by remember { mutableStateOf("") }
 
+    // Take photo / Choose photo, then a free crop (owner, 7 November 2026: "so the picture is perfect").
+    var photoMenu by remember { mutableStateOf(false) }
+    var cropping by remember { mutableStateOf<String?>(null) }
+    fun imported(p: String?) {
+        if (p == null) err = tr("Couldn’t use that picture.") else { cropping = p; err = "" }
+    }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) {
-            scope.launch {
-                val p = ImageStore.import(ctx, uri)
-                if (p == null) {
-                    err = tr("Couldn’t use that picture.")
-                } else {
-                    if (picked.isNotEmpty()) ImageStore.delete(ctx, picked)
-                    picked = p; image = p; err = ""
-                }
-            }
-        }
+        if (uri != null) scope.launch { imported(ImageStore.import(ctx, uri)) }
+    }
+    val cameraFile = remember { java.io.File(java.io.File(ctx.cacheDir, "share").apply { mkdirs() }, "wish_camera.jpg") }
+    val cameraUri = remember { androidx.core.content.FileProvider.getUriForFile(ctx, ctx.packageName + ".files", cameraFile) }
+    val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
+        if (ok) scope.launch { imported(ImageStore.import(ctx, cameraUri)) }
     }
     fun pickImage() = picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+    fun takePhoto() = try { camera.launch(cameraUri) } catch (e: Exception) { err = tr("Couldn’t open the camera.") }
 
     fun close() {
         if (picked.isNotEmpty()) ImageStore.delete(ctx, picked)
@@ -2089,18 +2091,28 @@ fun WishDialog(
                 }
                 dupOf?.let { Text(tr("This item is already on “%s”", it), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
                 // (No tip under the link any more: removed by the owner, 2.118.)
-                ImageBlock(image, onPick = { pickImage() }, onRemove = {
-                    if (picked.isNotEmpty() && picked == image) { ImageStore.delete(ctx, picked); picked = "" }
-                    image = ""
-                })
+                Box {
+                    ImageBlock(image, onPick = { photoMenu = true }, onRemove = {
+                        if (picked.isNotEmpty() && picked == image) { ImageStore.delete(ctx, picked); picked = "" }
+                        image = ""
+                    })
+                    DropdownMenu(expanded = photoMenu, onDismissRequest = { photoMenu = false }) {
+                        DropdownMenuItem(text = { Text(tr("Take photo")) }, onClick = { photoMenu = false; takePhoto() })
+                        DropdownMenuItem(text = { Text(tr("Choose photo")) }, onClick = { photoMenu = false; pickImage() })
+                    }
+                }
                 // Name and price side by side: the price only needs room for "€9999,99", the name gets the rest and
                 // stays on one line (a long name scrolls inside the field instead of taking three lines).
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
-                    // The * shows the name is the one thing a wish needs. Saving without one marks the field red.
+                    // A name is needed only for a wish with a link (owner, 7 November 2026); without a link a name, a
+                    // photo or the link itself is enough. Saving with too little marks the field red.
                     OutlinedTextField(
-                        title, { title = it; if (it.isNotBlank()) nameErr = false }, label = { Text(tr("Name*")) }, singleLine = true,
+                        title, { title = it; if (it.isNotBlank()) nameErr = false },
+                        label = { Text(if (url.isNotBlank()) tr("Name*") else tr("Name")) }, singleLine = true,
                         isError = nameErr,
-                        supportingText = if (nameErr) ({ Text(tr("What are you wishing for?")) }) else null,
+                        supportingText = if (nameErr) ({
+                            Text(if (url.isNotBlank()) tr("What are you wishing for?") else tr("Add a name, a photo or a link."))
+                        }) else null,
                         modifier = Modifier.weight(1f), keyboardOptions = Capitalised)
                     OutlinedTextField(
                         // Narrow, sized for "9999,99"; any amount can be typed, a longer one scrolls inside the field.
@@ -2159,7 +2171,7 @@ fun WishDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    if (title.isBlank()) { nameErr = true; return@TextButton }
+                    if (title.isBlank() && (url.isNotBlank() || image.isBlank())) { nameErr = true; return@TextButton }
                     val p = price.replace(',', '.').toDoubleOrNull()
                     val u = cleanUrl(url) ?: url.trim()
                     // A picture that was replaced or removed in this dialog is no longer needed.
@@ -2196,6 +2208,14 @@ fun WishDialog(
     )
 
     // A category made here is chosen for this wish straight away.
+    // The free crop after taking or choosing a photo (owner, 7 November 2026). Cancel keeps the photo as it was taken.
+    cropping?.let { src ->
+        CropDialog(src, onDone = { out ->
+            cropping = null
+            if (picked.isNotEmpty() && picked != out) ImageStore.delete(ctx, picked)
+            picked = out; image = out; if (title.isBlank()) nameErr = false
+        })
+    }
     if (newCatDlg) CategoryDialog(onAdded = { cat = it }) { newCatDlg = false }
     // The picked category follows a rename there; a deleted one becomes "No category".
     if (editCats) EditCategoriesScreen(onRenamed = { o, n -> if (cat == o) cat = n }) { editCats = false; if (cat.isNotEmpty() && cat !in Repo.cats) cat = "" }

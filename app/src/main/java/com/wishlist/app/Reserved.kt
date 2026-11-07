@@ -78,7 +78,7 @@ object ReservedGifts {
             }
             if (mine.isEmpty()) continue
             val wishes = Shared.cachedWishes(c, sl.code).associateBy { it.id }
-            val titles = mine.mapNotNull { id -> wishes[id]?.takeIf { it.bin == 0L }?.title }
+            val titles = mine.mapNotNull { id -> wishes[id]?.takeIf { it.bin == 0L }?.label }
             if (titles.isNotEmpty()) out += ReservedGroup(sl.code, sl.name, true, titles)
         }
         return out

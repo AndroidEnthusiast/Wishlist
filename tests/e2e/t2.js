@@ -74,7 +74,8 @@ const CHAIR = `<html><head><title>Chair - Shop</title><meta property="og:title" 
   // save needs a title
   await t.page.locator("#fab").click();
   await t.page.getByRole("button", { name: "Save" }).click();
-  check("title required", /title/i.test(await t.page.locator(".dlg .err").innerText()) && (await t.page.locator(".dlg").count()) === 1);
+  // (7 November 2026) an empty form asks for a name, a photo or a link; a link still needs a name.
+  check("empty wish refused", /name, a photo or a link/i.test(await t.page.locator(".dlg .err").innerText()) && (await t.page.locator(".dlg").count()) === 1);
   await t.page.getByRole("button", { name: "Cancel" }).click();
   check("cancel closes, nothing saved", (await t.page.locator(".dlg").count()) === 0);
   check("bad link text", true);
@@ -82,6 +83,8 @@ const CHAIR = `<html><head><title>Chair - Shop</title><meta property="og:title" 
   await t.page.locator(".dlg input[type=url]").fill("hello");
   await t.page.getByRole("button", { name: "Fetch details" }).click();
   check("not a link message", /full product link/.test(await t.page.locator(".dlg .err").innerText()));
+  await t.page.getByRole("button", { name: "Save" }).click();
+  check("a link without a name still needs a title", /title/i.test(await t.page.locator(".dlg .err").innerText()) && (await t.page.locator(".dlg").count()) === 1);
   check("click outside does not close", await (async () => { await t.page.mouse.click(5, 5); return (await t.page.locator(".dlg").count()) === 1; })());
   await t.page.getByRole("button", { name: "Cancel" }).click();
   check("no js errors 2", t.errors.length === 0, t.errors);

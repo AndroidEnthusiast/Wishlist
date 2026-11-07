@@ -509,7 +509,7 @@ function card(w, compact, rows) {
   var body = el("div", "body");
   var meta = [hostOf(w.url), w.cat].filter(Boolean).join(" · ");
   if (!compact) body.appendChild(el("div", "meta", meta));
-  body.appendChild(el("h2", "title", w.title || ""));
+  body.appendChild(nameEl(w));
   var tg = WLRes.tags(w);
   if (tg) body.appendChild(el("div", "tags", tg));
   if (w.desc && !compact && !rows) body.appendChild(el("p", "desc", w.desc));

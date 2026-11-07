@@ -13,6 +13,12 @@ import java.util.UUID
 // A new field here must ALSO be added to wishToJson / wishFromJson below and to changedFields / applyFields in
 // Shared.kt (and to the web pages), or it won't be saved when someone edits a shared wish. (Like "by", the bin fields
 // and "chk" are not edited in the form: only moving to the bin, restoring and the price check write them.)
+/**
+ * What a wish is called on screen: its name, or a grey-worthy "Unnamed wish" (owner, 7 November 2026: a wish without
+ * a link may be saved without a name; it needs a name, a photo or a link).
+ */
+val Wish.label: String get() = title.ifBlank { tr("Unnamed wish") }
+
 data class Wish(
     val id: Long,
     val url: String,

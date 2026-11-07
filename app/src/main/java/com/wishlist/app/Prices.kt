@@ -113,7 +113,7 @@ fun PricesScreen(snack: SnackbarHostState, onBack: () -> Unit) {
                         }
                         Column(Modifier.weight(1f).padding(start = 12.dp, end = 8.dp)) {
                             Text(
-                                r.w.title, style = MaterialTheme.typography.titleSmall, color = look.cardInk(id),
+                                r.w.label, style = MaterialTheme.typography.titleSmall, color = look.cardInk(id),
                                 maxLines = 2, overflow = TextOverflow.Ellipsis
                             )
                             Text(r.list, style = MaterialTheme.typography.labelSmall, color = look.cardMuted(id), maxLines = 1)

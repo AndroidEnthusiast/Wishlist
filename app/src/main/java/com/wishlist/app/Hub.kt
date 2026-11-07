@@ -385,7 +385,7 @@ private fun PriceChangeRow(w: Wish) {
         }
         Column(Modifier.weight(1f).padding(start = 14.dp)) {
             Text(
-                w.title, style = MaterialTheme.typography.titleSmall, color = look.cardInk(id),
+                w.label, style = MaterialTheme.typography.titleSmall, color = look.cardInk(id),
                 maxLines = 1, overflow = TextOverflow.Ellipsis
             )
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 2.dp)) {

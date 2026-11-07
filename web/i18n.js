@@ -17,6 +17,15 @@
     var a = arguments;
     return en.replace(/\{(\d)\}/g, function (m, i) { var v = a[+i + 1]; return v === undefined ? m : String(v); });
   };
+  // A wish's name on a card (owner, 7 November 2026): a wish without a link may have no name; it then says "Unnamed
+  // wish" in grey. Built with textContent (wish names come from other people).
+  window.nameEl = function (w) {
+    var h = document.createElement("h2");
+    var t = String((w && w.title) || "").trim();
+    h.className = t ? "title" : "title unnamed";
+    h.textContent = t || window.T("Unnamed wish");
+    return h;
+  };
   // Kept for a later translation of the fixed texts in the HTML; nothing to do in English.
   window.translatePage = function () { };
   // Light or dark for this browser: "system" (the device decides), "light" or "dark".

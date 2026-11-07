@@ -560,7 +560,7 @@
     var body = el("div", "body");
     var meta = hostOf(w.url);
     if (meta) body.appendChild(el("div", "meta", meta));
-    body.appendChild(el("h2", "title", w.title || ""));
+    body.appendChild(nameEl(w));
     if (w.desc) body.appendChild(el("p", "desc", w.desc));
     if (w.size) body.appendChild(el("span", "sizetag", T("Size {0}", String(w.size).slice(0, 8))));
     if (w.note) body.appendChild(el("p", "wnote", T("Note: {0}", w.note)));

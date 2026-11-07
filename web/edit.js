@@ -916,7 +916,7 @@
       // Like the app's small card: title and price, everything else in the ⋮ menu.
       var crow = el("div", "crow");
       var ct = el("div", "ctext");
-      ct.appendChild(el("h2", "title", w.title));
+      ct.appendChild(nameEl(w));
       var ctg = WLRes.tags(w);
       if (ctg) ct.appendChild(el("div", "tags", ctg));
       var cp = el("div", "price" + changeClass(w), w.price !== null ? money(w.price, w.cur) : T("No price"));
@@ -942,7 +942,7 @@
     }
     var meta = [hostOf(w.url), w.cat].filter(Boolean).join(" · ");
     if (!compact && meta) body.appendChild(el("div", "meta", meta));
-    body.appendChild(el("h2", "title", w.title));
+    body.appendChild(nameEl(w));
     var tg = WLRes.tags(w);
     if (tg) body.appendChild(el("div", "tags", tg));
     // Rows shows only the shop, name and price (owner, 2.126).
@@ -1468,7 +1468,11 @@
 
     function save() {
       var title = f.title.trim();
-      if (!title) { setErr(T("Give the wish a title.")); els.title.focus(); return false; }
+      // A name is only needed for a wish with a link (owner, 7 November 2026); otherwise a name, a photo or a link.
+      if (!title && (f.url.trim() || !f.image)) {
+        setErr(f.url.trim() ? T("Give the wish a title.") : T("Add a name, a photo or a link."));
+        els.title.focus(); return false;
+      }
       var priceText = f.price.trim().replace(",", ".");
       var p = priceText === "" ? null : Number(priceText);
       if (p !== null && !isFinite(p)) p = null;
