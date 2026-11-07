@@ -39,7 +39,11 @@ fun saveTargets(mine: List<Pair<String, String>>, shared: List<SharedList>): Lis
 
 /** A drop-down to choose which wishlist a wish is saved to. */
 @Composable
-fun SaveToField(targets: List<SaveTarget>, selected: String, onPick: (String) -> Unit, modifier: Modifier = Modifier) {
+fun SaveToField(
+    targets: List<SaveTarget>, selected: String, onPick: (String) -> Unit, modifier: Modifier = Modifier,
+    // "+ New wishlist" at the bottom (owner, 7 November 2026): the usual create form, then back here with it picked.
+    onNew: (() -> Unit)? = null
+) {
     var open by remember { mutableStateOf(false) }
     val current = targets.firstOrNull { it.key == selected } ?: targets.first()
     Box(modifier) {
@@ -59,6 +63,14 @@ fun SaveToField(targets: List<SaveTarget>, selected: String, onPick: (String) ->
                 DropdownMenuItem(
                     text = { Text(t.name, fontWeight = if (t.key == current.key) FontWeight.Bold else FontWeight.Normal) },
                     onClick = { open = false; onPick(t.key) }
+                )
+            }
+            if (onNew != null) {
+                androidx.compose.material3.HorizontalDivider()
+                DropdownMenuItem(
+                    text = { Text(tr("New wishlist"), fontWeight = FontWeight.SemiBold) },
+                    leadingIcon = { Icon(AppIcons.Add, null) },
+                    onClick = { open = false; onNew() }
                 )
             }
         }

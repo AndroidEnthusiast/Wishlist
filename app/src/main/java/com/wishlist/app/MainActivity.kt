@@ -1008,7 +1008,10 @@ fun App(
     }
 
     if (adding) key(prefill) {
-        WishDialog(null, prefill, chooseList = prefill.isNotEmpty() || addTarget != null, startTarget = addTarget, initialMeta = prefillMeta, fromShop = fromShop) {
+        // Every new wish can choose its wishlist (owner, 7 November 2026): inside a list that list is picked; a link
+        // shared into the app starts on the list used last.
+        val here = if (prefill.isEmpty() && !fromShop) (Shared.active ?: MyLists.saveKey(Repo.openMine, false)) else null
+        WishDialog(null, prefill, chooseList = true, startTarget = addTarget ?: here, initialMeta = prefillMeta, fromShop = fromShop) {
             prefillMeta = null; fromShop = false
             adding = false; addTarget = null
         }
@@ -2053,6 +2056,8 @@ fun WishDialog(
     // A picture picked in this dialog but not saved yet. It is deleted again if you cancel or replace it.
     var picked by remember { mutableStateOf("") }
 
+    // "+ New wishlist" from the Save to menu: the usual form, then this wish goes there (owner, 7 November 2026).
+    var newListDlg by remember { mutableStateOf(false) }
     // Take photo / Choose photo, then a free crop (owner, 7 November 2026: "so the picture is perfect").
     var photoMenu by remember { mutableStateOf(false) }
     var cropping by remember { mutableStateOf<String?>(null) }
@@ -2153,7 +2158,8 @@ fun WishDialog(
                     SaveToField(
                         targets = targets, selected = Shared.active ?: MyLists.saveKey(Repo.openMine, false),
                         onPick = { pickTarget(it) },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        onNew = { newListDlg = true }
                     )
                 }
                 if (clip != null && url.isBlank()) {
@@ -2310,60 +2316,79 @@ fun WishDialog(
 
     // A category made here is chosen for this wish straight away.
     // The free crop after taking or choosing a photo (owner, 7 November 2026). Cancel keeps the photo as it was taken.
+    // Since 2.144 the same editor as the profile and cover photo (owner, 7 November 2026): a square frame, move and
+    // pinch, turn, lighter or darker, and "Fit whole photo". What is in the frame becomes the wish's photo. The back
+    // arrow drops the new photo (the wish keeps the picture it had).
     cropping?.let { src ->
-        CropDialog(src, onDone = { out ->
-            cropping = null
-            if (picked.isNotEmpty() && picked != out) ImageStore.delete(ctx, picked)
-            picked = out; image = out; if (title.isBlank()) nameErr = false
-        })
+        HeroEditor(
+            src, HeroEdit(), wish = true,
+            onSave = { chosen, e ->
+                cropping = null
+                scope.launch {
+                    val out = renderWishPhoto(ctx, chosen, e) ?: chosen
+                    if (out != chosen) ImageStore.delete(ctx, chosen)
+                    if (src != chosen && src != out) ImageStore.delete(ctx, src)
+                    if (picked.isNotEmpty() && picked != out) ImageStore.delete(ctx, picked)
+                    picked = out; image = out; if (title.isBlank()) nameErr = false
+                }
+            },
+            onCancel = { cropping = null; ImageStore.delete(ctx, src) }
+        )
     }
+    if (newListDlg) NewListDialog(
+        onCreated = { id -> newListDlg = false; pickTarget(MyLists.saveKey(id, false)) },
+        onClose = { newListDlg = false }
+    )
     if (newCatDlg) CategoryDialog(onAdded = { cat = it }) { newCatDlg = false }
     // The picked category follows a rename there; a deleted one becomes "No category".
     if (editCats) EditCategoriesScreen(onRenamed = { o, n -> if (cat == o) cat = n }) { editCats = false; if (cat.isNotEmpty() && cat !in Repo.cats) cat = "" }
 }
 
-/** The picture of a wish. Empty: a dashed block with a plus and "Add image". Filled: the picture, tap to change, X to remove. */
+/**
+ * The picture of a wish (owner, 7 November 2026: not too small, not overpowering): a 128 dp square tile on the left.
+ * Empty: a dashed tile with a plus and "Add photo". Filled: the photo fills the tile (wish photos are square since
+ * 2.144; a picture from a shop page sits whole on white), tap to change, ✕ to remove.
+ */
 @Composable
 fun ImageBlock(image: String, onPick: () -> Unit, onRemove: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val line = cs.outline
+    val tile = Modifier.size(128.dp).clip(RoundedCornerShape(16.dp))
     if (image.isEmpty()) {
         Column(
-            Modifier.fillMaxWidth().height(120.dp).clip(RoundedCornerShape(12.dp))
-                .background(cs.surfaceVariant)
+            tile.background(cs.surfaceVariant)
                 .drawBehind {
                     drawRoundRect(
-                        color = line, cornerRadius = CornerRadius(12.dp.toPx()),
+                        color = line, cornerRadius = CornerRadius(16.dp.toPx()),
                         style = Stroke(width = 1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 10f)))
                     )
                 }
-                .semantics { contentDescription = tr("Add image") }
+                .semantics { contentDescription = tr("Add photo") }
                 .clickable(onClick = onPick),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Icon(AppIcons.Add, null, Modifier.size(32.dp), tint = cs.onSurfaceVariant)
-            Text(tr("Add image"), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
+            Text(tr("Add photo"), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
         }
     } else {
         Box(
-            Modifier.fillMaxWidth().height(120.dp).clip(RoundedCornerShape(12.dp)).background(Color.White)
-                .semantics { contentDescription = tr("Change image") }
+            tile.background(Color.White)
+                .semantics { contentDescription = tr("Change photo") }
                 .clickable(onClick = onPick),
             contentAlignment = Alignment.Center
         ) {
-            AsyncImage(
-                model = image, contentDescription = null, contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxSize().padding(4.dp)
-            )
+            AsyncImage(model = image, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+            // ✕ in the corner: 32 dp to see, a 48 dp area to tap (docs/STYLE.md).
             Box(
-                Modifier.align(Alignment.TopEnd).padding(6.dp).size(32.dp).clip(CircleShape)
-                    .background(Color.Black.copy(alpha = 0.6f))
-                    .semantics { contentDescription = tr("Remove image") }
+                Modifier.align(Alignment.TopEnd).size(48.dp)
+                    .semantics { contentDescription = tr("Remove photo") }
                     .clickable(onClick = onRemove),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(AppIcons.Close, null, Modifier.size(18.dp), tint = Color.White)
+                Box(Modifier.size(28.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.6f)), contentAlignment = Alignment.Center) {
+                    Icon(AppIcons.Close, null, Modifier.size(16.dp), tint = Color.White)
+                }
             }
         }
     }

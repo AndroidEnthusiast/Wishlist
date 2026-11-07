@@ -10,6 +10,10 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -179,7 +183,19 @@ object Shops {
         return s
     }
 
-    fun remove(c: Context, s: Shop) = save(c, stored(c).filter { it.url != s.url })
+    /** Removes a shop. Returns where it was, for [putBack] (Undo). */
+    fun remove(c: Context, s: Shop): Int {
+        val l = stored(c)
+        save(c, l.filter { it.url != s.url })
+        return l.indexOfFirst { it.url == s.url }
+    }
+
+    /** Undo of [remove]: the shop goes back where it was. */
+    fun putBack(c: Context, s: Shop, at: Int) {
+        val l = stored(c).filter { it.host != s.host }.toMutableList()
+        l.add(at.coerceIn(0, l.size), s)
+        save(c, l)
+    }
 
     /** Puts back the starter shops you removed (your own stay). */
     fun restoreStarters(c: Context) {
@@ -189,9 +205,11 @@ object Shops {
 }
 
 /**
- * Discover (owner, 7 November 2026: the shops got their own tab instead of a row on Home, in the place of Price watch:
- * "people are more interested in finding inspiration for their wishlist"). Every shop as a tile, four per row, with
- * "Add shop" at the end; tap one to shop inside the app and add what you find with one button. Long press removes it.
+ * My shops (owner, 7 November 2026; called Discover until 2.144): every shop as a tile, four per row, with "Add shop"
+ * at the end; tap one to shop inside the app and add what you find with one button.
+ * Removing (owner, 2.144, "Apple style"): a long press on any shop makes all tiles pulse briefly and shows an ✕ on each.
+ * Tapping an ✕ removes that shop at once, with Undo. "Done" (top right), a tap on empty space or Back ends it; tapping a
+ * shop then does nothing. With the phone's animations off there is no pulse. No wiggle (owner).
  */
 @OptIn(ExperimentalFoundationApi::class, androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
@@ -199,17 +217,42 @@ fun DiscoverScreen(snack: androidx.compose.material3.SnackbarHostState, onProfil
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
     val shops = remember(Shops.version) { Shops.list(ctx) }
     var open by remember { mutableStateOf<Shop?>(null) }
     var adding by remember { mutableStateOf(false) }
-    var menuFor by remember { mutableStateOf<Shop?>(null) }
+    var editing by remember { mutableStateOf(false) }
+    val still = remember {
+        try { android.provider.Settings.Global.getFloat(ctx.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f } catch (e: Exception) { false }
+    }
+    // The short pulse of every tile when the ✕ marks appear.
+    val pulse = remember { androidx.compose.animation.core.Animatable(1f) }
+    var pulses by remember { mutableStateOf(0) }
+    androidx.compose.runtime.LaunchedEffect(pulses) {
+        if (pulses == 0 || still) return@LaunchedEffect
+        pulse.animateTo(1.08f, androidx.compose.animation.core.tween(120))
+        pulse.animateTo(1f, androidx.compose.animation.core.tween(180))
+    }
+    BackHandler(enabled = editing) { editing = false }
+    fun startEditing() { if (!editing) { editing = true; pulses++ } }
+    fun removeShop(s: Shop) {
+        val at = Shops.remove(ctx, s)
+        scope.launch {
+            snack.currentSnackbarData?.dismiss()
+            val r = snack.showToast(tr("%s removed", s.name), tr("Undo"))
+            if (r == androidx.compose.material3.SnackbarResult.ActionPerformed) Shops.putBack(ctx, s, at)
+        }
+    }
     androidx.compose.material3.Scaffold(
         containerColor = cs.background,
         topBar = {
             TopAppBar(
-                title = { Text(tr("Discover"), fontWeight = look.titleWeight) },
+                title = { Text(tr("My shops"), fontWeight = look.titleWeight) },
                 navigationIcon = { MenuSlot() },
-                actions = { ProfileButton(onProfile) },
+                actions = {
+                    if (editing) TextButton(onClick = { editing = false }) { Text(tr("Done")) }
+                    else ProfileButton(onProfile)
+                },
                 colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
         },
@@ -217,14 +260,22 @@ fun DiscoverScreen(snack: androidx.compose.material3.SnackbarHostState, onProfil
     ) { pad ->
         Column(
             Modifier.padding(pad).fillMaxSize().lookBackdrop(look)
+                // A tap on empty space ends removing.
+                .then(
+                    if (editing) Modifier.clickable(
+                        interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                        indication = null
+                    ) { editing = false } else Modifier
+                )
                 .verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(bottom = 32.dp)
         ) {
             Text(
-                tr("Shop in the app and add what you love to your wishlist with one tap."),
+                if (editing) tr("Tap ✕ to remove a shop. Tap Done when you’re finished.")
+                else tr("Shop in the app and add what you love to your wishlist with one tap."),
                 style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant,
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp)
             )
-            val cells: List<Shop?> = shops + listOf(null)
+            val cells: List<Shop?> = if (editing) shops else shops + listOf(null)
             cells.chunked(4).forEach { row ->
                 Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp)) {
                     row.forEach { s ->
@@ -244,19 +295,33 @@ fun DiscoverScreen(snack: androidx.compose.material3.SnackbarHostState, onProfil
                                 }
                             } else {
                                 Column(
-                                    Modifier.clip(RoundedCornerShape(12.dp))
-                                        .combinedClickable(onLongClickLabel = tr("Remove"), onLongClick = { menuFor = s }) { open = s; Shops.opened(ctx, s) }
+                                    Modifier.graphicsLayer { scaleX = pulse.value; scaleY = pulse.value }
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .combinedClickable(
+                                            onLongClickLabel = tr("Remove shops"), onLongClick = { startEditing() }
+                                        ) { if (!editing) { open = s; Shops.opened(ctx, s) } }
                                         .padding(4.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    ShopIcon(s, 60)
+                                    Box {
+                                        ShopIcon(s, 60)
+                                        // The ✕: 24 dp to see, a 48 dp area to tap (docs/STYLE.md), on the tile's top right corner.
+                                        if (editing) Box(
+                                            Modifier.align(Alignment.TopEnd).offset(x = 18.dp, y = (-18).dp).size(48.dp)
+                                                .clickable(onClickLabel = tr("Remove %s", s.name)) { removeShop(s) },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Box(
+                                                Modifier.size(24.dp).clip(CircleShape).background(Color(0xFF3A3A40))
+                                                    .border(1.5.dp, Color.White, CircleShape),
+                                                contentAlignment = Alignment.Center
+                                            ) { Icon(AppIcons.Close, null, tint = Color.White, modifier = Modifier.size(14.dp)) }
+                                        }
+                                    }
                                     Text(
                                         s.name, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
                                         textAlign = TextAlign.Center, modifier = Modifier.padding(top = 6.dp)
                                     )
-                                }
-                                DropdownMenu(expanded = menuFor == s, onDismissRequest = { menuFor = null }) {
-                                    DropdownMenuItem(text = { Text(tr("Remove %s", s.name)) }, onClick = { menuFor = null; Shops.remove(ctx, s) })
                                 }
                             }
                         }
@@ -264,8 +329,8 @@ fun DiscoverScreen(snack: androidx.compose.material3.SnackbarHostState, onProfil
                     repeat(4 - row.size) { Box(Modifier.weight(1f)) }
                 }
             }
-            Text(
-                tr("Long press a shop to remove it."), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
+            if (!editing) Text(
+                tr("Long press a shop to remove shops."), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp)
             )
         }

@@ -105,7 +105,7 @@ fun AppBottomBar(
                 Icon(AppIcons.Add, tr("Add wish"), tint = look.onAccent, modifier = Modifier.size(30.dp))
             }
             }
-            BarItem(tr("Discover"), current == "discover", onDiscover) { Icon(AppIcons.Store, null, tint = it, modifier = Modifier.size(26.dp)) }
+            BarItem(tr("My shops"), current == "discover", onDiscover) { Icon(AppIcons.Store, null, tint = it, modifier = Modifier.size(26.dp)) }
             BarItem(tr("Friends"), current == "friends", onFriends, dot = friendsDot) { Icon(AppIcons.Person, null, tint = it, modifier = Modifier.size(26.dp)) }
         }
     }

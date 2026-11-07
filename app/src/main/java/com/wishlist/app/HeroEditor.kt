@@ -314,6 +314,9 @@ fun HeroEditor(
     image: String, start: HeroEdit, onSave: (String, HeroEdit) -> Unit, onCancel: () -> Unit,
     // The profile photo (2.88): a round frame (a square photo is saved, shown in a circle), no text tool.
     round: Boolean = false,
+    // A wish's photo (owner, 7 November 2026): a square frame, no text tool, and "Fit whole photo" (the whole photo in
+    // the frame on white). The result is cut out with [renderWishPhoto].
+    wish: Boolean = false,
     // A wishlist's cover (2.89): a Preview button shows the list with the photo as it is in the frame now.
     preview: (@Composable (String, HeroEdit, () -> Unit) -> Unit)? = null
 ) {
@@ -325,6 +328,8 @@ fun HeroEditor(
     var previewing by remember { mutableStateOf(false) }
     // The text is selected (tapped): it shows corners to make it bigger or smaller.
     var textOn by remember { mutableStateOf(false) }
+    // "Fit whole photo" was tapped (a counter, so it works again after moving the photo).
+    var fitAsk by remember { mutableStateOf(0) }
     // Photos picked here with the arrow: the ones not kept are deleted again.
     var picked by remember { mutableStateOf(listOf<String>()) }
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -352,7 +357,7 @@ fun HeroEditor(
                 Row(Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = { cancel() }) { Icon(AppIcons.ArrowBack, tr("Cancel"), tint = onDark) }
                     Text(
-                        if (round) tr("Edit profile photo") else tr("Edit cover photo"), style = MaterialTheme.typography.titleLarge, color = onDark,
+                        if (round) tr("Edit profile photo") else if (wish) tr("Edit photo") else tr("Edit cover photo"), style = MaterialTheme.typography.titleLarge, color = onDark,
                         modifier = Modifier.weight(1f).padding(start = 8.dp)
                     )
                     if (preview != null) {
@@ -376,7 +381,7 @@ fun HeroEditor(
                 val density = LocalDensity.current
                 // The shape of the frame on the dashboard (16 dp from both sides, 150 dp high).
                 // The profile photo: a circle in a square.
-                val fa = if (round) 1f else (LocalConfiguration.current.screenWidthDp - 32).coerceAtLeast(120) / 150f
+                val fa = if (round || wish) 1f else (LocalConfiguration.current.screenWidthDp - 32).coerceAtLeast(120) / 150f
                 // The photo's zoom (1 = it just fills the frame) and where its middle is on screen; null: not placed yet.
                 var zoomS by remember(img, edit.rotation) { mutableStateOf<Float?>(null) }
                 var midS by remember(img, edit.rotation) { mutableStateOf<Offset?>(null) }
@@ -398,16 +403,22 @@ fun HeroEditor(
                         // The photo's size at zoom 1: it just fills the frame.
                         val baseW = maxOf(fw, fh * ar)
                         val baseH = baseW / ar
+                        // A wish photo may be smaller than the frame, down to the whole photo in it ("Fit whole photo").
+                        val minZ = if (wish) minOf(fw / baseW, fh / baseH) else 1f
                         // Keep the frame filled: the photo may not move so far that an edge shows inside the frame.
+                        // A photo smaller than the frame (a wish photo fitted) stays in the middle that way.
                         fun keep(z: Float, c: Offset): Offset {
                             val mx = (baseW * z - fw) / 2f
                             val my = (baseH * z - fh) / 2f
-                            return Offset(c.x.coerceIn(frame.center.x - mx, frame.center.x + mx), c.y.coerceIn(frame.center.y - my, frame.center.y + my))
+                            return Offset(
+                                if (mx <= 0f) frame.center.x else c.x.coerceIn(frame.center.x - mx, frame.center.x + mx),
+                                if (my <= 0f) frame.center.y else c.y.coerceIn(frame.center.y - my, frame.center.y + my)
+                            )
                         }
                         // Where it starts: as saved before (editing again), or filling the frame in the middle.
                         val start = remember(img, edit.rotation, aw, ah, r) {
                             if (edit.cropW > 0f && edit.cropH > 0f) {
-                                val z = (fw / (edit.cropW * baseW)).coerceIn(1f, 8f)
+                                val z = (fw / (edit.cropW * baseW)).coerceIn(minZ, 8f)
                                 val w = baseW * z
                                 val h = baseH * z
                                 z to keep(z, Offset(frame.left - edit.cropL * w + w / 2f, frame.top - edit.cropT * h + h / 2f))
@@ -428,10 +439,16 @@ fun HeroEditor(
                                 cropW = frame.width / p.width, cropH = frame.height / p.height
                             )
                         }
+                        // "Fit whole photo": the whole photo in the middle of the frame.
+                        androidx.compose.runtime.LaunchedEffect(fitAsk) {
+                            if (fitAsk > 0) { zoomS = minZ; midS = frame.center; keepCrop() }
+                        }
                         val pr = photo()
                         val filter = brightness(edit.bright)
                         // The photo, drawn straight onto the screen, and the frame over it (the rest dimmed).
                         Canvas(Modifier.matchParentSize()) {
+                            // A wish photo is saved on white: what shows around a fitted photo.
+                            if (wish) drawRect(Color.White, frame.topLeft, frame.size)
                             val dw = if (sideways) pr.height else pr.width
                             val dh = if (sideways) pr.width else pr.height
                             rotate(edit.rotation.toFloat(), pr.center) {
@@ -468,7 +485,7 @@ fun HeroEditor(
                                 detectTransformGestures { centroid, pan, zoom, _ ->
                                     textOn = false
                                     val z0 = zoomNow()
-                                    val z1 = (z0 * zoom).coerceIn(1f, 8f)
+                                    val z1 = (z0 * zoom).coerceIn(minZ, 8f)
                                     val c = centroid + (midNow() - centroid) * (z1 / z0) + pan
                                     zoomS = z1
                                     midS = keep(z1, c)
@@ -507,7 +524,8 @@ fun HeroEditor(
                         }
                         ToolButton(tr("Crop"), tool == "crop", { tool = "crop" }) { CropIcon(Color(0xFF111111)) }
                         ToolButton(tr("Lighter or darker"), tool == "light", { tool = "light" }) { SunIcon(Color(0xFF111111)) }
-                        if (!round) ToolButton(tr("Text"), tool == "text", { tool = "text" }) {
+                        if (wish) ToolButton(tr("Fit whole photo"), false, { tool = "crop"; fitAsk++ }) { FitIcon(Color(0xFF111111)) }
+                        if (!round && !wish) ToolButton(tr("Text"), tool == "text", { tool = "text" }) {
                             Text("T", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111111))
                         }
                         ToolButton(tr("New photo"), false, {
@@ -801,6 +819,71 @@ suspend fun renderCover(c: android.content.Context, image: String, edit: HeroEdi
             canvas.drawBitmap(bmp, android.graphics.Rect(left, top, left + w, top + h), android.graphics.Rect(0, 0, outW, outH), paint)
             val dir = java.io.File(c.filesDir, "images").apply { mkdirs() }
             val file = java.io.File(dir, "cover_" + System.currentTimeMillis() + ".jpg")
+            java.io.FileOutputStream(file).use { out.compress(android.graphics.Bitmap.CompressFormat.JPEG, 90, it) }
+            android.net.Uri.fromFile(file).toString()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+
+/** "Fit whole photo": a frame with a smaller picture inside it (our own drawing). */
+@Composable
+private fun FitIcon(c: Color) {
+    Canvas(Modifier.size(24.dp)) {
+        val u = size.width / 24f
+        drawRect(c, Offset(3f * u, 3f * u), Size(18f * u, 18f * u), style = Stroke(1.8f * u))
+        drawRect(c, Offset(7f * u, 8f * u), Size(10f * u, 8f * u), style = Stroke(1.8f * u))
+    }
+}
+
+/**
+ * A wish's photo from the editor (owner, 7 November 2026): exactly the square that was in the frame, turned and lighter or
+ * darker, on white where a fitted photo doesn't reach. A JPEG of at most 1200 × 1200. Null when it couldn't be made.
+ */
+suspend fun renderWishPhoto(c: android.content.Context, image: String, edit: HeroEdit): String? =
+    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        try {
+            val path = android.net.Uri.parse(image).path ?: return@withContext null
+            val o = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            android.graphics.BitmapFactory.decodeFile(path, o)
+            if (o.outWidth <= 0 || o.outHeight <= 0) return@withContext null
+            var sample = 1
+            while (maxOf(o.outWidth, o.outHeight) / (sample * 2) >= 2400) sample *= 2
+            var bmp = android.graphics.BitmapFactory.decodeFile(path, android.graphics.BitmapFactory.Options().apply { inSampleSize = sample })
+                ?: return@withContext null
+            if (edit.rotation % 360 != 0) {
+                val m = android.graphics.Matrix().apply { postRotate(edit.rotation.toFloat()) }
+                bmp = android.graphics.Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, m, true)
+            }
+            val raw = bmp.width.toFloat() / bmp.height
+            // The part in the frame, as parts of the photo (it may reach past the photo when it was fitted).
+            val cw: Float
+            val ch: Float
+            val cl: Float
+            val ct: Float
+            if (edit.cropW > 0f && edit.cropH > 0f) {
+                cw = edit.cropW; ch = edit.cropH; cl = edit.cropL; ct = edit.cropT
+            } else {
+                if (raw > 1f) { ch = 1f; cw = 1f / raw } else { cw = 1f; ch = raw }
+                cl = (1f - cw) / 2f; ct = (1f - ch) / 2f
+            }
+            // As sharp as the photo allows, at most 1200 pixels.
+            val side = (cw * bmp.width).coerceAtLeast(ch * bmp.height).toInt().coerceIn(200, 1200)
+            val out = android.graphics.Bitmap.createBitmap(side, side, android.graphics.Bitmap.Config.ARGB_8888)
+            val canvas = android.graphics.Canvas(out)
+            canvas.drawColor(android.graphics.Color.WHITE)
+            val paint = android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG)
+            if (edit.bright != 0f) {
+                val k = edit.bright * 0.4f * 255f
+                paint.colorFilter = android.graphics.ColorMatrixColorFilter(
+                    floatArrayOf(1f, 0f, 0f, 0f, k, 0f, 1f, 0f, 0f, k, 0f, 0f, 1f, 0f, k, 0f, 0f, 0f, 1f, 0f)
+                )
+            }
+            val dst = android.graphics.RectF(-cl / cw * side, -ct / ch * side, (1f - cl) / cw * side, (1f - ct) / ch * side)
+            canvas.drawBitmap(bmp, null, dst, paint)
+            val dir = java.io.File(c.filesDir, "images").apply { mkdirs() }
+            val file = java.io.File(dir, "wish_" + System.currentTimeMillis() + ".jpg")
             java.io.FileOutputStream(file).use { out.compress(android.graphics.Bitmap.CompressFormat.JPEG, 90, it) }
             android.net.Uri.fromFile(file).toString()
         } catch (e: Exception) {
