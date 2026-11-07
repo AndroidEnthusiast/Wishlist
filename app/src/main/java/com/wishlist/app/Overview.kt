@@ -5,6 +5,9 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -146,8 +149,12 @@ fun ProfileSummary(onProfile: () -> Unit, onFriends: () -> Unit = {}, onAddWish:
     val all = placedWishes()
     val friends = Friends.state?.friends?.size ?: 0
     val total = homeTotal(all.map { it.w })
+    val look = LocalLook.current
+    // One soft card in the style's own look around you and your numbers (owner, 7 November 2026), set apart from the
+    // lists below; inside it the numbers are plain, with thin lines between them (no cards in a card).
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp).fillMaxWidth()
+            .lookCard(look, 5L, look.cardShape(5L, small = true)).padding(horizontal = 14.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(Modifier.clip(androidx.compose.foundation.shape.CircleShape).clickable(onClickLabel = tr("Profile"), onClick = onProfile)) {
@@ -156,13 +163,16 @@ fun ProfileSummary(onProfile: () -> Unit, onFriends: () -> Unit = {}, onAddWish:
         Column(Modifier.weight(1f).padding(start = 14.dp)) {
             Text(
                 Shared.lastName.ifBlank { tr("Add your name") }, style = MaterialTheme.typography.titleLarge,
-                fontWeight = LocalLook.current.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                fontWeight = look.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis, color = look.cardInk(5L),
                 modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onProfile).padding(horizontal = 2.dp)
             )
-            Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Stat(friends.toString(), friends == 0, if (friends == 1) tr("Friend") else tr("Friends"), Modifier.weight(1f), if (Config.enabled) tr("Add friends") else null, onFriends, onFriends)
-                Stat(all.size.toString(), all.isEmpty(), if (all.size == 1) tr("Wish") else tr("Wishes"), Modifier.weight(1f), tr("Add wish"), onAddWish) { HubNav.page = "wishes" }
-                Stat(total, false, tr("Total value"), Modifier.weight(1f), onClick = null)
+            Row(Modifier.fillMaxWidth().padding(top = 8.dp).height(androidx.compose.foundation.layout.IntrinsicSize.Min), verticalAlignment = Alignment.CenterVertically) {
+                val line = look.cardMuted(5L).copy(alpha = 0.3f)
+                Stat(friends.toString(), friends == 0, if (friends == 1) tr("Friend") else tr("Friends"), Modifier.weight(1f), if (Config.enabled) tr("Add friends") else null, onFriends, onFriends, plain = true)
+                Box(Modifier.width(1.dp).fillMaxHeight(0.7f).background(line))
+                Stat(all.size.toString(), all.isEmpty(), if (all.size == 1) tr("Wish") else tr("Wishes"), Modifier.weight(1f), tr("Add wish"), onAddWish, plain = true) { HubNav.page = "wishes" }
+                Box(Modifier.width(1.dp).fillMaxHeight(0.7f).background(line))
+                Stat(total, false, tr("Total value"), Modifier.weight(1.3f), onClick = null, plain = true)
             }
         }
     }
@@ -220,13 +230,16 @@ fun Modifier.statTile(): Modifier {
 @Composable
 private fun Stat(
     value: String, zero: Boolean, label: String, modifier: Modifier = Modifier, invite: String? = null, onInvite: () -> Unit = {},
-    onClick: (() -> Unit)?
+    onClick: (() -> Unit)?,
+    // Inside the profile card: no tile of its own (owner, 7 November 2026).
+    plain: Boolean = false
 ) {
     val look = LocalLook.current
     val inviting = zero && invite != null
     val tap = if (inviting) onInvite else onClick
     Column(
-        modifier.statTile().then(if (tap != null) Modifier.clickable(onClick = tap) else Modifier)
+        modifier.then(if (plain) Modifier.clip(RoundedCornerShape(10.dp)) else Modifier.statTile())
+            .then(if (tap != null) Modifier.clickable(onClick = tap) else Modifier)
             .padding(horizontal = 4.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
