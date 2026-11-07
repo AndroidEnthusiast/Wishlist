@@ -198,7 +198,7 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
         topBar = {
             TopAppBar(
                 title = { Text(tr("Messages"), fontWeight = look.titleWeight) },
-                navigationIcon = { MenuSlot() },
+                navigationIcon = { MenuSlot(back = false) },
                 actions = { ProfileButton(onProfile) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )

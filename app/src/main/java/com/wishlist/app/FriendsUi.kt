@@ -188,7 +188,16 @@ fun ProfileButton(onProfile: () -> Unit) {
             if (Notifications.unread) RedDot(Modifier.align(Alignment.TopEnd).offset(2.dp, (-2).dp))
         }
     }
-    IconButton(onClick = onProfile) { Avatar(Friends.myPhoto, Shared.lastName, 32.dp) }
+    // Your picture opens the profile sheet (owner, 7 November 2026: no side menu): Profile, Gifts I reserved,
+    // Received gifts, Bin, App settings.
+    IconButton(onClick = { AccountNav.open = true }) {
+        Box(Modifier.semantics { contentDescription = tr("Profile and settings") }) { Avatar(Friends.myPhoto, Shared.lastName, 32.dp) }
+    }
+}
+
+/** The profile sheet (owner, 7 November 2026): opened by your picture at the top right. */
+object AccountNav {
+    var open by mutableStateOf(false)
 }
 
 /** The bell at the top asks the app to show Notifications (see [ProfileButton]). */
@@ -297,7 +306,7 @@ private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenL
         topBar = {
             TopAppBar(
                 title = { Text(tr("Friends"), fontWeight = LocalLook.current.titleWeight) },
-                navigationIcon = { MenuSlot() },
+                navigationIcon = { MenuSlot(back = false) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
                 actions = { ProfileButton(onProfile) }
             )

@@ -235,7 +235,7 @@ fun HubScreen(
             TopAppBar(
                 // The app's wordmark instead of "Home" (2.97, in the style's own way).
                 title = { Wordmark() },
-                navigationIcon = { MenuSlot() },
+                navigationIcon = { MenuSlot(back = false) },
                 actions = { ProfileButton(onProfile) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
@@ -254,6 +254,9 @@ fun HubScreen(
 
             // Gift exchange in its season (owner, 7 November 2026).
             SeasonCard(onNewExchange)
+            // Gift exchanges (owner, 7 November 2026: out of the menu, onto Home): yours as blocks and a small "New gift
+            // exchange" block, all year.
+            if (Config.enabled) ExchangesSection(onNewExchange)
 
             // No "Price changes" here any more (owner, 2.95): price news is on Price watch and in Notifications.
         }
@@ -789,3 +792,38 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
 
 /** Lists in the order they were last opened, newest first; never-opened ones keep their own order after them. */
 internal fun byRecent(items: List<HubItem>): List<HubItem> = items.sortedByDescending { Repo.recent[it.key] ?: 0L }
+
+/** "Gift exchanges ›" on Home: your exchanges (tap: open it) and "New gift exchange"; the › opens the exchanges page. */
+@Composable
+private fun ExchangesSection(onNew: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val look = LocalLook.current
+    val list = Exchanges.list
+    Spacer(Modifier.height(8.dp))
+    HubTitle(tr("Gift exchanges"), onMore = { ExchangeNav.open = null; ExchangeNav.show = true })
+    val w = ((LocalConfiguration.current.screenWidthDp - 16) / 2.3f).dp
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(list.size, key = { list[it].id }) { i ->
+            val x = list[i]
+            Column(Modifier.width(w).clip(RoundedCornerShape(16.dp)).clickable { ExchangeNav.openExchange(x.id) }) {
+                Box {
+                    GxCover(x.theme, Exchanges.photos[x.id], Modifier.fillMaxWidth().aspectRatio(1f).clip(look.cardShape(x.id.hashCode().toLong(), small = true)))
+                    if (x.me.unreadGiftee + x.me.unreadSanta > 0) RedDot(Modifier.align(Alignment.TopEnd).padding(8.dp))
+                }
+                Text(
+                    x.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = cs.onBackground,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp, start = 2.dp, end = 2.dp)
+                )
+                Text(
+                    Exchanges.countdown(x) ?: if (!x.drawn) tr("Names not drawn yet") else tr("Names drawn"),
+                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 2.dp)
+                )
+            }
+        }
+        item(key = "new") { NewBlock(tr("New gift exchange"), onNew, Modifier.width(w)) }
+    }
+}

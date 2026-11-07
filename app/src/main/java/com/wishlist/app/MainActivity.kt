@@ -437,8 +437,12 @@ private fun DrawerDivider() {
 
 /** Empty space in the top bar where the floating menu button is drawn. */
 @Composable
-fun MenuSlot() {
-    Spacer(Modifier.size(48.dp))
+fun MenuSlot(back: Boolean = true) {
+    // No side menu any more (owner, 7 November 2026): screens reached from the profile sheet get a back arrow (the
+    // phone's Back does the same); the tabs (Home, Messages, My shops, Friends) start with their title.
+    if (!back) return
+    val d = androidx.activity.compose.LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    IconButton(onClick = { d?.onBackPressed() }) { Icon(AppIcons.ArrowBack, tr("Back")) }
 }
 
 /** Three bars that spin and merge into an X while the menu is open. */
@@ -828,7 +832,9 @@ fun App(
         !pricesOpen && !discoverOpen && !friendsOpen && !messagesOpen && groupOpen == null
     ModalNavigationDrawer(
         drawerState = drawer,
-        gesturesEnabled = !inListSettings && !inThemer && !inFriend && !inOverview && !inChat && !inGroup && !inList && !inExchange && !inPrices,
+        // The side menu is switched off (owner, 7 November 2026: the profile sheet took its place); its code stays for
+        // now so it can come back quickly if the owner changes their mind.
+        gesturesEnabled = false,
         drawerContent = {
             val look = LocalLook.current
             ModalDrawerSheet(
@@ -997,8 +1003,8 @@ fun App(
         }
     }
 
-    // The menu button lives above the menu so it can spin into an X and close it.
-    if (!inListSettings && !inThemer && !inFriend && !inOverview && !inChat && !inGroup && !inList && !inExchange && !inPrices) Box(
+    // The menu button lives above the menu so it can spin into an X and close it. Hidden: no side menu (7 November 2026).
+    if (false) Box(
         Modifier.windowInsetsPadding(TopAppBarDefaults.windowInsets).height(64.dp).padding(start = 4.dp),
         contentAlignment = Alignment.CenterStart
     ) {
@@ -1026,6 +1032,14 @@ fun App(
     // Joining asks for your name first when it's missing (owner, 2.135).
     val needName = (joinDlg != null || GroupNav.joinLink != null || GroupNav.joinGroup != null || ExchangeNav.joinLink != null || ExchangeNav.joinGx != null) && !NameGate.hasName()
     LaunchedEffect(needName) { if (needName) NameGate.ensure {} }
+    if (AccountNav.open) AccountSheet(
+        onClose = { AccountNav.open = false },
+        onProfile = { AccountNav.open = false; closeAll(); profileOpen = true },
+        onReserved = { AccountNav.open = false; reservedOpen = true },
+        onReceived = { AccountNav.open = false; receivedOpen = true },
+        onBin = { AccountNav.open = false; closeAll(); binOpen = true },
+        onSettings = { AccountNav.open = false; closeAll(); settings = true }
+    )
     if (receivedOpen) ReceivedScreen { receivedOpen = false }
     // "Gifts I reserved" (2.129): tapping a list opens it where it lives (a friend, a group, a gift exchange, a gift list).
     if (reservedOpen) ReservedScreen(onClose = { reservedOpen = false }) { g ->
