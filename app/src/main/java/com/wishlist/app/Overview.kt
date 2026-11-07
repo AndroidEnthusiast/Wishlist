@@ -170,7 +170,7 @@ fun ProfileSummary(onProfile: () -> Unit, onFriends: () -> Unit = {}, onAddWish:
                 val line = look.cardMuted(5L).copy(alpha = 0.3f)
                 Stat(friends.toString(), friends == 0, if (friends == 1) tr("Friend") else tr("Friends"), Modifier.weight(1f), if (Config.enabled) tr("Add friends") else null, onFriends, onFriends, plain = true)
                 Box(Modifier.width(1.dp).fillMaxHeight(0.7f).background(line))
-                Stat(all.size.toString(), all.isEmpty(), if (all.size == 1) tr("Wish") else tr("Wishes"), Modifier.weight(1f), tr("Add wish"), onAddWish, plain = true) { HubNav.page = "wishes" }
+                Stat(all.size.toString(), all.isEmpty(), if (all.size == 1) tr("Wish") else tr("Wishes"), Modifier.weight(1f), tr("Add wish"), onAddWish, onClick = { HubNav.page = "wishes" }, plain = true)
                 Box(Modifier.width(1.dp).fillMaxHeight(0.7f).background(line))
                 Stat(total, false, tr("Total value"), Modifier.weight(1.3f), onClick = null, plain = true)
             }
