@@ -261,6 +261,11 @@ fun Switch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifier: Mo
     }
 }
 
+/** [t] with LocalInDialog on, so its buttons are the compact size. */
+private fun inDialog(t: @Composable () -> Unit): @Composable () -> Unit = {
+    CompositionLocalProvider(LocalInDialog provides true) { t() }
+}
+
 @Composable
 fun AlertDialog(
     onDismissRequest: () -> Unit,
@@ -275,16 +280,16 @@ fun AlertDialog(
     val cs = MaterialTheme.colorScheme
     val shape = MaterialTheme.shapes.extraLarge
     // Buttons inside the dialog's text are the compact size (LocalInDialog, docs/STYLE.md).
-    val text = text?.let { t -> @Composable { CompositionLocalProvider(LocalInDialog provides true) { t() } } }
+    val body: (@Composable () -> Unit)? = if (text == null) null else inDialog(text)
     if (look.design == "quiet") {
         M3AlertDialog(
-            onDismissRequest, confirmButton, modifier, dismissButton, title = title, text = text,
+            onDismissRequest, confirmButton, modifier, dismissButton, title = title, text = body,
             shape = shape, containerColor = cs.surfaceContainerHigh, tonalElevation = 0.dp, properties = properties
         )
     } else {
         M3AlertDialog(
             onDismissRequest, confirmButton, modifier.lookSurface(look, shape, cs.surfaceContainerHigh, depth = 10.dp), dismissButton,
-            title = title, text = text, shape = shape, containerColor = Color.Transparent, tonalElevation = 0.dp, properties = properties
+            title = title, text = body, shape = shape, containerColor = Color.Transparent, tonalElevation = 0.dp, properties = properties
         )
     }
 }
