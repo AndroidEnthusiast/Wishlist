@@ -580,17 +580,18 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
     }
 
     // Is the page on screen a product? Looked at when a page has loaded or its address changed (shops that change
-    // pages without reloading), and again a little later, as many shops fill in the price after loading.
+    // pages without reloading), then again and again while you stay (2.145: every 5 seconds for a minute), as many
+    // shops fill in the product and its price well after loading. A product without a readable price counts too.
     LaunchedEffect(checks) {
         if (checks == 0) return@LaunchedEffect
-        for (wait in listOf(300L, 1500L, 3000L)) {
+        for (wait in listOf(300L, 1200L, 1500L) + List(12) { 5000L }) {
             kotlinx.coroutines.delay(wait)
             val w = web ?: return@LaunchedEffect
             val url = w.url ?: return@LaunchedEffect
             if (productAt == url) return@LaunchedEffect
             val html = js(w, "document.documentElement.outerHTML") ?: continue
             val ok = withContext(Dispatchers.Default) {
-                try { parsePage(Jsoup.parse(html, url), URI(url).host ?: "", 200)?.let { !it.blocked && it.price != null } ?: false }
+                try { parsePage(Jsoup.parse(html, url), URI(url).host ?: "", 200)?.let { !it.blocked && it.product } ?: false }
                 catch (e: Exception) { false }
             }
             if (web?.url != url) return@LaunchedEffect
@@ -602,16 +603,22 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
     fun add(anyway: Boolean = false) {
         val w = web ?: return
         val url = w.url ?: return
-        if (!anyway && productAt != url) { hint = true; return }
         hint = false
         reading = true
         scope.launch {
+            // The page as it is right now (2.145): a price or a size chosen after the last check counts.
             val html = js(w, "document.documentElement.outerHTML")
             val read = try {
-                html?.let { parsePage(Jsoup.parse(it, url), URI(url).host ?: "", 200) }
+                html?.let { h -> withContext(Dispatchers.Default) { parsePage(Jsoup.parse(h, url), URI(url).host ?: "", 200) } }
             } catch (e: Exception) {
                 null
             }
+            if (!anyway && (read == null || read.blocked || !read.product)) {
+                reading = false
+                hint = true
+                return@launch
+            }
+            if (!anyway) productAt = url
             // The product picture (owner, 2.116: it often stayed empty; 2.118: always the FIRST product photo). Shops
             // that change pages without reloading keep an old "og:image" (or none), so the picture is taken from the
             // page itself: the first image in the product's own structured data, then the page's og:image when it

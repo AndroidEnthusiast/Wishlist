@@ -40,7 +40,12 @@ object SharedPrices {
                 if (System.currentTimeMillis() - w.checked < fresh) continue
                 // A shop that couldn't be read is not marked: another phone may have more luck.
                 val np = fetchMeta(w.url, c, w.price != null)?.price ?: continue
-                val changed = newPrice(w, np)
+                // The first check with the better reader of 2.145 is quiet: no old price, so no alert anywhere.
+                val quiet = ReaderUpgrade.quiet(c, w.id)
+                if (quiet) ReaderUpgrade.done(c, w.id)
+                val changed = if (quiet && w.price != null) {
+                    if (np < w.price - 0.005 || np > w.price + 0.005) w.copy(price = np, oldPrice = null) else null
+                } else newPrice(w, np)
                 val upd = (changed ?: w).copy(checked = System.currentTimeMillis())
                 try {
                     Cloud.shPut(l.key, upd, if (changed != null) listOf("price", "old", "chk") else listOf("chk"))

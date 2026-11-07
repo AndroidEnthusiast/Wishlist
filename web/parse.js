@@ -153,6 +153,95 @@
    * answered. base: the page's address, for turning a relative picture address into a full one.
    * Returns {title, desc, image, price, currency, blocked} or null when there is no title at all.
    */
+  // ---- The shop's own product data (JSON-LD, schema.org), 2.145. Same rules as Fetch.kt (ldProduct, shownPrice). ----
+  function ldIsProduct(o) {
+    var t = o["@type"];
+    var types = Array.isArray(t) ? t.map(String) : [String(t || "")];
+    return types.some(function (x) { return endsWith(x, "Product") || endsWith(x, "ProductGroup"); });
+  }
+  function ldNodes(v) {
+    if (Array.isArray(v)) return v.reduce(function (a, x) { return a.concat(ldNodes(x)); }, []);
+    if (v && typeof v === "object") return [v].concat(v["@graph"] ? ldNodes(v["@graph"]).filter(function (x) { return x !== v; }) : []);
+    return [];
+  }
+  function ldPrice(offers) {
+    if (Array.isArray(offers)) {
+      for (var i = 0; i < offers.length; i++) { var r = ldPrice(offers[i]); if (r) return r; }
+      return null;
+    }
+    if (!offers || typeof offers !== "object") return null;
+    var cur = String(offers.priceCurrency || "");
+    var keys = ["price", "lowPrice"];
+    for (var k = 0; k < keys.length; k++) {
+      var v = offers[keys[k]];
+      var n = v === undefined || v === null || v === "" ? null : toNum(String(v));
+      if (n !== null && n > 0) return { price: n, currency: cur };
+    }
+    var ps = ldPrice(offers.priceSpecification);
+    if (ps) return { price: ps.price, currency: ps.currency || cur };
+    return ldPrice(offers.offers);
+  }
+  function ldImage(v) {
+    if (typeof v === "string") return v;
+    if (Array.isArray(v)) return v.length ? ldImage(v[0]) : "";
+    if (v && typeof v === "object") return String(v.url || v.contentUrl || "");
+    return "";
+  }
+  function ldProduct(d, url) {
+    var scripts = d.querySelectorAll('script[type="application/ld+json"]');
+    for (var i = 0; i < scripts.length; i++) {
+      var v;
+      try { v = JSON.parse(String(scripts[i].textContent || "").trim()); } catch (e) { continue; }
+      var p = ldNodes(v).filter(function (o) { return o && typeof o === "object" && ldIsProduct(o); })[0];
+      if (!p) continue;
+      var price = ldPrice(p.offers);
+      var variants = Array.isArray(p.hasVariant) ? p.hasVariant.filter(function (x) { return x && typeof x === "object"; }) : null;
+      if (variants) {
+        var path = String(url || "").replace(/^[a-z]+:\/\/[^/]*\//i, "");
+        var here = variants.filter(function (x) {
+          var u = String(x.url || "");
+          return u && (url === u || endsWith(String(url || ""), u) || endsWith(u, path));
+        })[0];
+        var hp = here ? ldPrice(here.offers) : null;
+        if (hp) price = hp;
+        else if (!price) for (var j = 0; j < variants.length && !price; j++) price = ldPrice(variants[j].offers);
+      }
+      var image = ldImage(p.image) || (variants && variants[0] ? ldImage(variants[0].image) : "");
+      return { name: String(p.name || "").trim(), image: image, price: price ? price.price : null, currency: price ? price.currency : "" };
+    }
+    return null;
+  }
+
+  var SHOWN_PRICE = /([€$£])\s?([0-9][0-9.,]*)|([0-9][0-9.,]*)\s?(?:€|EUR|£|GBP|USD)/;
+  var OLD_PRICE = /old|was|strike|compare|before|previous|original|crossed|rrp|msrp|list-price|from-price/;
+  var NOT_A_PRICE = /verzend|bezorg|shipping|delivery|versand|livraison|vanaf|from|per maand|\/mnd|p\/m/;
+  function shownPrice(d, host) {
+    var els = d.querySelectorAll('[class*="price" i], [id*="price" i]');
+    for (var i = 0; i < els.length && i < 400; i++) {
+      var e = els[i];
+      var tag = String(e.tagName || "").toLowerCase();
+      if (["del", "s", "strike", "script", "style", "meta"].indexOf(tag) >= 0) continue;
+      var cls = (String(e.getAttribute("class") || "") + " " + String(e.id || "")).toLowerCase();
+      if (OLD_PRICE.test(cls)) continue;
+      var bad = false;
+      for (var a = e.parentElement; a && !bad; a = a.parentElement) {
+        var at = String(a.tagName || "").toLowerCase();
+        if (at === "del" || at === "s" || at === "strike" || OLD_PRICE.test(String(a.getAttribute("class") || "").toLowerCase())) bad = true;
+      }
+      if (bad) continue;
+      var own = Array.prototype.filter.call(e.childNodes, function (x) { return x.nodeType === 3; })
+        .map(function (x) { return x.textContent; }).join(" ").replace(/\s+/g, " ").trim();
+      var t = own || String(e.textContent || "").replace(/\s+/g, " ").trim();
+      if (t.length > 40 || NOT_A_PRICE.test(t.toLowerCase())) continue;
+      var mm = SHOWN_PRICE.exec(t);
+      if (!mm) continue;
+      var amount = toNum(mm[2] || mm[3]);
+      if (amount === null || amount <= 0) continue;
+      return { price: amount, currency: currencyOf(t, host) };
+    }
+    return null;
+  }
+
   function parsePage(d, host, status, base) {
     var isAmazon = String(host).indexOf("amazon.") >= 0;
     var pageTitle = String(d.title || "").replace(/\s+/g, " ").trim();
@@ -182,6 +271,7 @@
       if (li) image = li.getAttribute("data-old-hires") || absUrl(String(li.getAttribute("src") || ""), base);
     }
 
+    var ld = ldProduct(d, base || "");
     var price = toNum(m("product:price:amount", "og:price:amount", "price"));
     var cur = m("product:price:currency", "og:price:currency", "priceCurrency");
     if (price === null && isAmazon) {
@@ -192,19 +282,30 @@
         if (n !== null && n > 0) { price = n; cur = currencyOf(t, host); break; }
       }
     }
-    if (price === null) {
-      var ld = Array.prototype.map.call(d.querySelectorAll('script[type="application/ld+json"]'),
-        function (s) { return s.textContent; }).join(" ");
-      var pm = /"price"\s*:\s*"?([0-9][0-9.,]*)/.exec(ld);
-      price = pm ? toNum(pm[1]) : null;
-      if (!cur) {
-        var cm = /"priceCurrency"\s*:\s*"([A-Z]{3})"/.exec(ld);
-        cur = cm ? cm[1] : "";
-      }
+    // The product's own data (2.145): its own price, not the first "price" anywhere in the page.
+    if (price === null && ld && ld.price !== null) {
+      price = ld.price;
+      if (!cur) cur = ld.currency;
     }
     if (price === null) {
       var ip = d.querySelector("[itemprop=price]");
       if (ip) price = toNum(ip.getAttribute("content") || ip.textContent);
+    }
+    if (price === null && !ld) {
+      // Product data that isn't valid JSON: the first "price" in it, as before 2.145.
+      var raw = Array.prototype.map.call(d.querySelectorAll('script[type="application/ld+json"]'),
+        function (s) { return s.textContent; }).join(" ");
+      var pm = /"price"\s*:\s*"?([0-9][0-9.,]*)/.exec(raw);
+      price = pm ? toNum(pm[1]) : null;
+      if (price !== null && !cur) {
+        var cm = /"priceCurrency"\s*:\s*"([A-Z]{3})"/.exec(raw);
+        cur = cm ? cm[1] : "";
+      }
+    }
+    if (price === null) {
+      // The price the page shows (2.145; the owner chose this last try knowing it can now and then pick a wrong one).
+      var sp = shownPrice(d, host);
+      if (sp) { price = sp.price; if (!cur) cur = sp.currency; }
     }
     if (price === null && d.body) {
       // Last resort for sites that only print the price as text.
@@ -223,11 +324,15 @@
         }
       }
     }
+    if (!title.trim() && ld) title = ld.name;
+    if (!image && ld && ld.image) image = absUrl(ld.image, base);
+    var product = !!ld || price !== null || m("og:type").toLowerCase().indexOf("product") >= 0 ||
+      !!d.querySelector('[itemtype*="schema.org/Product"]');
     if (!title.trim()) return null;
     return {
       title: cleanTitle(title, host).slice(0, 120),
       desc: m("og:description", "twitter:description", "description").slice(0, 200),
-      image: image, price: price, currency: cur || currencyOf("", host), blocked: false
+      image: image, price: price, currency: cur || currencyOf("", host), blocked: false, product: product
     };
   }
 

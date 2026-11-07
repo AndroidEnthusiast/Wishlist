@@ -117,5 +117,35 @@ check("title: nothing to clean", CT("Sony WH-1000XM5 - Zwart", "www.coolblue.nl"
 check("title: only the shop's name stays", CT("Amazon.nl", "www.amazon.nl") === "Amazon.nl");
 check("title: short brackets stay", CT("T-shirt (2 pack)", "www.hm.com") === "T-shirt (2 pack)");
 check("title: from a page", P.parsePage(new JSDOM('<html><head><title>Kandelaar (m2434550716) \u2014 Marktplaats</title></head></html>').window.document, "www.marktplaats.nl", 200, "https://www.marktplaats.nl/x").title === "Kandelaar");
+// The shop's own product data and the shown price (2.145); same rules as ldProduct / shownPrice in Fetch.kt.
+const ldPage = (blocks, body = "", head = "") => "<html><head><title>Shop</title>" + head + blocks.map(b => '<script type="application/ld+json">' + JSON.stringify(b) + "</script>").join("") + "</head><body>" + body + "</body></html>";
+const related = { "@type": "ItemList", itemListElement: [{ "@type": "Product", name: "Other", offers: { price: "9.99", priceCurrency: "EUR" } }] };
+let r = meta(ldPage([related, { "@context": "https://schema.org", "@type": "Product", name: "Gift Set M", image: ["/img/set-m.jpg"], offers: { "@type": "Offer", price: "39.90", priceCurrency: "EUR" } }]), "www.rituals.com");
+check("ld: the product's own price, not a related product's", r.price === 39.9 && r.currency === "EUR" && r.product === true);
+check("ld: picture from the product data when there is no og:image", r.image === "https://www.rituals.com/img/set-m.jpg");
+r = meta(ldPage([{ "@graph": [{ "@type": "WebPage" }, { "@type": ["Product", "Thing"], name: "Lamp", offers: [{ "@type": "Offer", price: 59 }] }] }]), "shop.example");
+check("ld: @graph and a list of types, number price", r.price === 59);
+r = meta(ldPage([{ "@type": "Product", name: "Mug", offers: { "@type": "AggregateOffer", lowPrice: "12,50", priceCurrency: "EUR" } }]), "shop.example");
+check("ld: AggregateOffer lowPrice", r.price === 12.5);
+r = meta(ldPage([{ "@type": "Product", name: "Chair", offers: { "@type": "Offer", priceSpecification: { "@type": "UnitPriceSpecification", price: 149, priceCurrency: "GBP" } } }]), "shop.example");
+check("ld: priceSpecification", r.price === 149 && r.currency === "GBP");
+const group = { "@type": "ProductGroup", name: "Jacket", hasVariant: [
+  { "@type": "Product", url: "https://shop.example/jacket?size=s", offers: { price: "100.00" } },
+  { "@type": "Product", url: "https://shop.example/jacket?size=m", offers: { price: "110.00" } }] };
+const gd = new dom.window.DOMParser().parseFromString(ldPage([group]), "text/html");
+check("ld: ProductGroup takes the variant of this page", P.parsePage(gd, "shop.example", 200, "https://shop.example/jacket?size=m").price === 110);
+check("ld: ProductGroup without a match takes the first variant", P.parsePage(gd, "shop.example", 200, "https://shop.example/jacket").price === 100);
+r = meta(ldPage([{ "@type": "Product", name: "Sold out thing" }]), "shop.example");
+check("a product without a price still counts", r.product === true && r.price === null);
+r = meta('<html><head><title>Bag</title><meta property="og:type" content="product"></head><body>Out of stock</body></html>', "shop.example");
+check("og:type product counts", r.product === true && r.price === null);
+r = meta('<html><head><title>Welcome to our shop</title></head><body><a href="/sale">Sale</a></body></html>', "shop.example");
+check("a home page is no product", r.product === false && r.price === null);
+r = meta('<html><head><title>Set</title></head><body><p class="shipping-price">Gratis verzending vanaf €35</p><span class="price price--old"><del>€ 54,20</del></span><s class="price">€ 50,00</s><div class="product-price"><span class="value">€ 39,90</span></div></body></html>', "www.rituals.com");
+check("shown price: not delivery, not an old crossed-out price", r.price === 39.9 && r.currency === "EUR" && r.product === true);
+r = meta('<html><head><title>Set</title></head><body><div id="ProductPrice">39,90 €</div></body></html>', "shop.example");
+check("shown price: amount before the euro sign, id with Price", r.price === 39.9);
+r = meta('<html><head><title>Broken</title><script type="application/ld+json">{"@type":"Product","offers":{"price":"25.00",}}</script></head></html>', "shop.example");
+check("product data that isn't valid JSON: its first price, as before", r.price === 25 && r.product === true);
 console.log(fails === 0 ? "ALL PASSED (" + n + " checks)" : fails + " FAILED of " + n);
 process.exit(fails ? 1 : 0);

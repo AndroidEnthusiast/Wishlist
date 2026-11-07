@@ -14,8 +14,105 @@ data class Meta(
     val image: String,
     val price: Double?,
     val currency: String,
-    val blocked: Boolean = false
+    val blocked: Boolean = false,
+    // The page is a product page (2.145): the shop's product data, og:type product, product microdata, or a price.
+    // A product without a readable price still counts; its price is left empty to fill in.
+    val product: Boolean = false
 )
+
+/** What the shop's own product data (JSON-LD, schema.org) says: the product itself, never "related" products. */
+internal data class LdProduct(val name: String, val image: String, val price: Double?, val currency: String)
+
+/** True for a JSON-LD @type of Product or ProductGroup (a string or a list). */
+private fun ldIsProduct(o: org.json.JSONObject): Boolean {
+    val t = o.opt("@type")
+    val types = if (t is org.json.JSONArray) (0 until t.length()).map { t.optString(it) } else listOf(t?.toString().orEmpty())
+    return types.any { it.endsWith("Product") || it.endsWith("ProductGroup") }
+}
+
+/** The top-level objects of one JSON-LD block: itself, a list, or its @graph (not nested properties). */
+private fun ldNodes(v: Any?): List<org.json.JSONObject> = when (v) {
+    is org.json.JSONArray -> (0 until v.length()).flatMap { ldNodes(v.opt(it)) }
+    is org.json.JSONObject -> listOf(v) + ldNodes(v.opt("@graph")).filter { it !== v }
+    else -> emptyList()
+}
+
+/** A price from schema.org offers: an Offer, a list of them, an AggregateOffer (lowPrice) or a priceSpecification. */
+private fun ldPrice(offers: Any?): Pair<Double, String>? {
+    when (offers) {
+        is org.json.JSONArray -> { for (i in 0 until offers.length()) ldPrice(offers.opt(i))?.let { return it }; return null }
+        is org.json.JSONObject -> {
+            val cur = offers.optString("priceCurrency")
+            for (k in listOf("price", "lowPrice")) {
+                val n = offers.opt(k)?.toString()?.takeIf { it.isNotBlank() && it != "null" }?.toNum()
+                if (n != null && n > 0) return n to cur
+            }
+            ldPrice(offers.opt("priceSpecification"))?.let { (n, c) -> return n to c.ifEmpty { cur } }
+            ldPrice(offers.opt("offers"))?.let { return it }
+            return null
+        }
+        else -> return null
+    }
+}
+
+private fun ldImage(v: Any?): String = when (v) {
+    is String -> v
+    is org.json.JSONArray -> if (v.length() > 0) ldImage(v.opt(0)) else ""
+    is org.json.JSONObject -> v.optString("url").ifEmpty { v.optString("contentUrl") }
+    else -> ""
+}
+
+/**
+ * The product in the page's JSON-LD (2.145): the first Product or ProductGroup at the top of a block or in its @graph.
+ * A ProductGroup (sizes, colours) takes the variant whose web address is the page's [url], else its own offers, else
+ * its first variant's. Null when the page has no product data.
+ */
+internal fun ldProduct(d: Document, url: String): LdProduct? {
+    for (sc in d.select("script[type=application/ld+json]")) {
+        val v = try { org.json.JSONTokener(sc.data().trim()).nextValue() } catch (e: Exception) { continue }
+        val p = ldNodes(v).firstOrNull { ldIsProduct(it) } ?: continue
+        var price = ldPrice(p.opt("offers"))
+        val variants = p.optJSONArray("hasVariant")
+        if (variants != null) {
+            val list = (0 until variants.length()).mapNotNull { variants.optJSONObject(it) }
+            val here = list.firstOrNull { val u = it.optString("url"); u.isNotEmpty() && (url == u || url.endsWith(u) || u.endsWith(url.substringAfter("://").substringAfter('/'))) }
+            price = (here?.let { ldPrice(it.opt("offers")) }) ?: price ?: list.firstNotNullOfOrNull { ldPrice(it.opt("offers")) }
+        }
+        val image = ldImage(p.opt("image")).ifEmpty { ldImage(variants?.optJSONObject(0)?.opt("image")) }
+        return LdProduct(p.optString("name").trim(), image, price?.first, price?.second.orEmpty())
+    }
+    return null
+}
+
+/**
+ * The price a shop shows on the page (2.145, the last try before the "Price: €…" words): the first element whose class
+ * or id says "price", that holds a short amount with a currency, and isn't an old (crossed-out) price or a delivery
+ * cost. Same rules as web/parse.js.
+ */
+internal fun shownPrice(d: Document, host: String): Pair<Double, String>? {
+    var n = 0
+    for (e in d.select("[class~=(?i)price], [id~=(?i)price]")) {
+        if (++n > 400) break
+        val cls = (e.className() + " " + e.id()).lowercase()
+        if (OLD_PRICE.containsMatchIn(cls)) continue
+        if (e.parents().any { it.tagName() in listOf("del", "s", "strike") || OLD_PRICE.containsMatchIn((it.className()).lowercase()) }) continue
+        if (e.tagName() in listOf("del", "s", "strike", "script", "style", "meta")) continue
+        val t = e.ownText().ifBlank { e.text() }.trim()
+        if (t.length > 40 || NOT_A_PRICE.containsMatchIn(t.lowercase())) continue
+        val m = SHOWN_PRICE.find(t) ?: continue
+        val amount = (m.groupValues[2].ifEmpty { m.groupValues[3] }).toNum() ?: continue
+        if (amount <= 0) continue
+        return amount to currencyOf(t, host)
+    }
+    return null
+}
+
+/** "€ 39,90", "€39.90", "39,90 €", "£12", "$9.99", "12,50 EUR". */
+private val SHOWN_PRICE = Regex("([€\$£])\s?([0-9][0-9.,]*)|([0-9][0-9.,]*)\s?(?:€|EUR|£|GBP|USD)")
+/** Classes of old prices and price ranges that aren't this product's price now. */
+private val OLD_PRICE = Regex("old|was|strike|compare|before|previous|original|crossed|rrp|msrp|list-price|from-price")
+/** Amounts that aren't the price: delivery, shipping, free shipping thresholds. */
+private val NOT_A_PRICE = Regex("verzend|bezorg|shipping|delivery|versand|livraison|vanaf|from|per maand|/mnd|p/m")
 
 private const val UA =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
@@ -192,6 +289,7 @@ internal fun parsePage(d: Document, host: String, status: Int): Meta? {
         }.orEmpty()
     }
 
+    val ld = ldProduct(d, d.location())
     var price = m("product:price:amount", "og:price:amount", "price").toNum()
     var cur = m("product:price:currency", "og:price:currency", "priceCurrency")
     if (price == null && isAmazon) {
@@ -201,15 +299,24 @@ internal fun parsePage(d: Document, host: String, status: Int): Meta? {
             if (n != null && n > 0) { price = n; cur = currencyOf(t, host); break }
         }
     }
-    if (price == null) {
-        val ld = d.select("script[type=application/ld+json]").joinToString(" ") { it.data() }
-        price = Regex("\"price\"\\s*:\\s*\"?([0-9][0-9.,]*)").find(ld)?.groupValues?.get(1)?.toNum()
-        if (cur.isEmpty()) {
-            cur = Regex("\"priceCurrency\"\\s*:\\s*\"([A-Z]{3})\"").find(ld)?.groupValues?.get(1).orEmpty()
-        }
+    // The product's own data (2.145): its own price, not the first "price" anywhere in the page (that could be a
+    // product under "you may also like").
+    if (price == null && ld?.price != null) {
+        price = ld.price
+        if (cur.isEmpty()) cur = ld.currency
     }
     if (price == null) {
         price = d.selectFirst("[itemprop=price]")?.let { it.attr("content").ifEmpty { it.text() } }?.toNum()
+    }
+    if (price == null && ld == null) {
+        // Product data that isn't valid JSON: the first "price" in it, as before 2.145.
+        val raw = d.select("script[type=application/ld+json]").joinToString(" ") { it.data() }
+        price = Regex("\"price\"\\s*:\\s*\"?([0-9][0-9.,]*)").find(raw)?.groupValues?.get(1)?.toNum()
+        if (price != null && cur.isEmpty()) cur = Regex("\"priceCurrency\"\\s*:\\s*\"([A-Z]{3})\"").find(raw)?.groupValues?.get(1).orEmpty()
+    }
+    if (price == null) {
+        // The price the page shows (2.145; the owner chose this last try knowing it can now and then pick a wrong one).
+        shownPrice(d, host)?.let { (n, c) -> price = n; if (cur.isEmpty()) cur = c }
     }
     if (price == null) {
         // Last resort for sites that only print the price as text.
@@ -226,11 +333,15 @@ internal fun parsePage(d: Document, host: String, status: Int): Meta? {
             }
         }
     }
+    if (title.isBlank() && ld != null) title = ld.name
+    if (image.isEmpty() && ld != null && ld.image.isNotEmpty()) image = try { java.net.URI(d.location()).resolve(ld.image).toString() } catch (e: Exception) { ld.image }
+    val product = ld != null || price != null || m("og:type").lowercase().contains("product") ||
+        d.selectFirst("[itemtype*=schema.org/Product]") != null
     return if (title.isBlank()) null
     else Meta(
         cleanTitle(title, host).take(120),
         m("og:description", "twitter:description", "description").take(200),
-        image, price, cur.ifEmpty { currencyOf("", host) }
+        image, price, cur.ifEmpty { currencyOf("", host) }, product = product
     )
 }
 
@@ -261,3 +372,30 @@ suspend fun fetchMeta(url: String, ctx: Context? = null, browser: Boolean = true
         }
         f
     }
+
+/**
+ * The better product reader of 2.145 can read a different price than before, only because it now reads the right one
+ * (the product's own price, not a "you may also like" item's). The owner chose: the first check of each wish after
+ * the update takes the newly read price quietly: no notification, no crossed-out old price, no point in the history.
+ * Wishes added after the update were read with the new reader already.
+ */
+object ReaderUpgrade {
+    private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
+
+    /** True when wish [id] (made at that time, in milliseconds) hasn't been checked with the new reader yet. */
+    @Synchronized
+    fun quiet(c: Context, id: Long): Boolean {
+        val p = prefs(c)
+        var since = p.getLong("rd2_since", 0L)
+        if (since == 0L) { since = System.currentTimeMillis(); p.edit().putLong("rd2_since", since).apply() }
+        return id < since && id.toString() !in (p.getStringSet("rd2_done", null) ?: emptySet())
+    }
+
+    /** Wish [id] was checked with the new reader. */
+    @Synchronized
+    fun done(c: Context, id: Long) {
+        val p = prefs(c)
+        val s = (p.getStringSet("rd2_done", null) ?: emptySet()).toMutableSet()
+        if (s.add(id.toString())) p.edit().putStringSet("rd2_done", s).apply()
+    }
+}

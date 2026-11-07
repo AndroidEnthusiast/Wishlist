@@ -50,6 +50,15 @@ object PriceCheck {
                 if (listId !in Repo.mineIds) break
                 val cw = Repo.mine(c, listId).wishes.firstOrNull { it.id == w.id } ?: continue
                 val cur = cw.price
+                // The first check with the better reader of 2.145 is quiet (ReaderUpgrade, owner's choice).
+                if (ReaderUpgrade.quiet(c, cw.id)) {
+                    ReaderUpgrade.done(c, cw.id)
+                    if (cur != null && (np < cur - 0.005 || np > cur + 0.005)) {
+                        val q = cw.copy(price = np, oldPrice = null)
+                        Repo.updateMine(c, listId) { l -> l.map { if (it.id == q.id) q else it } }
+                        continue
+                    }
+                }
                 // A price that went up keeps the old price too, so the wish shows "+12%".
                 val nw = when {
                     cur == null -> cw.copy(price = np)
