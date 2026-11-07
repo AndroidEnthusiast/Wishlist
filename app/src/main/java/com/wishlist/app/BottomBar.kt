@@ -44,6 +44,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 
 /*
  * The bar at the bottom (since 2.65): quick access to what matters most, next to the side menu.
@@ -86,11 +89,12 @@ fun AppBottomBar(
             .then(if (look.design == "chaos") Modifier.rotate(-0.8f) else Modifier)
     ) {
         Row(
-            frame.fillMaxWidth().height(72.dp).padding(horizontal = 4.dp), // 64 until 2.121 (owner: a little taller)
+            frame.fillMaxWidth().height(64.dp).padding(horizontal = 4.dp), // 72 with the words (2.121–2.148)
             horizontalArrangement = Arrangement.SpaceAround, verticalAlignment = Alignment.CenterVertically
         ) {
-            BarItem(tr("Home"), current == "home", onHome) { Icon(AppIcons.Home, null, tint = it, modifier = Modifier.size(26.dp)) }
-            BarItem(tr("Messages"), current == "messages", onMessages, dot = messagesDot) { ChatIcon(it, 26.dp) }
+            // Icons only, a little bigger (owner, 7 November 2026); their names are read out by TalkBack.
+            BarItem(tr("Home"), current == "home", onHome) { Icon(AppIcons.Home, null, tint = it, modifier = Modifier.size(30.dp)) }
+            BarItem(tr("Messages"), current == "messages", onMessages, dot = messagesDot) { ChatIcon(it, 30.dp) }
             // Add wish: only a + in the accent colour, no words. Its own wider slot (owner, 2.126: more breathing space,
             // "Price watch" seemed closer to the + than "Messages"): the same room on both sides.
             Box(Modifier.width(78.dp), contentAlignment = Alignment.Center) {
@@ -105,8 +109,8 @@ fun AppBottomBar(
                 Icon(AppIcons.Add, tr("Add wish"), tint = look.onAccent, modifier = Modifier.size(30.dp))
             }
             }
-            BarItem(tr("My shops"), current == "discover", onDiscover) { Icon(AppIcons.Store, null, tint = it, modifier = Modifier.size(26.dp)) }
-            BarItem(tr("Friends"), current == "friends", onFriends, dot = friendsDot) { Icon(AppIcons.Person, null, tint = it, modifier = Modifier.size(26.dp)) }
+            BarItem(tr("My shops"), current == "discover", onDiscover) { Icon(AppIcons.Store, null, tint = it, modifier = Modifier.size(30.dp)) }
+            BarItem(tr("Friends"), current == "friends", onFriends, dot = friendsDot) { Icon(AppIcons.Person, null, tint = it, modifier = Modifier.size(30.dp)) }
         }
     }
 }
@@ -117,19 +121,15 @@ private fun RowScope.BarItem(label: String, on: Boolean, onClick: () -> Unit, do
     val cs = MaterialTheme.colorScheme
     val tint = if (on) cs.onSurface else cs.onSurfaceVariant
     Column(
-        Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).clickable(onClick = onClick).padding(vertical = 6.dp),
+        Modifier.weight(1f).clip(RoundedCornerShape(16.dp))
+            .semantics { contentDescription = label; selected = on }
+            .clickable(onClick = onClick).padding(vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box {
             icon(tint)
             if (dot) RedDot(Modifier.align(Alignment.TopEnd).offset(4.dp, (-3).dp))
         }
-        Text(
-            label, maxLines = 1, softWrap = false, overflow = TextOverflow.Visible, color = tint,
-            fontWeight = if (on) FontWeight.Bold else FontWeight.Medium,
-            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.sp), // labelMedium in 2.121–2.125
-            modifier = Modifier.padding(top = 3.dp)
-        )
     }
 }
 
@@ -204,12 +204,13 @@ fun CreateChoiceDialog(onMine: () -> Unit, onGroup: () -> Unit, onWishGroup: () 
     val cs = MaterialTheme.colorScheme
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text(tr("New list")) },
+        title = { Text(tr("Create a list")) },
         text = {
+            // Owner, 7 November 2026: clear what each makes and where it shows.
             Column {
-                Choice(tr("My wishlist"), tr("Things you’d love to get.")) { onMine() }
-                Choice(tr("Collab wishlist"), tr("Collect gift ideas for someone with others.")) { onGroup() }
-                Choice(tr("Group"), tr("See each other’s wishlists.")) { onWishGroup() }
+                Choice(tr("Wishlist"), tr("For things you’d love to get. Shows under Your wishlists.")) { onMine() }
+                Choice(tr("Collab wishlist"), tr("Find and save gifts for someone, together with others.")) { onGroup() }
+                Choice(tr("Wishlist group"), tr("A circle of people who can see each other’s wishlists.")) { onWishGroup() }
             }
         },
         confirmButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }

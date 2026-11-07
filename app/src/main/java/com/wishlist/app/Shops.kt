@@ -287,7 +287,7 @@ fun DiscoverScreen(snack: androidx.compose.material3.SnackbarHostState, onProfil
         ) {
             Text(
                 if (editing) tr("Tap ✕ to remove a shop. Tap Done when you’re finished.")
-                else tr("Shop in the app and add what you love to your wishlist with one tap."),
+                else tr("Find must-haves in popular shops, or with a quick search."),
                 style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant,
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp)
             )
@@ -314,6 +314,11 @@ fun DiscoverScreen(snack: androidx.compose.material3.SnackbarHostState, onProfil
                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
                 )
             }
+            // A title above the shops (owner, 7 November 2026).
+            Text(
+                tr("Popular shops"), style = MaterialTheme.typography.titleMedium, fontWeight = look.titleWeight,
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 4.dp)
+            )
             val cells: List<Shop?> = if (editing) shops else shops + listOf(null)
             cells.chunked(4).forEach { row ->
                 Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp)) {

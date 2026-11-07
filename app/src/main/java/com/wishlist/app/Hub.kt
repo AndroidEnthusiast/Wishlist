@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -667,26 +668,45 @@ private fun SeasonCard(onStart: () -> Unit) {
     val key = "gx_card_" + today.year
     var hidden by remember { mutableStateOf(prefs.getBoolean(key, false)) }
     if (hidden || Exchanges.list.isNotEmpty() || Exchanges.invites.isNotEmpty()) return
-    val id = 77L
+    // Secret Santa colours (owner, 7 November 2026: "now it's just a grey block"): a deep red with light snow dots,
+    // white words and a white pill to start. A drawn illustration, so its colours are fixed in every theme.
+    val red = Color(0xFFB3261E)
+    val deep = Color(0xFF6E1414)
+    val shape = RoundedCornerShape(24.dp)
     Box(
-        Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp).fillMaxWidth()
-            .lookCard(look, id, look.cardShape(id, small = true))
+        Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp).fillMaxWidth().clip(shape)
+            .background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(red, deep)))
+            .drawBehind {
+                // Snow: fixed dots, nothing moves.
+                val dots = listOf(0.08f to 0.18f, 0.22f to 0.72f, 0.35f to 0.12f, 0.5f to 0.85f, 0.62f to 0.3f,
+                    0.74f to 0.68f, 0.86f to 0.15f, 0.93f to 0.55f, 0.15f to 0.45f, 0.44f to 0.5f)
+                dots.forEachIndexed { k, (x, y) ->
+                    drawCircle(Color.White.copy(alpha = 0.22f), radius = (2 + k % 3).dp.toPx(), center = androidx.compose.ui.geometry.Offset(x * size.width, y * size.height))
+                }
+            }
+            .clickable(onClickLabel = tr("Start a gift exchange"), onClick = onStart)
     ) {
         Row(Modifier.padding(start = 16.dp, top = 16.dp, bottom = 16.dp, end = 40.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("🎅", fontSize = 34.sp)
+            Text("🎅", fontSize = 40.sp)
             Column(Modifier.weight(1f).padding(start = 14.dp)) {
-                Text(tr("Secret Santa this year?"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = look.cardInk(id))
+                Text(tr("Secret Santa this year?"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White)
                 Text(
-                    tr("Draw names with family or friends."), style = MaterialTheme.typography.bodySmall,
-                    color = look.cardMuted(id), modifier = Modifier.padding(top = 2.dp, bottom = 10.dp)
+                    tr("Draw names with family or friends."), style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.9f), modifier = Modifier.padding(top = 2.dp, bottom = 12.dp)
                 )
-                Button(onClick = onStart) { Text(tr("Start a gift exchange")) }
+                Box(
+                    Modifier.heightIn(min = 48.dp).clip(RoundedCornerShape(24.dp)).background(Color.White)
+                        .clickable(onClick = onStart).padding(horizontal = 18.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("🎁 " + tr("Start a gift exchange"), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = red)
+                }
             }
         }
         IconButton(
             onClick = { hidden = true; prefs.edit().putBoolean(key, true).apply() },
             modifier = Modifier.align(Alignment.TopEnd)
-        ) { Icon(AppIcons.Close, tr("Hide until next year"), tint = look.cardMuted(id)) }
+        ) { Icon(AppIcons.Close, tr("Hide until next year"), tint = Color.White) }
     }
 }
 

@@ -467,7 +467,7 @@ fun AnimatedMenuIcon(open: Boolean, tint: Color) {
 }
 
 @Composable
-private fun DrawerItem(label: String, icon: ImageVector, selected: Boolean, dot: Boolean = false, snow: Boolean = false, onClick: () -> Unit) {
+private fun DrawerItem(label: String, icon: ImageVector, selected: Boolean, dot: Boolean = false, emoji: String? = null, onClick: () -> Unit) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
     // The chosen item looks like the style's chosen chip (2.97): Quiet a soft tinted pill, the others their own frame.
@@ -479,7 +479,8 @@ private fun DrawerItem(label: String, icon: ImageVector, selected: Boolean, dot:
         },
         selected = selected,
         onClick = onClick,
-        icon = { Icon(icon, null) },
+        // In the gift exchange season a coloured emoji instead of the icon (owner, 7 November 2026: no snow, a 🎅).
+        icon = { if (emoji != null) Text(emoji, fontSize = 22.sp) else Icon(icon, null) },
         badge = if (dot) ({ RedDot() }) else null,
         shape = shape,
         colors = NavigationDrawerItemDefaults.colors(
@@ -490,8 +491,6 @@ private fun DrawerItem(label: String, icon: ImageVector, selected: Boolean, dot:
             unselectedTextColor = cs.onSurface, unselectedIconColor = cs.onSurfaceVariant
         ),
         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding).then(if (framed) Modifier.lookChip(look, true) else Modifier)
-            // A very light snowfall inside the item, only during the gift exchange season (owner, 7 November 2026).
-            .then(if (snow) Modifier.clip(shape).snowfall(look.dark) else Modifier)
     )
 }
 
@@ -873,7 +872,7 @@ fun App(
                         createChoice = true
                         scope.launch { drawer.close() }
                     }
-                    DrawerItem(tr("Gift exchange"), AppIcons.Exchange, exchangesOpen && !settings && !binOpen && !notesOpen && !profileOpen, dot = Exchanges.unread, snow = Snow.season()) {
+                    DrawerItem(tr("Gift exchange"), AppIcons.Exchange, exchangesOpen && !settings && !binOpen && !notesOpen && !profileOpen, dot = Exchanges.unread, emoji = if (Snow.season()) "🎅" else null) {
                         ExchangeNav.open = null
                         closeAll(); hub = true; exchangesOpen = true
                         scope.launch { drawer.close() }
@@ -1937,7 +1936,8 @@ fun WishCard(
                 Row(Modifier.weight(1f), verticalAlignment = Alignment.Bottom) {
                     Text(
                         if (newP != null) money(newP, w.currency) else tr("No price"),
-                        style = MaterialTheme.typography.titleLarge, fontWeight = look.priceWeight,
+                        // The style's display font, as on Rows and Two per row (owner, 7 November 2026).
+                        style = MaterialTheme.typography.titleLarge, fontWeight = look.priceWeight, fontFamily = look.display,
                         color = if (drop) look.drop else if (rise) look.rise else ink
                     )
                     if ((drop || rise) && oldP != null) {
@@ -2017,7 +2017,8 @@ fun RowCard(
                 }
             }
             // Room under the buttons, so Reserve never touches the card's edge (owner, 7 November 2026).
-            Column(Modifier.weight(1f).padding(start = 4.dp, top = 10.dp, end = 8.dp, bottom = 10.dp)) {
+            // 16 dp from the picture (owner, 7 November 2026: the words almost touched it).
+            Column(Modifier.weight(1f).padding(start = 16.dp, top = 10.dp, end = 8.dp, bottom = 10.dp)) {
                 Column(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).combinedClickable(
                         enabled = w.url.isNotBlank() || onLongPress != null,

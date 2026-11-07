@@ -455,7 +455,8 @@ private val chevronIcon: ImageVector by lazy {
 }
 
 private val storeIcon: ImageVector by lazy {
-    pathIcon("Store", "M20,4H4v2h16V4zM21,14v-2l-1,-5H4l-1,5v2h1v6h10v-6h4v6h2v-6h1zM12,18H6v-4h6v4z")
+    // My shops: a shopping bag (owner, 7 November 2026; Google's Material icon, Apache 2.0).
+    pathIcon("Store", "M18,6h-2c0,-2.21 -1.79,-4 -4,-4S8,3.79 8,6H6c-1.1,0 -2,0.9 -2,2v12c0,1.1 0.9,2 2,2h12c1.1,0 2,-0.9 2,-2V8c0,-1.1 -0.9,-2 -2,-2zM12,4c1.1,0 2,0.9 2,2h-4c0,-1.1 0.9,-2 2,-2zM18,20H6V8h2v2c0,0.55 0.45,1 1,1s1,-0.45 1,-1V8h4v2c0,0.55 0.45,1 1,1s1,-0.45 1,-1V8h2v12z")
 }
 
 private fun pathIcon(name: String, d: String): ImageVector =
