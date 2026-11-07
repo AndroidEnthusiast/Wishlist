@@ -82,6 +82,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -128,23 +130,39 @@ object ThemerNav {
  * used underneath; outside Quiet they are see-through and the style's surface ([lookSurface]) is drawn behind them.
  */
 
+/**
+ * True inside a dialog's text (docs/STYLE.md): buttons there are the compact size, so they stay in proportion to the
+ * dialog's text, and they keep room for their shadow so a scrolling dialog never cuts them off.
+ */
+val LocalInDialog = compositionLocalOf { false }
+
+/** The two button sizes of docs/STYLE.md: regular on screens (46 dp), compact in dialogs (40 dp, a smaller shadow). */
+private class ButtonSize(val height: androidx.compose.ui.unit.Dp, val pad: PaddingValues, val depth: androidx.compose.ui.unit.Dp, val room: androidx.compose.ui.unit.Dp)
+
+@Composable
+private fun buttonSize(): ButtonSize = if (LocalInDialog.current)
+    ButtonSize(40.dp, PaddingValues(horizontal = 18.dp, vertical = 8.dp), 3.dp, 6.dp)
+else ButtonSize(46.dp, PaddingValues(horizontal = 22.dp, vertical = 10.dp), 5.dp, 0.dp)
+
 @Composable
 fun Button(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) {
     val look = LocalLook.current
     val shape = look.buttonShape
+    val z = buttonSize()
     if (look.design == "quiet") {
         // Quiet: a calm pill in the accent colour, a little taller than Material's.
         M3Button(
-            onClick, modifier.heightIn(min = 46.dp), enabled, shape = shape, elevation = null,
+            onClick, modifier.padding(vertical = z.room).heightIn(min = z.height), enabled, shape = shape, elevation = null,
             colors = ButtonDefaults.buttonColors(containerColor = look.accent, contentColor = look.onAccent),
-            contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp), content = content
+            contentPadding = z.pad, content = content
         )
     } else {
         M3Button(
-            onClick, modifier.heightIn(min = 46.dp).then(if (enabled) Modifier.lookSurface(look, shape, look.accent, depth = 5.dp) else Modifier),
+            onClick, modifier.padding(vertical = z.room).heightIn(min = z.height)
+                .then(if (enabled) Modifier.lookSurface(look, shape, look.accent, depth = z.depth) else Modifier),
             enabled, shape = shape, elevation = null,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = look.onAccent),
-            contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp), content = content
+            contentPadding = z.pad, content = content
         )
     }
 }
@@ -154,19 +172,21 @@ fun OutlinedButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: 
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
     val shape = look.buttonShape
+    val z = buttonSize()
     if (look.design == "quiet") {
         // Quiet: a soft tinted pill with the accent as text (the "secondary" button of iOS).
         M3Button(
-            onClick, modifier.heightIn(min = 46.dp), enabled, shape = shape, elevation = null,
+            onClick, modifier.padding(vertical = z.room).heightIn(min = z.height), enabled, shape = shape, elevation = null,
             colors = ButtonDefaults.buttonColors(containerColor = cs.primaryContainer, contentColor = if (look.dark) look.accent else cs.onPrimaryContainer),
-            contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp), content = content
+            contentPadding = z.pad, content = content
         )
     } else {
         M3Button(
-            onClick, modifier.heightIn(min = 46.dp).then(if (enabled) Modifier.lookSurface(look, shape, cs.surfaceVariant, depth = 5.dp) else Modifier),
+            onClick, modifier.padding(vertical = z.room).heightIn(min = z.height)
+                .then(if (enabled) Modifier.lookSurface(look, shape, cs.surfaceVariant, depth = z.depth) else Modifier),
             enabled, shape = shape, elevation = null,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = cs.onSurface),
-            contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp), content = content
+            contentPadding = z.pad, content = content
         )
     }
 }
@@ -254,6 +274,8 @@ fun AlertDialog(
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
     val shape = MaterialTheme.shapes.extraLarge
+    // Buttons inside the dialog's text are the compact size (LocalInDialog, docs/STYLE.md).
+    val text = text?.let { t -> @Composable { CompositionLocalProvider(LocalInDialog provides true) { t() } } }
     if (look.design == "quiet") {
         M3AlertDialog(
             onDismissRequest, confirmButton, modifier, dismissButton, title = title, text = text,
@@ -392,10 +414,35 @@ object AppIcons {
     val Bag: ImageVector get() = bagIcon
     /** Gift exchange (2.129): Google's Material "swap horiz" icon, drawn from its path. */
     val Swap: ImageVector get() = swapIcon
+    /** Gift exchange in the side menu (owner, 7 November 2026): two gifts with an arrow from each to the other, our own drawing. */
+    val Exchange: ImageVector get() = exchangeIcon
     /** Discover, the shops (owner, 7 November 2026): Google's Material "store" icon, drawn from its path. */
     val Store: ImageVector get() = storeIcon
     /** "Your wishlists ›" (owner, 7 November 2026): Google's Material "chevron right" icon, drawn from its path. */
     val Chevron: ImageVector get() = chevronIcon
+}
+
+private val exchangeIcon: ImageVector by lazy {
+    // Line drawing on the 24 × 24 grid of Material icons: a gift bottom left, a gift top right, and two curved arrows
+    // swapping them (our own drawing, allowed by the icon rule).
+    val b = ImageVector.Builder("Exchange", 24.dp, 24.dp, 24f, 24f)
+    fun line(d: String) {
+        b.addPath(
+            androidx.compose.ui.graphics.vector.addPathNodes(d), fill = null,
+            stroke = androidx.compose.ui.graphics.SolidColor(Color.Black), strokeLineWidth = 1.7f,
+            strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round
+        )
+    }
+    // The gift bottom left: lid, box, ribbon, bow.
+    line("M2,11h9v2.5h-9z"); line("M3,13.5h7v7.5h-7z"); line("M6.5,11v10")
+    line("M6.5,11c-1.4,-2.4 -3.4,-1.6 -2.4,0M6.5,11c1.4,-2.4 3.4,-1.6 2.4,0")
+    // The gift top right.
+    line("M13,4h9v2.5h-9z"); line("M14,6.5h7v6h-7z"); line("M17.5,4v8.5")
+    line("M17.5,4c-1.4,-2.4 -3.4,-1.6 -2.4,0M17.5,4c1.4,-2.4 3.4,-1.6 2.4,0")
+    // The arrows: up and over to the right, and back under to the left.
+    line("M4.5,8.5C4.5,5 6.5,3.5 10,3.5"); line("M8.4,1.9L10,3.5L8.4,5.1")
+    line("M19.5,15.5C19.5,19 17.5,20.5 14,20.5"); line("M15.6,18.9L14,20.5L15.6,22.1")
+    b.build()
 }
 
 private val chevronIcon: ImageVector by lazy {

@@ -3,6 +3,8 @@ package com.wishlist.app
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -59,10 +61,13 @@ fun SizeField(size: String, onPick: (String) -> Unit, modifier: Modifier = Modif
 @Composable
 fun SizeTag(size: String, modifier: Modifier = Modifier) {
     val cs = MaterialTheme.colorScheme
-    Surface(color = cs.secondaryContainer, shape = RoundedCornerShape(8.dp), modifier = modifier) {
-        Text(
-            tr("Size %s", size), style = MaterialTheme.typography.labelMedium, color = cs.onSecondaryContainer,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-        )
+    // The same height as the reaction chips next to it (CHIP_HEIGHT, docs/STYLE.md).
+    Surface(color = cs.secondaryContainer, shape = RoundedCornerShape(8.dp), modifier = modifier.heightIn(min = CHIP_HEIGHT)) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.heightIn(min = CHIP_HEIGHT)) {
+            Text(
+                tr("Size %s", size), style = MaterialTheme.typography.labelMedium, color = cs.onSecondaryContainer,
+                modifier = Modifier.padding(horizontal = 10.dp)
+            )
+        }
     }
 }

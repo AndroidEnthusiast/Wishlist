@@ -160,7 +160,7 @@ const A = "AAAAAAAAAAAAAAAAAAAA", AT = "tokA_tokA_tokA_tokA_", LINK = "LNKABCDEF
   check("Anna's list: 2 wishes, the binned one hidden", (await w.page.locator(".card").count()) === 2);
   await sleep(200);
   await w.page.screenshot({ path: "s_group_member.png" });
-  check("Anna's list: Owned by Anna", (await w.page.locator(".owner").innerText()) === "Owned by Anna");
+  check("Anna’s list: no Owned by, its name already says whose it is", (await w.page.locator(".owner").count()) === 0);
   check("Anna's list: top wish first with its label", (await w.page.locator(".card").first().locator(".badge.star").count()) === 1 && (await w.page.locator(".card .title").first().innerText()) === "Poetry book");
   await w.page.locator(".card").first().getByRole("button", { name: "Reserve" }).click();
   await w.page.waitForSelector(".badge.status");

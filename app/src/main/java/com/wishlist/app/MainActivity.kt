@@ -459,7 +459,7 @@ fun AnimatedMenuIcon(open: Boolean, tint: Color) {
 }
 
 @Composable
-private fun DrawerItem(label: String, icon: ImageVector, selected: Boolean, dot: Boolean = false, onClick: () -> Unit) {
+private fun DrawerItem(label: String, icon: ImageVector, selected: Boolean, dot: Boolean = false, snow: Boolean = false, onClick: () -> Unit) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
     // The chosen item looks like the style's chosen chip (2.97): Quiet a soft tinted pill, the others their own frame.
@@ -482,6 +482,8 @@ private fun DrawerItem(label: String, icon: ImageVector, selected: Boolean, dot:
             unselectedTextColor = cs.onSurface, unselectedIconColor = cs.onSurfaceVariant
         ),
         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding).then(if (framed) Modifier.lookChip(look, true) else Modifier)
+            // A very light snowfall inside the item, only during the gift exchange season (owner, 7 November 2026).
+            .then(if (snow) Modifier.clip(shape).snowfall(look.dark) else Modifier)
     )
 }
 
@@ -863,7 +865,7 @@ fun App(
                         createChoice = true
                         scope.launch { drawer.close() }
                     }
-                    DrawerItem(tr("Gift exchange"), AppIcons.Swap, exchangesOpen && !settings && !binOpen && !notesOpen && !profileOpen, dot = Exchanges.unread) {
+                    DrawerItem(tr("Gift exchange"), AppIcons.Exchange, exchangesOpen && !settings && !binOpen && !notesOpen && !profileOpen, dot = Exchanges.unread, snow = Snow.season()) {
                         ExchangeNav.open = null
                         closeAll(); hub = true; exchangesOpen = true
                         scope.launch { drawer.close() }
@@ -1625,7 +1627,9 @@ fun reservedLabel(r: Boolean?): String? = when (r) {
 @Composable
 fun CompactCard(
     w: Wish, onLongPress: (() -> Unit)? = null, onStar: (() -> Unit)? = null, reserve: Reserving? = null,
-    onPrivate: (() -> Unit)? = null, emoji: String = "🎁", inert: Boolean = false, onEdit: () -> Unit
+    onPrivate: (() -> Unit)? = null, emoji: String = "🎁", inert: Boolean = false,
+    // Someone else's list (a Friend's, 7 November 2026): the menu only has Share and Reserve.
+    readOnly: Boolean = false, onEdit: () -> Unit
 ) {
     val ctx = LocalContext.current
     // inert: a sample card (the Themer's preview) that does nothing when tapped.
@@ -1726,21 +1730,21 @@ fun CompactCard(
                     // takes the place of Private/owned. No Top wish here: the star on the picture does that. Two per row
                     // has no long press any more: everything is in this menu.
                     DropdownMenuItem(text = { Text(tr("Share")) }, onClick = { menu = false; shareItem(ctx, w) })
-                    DropdownMenuItem(text = { Text(tr("Edit")) }, onClick = { menu = false; onEdit() })
-                    if (reserve == null) PrivateMenuItem(w.priv) { menu = false; togglePrivate(ctx, w) }
+                    if (!readOnly) DropdownMenuItem(text = { Text(tr("Edit")) }, onClick = { menu = false; onEdit() })
+                    if (reserve == null && !readOnly) PrivateMenuItem(w.priv) { menu = false; togglePrivate(ctx, w) }
                     if (reserve != null) {
                         when (reserve.state) {
                             true -> DropdownMenuItem(text = { Text(tr("Undo reservation")) }, onClick = { menu = false; reserve.set(false) })
                             null -> DropdownMenuItem(text = { Text(tr("Reserve")) }, onClick = { menu = false; reserve.set(true) })
                             else -> {}
                         }
-                    } else {
+                    } else if (!readOnly) {
                         DropdownMenuItem(
                             text = { Text(if (w.got) tr("Mark as not owned") else tr("Mark as owned")) },
                             onClick = { menu = false; OwnedFlow.toggle(ctx, w) }
                         )
                     }
-                    DropdownMenuItem(text = { Text(tr("Delete")) }, onClick = { menu = false; DeleteFlow.request(ctx, w) })
+                    if (!readOnly) DropdownMenuItem(text = { Text(tr("Delete")) }, onClick = { menu = false; DeleteFlow.request(ctx, w) })
                 }
             }
         }
@@ -1856,7 +1860,6 @@ fun WishCard(
                         maxLines = 2, overflow = TextOverflow.Ellipsis, color = muted
                     )
                 }
-                if (w.size.isNotBlank()) SizeTag(w.size, Modifier.padding(top = 4.dp))
                 if (w.note.isNotBlank()) {
                     Text(
                         tr("Note: %s", w.note), style = MaterialTheme.typography.bodyMedium,
@@ -1868,8 +1871,8 @@ fun WishCard(
                 }
                 // No "Added on" here (owner, 2.100): too busy on a list; it stays in Price watch.
             }
-            // Reactions (2.142): only on lists that show them (LocalWishDeco).
-            ReactionBar(w)
+            // The size label and the reactions share one row (owner, 7 November 2026; LocalWishDeco).
+            ReactionBar(w, lead = if (w.size.isNotBlank()) ({ SizeTag(w.size) }) else null)
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Row(Modifier.weight(1f), verticalAlignment = Alignment.Bottom) {
                     Text(

@@ -527,10 +527,19 @@
     return (items || []).filter(function (w) { return w && w.id !== 0 && !w.bin && !w.priv; });
   }
 
+  // "Owned by …" only when the list's name doesn't already say whose it is (owner, 7 November 2026; nameSaysOwner in
+  // the app's Friend.kt).
+  function nameSaysOwner(listName, owner) {
+    var n = String(listName || "").toLowerCase(), o = String(owner || "").trim().toLowerCase();
+    if (!o) return true;
+    var first = o.split(" ")[0];
+    return n.indexOf(o) >= 0 || (first.length >= 2 && n.indexOf(first) >= 0);
+  }
+
   function drawMember() {
     var v = view();
     setTitle(other.name || member.list.name);
-    v.appendChild(el("p", "owner", T("Owned by {0}", member.name)));
+    if (!nameSaysOwner(other.name || member.list.name, member.name)) v.appendChild(el("p", "owner", T("Owned by {0}", member.name)));
     var qp = window.WLT ? WLT.panel(member.list.code) : null;
     if (qp) v.appendChild(qp);
     var ws = visible(other.items);

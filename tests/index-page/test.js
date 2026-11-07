@@ -78,9 +78,12 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   check("title is list name", doc.title === "Sam's wishlist" && doc.getElementById("name").textContent === "Sam's wishlist");
   check("3 cards rendered", doc.querySelectorAll(".card").length === 3);
   check("no owner name: no Owned by line", doc.getElementById("owner").hidden);
-  store.owner = "Sam <b>R</b>";
+  store.owner = "Sam R";
   let own = await load("?c=abcd2345");
-  check("Owned by the owner's name, as text (2.102)", own.window.document.getElementById("owner").textContent === "Owned by Sam <b>R</b>" && !own.window.document.getElementById("owner").hidden && !own.window.document.querySelector("#owner b"));
+  check("no Owned by when the name already says whose it is (7 November 2026)", own.window.document.getElementById("owner").hidden);
+  store.owner = "Robin <b>R</b>";
+  own = await load("?c=abcd2345");
+  check("Owned by the owner's name, as text (2.102)", own.window.document.getElementById("owner").textContent === "Owned by Robin <b>R</b>" && !own.window.document.getElementById("owner").hidden && !own.window.document.querySelector("#owner b"));
   delete store.owner;
   check("HTML in title is not injected", !doc.querySelector(".title b") && doc.body.innerHTML.includes("&lt;b&gt;X"));
   check("javascript: link not used", ![...doc.querySelectorAll("a")].some(a => a.href.startsWith("javascript")));

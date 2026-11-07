@@ -242,12 +242,12 @@ fun SharedShareDialog(onClose: () -> Unit) {
         onDismissRequest = onClose,
         title = { Text(tr("Share “%s”", title)) },
         text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     tr("They can edit and reserve wishes. Only send it to people you trust."),
-                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
+                    style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
                 )
-                Text(invite, style = MaterialTheme.typography.bodySmall, color = cs.onSurface)
+                Text(invite, style = MaterialTheme.typography.bodyMedium, color = cs.onSurface)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(onClick = { scope.launch { ShareCard.share(ctx, ShareCard.Kind.INVITE, title, invite) } }) { Text(tr("Send invite")) }
                     OutlinedButton(onClick = {
@@ -257,7 +257,7 @@ fun SharedShareDialog(onClose: () -> Unit) {
                 }
                 if (Friends.hasProfile(ctx) && !Friends.state?.friends.isNullOrEmpty()) {
                     Text(
-                        tr("Or invite your Friends in the app:"), style = MaterialTheme.typography.bodySmall,
+                        tr("Or invite your Friends in the app:"), style = MaterialTheme.typography.bodyMedium,
                         color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp)
                     )
                     OutlinedButton(onClick = { inviting = true }) { Text(tr("Invite Friends")) }

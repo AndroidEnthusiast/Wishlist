@@ -589,6 +589,15 @@ function renderTools() {
   $("sort").value = sortBy;
 }
 
+// "Owned by …" only when the list's name doesn't already say whose it is (owner, 7 November 2026; nameSaysOwner in
+// the app's Friend.kt).
+function nameSaysOwner(listName, owner) {
+  var n = String(listName || "").toLowerCase(), o = String(owner || "").trim().toLowerCase();
+  if (!o) return true;
+  var first = o.split(" ")[0];
+  return n.indexOf(o) >= 0 || (first.length >= 2 && n.indexOf(first) >= 0);
+}
+
 function render() {
   var v = $("view");
   if (state === "gone") { showCodeForm(T("This list isn’t shared any more.")); return; }
@@ -612,8 +621,9 @@ function render() {
   document.title = list.name || "Wishlist";
   // Whose list this is (2.102): the owner's profile name, sent by their app (supabase-friends.sql).
   var ow = $("owner");
-  ow.textContent = list.owner ? T("Owned by {0}", String(list.owner).slice(0, 30)) : "";
-  ow.hidden = !list.owner;
+  var showOwner = list.owner && !nameSaysOwner(list.name, list.owner);
+  ow.textContent = showOwner ? T("Owned by {0}", String(list.owner).slice(0, 30)) : "";
+  ow.hidden = !showOwner;
   // The list's occasion (owner, 5 November 2026): "Birthday · in 3 weeks" (occasion.js).
   var oc = $("occasion");
   oc.textContent = window.occasionLine ? window.occasionLine(list.occ) : "";

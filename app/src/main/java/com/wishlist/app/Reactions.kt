@@ -27,6 +27,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -74,6 +75,9 @@ data class React(val item: Long, val emoji: String, val name: String, val mine: 
 class WishDeco(val code: String, val canReact: Boolean, val onBadge: ((Wish) -> Unit)? = null)
 
 val LocalWishDeco = compositionLocalOf<WishDeco?> { null }
+
+/** The height of the small chips on a card: the size label, reactions, "+ react" (docs/STYLE.md). */
+val CHIP_HEIGHT = 28.dp
 
 object Reactions {
     private val map = mutableStateMapOf<String, List<React>>()
@@ -232,15 +236,23 @@ fun ReactionsLoader(code: String?) {
  */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
-fun ReactionBar(w: Wish, modifier: Modifier = Modifier) {
-    val deco = LocalWishDeco.current ?: return
-    if (Reactions.missing) return
+fun ReactionBar(w: Wish, modifier: Modifier = Modifier, lead: (@Composable () -> Unit)? = null) {
+    val deco0 = LocalWishDeco.current
+    // [lead] (the size label) shares the row (owner, 7 November 2026); without reactions it stands alone.
+    if (deco0 == null || Reactions.missing) {
+        if (lead != null) Row(modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) { lead() }
+        return
+    }
+    val deco: WishDeco = deco0
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val look = LocalLook.current
     val ink = look.cardInk(w.id)
     val rx = Reactions.of(deco.code, w.id)
-    if (rx.isEmpty() && !deco.canReact) return
+    if (rx.isEmpty() && !deco.canReact) {
+        if (lead != null) Row(modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) { lead() }
+        return
+    }
     var picking by remember { mutableStateOf(false) }
     var who by remember { mutableStateOf<String?>(null) }
     var msg by remember { mutableStateOf<String?>(null) }
@@ -248,18 +260,21 @@ fun ReactionBar(w: Wish, modifier: Modifier = Modifier) {
         scope.launch { msg = Reactions.set(ctx, deco.code, w.id, e) }
     }
     val byEmoji = rx.groupBy { it.emoji }.entries.sortedByDescending { it.value.size }
-    FlowRow(modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    // One row of chips, all the same height (docs/STYLE.md: chips 28 dp, a 48 dp touch area for the ones you tap).
+    FlowRow(modifier.padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        // Every item is 48 dp tall (the tap area) with the visible chip centred in it, so the row lines up.
+        if (lead != null) Box(Modifier.heightIn(min = 48.dp), contentAlignment = Alignment.Center) { lead() }
         byEmoji.forEach { (e, l) ->
             val mine = l.any { it.mine }
             Row(
-                Modifier.clip(CircleShape)
+                Modifier.minimumInteractiveComponentSize().heightIn(min = CHIP_HEIGHT).clip(CircleShape)
                     .background(if (mine) look.accent.copy(alpha = 0.18f) else ink.copy(alpha = 0.07f))
                     .border(1.dp, if (mine) look.accent else ink.copy(alpha = 0.12f), CircleShape)
                     .combinedClickable(
                         onClick = { if (deco.canReact) react(if (mine) "" else e) else who = e },
                         onLongClick = { who = e }
                     )
-                    .padding(horizontal = 9.dp, vertical = 3.dp),
+                    .padding(horizontal = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(e, fontSize = 15.sp)
@@ -267,8 +282,8 @@ fun ReactionBar(w: Wish, modifier: Modifier = Modifier) {
             }
         }
         if (deco.canReact) Row(
-            Modifier.clip(CircleShape).border(1.dp, ink.copy(alpha = 0.25f), CircleShape)
-                .clickable { picking = true }.padding(horizontal = 10.dp, vertical = 4.dp),
+            Modifier.minimumInteractiveComponentSize().heightIn(min = CHIP_HEIGHT).clip(CircleShape).border(1.dp, ink.copy(alpha = 0.25f), CircleShape)
+                .clickable(onClickLabel = tr("React")) { picking = true }.padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text("+ " + tr("react"), style = MaterialTheme.typography.labelMedium, color = ink.copy(alpha = 0.8f))

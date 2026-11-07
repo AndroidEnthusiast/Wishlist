@@ -31,6 +31,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -156,7 +157,8 @@ fun FriendScreen(
                     Column {
                         Text(f.name, fontWeight = LocalLook.current.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         val owner = ownerName?.takeIf { it.isNotBlank() } ?: remote?.owner
-                        if (!owner.isNullOrBlank()) Text(
+                        // "Owned by …" only when the list's name doesn't say whose it is (owner, 7 November 2026).
+                        if (!owner.isNullOrBlank() && !nameSaysOwner(f.name, owner)) Text(
                             tr("Owned by %s", owner), style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis
                         )
@@ -175,6 +177,8 @@ fun FriendScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 actions = {
                     extraAction?.invoke()
+                    // The same views as your own lists, one choice for all lists (owner, 7 November 2026).
+                    ViewMenuButton(Repo.view) { Repo.setView(ctx, it) }
                     IconButton(onClick = { tick++ }) { Icon(AppIcons.Refresh, tr("Refresh")) }
                     if (onBack == null) IconButton(onClick = { confirmRemove = true }) { Icon(AppIcons.Delete, tr("Remove this list")) }
                 }
@@ -237,20 +241,16 @@ fun FriendScreen(
                         androidx.compose.runtime.CompositionLocalProvider(LocalWishDeco provides deco) {
                         LazyVerticalGrid(
                             state = gridState,
-                            columns = GridCells.Adaptive(300.dp),
+                            columns = if (Repo.view == "grid") GridCells.Fixed(2) else GridCells.Adaptive(300.dp),
                             contentPadding = PaddingValues(16.dp, 12.dp, 16.dp, 32.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                            horizontalArrangement = Arrangement.spacedBy(if (Repo.view == "list") 16.dp else 12.dp),
+                            verticalArrangement = Arrangement.spacedBy(if (Repo.view == "list") 16.dp else 12.dp)
                         ) {
                             gridItems(shown, key = { it.id }) { w ->
                                 val r = res[w.id]
-                                GlowBox(w.id, small = false) {
-                                WishCard(
-                                    w,
-                                    badge = if (w.got) tr("Owned") else reserveLabel(f.code, w, r)
-                                        ?: if (overBudget?.invoke(w) == true) tr("Over budget") else null,
-                                    dim = w.got || r == false
-                                ) {
+                                val label = if (w.got) tr("Owned") else reserveLabel(f.code, w, r)
+                                    ?: if (overBudget?.invoke(w) == true) tr("Over budget") else null
+                                val actions: @Composable RowScope.() -> Unit = {
                                     if (!w.got) {
                                         if (r == null) {
                                             Button(onClick = { toggle(w, true) }, enabled = busy == null) {
@@ -262,6 +262,15 @@ fun FriendScreen(
                                             }
                                         }
                                     }
+                                }
+                                GlowBox(w.id, small = Repo.view == "grid") {
+                                when (Repo.view) {
+                                    "grid" -> CompactCard(
+                                        w, readOnly = true,
+                                        reserve = if (w.got) null else Reserving(r, label) { on -> toggle(w, on) }
+                                    ) {}
+                                    "rows" -> RowCard(w, badge = label, dim = w.got || r == false, actions = actions)
+                                    else -> WishCard(w, badge = label, dim = w.got || r == false, actions = actions)
                                 }
                                 }
                             }
@@ -314,4 +323,12 @@ fun FriendScreen(
             dismissButton = { TextButton(onClick = { confirmRemove = false }) { Text(tr("Cancel")) } }
         )
     }
+}
+
+/** True when a list's name already says whose it is ("Magdalena’s wishlist" by Magdalena): no "Owned by" then. */
+fun nameSaysOwner(listName: String, owner: String): Boolean {
+    val n = listName.lowercase()
+    val o = owner.trim().lowercase()
+    if (o.isEmpty()) return true
+    return n.contains(o) || o.split(" ").first().let { it.length >= 2 && n.contains(it) }
 }
