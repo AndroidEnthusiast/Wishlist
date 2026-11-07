@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.layout.layout
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -1764,7 +1765,16 @@ fun CompactCard(
             }
             // The ⋮ lines up with the first line of the name, the bin under it (owner, 7 November 2026: Delete left the
             // menu). The 48 dp touch areas stay; only the icons move up next to the name.
-            Column(Modifier.offset(y = (-6).dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            // It is moved up 6 dp and gives back the empty half of the bin's touch area below it, so the reactions
+            // follow the price closely (owner, 7 November 2026: too much space between them).
+            Column(
+                Modifier.layout { m, c ->
+                    val p = m.measure(c)
+                    val up = 6.dp.roundToPx()
+                    layout(p.width, (p.height - up - 12.dp.roundToPx()).coerceAtLeast(0)) { p.place(0, -up) }
+                },
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
             Box {
                 IconButton(onClick = { if (!inert) menu = true }) {
                     Icon(AppIcons.MoreVert, tr("More"), tint = muted)

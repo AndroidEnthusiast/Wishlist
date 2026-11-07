@@ -524,7 +524,6 @@ private fun AddShopDialog(onClose: () -> Unit) {
                     name, { name = it.take(30) }, label = { Text(tr("Name (optional)")) }, singleLine = true,
                     keyboardOptions = Capitalised, modifier = Modifier.fillMaxWidth()
                 )
-                TextButton(onClick = { Shops.restoreStarters(ctx); onClose() }) { Text(tr("Bring back removed shops")) }
             }
         },
         confirmButton = {
@@ -747,9 +746,9 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                     // "+ Add shop" while the site isn't one of yours; "✓ In My shops" right after adding it.
                     if (!known || justAdded == host) {
                         val added = justAdded == host
-                        TextButton(onClick = { if (!added) addSite(host) }) {
-                            Text(if (added) "✓ " + tr("In My shops") else "+ " + tr("Add shop"), maxLines = 1)
-                        }
+                        // A filled accent button: the plain text was barely visible on a shop's page (owner, 7 November 2026).
+                        if (added) Text("✓ " + tr("In My shops"), style = MaterialTheme.typography.labelLarge, color = cs.primary, maxLines = 1, modifier = Modifier.padding(horizontal = 8.dp))
+                        else Button(onClick = { addSite(host) }) { Text("+ " + tr("Add shop"), maxLines = 1) }
                     }
                 }
                 if (progress in 1..99) LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth())

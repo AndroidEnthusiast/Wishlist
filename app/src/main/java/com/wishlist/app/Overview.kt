@@ -178,8 +178,9 @@ internal fun homeTotal(ws: List<Wish>): String {
     val sums = ws.filter { !it.got && it.bin == 0L && it.price != null }.groupBy { it.currency }
         .map { (cur, l) -> cur to l.sumOf { (it.price ?: 0.0) * it.qty.coerceAtLeast(1) } }
         .sortedByDescending { it.second }
-    if (sums.isEmpty()) return wholeMoney(0.0, localCurrency())
-    return wholeMoney(sums[0].second, sums[0].first) + if (sums.size > 1) "+" else ""
+    // With cents (owner, 7 November 2026).
+    if (sums.isEmpty()) return money(0.0, localCurrency())
+    return money(sums[0].second, sums[0].first) + if (sums.size > 1) "+" else ""
 }
 
 /** An amount without cents ("€1,245"), so it fits a small tile. */

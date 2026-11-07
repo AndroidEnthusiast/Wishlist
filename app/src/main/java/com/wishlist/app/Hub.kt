@@ -520,30 +520,36 @@ internal fun BlockGrid(
 @Composable
 private fun NewBlock(label: String, onClick: () -> Unit, modifier: Modifier) {
     val cs = MaterialTheme.colorScheme
-    val shape = RoundedCornerShape(20.dp)
-    Column(modifier) {
-        Box(
-            Modifier.fillMaxWidth().aspectRatio(1f).clip(shape)
-                .drawBehind {
-                    val w = 1.5.dp.toPx()
-                    drawRoundRect(
-                        color = cs.outline, topLeft = androidx.compose.ui.geometry.Offset(w / 2, w / 2),
-                        size = androidx.compose.ui.geometry.Size(size.width - w, size.height - w),
-                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(20.dp.toPx()),
-                        style = androidx.compose.ui.graphics.drawscope.Stroke(
-                            width = w, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(14f, 10f))
-                        )
-                    )
-                }
-                .clickable(onClickLabel = label, onClick = onClick),
-            contentAlignment = Alignment.Center
+    val shape = RoundedCornerShape(18.dp)
+    // Smaller than a list (owner, 7 November 2026): a dashed square with its label, centred on the lists' pictures.
+    Box(modifier.aspectRatio(1f), contentAlignment = Alignment.Center) {
+        Column(
+            Modifier.clip(RoundedCornerShape(16.dp)).clickable(onClickLabel = label, onClick = onClick).padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(AppIcons.Add, null, tint = cs.primary, modifier = Modifier.size(36.dp))
+            Box(
+                Modifier.size(72.dp).clip(shape)
+                    .drawBehind {
+                        val w = 1.5.dp.toPx()
+                        drawRoundRect(
+                            color = cs.outline, topLeft = androidx.compose.ui.geometry.Offset(w / 2, w / 2),
+                            size = androidx.compose.ui.geometry.Size(size.width - w, size.height - w),
+                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(18.dp.toPx()),
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                width = w, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(14f, 10f))
+                            )
+                        )
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(AppIcons.Add, null, tint = cs.primary, modifier = Modifier.size(32.dp))
+            }
+            Text(
+                label, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = cs.primary,
+                maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier.padding(top = 8.dp)
+            )
         }
-        Text(
-            label, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = cs.primary,
-            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp, start = 2.dp, end = 2.dp)
-        )
     }
 }
 
