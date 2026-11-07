@@ -108,7 +108,7 @@ internal fun shownPrice(d: Document, host: String): Pair<Double, String>? {
 }
 
 /** "€ 39,90", "€39.90", "39,90 €", "£12", "$9.99", "12,50 EUR". */
-private val SHOWN_PRICE = Regex("([€\$£])\s?([0-9][0-9.,]*)|([0-9][0-9.,]*)\s?(?:€|EUR|£|GBP|USD)")
+private val SHOWN_PRICE = Regex("([€\$£])\\s?([0-9][0-9.,]*)|([0-9][0-9.,]*)\\s?(?:€|EUR|£|GBP|USD)")
 /** Classes of old prices and price ranges that aren't this product's price now. */
 private val OLD_PRICE = Regex("old|was|strike|compare|before|previous|original|crossed|rrp|msrp|list-price|from-price")
 /** Amounts that aren't the price: delivery, shipping, free shipping thresholds. */
