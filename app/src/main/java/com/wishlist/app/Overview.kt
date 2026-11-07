@@ -135,11 +135,12 @@ private fun placedWishes(): List<Placed> {
 }
 
 /**
- * Your picture and name on the left; the three numbers next to it (owner, 2.134: the most interesting ones, each
- * tappable): Wishes (all your wishes), Friends (the Friends tab) and Reserved (gifts you reserved, "Gifts I reserved").
+ * Your picture on the left; next to it your name in a heading size and under it the three tiles (owner, 2.134: the
+ * most interesting ones, each tappable; layout of 7 November 2026): Wishes (all your wishes), Friends (the Friends
+ * tab) and Reserved (gifts you reserved, "Gifts I reserved"). At 0 a tile invites: "+ Add wish", "+ Add friends".
  */
 @Composable
-fun ProfileSummary(onProfile: () -> Unit, onFriends: () -> Unit = {}, onReserved: () -> Unit = {}) {
+fun ProfileSummary(onProfile: () -> Unit, onFriends: () -> Unit = {}, onReserved: () -> Unit = {}, onAddWish: () -> Unit = {}) {
     val ctx = LocalContext.current
     Friends.load(ctx)
     val all = placedWishes()
@@ -151,21 +152,20 @@ fun ProfileSummary(onProfile: () -> Unit, onFriends: () -> Unit = {}, onReserved
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(
-            Modifier.widthIn(max = 96.dp).clip(RoundedCornerShape(12.dp)).clickable(onClick = onProfile).padding(4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Avatar(Friends.myPhoto, Shared.lastName, 64.dp)
-            Text(
-                Shared.lastName.ifBlank { tr("Add your name") }, style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center, modifier = Modifier.padding(top = 6.dp)
-            )
+        Box(Modifier.clip(androidx.compose.foundation.shape.CircleShape).clickable(onClickLabel = tr("Profile"), onClick = onProfile)) {
+            Avatar(Friends.myPhoto, Shared.lastName, 72.dp)
         }
-        Row(Modifier.weight(1f).padding(start = 8.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-            Stat(all.size, if (all.size == 1) tr("Wish") else tr("Wishes")) { HubNav.page = "wishes" }
-            Stat(friends, if (friends == 1) tr("Friend") else tr("Friends"), onFriends)
-            Stat(reserved, tr("Reserved"), onReserved)
+        Column(Modifier.weight(1f).padding(start = 14.dp)) {
+            Text(
+                Shared.lastName.ifBlank { tr("Add your name") }, style = MaterialTheme.typography.titleLarge,
+                fontWeight = LocalLook.current.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onProfile).padding(horizontal = 2.dp)
+            )
+            Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Stat(all.size, if (all.size == 1) tr("Wish") else tr("Wishes"), Modifier.weight(1f), tr("Add wish"), onAddWish) { HubNav.page = "wishes" }
+                Stat(friends, if (friends == 1) tr("Friend") else tr("Friends"), Modifier.weight(1f), if (Config.enabled) tr("Add friends") else null, onFriends, onFriends)
+                Stat(reserved, tr("Reserved"), Modifier.weight(1f), onClick = onReserved)
+            }
         }
     }
 }
@@ -191,16 +191,29 @@ fun Modifier.statTile(): Modifier {
     }
 }
 
+/** One tile: the number and its label; at 0 with an [invite], a "+" and the invite in the accent colour instead. */
 @Composable
-private fun Stat(n: Int, label: String, onClick: () -> Unit) {
+private fun Stat(
+    n: Int, label: String, modifier: Modifier = Modifier, invite: String? = null, onInvite: () -> Unit = {},
+    onClick: () -> Unit
+) {
+    val look = LocalLook.current
+    val inviting = n == 0 && invite != null
     Column(
-        Modifier.statTile().clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 3.dp),
+        modifier.statTile().clickable(onClick = if (inviting) onInvite else onClick).padding(horizontal = 4.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // The tile's own ink (dark on the bright cards of some styles) and the style's display font for the number.
-        val look = LocalLook.current
-        Text(n.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, fontFamily = look.display, color = look.cardInk(5L))
-        Text(label, style = MaterialTheme.typography.bodySmall, color = look.cardMuted(5L), maxLines = 1)
+        val ink = if (inviting) MaterialTheme.colorScheme.primary else look.cardInk(5L)
+        Text(
+            if (inviting) "+" else n.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
+            fontFamily = look.display, color = ink, maxLines = 1
+        )
+        Text(
+            if (inviting) invite!! else label, style = MaterialTheme.typography.bodySmall,
+            fontWeight = if (inviting) FontWeight.SemiBold else null,
+            color = if (inviting) ink else look.cardMuted(5L), maxLines = 1, overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -241,18 +254,28 @@ fun OverviewScreen(
         }
         val all = placedWishes()
         val shown = if (page == "top") all.filter { it.starred } else all
+        Column(Modifier.padding(pad).fillMaxSize()) {
+        // All wishes or only the top wishes (owner, 7 November 2026: the Top wishes page is reached this way).
+        Row(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            androidx.compose.material3.FilterChip(
+                selected = page != "top", onClick = { HubNav.page = "wishes" }, label = { Text(tr("All wishes")) }
+            )
+            androidx.compose.material3.FilterChip(
+                selected = page == "top", onClick = { HubNav.page = "top" }, label = { Text(tr("Top wishes") + " ★") }
+            )
+        }
         if (shown.isEmpty()) {
-            Box(Modifier.padding(pad).fillMaxSize().padding(32.dp), Alignment.Center) {
+            Box(Modifier.fillMaxSize().padding(32.dp), Alignment.Center) {
                 Text(
                     if (page == "top") tr("No top wishes yet. Tap the star on a wish to make it a top wish.")
-                    else tr("No wishes yet."),
+                    else tr("No wishes yet. Tap + at the bottom to add your first wish."),
                     color = cs.onSurfaceVariant, textAlign = TextAlign.Center
                 )
             }
-            return@Scaffold
+            return@Column
         }
         LazyColumn(
-            Modifier.padding(pad).fillMaxSize().lookBackdrop(look),
+            Modifier.fillMaxSize().lookBackdrop(look),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
@@ -275,6 +298,7 @@ fun OverviewScreen(
                     onUnstar = if (page == "top") ({ unstarring = p }) else null
                 )
             }
+        }
         }
     }
     // Taking a top wish off is asked first (owner, 2.90): an accidental tap on the star shouldn't do it.

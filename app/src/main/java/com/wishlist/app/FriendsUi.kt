@@ -117,6 +117,8 @@ object FriendsNav {
     var page by mutableStateOf<String?>(null)
     /** The lists of the friend whose page is open, as loaded (for the blocks and the numbers). */
     var loaded by mutableStateOf<Map<String, RemoteList>>(emptyMap())
+    /** Whose lists [loaded] holds once they finished loading (so a page never says "No wishes" while loading). */
+    var loadedFor by mutableStateOf<String?>(null)
 
     /** A friend link that was opened (owner, 2.139): their code and the name in the link. */
     var addCode by mutableStateOf<String?>(null)
@@ -131,7 +133,7 @@ object FriendsNav {
     /** The chat the friend's page was opened from (tap their name at the top of a chat): Back returns there (2.105). */
     var fromChat by mutableStateOf<String?>(null)
 
-    fun reset() { person = null; list = null; page = null; loaded = emptyMap(); fromChat = null }
+    fun reset() { person = null; list = null; page = null; loaded = emptyMap(); loadedFor = null; fromChat = null }
 
     /**
      * Back from a friend's page: to the chat it was opened from, or to Friends. Going back to the chat, their page
@@ -546,6 +548,7 @@ private fun LoadFriendLists(f: Person) {
             }
         }
         FriendsNav.loaded = out
+        FriendsNav.loadedFor = f.id
         // Opening their page counts as seeing their new wishes (owner, 2.139).
         if (out.size == f.lists.size) FriendNews.markSeen(ctx, f.id, out.values)
     }
@@ -718,8 +721,16 @@ private fun FriendWishesPage(f: Person, page: String, snack: SnackbarHostState) 
                     )
                 }
             }
-            if (shown.isEmpty()) item {
-                Text(tr("No wishes yet."), color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 16.dp))
+            // Still loading: a spinner, never "No wishes" (owner, 7 November 2026).
+            if (shown.isEmpty() && FriendsNav.loadedFor != f.id && f.lists.isNotEmpty()) item {
+                Box(Modifier.fillMaxWidth().padding(top = 32.dp), contentAlignment = Alignment.Center) {
+                    androidx.compose.material3.CircularProgressIndicator()
+                }
+            } else if (shown.isEmpty()) item {
+                Text(
+                    if (page == "top") tr("No top wishes to see yet.") else tr("No wishes to see yet."),
+                    color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 16.dp)
+                )
             }
             items(shown, key = { it.first.id }) { (w, l) ->
                 val id = w.id

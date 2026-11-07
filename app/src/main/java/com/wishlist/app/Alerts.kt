@@ -98,7 +98,7 @@ object Alerts {
     }
 
     /** One price change waiting to be told (see [collectPrices]). */
-    private class PriceAlert(val drop: Boolean, val id: Int, val item: String, val old: Double, val now: Double, val currency: String, val heading: String)
+    private class PriceAlert(val drop: Boolean, val id: Int, val item: String, val old: Double, val now: Double, val currency: String, val heading: String, val wishId: Long = 0L)
     private val pending = ArrayList<PriceAlert>()
     private var collecting = 0
 
@@ -119,7 +119,7 @@ object Alerts {
                 for (drop in listOf(true, false)) {
                     val l = now.filter { it.drop == drop }
                     when {
-                        l.size == 1 -> l[0].let { if (drop) postDrop(c, it.id, it.item, it.old, it.now, it.currency, it.heading) else postRise(c, it.id, it.item, it.old, it.now, it.currency, it.heading) }
+                        l.size == 1 -> l[0].let { if (drop) postDrop(c, it.id, it.item, it.old, it.now, it.currency, it.heading, it.wishId) else postRise(c, it.id, it.item, it.old, it.now, it.currency, it.heading, it.wishId) }
                         l.size > 1 -> postSummary(c, drop, l)
                     }
                 }
@@ -139,10 +139,10 @@ object Alerts {
         lines.take(6).forEach { style.addLine(it) }
         if (lines.size > 6) style.setSummaryText(tr("and %d more", lines.size - 6))
         val id = if (drop) 7_000_001 else 7_000_002
-        val pi = PendingIntent.getActivity(
-            c, id, Intent(c, MainActivity::class.java).note("price"),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
+        // Several of your own wishes: "Price changes" (owner, 7 November 2026); gift lists' prices just open the app.
+        val open = Intent(c, MainActivity::class.java).note("price")
+        if (l.any { it.wishId != 0L }) open.putExtra(MainActivity.OPEN_PRICES, true)
+        val pi = PendingIntent.getActivity(c, id, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val n = NotificationCompat.Builder(c, CHANNEL)
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle(title)
@@ -156,18 +156,24 @@ object Alerts {
     }
 
     /** Title says a price dropped, the text says which item and by how much. During a check: told afterwards. */
-    fun notifyDrop(c: Context, id: Int, item: String, old: Double, now: Double, currency: String, heading: String = tr("Price drop on your wishlist")) {
-        synchronized(pending) { if (collecting > 0) { pending.add(PriceAlert(true, id, item, old, now, currency, heading)); return } }
-        postDrop(c, id, item, old, now, currency, heading)
+    fun notifyDrop(c: Context, id: Int, item: String, old: Double, now: Double, currency: String, heading: String = tr("Price drop on your wishlist"), wishId: Long = 0L) {
+        synchronized(pending) { if (collecting > 0) { pending.add(PriceAlert(true, id, item, old, now, currency, heading, wishId)); return } }
+        postDrop(c, id, item, old, now, currency, heading, wishId)
     }
 
-    private fun postDrop(c: Context, id: Int, item: String, old: Double, now: Double, currency: String, heading: String) {
+    /** Tapping one price change of your own wish opens its price page (owner, 7 November 2026); others open the app. */
+    private fun priceIntent(c: Context, wishId: Long): Intent {
+        val open = Intent(c, MainActivity::class.java).note("price")
+        if (wishId != 0L) open.putExtra(MainActivity.HISTORY_ID, wishId)
+        return open
+    }
+
+    private fun postDrop(c: Context, id: Int, item: String, old: Double, now: Double, currency: String, heading: String, wishId: Long = 0L) {
         ensureChannel(c)
         val pct = if (old > 0) Math.round((1 - now / old) * 100) else 0L
         val text = tr("%1\$s is now %2\$s (was %3\$s, -%4\$d%%)", item, money(now, currency), money(old, currency), pct)
         val pi = PendingIntent.getActivity(
-            c, id, Intent(c, MainActivity::class.java).note("price"),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            c, id, priceIntent(c, wishId), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         val n = NotificationCompat.Builder(c, CHANNEL)
             .setSmallIcon(R.drawable.ic_stat)
@@ -182,18 +188,17 @@ object Alerts {
     }
 
     /** A price went up (only when switched on in Settings). Title and text like [notifyDrop]. */
-    fun notifyRise(c: Context, id: Int, item: String, old: Double, now: Double, currency: String, heading: String = tr("Price increase on your wishlist")) {
-        synchronized(pending) { if (collecting > 0) { pending.add(PriceAlert(false, id, item, old, now, currency, heading)); return } }
-        postRise(c, id, item, old, now, currency, heading)
+    fun notifyRise(c: Context, id: Int, item: String, old: Double, now: Double, currency: String, heading: String = tr("Price increase on your wishlist"), wishId: Long = 0L) {
+        synchronized(pending) { if (collecting > 0) { pending.add(PriceAlert(false, id, item, old, now, currency, heading, wishId)); return } }
+        postRise(c, id, item, old, now, currency, heading, wishId)
     }
 
-    private fun postRise(c: Context, id: Int, item: String, old: Double, now: Double, currency: String, heading: String) {
+    private fun postRise(c: Context, id: Int, item: String, old: Double, now: Double, currency: String, heading: String, wishId: Long = 0L) {
         ensureChannel(c)
         val pct = if (old > 0) Math.round((now / old - 1) * 100) else 0L
         val text = tr("%1\$s is now %2\$s (was %3\$s, +%4\$d%%)", item, money(now, currency), money(old, currency), pct)
         val pi = PendingIntent.getActivity(
-            c, id, Intent(c, MainActivity::class.java).note("price"),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            c, id, priceIntent(c, wishId), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         val n = NotificationCompat.Builder(c, CHANNEL)
             .setSmallIcon(R.drawable.ic_stat)

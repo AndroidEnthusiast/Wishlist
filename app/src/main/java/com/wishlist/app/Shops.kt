@@ -23,7 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -188,53 +188,86 @@ object Shops {
     }
 }
 
-/** "Shop for gifts" on Home (called "Find a gift" until 2.121): the shops in a row (swipe sideways), with "Add shop" at the end. */
-@OptIn(ExperimentalFoundationApi::class)
+/**
+ * Discover (owner, 7 November 2026: the shops got their own tab instead of a row on Home, in the place of Price watch:
+ * "people are more interested in finding inspiration for their wishlist"). Every shop as a tile, four per row, with
+ * "Add shop" at the end; tap one to shop inside the app and add what you find with one button. Long press removes it.
+ */
+@OptIn(ExperimentalFoundationApi::class, androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-fun FindAGiftRow(onFound: (String, Meta?) -> Unit) {
+fun DiscoverScreen(snack: androidx.compose.material3.SnackbarHostState, onProfile: () -> Unit, onFound: (String, Meta?) -> Unit) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
+    val look = LocalLook.current
     val shops = remember(Shops.version) { Shops.list(ctx) }
     var open by remember { mutableStateOf<Shop?>(null) }
     var adding by remember { mutableStateOf(false) }
     var menuFor by remember { mutableStateOf<Shop?>(null) }
-    HubTitle(tr("Shop for gifts"))
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        items(shops.size) { i ->
-            val s = shops[i]
-            Box {
-                Column(
-                    Modifier.width(64.dp).clip(RoundedCornerShape(12.dp))
-                        .combinedClickable(onLongClickLabel = tr("Remove"), onLongClick = { menuFor = s }) { open = s; Shops.opened(ctx, s) },
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    ShopIcon(s, 52)
-                    Text(
-                        s.name, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                        textAlign = TextAlign.Center, modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-                DropdownMenu(expanded = menuFor == s, onDismissRequest = { menuFor = null }) {
-                    DropdownMenuItem(text = { Text(tr("Remove %s", s.name)) }, onClick = { menuFor = null; Shops.remove(ctx, s) })
+    androidx.compose.material3.Scaffold(
+        containerColor = cs.background,
+        topBar = {
+            TopAppBar(
+                title = { Text(tr("Discover"), fontWeight = look.titleWeight) },
+                navigationIcon = { MenuSlot() },
+                actions = { ProfileButton(onProfile) },
+                colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
+            )
+        },
+        snackbarHost = { AppSnackbarHost(snack) }
+    ) { pad ->
+        Column(
+            Modifier.padding(pad).fillMaxSize().lookBackdrop(look)
+                .verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(bottom = 32.dp)
+        ) {
+            Text(
+                tr("Shop in the app and add what you love to your wishlist with one tap."),
+                style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant,
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp)
+            )
+            val cells: List<Shop?> = shops + listOf(null)
+            cells.chunked(4).forEach { row ->
+                Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp)) {
+                    row.forEach { s ->
+                        Box(Modifier.weight(1f), contentAlignment = Alignment.TopCenter) {
+                            if (s == null) {
+                                Column(
+                                    Modifier.clip(RoundedCornerShape(12.dp)).combinedClickable { adding = true }.padding(4.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    // A tile like the shops' (owner, 2.121), with a frame so it reads as a button.
+                                    Box(
+                                        Modifier.size(60.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xFFEDEDF0))
+                                            .border(1.5.dp, Color(0xFFB9B9C3), RoundedCornerShape(14.dp)),
+                                        contentAlignment = Alignment.Center
+                                    ) { Icon(AppIcons.Add, null, tint = Color(0xFF44444C)) }
+                                    Text(tr("Add shop"), style = MaterialTheme.typography.labelMedium, maxLines = 1, modifier = Modifier.padding(top = 6.dp))
+                                }
+                            } else {
+                                Column(
+                                    Modifier.clip(RoundedCornerShape(12.dp))
+                                        .combinedClickable(onLongClickLabel = tr("Remove"), onLongClick = { menuFor = s }) { open = s; Shops.opened(ctx, s) }
+                                        .padding(4.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    ShopIcon(s, 60)
+                                    Text(
+                                        s.name, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                        textAlign = TextAlign.Center, modifier = Modifier.padding(top = 6.dp)
+                                    )
+                                }
+                                DropdownMenu(expanded = menuFor == s, onDismissRequest = { menuFor = null }) {
+                                    DropdownMenuItem(text = { Text(tr("Remove %s", s.name)) }, onClick = { menuFor = null; Shops.remove(ctx, s) })
+                                }
+                            }
+                        }
+                    }
+                    repeat(4 - row.size) { Box(Modifier.weight(1f)) }
                 }
             }
-        }
-        item {
-            Column(
-                Modifier.width(64.dp).clip(RoundedCornerShape(12.dp)).combinedClickable { adding = true },
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // A tile like the shops' (owner, 2.121), with a frame so it reads as a button.
-                Box(
-                    Modifier.size(52.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xFFEDEDF0))
-                        .border(1.5.dp, Color(0xFFB9B9C3), RoundedCornerShape(14.dp)),
-                    contentAlignment = Alignment.Center
-                ) { Icon(AppIcons.Add, null, tint = Color(0xFF44444C)) }
-                Text(tr("Add shop"), style = MaterialTheme.typography.labelSmall, maxLines = 1, modifier = Modifier.padding(top = 4.dp))
-            }
+            Text(
+                tr("Long press a shop to remove it."), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp)
+            )
         }
     }
     // The shop stays open under the add form (owner, 2.116): after Save or Cancel you are back where you were in it.

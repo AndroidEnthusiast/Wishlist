@@ -142,6 +142,8 @@ private fun pick(id: Long, n: Int) = Math.floorMod(id, n.toLong()).toInt()
 private fun inkOn(bg: Color) = if (bg.luminance() > 0.5f) c(0xFF0B0B0F) else Color.White
 
 val figtree by lazy { google("Figtree") }
+/** Headings of Quiet and Neumorphism (owner, 7 November 2026: "a heading font with character"): a soft serif. */
+private val fraunces by lazy { google("Fraunces") }
 private val rajdhani by lazy { google("Rajdhani") }
 private val techMono by lazy { google("Share Tech Mono") }
 private val bungee by lazy { google("Bungee") }
@@ -289,23 +291,26 @@ private fun styleType(
 }
 
 /**
- * The fonts of each style. Quiet, Neobrutalism and Neumorphism: Figtree (bold, tight headings). Cyberpunk: Rajdhani
+ * The fonts of each style. Quiet and Neumorphism: Fraunces headings (a soft serif, since 7 November 2026) with Figtree
+ * text. Neobrutalism: Figtree (bold, tight headings). Cyberpunk: Rajdhani
  * with Share Tech Mono labels. Chaos: Bungee headings, Bricolage Grotesque text, handwritten Caveat for small labels.
  * (Fonts with one weight, Bungee and Share Tech Mono, are only asked for in that weight.)
  */
 fun typographyFor(design: String, @Suppress("UNUSED_PARAMETER") classic: Typography? = null): Typography = when (design) {
     "neo" -> styleType(figtree, FontWeight.ExtraBold, -0.4f, figtree, FontWeight.Bold, FontWeight.Normal, figtree, FontWeight.Bold)
-    "neu" -> styleType(figtree, FontWeight.Bold, -0.3f, figtree, FontWeight.SemiBold, FontWeight.Normal, figtree, FontWeight.SemiBold)
+    "neu" -> styleType(fraunces, FontWeight.SemiBold, -0.2f, figtree, FontWeight.SemiBold, FontWeight.Normal, figtree, FontWeight.SemiBold)
     "cyber" -> styleType(rajdhani, FontWeight.Bold, 0.6f, rajdhani, FontWeight.Bold, FontWeight.Medium, techMono, FontWeight.Normal)
     "chaos" -> styleType(bungee, FontWeight.Normal, 0f, bricolage, FontWeight.Bold, FontWeight.Normal, bricolage, FontWeight.Bold, caveat, FontWeight.Bold)
-    else -> styleType(figtree, FontWeight.ExtraBold, -0.5f, figtree, FontWeight.SemiBold, FontWeight.Normal, figtree, FontWeight.SemiBold)
+    else -> styleType(fraunces, FontWeight.SemiBold, -0.2f, figtree, FontWeight.SemiBold, FontWeight.Normal, figtree, FontWeight.SemiBold)
 }
 
 /** The weight of screen titles in the top bar. */
 val Look.titleWeight: FontWeight
     get() = when (design) {
         "chaos" -> FontWeight.Normal
-        "cyber", "neu" -> FontWeight.Bold
+        "cyber" -> FontWeight.Bold
+        // Fraunces headings (7 November 2026) look best a little lighter.
+        "quiet", "neu" -> FontWeight.SemiBold
         else -> FontWeight.ExtraBold
     }
 

@@ -187,6 +187,8 @@ class MainActivity : ComponentActivity() {
         const val FRIEND_CODE = "friend_code"
         /** A "Target price reached" alert: the wish whose price history to open. */
         const val HISTORY_ID = "history_id"
+        // A notification about several price changes: "Price changes" (owner, 7 November 2026).
+        const val OPEN_PRICES = "open_prices"
         /** A friend request (or an approval) alert: open the Friends tab. */
         const val OPEN_FRIENDS = "open_friends"
         /** A new message alert: the friend (profile id) whose conversation to open. */
@@ -281,6 +283,11 @@ class MainActivity : ComponentActivity() {
         if (i != null && i.hasExtra(OPEN_NOTE)) {
             NoteNav.key = i.getStringExtra(OPEN_NOTE)
             i.removeExtra(OPEN_NOTE)
+            return
+        }
+        if (i != null && i.getBooleanExtra(OPEN_PRICES, false)) {
+            PricesNav.open = true
+            i.removeExtra(OPEN_PRICES)
             return
         }
         if (i != null && i.hasExtra(HISTORY_ID)) {
@@ -481,7 +488,10 @@ fun App(
     var hub by remember { mutableStateOf(true) }
     var newMine by remember { mutableStateOf(false) }
     // The bottom bar's pages and actions (BottomBar.kt).
+    // "Price changes" (owner, 7 November 2026: no longer a tab; a wish's price page has "All price changes").
     var pricesOpen by remember { mutableStateOf(false) }
+    // Discover, the shops (bottom bar, owner 7 November 2026).
+    var discoverOpen by remember { mutableStateOf(false) }
     // Notifications (menu, above Bin): price drops and rises, with a red dot while there is something new.
     var notesOpen by remember { mutableStateOf(false) }
     var friendsOpen by remember { mutableStateOf(false) }
@@ -501,7 +511,7 @@ fun App(
     fun closeAll() {
         settings = false; binOpen = false; friendCode = null; listSettings = false
         pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false; messagesOpen = false
-        groupOpen = null; exchangesOpen = false
+        groupOpen = null; exchangesOpen = false; discoverOpen = false
     }
     var createChoice by remember { mutableStateOf(false) }
     // "Add wish" from the bottom bar: the form with "Save to", starting at the list on screen (or the last one used).
@@ -625,11 +635,13 @@ fun App(
     }
     // Back from a shared wishlist goes to My wishlist.
     // Back from a list goes to the dashboard; back from Prices or Friends to where you were.
-    BackHandler(enabled = !drawer.isOpen && !settings && !binOpen && friendCode == null && !listSettings && !hub && !pricesOpen && !friendsOpen && !notesOpen && !messagesOpen) {
+    BackHandler(enabled = !drawer.isOpen && !settings && !binOpen && friendCode == null && !listSettings && !hub && !pricesOpen && !discoverOpen && !friendsOpen && !notesOpen && !messagesOpen) {
         hub = true
     }
-    BackHandler(enabled = !drawer.isOpen && !settings && !binOpen && friendCode == null && (pricesOpen || friendsOpen || notesOpen || messagesOpen)) {
-        pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false; messagesOpen = false
+    BackHandler(enabled = !drawer.isOpen && !settings && !binOpen && friendCode == null && (pricesOpen || discoverOpen || friendsOpen || notesOpen || messagesOpen)) {
+        // Back from Price changes goes to where it was opened (a list or Home); from a tab to where you were.
+        if (pricesOpen) pricesOpen = false
+        else { discoverOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false; messagesOpen = false }
     }
     // A new message alert, or "Message" on a friend's page: Messages, at that conversation.
     LaunchedEffect(ChatNav.openTab) {
@@ -680,6 +692,16 @@ fun App(
             scope.launch { drawer.close() }
         }
     }
+    // "All price changes" on a wish's price page, or a notification about several prices (owner, 7 November 2026).
+    LaunchedEffect(PricesNav.open) {
+        if (PricesNav.open) {
+            PricesNav.open = false
+            settings = false; binOpen = false; notesOpen = false; profileOpen = false
+            discoverOpen = false; friendsOpen = false; messagesOpen = false
+            pricesOpen = true
+            scope.launch { drawer.close() }
+        }
+    }
     // Back from Profile goes to where you were (Friends, when you came from your picture there).
     BackHandler(enabled = !drawer.isOpen && profileOpen) { profileOpen = false }
     // A friend request alert was tapped: the Friends tab.
@@ -726,21 +748,23 @@ fun App(
     val inFriend = friendsOpen && FriendsNav.deep && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen && !profileOpen
     // A page behind one of the numbers on Home (Overview.kt) has a back arrow too.
     val inOverview = hub && HubNav.page != null && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen &&
-        !profileOpen && !pricesOpen && !friendsOpen && !messagesOpen
+        !profileOpen && !pricesOpen && !discoverOpen && !friendsOpen && !messagesOpen
+    // Price changes has a back arrow (owner, 7 November 2026: opened from a wish, no longer a tab).
+    val inPrices = pricesOpen && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen && !profileOpen
     // A wishlist group has a back arrow too.
     val inGroup = groupOpen != null && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen && !profileOpen &&
-        !pricesOpen && !friendsOpen && !messagesOpen
+        !pricesOpen && !discoverOpen && !friendsOpen && !messagesOpen
     // An open conversation has a back arrow too, and no bottom bar.
     val inChat = messagesOpen && ChatNav.peer != null && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen && !profileOpen
     // An open gift exchange has a back arrow too (2.129).
     val inExchange = exchangesOpen && ExchangeNav.open != null && !settings && !binOpen && friendCode == null && !listSettings &&
-        !notesOpen && !profileOpen && !pricesOpen && !friendsOpen && !messagesOpen
+        !notesOpen && !profileOpen && !pricesOpen && !discoverOpen && !friendsOpen && !messagesOpen
     // An open wishlist has a back arrow to Home instead of the menu button (owner, 2.110: "for some it's intuitive").
     val inList = !hub && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen && !profileOpen &&
-        !pricesOpen && !friendsOpen && !messagesOpen && groupOpen == null
+        !pricesOpen && !discoverOpen && !friendsOpen && !messagesOpen && groupOpen == null
     ModalNavigationDrawer(
         drawerState = drawer,
-        gesturesEnabled = !inListSettings && !inThemer && !inFriend && !inOverview && !inChat && !inGroup && !inList && !inExchange,
+        gesturesEnabled = !inListSettings && !inThemer && !inFriend && !inOverview && !inChat && !inGroup && !inList && !inExchange && !inPrices,
         drawerContent = {
             val look = LocalLook.current
             ModalDrawerSheet(
@@ -773,7 +797,7 @@ fun App(
                     // Only the screen that is open is highlighted: one item at a time.
                     // The menu holds no lists (owner, 2.129): Home and the Friends tab show them. Three groups with
                     // dividers and no headings (owner, 2.130): the core features, your things, then Bin and settings.
-                    val elsewhere = settings || binOpen || friendCode != null || notesOpen || pricesOpen || friendsOpen || profileOpen || messagesOpen || groupOpen != null || exchangesOpen
+                    val elsewhere = settings || binOpen || friendCode != null || notesOpen || pricesOpen || discoverOpen || friendsOpen || profileOpen || messagesOpen || groupOpen != null || exchangesOpen
                     DrawerItem(tr("Home"), AppIcons.Home, hub && !elsewhere) {
                         HubNav.page = null
                         closeAll(); hub = true
@@ -840,7 +864,11 @@ fun App(
                     ListSettingsScreen(snack, onDeleted = { listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false; hub = true }) { listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false }
                 }
                 notesOpen -> NotificationsScreen(snack) { key -> openNote(key) }
-                pricesOpen -> PricesScreen(snack, onProfile = { profileOpen = true })
+                pricesOpen -> PricesScreen(snack, onBack = { pricesOpen = false })
+                discoverOpen -> DiscoverScreen(
+                    snack, onProfile = { profileOpen = true },
+                    onFound = { u, m -> addTarget = null; prefillMeta = m; fromShop = true; prefill = u; adding = true }
+                )
                 friendsOpen -> FriendsScreen(snack, onProfile = { profileOpen = true }, onOpenLink = { friendCode = it })
                 messagesOpen -> MessagesScreen(snack, onProfile = { profileOpen = true })
                 exchangesOpen -> ExchangesScreen(snack, onOpenMine = { openMine(it) }, onNew = { newExchange = true })
@@ -857,9 +885,11 @@ fun App(
                     onAddTo = { t -> addTarget = t; prefill = ""; adding = true },
                     onOpenWishGroup = { GroupNav.openGroup(it) },
                     onNewWishGroup = { newWishGroup = true },
-                    onFound = { u, m -> addTarget = null; prefillMeta = m; fromShop = true; prefill = u; adding = true },
                     onFriends = { FriendsNav.reset(); closeAll(); friendsOpen = true },
-                    onReserved = { reservedOpen = true }
+                    onReserved = { reservedOpen = true },
+                    onCreateList = { createChoice = true },
+                    onAddWish = { addTarget = Repo.lastSaveTo; prefill = ""; adding = true },
+                    onNewExchange = { newExchange = true }
                 )
                 else -> key(Shared.active, Repo.openMine) {
                     HomeScreen(
@@ -876,25 +906,25 @@ fun App(
         if (showBar) {
             AppBottomBar(
                 current = when {
-                    pricesOpen -> "prices"; friendsOpen -> "friends"; messagesOpen -> "messages"
+                    pricesOpen -> ""; discoverOpen -> "discover"; friendsOpen -> "friends"; messagesOpen -> "messages"
                     hub -> "home"; else -> ""
                 },
                 onHome = { HubNav.page = null; closeAll(); hub = true },
                 // "Messages" (owner, 2.98) took the place of "Wishlists"; your wishlists are on Home and its number.
                 onMessages = {
                     if (messagesOpen) ChatNav.peer = null
-                    pricesOpen = false; friendsOpen = false; messagesOpen = true
+                    pricesOpen = false; discoverOpen = false; friendsOpen = false; messagesOpen = true
                 },
                 onAdd = {
-                    val onAList = !hub && !pricesOpen && !friendsOpen && !messagesOpen
+                    val onAList = !hub && !pricesOpen && !discoverOpen && !friendsOpen && !messagesOpen
                     addTarget = if (onAList) (Shared.active ?: MyLists.saveKey(Repo.openMine, false)) else Repo.lastSaveTo
                     prefill = ""; adding = true
                 },
-                onPrices = { pricesOpen = true; friendsOpen = false; messagesOpen = false },
+                onDiscover = { discoverOpen = true; pricesOpen = false; friendsOpen = false; messagesOpen = false },
                 onFriends = {
                     // Tapping Friends again goes back to its first page.
                     if (friendsOpen) FriendsNav.reset()
-                    friendsOpen = true; pricesOpen = false; messagesOpen = false
+                    friendsOpen = true; pricesOpen = false; discoverOpen = false; messagesOpen = false
                 },
                 friendsDot = Friends.waiting > 0,
                 messagesDot = Chat.unreadTotal > 0
@@ -904,7 +934,7 @@ fun App(
     }
 
     // The menu button lives above the menu so it can spin into an X and close it.
-    if (!inListSettings && !inThemer && !inFriend && !inOverview && !inChat && !inGroup && !inList && !inExchange) Box(
+    if (!inListSettings && !inThemer && !inFriend && !inOverview && !inChat && !inGroup && !inList && !inExchange && !inPrices) Box(
         Modifier.windowInsetsPadding(TopAppBarDefaults.windowInsets).height(64.dp).padding(start = 4.dp),
         contentAlignment = Alignment.CenterStart
     ) {
@@ -1044,7 +1074,9 @@ fun App(
     PrivateHost(snack)
     OwnedHost(snack)
     if (askBackground) BackgroundQuestion()
-    // A "Target price reached" alert (or its entry in Notifications): that wish's price history, the target lit up.
+    // The share card of one of your lists (owner, 7 November 2026; HomeShare.kt).
+    ShareNav.list?.let { id -> key(id) { ListShareDialog(id) { ShareNav.list = null } } }
+    // A "Price alert" notification (or its entry in Notifications): that wish's price history, the alert lit up.
     HistoryNav.open?.let { id ->
         val w = remember(id, Repo.mineVersion, Repo.myWishes) { Repo.allMine(ctx).flatMap { it.wishes }.firstOrNull { it.id == id } }
         if (w != null) PriceHistoryDialog(w, highlight = true) { HistoryNav.open = null }
@@ -1188,7 +1220,7 @@ fun HomeScreen(
                     }
                     // The settings of this list. Refreshing is pulling down on the list.
                     IconButton(onClick = onListSettings) { Icon(AppIcons.Settings, tr("Wishlist settings")) }
-                    IconButton(onClick = { if (inShared) NameGate.ensure(onInvite) else NameGate.ensureListName { startShare(ctx, scope, snack) } }) {
+                    IconButton(onClick = { if (inShared) NameGate.ensure(onInvite) else NameGate.ensureListName { ShareNav.list = Repo.openMine } }) {
                         Icon(AppIcons.Share, if (inShared) tr("Invite or share") else tr("Share wishlist"))
                     }
                 }

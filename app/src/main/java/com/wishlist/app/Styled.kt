@@ -392,6 +392,18 @@ object AppIcons {
     val Bag: ImageVector get() = bagIcon
     /** Gift exchange (2.129): Google's Material "swap horiz" icon, drawn from its path. */
     val Swap: ImageVector get() = swapIcon
+    /** Discover, the shops (owner, 7 November 2026): Google's Material "store" icon, drawn from its path. */
+    val Store: ImageVector get() = storeIcon
+    /** "Your wishlists ›" (owner, 7 November 2026): Google's Material "chevron right" icon, drawn from its path. */
+    val Chevron: ImageVector get() = chevronIcon
+}
+
+private val chevronIcon: ImageVector by lazy {
+    pathIcon("Chevron", "M10,6L8.59,7.41 13.17,12l-4.58,4.59L10,18l6,-6z")
+}
+
+private val storeIcon: ImageVector by lazy {
+    pathIcon("Store", "M20,4H4v2h16V4zM21,14v-2l-1,-5H4l-1,5v2h1v6h10v-6h4v6h2v-6h1zM12,18H6v-4h6v4z")
 }
 
 private fun pathIcon(name: String, d: String): ImageVector =

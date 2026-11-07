@@ -280,7 +280,7 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
         if (notes.isEmpty()) {
             Box(Modifier.padding(pad).fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
                 Text(
-                    tr("Nothing new yet."),
+                    tr("Nothing new yet. Price drops, friend requests and invitations show up here."),
                     color = cs.onSurfaceVariant, textAlign = TextAlign.Center
                 )
             }
@@ -338,7 +338,7 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                                 "reminder", "thanks" -> n.currency
                                 "recv_ask" -> tr("Did your wishes come true? ✨") + " " + n.currency
                                 "owner" -> tr("You can renew the link and delete the list.")
-                                "target" -> tr("reached your target price")
+                                "target" -> tr("reached your price alert")
                                 "friend_req" -> tr("wants to be your friend")
                                 "friend_ok" -> tr("approved your friend request")
                                 "gift_binned" -> tr("Your reserved gift was moved to the bin")

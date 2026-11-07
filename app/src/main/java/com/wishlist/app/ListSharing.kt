@@ -124,18 +124,41 @@ object ListVisibility {
         else tr("Only your friends can see this wishlist")
     }
 
-    /** A new list: "My friends" (now, or at a later start when offline). */
+    /**
+     * App settings > "New wishlists are visible to" (owner, 7 November 2026): "Friends + anyone with the link" unless
+     * changed, so sharing a new list works the first time. Each list can still be changed in its own settings.
+     */
+    var newDefault by mutableStateOf(Who.LINK)
+        private set
+    private var defaultLoaded = false
+
+    fun loadDefault(c: Context) {
+        if (defaultLoaded) return
+        defaultLoaded = true
+        newDefault = when (prefs(c).getString("new_vis", "link")) { "me" -> Who.ME; "friends" -> Who.FRIENDS; else -> Who.LINK }
+    }
+
+    fun setNewDefault(c: Context, w: Who) {
+        newDefault = w
+        prefs(c).edit().putString("new_vis", when (w) { Who.ME -> "me"; Who.FRIENDS -> "friends"; Who.LINK -> "link" }).apply()
+    }
+
+    /** A new list: the choice in App settings (now, or at a later start when offline). "Only me" stays offline. */
     fun startShared(c: Context, id: String) {
         if (!Config.enabled) return
+        loadDefault(c)
+        val to = newDefault
+        if (to == Who.ME) return
         val p = prefs(c)
-        p.edit().putStringSet("vis_pending", (p.getStringSet("vis_pending", null).orEmpty() + id).toSet()).apply()
+        p.edit().putStringSet("vis_pending", (p.getStringSet("vis_pending", null).orEmpty() + id).toSet())
+            .putString("vis_to_$id", if (to == Who.LINK) "link" else "friends").apply()
         Sync.later { trySwitch(c) }
     }
 
     private fun dropPending(c: Context, id: String) {
         val p = prefs(c)
         val now = p.getStringSet("vis_pending", null) ?: return
-        if (id in now) p.edit().putStringSet("vis_pending", (now - id).toSet()).apply()
+        if (id in now) p.edit().putStringSet("vis_pending", (now - id).toSet()).remove("vis_to_$id").apply()
     }
 
     /**
@@ -146,16 +169,21 @@ object ListVisibility {
         if (!Config.enabled) return
         val p = prefs(c)
         if (!p.getBoolean("vis_mig_2105", false)) {
-            val me = Repo.allMine(c).filter { it.code == null }.map { it.id }.toSet()
-            p.edit().putStringSet("vis_pending", (p.getStringSet("vis_pending", null).orEmpty() + me).toSet())
-                .putBoolean("vis_mig_2105", true).apply()
+            // (Also a new install's first list: it follows App settings' choice, 7 November 2026.)
+            loadDefault(c)
+            val me = if (newDefault == Who.ME) emptySet() else Repo.allMine(c).filter { it.code == null }.map { it.id }.toSet()
+            val e = p.edit().putStringSet("vis_pending", (p.getStringSet("vis_pending", null).orEmpty() + me).toSet())
+                .putBoolean("vis_mig_2105", true)
+            if (newDefault == Who.LINK) me.forEach { e.putString("vis_to_$it", "link") }
+            e.apply()
         }
         val todo = p.getStringSet("vis_pending", null)?.toSet().orEmpty()
         for (id in todo) {
             if (id !in Repo.mineIds) { dropPending(c, id); continue }
             if (of(c, id) != Who.ME) { dropPending(c, id); continue }
             try {
-                set(c, id, Who.FRIENDS)
+                // Lists made since 7 November 2026 remember where they should go; older ones go to "My friends".
+                set(c, id, if (p.getString("vis_to_$id", null) == "link") Who.LINK else Who.FRIENDS)
             } catch (e: Exception) {
                 return // offline: next start
             }
@@ -287,4 +315,24 @@ private fun Choice(title: String, detail: String, on: Boolean, enabled: Boolean,
             Text(detail, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
         }
     }
+}
+
+/** App settings > "New wishlists are visible to" (owner, 7 November 2026). */
+@Composable
+fun NewListVisibilitySetting() {
+    val ctx = LocalContext.current
+    val cs = MaterialTheme.colorScheme
+    ListVisibility.loadDefault(ctx)
+    val now = ListVisibility.newDefault
+    Text(tr("New wishlists are visible to"), style = MaterialTheme.typography.bodyLarge)
+    Text(
+        tr("You can still change it for each wishlist in its settings."),
+        style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
+    )
+    Choice(tr("Only me"), tr("Nobody else sees new wishlists."), now == Who.ME, true) { ListVisibility.setNewDefault(ctx, Who.ME) }
+    Choice(tr("My friends"), tr("Friends you added in the app."), now == Who.FRIENDS, true) { ListVisibility.setNewDefault(ctx, Who.FRIENDS) }
+    Choice(
+        tr("Friends + anyone with the link"), tr("Also people without the app, in their browser."),
+        now == Who.LINK, true
+    ) { ListVisibility.setNewDefault(ctx, Who.LINK) }
 }

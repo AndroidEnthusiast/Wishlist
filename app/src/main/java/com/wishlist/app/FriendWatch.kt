@@ -78,8 +78,6 @@ object FriendWatch {
             m = m - id
         }
         write(c, f.code, m)
-        // What these reserved gifts cost now, for Price watch > Gifts I reserved (owner, 2.138).
-        ReservedPrices.remember(c, f.code, m.keys.mapNotNull { visible[it] })
         // 7 days before the list's occasion (2.128): a reminder of what you reserved there.
         val titles = m.keys.mapNotNull { visible[it]?.takeIf { w -> !w.got }?.title }
         Reminders.giver(c, f.code, gift = false, occ = list.occ, owner = list.owner, listName = list.name.ifBlank { f.name }, titles = titles)

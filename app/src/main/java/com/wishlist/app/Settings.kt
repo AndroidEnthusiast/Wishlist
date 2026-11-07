@@ -193,6 +193,12 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
             SettingSwitch(tr("Price increases"), tr("A wish got more expensive."), Repo.notifyRises) { Repo.setNotifyRises(ctx, it) }
             CurrencySetting()
 
+            // Who sees new wishlists (owner, 7 November 2026).
+            if (Config.enabled) {
+                SectionTitle(tr("Sharing"))
+                NewListVisibilitySetting()
+            }
+
             // Only the notifications you may switch off (owner, 2.126). Reserved gifts that are gone and wishlist group
             // invitations always come; "friend request accepted" and group news only show on the Notifications page.
             SectionTitle(tr("Notifications"))

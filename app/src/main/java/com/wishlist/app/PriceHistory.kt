@@ -162,7 +162,7 @@ fun targetGold(dark: Boolean): Color = if (dark) Color(0xFFFFC94D) else Color(0x
  * from the "Target price reached" alert). "View product" opens the shop's page.
  */
 @Composable
-fun PriceHistoryDialog(w: Wish, highlight: Boolean = false, onClose: () -> Unit) {
+fun PriceHistoryDialog(w: Wish, highlight: Boolean = false, showAll: Boolean = true, onClose: () -> Unit) {
     val ctx = LocalContext.current
     val ui = LocalUriHandler.current
     val cs = MaterialTheme.colorScheme
@@ -185,8 +185,15 @@ fun PriceHistoryDialog(w: Wish, highlight: Boolean = false, onClose: () -> Unit)
                 } else {
                     HistoryBody(points, w.currency, nowSec, if (reached) gold else null)
                 }
-                // Under "Tracking since…": the target price, gold when the price is at or below it.
+                // Under "Tracking since…": the price alert, gold when the price is at or below it.
                 if (w.price != null) TargetRow(w, reached, gold, highlight)
+                // "All price changes" (owner, 7 November 2026): the overview that was the Price watch tab.
+                if (showAll) Text(
+                    tr("All price changes") + " ›", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
+                    color = cs.primary,
+                    modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { onClose(); PricesNav.open = true }
+                        .padding(vertical = 8.dp, horizontal = 2.dp)
+                )
             }
         },
         confirmButton = { TextButton(onClick = onClose) { Text(tr("Close")) } },
@@ -234,7 +241,7 @@ private fun TargetRow(w: Wish, reached: Boolean, gold: Color, highlight: Boolean
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.height(56.dp)) {
             Text(
-                tr("Target price"), fontWeight = FontWeight.Bold,
+                tr("Price alert"), fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.titleSmall.copy(shadow = glow),
                 color = if (reached) gold else cs.onSurface, modifier = Modifier.padding(end = 10.dp)
             )
@@ -261,13 +268,13 @@ private fun TargetRow(w: Wish, reached: Boolean, gold: Color, highlight: Boolean
             if (target != null) {
                 // ✕: the target goes and the field is back.
                 IconButton(onClick = { Targets.set(ctx, w, null); text = ""; err = null; editing = true }) {
-                    Icon(AppIcons.Close, tr("Remove the target price"), tint = cs.onSurfaceVariant)
+                    Icon(AppIcons.Close, tr("Remove the price alert"), tint = cs.onSurfaceVariant)
                 }
             }
         }
         err?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = cs.error) }
         Text(
-            tr("You’ll get a notification when the price drops to your target or lower."),
+            tr("You’ll get a notification when the price drops to this amount or lower."),
             style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
         )
     }

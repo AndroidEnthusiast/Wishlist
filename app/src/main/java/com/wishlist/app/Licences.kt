@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.sp
  * licence; those licences ask that their text comes with the app, so here it is.
  *  - Icons: Google's Material Icons (Apache License 2.0). The other icons (menu, view buttons, prices, wishlist,
  *    gift, crop, light, new photo, colour ball) are drawn in this app's own code.
- *  - Fonts (2.97): Google Sans (built in) and Figtree, Rajdhani, Share Tech Mono, Bungee, Bricolage Grotesque, Caveat
+ *  - Fonts (2.97): Google Sans (built in) and Figtree, Fraunces (7 November 2026), Rajdhani, Share Tech Mono, Bungee, Bricolage Grotesque, Caveat
  *    (downloaded from Google Fonts): SIL Open Font License 1.1.
  *  - Libraries: AndroidX / Jetpack Compose, Kotlin, Coil, Firebase Cloud Messaging (Apache License 2.0; it uses
  *    Google Play services on the phone, which come with Android).
@@ -49,7 +49,7 @@ fun LicencesDialog(onClose: () -> Unit) {
                 Credit(tr("Icons"), "Material Icons, Google — Apache License 2.0")
                 Credit(
                     tr("Fonts"),
-                    "Google Sans, Figtree, Rajdhani, Share Tech Mono, Bungee, Bricolage Grotesque, Caveat — SIL Open Font License 1.1"
+                    "Google Sans, Figtree, Fraunces, Rajdhani, Share Tech Mono, Bungee, Bricolage Grotesque, Caveat — SIL Open Font License 1.1"
                 )
                 Credit(tr("Building blocks"), "AndroidX, Jetpack Compose, Kotlin, Coil, Firebase Cloud Messaging — Apache License 2.0")
                 Text(

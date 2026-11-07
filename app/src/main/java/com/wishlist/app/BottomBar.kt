@@ -47,7 +47,8 @@ import androidx.compose.ui.unit.sp
 
 /*
  * The bar at the bottom (since 2.65): quick access to what matters most, next to the side menu.
- * Home (the dashboard), New list, Add wish (just a +), Prices (price history of all your wishes), Friends (coming soon).
+ * Home, Messages, Add wish (just a +), Discover (the shops, since 7 November 2026; Price watch moved to a wish's price
+ * page, "All price changes") and Friends.
  * It shows on the dashboard, on a list, on Prices and on Friends; not on settings screens or the bin.
  */
 
@@ -57,7 +58,8 @@ fun AppBottomBar(
     onHome: () -> Unit,
     onMessages: () -> Unit,
     onAdd: () -> Unit,
-    onPrices: () -> Unit,
+    // Discover, the shops (owner, 7 November 2026: in the place of Price watch).
+    onDiscover: () -> Unit,
     onFriends: () -> Unit,
     // Friend requests wait for your approval.
     friendsDot: Boolean = false,
@@ -103,7 +105,7 @@ fun AppBottomBar(
                 Icon(AppIcons.Add, tr("Add wish"), tint = look.onAccent, modifier = Modifier.size(30.dp))
             }
             }
-            BarItem(tr("Price watch"), current == "prices", onPrices) { PriceIcon(it, Modifier.size(26.dp)) }
+            BarItem(tr("Discover"), current == "discover", onDiscover) { Icon(AppIcons.Store, null, tint = it, modifier = Modifier.size(26.dp)) }
             BarItem(tr("Friends"), current == "friends", onFriends, dot = friendsDot) { Icon(AppIcons.Person, null, tint = it, modifier = Modifier.size(26.dp)) }
         }
     }

@@ -104,10 +104,16 @@ fun ReservedScreen(onClose: () -> Unit, onOpen: (ReservedGroup) -> Unit) {
                     Text(tr("Gifts I reserved"), style = MaterialTheme.typography.titleLarge, fontWeight = LocalLook.current.titleWeight, modifier = Modifier.weight(1f))
                     if (loading) CircularProgressIndicator(Modifier.padding(end = 16.dp).size(20.dp), strokeWidth = 2.dp)
                 }
-                if (groups.isEmpty() && !loading) Text(
-                    tr("Nothing reserved yet. Reserve a gift on a friend’s wishlist and it shows here."),
-                    color = cs.onSurfaceVariant, modifier = Modifier.padding(16.dp)
-                )
+                // Every empty page says what to do next (owner, 7 November 2026).
+                if (groups.isEmpty() && !loading) {
+                    Text(
+                        tr("Nothing reserved yet. Open a friend’s wishlist, tap Reserve on a gift you’ll buy, and it shows here. They never see who reserved it."),
+                        color = cs.onSurfaceVariant, modifier = Modifier.padding(16.dp)
+                    )
+                    Button(onClick = { onClose(); FriendsNav.openTab = true }, modifier = Modifier.padding(horizontal = 16.dp)) {
+                        Text(tr("Go to Friends"))
+                    }
+                }
                 groups.forEach { g ->
                     Column(
                         Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp).clip(RoundedCornerShape(16.dp))
@@ -133,73 +139,4 @@ fun ReservedScreen(onClose: () -> Unit, onOpen: (ReservedGroup) -> Unit) {
     }
 }
 
-/** One reserved gift on Price watch: its price now and when you reserved it (or first saw it after 2.138). */
-data class ReservedPrice(
-    val code: String, val gift: Boolean, val listName: String, val id: Long, val title: String, val image: String,
-    val price: Double?, val currency: String, val first: Double?
-) {
-    /** Up (more than 0) or down (less than 0) since you reserved it, or null without two prices. */
-    val change: Double? get() = if (price != null && first != null) price - first else null
-}
-
-/**
- * Prices of the gifts you reserved (owner, 2.138: Price watch > "Gifts I reserved"). The list's owner's phone checks the
- * shop prices; this phone only remembers what it saw: the price when you reserved a gift (or, for gifts reserved
- * before 2.138, the first time it was seen) and the price now.
- */
-object ReservedPrices {
-    private fun prefs(c: android.content.Context) = c.applicationContext.getSharedPreferences("wishlist", android.content.Context.MODE_PRIVATE)
-
-    private fun read(c: android.content.Context, key: String): org.json.JSONObject =
-        try { org.json.JSONObject(prefs(c).getString(key, null) ?: "{}") } catch (e: Exception) { org.json.JSONObject() }
-
-    /** What [wishes] (reserved on list [code]) look like now; the first price seen is kept. */
-    @Synchronized
-    fun remember(c: android.content.Context, code: String, wishes: List<Wish>) {
-        val now = read(c, "rpw_$code")
-        val out = org.json.JSONObject()
-        for (w in wishes) {
-            val old = now.optJSONObject(w.id.toString())
-            val first = if (old != null && old.has("f")) old.optDouble("f") else w.price
-            out.put(w.id.toString(), org.json.JSONObject().put("t", w.title).put("i", w.image).put("c", w.currency)
-                .put("p", w.price ?: org.json.JSONObject.NULL).put("f", first ?: org.json.JSONObject.NULL))
-        }
-        prefs(c).edit().putString("rpw_$code", out.toString()).apply()
-    }
-
-    private fun rows(c: android.content.Context, code: String, gift: Boolean, name: String): List<ReservedPrice> {
-        val o = read(c, "rpw_$code")
-        return o.keys().asSequence().mapNotNull { k ->
-            val e = o.optJSONObject(k) ?: return@mapNotNull null
-            ReservedPrice(
-                code, gift, name, k.toLongOrNull() ?: return@mapNotNull null, e.optString("t"), e.optString("i"),
-                if (e.isNull("p")) null else e.optDouble("p"), e.optString("c", "EUR"), if (e.isNull("f")) null else e.optDouble("f")
-            )
-        }.toList()
-    }
-
-    /** Every reserved gift with its prices: friends' lists from what this phone saw, gift lists checked online. */
-    suspend fun load(c: android.content.Context): List<ReservedPrice> {
-        val out = ArrayList<ReservedPrice>()
-        for ((code, m) in FriendWatch.all(c)) {
-            val name = FriendWatch.label(c, code).ifBlank { Repo.friends.firstOrNull { it.code == code }?.name.orEmpty() }
-            // A list never opened since 2.138: read it once through its link, when that works.
-            if (read(c, "rpw_$code").length() == 0) try {
-                Cloud.fetchList(code)?.let { l -> remember(c, code, l.wishes.filter { it.id in m.keys && it.bin == 0L }) }
-            } catch (e: Exception) {
-            }
-            out += rows(c, code, false, name).filter { it.id in m.keys }
-        }
-        for (sl in Shared.lists) {
-            val mine = try {
-                Cloud.fetchReservations(sl.code, Repo.deviceId).filterValues { it }.keys
-            } catch (e: Exception) {
-                read(c, "rpw_${sl.code}").keys().asSequence().mapNotNull { it.toLongOrNull() }.toSet()
-            }
-            val wishes = Shared.cachedWishes(c, sl.code).filter { it.id in mine && it.bin == 0L }
-            if (wishes.isNotEmpty()) remember(c, sl.code, wishes)
-            out += rows(c, sl.code, true, sl.name).filter { it.id in mine }
-        }
-        return out.distinctBy { it.code + ":" + it.id }.sortedBy { it.change ?: 0.0 }
-    }
-}
+// ("Price watch > Gifts I reserved" of 2.138 and its ReservedPrices were dropped, owner 7 November 2026.)

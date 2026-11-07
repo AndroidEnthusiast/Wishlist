@@ -225,7 +225,15 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
             }
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 if (tab == 1) {
-                    if (friends.isEmpty()) Empty(tr("Add friends to start chatting."))
+                    // Every empty page says what to do next (owner, 7 November 2026): here a way to Friends.
+                    if (friends.isEmpty()) Empty(tr("Add friends to start chatting.")) {
+                        Text(
+                            tr("Add friends"), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
+                            color = look.chipContent(true),
+                            modifier = Modifier.padding(top = 16.dp).lookChip(look, on = true).clickable { FriendsNav.openTab = true }
+                                .padding(horizontal = 18.dp, vertical = 10.dp)
+                        )
+                    }
                     else LazyColumn(
                         Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
@@ -250,7 +258,14 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
                 } else when {
                     !Config.enabled || !Friends.hasProfile(ctx) && list.isEmpty() -> Empty(
                         tr("Add friends to start chatting.")
-                    )
+                    ) {
+                        Text(
+                            tr("Add friends"), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
+                            color = look.chipContent(true),
+                            modifier = Modifier.padding(top = 16.dp).lookChip(look, on = true).clickable { FriendsNav.openTab = true }
+                                .padding(horizontal = 18.dp, vertical = 10.dp)
+                        )
+                    }
                     list.isEmpty() && !loaded -> CircularProgressIndicator(Modifier.align(Alignment.Center))
                     list.isEmpty() && problem -> Empty(tr("Couldn’t reach the server. Check your connection."))
                     // No conversations yet: a "Start a chat" chip that shows your friends (it goes once there is a chat).

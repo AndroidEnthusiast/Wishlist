@@ -84,19 +84,27 @@ fun groupNote(c: Context, listId: String): String {
 
 // ---------- Home ----------
 
-/** "Wishlist groups" on Home: invites waiting for you, then your groups as blocks, two per row. */
+/**
+ * "Your groups" on Home: invites waiting for you, then your groups (on Home one sideways row with "New group" at the
+ * end, owner 7 November 2026). Only shown once you have a group or an invite: Home starts with your own wishlists.
+ */
 @Composable
 fun GroupsHomeSection(onHome: Boolean, onOpen: (String) -> Unit, onNew: () -> Unit) {
     val ctx = LocalContext.current
-    val cs = MaterialTheme.colorScheme
     Groups.load(ctx)
-    HubTitle(tr("Wishlist groups"), line = tr("See each other’s wishlists."))
+    if (Groups.groups.isEmpty() && (!onHome || Groups.invites.isEmpty())) return
+    HubTitle(tr("Your groups"), onMore = if (onHome && Groups.groups.isNotEmpty()) ({ HubNav.page = "lists" }) else null)
     if (onHome) Groups.invites.forEach { InviteCard(it) }
+    if (Groups.groups.isEmpty()) return
     val items = Groups.groups.map { g ->
-        val pic = Groups.photos[g.id] ?: g.members.mapNotNull { it.list?.image?.takeIf { i -> i.isNotBlank() } }.firstOrNull()
-        HubItem("g:" + g.id, g.name, g.members.size, pic, true, "") { onOpen(g.id) }
+        // The group's photo, else the newest photos of the members' lists.
+        val memberPics = g.members.mapNotNull { it.list?.image?.takeIf { i -> i.isNotBlank() } }.distinct().take(3)
+        val pic = Groups.photos[g.id] ?: memberPics.firstOrNull()
+        val pics = if (Groups.photos[g.id] != null) listOf(pic!!) else memberPics
+        val n = g.members.size
+        HubItem("g:" + g.id, g.name, n, pic, true, "", pics, if (n == 1) tr("1 member") else tr("%d members", n)) { onOpen(g.id) }
     }
-    BlockGrid(byRecent(items), onHome = false, actionsOf = { emptyList() }, onAddTo = {}, newLabel = tr("New group"), onNew = if (onHome) onNew else null)
+    HubBlocks(byRecent(items), onHome, actionsOf = { emptyList() }, onAddTo = {}, newLabel = tr("New group"), onNew = if (onHome) onNew else null)
 }
 
 /** An invite on Home: who invited you, the group, "No thanks" and "Join". */
