@@ -234,6 +234,9 @@ fun SharedShareDialog(onClose: () -> Unit) {
     val l = Shared.current ?: return
     val title = Repo.listName
     val invite = inviteLink(l.key)
+    // Invite Friends in the app (owner, 7 November 2026): an invitation to accept, besides the link.
+    var inviting by remember { mutableStateOf(false) }
+    if (inviting) { GiftInviteFriendsDialog(l) { inviting = false }; return }
 
     AlertDialog(
         onDismissRequest = onClose,
@@ -251,6 +254,13 @@ fun SharedShareDialog(onClose: () -> Unit) {
                         clip.setText(AnnotatedString(invite))
                         toast(ctx, tr("Invite link copied"))
                     }) { Text(tr("Copy")) }
+                }
+                if (Friends.hasProfile(ctx) && !Friends.state?.friends.isNullOrEmpty()) {
+                    Text(
+                        tr("Or invite your Friends in the app:"), style = MaterialTheme.typography.bodySmall,
+                        color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp)
+                    )
+                    OutlinedButton(onClick = { inviting = true }) { Text(tr("Invite Friends")) }
                 }
             }
         },

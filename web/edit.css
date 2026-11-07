@@ -248,3 +248,43 @@ body.menu-open .drawer { transform: none; visibility: visible; }
 .bintitle { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .binrow .act { flex: none; }
 .binempty { margin-top: 12px; }
+
+/* Doing things together (7 November 2026, together.js): reactions under a wish, the emoji picker, "Still buying …?". */
+.wlt-bar { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
+.wlt-chip, .wlt-add {
+  display: inline-flex; align-items: center; gap: 3px; border-radius: 999px; font: inherit; font-size: .85rem;
+  padding: 2px 9px; cursor: pointer; color: var(--fg); background: color-mix(in srgb, var(--fg) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fg) 14%, transparent); user-select: none; -webkit-user-select: none;
+}
+.wlt-chip.mine { background: color-mix(in srgb, var(--primary) 18%, transparent); border-color: var(--primary); }
+.wlt-ce { font-size: 1rem; line-height: 1.3; }
+.wlt-cn { font-weight: 600; }
+.wlt-add { background: transparent; color: var(--muted); border-color: color-mix(in srgb, var(--fg) 26%, transparent); }
+.wlt-chip:focus-visible, .wlt-add:focus-visible, .wlt-e:focus-visible, .wlt-tab:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+button.badge.wlt-ask { border: 0; font: inherit; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
+.wlt-back {
+  position: fixed; inset: 0; z-index: 60; background: rgba(0, 0, 0, .45); display: flex; align-items: center;
+  justify-content: center; padding: 16px;
+}
+.wlt-box {
+  background: var(--bg); color: var(--fg); border-radius: 24px; padding: 20px; width: 100%; max-width: 420px;
+  max-height: calc(100vh - 32px); overflow: auto; box-shadow: 0 10px 40px rgba(0, 0, 0, .3);
+}
+.wlt-box.wlt-picker { display: flex; flex-direction: column; max-height: min(620px, calc(100vh - 32px)); }
+.wlt-h { margin: 0 0 8px; font-size: 1.2rem; }
+.wlt-p { margin: 6px 0; color: var(--muted); }
+.wlt-row { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-top: 12px; }
+.wlt-row.start { justify-content: flex-start; margin-top: 8px; }
+.wlt-form input, .wlt-search {
+  width: 100%; box-sizing: border-box; font: inherit; padding: 10px 12px; border-radius: 12px;
+  border: 1px solid var(--outline); background: var(--bg); color: var(--fg);
+}
+.wlt-tabs { display: flex; gap: 2px; overflow-x: auto; margin: 8px 0 4px; }
+.wlt-tab { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 10px; border: 0; background: transparent; font-size: 1.25rem; cursor: pointer; }
+.wlt-emoji { display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); overflow-y: auto; min-height: 120px; flex: 1 1 auto; }
+.wlt-gh { grid-column: 1 / -1; font-size: .8rem; font-weight: 600; color: var(--muted); padding: 8px 4px 4px; }
+.wlt-e { height: 42px; border: 0; background: transparent; border-radius: 10px; font-size: 1.5rem; cursor: pointer; }
+.wlt-e:hover, .wlt-tab:hover { background: color-mix(in srgb, var(--fg) 8%, transparent); }
+.wlt-panel { display: grid; gap: 8px; margin: 8px 0 12px; }
+.wlt-q { background: var(--card); border-radius: 18px; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent); }
+.wlt-q .wlt-p { color: var(--fg); }

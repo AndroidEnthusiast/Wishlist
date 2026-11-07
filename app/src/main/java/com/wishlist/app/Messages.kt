@@ -751,6 +751,8 @@ private fun Bubble(
                         if (m.content.kind == "group") GroupNav.openInvite(m.content.text, Groups.parseLink(m.content.url))
                         // A gift exchange invitation (2.129).
                         if (m.content.kind == "exchange") ExchangeNav.openInvite(m.content.text, Exchanges.parseLink(m.content.url))
+                        // A gift list invitation (2.142): the invitation (or the list when you are on it already).
+                        if (m.content.kind == "giftlist" && !m.mine) GiftInviteNav.open = m.content.text
                         if (m.content.kind == "photo") {
                             if (photoState == "ok") photo?.let(onOpenPhoto)
                             else if (photoState == "offline") photoTry++
@@ -792,6 +794,7 @@ private fun Bubble(
                         if (m.content.url.isNotBlank()) Text(tr("View in shop"), color = ink.copy(alpha = 0.8f), style = MaterialTheme.typography.labelSmall)
                     }
                 }
+                m.content.kind == "giftlist" -> GiftListChatCard(m.content.title, m.mine, ink)
                 m.content.kind == "group" || m.content.kind == "exchange" -> Row(verticalAlignment = Alignment.CenterVertically) {
                     val gx = m.content.kind == "exchange"
                     Box(

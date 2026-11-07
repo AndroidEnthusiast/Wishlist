@@ -512,6 +512,11 @@
       var res = {};
       (rs || []).forEach(function (r) { res[r.id] = !!r.mine; });
       other = l; other.res = res;
+      // Reactions, and "Still buying …?" for gifts reserved in this browser (together.js, 7 November 2026).
+      if (window.WLT) {
+        other.cnt = window.WLRes ? WLRes.parse(rs).cnt : {};
+        await WLT.load(member.list.code, true);
+      }
       if (screen === "member") drawMember();
     } catch (e) {
       if (!other) center(T("Couldn’t load the list. Check your connection."));
@@ -526,6 +531,8 @@
     var v = view();
     setTitle(other.name || member.list.name);
     v.appendChild(el("p", "owner", T("Owned by {0}", member.name)));
+    var qp = window.WLT ? WLT.panel(member.list.code) : null;
+    if (qp) v.appendChild(qp);
     var ws = visible(other.items);
     if (!ws.length) { v.appendChild(el("div", "center", T("Nothing here yet."))); return; }
     // Owned wishes at the bottom (owner, 4 November 2026), then top wishes first.
@@ -567,7 +574,10 @@
       var s = el("span", "badge star"); s.appendChild(el("span", "ico", "★")); s.appendChild(el("span", "lbl", T("Top wish"))); bx.appendChild(s);
     }
     var status = got ? T("Owned") : r === true ? T("Reserved by you") : r === false ? T("Reserved") : "";
-    if (status) bx.appendChild(el("span", "badge status", status));
+    var lcode = own ? me.list : member.list.code;
+    // Someone else's reservation: tapping the label asks if it's still being bought (together.js).
+    if (status) bx.appendChild(!own && !got && window.WLT && WLT.canAsk(w, r, (other.cnt || {})[w.id])
+      ? WLT.label(status, lcode, w, null) : el("span", "badge status", status));
     if (bx.childNodes.length) pic.appendChild(bx);
     c.appendChild(pic);
 
@@ -578,6 +588,9 @@
     if (w.desc) body.appendChild(el("p", "desc", w.desc));
     if (w.size) body.appendChild(el("span", "sizetag", T("Size {0}", String(w.size).slice(0, 8))));
     if (w.note) body.appendChild(el("p", "wnote", T("Note: {0}", w.note)));
+    // Reactions (owner, 7 November 2026): on the others' lists you can react; your own shows them.
+    var rb = window.WLT ? WLT.bar(lcode, w, !own) : null;
+    if (rb) body.appendChild(rb);
     var row = el("div", "row");
     row.appendChild(el("div", "price", typeof w.price === "number" ? money(w.price, w.cur) : T("No price")));
     if (own) {
@@ -609,6 +622,7 @@
       var l = await rpc("wl_get_list", { p_code: me.list });
       mine = { name: (l && l.name) || me.listName || T("My wishlist"), items: visible(l && l.items) };
       me.listName = mine.name; saveMe();
+      if (window.WLT) await WLT.load(me.list, false);
       drawMine();
     } catch (e) {
       center(T("Couldn’t load the list. Check your connection."));
@@ -836,6 +850,15 @@
   }
 
   // ---------- start ----------
+
+  if (window.WLT) WLT.setup({
+    rpc: rpc, device: deviceId, toast: toast,
+    redraw: function () { if (screen === "member" && other) drawMember(); else if (screen === "mine" && mine) drawMine(); },
+    reload: function () { if (screen === "member") loadMember(); },
+    name: function () { return me ? me.name : ""; },
+    setName: function () { },
+    auth: function () { return me ? { p_id: me.id, p_token: me.token } : null; }
+  });
 
   async function start() {
     clearInterval(timer);

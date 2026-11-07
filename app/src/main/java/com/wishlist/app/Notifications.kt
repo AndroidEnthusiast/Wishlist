@@ -308,7 +308,15 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                 Row(
                     Modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true))
                         // A reached target opens the wish's price history; a price change opens its list.
-                        .clickable { if (target) HistoryNav.open = n.wishId else onOpen(n.listKey) }.padding(10.dp),
+                        .clickable {
+                            if (target) HistoryNav.open = n.wishId
+                            else {
+                                // News about a wish you want or reserved (2.142): the list opens on that wish.
+                                if (n.kind in listOf("ask_sent", "ask_yes", "ask_free", "ask_ended") && n.listKey.length > 2 && n.wishId > 0L)
+                                    AskNav.focus = Triple(n.listKey.substring(2), n.wishId, n.kind == "ask_free")
+                                onOpen(n.listKey)
+                            }
+                        }.padding(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     val mat = RoundedCornerShape(10.dp)
@@ -320,7 +328,7 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                                 if (person) ContentScale.Crop else ContentScale.Fit
                             )
                         } else PlaceholderIcon(
-                            when (n.kind) { "friend_req", "friend_ok", "group_declined" -> "friend"; "birthday" -> "birthday"; else -> "gift" }, 22.dp
+                            when (n.kind) { "friend_req", "friend_ok", "group_declined", "gl_declined" -> "friend"; "birthday" -> "birthday"; else -> "gift" }, 22.dp
                         )
                     }
                     Column(Modifier.weight(1f).padding(start = 12.dp, end = 8.dp)) {
@@ -350,6 +358,11 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                                 "group_removed" -> tr("You are removed from this wishlist group")
                                 // Gift exchange (2.129): the invite says who; the others carry their own line.
                                 "gx_invite" -> tr("%s invited you to this gift exchange", n.currency)
+                                // 2.142: gift list invitations, "Still buying …?" and reactions.
+                                "gl_invite" -> tr("%s invited you to plan gifts together", n.currency)
+                                "gl_declined" -> tr("said no thanks to “%s”", n.currency)
+                                "ask", "ask_sent", "ask_yes", "ask_free", "ask_ended" -> Asks.noteLine(n.kind, n.currency)
+                                "reacts" -> n.currency
                                 else -> if (n.kind.startsWith("gx_")) n.currency
                                     else if (down) tr("decreased in price") else tr("increased in price")
                             },

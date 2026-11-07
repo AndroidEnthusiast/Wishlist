@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.wishlist.app",
+      "sha256_cert_fingerprints": [
+        "15:CA:2A:83:02:C6:4A:32:32:13:0F:6A:89:71:11:B3:FD:65:A2:F8:23:BF:83:19:30:41:DC:BB:0F:C6:03:F5"
+      ]
+    }
+  }
+]

@@ -28,7 +28,9 @@ import androidx.compose.ui.unit.sp
  *    (downloaded from Google Fonts): SIL Open Font License 1.1.
  *  - Libraries: AndroidX / Jetpack Compose, Kotlin, Coil, Firebase Cloud Messaging (Apache License 2.0; it uses
  *    Google Play services on the phone, which come with Android).
- * The full texts are in res/raw (license_apache.txt, license_ofl.txt).
+ *  - Emoji names for the reaction picker (2.142, assets/emoji.txt): Unicode's emoji list (Unicode License V3) through the
+ *    unicode-emoji-json package (MIT License). The emoji themselves are the phone's own.
+ * The full texts are in res/raw (license_apache.txt, license_ofl.txt, license_unicode.txt).
  */
 
 /** The licences: who made what, and the full licence texts (tap to show). */
@@ -52,6 +54,8 @@ fun LicencesDialog(onClose: () -> Unit) {
                     "Google Sans, Figtree, Fraunces, Rajdhani, Share Tech Mono, Bungee, Bricolage Grotesque, Caveat — SIL Open Font License 1.1"
                 )
                 Credit(tr("Building blocks"), "AndroidX, Jetpack Compose, Kotlin, Coil, Firebase Cloud Messaging — Apache License 2.0")
+                // The emoji picker's names (2.142): Unicode's emoji list, through the unicode-emoji-json package.
+                Credit(tr("Emoji names"), "Unicode emoji data, Unicode, Inc. — Unicode License V3; unicode-emoji-json, Mu-An Chiou — MIT License")
                 Text(
                     tr("Our own icons: menu, view buttons, prices, wishlist, gift, crop, light, new photo and the colour ball."),
                     style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
@@ -61,6 +65,9 @@ fun LicencesDialog(onClose: () -> Unit) {
                 }
                 TextButton(onClick = { full = if (full == R.raw.license_ofl) null else R.raw.license_ofl }) {
                     Text(tr("SIL Open Font License 1.1 (full text)"))
+                }
+                TextButton(onClick = { full = if (full == R.raw.license_unicode) null else R.raw.license_unicode }) {
+                    Text(tr("Unicode License V3 and MIT License (full text)"))
                 }
                 full?.let { res ->
                     val text = remember(res) {

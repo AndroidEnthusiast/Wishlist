@@ -30,6 +30,24 @@
                 <data android:scheme="wishlist" android:host="friend" />
                 <data android:scheme="wishlist" android:host="me" />
             </intent-filter>
+            <!-- App Links (owner, 7 November 2026): every link of ours opens the app when it is installed (the web page
+                 otherwise). Android checks https://androidenthusiast.github.io/.well-known/assetlinks.json (the repository
+                 AndroidEnthusiast.github.io) for this app's signing key. Not the browser editor (edit.html): iPhone and
+                 computer users edit there, and an Android user may choose it on purpose. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" />
+                <data android:host="androidenthusiast.github.io" />
+                <data android:path="/Wishlist/" />
+                <data android:path="/Wishlist/index.html" />
+                <data android:pathPrefix="/Wishlist/join" />
+                <data android:pathPrefix="/Wishlist/list" />
+                <data android:pathPrefix="/Wishlist/group" />
+                <data android:pathPrefix="/Wishlist/exchange" />
+                <data android:pathPrefix="/Wishlist/friend" />
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />

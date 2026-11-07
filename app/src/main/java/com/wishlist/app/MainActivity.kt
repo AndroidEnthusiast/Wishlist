@@ -201,6 +201,10 @@ class MainActivity : ComponentActivity() {
         const val OPEN_EXCHANGE = "open_exchange"
         /** A "gift you reserved is no longer on …" alert (2.126): where to go, as on the Notifications page ("c:"/"s:"). */
         const val OPEN_NOTE = "open_note"
+        /** "Still buying …?" answered from the notification's buttons (2.142): the question, the answer, the notification. */
+        const val ASK_ID = "ask_id"
+        const val ASK_YES = "ask_yes"
+        const val ASK_NID = "ask_nid"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -273,10 +277,36 @@ class MainActivity : ComponentActivity() {
         FriendsNav.openTab = true
     }
 
+    /**
+     * A web link of ours (App Links, owner 7 November 2026): an invite (?j=), a friends' link (?c=), a group (?g=, or a
+     * browser member's My link), a gift exchange (?x=) or a friend link (/friend/?f=). False when it is none of these.
+     */
+    private fun openWebLink(u: String): Boolean {
+        Groups.parseMe(u)?.let { GroupNav.takeover = it; GroupNav.request++; return true }
+        Groups.parseLink(u)?.let { GroupNav.openInvite(null, it); return true }
+        Exchanges.parseLink(u)?.let { ExchangeNav.openInvite(null, it); return true }
+        if (u.contains("/friend", ignoreCase = true)) Friends.parseFriendLink(u)?.let { (c, n) -> openFriendLink(c, n); return true }
+        if (u.uppercase().contains("J=")) Sync.parseInvite(u)?.let { sharedInvite = it; return true }
+        Regex("[?&]c=([A-Za-z0-9-]{8,11})(?![A-Za-z0-9])", RegexOption.IGNORE_CASE).find(u)?.let { m ->
+            Sync.parseCode(m.groupValues[1])?.let { sharedCode = it; return true }
+        }
+        return false
+    }
+
     private fun handle(i: Intent?) {
         // A tapped push notification: its line on the Notifications page is seen already (owner, 2.126: no red dot).
+        if (i != null && i.hasExtra(ASK_ID)) {
+            Asks.answerFromNotification(this, i.getLongExtra(ASK_ID, 0L), i.getBooleanExtra(ASK_YES, false), i.getIntExtra(ASK_NID, 0))
+            i.removeExtra(ASK_ID)
+            return
+        }
         if (i != null && i.hasExtra(Alerts.NOTE_KIND)) {
             val kind = i.getStringExtra(Alerts.NOTE_KIND).orEmpty()
+            // "X is free. Reserve it now?" / "Your reservation of X has ended" (2.142): the list opens on that wish.
+            val list = i.getStringExtra(Alerts.NOTE_LIST).orEmpty()
+            val wish = i.getLongExtra(Alerts.NOTE_ID, 0L)
+            if ((kind == "ask_free" || kind == "ask_ended" || kind == "ask_yes" || kind == "ask_sent") && wish > 0L && list.length > 2)
+                AskNav.focus = Triple(list.substring(2), wish, kind == "ask_free")
             if (kind.isNotEmpty()) Notifications.markRead(this, kind, i.getStringExtra(Alerts.NOTE_LIST).orEmpty(), i.getLongExtra(Alerts.NOTE_ID, 0L))
             i.removeExtra(Alerts.NOTE_KIND)
         }
@@ -341,6 +371,8 @@ class MainActivity : ComponentActivity() {
         // An invite link that was opened (wishlist://join?j=KEY), for example from the button on the invite web page.
         if (i?.action == Intent.ACTION_VIEW) {
             val d = i.dataString.orEmpty()
+            // App Links (2.142): one of our web links opened the app. A link it can't read just opens the app.
+            if (d.startsWith("https://", ignoreCase = true)) { openWebLink(d); return }
             // Wishlist groups (2.108): a group link (wishlist://group?g=KEY) or a browser member's "My link".
             Groups.parseMe(d)?.let { GroupNav.takeover = it; GroupNav.request++; return }
             Groups.parseLink(d)?.let { GroupNav.openInvite(null, it); return }
@@ -537,6 +569,8 @@ fun App(
     }
 
     fun openFriend(code: String) {
+        // A link to one of your own wishlists opens it (owner, 7 November 2026: App Links open the app).
+        Repo.allMine(ctx).firstOrNull { it.code == code }?.let { openMine(it.id); return }
         if (code == Repo.shareCode) {
             scope.launch { snack.showToast(tr("That’s your own list. Friends reserve from it, and you can’t peek.")) }
             return
@@ -567,6 +601,20 @@ fun App(
     }
 
     /**
+     * A list someone else owns, from its code (a notification): a group member's list or a giftee's list opens where it
+     * lives, otherwise as a friend's list (2.142, as Gifts I reserved does).
+     */
+    fun openListByCode(code: String) {
+        val group = Groups.groups.firstOrNull { gr -> gr.members.any { it.list?.code == code } }
+        val exchange = Exchanges.list.firstOrNull { it.me.giftee?.list?.code == code }
+        when {
+            group != null -> GroupNav.openGroup(group.id)
+            exchange != null -> ExchangeNav.openExchange(exchange.id)
+            else -> openFriend(code)
+        }
+    }
+
+    /**
      * Opens where a notification happened (the Notifications page, or a tapped push): the list the wish is on, a
      * friend's list, Friends, that friend, or a group invitation.
      */
@@ -579,7 +627,11 @@ fun App(
                 if (Shared.lists.any { it.code == code }) openGroup(code)
                 else scope.launch { snack.showToast(tr("That gift list isn’t on this phone any more.")) }
             }
-            key.startsWith("c:") -> openFriend(key.removePrefix("c:"))
+            key.startsWith("c:") -> openListByCode(key.removePrefix("c:"))
+            // A gift list invitation (2.142).
+            key.startsWith("i:") -> GiftInviteNav.open = key.removePrefix("i:")
+            // A "Still buying …?" question (2.142): answered in Gifts I reserved.
+            key == "v:" -> { closeAll(); reservedOpen = true }
             key.startsWith("r:") -> { FriendsNav.reset(); friendsOpen = true }
             key.startsWith("p:") -> { FriendsNav.reset(); FriendsNav.person = key.removePrefix("p:"); friendsOpen = true }
             key.startsWith("g:") -> GroupNav.openInvite(key.removePrefix("g:"), null)
@@ -724,6 +776,9 @@ fun App(
         try { ListVisibility.trySwitch(ctx) } catch (e: Exception) {}
         // Wishlist groups and invites (2.108).
         if (Config.enabled && Friends.hasProfile(ctx)) try { Groups.refresh(ctx) } catch (e: Exception) {}
+        // News (2.142): gift list invitations and "Still buying …?"; it also links this phone's reservations to you,
+        // so a question about a gift you reserved reaches you at once.
+        if (Config.enabled && Friends.hasProfile(ctx)) try { News.poll(ctx) } catch (e: Exception) {}
         // Wish names without article numbers and the shop's name, once (owner, 2.135).
         try { Repo.cleanTitlesOnce(ctx) } catch (e: Exception) {}
         // Gift exchanges and their invitations (2.129): the red dot on the menu item.
@@ -1028,6 +1083,16 @@ fun App(
         )
     }
     if (inviteDlg) SharedShareDialog { inviteDlg = false }
+    // A gift list invitation from a Friend (2.142): a tapped notification or chat card.
+    GiftInviteNav.open?.let { code ->
+        key(code) {
+            GiftInviteDialog(
+                code,
+                onJoined = { c -> GiftInviteNav.open = null; Notifications.markRead(ctx, "gl_invite", "i:$c", 0L); openGroup(c) },
+                onClose = { GiftInviteNav.open = null }
+            )
+        }
+    }
     if (newMine) {
         NewListDialog(
             onCreated = { id ->
@@ -1298,6 +1363,31 @@ fun HomeScreen(
                     Cloud.rpc("wl_view_count", org.json.JSONObject().put("p_code", code).put("p_token", token)).trim().toIntOrNull() ?: 0
                 } catch (e: Exception) { views }
             }
+            // Reactions (2.142): your own lists show them (no reacting), gift lists let every giver react. On a gift list a
+            // tapped "Reserved" label of someone else asks "Is it still being bought?" (2.142).
+            var askBought by remember { mutableStateOf<Wish?>(null) }
+            var reserveNow by remember { mutableStateOf<Wish?>(null) }
+            val listCode = if (inShared) Shared.active else Repo.mine(ctx, Repo.openMine).code
+            ReactionsLoader(listCode)
+            val listDeco = listCode?.let { code ->
+                WishDeco(code, canReact = inShared, onBadge = if (!inShared) null else ({ w ->
+                    val c = ResCounts.of(code, w.id)
+                    if (res[w.id] == false || (w.qty > 1 && c != null && c.full && c.my == 0)) askBought = w
+                }))
+            }
+            askBought?.let { w ->
+                AskDialog(Shared.active.orEmpty(), w, Occasions.ofOpen(ctx), onClose = { askBought = null }) { m -> scope.launch { snack.showToast(m) } }
+            }
+            // A tapped "X is free" or "Your reservation of X has ended" on a gift list (2.142): it opens on that wish.
+            LaunchedEffect(AskNav.focus, Shared.active, res) {
+                val (code, id, reserve) = AskNav.focus ?: return@LaunchedEffect
+                if (!inShared || code != Shared.active) return@LaunchedEffect
+                val w = Repo.wishes.firstOrNull { it.id == id && it.bin == 0L } ?: return@LaunchedEffect
+                AskNav.focus = null
+                WishFocus.target = id
+                if (reserve && res[id] == null) reserveNow = w
+            }
+            reserveNow?.let { w -> ReserveNowDialog(w, onReserve = { Shared.reserve(w, true) }, onClose = { reserveNow = null }) }
             val stickyTop: @Composable (Boolean) -> Unit = { live ->
                 // More room between the summary and the choices (owner, 2.130: calmer, without making things smaller).
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -1327,6 +1417,7 @@ fun HomeScreen(
                 }
             } else {
                 val gap = if (view == "list") 16.dp else 12.dp
+                androidx.compose.runtime.CompositionLocalProvider(LocalWishDeco provides listDeco) {
                 LazyVerticalGrid(
                     state = gridState,
                     columns = if (view == "grid") GridCells.Fixed(2) else GridCells.Adaptive(300.dp),
@@ -1391,6 +1482,7 @@ fun HomeScreen(
                         }
                         }
                     }
+                }
                 }
             }
             // The pinned copy of the top, once the list's own copy starts to scroll away under it.
@@ -1597,7 +1689,7 @@ fun CompactCard(
             }
             val status = if (w.got) tr("Owned") else reserve?.label ?: reservedLabel(reserve?.state)
             if (status != null) {
-                StatusBadge(status, small = true, modifier = Modifier.align(Alignment.TopEnd).padding(8.dp))
+                TappableBadge(w, status, small = true, modifier = Modifier.align(Alignment.TopEnd).padding(8.dp))
             }
         }
         if (look.pictureLine > 0.dp) Box(Modifier.fillMaxWidth().height(look.pictureLine).background(look.line))
@@ -1622,6 +1714,8 @@ fun CompactCard(
                 // The old price crossed out next to it after a change (owner, 2.126).
                 PriceLine(w, MaterialTheme.typography.titleMedium, Modifier.padding(top = 2.dp, bottom = 6.dp))
                 // No "Added on" here (owner, 2.100): too busy on a list; it stays in Price watch.
+                // Reactions (2.142): only on lists that show them (LocalWishDeco).
+                ReactionBar(w, Modifier.padding(bottom = 6.dp))
             }
             Box {
                 IconButton(onClick = { if (!inert) menu = true }) {
@@ -1725,7 +1819,7 @@ fun WishCard(
             ) {
                 StarCorner(w, onStar)
                 if (badge != null) {
-                    StatusBadge(badge, small = false)
+                    TappableBadge(w, badge, small = false)
                 }
             }
         }
@@ -1774,6 +1868,8 @@ fun WishCard(
                 }
                 // No "Added on" here (owner, 2.100): too busy on a list; it stays in Price watch.
             }
+            // Reactions (2.142): only on lists that show them (LocalWishDeco).
+            ReactionBar(w)
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Row(Modifier.weight(1f), verticalAlignment = Alignment.Bottom) {
                     Text(
@@ -1852,7 +1948,7 @@ fun RowCard(
                         if (onStar != null) StarToggle(w.star, onStar, size = 28.dp)
                         else if (w.star) MostWantedBadge(false)
                     }
-                    if (badge != null) StatusBadge(badge, small = true)
+                    if (badge != null) TappableBadge(w, badge, small = true)
                 }
             }
             Column(Modifier.weight(1f).padding(start = 4.dp, top = 10.dp, end = 8.dp, bottom = 2.dp)) {
@@ -1875,6 +1971,8 @@ fun RowCard(
                         }
                     PriceLine(w, MaterialTheme.typography.titleMedium, Modifier.padding(top = 2.dp))
                 }
+                // Reactions (2.142): only on lists that show them (LocalWishDeco).
+                ReactionBar(w)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
                     actions()
                 }

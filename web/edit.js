@@ -715,7 +715,11 @@
       if (resBusy) return;
       var rr = WLRes.parse(rs);
       var m = rr.res;
-      if (JSON.stringify(m) !== JSON.stringify(res) || JSON.stringify(rr.cnt) !== JSON.stringify(cnt)) { res = m; cnt = rr.cnt; render(); }
+      var changed = JSON.stringify(m) !== JSON.stringify(res) || JSON.stringify(rr.cnt) !== JSON.stringify(cnt);
+      res = m; cnt = rr.cnt;
+      // Reactions, and "Still buying …?" for gifts reserved in this browser (together.js, 7 November 2026).
+      if (window.WLT && await WLT.load(code, true)) changed = true;
+      if (changed && !resBusy) render();
     } catch (e) { /* keep what we have */ }
   }
 
@@ -907,7 +911,8 @@
     else if (rise) pic.appendChild(el("span", "badge drop rise", "+" + Math.round((w.price / w.old - 1) * 100) + "%"));
     var bx = el("div", "badges");
     var rl = resLabel(w);
-    if (rl) bx.appendChild(el("span", "badge status", rl));
+    // Someone else's reservation: tapping the label asks if it's still being bought (together.js).
+    if (rl) bx.appendChild(window.WLT && WLT.canAsk(w, res[w.id], cnt[w.id]) ? WLT.label(rl, code, w, content && content.occ) : el("span", "badge status", rl));
     if (bx.childNodes.length) pic.appendChild(bx);
     c.appendChild(pic);
 
@@ -950,6 +955,9 @@
     if (w.size && !rows) body.appendChild(el("span", "sizetag", T("Size {0}", w.size.slice(0, 8))));
     if (w.note && !rows) body.appendChild(el("p", "wnote", T("Note: {0}", w.note)));
     if (w.by && !rows) body.appendChild(el("div", "meta", T("Added by {0}", w.by)));
+    // Reactions (owner, 7 November 2026): every giver can react.
+    var rb = window.WLT ? WLT.bar(code, w, true) : null;
+    if (rb) body.appendChild(rb);
 
     var row = el("div", "row");
     var pr = el("div", "price" + changeClass(w), w.price !== null ? money(w.price, w.cur) : T("No price"));
@@ -1016,6 +1024,8 @@
     renderViews();
     var shown = visibleItems();
     v.textContent = "";
+    var qp = window.WLT ? WLT.panel(code) : null;
+    if (qp) v.appendChild(qp);
     if (!shown.length) {
       var empty = el("div", "center");
       if (!content.items.length) {
@@ -1730,6 +1740,12 @@
     $("binBtn").addEventListener("click", fromDrawer(openBin));
     document.addEventListener("visibilitychange", function () { if (!document.hidden) refresh(); });
     window.addEventListener("online", refresh);
+    if (window.WLT) WLT.setup({
+      rpc: rpc, device: deviceId, toast: toast, redraw: function () { render(); }, reload: function () { loadRes(); },
+      name: function () { return me; },
+      setName: function (n) { me = String(n || "").trim().slice(0, 30); lsSet("wl_name", me); },
+      auth: function () { return null; }
+    });
     setInterval(function () { if (!document.hidden) refresh(); }, REFRESH_MS);
   }
 

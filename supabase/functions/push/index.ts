@@ -1,4 +1,5 @@
-// push: wakes a friend's phone when a message is sent to them (instant message notifications, version 2.105).
+// push: wakes a friend's phone when a message is sent to them (instant message notifications, version 2.105), and
+// (2.142) when there is news for that phone.
 //
 // The database calls this function after a message is saved (supabase-push.sql, trigger wl_messages_push) with only
 // the message's number. This function then:
@@ -9,6 +10,9 @@
 //
 // Gift exchange (2.129): the database also calls it with {"gx": number} for an anonymous gift-exchange message
 // (supabase-exchange.sql, trigger wl_gx_msgs_push); the push then says {t: "gx", g: exchange id}, never who wrote it.
+//
+// News (2.142, supabase-together.sql, trigger wl_news_push) comes as {"n": number}: a gift list invitation, a
+// question "Still buying …?" and its answers. The push then says {t: "news"}; the phone fetches its news itself.
 //
 // Safety: callers can't choose who gets a push or what it says; a message older than 10 minutes, or one that was
 // already pushed, is skipped. The push address is only read here, with the server's own key.
@@ -101,10 +105,12 @@ export async function handle(req: Request, deps: Deps = realDeps): Promise<Respo
   if (req.method !== "POST") return json(405, { error: "post_only" });
   let id = 0;
   let gx = false;
+  let news = false;
   try {
     const b = await req.json();
     gx = b && b.gx !== undefined && b.id === undefined;
-    id = Number(gx ? b.gx : b.id);
+    news = b && b.n !== undefined && b.id === undefined && b.gx === undefined;
+    id = Number(news ? b.n : gx ? b.gx : b.id);
   } catch {
     return json(400, { error: "bad_request" });
   }
@@ -121,7 +127,13 @@ export async function handle(req: Request, deps: Deps = realDeps): Promise<Respo
   const q = db(deps);
 
   // 1. Take the message: only once, and only while it is new.
-  const took = gx
+  const took = news
+    ? await q("wl_news?id=eq." + id + "&pushed=eq.false&select=profile,created_at", {
+      method: "PATCH",
+      headers: { prefer: "return=representation" },
+      body: JSON.stringify({ pushed: true }),
+    })
+    : gx
     ? await q("wl_gx_msgs?id=eq." + id + "&pushed=eq.false&select=gx_id,santa,giftee,from_santa,created_at", {
       method: "PATCH",
       headers: { prefer: "return=representation" },
@@ -136,8 +148,10 @@ export async function handle(req: Request, deps: Deps = realDeps): Promise<Respo
   const rows = await took.json();
   if (!Array.isArray(rows) || rows.length === 0) return json(200, { skipped: "done_or_gone" });
   // A gift-exchange message goes to the other person of its pair; the push only names the exchange.
-  const to = gx ? String((rows[0].from_santa ? rows[0].giftee : rows[0].santa) || "") : String(rows[0].b || "");
-  const data: Record<string, string> = gx ? { t: "gx", g: String(rows[0].gx_id || "") } : { t: "msg" };
+  const to = news
+    ? String(rows[0].profile || "")
+    : gx ? String((rows[0].from_santa ? rows[0].giftee : rows[0].santa) || "") : String(rows[0].b || "");
+  const data: Record<string, string> = news ? { t: "news" } : gx ? { t: "gx", g: String(rows[0].gx_id || "") } : { t: "msg" };
   const at = Date.parse(String(rows[0].created_at || ""));
   if (!to || !(at > deps.now() - MAX_AGE_MS)) return json(200, { skipped: "old" });
 

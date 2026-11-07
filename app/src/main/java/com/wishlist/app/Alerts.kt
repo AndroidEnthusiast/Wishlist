@@ -27,6 +27,8 @@ object Alerts {
     private const val EXCHANGE_CHANNEL = "exchange"
     private const val BIRTHDAY_CHANNEL = "birthdays"
     private const val OCC_CHANNEL = "occasions"
+    private const val GIFTLIST_CHANNEL = "gift_lists"
+    private const val REACT_CHANNEL = "reactions"
 
     /** Where a tapped notification sits on the Notifications page: it is marked as read (owner, 2.126: no red dot). */
     const val NOTE_KIND = "note_kind"
@@ -54,6 +56,8 @@ object Alerts {
         ch(MESSAGES_CHANNEL, tr("Messages"), tr("New messages from your friends"))
         ch(EXCHANGE_CHANNEL, tr("Gift exchange"), tr("Invitations, names drawn, anonymous messages and the exchange day"))
         ch(OCC_CHANNEL, tr("Occasions"), tr("Reminders around birthdays and other occasions"))
+        ch(GIFTLIST_CHANNEL, tr("Gift list invitations"), tr("A Friend invites you to plan gifts together"))
+        ch(REACT_CHANNEL, tr("Reactions"), tr("Once a day: who reacted to your wishes"))
     }
 
     /**
@@ -70,6 +74,7 @@ object Alerts {
         return listOfNotNull(
             if (off(BIN_CHANNEL)) tr("Notifications about gifts you reserved are off. You’ll miss important updates about them.") else null,
             if (off(GROUPS_CHANNEL)) tr("Group notifications are off. You’ll miss invitations.") else null,
+            if (off(GIFTLIST_CHANNEL)) tr("Gift list invitations are off. You’ll miss invitations from Friends.") else null,
             if (off(EXCHANGE_CHANNEL)) tr("Gift exchange notifications are off. You’ll miss invitations and the draw.") else null
         )
     }
@@ -404,6 +409,112 @@ object Alerts {
             .setAutoCancel(true)
             .build()
         nm.notify(nid, n)
+    }
+
+    /**
+     * A Friend invited you to a gift list (owner, 7 November 2026: "inviting and fun"): a colourful gift picture, the
+     * list's name with 🎁, and tapping opens the invitation (Join / No thanks). Always told, like group invitations.
+     */
+    fun notifyGiftInvite(c: Context, code: String, who: String, name: String) {
+        ensureChannel(c)
+        val nid = code.hashCode() * 31 + 53
+        val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_NOTE, "i:$code").note("gl_invite", "i:$code")
+            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        val pi = PendingIntent.getActivity(c, nid, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val title = tr("🎁 %1\$s invited you to “%2\$s”", who, name)
+        val text = tr("Plan gifts together and keep it a surprise. Tap to join.")
+        val n = NotificationCompat.Builder(c, GIFTLIST_CHANNEL)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setLargeIcon(giftPicture(c))
+            .setContentTitle(title)
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setColor(0xFFFF7AA2.toInt())
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+        (c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(nid, n)
+    }
+
+    /** People reacted to your wishes (owner: bundled, at most one a day, in the evening). Tapping opens the list. */
+    fun notifyReactions(c: Context, listKey: String, title: String, text: String) {
+        val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_NOTE, listKey).note("reacts", listKey)
+        ensureChannel(c)
+        val pi = PendingIntent.getActivity(c, 59, open.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val n = NotificationCompat.Builder(c, REACT_CHANNEL)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+        (c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(59, n)
+    }
+
+    /**
+     * Stuck reservations (owner, 7 November 2026): [kind] "ask" ("Still buying …?" with the two answers as buttons),
+     * "ask_sent", "ask_yes", "ask_free" or "ask_ended". [open] is where a tap goes ("v:" Gifts I reserved, or the list
+     * with the wish). Always told: it is about gifts you reserved or want.
+     */
+    fun notifyAsk(c: Context, kind: String, ask: Long, open: String, wishId: Long, title: String, text: String) {
+        ensureChannel(c)
+        val nid = (kind + ask).hashCode() * 31 + 61
+        val i = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_NOTE, open).note(kind, open, wishId)
+            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        val pi = PendingIntent.getActivity(c, nid, i, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val b = NotificationCompat.Builder(c, BIN_CHANNEL)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+        if (kind == "ask") {
+            fun answer(yes: Boolean): PendingIntent {
+                val a = Intent(c, MainActivity::class.java).putExtra(MainActivity.ASK_ID, ask).putExtra(MainActivity.ASK_YES, yes)
+                    .putExtra(MainActivity.ASK_NID, nid).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                return PendingIntent.getActivity(c, nid + (if (yes) 1 else 2), a, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+            }
+            b.addAction(0, tr("Yes, I’m buying it"), answer(true))
+            b.addAction(0, tr("Let someone else"), answer(false))
+        }
+        (c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(nid, b.build())
+    }
+
+    fun cancel(c: Context, nid: Int) {
+        (c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).cancel(nid)
+    }
+
+    /** A colourful round gift picture for a notification, drawn here (our own drawing). */
+    private fun giftPicture(c: Context): android.graphics.Bitmap {
+        val px = (64 * c.resources.displayMetrics.density).toInt().coerceAtLeast(64)
+        val bmp = android.graphics.Bitmap.createBitmap(px, px, android.graphics.Bitmap.Config.ARGB_8888)
+        val cv = android.graphics.Canvas(bmp)
+        val u = px / 24f
+        val p = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
+        p.shader = android.graphics.LinearGradient(0f, 0f, px.toFloat(), px.toFloat(),
+            intArrayOf(0xFF7C4DFF.toInt(), 0xFFFF7AA2.toInt(), 0xFFFFB86B.toInt()), null, android.graphics.Shader.TileMode.CLAMP)
+        cv.drawCircle(px / 2f, px / 2f, px / 2f, p)
+        p.shader = null
+        // Confetti dots.
+        p.color = 0xCCFFFFFF.toInt()
+        listOf(4.5f to 6f, 19f to 5f, 20f to 17f, 5f to 18f).forEach { (x, y) -> cv.drawCircle(x * u, y * u, 0.9f * u, p) }
+        // The box, the lid, the ribbon and the bow, in white.
+        p.color = 0xFFFFFFFF.toInt()
+        cv.drawRoundRect(android.graphics.RectF(6f * u, 11f * u, 18f * u, 19f * u), 1.2f * u, 1.2f * u, p)
+        cv.drawRoundRect(android.graphics.RectF(5f * u, 8f * u, 19f * u, 11.4f * u), 1.2f * u, 1.2f * u, p)
+        p.color = 0xFFFF7AA2.toInt()
+        cv.drawRect(11f * u, 8f * u, 13f * u, 19f * u, p)
+        p.style = android.graphics.Paint.Style.STROKE
+        p.strokeWidth = 1.6f * u
+        p.color = 0xFFFFFFFF.toInt()
+        cv.drawOval(android.graphics.RectF(7.6f * u, 4.6f * u, 12f * u, 8.2f * u), p)
+        cv.drawOval(android.graphics.RectF(12f * u, 4.6f * u, 16.4f * u, 8.2f * u), p)
+        return bmp
     }
 
     /** A new message from friend [id] (2.98). Tapping opens the conversation. */

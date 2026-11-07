@@ -92,7 +92,11 @@ fun ReservedScreen(onClose: () -> Unit, onOpen: (ReservedGroup) -> Unit) {
     val cs = MaterialTheme.colorScheme
     var groups by remember { mutableStateOf(ReservedGifts.remembered(ctx)) }
     var loading by remember { mutableStateOf(true) }
-    LaunchedEffect(Unit) {
+    // "Still buying …?" questions about your reservations wait at the top (owner, 7 November 2026; Asks.kt).
+    var asks by remember { mutableStateOf(Asks.waiting) }
+    var tick by remember { mutableStateOf(0) }
+    LaunchedEffect(tick) {
+        asks = try { Asks.refresh() } catch (e: Exception) { Asks.waiting }
         groups = ReservedGifts.load(ctx)
         loading = false
     }
@@ -104,8 +108,17 @@ fun ReservedScreen(onClose: () -> Unit, onOpen: (ReservedGroup) -> Unit) {
                     Text(tr("Gifts I reserved"), style = MaterialTheme.typography.titleLarge, fontWeight = LocalLook.current.titleWeight, modifier = Modifier.weight(1f))
                     if (loading) CircularProgressIndicator(Modifier.padding(end = 16.dp).size(20.dp), strokeWidth = 2.dp)
                 }
+                asks.forEach { a ->
+                    androidx.compose.runtime.key(a.ask) {
+                        AskBlock(a) { msg ->
+                            android.widget.Toast.makeText(ctx, msg, android.widget.Toast.LENGTH_LONG).show()
+                            asks = asks.filter { it.ask != a.ask }
+                            tick++
+                        }
+                    }
+                }
                 // Every empty page says what to do next (owner, 7 November 2026).
-                if (groups.isEmpty() && !loading) {
+                if (groups.isEmpty() && asks.isEmpty() && !loading) {
                     Text(
                         tr("Nothing reserved yet. Open a friend’s wishlist, tap Reserve on a gift you’ll buy, and it shows here. They never see who reserved it."),
                         color = cs.onSurfaceVariant, modifier = Modifier.padding(16.dp)

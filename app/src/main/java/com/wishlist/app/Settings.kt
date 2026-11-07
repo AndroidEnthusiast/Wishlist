@@ -222,6 +222,7 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
             SettingSwitch(tr("Friend requests"), tr("Someone wants to be your friend."), Show["nt_req"]) { Show.set(ctx, "nt_req", it) }
             SettingSwitch(tr("Friends’ birthdays"), tr("A few days before a friend’s birthday."), Show["nt_bday"]) { Show.set(ctx, "nt_bday", it) }
             SettingSwitch(tr("New messages"), tr("A friend sent you a message."), Show["nt_msg"]) { Show.set(ctx, "nt_msg", it) }
+            SettingSwitch(tr("Reactions"), tr("Once a day, in the evening: who reacted to your wishes."), Show["nt_react"]) { Show.set(ctx, "nt_react", it) }
 
             // Export and import, to move to a new phone (owner, 2.95).
             SectionTitle(tr("Backup"))

@@ -60,7 +60,9 @@ fun FriendScreen(
     // Something more in the top bar: "Add friend" on the list of a wishlist group member (2.108).
     extraAction: (@Composable () -> Unit)? = null,
     // A gift exchange's budget (2.129): wishes that cost more get "Over budget" on your giftee's list.
-    overBudget: ((Wish) -> Boolean)? = null
+    overBudget: ((Wish) -> Boolean)? = null,
+    // Reactions on wishes (2.142): everywhere except in a gift exchange (owner).
+    reactions: Boolean = true
 ) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -73,6 +75,14 @@ fun FriendScreen(
     var confirmRemove by remember { mutableStateOf(false) }
     // A 2× wish asks "How many will you buy?" (2.128).
     var askFor by remember { mutableStateOf<Wish?>(null) }
+    // "Is it still being bought?" about someone else's reservation (2.142), and "Reserve it now?" after "X is free".
+    var askBought by remember { mutableStateOf<Wish?>(null) }
+    var reserveNow by remember { mutableStateOf<Wish?>(null) }
+    ReactionsLoader(f.code)
+    val deco = WishDeco(f.code, canReact = reactions, onBadge = { w ->
+        val c = ResCounts.of(f.code, w.id)
+        if (!w.got && (res[w.id] == false || (w.qty > 1 && c != null && c.full && c.my == 0))) askBought = w
+    })
 
     // "Viewed 23 times" for the owner (2.136): one view each time this list is opened, never on the refresh below.
     LaunchedEffect(f.code) {
@@ -224,6 +234,7 @@ fun FriendScreen(
                             WishFocus.glow(t)
                             WishFocus.target = null
                         }
+                        androidx.compose.runtime.CompositionLocalProvider(LocalWishDeco provides deco) {
                         LazyVerticalGrid(
                             state = gridState,
                             columns = GridCells.Adaptive(300.dp),
@@ -255,6 +266,7 @@ fun FriendScreen(
                                 }
                             }
                         }
+                        }
                     }
                 }
                 state == "offline" -> Box(Modifier.fillMaxSize().padding(32.dp), Alignment.Center) {
@@ -268,6 +280,19 @@ fun FriendScreen(
         }
     }
 
+    // A tapped "X is free" or "Your reservation of X has ended" (2.142): this list opens on that wish.
+    LaunchedEffect(AskNav.focus, remote, res) {
+        val (code, id, reserve) = AskNav.focus ?: return@LaunchedEffect
+        if (code != f.code) return@LaunchedEffect
+        val w = remote?.wishes?.firstOrNull { it.id == id && it.bin == 0L } ?: return@LaunchedEffect
+        AskNav.focus = null
+        WishFocus.target = id
+        if (reserve && res[id] == null && !w.got) reserveNow = w
+    }
+    askBought?.let { w ->
+        AskDialog(f.code, w, remote?.occ, onClose = { askBought = null }) { m -> scope.launch { snack.showToast(m) } }
+    }
+    reserveNow?.let { w -> ReserveNowDialog(w, onReserve = { toggle(w, true) }, onClose = { reserveNow = null }) }
     askFor?.let { w ->
         ReserveCountDialog(
             ResCounts.free(f.code, w), ResCounts.of(f.code, w.id)?.my ?: 1,

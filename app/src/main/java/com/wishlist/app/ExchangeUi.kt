@@ -587,7 +587,7 @@ fun ExchangeScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, on
             FriendScreen(
                 Friend(code, giftee.list?.name.orEmpty()), snack, onMenu = {}, onRemoved = {},
                 fetch = { Exchanges.gifteeList(ctx, gid) }, onBack = { showList = false }, ownerName = giftee.name,
-                overBudget = { w -> Exchanges.overBudget(x, w) }
+                overBudget = { w -> Exchanges.overBudget(x, w) }, reactions = false
             )
             return
         }

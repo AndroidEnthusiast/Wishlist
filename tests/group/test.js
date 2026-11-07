@@ -172,7 +172,8 @@ const A = "AAAAAAAAAAAAAAAAAAAA", AT = "tokA_tokA_tokA_tokA_", LINK = "LNKABCDEF
   await w.page.locator(".gblock").nth(1).click();
   await w.page.waitForSelector(".card .badge.status >> nth=1");
   check("someone else's reservation shows as Reserved", (await w.page.locator(".card").nth(1).locator(".badge.status").innerText()) === "Reserved");
-  check("no Reserve button on a reserved gift", (await w.page.locator(".card").nth(1).getByRole("button", { name: "Reserve" }).count()) === 0);
+  check("the Reserved label asks if it is still being bought (together.js)", (await w.page.locator(".card").nth(1).locator("button.badge.wlt-ask").count()) === 1);
+  check("no Reserve button on a reserved gift", (await w.page.locator(".card").nth(1).getByRole("button", { name: "Reserve", exact: true }).count()) === 0);
   await w.page.locator("#backBtn").click();
 
   // ---- her own list ----

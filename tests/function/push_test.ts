@@ -28,6 +28,7 @@ function world(opts: { pushed?: boolean; age?: number; token?: string; fcmStatus
   let tokenRow: string | null = opts.token === undefined ? "TOKEN-BOB" : opts.token;
   const gxmsg = { pushed: false, from_santa: opts.fromSanta ?? true };
   const pushAsked: string[] = [];
+  const newsRow = { pushed: false };
   const deps = {
     now: () => NOW,
     env: (k: string) => ({ SUPABASE_URL: "https://x.supabase.co/", SUPABASE_SERVICE_ROLE_KEY: "eyJsecret", FCM_SERVICE_ACCOUNT: SA } as any)[k],
@@ -44,6 +45,11 @@ function world(opts: { pushed?: boolean; age?: number; token?: string; fcmStatus
         if (!url.includes("id=eq.9") || gxmsg.pushed) return new Response("[]", { status: 200 });
         gxmsg.pushed = true;
         return new Response(JSON.stringify([{ gx_id: "GX1", santa: "SANTA", giftee: "BOB", from_santa: gxmsg.from_santa, created_at: msg.created_at }]), { status: 200 });
+      }
+      if (url.startsWith("https://x.supabase.co/rest/v1/wl_news")) {
+        if (!url.includes("id=eq.11") || newsRow.pushed) return new Response("[]", { status: 200 });
+        newsRow.pushed = true;
+        return new Response(JSON.stringify([{ profile: "ANNA", created_at: msg.created_at }]), { status: 200 });
       }
       if (url.startsWith("https://x.supabase.co/rest/v1/wl_push")) {
         pushAsked.push(url);
@@ -114,6 +120,22 @@ for (const bad of [{ gx: "x" }, { gx: 0 }, { gx: 9, id: 7 }]) {
   w = world();
   r = await handle(post(bad), w.deps);
   check("gift exchange: odd body handled safely " + JSON.stringify(bad), (r.status === 400 && w.calls.length === 0) || !w.calls.some((x) => x.url.includes("wl_gx_msgs")));
+}
+
+// News ({"n": id}, 2.142): a gift list invitation or a "Still buying …?" question, to that profile, without text.
+w = world();
+r = await handle(post({ n: 11 }), w.deps);
+check("news: sends a push", r.status === 200 && (await r.json()).sent === true);
+const nsend = JSON.parse(String(w.calls.find((x) => x.url.includes("messages:send"))!.init.body));
+check("news: only says there is news", nsend.message.data.t === "news" && Object.keys(nsend.message.data).length === 1);
+check("news: to the profile of the news", w.pushAsked.some((u) => u.includes("id=eq.ANNA")));
+check("news: never touches messages", !w.calls.some((x) => x.url.includes("wl_messages") || x.url.includes("wl_gx_msgs")));
+r = await handle(post({ n: 11 }), w.deps);
+check("news: only once", (await r.json()).skipped === "done_or_gone");
+for (const bad of [{ n: "x" }, { n: -1 }, { n: 11, id: 7 }, { n: 11, gx: 9 }]) {
+  w = world();
+  r = await handle(post(bad), w.deps);
+  check("news: odd body handled safely " + JSON.stringify(bad), (r.status === 400 && w.calls.length === 0) || !w.calls.some((x) => x.url.includes("wl_news")));
 }
 
 console.log(fails ? `${fails} of ${n} push checks FAILED` : `push function: all ${n} checks passed`);

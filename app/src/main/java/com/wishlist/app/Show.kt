@@ -25,7 +25,8 @@ object Show {
         "nt_ok" to true,         // your friend request was accepted
         "nt_bday" to false,      // friends' birthdays
         "nt_msg" to true,        // new messages
-        "nt_group" to true       // wishlist groups (2.108): invites, "No thanks", removed from a group
+        "nt_group" to true,      // wishlist groups (2.108): invites, "No thanks", removed from a group
+        "nt_react" to true       // reactions on your wishes (2.142): one summary a day at most, in the evening
     )
 
     private val state = HashMap<String, androidx.compose.runtime.MutableState<Boolean>>()
@@ -57,6 +58,7 @@ object Show {
         // Reserved gifts, "friend request accepted" and wishlist groups always show (owner, 2.126: no switches).
         "friend_req" -> "nt_req"
         "birthday" -> "nt_bday"
+        "reacts" -> "nt_react"
         else -> null
     }
 }

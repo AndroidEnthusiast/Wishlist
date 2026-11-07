@@ -281,6 +281,16 @@ class BinWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, p
             Groups.poll(c)
         } catch (e: Exception) {
         }
+        // News from the server (GiftInvites.kt, 2.142): invitations to gift lists, "Still buying …?" and its answers,
+        // in case a push didn't arrive. And the reactions on your wishes, told once a day in the evening (Reactions.kt).
+        try {
+            News.poll(c)
+        } catch (e: Exception) {
+        }
+        try {
+            Reactions.daily(c)
+        } catch (e: Exception) {
+        }
         // Gift exchange news, anonymous messages and the exchange day (Exchange.kt, 2.129).
         try {
             Exchanges.poll(c)

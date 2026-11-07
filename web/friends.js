@@ -502,7 +502,8 @@ function card(w, compact, rows) {
   var status = got ? T("Owned") : WLRes.label(w, r, cnt[w.id], T("Reserved by you"));
   var bx = el("div", "badges");
   if (w.star && !got && !SHARED_LIST) bx.appendChild(starBadge());
-  if (status) bx.appendChild(el("span", "badge status", status));
+  // Someone else's reservation: tapping the label asks if it's still being bought (together.js, 7 November 2026).
+  if (status) bx.appendChild(!got && window.WLT && WLT.canAsk(w, r, cnt[w.id]) ? WLT.label(status, code, w, list && list.occ) : el("span", "badge status", status));
   if (bx.childNodes.length) pic.appendChild(bx);
   c.appendChild(pic);
 
@@ -515,6 +516,10 @@ function card(w, compact, rows) {
   if (w.desc && !compact && !rows) body.appendChild(el("p", "desc", w.desc));
   if (w.size && !rows) body.appendChild(el("span", "sizetag", T("Size {0}", String(w.size).slice(0, 8))));
   if (w.note && !rows) body.appendChild(el("p", "wnote", T("Note: {0}", w.note)));
+
+  // Reactions (owner, 7 November 2026): "😍 2" and "+ react".
+  var rb = window.WLT ? WLT.bar(code, w, true) : null;
+  if (rb) body.appendChild(rb);
 
   var row = el("div", "row");
   var pr = el("div", "price" + changeClass(w), typeof w.price === "number" ? money(w.price, w.cur) : T("No price"));
@@ -631,6 +636,9 @@ function render() {
   renderTools();
   var shown = visibleItems();
   v.textContent = "";
+  // "Still buying …?" about a gift reserved in this browser, and what happened to its own questions.
+  var qp = window.WLT ? WLT.panel(code) : null;
+  if (qp) v.appendChild(qp);
   if (!shown.length) {
     var empty = el("div", "center");
     if (filtersOn()) {
@@ -728,6 +736,7 @@ async function refresh() {
       else if (seen[id].got) { owned.push(mine[id]); delete mine[id]; }
     });
     writeMyRes(mine);
+    if (window.WLT) await WLT.load(code, true);
     list = l; res = m; state = "ok";
     if (gone.length || owned.length || thanks.length) noteGone(gone, owned, thanks);
   } catch (e) {
@@ -798,6 +807,8 @@ $("maxp").addEventListener("input", function () {
 $("avail").addEventListener("change", function () { onlyAvail = this.checked; render(); });
 $("clearF").addEventListener("click", clearFilters);
 
+// A first name for reactions when this browser can't store it (private mode).
+var memName = "";
 var invite = readInvite();
 $("langs").appendChild(themeSwitch());
 if (invite !== null) {
@@ -809,6 +820,11 @@ if (invite !== null) {
     $("note").textContent = T("Reserve what you’ll buy, so nobody buys it twice.");
   }
   code = readCode();
+  if (window.WLT) WLT.setup({
+    rpc: rpc, device: deviceId, toast: toast, redraw: function () { render(); }, reload: function () { refresh(); },
+    name: function () { try { return localStorage.getItem("wl_rx_name") || ""; } catch (e) { return memName; } },
+    setName: function (n) { memName = n; try { localStorage.setItem("wl_rx_name", n); } catch (e) { } }
+  });
   if (!code) {
     showCodeForm(T("Open the link your friend sent you, or enter their list code."));
   } else {
