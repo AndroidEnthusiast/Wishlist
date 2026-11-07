@@ -167,13 +167,13 @@ fun BinScreen(snack: SnackbarHostState) {
                             )
                             if (Shared.lists.isNotEmpty()) {
                                 Text(
-                                    tr("Everyone on a gift list can restore its deleted wishes."),
+                                    tr("Everyone on a collab wishlist can restore its deleted wishes."),
                                     style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
                                 )
                             }
                             if (Bin.offline) {
                                 Text(
-                                    tr("Couldn’t load the bin of every gift list. Check your connection."),
+                                    tr("Couldn’t load the bin of every collab wishlist. Check your connection."),
                                     style = MaterialTheme.typography.bodyMedium, color = cs.error
                                 )
                             }
@@ -263,7 +263,7 @@ fun BinScreen(snack: SnackbarHostState) {
             text = {
                 Text(
                     (if (n == 1) tr("1 wish will be deleted for good.") else tr("%d wishes will be deleted for good.", n)) +
-                        (if (entries.any { it.listCode != null }) " " + tr("Wishes from gift lists are gone for everyone on them.") else "") +
+                        (if (entries.any { it.listCode != null }) " " + tr("Wishes from collab wishlists are gone for everyone on them.") else "") +
                         " " + tr("This can’t be undone.")
                 )
             },

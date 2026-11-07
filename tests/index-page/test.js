@@ -22,7 +22,8 @@ function fakeFetch(url, opts) {
   const body = JSON.parse(opts.body);
   store.calls.push([fn, body, opts.headers]);
   let out;
-  if (fn === "wl_get_list") out = body.p_code === "ZZZZZZZZ" ? null : {name: "Sam's wishlist", owner: store.owner === undefined ? "" : store.owner, cats: store.noCats ? [] : ["Tech","Home","Books"], items};
+  if (fn === "wl_get_list") out = body.p_code === "ZZZZZZZZ" ? null : {name: "Sam's wishlist", owner: store.owner === undefined ? "" : store.owner, cats: store.noCats ? [] : ["Tech","Home","Books"].concat(store.extraCats || []), items};
+  else if (fn === "wl_moved_mine") out = store.moved ? store.moved(body) : [];
   else if (fn === "wl_get_reservations")
     out = store.resRows ? store.resRows(body.p_device)
       : Object.entries(store.reservations).map(([id, d]) => ({id: Number(id), mine: d === body.p_device}));
@@ -126,9 +127,23 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   check("gone gift: still-listed reservation kept, gone one forgotten", JSON.stringify(Object.keys(JSON.parse(dg.window.localStorage.getItem("wl_res_ABCD2345")))) === JSON.stringify(["1"]));
   goneNote.querySelector("button").click();
   check("gone gift: OK hides the note", goneNote.hidden);
+  // a gift reserved here that moved to another of the owner's lists (7 November 2026): where it went, not "gone"
+  store.moved = b => b.p_device === myDevice ? [{ item: 998, to: "WXYZ6789" }, { item: 5, to: "<b>bad</b>" }] : [];
+  const dm = await load("?c=ABCD2345", w => { w.localStorage.setItem("wl_device", myDevice); w.localStorage.setItem("wl_res_ABCD2345", JSON.stringify({ 1: "Headphones", 998: "Lamp", 997: "Old vase" })); });
+  await sleep(100);
+  const mvNote = dm.window.document.getElementById("gone");
+  const mvLink = mvNote.querySelector("a");
+  check("moved gift: says where it went, with a link to that list", /“Lamp” moved to another of their wishlists\. Your reservation moved with it\./.test(mvNote.textContent) && mvLink && mvLink.getAttribute("href") === "?c=WXYZ6789");
+  check("moved gift: the other one is still told as gone", /“Old vase” is no longer on the list/.test(mvNote.textContent) && !/“Lamp” is no longer/.test(mvNote.textContent));
+  check("moved gift: a bad list code is never used as a link", mvNote.querySelectorAll("a").length === 1);
+  check("moved gift: the new list remembers the reservation", JSON.parse(dm.window.localStorage.getItem("wl_res_WXYZ6789") || "{}")[998] === "Lamp");
+  check("moved gift: asked with this browser's device", store.calls.some(c => c[0] === "wl_moved_mine" && c[1].p_code === "ABCD2345" && c[1].p_device === myDevice));
+  store.moved = null;
+  const before = store.calls.filter(c => c[0] === "wl_moved_mine").length;
   const dg2 = await load("?c=ABCD2345", w => { w.localStorage.setItem("wl_device", myDevice); w.localStorage.setItem("wl_res_ABCD2345", JSON.stringify({ 1: "Headphones" })); });
   await sleep(100);
   check("nothing gone: no note", dg2.window.document.getElementById("gone").hidden);
+  check("nothing gone: the server isn't asked about moves", store.calls.filter(c => c[0] === "wl_moved_mine").length === before);
 
   // a gift reserved here that the friend marked as owned (owner, 4 November 2026): say so once, and never again
   store.reservations[3] = myDevice;
@@ -214,6 +229,18 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   let nc = await load("?c=ABCD2345");
   store.noCats = false;
   check("no categories: drop-down hidden, view buttons visible", D(nc).getElementById("chips").hidden && !D(nc).getElementById("bar").hidden && D(nc).querySelectorAll("#views .vbtn").length === 3);
+
+  // only categories that wishes carry (owner, 7 November 2026): an unused one isn't offered
+  store.extraCats = ["Garden"];
+  let uc = await load("?c=ABCD2345");
+  D(uc).getElementById("catBtn").click();
+  const offered = [...D(uc).querySelectorAll(".menu .mitem")].map(b => b.getAttribute("data-cat"));
+  check("unused category not offered", JSON.stringify(offered) === JSON.stringify(["All", "Tech", "Home", "Books"]));
+  store.extraCats = null;
+  const allItems = items.splice(0, items.length, ...items.map(w => Object.assign({}, w, { cat: "" })));
+  let nu = await load("?c=ABCD2345");
+  check("categories set but none used: drop-down hidden", D(nu).getElementById("chips").hidden && D(nu).querySelectorAll(".card").length === 3);
+  items.splice(0, items.length, ...allItems);
 
   // entry form / unshared list: no view buttons
   let ef = await load("");

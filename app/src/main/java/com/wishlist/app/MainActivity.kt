@@ -201,6 +201,8 @@ class MainActivity : ComponentActivity() {
         const val OPEN_EXCHANGE = "open_exchange"
         /** A "gift you reserved is no longer on …" alert (2.126): where to go, as on the Notifications page ("c:"/"s:"). */
         const val OPEN_NOTE = "open_note"
+        /** A bundle of news that lead to different places (7 November 2026): the Notifications page. */
+        const val OPEN_NOTES = "open_notes"
         /** "Still buying …?" answered from the notification's buttons (2.142): the question, the answer, the notification. */
         const val ASK_ID = "ask_id"
         const val ASK_YES = "ask_yes"
@@ -309,6 +311,11 @@ class MainActivity : ComponentActivity() {
                 AskNav.focus = Triple(list.substring(2), wish, kind == "ask_free")
             if (kind.isNotEmpty()) Notifications.markRead(this, kind, i.getStringExtra(Alerts.NOTE_LIST).orEmpty(), i.getLongExtra(Alerts.NOTE_ID, 0L))
             i.removeExtra(Alerts.NOTE_KIND)
+        }
+        if (i != null && i.getBooleanExtra(OPEN_NOTES, false)) {
+            NotesNav.open = true
+            i.removeExtra(OPEN_NOTES)
+            return
         }
         if (i != null && i.hasExtra(OPEN_NOTE)) {
             NoteNav.key = i.getStringExtra(OPEN_NOTE)
@@ -627,7 +634,7 @@ fun App(
             key.startsWith("s:") -> {
                 val code = key.removePrefix("s:")
                 if (Shared.lists.any { it.code == code }) openGroup(code)
-                else scope.launch { snack.showToast(tr("That gift list isn’t on this phone any more.")) }
+                else scope.launch { snack.showToast(tr("That collab wishlist isn’t on this phone any more.")) }
             }
             key.startsWith("c:") -> openListByCode(key.removePrefix("c:"))
             // A gift list invitation (2.142).
@@ -1141,6 +1148,7 @@ fun App(
     LaunchedEffect(welcome) { if (!welcome) NameGate.askAtStart() }
     NameGate.Host()
     DeleteHost(snack)
+    MoveHost(snack)
     PrivateHost(snack)
     OwnedHost(snack)
     if (askBackground) BackgroundQuestion()
@@ -1176,6 +1184,16 @@ fun HomeScreen(
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         menuId = w.id
     }
+    // Selecting several wishes (owner, 7 November 2026): a long press on your own list ticks that wish; then taps tick
+    // more, and the top bar offers Move to… and Delete. Back or ✕ stops. Collab wishlists keep their long-press menu.
+    var picked by remember(Repo.openMine, Shared.active) { mutableStateOf(setOf<Long>()) }
+    val startSelect: (Wish) -> Unit = { w ->
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        picked = setOf(w.id)
+    }
+    val selecting = picked.isNotEmpty() && Shared.active == null
+    BackHandler(enabled = selecting) { picked = emptySet() }
+    fun toggle(w: Wish) { picked = if (w.id in picked) picked - w.id else picked + w.id }
     // A shared wishlist is refreshed every 20 seconds while this screen is in front.
     val lifeOwner = ctx as? LifecycleOwner
     var foreground by remember { mutableStateOf(true) }
@@ -1275,7 +1293,20 @@ fun HomeScreen(
     Scaffold(
         containerColor = cs.background,
         topBar = {
-            TopAppBar(
+            if (selecting) TopAppBar(
+                title = { Text(if (picked.size == 1) tr("1 selected") else tr("%d selected", picked.size), fontWeight = look.titleWeight) },
+                navigationIcon = { IconButton(onClick = { picked = emptySet() }) { Icon(AppIcons.Close, tr("Stop selecting")) } },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
+                actions = {
+                    MoveBusy(Modifier.padding(end = 8.dp))
+                    TextButton(onClick = { MoveFlow.ask(picked); picked = emptySet() }) { Text(tr("Move to…")) }
+                    IconButton(onClick = {
+                        val ws = Repo.wishes.filter { it.id in picked }
+                        picked = emptySet()
+                        DeleteFlow.requestMany(ctx, ws)
+                    }) { Icon(AppIcons.Delete, tr("Delete selected")) }
+                }
+            ) else TopAppBar(
                 title = {
                     // No "Owned by you" any more (owner, 2.135): friends see "Owned by Jorai", and a list is never
                     // called "My wishlist" when shared (NameGate).
@@ -1436,12 +1467,15 @@ fun HomeScreen(
                         val r = res[w.id]
                         // A wish opened from "All your wishes" glows softly twice (WishFocus).
                         GlowBox(w.id, small = view == "grid") {
+                        Selectable(selecting, w.id in picked, { toggle(w) }) {
                         when (view) {
                             "grid" -> CompactCard(
-                                w, onLongPress = null, // everything is in its ⋮ menu (owner, 2.113)
+                                // Two per row: the ⋮ holds everything; a long press on your own list starts selecting.
+                                w, onLongPress = if (inShared) null else ({ startSelect(w) }),
                                 onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
                                 reserve = if (inShared) Reserving(r, reserveLabel(Shared.active.orEmpty(), w, r)) { on -> Shared.reserve(w, on) } else null,
-                                onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) })
+                                onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) }),
+                                onMove = if (inShared) null else ({ MoveFlow.ask(setOf(w.id)) })
                             ) { editing = w }
                             // The buttons of Rows and Large cards: Share, the eye (or Reserve on a gift list), Delete.
                             else -> {
@@ -1470,7 +1504,7 @@ fun HomeScreen(
                                 w,
                                 badge = if (inShared) reserveLabel(Shared.active.orEmpty(), w, r) else if (w.got) tr("Owned") else null,
                                 dim = if (inShared) r == false else w.got,
-                                onLongPress = { openMenu(w) },
+                                onLongPress = { if (inShared) openMenu(w) else startSelect(w) },
                                 onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
                                 onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) }),
                                 actions = actions
@@ -1478,12 +1512,13 @@ fun HomeScreen(
                                 w,
                                 badge = if (inShared) reserveLabel(Shared.active.orEmpty(), w, r) else if (w.got) tr("Owned") else null,
                                 dim = if (inShared) r == false else w.got,
-                                onLongPress = { openMenu(w) },
+                                onLongPress = { if (inShared) openMenu(w) else startSelect(w) },
                                 onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
                                 onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) }),
                                 actions = actions
                             )
                             }
+                        }
                         }
                         }
                     }
@@ -1508,8 +1543,8 @@ fun HomeScreen(
         ItemMenuDialog(
             w,
             onEdit = { menuId = null; editing = w },
-            // Only large cards have a long press (2.113): Edit and Mark as owned. Share and Private are on the card,
-            // Price history is on Price watch.
+            // Only collab wishlists still have this long-press menu (Edit); on your own lists a long press selects
+            // (owner, 7 November 2026). Share and Private are on the card, Price history is on Price watch.
             onHistory = null,
             onShare = null,
             onOwned = if (inShared) null else ({ menuId = null; OwnedFlow.toggle(ctx, w) }),
@@ -1553,6 +1588,8 @@ fun WishMoreButton(w: Wish, tint: Color, ico: androidx.compose.ui.unit.Dp, onEdi
                 text = { Text(if (w.got) tr("Mark as not owned") else tr("Mark as owned")) },
                 onClick = { menu = false; OwnedFlow.toggle(ctx, w) }
             )
+            // Owner, 7 November 2026: to another of your wishlists.
+            DropdownMenuItem(text = { Text(tr("Move to…")) }, onClick = { menu = false; MoveFlow.ask(setOf(w.id)) })
         }
     }
 }
@@ -1632,7 +1669,10 @@ fun CompactCard(
     w: Wish, onLongPress: (() -> Unit)? = null, onStar: (() -> Unit)? = null, reserve: Reserving? = null,
     onPrivate: (() -> Unit)? = null, emoji: String = "🎁", inert: Boolean = false,
     // Someone else's list (a Friend's, 7 November 2026): the menu only has Share and Reserve.
-    readOnly: Boolean = false, onEdit: () -> Unit
+    readOnly: Boolean = false,
+    // "Move to…" in the ⋮ menu (your own lists, owner 7 November 2026).
+    onMove: (() -> Unit)? = null,
+    onEdit: () -> Unit
 ) {
     val ctx = LocalContext.current
     // inert: a sample card (the Themer's preview) that does nothing when tapped.
@@ -1700,10 +1740,10 @@ fun CompactCard(
             }
         }
         if (look.pictureLine > 0.dp) Box(Modifier.fillMaxWidth().height(look.pictureLine).background(look.line))
-        Row(Modifier.padding(start = 12.dp, top = 8.dp, bottom = 4.dp), verticalAlignment = Alignment.Top) {
+        Row(Modifier.padding(start = 12.dp, bottom = 4.dp), verticalAlignment = Alignment.Top) {
             // The name and price lead to the shop page.
             Column(
-                Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).combinedClickable(
+                Modifier.weight(1f).padding(top = 8.dp).clip(RoundedCornerShape(8.dp)).combinedClickable(
                     enabled = w.url.isNotBlank() || onLongPress != null,
                     onClickLabel = if (w.url.isNotBlank()) tr("View in shop") else null,
                     onClick = { if (w.url.isNotBlank()) { try { ui.openUri(w.url) } catch (e: Exception) { } } },
@@ -1724,14 +1764,17 @@ fun CompactCard(
                 // Reactions (2.142): only on lists that show them (LocalWishDeco).
                 ReactionBar(w, Modifier.padding(bottom = 6.dp))
             }
+            // The ⋮ lines up with the first line of the name, the bin under it (owner, 7 November 2026: Delete left the
+            // menu). The 48 dp touch areas stay; only the icons move up next to the name.
+            Column(Modifier.offset(y = (-6).dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Box {
                 IconButton(onClick = { if (!inert) menu = true }) {
                     Icon(AppIcons.MoreVert, tr("More"), tint = muted)
                 }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                    // ⋮ (owner, 2.113): Share, Edit, Private (with a tick), Mark as owned, Delete; on a gift list Reserve
-                    // takes the place of Private/owned. No Top wish here: the star on the picture does that. Two per row
-                    // has no long press any more: everything is in this menu.
+                    // ⋮ (owner, 2.113): Share, Edit, Private (with a tick), Mark as owned, Move to…; on a collab wishlist
+                    // Reserve takes the place of Private/owned. No Top wish here: the star on the picture does that.
+                    // Delete is the bin under the ⋮ (owner, 7 November 2026).
                     DropdownMenuItem(text = { Text(tr("Share")) }, onClick = { menu = false; shareItem(ctx, w) })
                     if (!readOnly) DropdownMenuItem(text = { Text(tr("Edit")) }, onClick = { menu = false; onEdit() })
                     if (reserve == null && !readOnly) PrivateMenuItem(w.priv) { menu = false; togglePrivate(ctx, w) }
@@ -1747,8 +1790,12 @@ fun CompactCard(
                             onClick = { menu = false; OwnedFlow.toggle(ctx, w) }
                         )
                     }
-                    if (!readOnly) DropdownMenuItem(text = { Text(tr("Delete")) }, onClick = { menu = false; DeleteFlow.request(ctx, w) })
+                    if (onMove != null) DropdownMenuItem(text = { Text(tr("Move to…")) }, onClick = { menu = false; onMove() })
                 }
+            }
+            if (!readOnly) IconButton(onClick = { if (!inert) DeleteFlow.request(ctx, w) }) {
+                Icon(AppIcons.Delete, tr("Delete"), tint = muted)
+            }
             }
         }
         }

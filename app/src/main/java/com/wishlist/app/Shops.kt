@@ -197,6 +197,19 @@ object Shops {
         save(c, l)
     }
 
+    /** True when a site with host [h] ("www." or not) is in your shops. */
+    fun has(c: Context, h: String): Boolean = h.removePrefix("www.").let { x -> stored(c).any { it.host == x } }
+
+    /** The web search behind "Search in browser" (owner, 7 November 2026: Google). */
+    fun searchUrl(q: String): String = "https://www.google.com/search?q=" + java.net.URLEncoder.encode(q.trim(), "UTF-8")
+
+    /** A search engine's own pages are not offered as a shop. */
+    fun isSearch(h: String): Boolean = h.removePrefix("www.").let { it.startsWith("google.") || it == "consent.google.com" || it.endsWith(".google.com") }
+
+    /** "Add … to My shops?" after adding a wish from a site: asked once per site. */
+    fun offered(c: Context, h: String): Boolean = prefs(c).getBoolean("shop_offer_" + h.removePrefix("www."), false)
+    fun markOffered(c: Context, h: String) = prefs(c).edit().putBoolean("shop_offer_" + h.removePrefix("www."), true).apply()
+
     /** Puts back the starter shops you removed (your own stay). */
     fun restoreStarters(c: Context) {
         val now = stored(c)
@@ -220,6 +233,9 @@ fun DiscoverScreen(snack: androidx.compose.material3.SnackbarHostState, onProfil
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     val shops = remember(Shops.version) { Shops.list(ctx) }
     var open by remember { mutableStateOf<Shop?>(null) }
+    // "Search in browser" (owner, 7 November 2026): what was searched, while its results are open.
+    var searched by remember { mutableStateOf<String?>(null) }
+    var query by remember { mutableStateOf("") }
     var adding by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf(false) }
     val still = remember {
@@ -275,6 +291,29 @@ fun DiscoverScreen(snack: androidx.compose.material3.SnackbarHostState, onProfil
                 style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant,
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp)
             )
+            // Search the whole web in the app's browser, with "+ Add wish" as in the shops.
+            if (!editing) {
+                val focus = androidx.compose.ui.platform.LocalFocusManager.current
+                fun go() {
+                    val q = query.trim()
+                    if (q.isEmpty()) return
+                    focus.clearFocus()
+                    searched = q
+                    open = Shop(tr("Search"), Shops.searchUrl(q))
+                }
+                OutlinedTextField(
+                    query, { query = it.take(200) }, singleLine = true,
+                    placeholder = { Text(tr("Search in browser")) },
+                    leadingIcon = { Icon(AppIcons.Search, null) },
+                    trailingIcon = if (query.isNotEmpty()) ({
+                        IconButton(onClick = { query = "" }) { Icon(AppIcons.Close, tr("Clear search")) }
+                    }) else null,
+                    shape = RoundedCornerShape(28.dp),
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
+                    keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { go() }),
+                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
+                )
+            }
             val cells: List<Shop?> = if (editing) shops else shops + listOf(null)
             cells.chunked(4).forEach { row ->
                 Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp)) {
@@ -336,7 +375,7 @@ fun DiscoverScreen(snack: androidx.compose.material3.SnackbarHostState, onProfil
         }
     }
     // The shop stays open under the add form (owner, 2.116): after Save or Cancel you are back where you were in it.
-    open?.let { s -> ShopBrowser(s, onClose = { open = null }, onFound = { u, m -> onFound(u, m) }) }
+    open?.let { s -> ShopBrowser(s, onClose = { open = null; searched = null }, onFound = { u, m -> onFound(u, m) }, search = searched) }
     if (adding) AddShopDialog(onClose = { adding = false })
 }
 
@@ -545,7 +584,7 @@ private fun decodeJsString(r: String?): String? {
 @OptIn(ExperimentalFoundationApi::class)
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Unit) {
+fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Unit, search: String? = null) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
@@ -557,12 +596,25 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
     var productAt by remember { mutableStateOf<String?>(null) }
     var checks by remember { mutableIntStateOf(0) }
     var hint by remember { mutableStateOf(false) }
+    // The site on screen (owner, 7 November 2026): a site that isn't in My shops gets "+ My shops" at the top.
+    var host by remember { mutableStateOf(shop.host) }
+    var shopsVersion by remember { mutableIntStateOf(0) }
+    val known = remember(host, shopsVersion, Shops.version) { host.isEmpty() || Shops.isSearch(host) || Shops.has(ctx, host) }
+    var justAdded by remember { mutableStateOf("") }
+    // "Add bol.com to My shops?" once per site, after a wish from it was saved.
+    var offer by remember { mutableStateOf<String?>(null) }
+    var q by remember { mutableStateOf(search.orEmpty()) }
     // "Added to …" for a moment after a wish from this shop was saved.
     val savesAtStart = remember { ShopNav.saves }
     var addedNote by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(ShopNav.saves) {
         if (ShopNav.saves == savesAtStart) return@LaunchedEffect
         addedNote = tr("Added to %s", ShopNav.savedTo)
+        val h = host
+        if (h.isNotEmpty() && !Shops.isSearch(h) && !Shops.has(ctx, h) && !Shops.offered(ctx, h)) {
+            Shops.markOffered(ctx, h)
+            offer = h
+        }
         kotlinx.coroutines.delay(2500)
         addedNote = null
     }
@@ -574,6 +626,25 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
         }
     }
 
+    // Adds the site on screen to My shops: its own name when the page says it (og:site_name), else its address.
+    fun addSite(h: String) {
+        val w = web
+        scope.launch {
+            // The page on screen is that site (the offer may be for a site you have since left).
+            val cur = try { URI(w?.url ?: "").host } catch (e: Exception) { null }
+            val here = cur != null && cur.removePrefix("www.") == h
+            val named = if (!here || w == null) "" else js(w, "(document.querySelector('meta[property=\"og:site_name\"]')||{}).content||''")
+                ?.trim()?.take(30).orEmpty()
+            val raw = if (here) cur!! else h
+            Shops.add(ctx, named.ifEmpty { h.removePrefix("www.") }, "https://$raw/")
+            shopsVersion++
+            justAdded = h
+            offer = null
+            addedNote = tr("%s is in My shops", named.ifEmpty { h.removePrefix("www.") })
+            kotlinx.coroutines.delay(2500)
+            addedNote = null
+        }
+    }
     fun back() {
         val w = web
         if (w != null && w.canGoBack()) w.goBack() else onClose()
@@ -646,12 +717,40 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
         Surface(Modifier.fillMaxSize(), color = cs.background) {
             Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
                 Row(Modifier.fillMaxWidth().height(56.dp).padding(start = 4.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onClose) { Icon(AppIcons.Close, tr("Close shop")) }
-                    ShopIcon(shop, 28)
-                    Text(
+                    IconButton(onClick = onClose) { Icon(AppIcons.Close, if (search != null) tr("Close browser") else tr("Close shop")) }
+                    // The site on screen: its icon (Google's icon service, like the shop tiles).
+                    if (search == null || !Shops.isSearch(host)) ShopIcon(if (host == shop.host) shop else Shop(host, "https://$host/"), 28)
+                    if (search != null) {
+                        // From "Search in browser": what you searched; tap it to search again (owner, 7 November 2026).
+                        val focus = androidx.compose.ui.platform.LocalFocusManager.current
+                        androidx.compose.foundation.text.BasicTextField(
+                            q, { q = it.take(200) }, singleLine = true,
+                            textStyle = MaterialTheme.typography.bodyLarge.copy(color = cs.onSurface),
+                            cursorBrush = androidx.compose.ui.graphics.SolidColor(cs.primary),
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
+                            keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = {
+                                if (q.isNotBlank()) { focus.clearFocus(); web?.loadUrl(Shops.searchUrl(q)) }
+                            }),
+                            modifier = Modifier.weight(1f).padding(start = 8.dp).height(44.dp).clip(RoundedCornerShape(22.dp))
+                                .background(cs.surfaceVariant),
+                            decorationBox = { inner ->
+                                Box(Modifier.fillMaxSize().padding(horizontal = 14.dp), contentAlignment = Alignment.CenterStart) {
+                                    if (q.isEmpty()) Text(tr("Search in browser"), style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant, maxLines = 1)
+                                    inner()
+                                }
+                            }
+                        )
+                    } else Text(
                         pageTitle, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(start = 10.dp).weight(1f)
                     )
+                    // "+ My shops" while the site isn't one of yours; "✓ In My shops" right after adding it.
+                    if (!known || justAdded == host) {
+                        val added = justAdded == host
+                        TextButton(onClick = { if (!added) addSite(host) }) {
+                            Text(if (added) "✓ " + tr("In My shops") else "+ " + tr("My shops"), maxLines = 1)
+                        }
+                    }
                 }
                 if (progress in 1..99) LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth())
                 // The page fills the screen; "+ Add wish" floats over its bottom-right corner (owner, 2.120).
@@ -674,12 +773,14 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                                     override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) { progress = 10 }
                                     override fun onPageFinished(view: WebView, url: String?) {
                                         progress = 100
+                                        url?.let { u -> try { URI(u).host?.removePrefix("www.") } catch (e: Exception) { null } }?.let { host = it }
                                         view.title?.takeIf { it.isNotBlank() }?.let { pageTitle = it }
                                         checks++
                                     }
 
                                     override fun doUpdateVisitedHistory(view: WebView, url: String?, isReload: Boolean) {
                                         if (url != productAt) productAt = null
+                                        url?.let { u -> try { URI(u).host?.removePrefix("www.") } catch (e: Exception) { null } }?.let { host = it }
                                         checks++
                                     }
                                 }
@@ -722,6 +823,19 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                             style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f).padding(vertical = 12.dp)
                         )
                         TextButton(onClick = { add(anyway = true) }) { Text(tr("Add anyway"), color = cs.inversePrimary) }
+                    }
+                }
+                offer?.let { h ->
+                    Row(
+                        Modifier.fillMaxWidth().background(cs.inverseSurface).padding(start = 16.dp, end = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            tr("Add %s to My shops?", h), color = cs.inverseOnSurface, style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).padding(vertical = 12.dp)
+                        )
+                        TextButton(onClick = { addSite(h) }) { Text(tr("Add"), color = cs.inversePrimary) }
+                        IconButton(onClick = { offer = null }) { Icon(AppIcons.Close, tr("Not now"), tint = cs.inverseOnSurface) }
                     }
                 }
                 addedNote?.let { n ->

@@ -145,7 +145,7 @@ object Repo {
     val cats: List<String> get() = if (Shared.active == null) myCats else Shared.content.cats
     val listName: String
         get() = if (Shared.active == null) (if (myName == "My wishlist") tr(myName) else myName)
-        else Shared.content.name.ifBlank { tr("Gift list") }
+        else Shared.content.name.ifBlank { tr("Collab wishlist") }
     val about: String get() = if (Shared.active == null) myAbout else Shared.content.about
     /** Written on wishes you add to a shared wishlist ("Added by ..."). Empty on My wishlist. */
     val authorName: String get() = if (Shared.active == null) "" else Shared.me
@@ -194,7 +194,7 @@ object Repo {
      */
     private var copies: Map<String, Set<Long>> = emptyMap()
     /** The copies the last move to the bin took along, so Undo can put them back. */
-    private var lastCascade: Pair<Long, List<String>>? = null
+    private var cascades: Map<Long, List<String>> = emptyMap()
     /** Names of deleted lists whose wishes may still be in the bin ("gone_<time>" to name). */
     private var goneNames: Map<String, String> = emptyMap()
     /** Which of your lists a wish in the bin came from (wish id to list id); missing means "main". */
@@ -652,6 +652,35 @@ object Repo {
         mineVersion++
     }
 
+    /**
+     * Moves wishes [ids] from your list [fromId] to your list [toId] (owner, 7 November 2026), at the top, keeping their
+     * id (and so their price history). A wish that was a copy stays a copy; one the other list already has just leaves
+     * [fromId]. The reservations moved online first (MoveFlow). Returns the ids that moved.
+     */
+    @Synchronized
+    fun moveMine(c: Context, fromId: String, toId: String, ids: Set<Long>): Set<Long> {
+        if (fromId == toId || fromId !in mineIds || toId !in mineIds || ids.isEmpty()) return emptySet()
+        val moving = mine(c, fromId).wishes.filter { it.id in ids }
+        if (moving.isEmpty()) return emptySet()
+        val moved = moving.map { it.id }.toSet()
+        var had = emptySet<Long>()
+        updateMine(c, toId) { ws ->
+            had = ws.filter { it.id in moved }.map { it.id }.toSet()
+            moving.filter { it.id !in had } + ws
+        }
+        updateMine(c, fromId) { ws -> ws.filter { it.id !in moved } }
+        for (id in moved) {
+            val wasCopy = copies[fromId]?.contains(id) == true
+            copies = dropCopy(copies, fromId, id)
+            if (wasCopy && id !in had) copies = copies + (toId to (copies[toId].orEmpty() + id))
+            // The original arrived where a copy of it was: that one is the original now.
+            if (!wasCopy && id in had) copies = dropCopy(copies, toId, id)
+        }
+        persist(c)
+        mineVersion++
+        return moved
+    }
+
     /** The friends' link code and owner token of your list [id], open or not. */
     @Synchronized
     fun setShareFor(c: Context, id: String, code: String?, token: String?) {
@@ -731,14 +760,14 @@ object Repo {
         val wasCopy = copies[openMine]?.contains(id) == true
         copies = dropCopy(copies, openMine, id)
         // Removing an original also removes its copies on your other lists (removing a copy leaves the rest).
-        lastCascade = null
+        cascades = cascades - id
         if (!wasCopy) {
             val others = copies.filter { (l, ids) -> l != openMine && id in ids && l in mineIds }.keys.toList()
             for (l in others) {
                 updateMine(c, l) { ws -> ws.filter { it.id != id } }
                 copies = dropCopy(copies, l, id)
             }
-            if (others.isNotEmpty()) lastCascade = id to others
+            if (others.isNotEmpty()) cascades = cascades + (id to others)
         }
         commit(c)
         return Trashed(w, i, null)
@@ -755,14 +784,15 @@ object Repo {
         myBin = myBin.filter { it.id != t.wish.id }
         binOwner = binOwner - t.wish.id
         // Undo also brings back the copies the removal took along.
-        lastCascade?.takeIf { it.first == t.wish.id }?.let { (wid, lists) ->
+        cascades[t.wish.id]?.let { lists ->
+            val wid = t.wish.id
             val back = t.wish.copy(bin = 0L, binBy = "")
             for (l in lists) {
                 if (l !in mineIds) continue
                 updateMine(c, l) { ws -> if (ws.any { it.id == wid }) ws else listOf(back) + ws }
                 copies = copies + (l to (copies[l].orEmpty() + wid))
             }
-            lastCascade = null
+            cascades = cascades - wid
         }
         if (owner != openMine) {
             // You opened another of your lists before tapping Undo: the wish goes back to its own list.

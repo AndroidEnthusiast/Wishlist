@@ -643,7 +643,7 @@
   }
 
   function setName(raw) {
-    var n = String(raw || "").trim().slice(0, 60) || "Gift list";
+    var n = String(raw || "").trim().slice(0, 60) || "Collab wishlist";
     var before = content;
     write(before, copyWish(before, { name: n }), function () { return rpc("wl_sh_set_name", { p_key: key, p_name: n }); });
   }

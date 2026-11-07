@@ -93,7 +93,7 @@ fun GroupsHomeSection(onHome: Boolean, onOpen: (String) -> Unit, onNew: () -> Un
     val ctx = LocalContext.current
     Groups.load(ctx)
     if (Groups.groups.isEmpty() && (!onHome || Groups.invites.isEmpty())) return
-    HubTitle(tr("Your groups"), onMore = if (onHome && Groups.groups.isNotEmpty()) ({ HubNav.page = "lists" }) else null)
+    HubTitle(tr("Wishlist groups"), onMore = if (onHome && Groups.groups.isNotEmpty()) ({ HubNav.page = "lists" }) else null)
     if (onHome) Groups.invites.forEach { InviteCard(it) }
     if (Groups.groups.isEmpty()) return
     val items = Groups.groups.map { g ->

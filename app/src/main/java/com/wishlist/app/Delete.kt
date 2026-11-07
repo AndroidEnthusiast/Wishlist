@@ -19,6 +19,28 @@ object DeleteFlow {
     var undoable by mutableStateOf<Trashed?>(null)
         private set
 
+    /** Several wishes deleted at once (selected after a long press, owner 7 November 2026), for one Undo. */
+    var undoableMany by mutableStateOf<List<Trashed>?>(null)
+        private set
+
+    fun requestMany(c: Context, ws: List<Wish>) {
+        val done = ws.mapNotNull { Repo.trash(c, it.id) }
+        if (done.isEmpty()) return
+        undoable = null
+        undoableMany = done
+    }
+
+    /** Puts the wishes deleted together back where they stood (the last one deleted first). */
+    fun undoMany(c: Context) {
+        val l = undoableMany ?: return
+        undoableMany = null
+        l.asReversed().forEach { Repo.untrash(c, it) }
+    }
+
+    fun finishMany(l: List<Trashed>) {
+        if (undoableMany === l) undoableMany = null
+    }
+
     fun request(c: Context, w: Wish) {
         delete(c, w)
     }

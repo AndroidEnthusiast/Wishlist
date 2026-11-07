@@ -100,7 +100,7 @@ fun FriendScreen(
                     val m = Cloud.fetchReservations(f.code, Repo.deviceId)
                     remote = r
                     res = m
-                    FriendWatch.check(ctx, f, r, m.filterValues { it }.keys)
+                    FriendWatch.check(ctx, f, r, m.filterValues { it }.keys, FriendWatch.movedFrom(ctx, f.code, r))
                     state = "ok"
                     if (fetch == null && r.name != f.name) Repo.renameFriend(ctx, f.code, r.name)
                 }
@@ -179,7 +179,7 @@ fun FriendScreen(
                     extraAction?.invoke()
                     // The same views as your own lists, one choice for all lists (owner, 7 November 2026).
                     ViewMenuButton(Repo.view) { Repo.setView(ctx, it) }
-                    IconButton(onClick = { tick++ }) { Icon(AppIcons.Refresh, tr("Refresh")) }
+                    // No refresh button (owner, 7 November 2026): the list refreshes itself every 20 seconds.
                     if (onBack == null) IconButton(onClick = { confirmRemove = true }) { Icon(AppIcons.Delete, tr("Remove this list")) }
                 }
             )
@@ -203,17 +203,22 @@ fun FriendScreen(
                             .height(150.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp)),
                         cut = r0.cover
                     )
-                    LazyRow(
+                    // Only the categories that wishes on this list carry (owner, 7 November 2026); none at all: no row,
+                    // the wishes move up. A category that empties while you look at it falls back to All.
+                    val onList = r0.wishes.filter { it.bin == 0L }
+                    val usedCats = r0.cats.filter { c -> onList.any { it.category == c } }
+                    if (cat != "All" && cat !in usedCats) cat = "All"
+                    if (usedCats.isNotEmpty()) LazyRow(
                         contentPadding = PaddingValues(horizontal = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(listOf("All") + r0.cats) { c ->
+                        items(listOf("All") + usedCats) { c ->
                             FilterChip(selected = c == cat, onClick = { cat = c }, label = { Text(catLabel(c)) })
                         }
                     }
                     // Wishes in the owner's bin are not on the list.
                     // Owned wishes at the bottom (owner, 2.113): what's still wanted comes first.
-                    val shown = r0.wishes.filter { it.bin == 0L && (cat == "All" || it.category == cat) }.sortedBy { it.got }
+                    val shown = onList.filter { cat == "All" || it.category == cat }.sortedBy { it.got }
                     if (shown.isEmpty()) {
                         Box(Modifier.fillMaxSize().padding(32.dp), Alignment.Center) {
                             Text(tr("Nothing here yet."), color = MaterialTheme.colorScheme.onSurfaceVariant)

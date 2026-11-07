@@ -64,9 +64,18 @@ function readMyRes() {
 function writeMyRes(o) {
   try { localStorage.setItem(myResKey(), JSON.stringify(o)); } catch (e) { }
 }
-function noteGone(titles, owned, thanks) {
+function noteGone(titles, owned, thanks, moved) {
   var g = $("gone");
   g.textContent = "";
+  // Moved to another of the owner's wishlists (7 November 2026): the reservation went along, so no "pick another gift".
+  (moved || []).forEach(function (mv) {
+    g.appendChild(el("span", null, T("“{0}” moved to another of their wishlists. Your reservation moved with it.", mv.title || T("Wish"))));
+    g.appendChild(document.createTextNode(" "));
+    var a = el("a", "link", T("Open that list"));
+    a.href = "?c=" + encodeURIComponent(mv.to);
+    g.appendChild(a);
+    g.appendChild(document.createTextNode(" "));
+  });
   // The owner received it after the occasion (2.128): a thank-you instead of "pick another gift".
   (thanks || []).forEach(function (t) {
     g.appendChild(el("span", null, T("Nailed it 🎉 {0} got the {1} you picked.", list && list.owner ? String(list.owner).slice(0, 30) : T("They"), t || T("gift"))));
@@ -379,10 +388,17 @@ function confetti(box, head) {
   requestAnimationFrame(frame);
 }
 
+// The categories that wishes on this list carry (owner, 7 November 2026): an unused one isn't offered, and with none
+// at all the drop-down isn't shown.
+function usedCats() {
+  var items = ((list && list.items) || []).filter(function (w) { return !w.bin; });
+  return ((list && list.cats) || []).filter(function (c) { return items.some(function (w) { return w.cat === c; }); });
+}
+
 // The category drop-down ("All ▾"), like the app and the editor.
 function renderChips() {
   var box = $("chips");
-  var cats = (list && list.cats) || [];
+  var cats = usedCats();
   if (!cats.length) { box.hidden = true; return; }
   if (cat !== "All" && cats.indexOf(cat) < 0) cat = "All";
   box.hidden = false;
@@ -400,7 +416,7 @@ function openCatMenu() {
   var items = (list && list.items) || [];
   var box = el("div", "menu");
   box.setAttribute("role", "menu");
-  ["All"].concat(list.cats || []).forEach(function (c) {
+  ["All"].concat(usedCats()).forEach(function (c) {
     var n = c === "All" ? items.length : items.filter(function (w) { return w.cat === c; }).length;
     var b = el("button", "mitem" + (c === cat ? " b" : ""), (c === "All" ? T("All") : c) + " (" + n + ")");
     b.type = "button";
@@ -737,18 +753,36 @@ async function refresh() {
     l.sz = sz;
     // Remember what this browser reserved, and say so when one of those gifts is no longer on the list, or (owner,
     // 4 November 2026) was marked as owned, so nobody buys a duplicate.
-    var mine = readMyRes(), seen = {}, gone = [], owned = [], thanks = [];
+    var mine = readMyRes(), seen = {}, gone = [], goneIds = [], owned = [], thanks = [];
     l.items.forEach(function (w) { seen[w.id] = w; });
     Object.keys(m).forEach(function (id) { if (m[id] === true && seen[id] && !seen[id].got) mine[id] = String(seen[id].title || ""); });
     Object.keys(mine).forEach(function (id) {
       if (!seen[id] && received[id]) { thanks.push(mine[id]); delete mine[id]; }
-      else if (!seen[id]) { gone.push(mine[id]); delete mine[id]; }
+      else if (!seen[id]) { gone.push(mine[id]); goneIds.push(String(id)); delete mine[id]; }
       else if (seen[id].got) { owned.push(mine[id]); delete mine[id]; }
     });
     writeMyRes(mine);
+    // A gift that moved to another of the owner's lists (supabase-collab.sql): say where, not "gone".
+    var moved = [];
+    if (goneIds.length) {
+      var mv = [];
+      try { mv = await rpc("wl_moved_mine", { p_code: code, p_device: deviceId() }); } catch (e) { mv = []; }
+      (Array.isArray(mv) ? mv : []).forEach(function (x) {
+        var at = goneIds.indexOf(String(x && x.item));
+        if (at < 0 || !/^[A-Z0-9]{4,16}$/.test(String(x.to || ""))) return;
+        var title = gone[at];
+        moved.push({ title: title, to: String(x.to) });
+        gone.splice(at, 1); goneIds.splice(at, 1);
+        // The new list remembers this reservation too, for its own notes later.
+        try {
+          var k = "wl_res_" + x.to, o = JSON.parse(localStorage.getItem(k) || "{}") || {};
+          o[x.item] = title; localStorage.setItem(k, JSON.stringify(o));
+        } catch (e) { }
+      });
+    }
     if (window.WLT) await WLT.load(code, true);
     list = l; res = m; state = "ok";
-    if (gone.length || owned.length || thanks.length) noteGone(gone, owned, thanks);
+    if (gone.length || owned.length || thanks.length || moved.length) noteGone(gone, owned, thanks, moved);
   } catch (e) {
     if (!list) state = "offline";
   }

@@ -52,8 +52,24 @@ object FriendWatch {
      * it is fetched here). A reserved wish that friends can't see any more gives one notification. [mine] are the ids
      * reserved on this phone according to the server, when known: they are remembered too (for example after an update).
      */
+    /**
+     * Reserved wishes that left list [code] for another of the owner's lists (moved, supabase-collab.sql): wish id to
+     * the new list's code. Only asked when a remembered reservation is missing from [list]; nothing when offline.
+     */
+    suspend fun movedFrom(c: Context, code: String, list: RemoteList): Map<Long, String> {
+        val visible = list.wishes.filter { it.bin == 0L && !it.priv }.map { it.id }.toSet()
+        if (read(c, code).keys.all { it in visible }) return emptyMap()
+        return try {
+            val a = org.json.JSONArray(Cloud.rpc("wl_moved_mine", JSONObject().put("p_code", code).put("p_device", Repo.deviceId)))
+            (0 until a.length()).map { a.getJSONObject(it) }.associate { it.optLong("item") to it.optString("to") }
+                .filterValues { it.isNotBlank() }
+        } catch (e: Exception) {
+            emptyMap()
+        }
+    }
+
     @Synchronized
-    fun check(c: Context, f: Friend, list: RemoteList, mine: Set<Long> = emptySet()) {
+    fun check(c: Context, f: Friend, list: RemoteList, mine: Set<Long> = emptySet(), moved: Map<Long, String> = emptyMap()) {
         val visible = list.wishes.filter { it.bin == 0L && !it.priv }.associateBy { it.id }
         var m = read(c, f.code)
         val label = list.owner.takeIf { it.isNotBlank() }?.let { tr("%s’s wishlist", it) } ?: list.name.ifBlank { f.name }
@@ -64,6 +80,15 @@ object FriendWatch {
             val now = visible[id]
             // Still on the list and not owned: nothing to say.
             if (now != null && !now.got) continue
+            // Moved to another of the friend's lists (owner, 7 November 2026): the reservation went along, so this
+            // phone follows it there quietly instead of saying it's gone.
+            val to = moved[id]
+            if (now == null && to != null && to != f.code) {
+                write(c, to, read(c, to) + (id to title))
+                if (label(c, to).isBlank()) label(c, f.code).takeIf { it.isNotBlank() }?.let { prefs(c).edit().putString("fresn_$to", it).apply() }
+                m = m - id
+                continue
+            }
             // Received by the friend after the occasion (2.128): a thank-you, not "pick another gift".
             val recv = list.wishes.firstOrNull { it.id == id && it.recv > 0L }
             if (recv != null) {
@@ -95,7 +120,7 @@ object FriendWatch {
             } catch (e: Exception) {
                 null
             } ?: continue
-            check(c, f, list)
+            check(c, f, list, moved = movedFrom(c, f.code, list))
         }
     }
 }

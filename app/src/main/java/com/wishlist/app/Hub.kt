@@ -217,8 +217,8 @@ fun HubScreen(
         GroupsHomeSection(onHome, onOpenWishGroup, onNewWishGroup)
 
         if (groupItems.isNotEmpty()) {
-            HubTitle(tr("Your gift lists"), onMore = more)
-            HubBlocks(byRecent(groupItems), onHome, ::actionsOf, onAddTo, tr("New gift list"), if (onHome) onNewGroup else null)
+            HubTitle(tr("Collab wishlists"), onMore = more)
+            HubBlocks(byRecent(groupItems), onHome, ::actionsOf, onAddTo, tr("New collab wishlist"), if (onHome) onNewGroup else null)
         }
     }
 
@@ -241,7 +241,7 @@ fun HubScreen(
                 .padding(bottom = 32.dp)
         ) {
             // Your picture and name, and the numbers (2.89: the cover photo card is gone).
-            ProfileSummary(onProfile, onFriends, onReserved, onAddWish)
+            ProfileSummary(onProfile, onFriends, onAddWish)
 
             // (The shops moved to their own tab, Discover, owner 7 November 2026.)
             ListsSection(onHome = true)
@@ -586,6 +586,13 @@ internal fun ListBlock(
                     )
                     // Wishes, but none with a photo (or still loading).
                     else -> PlaceholderIcon(if (item.group) "group" else "gift", if (small) 26.dp else 40.dp)
+                }
+                // Who is on a collab wishlist (owner, 7 November 2026): small circles in the bottom right corner.
+                if (item.key.startsWith("s:") && !small) {
+                    val ctx = LocalContext.current
+                    val code = item.key.substringAfter(':')
+                    val ws = remember(code, Shared.content, item.count) { Shared.cachedWishes(ctx, code) }
+                    PeopleCircles(code, ws, Modifier.align(Alignment.BottomEnd).padding(6.dp))
                 }
             }
         }

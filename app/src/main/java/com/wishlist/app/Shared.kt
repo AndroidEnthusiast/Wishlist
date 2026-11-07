@@ -618,7 +618,7 @@ object Shared {
 
     /** Creator only: a new edit key. The old invite link stops working. Returns the new key. */
     suspend fun resetKey(c: Context): String {
-        val l = current ?: throw CloudException(tr("No gift list is open."))
+        val l = current ?: throw CloudException(tr("No collab wishlist is open."))
         if (l.owner.isEmpty()) throw CloudException(tr("Only the person who made this list can do that."))
         val nk = Sync.newKey()
         Cloud.shReset(l.code, l.owner, nk)

@@ -56,7 +56,7 @@ object Alerts {
         ch(MESSAGES_CHANNEL, tr("Messages"), tr("New messages from your friends"))
         ch(EXCHANGE_CHANNEL, tr("Gift exchange"), tr("Invitations, names drawn, anonymous messages and the exchange day"))
         ch(OCC_CHANNEL, tr("Occasions"), tr("Reminders around birthdays and other occasions"))
-        ch(GIFTLIST_CHANNEL, tr("Gift list invitations"), tr("A Friend invites you to plan gifts together"))
+        ch(GIFTLIST_CHANNEL, tr("Collab wishlist invitations"), tr("A Friend invites you to plan gifts together"))
         ch(REACT_CHANNEL, tr("Reactions"), tr("Once a day: who reacted to your wishes"))
     }
 
@@ -74,7 +74,7 @@ object Alerts {
         return listOfNotNull(
             if (off(BIN_CHANNEL)) tr("Notifications about gifts you reserved are off. You’ll miss important updates about them.") else null,
             if (off(GROUPS_CHANNEL)) tr("Group notifications are off. You’ll miss invitations.") else null,
-            if (off(GIFTLIST_CHANNEL)) tr("Gift list invitations are off. You’ll miss invitations from Friends.") else null,
+            if (off(GIFTLIST_CHANNEL)) tr("Collab wishlist invitations are off. You’ll miss invitations from Friends.") else null,
             if (off(EXCHANGE_CHANNEL)) tr("Gift exchange notifications are off. You’ll miss invitations and the draw.") else null
         )
     }
@@ -156,8 +156,7 @@ object Alerts {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pi)
             .setAutoCancel(true)
-            .build()
-        (c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(id, n)
+        NotifyPace.post(c, id, n)
     }
 
     /** Title says a price dropped, the text says which item and by how much. During a check: told afterwards. */
@@ -188,8 +187,7 @@ object Alerts {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pi)
             .setAutoCancel(true)
-            .build()
-        (c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(id, n)
+        NotifyPace.post(c, id, n)
     }
 
     /** A price went up (only when switched on in Settings). Title and text like [notifyDrop]. */
@@ -213,8 +211,7 @@ object Alerts {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pi)
             .setAutoCancel(true)
-            .build()
-        (c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(id, n)
+        NotifyPace.post(c, id, n)
     }
 
     /** Checks the bins every half hour, for "your reserved gift has been moved to the bin" (see Bin.kt), and once now. */
@@ -239,7 +236,8 @@ object Alerts {
         Notifications.add(c, "gift_lost", listKey, title, image, id, amount = if (owned) 1.0 else 0.0, extra = place)
         ensureChannel(c)
         val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val nid = code.hashCode() * 31 + id.hashCode() + 11
+        // One notification per list (owner, 7 November 2026): "3 gifts you reserved are no longer on Sam’s wishlist".
+        val nid = listKey.hashCode() * 31 + 11
         val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_NOTE, listKey).note("gift_lost", listKey, id)
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val pi = PendingIntent.getActivity(c, nid, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
@@ -252,11 +250,13 @@ object Alerts {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pi)
             .setAutoCancel(true)
-            .build()
-        nm.notify(nid, n)
+        NotifyPace.post(c, nid, n, NotifyPace.Bundle(
+            "lost:$listKey", if (owned) tr("“%s” is already owned", title) else tr("“%s” was removed", title),
+            { k -> tr("%1\$d gifts you reserved are no longer on %2\$s", k, place) }
+        ))
     }
 
-    private fun post(c: Context, channel: String, nid: Int, open: Intent, title: String, text: String) {
+    private fun post(c: Context, channel: String, nid: Int, open: Intent, title: String, text: String, bundle: NotifyPace.Bundle? = null) {
         ensureChannel(c)
         val pi = PendingIntent.getActivity(c, nid, open.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val n = NotificationCompat.Builder(c, channel)
@@ -267,8 +267,7 @@ object Alerts {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pi)
             .setAutoCancel(true)
-            .build()
-        (c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(nid, n)
+        NotifyPace.post(c, nid, n, bundle)
     }
 
     /** "7 days to Sam’s birthday 🎈" (owner, 2.128, playful): [what] is "Sam’s birthday" or “Mum’s 60th”. */
@@ -295,7 +294,8 @@ object Alerts {
         val text = tr("%1\$s got the %2\$s you picked.", who, gift)
         Notifications.add(c, "thanks", "c:$code", tr("Nailed it 🎉"), wishId = id, extra = text)
         val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_NOTE, "c:$code").note("thanks", "c:$code", id)
-        post(c, BIN_CHANNEL, code.hashCode() * 31 + id.hashCode() + 43, open, tr("Nailed it 🎉"), text)
+        post(c, BIN_CHANNEL, code.hashCode() * 31 + 43, open, tr("Nailed it 🎉"), text,
+            NotifyPace.Bundle("thanks:$code", text, { k -> tr("Nailed it 🎉 %d gifts you picked were received", k) }))
     }
 
     /** #6 (owner, 2.128): the day after your list's occasion, "Did your wishes come true? ✨". Opens "What did you get?". */
@@ -320,7 +320,8 @@ object Alerts {
         if (request && !Show.on(c, "nt_req")) return
         ensureChannel(c)
         val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val nid = id.hashCode() * 31 + (if (request) 13 else 17)
+        // Requests in one notification, approvals in another (owner, 7 November 2026: bundled per kind).
+        val nid = if (request) 7_000_201 else 7_000_202
         val who = name.ifBlank { tr("Someone") }
         val title = if (request) tr("%s wants to be your friend", who) else tr("%s approved your friend request", who)
         val text = if (request) tr("Open Friends to approve or decline.") else tr("You can now see the wishlists %s shares with friends.", who)
@@ -336,8 +337,10 @@ object Alerts {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pi)
             .setAutoCancel(true)
-            .build()
-        nm.notify(nid, n)
+        NotifyPace.post(c, nid, n, NotifyPace.Bundle(
+            if (request) "fr_req" else "fr_ok", title,
+            { k -> if (request) tr("%d people want to be your friend", k) else tr("%d friend requests approved", k) }
+        ))
     }
 
     /** A friend's birthday is in [days] days (2.95). Tapping opens that friend's page. */
@@ -345,7 +348,7 @@ object Alerts {
         if (!Show.on(c, "nt_bday")) return
         ensureChannel(c)
         val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val nid = id.hashCode() * 31 + 19
+        val nid = 7_000_205
         val who = name.ifBlank { tr("Someone") }
         val title = tr("%1\$s’s birthday is in %2\$d days", who, days)
         val text = tr("Have a look at %s’s wishlist for a gift they’ll love.", who)
@@ -360,8 +363,10 @@ object Alerts {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pi)
             .setAutoCancel(true)
-            .build()
-        nm.notify(nid, n)
+        NotifyPace.post(c, nid, n, NotifyPace.Bundle(
+            "bday", title, { k -> tr("%d friends have a birthday coming up", k) },
+            Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_FRIENDS, true)
+        ))
     }
 
     /**
@@ -372,7 +377,8 @@ object Alerts {
         // Always told (owner, 2.126: invitations can't be switched off).
         ensureChannel(c)
         val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val nid = (gid + title).hashCode() * 31 + 29
+        // All group news in one notification while it shows (owner, 7 November 2026).
+        val nid = 7_000_203
         val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_GROUP, gid).note(noteKind, noteList)
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val pi = PendingIntent.getActivity(c, nid, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
@@ -384,8 +390,9 @@ object Alerts {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pi)
             .setAutoCancel(true)
-            .build()
-        nm.notify(nid, n)
+        NotifyPace.post(c, nid, n, NotifyPace.Bundle(
+            "groups", title, { k -> tr("%d updates about your wishlist groups", k) }, NotifyPace.notesIntent(c)
+        ))
     }
 
     /**
@@ -395,7 +402,8 @@ object Alerts {
     fun notifyExchange(c: Context, gx: String, title: String, text: String, noteKind: String = "", noteList: String = "", msg: Boolean = false) {
         ensureChannel(c)
         val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val nid = (gx + (if (msg) "msg" else title)).hashCode() * 31 + 37
+        // Per exchange: its messages in one notification, its other news in another (owner, 7 November 2026).
+        val nid = (gx + (if (msg) "msg" else "news")).hashCode() * 31 + 37
         val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_EXCHANGE, gx).note(noteKind, noteList)
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val pi = PendingIntent.getActivity(c, nid, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
@@ -407,8 +415,10 @@ object Alerts {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pi)
             .setAutoCancel(true)
-            .build()
-        nm.notify(nid, n)
+        NotifyPace.post(c, nid, n, NotifyPace.Bundle(
+            "gx:$gx:" + (if (msg) "msg" else "news"), if (msg) text else title,
+            { k -> if (msg) tr("%d new anonymous messages", k) else tr("%d updates in your gift exchange", k) }
+        ))
     }
 
     /**
@@ -417,7 +427,7 @@ object Alerts {
      */
     fun notifyGiftInvite(c: Context, code: String, who: String, name: String) {
         ensureChannel(c)
-        val nid = code.hashCode() * 31 + 53
+        val nid = 7_000_204
         val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_NOTE, "i:$code").note("gl_invite", "i:$code")
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val pi = PendingIntent.getActivity(c, nid, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
@@ -433,8 +443,9 @@ object Alerts {
             .setColor(0xFFFF7AA2.toInt())
             .setContentIntent(pi)
             .setAutoCancel(true)
-            .build()
-        (c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(nid, n)
+        NotifyPace.post(c, nid, n, NotifyPace.Bundle(
+            "gl_inv", title, { k -> tr("%d invitations to collab wishlists", k) }, NotifyPace.notesIntent(c)
+        ))
     }
 
     /** People reacted to your wishes (owner: bundled, at most one a day, in the evening). Tapping opens the list. */
@@ -450,8 +461,7 @@ object Alerts {
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pi)
             .setAutoCancel(true)
-            .build()
-        (c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(59, n)
+        NotifyPace.post(c, 59, n)
     }
 
     /**
@@ -482,7 +492,7 @@ object Alerts {
             b.addAction(0, tr("Yes, I’m buying it"), answer(true))
             b.addAction(0, tr("Let someone else"), answer(false))
         }
-        (c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(nid, b.build())
+        NotifyPace.post(c, nid, b)
     }
 
     fun cancel(c: Context, nid: Int) {
@@ -534,8 +544,9 @@ object Alerts {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pi)
             .setAutoCancel(true)
-            .build()
-        nm.notify(nid, n)
+        NotifyPace.post(c, nid, n, NotifyPace.Bundle(
+            "msg:$id", text, { k -> tr("%1\$s · %2\$d new messages", name.ifBlank { tr("Someone") }, k) }
+        ))
     }
 
     /** The chat with [id] was seen: its message notification goes. */

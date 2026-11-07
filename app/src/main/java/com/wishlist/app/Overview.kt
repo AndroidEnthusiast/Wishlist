@@ -135,19 +135,17 @@ private fun placedWishes(): List<Placed> {
 }
 
 /**
- * Your picture on the left; next to it your name in a heading size and under it the three tiles (owner, 2.134: the
- * most interesting ones, each tappable; layout of 7 November 2026): Wishes (all your wishes), Friends (the Friends
- * tab) and Reserved (gifts you reserved, "Gifts I reserved"). At 0 a tile invites: "+ Add wish", "+ Add friends".
+ * Your picture on the left; next to it your name in a heading size and under it the three tiles (owner, 7 November
+ * 2026): Friends (the Friends tab), Wishes (all your wishes) and Total value (what your own wishlists still wish for,
+ * collab wishlists left out; only a number, no tap). At 0 a tile invites: "+ Add friends", "+ Add wish".
  */
 @Composable
-fun ProfileSummary(onProfile: () -> Unit, onFriends: () -> Unit = {}, onReserved: () -> Unit = {}, onAddWish: () -> Unit = {}) {
+fun ProfileSummary(onProfile: () -> Unit, onFriends: () -> Unit = {}, onAddWish: () -> Unit = {}) {
     val ctx = LocalContext.current
     Friends.load(ctx)
     val all = placedWishes()
     val friends = Friends.state?.friends?.size ?: 0
-    // What the phone remembers at once, then checked online (gift lists included).
-    var reserved by remember { mutableIntStateOf(ReservedGifts.remembered(ctx).sumOf { it.titles.size }) }
-    LaunchedEffect(Unit) { try { reserved = ReservedGifts.load(ctx).sumOf { it.titles.size } } catch (e: Exception) {} }
+    val total = homeTotal(all.map { it.w })
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -162,12 +160,35 @@ fun ProfileSummary(onProfile: () -> Unit, onFriends: () -> Unit = {}, onReserved
                 modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onProfile).padding(horizontal = 2.dp)
             )
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Stat(all.size, if (all.size == 1) tr("Wish") else tr("Wishes"), Modifier.weight(1f), tr("Add wish"), onAddWish) { HubNav.page = "wishes" }
-                Stat(friends, if (friends == 1) tr("Friend") else tr("Friends"), Modifier.weight(1f), if (Config.enabled) tr("Add friends") else null, onFriends, onFriends)
-                Stat(reserved, tr("Reserved"), Modifier.weight(1f), onClick = onReserved)
+                Stat(friends.toString(), friends == 0, if (friends == 1) tr("Friend") else tr("Friends"), Modifier.weight(1f), if (Config.enabled) tr("Add friends") else null, onFriends, onFriends)
+                Stat(all.size.toString(), all.isEmpty(), if (all.size == 1) tr("Wish") else tr("Wishes"), Modifier.weight(1f), tr("Add wish"), onAddWish) { HubNav.page = "wishes" }
+                Stat(total, false, tr("Total value"), Modifier.weight(1f), onClick = null)
             }
         }
     }
+}
+
+/**
+ * Home's "Total value" (owner, 7 November 2026): the wishes your own wishlists still wish for (not owned, a 2× wish
+ * twice, private wishes too, a copied wish once; collab wishlists are not in [ws]). Amounts in other currencies can't
+ * be added up without exchange rates: the tile shows the currency with the biggest amount and a "+" when there are
+ * others. No prices at all: 0 in your currency.
+ */
+internal fun homeTotal(ws: List<Wish>): String {
+    val sums = ws.filter { !it.got && it.bin == 0L && it.price != null }.groupBy { it.currency }
+        .map { (cur, l) -> cur to l.sumOf { (it.price ?: 0.0) * it.qty.coerceAtLeast(1) } }
+        .sortedByDescending { it.second }
+    if (sums.isEmpty()) return wholeMoney(0.0, localCurrency())
+    return wholeMoney(sums[0].second, sums[0].first) + if (sums.size > 1) "+" else ""
+}
+
+/** An amount without cents ("€1,245"), so it fits a small tile. */
+internal fun wholeMoney(p: Double, cur: String): String = try {
+    java.text.NumberFormat.getCurrencyInstance().apply {
+        currency = java.util.Currency.getInstance(cur); maximumFractionDigits = 0; minimumFractionDigits = 0
+    }.format(Math.round(p))
+} catch (e: Exception) {
+    Math.round(p).toString()
 }
 
 /**
@@ -191,23 +212,28 @@ fun Modifier.statTile(): Modifier {
     }
 }
 
-/** One tile: the number and its label; at 0 with an [invite], a "+" and the invite in the accent colour instead. */
+/**
+ * One tile: the number (or amount) and its label; at 0 ([zero]) with an [invite], a "+" and the invite in the accent
+ * colour instead. [onClick] null: only shown, not tappable (Total value).
+ */
 @Composable
 private fun Stat(
-    n: Int, label: String, modifier: Modifier = Modifier, invite: String? = null, onInvite: () -> Unit = {},
-    onClick: () -> Unit
+    value: String, zero: Boolean, label: String, modifier: Modifier = Modifier, invite: String? = null, onInvite: () -> Unit = {},
+    onClick: (() -> Unit)?
 ) {
     val look = LocalLook.current
-    val inviting = n == 0 && invite != null
+    val inviting = zero && invite != null
+    val tap = if (inviting) onInvite else onClick
     Column(
-        modifier.statTile().clickable(onClick = if (inviting) onInvite else onClick).padding(horizontal = 4.dp, vertical = 4.dp),
+        modifier.statTile().then(if (tap != null) Modifier.clickable(onClick = tap) else Modifier)
+            .padding(horizontal = 4.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // The tile's own ink (dark on the bright cards of some styles) and the style's display font for the number.
         val ink = if (inviting) MaterialTheme.colorScheme.primary else look.cardInk(5L)
         Text(
-            if (inviting) "+" else n.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
-            fontFamily = look.display, color = ink, maxLines = 1
+            if (inviting) "+" else value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
+            fontFamily = look.display, color = ink, maxLines = 1, overflow = TextOverflow.Ellipsis
         )
         Text(
             if (inviting) invite!! else label, style = MaterialTheme.typography.bodySmall,

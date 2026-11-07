@@ -44,6 +44,17 @@ fun DeleteHost(snack: SnackbarHostState) {
         )
         if (r == SnackbarResult.ActionPerformed) DeleteFlow.undo(ctx) else DeleteFlow.finish(t)
     }
+    val many = DeleteFlow.undoableMany
+    LaunchedEffect(many) {
+        if (many == null) return@LaunchedEffect
+        snack.currentSnackbarData?.dismiss()
+        val r = snack.showToast(
+            message = if (many.size == 1) tr("Wish moved to the bin") else tr("%d wishes moved to the bin", many.size),
+            actionLabel = tr("Undo"),
+            duration = SnackbarDuration.Short
+        )
+        if (r == SnackbarResult.ActionPerformed) DeleteFlow.undoMany(ctx) else DeleteFlow.finishMany(many)
+    }
 }
 
 private fun shorten(s: String): String = if (s.length <= 40) s else s.take(39).trimEnd() + "…"

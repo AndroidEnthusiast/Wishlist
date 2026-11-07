@@ -96,7 +96,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                     Column {
                         Text(Repo.listName, fontWeight = LocalLook.current.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(
-                            if (shared != null) tr("Gift list") else tr("Wishlist settings"),
+                            if (shared != null) tr("Collab wishlist") else tr("Wishlist settings"),
                             style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
                         )
                     }

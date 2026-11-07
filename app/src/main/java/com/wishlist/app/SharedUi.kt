@@ -55,7 +55,7 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
     AlertDialog(
         onDismissRequest = { if (!busy) onClose() },
         properties = DialogProperties(dismissOnClickOutside = false),
-        title = { Text(tr("Create a gift list for someone")) },
+        title = { Text(tr("Create a collab wishlist")) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
@@ -63,7 +63,7 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 OutlinedTextField(
-                    name, { name = it.take(60); if (it.isNotBlank()) missing = false }, label = { Text(tr("Gift list name*")) },
+                    name, { name = it.take(60); if (it.isNotBlank()) missing = false }, label = { Text(tr("Collab wishlist name*")) },
                     placeholder = { Text(tr("Baby registry")) }, singleLine = true, isError = missing,
                     supportingText = if (missing) ({ Text(tr("What is this wishlist called?")) }) else null,
                     modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
@@ -163,7 +163,7 @@ fun JoinDialog(key: String, onJoined: (String) -> Unit, onClose: () -> Unit) {
         onDismissRequest = { if (!joining) onClose() },
         // Only the buttons close this, so a tap next to it doesn't lose the invitation.
         properties = DialogProperties(dismissOnClickOutside = false),
-        title = { Text(if (name != null) tr("Join “%s”?", name) else tr("Invitation to a gift list")) },
+        title = { Text(if (name != null) tr("Join “%s”?", name) else tr("Invitation to a collab wishlist")) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (name != null) {

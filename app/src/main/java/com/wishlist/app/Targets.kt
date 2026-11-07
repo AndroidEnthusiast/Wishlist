@@ -101,8 +101,7 @@ object Targets {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pi)
             .setAutoCancel(true)
-            .build()
-        (c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(id, n)
+        NotifyPace.post(c, id, n)
     }
 }
 

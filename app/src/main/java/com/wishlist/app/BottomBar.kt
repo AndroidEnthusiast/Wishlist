@@ -208,7 +208,7 @@ fun CreateChoiceDialog(onMine: () -> Unit, onGroup: () -> Unit, onWishGroup: () 
         text = {
             Column {
                 Choice(tr("My wishlist"), tr("Things you’d love to get.")) { onMine() }
-                Choice(tr("Gift list"), tr("Collect gift ideas for someone with others.")) { onGroup() }
+                Choice(tr("Collab wishlist"), tr("Collect gift ideas for someone with others.")) { onGroup() }
                 Choice(tr("Group"), tr("See each other’s wishlists.")) { onWishGroup() }
             }
         },
