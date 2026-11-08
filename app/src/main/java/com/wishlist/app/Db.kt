@@ -16,9 +16,9 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 /*
- * The database on the phone (ROADMAP Stage 2, Room = Android's own SQLite library). Version A (2.165): the tables
- * exist and are checked, but nothing is stored in them yet: the app still reads and writes the settings store
- * (SharedPreferences, Data.kt, MyLists.kt). Version B moves the data over in one transaction (S2.3).
+ * The database on the phone (ROADMAP Stage 2, Room = Android's own SQLite library). 2.165 made the tables, 2.166
+ * copied the data in as a rehearsal, and since 2.167 your lists and wishes are read from here (ListStore.kt); the
+ * settings store is still written as the fallback until the owner's OK (S2.5).
  *
  * One row per thing instead of one big text per list: a wish is a row of `wishes` (a wish copied into another list is
  * a second row with the same id), so saving one wish never rewrites a whole list, and a save is all or nothing.
@@ -188,19 +188,12 @@ abstract class WishlistDb : RoomDatabase() {
     companion object {
         @Volatile private var db: WishlistDb? = null
 
+        /** For the checks: a new pretend phone gets its own database file. */
+        internal fun reset() { db?.close(); db = null }
+
         /** The app's one database, "wishlist.db" in the app's own folder. */
         fun get(c: Context): WishlistDb = db ?: synchronized(this) {
             db ?: Room.databaseBuilder(c.applicationContext, WishlistDb::class.java, "wishlist.db").build().also { db = it }
-        }
-
-        /**
-         * Version A (2.165): opens the database once in the background, so a phone that can't create it shows up in the
-         * crash reports before any data is moved. Nothing is read or written.
-         */
-        fun warmUp(c: Context) {
-            Thread {
-                try { get(c).dao().countLists() } catch (e: Throwable) { Crash.report(e) }
-            }.start()
         }
     }
 }

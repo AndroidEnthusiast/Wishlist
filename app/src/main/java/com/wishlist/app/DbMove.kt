@@ -6,11 +6,10 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /*
- * Moving your data into the database (ROADMAP S2.3). Version B (2.166) is a rehearsal: at every start the app copies
- * everything from the settings store (SharedPreferences) into the database in ONE transaction and checks that every
- * count matches, but it keeps reading and writing the settings store as before. So the copy is always fresh, the old
- * data is never touched (only read), and a failure changes nothing: the transaction is undone and the crash reports
- * say why. Version C switches the screens over to the database, on top of a copy that has already worked many times.
+ * Moving your data into the database (ROADMAP S2.3). [copy] replaces the database's contents with what the settings
+ * store (SharedPreferences) holds, in ONE transaction, and checks every count inside it: a mismatch undoes it all.
+ * 2.166 ran it as a rehearsal at every start; since 2.167 ListStore runs it the first time and after every change
+ * (the settings store is still written as the fallback), and reads your lists from the database.
  *
  * What moves: your own lists (name, note, link, categories), their wishes in order, the bin (with the list each wish
  * came from), the categories, the price history, friends' lists and the Notifications page. Settings, the profile,
@@ -120,18 +119,5 @@ object DbMove {
             count = c
         }
         return count!!
-    }
-
-    /** Version B: the rehearsal at every start, in the background. A failure is reported and changes nothing. */
-    fun rehearse(c: Context) {
-        Thread {
-            try {
-                val p = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
-                val version = try { c.packageManager.getPackageInfo(c.packageName, 0).versionName.orEmpty() } catch (e: Exception) { "" }
-                copy(WishlistDb.get(c), snapshot(p), version)
-            } catch (e: Throwable) {
-                Crash.report(IllegalStateException("Copying the data into the database failed", e))
-            }
-        }.start()
     }
 }

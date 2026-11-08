@@ -63,9 +63,6 @@ class MainActivity : ComponentActivity() {
         Alerts.ensureChannel(this)
         Alerts.schedule(this, Repo.intervalHours, false)
         Alerts.scheduleBin(this)
-        // Stage 2, version B: a fresh copy of your data into the database at every start, checked, while the app still
-        // uses the settings store (DbMove.kt). A failure is reported and changes nothing.
-        if (!Crash.onComputer) DbMove.rehearse(this)
         Sync.push()
         // Edge to edge (owner, 2.102): the app draws behind the system bars and handles them itself. Before, Android
         // shrank the whole window for the keyboard ("adjustResize"), also for a keyboard that was still closing in

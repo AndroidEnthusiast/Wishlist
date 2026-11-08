@@ -51,6 +51,8 @@ abstract class NavigationBase {
         // No welcome, no background question and a name, so no pop-up covers the screens.
         app.getSharedPreferences("wishlist", Context.MODE_PRIVATE).edit()
             .putBoolean("welcomed", true).putBoolean("asked_background", true).putString("sh_me", "Sam").commit()
+        // A new pretend phone: its own database (the app keeps both in objects between checks in one process).
+        ListStore.reset(); WishlistDb.reset()
         Repo.load(app)
         HubNav.page = null
         FriendsNav.reset()

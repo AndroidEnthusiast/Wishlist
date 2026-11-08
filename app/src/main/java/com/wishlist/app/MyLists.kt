@@ -52,6 +52,8 @@ object MyLists {
 
     /** Reads a list from the phone's storage (not the open one: that one is in Repo). */
     fun read(p: SharedPreferences, id: String, keep: Boolean = true): MineData {
+        // Since 2.167 your lists come from the database (ListStore); [keep] false reads the settings store itself.
+        if (keep) ListStore.get(id)?.let { return it }
         if (id == MAIN_LIST) {
             return MineData(
                 MAIN_LIST,
@@ -82,6 +84,7 @@ object MyLists {
 
     /** Writes a list into the editor (the caller applies it). */
     fun write(e: SharedPreferences.Editor, d: MineData) {
+        ListStore.put(d)
         val arr = JSONArray()
         d.wishes.forEach { arr.put(wishToJson(it)) }
         if (d.id == MAIN_LIST) {

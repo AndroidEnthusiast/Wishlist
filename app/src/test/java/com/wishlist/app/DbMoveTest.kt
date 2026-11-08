@@ -140,5 +140,13 @@ class DbMoveTest {
         Repo.load(c)
         assertEquals(Repo.allMine(c).map { it.id to it.wishes.size }, s.lists.map { it.id to it.wishes.size })
         println("REAL EXPORT: $count; lists ${s.lists.map { it.wishes.size }}")
+        // Version C1: the app's own start moves it into its database and then reads it back: it must match, twice.
+        ListStore.reset(); WishlistDb.reset()
+        ListStore.start(c)
+        assertEquals(true, ListStore.matched)
+        ListStore.reset(); ListStore.start(c)
+        assertEquals(true, ListStore.matched)
+        assertEquals(s.lists.single { it.id == MAIN_LIST }.wishes, MyLists.read(prefs, MAIN_LIST).wishes)
+        ListStore.reset(); WishlistDb.reset()
     }
 }

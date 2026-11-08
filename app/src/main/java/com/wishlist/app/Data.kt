@@ -220,6 +220,8 @@ object Repo {
         CurrencyChoice.load(c) // App settings > Prices (2.122)
         if (loaded) return
         loaded = true
+        // Your lists and wishes come from the database (ListStore, 2.167), checked against the settings store.
+        ListStore.start(c)
         val p = prefs(c)
         myWishes = SafeStore.readList(p, "wishes") { wishFromJson(it) }
         myBin = SafeStore.readList(p, "bin") { wishFromJson(it) }
@@ -316,10 +318,10 @@ object Repo {
         heroEdit = HeroEdit.fromJson(p.getString("hero_edit", null))
         heroCut = p.getString("hero_cut", "") ?: ""
         val open = p.getString("mine_open", MAIN_LIST) ?: MAIN_LIST
-        if (open != MAIN_LIST && open in mineIds) {
-            applyMine(MyLists.read(p, open))
-            openMine = open
-        }
+        // The open list as ListStore has it (the database's copy); the main list's own keys were read above as before.
+        val first = if (open != MAIN_LIST && open in mineIds) open else MAIN_LIST
+        applyMine(MyLists.read(p, first))
+        openMine = first
         mineNames = mineIds.associateWith { MyLists.read(p, it).name }
         // One set of categories for all your own lists (owner, 2.95): the first time, every list gets them all.
         if (!p.getBoolean("cats_merged", false)) {
