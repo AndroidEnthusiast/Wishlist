@@ -13,11 +13,14 @@ import androidx.navigation.NavController
  * on/off switches in [App] having to know about it.
  *
  * Moved so far: Profile, App settings, Bin, Notifications (2.154); Received gifts, Gifts I reserved, Price changes and
- * a list's settings (2.156); a friend's list opened from a link or code (2.157). Everything else (Home, the tabs, a list, a friend's list, groups, gift exchanges) still
- * lives on [MAIN] with its switches, and moves over one screen at a time. Each move adds its name here.
+ * a list's settings (2.156); a friend's list opened from a link or code (2.157); the tabs Messages, My shops and
+ * Friends (2.158). Everything else (Home, a list, groups, gift exchanges) still lives on [MAIN] with its switches,
+ * and moves over one screen at a time. Each move adds its name here.
+ *
+ * The back stack is at most three deep: [MAIN], then perhaps one tab, then perhaps one screen on top.
  */
 object Route {
-    /** Home, the tabs and the lists: the screens that haven't moved yet. Always at the bottom of the back stack. */
+    /** Home and the lists: the screens that haven't moved yet. Always at the bottom of the back stack. */
     const val MAIN = "main"
     const val PROFILE = "profile"
     const val SETTINGS = "settings"
@@ -29,6 +32,12 @@ object Route {
     /** The settings of the list open on [MAIN] (its ⚙). */
     const val LIST_SETTINGS = "list-settings"
 
+    /** The bottom bar's tabs; Home is [MAIN]. A tab sits right on top of [MAIN], so Back on it goes Home. */
+    const val MESSAGES = "messages"
+    const val SHOPS = "shops"
+    const val FRIENDS = "friends"
+    val tabs = listOf(MESSAGES, SHOPS, FRIENDS)
+
     /** A list someone else owns, opened from its link or code (not through Friends): `friend/<code>`. */
     const val FRIEND = "friend/{code}"
     fun friend(code: String) = "friend/" + android.net.Uri.encode(code)
@@ -38,16 +47,36 @@ object Route {
 }
 
 /**
- * Opens one of [Route.onTop] over the screen on [Route.MAIN]: Back returns to that screen, just as you left it. Only
- * one of them is open at a time (as before: Profile, then Bin from the sheet, then Back goes to where you started), and
+ * Opens one of [Route.onTop] over Home, a list or a tab: Back returns to that screen, just as you left it. Only one of
+ * them is open at a time (as before: Profile, then Bin from the sheet, then Back goes to where you started), and
  * opening the one already on screen does nothing.
  */
 fun NavController.openOnTop(route: String) {
+    // The tab underneath stays (Profile from Friends goes back to Friends); otherwise Home or the list.
+    val base = Route.tabs.firstOrNull { has(it) } ?: Route.MAIN
     navigate(route) {
-        popUpTo(Route.MAIN)
+        popUpTo(base)
         // A route with a value (a friend's list) is a new screen for each value; the others open once.
         launchSingleTop = '/' !in route
     }
+}
+
+/**
+ * Opens a tab of the bottom bar over Home or the list (whatever was on top closes). Its place inside the tab (a
+ * friend's page, a chat) lives in FriendsNav and ChatNav, so it opens where you left it (owner, 8 November 2026).
+ */
+fun NavController.openTab(tab: String) {
+    navigate(tab) {
+        popUpTo(Route.MAIN)
+        launchSingleTop = true
+    }
+}
+
+/** Whether this route is in the back stack. */
+private fun NavController.has(route: String): Boolean = try {
+    getBackStackEntry(route); true
+} catch (e: IllegalArgumentException) {
+    false
 }
 
 /** Closes every route on top, back to the screens on [Route.MAIN] (a list, a chat or a tab is about to open there). */

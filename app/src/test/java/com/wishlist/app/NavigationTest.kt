@@ -151,6 +151,34 @@ class NavigationTest : NavigationBase() {
         tabOn("Friends")
     }
 
+    @Test fun backOnATabGoesHome() {
+        // Owner, 8 November 2026: Back on a tab's first page goes Home, also when a list was open before.
+        val id = Repo.mineIds.first()
+        compose.runOnUiThread { NoteNav.key = "m:$id" }
+        compose.waitForIdle()
+        compose.onAllNodes(hasContentDescription("Wishlist settings") and hasClickAction()).onFirst().assertExists()
+        tap("Messages")
+        tabOn("Messages")
+        tap("My shops")
+        tabOn("My shops")
+        phoneBack()
+        tabOn("Home")
+    }
+
+    @Test fun screensOnTopOfATabReturnToIt() {
+        // Profile from the Friends tab, then the bell: Back returns to Friends each time (the tab stays underneath).
+        tap("Friends")
+        fromSheet("Profile")
+        phoneBack()
+        tabOn("Friends")
+        tap("Notifications")
+        shows("Notifications")
+        phoneBack()
+        tabOn("Friends")
+        phoneBack()
+        tabOn("Home")
+    }
+
     @Test fun friendsListFromALinkBackHome() {
         // A list saved from a link (a notification about it opens it): its own screen, Back returns Home.
         val app = ApplicationProvider.getApplicationContext<android.app.Application>()
