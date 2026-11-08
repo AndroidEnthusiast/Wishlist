@@ -308,6 +308,8 @@ class MainActivity : ComponentActivity() {
             if ((kind == "ask_free" || kind == "ask_ended" || kind == "ask_yes" || kind == "ask_sent") && wish > 0L && list.length > 2)
                 AskNav.focus = Triple(list.substring(2), wish, kind == "ask_free")
             if (kind.isNotEmpty()) Notifications.markRead(this, kind, i.getStringExtra(Alerts.NOTE_LIST).orEmpty(), i.getLongExtra(Alerts.NOTE_ID, 0L))
+            // A push about one wish on your own list opens the list on that wish (2.161).
+            if (i.hasExtra(OPEN_NOTE)) WishFocus.forNote(list, wish, kind)
             i.removeExtra(Alerts.NOTE_KIND)
         }
         if (i != null && i.getBooleanExtra(OPEN_NOTES, false)) {

@@ -60,7 +60,7 @@ import coil.compose.AsyncImage
  */
 
 /**
- * A wish opened from "All your wishes" or "Top wishes" (2.91): the list scrolls to [target] and lets it glow softly
+ * A wish opened from "All your wishes" or "Top wishes" (2.91), or a notification about it (2.161): the list scrolls to [target] and lets it glow softly
  * twice ([GlowBox]).
  */
 object WishFocus {
@@ -68,6 +68,16 @@ object WishFocus {
     /** The wish that glows and a counter, so the same wish can glow again. */
     var glowing by mutableStateOf<Pair<Long, Int>?>(null)
         private set
+
+    /**
+     * A notification about one wish on your own list or a collab wishlist (a price change, a gift moved, …), tapped on
+     * the Notifications page or as a push: its list opens on that wish (owner, 8 November 2026, 2.161). Friends'
+     * lists load from the server first, so they open at the top; "Still buying …?" news has its own (AskNav).
+     */
+    fun forNote(listKey: String, wishId: Long, kind: String) {
+        if (wishId <= 0L || kind.startsWith("ask")) return
+        if (listKey.startsWith("m:") || listKey.startsWith("s:")) target = wishId
+    }
 
     fun glow(id: Long) { glowing = id to ((glowing?.second ?: 0) + 1) }
 

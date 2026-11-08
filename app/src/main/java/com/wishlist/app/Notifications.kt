@@ -307,13 +307,14 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                 }) {
                 Row(
                     Modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true))
-                        // A reached target opens the wish's price history; a price change opens its list.
+                        // A reached target opens the wish's price history; a price change opens its list on that wish.
                         .clickable {
                             if (target) HistoryNav.open = n.wishId
                             else {
                                 // News about a wish you want or reserved (2.142): the list opens on that wish.
                                 if (n.kind in listOf("ask_sent", "ask_yes", "ask_free", "ask_ended") && n.listKey.length > 2 && n.wishId > 0L)
                                     AskNav.focus = Triple(n.listKey.substring(2), n.wishId, n.kind == "ask_free")
+                                WishFocus.forNote(n.listKey, n.wishId, n.kind)
                                 onOpen(n.listKey)
                             }
                         }.padding(10.dp),
