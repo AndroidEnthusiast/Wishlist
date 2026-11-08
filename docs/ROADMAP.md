@@ -91,7 +91,8 @@ saved pages must be uploaded by the owner, or fetched by a session with those ho
 Goal: one screen at a time, Back always right, `MainActivity.kt` small.
 - [ ] S1.1 Add Navigation Compose and ViewModels (androidx `navigation-compose`, `lifecycle-viewmodel-compose`).
   *(2.154: Navigation Compose added, `Nav.kt`. `lifecycle-viewmodel-compose` is added with the first screen whose state
-  moves into a ViewModel, not before: an unused library is only weight.)*
+  moves into a ViewModel, not before: an unused library is only weight. ViewModels only pay off once there is a data
+  layer to read from, so they come with S2.2 (screens read the repositories through ViewModels).)*
   One route per screen: Home, a list, list settings, Messages, a chat, My shops, Friends, a friend's list, Profile,
   App settings, Bin, Notifications, Gifts I reserved, Received gifts, groups, gift exchanges, price pages.
 - [x] S1.2 Move screens over **one at a time**, starting with the simplest (Bin, App settings, Notifications), then
@@ -103,12 +104,17 @@ Goal: one screen at a time, Back always right, `MainActivity.kt` small.
 - [x] S1.3 Notifications and links (`OPEN_*` extras, App Links) open routes instead of setting switches. *(2.162:
   `Deep.kt`, one `App.go`; a check per entry point. In-app requests between screens (GroupNav, ExchangeNav, ChatNav,
   FriendsNav, PricesNav, NotesNav) still use their flags; they move with S1.4 or the ViewModels.)*
-- [ ] S1.4 Dialogs that belong to one screen move into that screen; app-wide ones (delete/undo, move, share) stay in
-  one place.
+- [x] S1.4 Dialogs that belong to one screen move into that screen; app-wide ones (delete/undo, move, share) stay in
+  one place. *(2.163: New category → the list screen; Create a list and its three forms → Home. MainActivity.kt split
+  into AppScreen, ListScreen, WishCards, WishForm: 142 lines.)*
 - [x] S1.5 Delete the switched-off side menu code (owner decided 7 November 2026, if still wanted). *(2.154, owner
   confirmed 8 November 2026.)*
 Owner tests per step: the moved screens open, Back goes to the right place, notifications open the right thing.
 Done when `MainActivity.kt` only sets up the app (< 300 lines) and every screen is a route.
+*Code work done 8 November 2026 (2.154–2.163): every screen is a route (2.160), every way in goes through `Deep.kt`
+(2.162), `MainActivity.kt` 142 lines (2.163), 63 app checks. Left for later on purpose: in-app requests between
+screens still use small flag objects (GroupNav, ExchangeNav, ChatNav, FriendsNav, PricesNav, NotesNav, HistoryNav);
+they go when those screens get ViewModels (S2.2). Waiting for: the owner's final Stage 1 test.*
 
 ## Stage 2 — A real database on the phone (3–4 sessions)  (P2)
 Goal: fast, safe local data that can't be half-saved.

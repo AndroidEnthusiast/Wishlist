@@ -131,19 +131,16 @@ fun HubScreen(
     snack: SnackbarHostState,
     onOpenMine: (String) -> Unit,
     onOpenGroup: (String) -> Unit,
-    onNewMine: () -> Unit,
-    onNewGroup: () -> Unit,
+    // A new collab wishlist was made (its invitation comes up, app-wide).
+    onCollabCreated: (String) -> Unit,
     onProfile: () -> Unit = {},
     // "+ Add wish" on an empty list's block: the wish form, with that list chosen.
     onAddTo: (String) -> Unit = {},
-    // Wishlist groups (2.108): open one, or make a new one.
+    // Wishlist groups (2.108): open one.
     onOpenWishGroup: (String) -> Unit = {},
-    onNewWishGroup: () -> Unit = {},
     // The Friends and Reserved tiles (owner, 2.134).
     onFriends: () -> Unit = {},
     onReserved: () -> Unit = {},
-    // "Create list" (owner, 7 November 2026): the choice of My wishlist / Group / Gift list.
-    onCreateList: () -> Unit = {},
     // "+ Add wish" on the Wishes tile when you have none.
     onAddWish: () -> Unit = {},
     // The gift exchange card in its season.
@@ -152,6 +149,36 @@ fun HubScreen(
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
+    // "Create list" (owner, 7 November 2026): the choice of Wishlist / Collab wishlist / Wishlist group, and the three
+    // forms. Only Home opens them, so they live here (ROADMAP S1.4, 2.163; they were in App before).
+    val scope = rememberCoroutineScope()
+    var createChoice by remember { mutableStateOf(false) }
+    var newMine by remember { mutableStateOf(false) }
+    var newShared by remember { mutableStateOf(false) }
+    var newWishGroup by remember { mutableStateOf(false) }
+    val onNewMine = { newMine = true }
+    val onNewGroup = { newShared = true }
+    val onNewWishGroup = { newWishGroup = true }
+    val onCreateList = { createChoice = true }
+    if (createChoice) CreateChoiceDialog(
+        onMine = { createChoice = false; newMine = true },
+        onGroup = { createChoice = false; newShared = true },
+        onWishGroup = { createChoice = false; newWishGroup = true },
+        onClose = { createChoice = false }
+    )
+    if (newMine) NewListDialog(
+        // It appears under your wishlists on Home.
+        onCreated = { id -> newMine = false; scope.launch { snack.showToast(tr("“%s” is ready", Repo.mineName(id))) } },
+        onClose = { newMine = false }
+    )
+    if (newShared) NewSharedDialog(
+        onCreated = { code -> newShared = false; onCollabCreated(code) },
+        onClose = { newShared = false }
+    )
+    if (newWishGroup) NewGroupDialog(
+        onCreated = { gid -> newWishGroup = false; GroupNav.inviteNow = gid; GroupNav.openGroup(gid) },
+        onClose = { newWishGroup = false }
+    )
     // Your own lists are read again whenever one changes (mineVersion) or the open one changes.
     val mine = remember(Repo.mineVersion, Repo.myWishes, Repo.myName, Repo.mineIds, Repo.openMine) { Repo.allMine(ctx) }
     // The picture of a list: its newest wish photos (a collage when there are three; never the cover photo, owner).
@@ -168,7 +195,6 @@ fun HubScreen(
             HubItem("s:" + l.code, l.name, ws.size, pics.firstOrNull(), true, l.code, pics, wishesLabel(ws.size)) { onOpenGroup(l.code) }
         }
     }
-    val scope = rememberCoroutineScope()
     // Long press on a list (see the end of this screen).
     var renaming by remember { mutableStateOf<HubItem?>(null) }
     var deleting by remember { mutableStateOf<HubItem?>(null) }

@@ -217,6 +217,15 @@ class NavigationTest : NavigationBase() {
         tabOn("Home")
     }
 
+    @Test fun createListFromHome() {
+        // "Create list" on Home opens the choice (it lives in Home since 2.163); Cancel closes it, Home stays.
+        tap("Create list")
+        shows("Create a list")
+        tap("Cancel")
+        tabOn("Home")
+        compose.onAllNodes(hasText("Create a list", substring = false)).assertCountEquals(0)
+    }
+
     @Test fun friendsListFromALinkBackHome() {
         // A list saved from a link (a notification about it opens it): its own screen, Back returns Home.
         val app = ApplicationProvider.getApplicationContext<android.app.Application>()
