@@ -133,7 +133,8 @@ object FriendsNav {
     /** The chat the friend's page was opened from (tap their name at the top of a chat): Back returns there (2.105). */
     var fromChat by mutableStateOf<String?>(null)
 
-    fun reset() { person = null; list = null; page = null; loaded = emptyMap(); loadedFor = null; fromChat = null }
+    // [loaded] is kept (owner, 8 November 2026): coming back to a friend shows their wishes at once while they refresh.
+    fun reset() { person = null; list = null; page = null; loadedFor = null; fromChat = null }
 
     /**
      * Back from a friend's page: to the chat it was opened from, or to Friends. Going back to the chat, their page
@@ -549,14 +550,23 @@ private fun FriendRow(f: Person, onOpen: () -> Unit, onUnfriend: () -> Unit) {
 private fun LoadFriendLists(f: Person) {
     val ctx = LocalContext.current
     LaunchedEffect(f.id, f.lists) {
-        val out = HashMap<String, RemoteList>()
-        for (l in f.lists) {
-            try {
-                Friends.fetchList(ctx, f.id, l.code)?.let { out[l.code] = it }
-            } catch (e: Exception) {
+        // All lists at once, each shown as soon as it arrives (owner, 8 November 2026: one after another, and nothing
+        // until the last one, a slow call after the app was in the background left the page empty for a long time).
+        // What was loaded before stays on screen meanwhile.
+        val out = java.util.concurrent.ConcurrentHashMap<String, RemoteList>()
+        kotlinx.coroutines.coroutineScope {
+            f.lists.forEach { l ->
+                launch {
+                    try {
+                        Friends.fetchList(ctx, f.id, l.code)?.let { r ->
+                            out[l.code] = r
+                            FriendsNav.loaded = FriendsNav.loaded + (l.code to r)
+                        }
+                    } catch (e: Exception) {
+                    }
+                }
             }
         }
-        FriendsNav.loaded = out
         FriendsNav.loadedFor = f.id
         // Opening their page counts as seeing their new wishes (owner, 2.139).
         if (out.size == f.lists.size) FriendNews.markSeen(ctx, f.id, out.values)
