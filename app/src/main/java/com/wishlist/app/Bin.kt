@@ -248,6 +248,11 @@ class BinWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, p
     override suspend fun doWork(): Result {
         val c = applicationContext
         Repo.load(c)
+        // Your own lists: saves that failed while offline (ROADMAP S3.1); no call when nothing is waiting.
+        try {
+            Sync.catchUp(c)
+        } catch (e: Exception) {
+        }
         try {
             Bin.watch(c)
         } catch (e: Exception) {

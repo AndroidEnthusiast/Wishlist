@@ -144,11 +144,12 @@ object Sync {
                 if (n in up) w.copy(image = Cloud.photoUrl(code, n)) else w.copy(image = "")
             }
         }
-        Cloud.pushList(
-            code, token, d.name, d.cats, out, d.about,
-            coverUrl, if (coverUrl.isEmpty() || cover == null) "" else cover.edit.toJson(),
+        // Only what changed goes online (ROADMAP S3.1, MineSync.kt); a failed save is tried again later.
+        val items = Cloud.listItems(
+            out, d.about, coverUrl, if (coverUrl.isEmpty() || cover == null) "" else cover.edit.toJson(),
             Occasions.ofMine(c, d.id), Friends.sizesJson()
         )
+        MineSync.send(c, code, token, d.name, d.cats, items, Shared.lastName.trim())
 
         for (n in up - keep) {
             try {
@@ -166,6 +167,29 @@ object Sync {
             mine.isEmpty() -> ""
             else -> tr("Pictures online: %1\$d of %2\$d", mine.keys.count { it in up }, mine.size)
         }
+    }
+
+    /**
+     * Every list of yours that is online gets whatever didn't reach the server yet (a save that failed while offline).
+     * Nothing waiting: no server call at all (MineSync compares with what the server has). At the start and in the
+     * background check (owner, 8 November 2026: "keep it, retry later").
+     */
+    suspend fun catchUp(c: Context) {
+        for (id in Repo.mineIds.toList()) {
+            val d = Repo.mine(c, id)
+            if (d.code == null) continue
+            val wishes = if (id == Repo.openMine) Repo.syncWishes() else (d.wishes + Repo.binnedOf(id)).filter { !it.priv }
+            try {
+                lock.withLock { pushData(d, wishes, live = id == Repo.openMine) }
+            } catch (e: Exception) {
+            }
+        }
+    }
+
+    /** [catchUp] in the background (the app's start). */
+    fun catchUpLater(c: Context) {
+        val a = c.applicationContext
+        scope.launch { catchUp(a) }
     }
 
     /** Makes the list available online (first time only) and returns its share code. */
@@ -195,6 +219,7 @@ object Sync {
         }
         Repo.setUploaded(c, emptySet())
         Cloud.deleteList(code, token)
+        MineSync.forget(c, code)
         Repo.setShare(c, null, null)
         photoStatus = ""
     }
@@ -231,6 +256,7 @@ object Sync {
         val d = Repo.mine(c, id)
         if (d.code == null) return
         unpublishStored(d)
+        MineSync.forget(c, d.code)
         Repo.setShareFor(c, id, null, null)
         Repo.setUploadedFor(c, id, emptySet())
     }

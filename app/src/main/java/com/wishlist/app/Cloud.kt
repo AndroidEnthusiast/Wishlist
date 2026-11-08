@@ -131,17 +131,17 @@ object Cloud {
         rpc("wl_create_list", JSONObject().put("p_code", code).put("p_token", token).put("p_name", name))
     }
 
-    suspend fun pushList(
-        code: String, token: String, name: String, cats: List<String>, wishes: List<Wish>, about: String = "",
-        cover: String = "", coverEdit: String = "", occ: Occasion? = null, sizes: String = ""
-    ) {
+    /**
+     * Your list's wishes as they go online (private wishes never; pictures only on this phone are left out), plus the
+     * "about" item (id 0): the note, and (since 2.105) the cover photo, the occasion and your sizes, so friends see
+     * them (older apps only read "about" and skip the rest). No about item when all of those are empty.
+     */
+    fun listItems(
+        wishes: List<Wish>, about: String = "", cover: String = "", coverEdit: String = "", occ: Occasion? = null,
+        sizes: String = ""
+    ): JSONArray {
         val items = JSONArray()
-        // A private wish never leaves the phone (Repo.syncWishes leaves them out already; this makes sure).
         wishes.filter { !it.priv }.forEach { items.put(wishToJson(if (ImageStore.isLocal(it.image)) it.copy(image = "") else it)) }
-        // The note and (since 2.105) the cover photo travel in the "about" item, so friends see them (older apps
-        // only read "about" and skip the rest).
-        // The occasion too (Occasion.kt): older apps skip it.
-        // Your sizes too (owner, 2.128: friends see them, also on the friends' web page).
         if (about.isNotBlank() || cover.isNotEmpty() || occ != null || sizes.isNotEmpty()) {
             val o = JSONObject().put("id", ABOUT_ITEM_ID).put("kind", "about").put("about", about)
                 .put("url", "").put("title", "")
@@ -150,25 +150,40 @@ object Cloud {
             if (sizes.isNotEmpty()) o.put("sz", JSONObject(sizes))
             items.put(o)
         }
+        return items
+    }
+
+    /** The whole list at once (the way before 2.173; older apps and the first save of a list). */
+    suspend fun syncList(code: String, token: String, name: String, cats: List<String>, items: JSONArray) {
         rpc(
             "wl_sync_list",
             JSONObject()
                 .put("p_code", code).put("p_token", token).put("p_name", name)
                 .put("p_cats", JSONArray(cats)).put("p_items", items)
         )
-        // "Owned by …" on friends' screens (2.102, supabase-friends.sql): your profile name with the list, sent when
-        // it changed. Without the new script the function doesn't exist yet: then nothing happens.
-        val me = Shared.lastName.trim()
-        if (me.isNotEmpty() && ownerSent[code] != me) {
-            try {
-                rpc("wl_set_owner", JSONObject().put("p_code", code).put("p_token", token).put("p_name", me))
-                ownerSent[code] = me
-            } catch (e: Exception) {
-            }
-        }
     }
 
-    private val ownerSent = java.util.concurrent.ConcurrentHashMap<String, String>()
+    /** Only what changed (2.173, supabase-sync.sql): new or changed wishes, removed ids, the name/categories if changed. */
+    suspend fun minePut(code: String, token: String, name: String?, cats: List<String>?, items: List<JSONObject>, del: List<Long>) {
+        rpc(
+            "wl_mine_put",
+            JSONObject()
+                .put("p_code", code).put("p_token", token)
+                .put("p_name", name ?: JSONObject.NULL)
+                .put("p_cats", cats?.let { JSONArray(it) } ?: JSONObject.NULL)
+                .put("p_items", JSONArray(items)).put("p_del", JSONArray(del))
+        )
+    }
+
+    /** "Owned by …" on friends' screens (2.102, supabase-friends.sql): your profile name with the list. */
+    suspend fun setOwner(code: String, token: String, name: String) {
+        rpc("wl_set_owner", JSONObject().put("p_code", code).put("p_token", token).put("p_name", name))
+    }
+
+    /** The whole list, without remembering what was sent (only when the app isn't fully started). */
+    suspend fun pushList(code: String, token: String, name: String, cats: List<String>, wishes: List<Wish>, about: String = "") {
+        syncList(code, token, name, cats, listItems(wishes, about))
+    }
 
     suspend fun deleteList(code: String, token: String) {
         rpc("wl_delete_list", JSONObject().put("p_code", code).put("p_token", token))

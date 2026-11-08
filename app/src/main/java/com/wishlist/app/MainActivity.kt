@@ -63,7 +63,8 @@ class MainActivity : ComponentActivity() {
         Alerts.ensureChannel(this)
         Alerts.schedule(this, Repo.intervalHours, false)
         Alerts.scheduleBin(this)
-        Sync.push()
+        // Whatever didn't reach the server yet (a save made offline) goes online now; nothing waiting: no call.
+        Sync.catchUpLater(this)
         // Edge to edge (owner, 2.102): the app draws behind the system bars and handles them itself. Before, Android
         // shrank the whole window for the keyboard ("adjustResize"), also for a keyboard that was still closing in
         // another app when you came back, so the bottom bar jumped up for a moment. Now only what needs it moves.
