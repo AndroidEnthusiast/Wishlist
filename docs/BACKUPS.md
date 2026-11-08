@@ -18,7 +18,9 @@ Both go in GitHub: the repository > **Settings** > **Secrets and variables** > *
 1. `SUPABASE_DB_URL`: in Supabase, open the project, tap **Connect** (top of the page), choose **Session pooler**
    (not "Direct connection": GitHub can't reach that one), copy the line that starts with `postgresql://`, and replace
    `[YOUR-PASSWORD]` with the database password (forgotten? **Project Settings** > **Database** > **Reset database
-   password**; the app and web pages don't use it, so resetting is safe).
+   password**; the app and web pages don't use it, so resetting is safe). Any characters work: the job splits the line
+   into its parts and never prints the password (after a `%` once made the database tool print part of it, 8 November
+   2026; that log was deleted and the password reset).
 2. `BACKUP_PASSWORD`: a long password you make up (at least 16 characters). **Save it in your password manager first.**
    If it is lost, the copies can't be opened; if it changes, older copies still need the old one.
 

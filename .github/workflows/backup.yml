@@ -30,13 +30,36 @@ jobs:
         env:
           DB: ${{ secrets.SUPABASE_DB_URL }}
         run: |
+          # The connection string is split into its parts here and handed over as PGHOST, PGPASSWORD and so on, never
+          # as one text: a password with % or $ in it once made the database tool print part of it into this public
+          # log (8 November 2026). The password is masked as well, and nothing below echoes it.
+          python3 - > pg.env <<'PY'
+          import os, re, urllib.parse
+          u = os.environ["DB"].strip()
+          u = re.sub(r"^postgres(ql)?://", "", u)
+          userinfo, hostpart = u.rsplit("@", 1)
+          user, pw = userinfo.split(":", 1)
+          pw = pw.strip("[]") if pw.startswith("[") and pw.endswith("]") else pw
+          if re.fullmatch(r"(?:[^%]|%[0-9A-Fa-f]{2})*", pw): pw = urllib.parse.unquote(pw)
+          hostport, _, db = hostpart.partition("/")
+          host, _, port = hostport.partition(":")
+          db = db.split("?", 1)[0] or "postgres"
+          print("::add-mask::" + pw)
+          for k, v in (("PGHOST", host), ("PGPORT", port or "5432"), ("PGUSER", urllib.parse.unquote(user)), ("PGDATABASE", db), ("PGPASSWORD", pw)):
+              print(k + "=" + v)
+          PY
+          grep '^::add-mask::' pg.env || true
+          grep -v '^::add-mask::' pg.env > pg.list; rm -f pg.env
+          echo "Connecting to $(grep '^PGHOST=' pg.list | cut -d= -f2) as $(grep '^PGUSER=' pg.list | cut -d= -f2)"
           # pg_dump must be at least as new as the database, so use the database's own version.
-          v=$(docker run --rm --network host -e DB postgres:17 sh -c 'psql "$DB" -tAc "show server_version_num"' | tr -d '[:space:]')
+          v=$(docker run --rm --network host --env-file pg.list postgres:17 psql -tAc "show server_version_num" | tr -d '[:space:]')
+          [ -n "$v" ] || { rm -f pg.list; echo "::error::Couldn't reach the database. Check SUPABASE_DB_URL: the Session pooler line, with the real database password."; exit 1; }
           major=$(( v / 10000 )); [ "$major" -ge 17 ] || major=17
           echo "Database version $v, using pg_dump $major"
           mkdir -p out
-          docker run --rm --network host -e DB -v "$PWD/out:/out" "postgres:$major" \
-            pg_dump "$DB" --schema=public --no-owner --format=custom --file=/out/wishlist.dump
+          docker run --rm --network host --env-file pg.list -v "$PWD/out:/out" "postgres:$major" \
+            pg_dump --schema=public --no-owner --format=custom --file=/out/wishlist.dump || { rm -f pg.list; exit 1; }
+          rm -f pg.list
           # A copy that can't be read back is no copy: list its contents and count the tables.
           docker run --rm -v "$PWD/out:/out" "postgres:$major" pg_restore --list /out/wishlist.dump > out/contents.txt
           tables=$(grep -c ' TABLE DATA ' out/contents.txt || true)
