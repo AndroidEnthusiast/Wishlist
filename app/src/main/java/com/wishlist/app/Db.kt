@@ -159,6 +159,19 @@ interface WishlistDao {
     @Query("SELECT COUNT(*) FROM price_points") fun countPricePoints(): Int
 
     @Query("DELETE FROM lists WHERE id = :id") fun deleteList(id: String)
+
+    @Query("DELETE FROM wishes") fun clearWishes()
+    @Query("DELETE FROM lists") fun clearLists()
+    @Query("DELETE FROM bin") fun clearBin()
+    @Query("DELETE FROM categories") fun clearCategories()
+    @Query("DELETE FROM price_points") fun clearPricePoints()
+    @Query("DELETE FROM friend_lists") fun clearFriendLists()
+    @Query("DELETE FROM notifications") fun clearNotes()
+
+    /** Empties every table except `meta` (inside the caller's transaction). */
+    fun clearData() {
+        clearWishes(); clearLists(); clearBin(); clearCategories(); clearPricePoints(); clearFriendLists(); clearNotes()
+    }
 }
 
 @Database(

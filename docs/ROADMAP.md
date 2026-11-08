@@ -132,7 +132,9 @@ values (wishes ~3 KB), plus ~100 leftover shop-icon entries from old versions th
 - [ ] S2.3 **Moving existing data:** on first start of the new version, copy everything from the settings store into
   Room inside one transaction, check the counts match, keep the old data untouched for at least two versions, and
   write a flag only when it all worked. If anything fails, the app keeps using the old data and reports it (D2).
-  Tested first with an Export file of the owner's real data.
+  Tested first with an Export file of the owner's real data. *(2.166, version B: a rehearsal at every start, the app
+  still uses the settings store; the owner's real Export moved exactly (1 list, 7 wishes, 1 bin, 17 price points,
+  5 notifications). The flag that switches the app over comes with version C.)*
 - [ ] S2.4 Export/Import read and write the new database (old Export files still import).
 - [ ] S2.5 Only after the owner confirms on both phones: remove the old storage code (`MyLists` blobs, `SafeStore`).
 Owner tests: everything is still there after updating (lists, bin, history, categories, covers), on both phones.

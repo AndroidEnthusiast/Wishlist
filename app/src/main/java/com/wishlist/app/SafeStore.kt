@@ -17,15 +17,16 @@ import org.json.JSONObject
 object SafeStore {
     private const val TAG = "Wishlist"
 
-    fun <T> readList(p: SharedPreferences, key: String, read: (JSONObject) -> T): List<T> {
+    /** [keep] false: only read, never write the backup or "unreadable" copies (the data move, DbMove.kt). */
+    fun <T> readList(p: SharedPreferences, key: String, keep: Boolean = true, read: (JSONObject) -> T): List<T> {
         val raw = p.getString(key, null) ?: return emptyList()
         val whole = parse(raw, read)
         if (whole != null && whole.second) {
-            p.edit().putString(key + "_backup", raw).apply()
+            if (keep) p.edit().putString(key + "_backup", raw).apply()
             return whole.first
         }
         Log.w(TAG, "Couldn't read all of \"$key\"; the stored text is kept as ${key}_unreadable")
-        if (!p.contains(key + "_unreadable")) p.edit().putString(key + "_unreadable", raw).apply()
+        if (keep && !p.contains(key + "_unreadable")) p.edit().putString(key + "_unreadable", raw).apply()
         if (whole != null) return whole.first
         val backup = p.getString(key + "_backup", null)?.let { parse(it, read) }
         return backup?.first ?: emptyList()

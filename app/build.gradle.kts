@@ -14,8 +14,8 @@ android {
         applicationId = "com.wishlist.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 166
-        versionName = "2.165"
+        versionCode = 167
+        versionName = "2.166"
         // Crash reports (Crash.kt): Crashlytics wants a build id, which its Gradle plugin would normally add. The app
         // isn't shrunk or renamed (isMinifyEnabled = false), so there is no mapping file to upload; one id per version.
         resValue("string", "com.google.firebase.crashlytics.mapping_file_id", "wishlist-$versionCode")
@@ -66,6 +66,8 @@ android {
             it.forkEvery = 1
             // The shop checks need the internet; they only run with -Pwl.shops (tests/README.md).
             it.systemProperty("wl.shops", if (project.hasProperty("wl.shops")) "1" else "")
+            // The data move checked on an owner's real Export (DbMoveTest): -Pwl.export=/path/to/prefs.json, here only.
+            it.systemProperty("wl.export", (project.findProperty("wl.export") as String?).orEmpty())
             it.testLogging.showStandardStreams = project.hasProperty("wl.shops")
             // Robolectric downloads Android itself from Maven Central, which answers cloud computers with "429"; on
             // such a computer tests/android-setup.sh sets wl.mavenMirror to Google's copy (the GitHub build doesn't).

@@ -51,14 +51,14 @@ object MyLists {
     }
 
     /** Reads a list from the phone's storage (not the open one: that one is in Repo). */
-    fun read(p: SharedPreferences, id: String): MineData {
+    fun read(p: SharedPreferences, id: String, keep: Boolean = true): MineData {
         if (id == MAIN_LIST) {
             return MineData(
                 MAIN_LIST,
                 p.getString("name", null)?.takeIf { it.isNotBlank() } ?: "My wishlist",
                 p.getString("about", "") ?: "",
                 p.getString("cats", null)?.split("\n")?.filter { it.isNotBlank() } ?: DEFAULT_CATS,
-                SafeStore.readList(p, "wishes") { wishFromJson(it) },
+                SafeStore.readList(p, "wishes", keep) { wishFromJson(it) },
                 p.getString("code", null), p.getString("token", null),
                 p.getStringSet("photosUp", null)?.toSet() ?: emptySet()
             )
