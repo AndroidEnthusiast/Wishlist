@@ -430,4 +430,12 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **D3 Database backups: a weekly GitHub job**, each copy kept privately for 90 days. Needs one GitHub secret with the Supabase database connection (the owner adds it).
 - **D4 Keeping Supabase awake: a simple touch every 2 days** by a scheduled GitHub job. The owner first asked for "only if it wasn't used for 2.5 days"; Claude pointed out that checking is itself a use, so it's the same thing with more parts; the owner chose the simple touch.
 - **D5 Identity: Supabase anonymous accounts** (no e-mail, no sign-up screen; later linkable to Google so a new phone gets everything back). Built in Stage 4 (S4.5), step by step, with every existing owner token, device id and link still working. Nothing is built for it before then.
+- **Stage 0 signed off, Stage 1 started** (owner, 8 November 2026, session 2): 2.153 "seems to work like before", with
+  the wish that anything noticed later is still fixed (fixes come first, roadmap rule 1). S0.3 (saved shop pages) stays
+  open for later. The switched-off **side menu is deleted** for good (S1.5). The database password was reset and the
+  secret updated; the next backup was green.
+- **Back from a screen opened on top returns to where you opened it** (Stage 1, 2.154, following the roadmap's goal
+  "Back always goes where you think"): Profile, App settings, Bin and Notifications opened from the Friends tab go back
+  to Friends (before: Home). Screens keep changing at once, without slide or fade animations (nothing else visible
+  changes in Stages 1–3).
 - **No download line during the roadmap** (owner, 8 November 2026): "I don't need to see an app download link. Instead I need your guidance on what to do next." Until the roadmap's stages are done, messages end with the next steps for the owner, not the download link (say it in a line when an update needs installing).

@@ -84,7 +84,7 @@ private fun SectionTitle(t: String) {
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
+fun SettingsScreen(snack: SnackbarHostState) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme

@@ -511,7 +511,7 @@ fun GroupScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, onOpe
         BackHandler { member = null }
         val code = m.list?.code ?: ""
         FriendScreen(
-            Friend(code, m.list?.name ?: ""), snack, onMenu = {}, onRemoved = {},
+            Friend(code, m.list?.name ?: ""), snack, onRemoved = {},
             fetch = { Groups.fetchList(ctx, gid, code) }, onBack = { member = null }, ownerName = m.name,
             extraAction = if (!m.friend && !m.web && m.code.isNotEmpty()) ({ AddFriendButton(m, snack) }) else null
         )

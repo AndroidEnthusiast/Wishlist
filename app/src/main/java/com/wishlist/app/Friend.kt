@@ -56,7 +56,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FriendScreen(
-    f: Friend, snack: SnackbarHostState, onMenu: () -> Unit, onRemoved: () -> Unit,
+    f: Friend, snack: SnackbarHostState, onRemoved: () -> Unit,
     // A list of a friend from the Friends tab: loaded through the friendship (not the link), with a back arrow and
     // no "Remove this list" (unfriending is done on the friend).
     fetch: (suspend () -> RemoteList?)? = null,

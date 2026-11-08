@@ -78,6 +78,9 @@ Goal: catch mistakes before they reach the phone, and never lose server data.
   copied 29 tables (Postgres 17), locked, kept until 6 February 2027.)*
 - [x] S0.5 D2 crash reports, if the owner said yes (`Licences.kt` if a new library is added).
 Owner tests: nothing changes on the phone. Done when the build runs tests and the backups exist.
+**Signed off by the owner on 8 November 2026** ("seems to work like before"; anything noticed later still gets fixed
+first). S0.3 stays open by the owner's choice, to be done when a shop reads badly or pages are uploaded. The backup
+after the database password reset was green (run 3).
 *Notes (session 1, 8 November 2026, 2.153):* D1–D5 answered (DECISIONS "Roadmap decisions D1–D5"). 32 app checks (31 plain
 JUnit + 1 Robolectric start check) and 49 shared app/web checks; the first S0.2 moves: `Totals.kt`, `OccasionUi.kt`,
 `QuantityUi.kt`. More pure logic (price parsing helpers, reservation counts on lists) moves when Stage 1 touches those
@@ -87,14 +90,19 @@ saved pages must be uploaded by the owner, or fetched by a session with those ho
 ## Stage 1 — Screens that manage themselves (3–5 sessions)  (P1)
 Goal: one screen at a time, Back always right, `MainActivity.kt` small.
 - [ ] S1.1 Add Navigation Compose and ViewModels (androidx `navigation-compose`, `lifecycle-viewmodel-compose`).
+  *(2.154: Navigation Compose added, `Nav.kt`. `lifecycle-viewmodel-compose` is added with the first screen whose state
+  moves into a ViewModel, not before: an unused library is only weight.)*
   One route per screen: Home, a list, list settings, Messages, a chat, My shops, Friends, a friend's list, Profile,
   App settings, Bin, Notifications, Gifts I reserved, Received gifts, groups, gift exchanges, price pages.
 - [ ] S1.2 Move screens over **one at a time**, starting with the simplest (Bin, App settings, Notifications), then
   the tabs, then the list screen last. Each move removes its on/off switches from `MainActivity`.
+  *(2.154: Profile, App settings, Bin, Notifications are routes; 4 of the 75 switches gone. Next: Received gifts and
+  Gifts I reserved (now full-screen pop-ups), Price changes, a friend's link list, list settings, then the tabs.)*
 - [ ] S1.3 Notifications and links (`OPEN_*` extras, App Links) open routes instead of setting switches.
 - [ ] S1.4 Dialogs that belong to one screen move into that screen; app-wide ones (delete/undo, move, share) stay in
   one place.
-- [ ] S1.5 Delete the switched-off side menu code (owner decided 7 November 2026, if still wanted).
+- [x] S1.5 Delete the switched-off side menu code (owner decided 7 November 2026, if still wanted). *(2.154, owner
+  confirmed 8 November 2026.)*
 Owner tests per step: the moved screens open, Back goes to the right place, notifications open the right thing.
 Done when `MainActivity.kt` only sets up the app (< 300 lines) and every screen is a route.
 

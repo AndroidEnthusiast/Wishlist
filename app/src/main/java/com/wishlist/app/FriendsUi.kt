@@ -239,7 +239,7 @@ fun FriendsScreen(snack: SnackbarHostState, onProfile: () -> Unit, onOpenLink: (
         BackHandler { FriendsNav.list = null }
         // Coming back from the list returns to where you were: their page or their wishes page.
         FriendScreen(
-            Friend(list.code, list.name), snack, onMenu = {}, onRemoved = {},
+            Friend(list.code, list.name), snack, onRemoved = {},
             fetch = { Friends.fetchList(ctx, person.id, list.code) }, ownerName = person.name,
             onBack = { FriendsNav.list = null }
         )

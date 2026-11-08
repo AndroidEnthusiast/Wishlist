@@ -10,8 +10,8 @@ android {
         applicationId = "com.wishlist.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 154
-        versionName = "2.153"
+        versionCode = 155
+        versionName = "2.154"
         // Crash reports (Crash.kt): Crashlytics wants a build id, which its Gradle plugin would normally add. The app
         // isn't shrunk or renamed (isMinifyEnabled = false), so there is no mapping file to upload; one id per version.
         resValue("string", "com.google.firebase.crashlytics.mapping_file_id", "wishlist-$versionCode")
@@ -78,6 +78,8 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.activity:activity-compose:1.9.0")
+    // Screens as routes with their own back stack (ROADMAP Stage 1, Nav.kt). 2.7.x fits Compose 1.6 (the BOM above).
+    implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")

@@ -585,7 +585,7 @@ fun ExchangeScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, on
             LaunchedEffect(Unit) { showList = false; snack.showToast(tr("%s has no wishlist right now.", giftee.name)) }
         } else {
             FriendScreen(
-                Friend(code, giftee.list?.name.orEmpty()), snack, onMenu = {}, onRemoved = {},
+                Friend(code, giftee.list?.name.orEmpty()), snack, onRemoved = {},
                 fetch = { Exchanges.gifteeList(ctx, gid) }, onBack = { showList = false }, ownerName = giftee.name,
                 overBudget = { w -> Exchanges.overBudget(x, w) }, reactions = false
             )

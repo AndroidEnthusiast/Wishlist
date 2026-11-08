@@ -11,6 +11,12 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -43,11 +49,9 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.draw.blur
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
@@ -108,18 +112,12 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.DrawerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -128,7 +126,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -426,16 +423,7 @@ private fun host(url: String): String = try {
     url
 }
 
-/** The thin line between groups in the side menu. */
-@Composable
-private fun DrawerDivider() {
-    Box(
-        Modifier.fillMaxWidth().padding(horizontal = 28.dp, vertical = 8.dp).height(1.dp)
-            .background(MaterialTheme.colorScheme.outlineVariant)
-    )
-}
-
-/** Empty space in the top bar where the floating menu button is drawn. */
+/** The back arrow at the left of the top bar of a screen opened on top of another (nothing on the tabs). */
 @Composable
 fun MenuSlot(back: Boolean = true) {
     // No side menu any more (owner, 7 November 2026): screens reached from the profile sheet get a back arrow (the
@@ -443,59 +431,6 @@ fun MenuSlot(back: Boolean = true) {
     if (!back) return
     val d = androidx.activity.compose.LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     IconButton(onClick = { d?.onBackPressed() }) { Icon(AppIcons.ArrowBack, tr("Back")) }
-}
-
-/** Three bars that spin and merge into an X while the menu is open. */
-@Composable
-fun AnimatedMenuIcon(open: Boolean, tint: Color) {
-    val p by animateFloatAsState(if (open) 1f else 0f, tween(350, easing = FastOutSlowInEasing), label = "menuIcon")
-    Canvas(Modifier.size(24.dp)) {
-        val u = size.width / 24f
-        val cx = size.width / 2f
-        val cy = size.height / 2f
-        fun bar(dy: Float, angle: Float, alpha: Float) {
-            val y = cy + dy
-            rotate(angle, Offset(cx, y)) {
-                drawLine(
-                    color = tint, start = Offset(cx - 8f * u, y), end = Offset(cx + 8f * u, y),
-                    strokeWidth = 2f * u, cap = StrokeCap.Round, alpha = alpha
-                )
-            }
-        }
-        rotate(180f * p, Offset(cx, cy)) {
-            bar(-6f * u * (1f - p), 45f * p, 1f)
-            bar(0f, 0f, 1f - p)
-            bar(6f * u * (1f - p), -45f * p, 1f)
-        }
-    }
-}
-
-@Composable
-private fun DrawerItem(label: String, icon: ImageVector, selected: Boolean, dot: Boolean = false, emoji: String? = null, onClick: () -> Unit) {
-    val look = LocalLook.current
-    val cs = MaterialTheme.colorScheme
-    // The chosen item looks like the style's chosen chip (2.97): Quiet a soft tinted pill, the others their own frame.
-    val shape = look.chipShape
-    val framed = selected && look.design != "quiet"
-    NavigationDrawerItem(
-        label = {
-            Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = if (selected) FontWeight.Bold else null)
-        },
-        selected = selected,
-        onClick = onClick,
-        // In the gift exchange season a coloured emoji instead of the icon (owner, 7 November 2026: no snow, a 🎅).
-        icon = { if (emoji != null) Text(emoji, fontSize = 22.sp) else Icon(icon, null) },
-        badge = if (dot) ({ RedDot() }) else null,
-        shape = shape,
-        colors = NavigationDrawerItemDefaults.colors(
-            selectedContainerColor = if (framed) Color.Transparent else cs.primaryContainer,
-            selectedTextColor = if (framed) look.chipContent(true) else cs.onPrimaryContainer,
-            selectedIconColor = if (framed) look.chipContent(true) else cs.onPrimaryContainer,
-            unselectedContainerColor = Color.Transparent,
-            unselectedTextColor = cs.onSurface, unselectedIconColor = cs.onSurfaceVariant
-        ),
-        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding).then(if (framed) Modifier.lookChip(look, true) else Modifier)
-    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -507,16 +442,17 @@ fun App(
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val snack = remember { SnackbarHostState() }
-    val drawer = rememberDrawerState(DrawerValue.Closed)
+    // Screens with a route of their own (ROADMAP Stage 1, Nav.kt): Profile, App settings, Bin, Notifications. The
+    // rest still share the "main" route and its switches below, until they move too.
+    val nav = rememberNavController()
+    val route = nav.currentBackStackEntryAsState().value?.destination?.route
+    val onMain = route == null || route == Route.MAIN
     var adding by remember { mutableStateOf(false) }
     var prefill by remember { mutableStateOf("") }
     // What "Find a gift" already read from the shop page on screen (2.114), so the form needn't load it again.
     var prefillMeta by remember { mutableStateOf<Meta?>(null) }
     var fromShop by remember { mutableStateOf(false) }
     var catDlg by remember { mutableStateOf(false) }
-    var settings by remember { mutableStateOf(false) }
-    // The bin (menu > Bin): deleted wishes of every list, for 30 days.
-    var binOpen by remember { mutableStateOf(false) }
     // "Received gifts" and "What did you get?" for one of your lists (2.128).
     var receivedOpen by remember { mutableStateOf(false) }
     var receivedAsk by remember { mutableStateOf<String?>(null) }
@@ -537,25 +473,22 @@ fun App(
     var pricesOpen by remember { mutableStateOf(false) }
     // Discover, the shops (bottom bar, owner 7 November 2026).
     var discoverOpen by remember { mutableStateOf(false) }
-    // Notifications (menu, above Bin): price drops and rises, with a red dot while there is something new.
-    var notesOpen by remember { mutableStateOf(false) }
     var friendsOpen by remember { mutableStateOf(false) }
     // Messages (bottom bar, 2.98): the conversations, or one conversation (ChatNav.peer).
     var messagesOpen by remember { mutableStateOf(false) }
-    // Your profile (menu > Profile, or your picture on Friends): photo, name and friend code (FriendsUi.kt).
-    var profileOpen by remember { mutableStateOf(false) }
     // A wishlist group on screen (2.108, GroupsUi.kt), by its id.
     var groupOpen by remember { mutableStateOf<String?>(null) }
     var newWishGroup by remember { mutableStateOf(false) }
 
     /**
-     * Closes every screen that lies on top of Home or a list (settings, bin, a friend's link list, a list's settings,
-     * Price watch, Friends, Notifications, Profile). One place, so none is forgotten (2.95: these were 30 hand-written
-     * copies, and a forgotten one kept Profile on screen when Notifications was opened from the menu).
+     * Closes every screen that lies on top of Home or a list (a route such as Profile or Bin, a friend's link list, a
+     * list's settings, Price changes, the tabs, a group, gift exchanges). One place, so none is forgotten (2.95: these
+     * were 30 hand-written copies, and a forgotten one kept Profile on screen when Notifications was opened).
      */
     fun closeAll() {
-        settings = false; binOpen = false; friendCode = null; listSettings = false
-        pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false; messagesOpen = false
+        nav.backToMain()
+        friendCode = null; listSettings = false
+        pricesOpen = false; friendsOpen = false; messagesOpen = false
         groupOpen = null; exchangesOpen = false; discoverOpen = false
     }
     var createChoice by remember { mutableStateOf(false) }
@@ -632,7 +565,7 @@ fun App(
      * friend's list, Friends, that friend, or a group invitation.
      */
     fun openNote(key: String) {
-        notesOpen = false; profileOpen = false
+        nav.backToMain()
         when {
             key.startsWith("m:") -> key.removePrefix("m:").takeIf { it in Repo.mineIds }?.let { openMine(it) }
             key.startsWith("s:") -> {
@@ -682,8 +615,7 @@ fun App(
     LaunchedEffect(binTarget) {
         if (binTarget != null) {
             Bin.focus = binTarget
-            closeAll(); binOpen = true
-            scope.launch { drawer.close() }
+            closeAll(); nav.openOnTop(Route.BIN)
             onBinUsed()
         }
     }
@@ -694,19 +626,19 @@ fun App(
         }
     }
 
-    BackHandler(enabled = drawer.isOpen) { scope.launch { drawer.close() } }
-    BackHandler(enabled = !drawer.isOpen && (settings || binOpen || friendCode != null)) {
+    // Back on the screens of the "main" route (the routes go back by themselves, Nav.kt). Each handler checks
+    // [onMain], so none of them can take Back away from a route on top.
+    BackHandler(enabled = onMain && friendCode != null) {
         closeAll()
     }
-    // Back from a shared wishlist goes to My wishlist.
-    // Back from a list goes to the dashboard; back from Prices or Friends to where you were.
-    BackHandler(enabled = !drawer.isOpen && !settings && !binOpen && friendCode == null && !listSettings && !hub && !pricesOpen && !discoverOpen && !friendsOpen && !notesOpen && !messagesOpen) {
+    // Back from a list goes to the dashboard; back from Prices or a tab to where you were.
+    BackHandler(enabled = onMain && friendCode == null && !listSettings && !hub && !pricesOpen && !discoverOpen && !friendsOpen && !messagesOpen) {
         hub = true
     }
-    BackHandler(enabled = !drawer.isOpen && !settings && !binOpen && friendCode == null && (pricesOpen || discoverOpen || friendsOpen || notesOpen || messagesOpen)) {
+    BackHandler(enabled = onMain && friendCode == null && (pricesOpen || discoverOpen || friendsOpen || messagesOpen)) {
         // Back from Price changes goes to where it was opened (a list or Home); from a tab to where you were.
         if (pricesOpen) pricesOpen = false
-        else { discoverOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false; messagesOpen = false }
+        else { discoverOpen = false; friendsOpen = false; messagesOpen = false }
     }
     // A new message alert, or "Message" on a friend's page: Messages, at that conversation.
     LaunchedEffect(ChatNav.openTab) {
@@ -729,10 +661,9 @@ fun App(
             groupOpen = g
             // Home puts the group you opened last first in its section (2.110).
             Repo.touchRecent(ctx, "g:$g")
-            scope.launch { drawer.close() }
         }
     }
-    BackHandler(enabled = !drawer.isOpen && groupOpen != null && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen && !profileOpen) {
+    BackHandler(enabled = onMain && groupOpen != null && friendCode == null && !listSettings) {
         groupOpen = null
     }
 
@@ -742,33 +673,28 @@ fun App(
             ExchangeNav.show = false
             closeAll(); hub = true; HubNav.page = null
             exchangesOpen = true
-            scope.launch { drawer.close() }
         }
     }
-    BackHandler(enabled = !drawer.isOpen && exchangesOpen && ExchangeNav.open == null && !settings && !binOpen && friendCode == null && !notesOpen && !profileOpen) {
+    BackHandler(enabled = onMain && exchangesOpen && ExchangeNav.open == null && friendCode == null) {
         exchangesOpen = false; hub = true
     }
 
-    // The bell at the top right (2.122): Notifications.
+    // The bell at the top right (2.122): Notifications. Back returns to the screen the bell was on.
     LaunchedEffect(NotesNav.open) {
         if (NotesNav.open) {
             NotesNav.open = false
-            closeAll(); notesOpen = true
-            scope.launch { drawer.close() }
+            nav.openOnTop(Route.NOTES)
         }
     }
     // "All price changes" on a wish's price page, or a notification about several prices (owner, 7 November 2026).
     LaunchedEffect(PricesNav.open) {
         if (PricesNav.open) {
             PricesNav.open = false
-            settings = false; binOpen = false; notesOpen = false; profileOpen = false
+            nav.backToMain()
             discoverOpen = false; friendsOpen = false; messagesOpen = false
             pricesOpen = true
-            scope.launch { drawer.close() }
         }
     }
-    // Back from Profile goes to where you were (Friends, when you came from your picture there).
-    BackHandler(enabled = !drawer.isOpen && profileOpen) { profileOpen = false }
     // A friend request alert was tapped: the Friends tab.
     LaunchedEffect(FriendsNav.openTab) {
         if (FriendsNav.openTab) {
@@ -799,225 +725,101 @@ fun App(
         if (Config.enabled && Friends.hasProfile(ctx)) try { Exchanges.refresh(ctx) } catch (e: Exception) {}
     }
 
-    val openMenu: () -> Unit = { scope.launch { drawer.open() } }
-
-    // The side menu takes about 72% of the screen, so a strip of the list stays visible. Tapping that strip closes the menu.
-    val cfg = LocalConfiguration.current
-    val sheetWidth = (cfg.screenWidthDp * 0.72f).coerceIn(240f, 320f).dp
-    val menuOpen = drawer.targetValue == DrawerValue.Open
-    val blurRadius by animateDpAsState(if (menuOpen) 10.dp else 0.dp, tween(300), label = "menuBlur")
-
-    Box(Modifier.fillMaxSize()) {
-    // A list's settings screen has only its back arrow: no menu button and no swiping the menu open.
-    val inListSettings = listSettings && !settings && !binOpen && friendCode == null
-    // The Themer (App settings > Theme) has only its back arrow too.
-    val inThemer = settings && ThemerNav.open
-    // A friend's page or list (Friends tab) has a back arrow instead of the menu button.
-    val inFriend = friendsOpen && FriendsNav.deep && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen && !profileOpen
-    // A page behind one of the numbers on Home (Overview.kt) has a back arrow too.
-    val inOverview = hub && HubNav.page != null && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen &&
-        !profileOpen && !pricesOpen && !discoverOpen && !friendsOpen && !messagesOpen
-    // Price changes has a back arrow (owner, 7 November 2026: opened from a wish, no longer a tab).
-    val inPrices = pricesOpen && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen && !profileOpen
-    // A wishlist group has a back arrow too.
-    val inGroup = groupOpen != null && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen && !profileOpen &&
-        !pricesOpen && !discoverOpen && !friendsOpen && !messagesOpen
-    // An open conversation has a back arrow too, and no bottom bar.
-    val inChat = messagesOpen && ChatNav.peer != null && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen && !profileOpen
-    // An open gift exchange has a back arrow too (2.129).
-    val inExchange = exchangesOpen && ExchangeNav.open != null && !settings && !binOpen && friendCode == null && !listSettings &&
-        !notesOpen && !profileOpen && !pricesOpen && !discoverOpen && !friendsOpen && !messagesOpen
-    // An open wishlist has a back arrow to Home instead of the menu button (owner, 2.110: "for some it's intuitive").
-    val inList = !hub && !settings && !binOpen && friendCode == null && !listSettings && !notesOpen && !profileOpen &&
-        !pricesOpen && !discoverOpen && !friendsOpen && !messagesOpen && groupOpen == null
-    ModalNavigationDrawer(
-        drawerState = drawer,
-        // The side menu is switched off (owner, 7 November 2026: the profile sheet took its place); its code stays for
-        // now so it can come back quickly if the owner changes their mind.
-        gesturesEnabled = false,
-        drawerContent = {
-            val look = LocalLook.current
-            ModalDrawerSheet(
-                modifier = Modifier.width(sheetWidth).then(
-                    // A line along the edge of the menu: thick ink (Neobrutalism, chaos) or thin neon (Cyberpunk).
-                    if (look.design == "neo" || look.design == "chaos" || look.design == "cyber") Modifier.drawWithContent {
-                        drawContent()
-                        val w = when (look.design) { "chaos" -> 3.dp; "cyber" -> 1.dp; else -> 2.dp }.toPx()
-                        drawRect(look.line, Offset(size.width - w, 0f), Size(w, size.height))
-                    } else Modifier
-                ),
-                drawerContainerColor = MaterialTheme.colorScheme.background
-            ) {
-                val appVersion = remember {
-                    try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName.orEmpty() } catch (e: Exception) { "" }
-                }
-                // The items take all the room (they only scroll on a very small screen); the version is at the bottom.
-                Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
-                    // Same height as the top bar; the menu button (now an X) sits at the left of this row.
-                    Box(
-                        Modifier.fillMaxWidth().height(64.dp).padding(start = 60.dp, end = 16.dp),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        // "Menu": you have several wishlists, so not the name of one of them (owner, 2.88).
-                        Text(
-                            tr("Menu"), style = MaterialTheme.typography.titleLarge,
-                            maxLines = 1, overflow = TextOverflow.Ellipsis
+    // Every screen is a route (ROADMAP Stage 1, Nav.kt). The tabs, lists, groups, exchanges and the rest still share
+    // the "main" route and move to routes of their own one at a time; the pop-ups below show over every route.
+    NavHost(
+        nav, startDestination = Route.MAIN,
+        // Screens change at once, as they always have (no sliding or fading).
+        enterTransition = { EnterTransition.None }, exitTransition = { ExitTransition.None },
+        popEnterTransition = { EnterTransition.None }, popExitTransition = { ExitTransition.None }
+    ) {
+        composable(Route.MAIN) {
+            val fr = Repo.friends.firstOrNull { it.code == friendCode }
+            // While the keyboard is open the bottom bar steps aside and the screen above it makes room (edge to edge, 2.102).
+            val imeOpen = WindowInsets.isImeVisible
+            // An open conversation has a back arrow and no bottom bar.
+            val inChat = messagesOpen && ChatNav.peer != null && fr == null && !listSettings
+            val showBar = fr == null && !listSettings && !inChat && !imeOpen
+            Column(Modifier.fillMaxSize()) {
+            // With the bottom bar, the screens above it don't leave room for the phone's own navigation bar again.
+            Box(Modifier.weight(1f).imePadding().then(if (showBar) Modifier.consumeWindowInsets(WindowInsets.navigationBars) else Modifier)) {
+                when {
+                    fr != null -> FriendScreen(fr, snack, onRemoved = { friendCode = null })
+                    listSettings -> key(Shared.active, Repo.openMine) {
+                        ListSettingsScreen(snack, onDeleted = { listSettings = false; pricesOpen = false; friendsOpen = false; hub = true }) { listSettings = false; pricesOpen = false; friendsOpen = false }
+                    }
+                    pricesOpen -> PricesScreen(snack, onBack = { pricesOpen = false })
+                    discoverOpen -> DiscoverScreen(
+                        snack, onProfile = { nav.openOnTop(Route.PROFILE) },
+                        onFound = { u, m -> addTarget = null; prefillMeta = m; fromShop = true; prefill = u; adding = true }
+                    )
+                    friendsOpen -> FriendsScreen(snack, onProfile = { nav.openOnTop(Route.PROFILE) }, onOpenLink = { friendCode = it })
+                    messagesOpen -> MessagesScreen(snack, onProfile = { nav.openOnTop(Route.PROFILE) })
+                    exchangesOpen -> ExchangesScreen(snack, onOpenMine = { openMine(it) }, onNew = { newExchange = true })
+                    groupOpen != null -> key(groupOpen) {
+                        GroupScreen(groupOpen!!, snack, onBack = { groupOpen = null; hub = true }, onOpenMine = { openMine(it) })
+                    }
+                    hub -> HubScreen(
+                        snack,
+                        onOpenMine = { openMine(it) },
+                        onOpenGroup = { openGroup(it) },
+                        onNewMine = { newMine = true },
+                        onNewGroup = { newShared = true },
+                        onProfile = { nav.openOnTop(Route.PROFILE) },
+                        onAddTo = { t -> addTarget = t; prefill = ""; adding = true },
+                        onOpenWishGroup = { GroupNav.openGroup(it) },
+                        onNewWishGroup = { newWishGroup = true },
+                        onFriends = { FriendsNav.reset(); closeAll(); friendsOpen = true },
+                        onReserved = { reservedOpen = true },
+                        onCreateList = { createChoice = true },
+                        onAddWish = { addTarget = Repo.lastSaveTo; prefill = ""; adding = true },
+                        onNewExchange = { newExchange = true }
+                    )
+                    else -> key(Shared.active, Repo.openMine) {
+                        HomeScreen(
+                            snack,
+                            onAdd = { prefill = ""; adding = true },
+                            onNewCat = { catDlg = true },
+                            onInvite = { inviteDlg = true },
+                            onListSettings = { listSettings = true },
+                            onBack = { HubNav.page = null; closeAll(); hub = true }
                         )
                     }
-                    // Only the screen that is open is highlighted: one item at a time.
-                    // The menu holds no lists (owner, 2.129): Home and the Friends tab show them. Three groups with
-                    // dividers and no headings (owner, 2.130): the core features, your things, then Bin and settings.
-                    val elsewhere = settings || binOpen || friendCode != null || notesOpen || pricesOpen || discoverOpen || friendsOpen || profileOpen || messagesOpen || groupOpen != null || exchangesOpen
-                    DrawerItem(tr("Home"), AppIcons.Home, hub && !elsewhere) {
-                        HubNav.page = null
-                        closeAll(); hub = true
-                        scope.launch { drawer.close() }
-                    }
-                    // One "New list" (owner, 2.128): it opens the choice of My wishlist, Gift list or Group.
-                    DrawerItem(tr("New list"), AppIcons.Add, false) {
-                        createChoice = true
-                        scope.launch { drawer.close() }
-                    }
-                    DrawerItem(tr("Gift exchange"), AppIcons.Exchange, exchangesOpen && !settings && !binOpen && !notesOpen && !profileOpen, dot = Exchanges.unread, emoji = if (Snow.season()) "🎅" else null) {
-                        ExchangeNav.open = null
-                        closeAll(); hub = true; exchangesOpen = true
-                        scope.launch { drawer.close() }
-                    }
-                    // Your things (owner, 2.130). Notifications is not in the menu: the bell on Home.
-                    DrawerDivider()
-                    DrawerItem(tr("Profile"), AppIcons.Person, profileOpen) {
-                        closeAll()
-                        profileOpen = true
-                        scope.launch { drawer.close() }
-                    }
-                    DrawerItem(tr("Gifts I reserved"), AppIcons.Bag, reservedOpen) {
-                        reservedOpen = true
-                        scope.launch { drawer.close() }
-                    }
-                    DrawerItem(tr("Received gifts"), AppIcons.Gift, receivedOpen) {
-                        receivedOpen = true
-                        scope.launch { drawer.close() }
-                    }
-                    DrawerDivider()
-                    DrawerItem(tr("Bin"), AppIcons.Delete, binOpen) {
-                        closeAll(); binOpen = true
-                        scope.launch { drawer.close() }
-                    }
-                    DrawerItem(tr("App settings"), AppIcons.Settings, settings) {
-                        closeAll(); settings = true
-                        scope.launch { drawer.close() }
-                    }
-                }
-                // Bottom left of the menu: the version of the app.
-                Text(
-                    tr("Version %s", appVersion), style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 28.dp, top = 8.dp, bottom = 16.dp)
-                )
-            }
-        }
-    ) {
-        // The screen behind the menu blurs a little while the menu is open.
-        val fr = Repo.friends.firstOrNull { it.code == friendCode }
-        // While the keyboard is open the bottom bar steps aside and the screen above it makes room (edge to edge, 2.102).
-        val imeOpen = WindowInsets.isImeVisible
-        val showBar = !settings && !binOpen && fr == null && !listSettings && !notesOpen && !profileOpen && !inChat && !imeOpen
-        Column(Modifier.fillMaxSize().then(if (blurRadius > 0.dp) Modifier.blur(blurRadius) else Modifier)) {
-        // With the bottom bar, the screens above it don't leave room for the phone's own navigation bar again.
-        Box(Modifier.weight(1f).imePadding().then(if (showBar) Modifier.consumeWindowInsets(WindowInsets.navigationBars) else Modifier)) {
-            when {
-                profileOpen -> ProfileScreen(snack)
-                settings -> SettingsScreen(snack, openMenu)
-                binOpen -> BinScreen(snack)
-                fr != null -> FriendScreen(fr, snack, openMenu, onRemoved = { friendCode = null })
-                listSettings -> key(Shared.active, Repo.openMine) {
-                    ListSettingsScreen(snack, onDeleted = { listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false; hub = true }) { listSettings = false; pricesOpen = false; friendsOpen = false; notesOpen = false; profileOpen = false }
-                }
-                notesOpen -> NotificationsScreen(snack) { key -> openNote(key) }
-                pricesOpen -> PricesScreen(snack, onBack = { pricesOpen = false })
-                discoverOpen -> DiscoverScreen(
-                    snack, onProfile = { profileOpen = true },
-                    onFound = { u, m -> addTarget = null; prefillMeta = m; fromShop = true; prefill = u; adding = true }
-                )
-                friendsOpen -> FriendsScreen(snack, onProfile = { profileOpen = true }, onOpenLink = { friendCode = it })
-                messagesOpen -> MessagesScreen(snack, onProfile = { profileOpen = true })
-                exchangesOpen -> ExchangesScreen(snack, onOpenMine = { openMine(it) }, onNew = { newExchange = true })
-                groupOpen != null -> key(groupOpen) {
-                    GroupScreen(groupOpen!!, snack, onBack = { groupOpen = null; hub = true }, onOpenMine = { openMine(it) })
-                }
-                hub -> HubScreen(
-                    snack,
-                    onOpenMine = { openMine(it) },
-                    onOpenGroup = { openGroup(it) },
-                    onNewMine = { newMine = true },
-                    onNewGroup = { newShared = true },
-                    onProfile = { profileOpen = true },
-                    onAddTo = { t -> addTarget = t; prefill = ""; adding = true },
-                    onOpenWishGroup = { GroupNav.openGroup(it) },
-                    onNewWishGroup = { newWishGroup = true },
-                    onFriends = { FriendsNav.reset(); closeAll(); friendsOpen = true },
-                    onReserved = { reservedOpen = true },
-                    onCreateList = { createChoice = true },
-                    onAddWish = { addTarget = Repo.lastSaveTo; prefill = ""; adding = true },
-                    onNewExchange = { newExchange = true }
-                )
-                else -> key(Shared.active, Repo.openMine) {
-                    HomeScreen(
-                        snack, openMenu,
-                        onAdd = { prefill = ""; adding = true },
-                        onNewCat = { catDlg = true },
-                        onInvite = { inviteDlg = true },
-                        onListSettings = { listSettings = true },
-                        onBack = { HubNav.page = null; closeAll(); hub = true }
-                    )
                 }
             }
-        }
-        if (showBar) {
-            AppBottomBar(
-                current = when {
-                    pricesOpen -> ""; discoverOpen -> "discover"; friendsOpen -> "friends"; messagesOpen -> "messages"
-                    hub -> "home"; else -> ""
-                },
-                onHome = { HubNav.page = null; closeAll(); hub = true },
-                // "Messages" (owner, 2.98) took the place of "Wishlists"; your wishlists are on Home and its number.
-                onMessages = {
-                    if (messagesOpen) ChatNav.peer = null
-                    pricesOpen = false; discoverOpen = false; friendsOpen = false; messagesOpen = true
-                },
-                onAdd = {
-                    val onAList = !hub && !pricesOpen && !discoverOpen && !friendsOpen && !messagesOpen
-                    addTarget = if (onAList) (Shared.active ?: MyLists.saveKey(Repo.openMine, false)) else Repo.lastSaveTo
-                    prefill = ""; adding = true
-                },
-                onDiscover = { discoverOpen = true; pricesOpen = false; friendsOpen = false; messagesOpen = false },
-                onFriends = {
-                    // Tapping Friends again goes back to its first page.
-                    if (friendsOpen) FriendsNav.reset()
-                    friendsOpen = true; pricesOpen = false; discoverOpen = false; messagesOpen = false
-                },
-                friendsDot = Friends.waiting > 0,
-                messagesDot = Chat.unreadTotal > 0
-            )
-        }
-        }
-    }
-
-    // The menu button lives above the menu so it can spin into an X and close it. Hidden: no side menu (7 November 2026).
-    if (false) Box(
-        Modifier.windowInsetsPadding(TopAppBarDefaults.windowInsets).height(64.dp).padding(start = 4.dp),
-        contentAlignment = Alignment.CenterStart
-    ) {
-        IconButton(
-            onClick = { scope.launch { if (drawer.isOpen) drawer.close() else drawer.open() } },
-            modifier = Modifier.semantics { contentDescription = if (menuOpen) tr("Close menu") else tr("Open menu") }
-        ) {
-            Box {
-                AnimatedMenuIcon(menuOpen, MaterialTheme.colorScheme.onSurface)
-                // (Until 2.122 a red dot here showed news in Notifications; now the bell at the top right does.)
+            if (showBar) {
+                AppBottomBar(
+                    current = when {
+                        pricesOpen -> ""; discoverOpen -> "discover"; friendsOpen -> "friends"; messagesOpen -> "messages"
+                        hub -> "home"; else -> ""
+                    },
+                    onHome = { HubNav.page = null; closeAll(); hub = true },
+                    // "Messages" (owner, 2.98) took the place of "Wishlists"; your wishlists are on Home and its number.
+                    onMessages = {
+                        if (messagesOpen) ChatNav.peer = null
+                        pricesOpen = false; discoverOpen = false; friendsOpen = false; messagesOpen = true
+                    },
+                    onAdd = {
+                        val onAList = !hub && !pricesOpen && !discoverOpen && !friendsOpen && !messagesOpen
+                        addTarget = if (onAList) (Shared.active ?: MyLists.saveKey(Repo.openMine, false)) else Repo.lastSaveTo
+                        prefill = ""; adding = true
+                    },
+                    onDiscover = { discoverOpen = true; pricesOpen = false; friendsOpen = false; messagesOpen = false },
+                    onFriends = {
+                        // Tapping Friends again goes back to its first page.
+                        if (friendsOpen) FriendsNav.reset()
+                        friendsOpen = true; pricesOpen = false; discoverOpen = false; messagesOpen = false
+                    },
+                    friendsDot = Friends.waiting > 0,
+                    messagesDot = Chat.unreadTotal > 0
+                )
+            }
             }
         }
-    }
+        composable(Route.PROFILE) { RouteBox { ProfileScreen(snack) } }
+        composable(Route.SETTINGS) { RouteBox { SettingsScreen(snack) } }
+        composable(Route.BIN) { RouteBox { BinScreen(snack) } }
+        composable(Route.NOTES) { RouteBox { NotificationsScreen(snack) { key -> openNote(key) } } }
     }
 
     if (adding) key(prefill) {
@@ -1034,11 +836,12 @@ fun App(
     LaunchedEffect(needName) { if (needName) NameGate.ensure {} }
     if (AccountNav.open) AccountSheet(
         onClose = { AccountNav.open = false },
-        onProfile = { AccountNav.open = false; closeAll(); profileOpen = true },
+        // Back from these returns to the screen the sheet was opened on (ROADMAP Stage 1).
+        onProfile = { AccountNav.open = false; nav.openOnTop(Route.PROFILE) },
         onReserved = { AccountNav.open = false; reservedOpen = true },
         onReceived = { AccountNav.open = false; receivedOpen = true },
-        onBin = { AccountNav.open = false; closeAll(); binOpen = true },
-        onSettings = { AccountNav.open = false; closeAll(); settings = true }
+        onBin = { AccountNav.open = false; nav.openOnTop(Route.BIN) },
+        onSettings = { AccountNav.open = false; nav.openOnTop(Route.SETTINGS) }
     )
     if (receivedOpen) ReceivedScreen { receivedOpen = false }
     // "Gifts I reserved" (2.129): tapping a list opens it where it lives (a friend, a group, a gift exchange, a gift list).
@@ -1179,7 +982,7 @@ fun App(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    snack: SnackbarHostState, onMenu: () -> Unit, onAdd: () -> Unit, onNewCat: () -> Unit, onInvite: () -> Unit,
+    snack: SnackbarHostState, onAdd: () -> Unit, onNewCat: () -> Unit, onInvite: () -> Unit,
     onListSettings: () -> Unit, onBack: () -> Unit
 ) {
     val ctx = LocalContext.current
