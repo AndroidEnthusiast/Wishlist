@@ -60,6 +60,11 @@ jobs:
           # the old file in it instead, so the download link always gives the newest app.
           gh release create latest Wishlist.apk --title "Latest Wishlist app" --notes "Newest build. Download Wishlist.apk below." --target "${{ github.sha }}" \
             || gh release upload latest Wishlist.apk --clobber
+          # "gh release create" makes a draft, uploads the file and then publishes it. When GitHub stumbled on that last
+          # part (8 November 2026), the release stayed a draft and the download link gave "404". So: publish it again,
+          # and stop with a red cross if it still isn't public, instead of a green tick nobody can download.
+          gh release edit latest --draft=false --latest || true
+          test "$(gh release view latest --json isDraft --jq .isDraft)" = "false"
 
   pages:
     runs-on: ubuntu-latest
