@@ -179,30 +179,6 @@ fun ProfileSummary(onProfile: () -> Unit, onFriends: () -> Unit = {}, onAddWish:
 }
 
 /**
- * Home's "Total value" (owner, 7 November 2026): the wishes your own wishlists still wish for (not owned, a 2× wish
- * twice, private wishes too, a copied wish once; collab wishlists are not in [ws]). Amounts in other currencies can't
- * be added up without exchange rates: the tile shows the currency with the biggest amount and a "+" when there are
- * others. No prices at all: 0 in your currency.
- */
-internal fun homeTotal(ws: List<Wish>): String {
-    val sums = ws.filter { !it.got && it.bin == 0L && it.price != null }.groupBy { it.currency }
-        .map { (cur, l) -> cur to l.sumOf { (it.price ?: 0.0) * it.qty.coerceAtLeast(1) } }
-        .sortedByDescending { it.second }
-    // With cents (owner, 7 November 2026).
-    if (sums.isEmpty()) return money(0.0, localCurrency())
-    return money(sums[0].second, sums[0].first) + if (sums.size > 1) "+" else ""
-}
-
-/** An amount without cents ("€1,245"), so it fits a small tile. */
-internal fun wholeMoney(p: Double, cur: String): String = try {
-    java.text.NumberFormat.getCurrencyInstance().apply {
-        currency = java.util.Currency.getInstance(cur); maximumFractionDigits = 0; minimumFractionDigits = 0
-    }.format(Math.round(p))
-} catch (e: Exception) {
-    Math.round(p).toString()
-}
-
-/**
  * The small tile behind a number (owner, 2.96: "separate tiles, but subtle"). Quiet: the card colour, a little see-
  * through, no shadow, a faint edge in dark. The other styles (owner, 2.103: the tiles must follow the theme): a small
  * version of their own card, with its lines, hard shadow, cut corners or raised neumorphic shape.

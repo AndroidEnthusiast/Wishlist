@@ -1,0 +1,28 @@
+name: Keep Supabase awake
+# A free Supabase project is paused after about a week without use, and then the app and the web pages stop working.
+# Every 2 days this asks Supabase one tiny question (no data is read or changed), so it never pauses (owner, D4,
+# 8 November 2026). If Supabase doesn't answer, this job fails and GitHub e-mails the owner: open the Supabase
+# dashboard and press "Restore project" if it says paused.
+on:
+  schedule:
+    - cron: '17 4 */2 * *'
+  workflow_dispatch:
+
+jobs:
+  touch:
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Ask Supabase one tiny question
+        run: |
+          # The public address and publishable key (also in the app and web pages: they are meant to be public).
+          url="https://aspnmvmsvwbezdltykgx.supabase.co"
+          key="sb_publishable_2RpbWlDJBB3yV2TO-h68xA_i-gXfd_t"
+          for try in 1 2 3; do
+            code=$(curl -s -o answer.txt -w '%{http_code}' -m 30 -X POST "$url/rest/v1/rpc/wl_get_reservations" \
+              -H "apikey: $key" -H "Content-Type: application/json" -d '{"p_code":"KEEPAWAKE","p_device":"keep-awake-job"}') || code=000
+            if [ "$code" = "200" ]; then echo "Supabase answered: $(cat answer.txt)"; exit 0; fi
+            echo "Try $try: Supabase answered $code $(head -c 300 answer.txt 2>/dev/null)"; sleep 20
+          done
+          echo "::error::Supabase didn't answer. Open supabase.com, your project: if it says Paused, press Restore project."
+          exit 1

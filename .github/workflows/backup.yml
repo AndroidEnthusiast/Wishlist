@@ -1,0 +1,61 @@
+name: Weekly database backup
+# Every week a copy of the whole Supabase database (the "public" part: lists, wishes, reservations, friends, groups,
+# exchanges, chats) is made and LOCKED with a password before it is saved (owner, D3, 8 November 2026). The repository
+# is public, and anyone with a GitHub account can download a public repository's job files, so an unlocked copy would
+# give away every list's secret keys. Each copy is kept 90 days (Actions > this job > a run > Artifacts).
+# Needs two repository secrets (Settings > Secrets and variables > Actions):
+#   SUPABASE_DB_URL  the "Session pooler" connection string from Supabase's Connect button, with the database password
+#   BACKUP_PASSWORD  a long password the owner made up and keeps in a password manager; without it a copy can't be opened
+# Restoring is written down in docs/BACKUPS.md. Not in the copy: pictures uploaded to Supabase Storage (only their
+# addresses), and Supabase's own parts (accounts, settings), which the supabase-*.sql scripts set up again.
+on:
+  schedule:
+    - cron: '43 2 * * 0'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Check the secrets are there
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+          PW: ${{ secrets.BACKUP_PASSWORD }}
+        run: |
+          [ -n "$DB" ] || { echo "::error::The secret SUPABASE_DB_URL is missing (Settings > Secrets and variables > Actions)."; exit 1; }
+          [ -n "$PW" ] || { echo "::error::The secret BACKUP_PASSWORD is missing (Settings > Secrets and variables > Actions)."; exit 1; }
+          [ ${#PW} -ge 16 ] || { echo "::error::BACKUP_PASSWORD is too short: use at least 16 characters."; exit 1; }
+      - name: Copy the database
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          # pg_dump must be at least as new as the database, so use the database's own version.
+          v=$(docker run --rm --network host -e DB postgres:17 sh -c 'psql "$DB" -tAc "show server_version_num"' | tr -d '[:space:]')
+          major=$(( v / 10000 )); [ "$major" -ge 17 ] || major=17
+          echo "Database version $v, using pg_dump $major"
+          mkdir -p out
+          docker run --rm --network host -e DB -v "$PWD/out:/out" "postgres:$major" \
+            pg_dump "$DB" --schema=public --no-owner --format=custom --file=/out/wishlist.dump
+          # A copy that can't be read back is no copy: list its contents and count the tables.
+          docker run --rm -v "$PWD/out:/out" "postgres:$major" pg_restore --list /out/wishlist.dump > out/contents.txt
+          tables=$(grep -c ' TABLE DATA ' out/contents.txt || true)
+          echo "Tables with data in the copy: $tables"; ls -l out/wishlist.dump
+          [ "$tables" -ge 5 ] || { echo "::error::The copy looks empty ($tables tables)."; exit 1; }
+      - name: Lock the copy with the password
+        env:
+          PW: ${{ secrets.BACKUP_PASSWORD }}
+        run: |
+          name="wishlist-$(date -u +%Y-%m-%d).dump.gpg"
+          printf '%s' "$PW" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 \
+            --symmetric --cipher-algo AES256 -o "out/$name" out/wishlist.dump
+          # Check that the password opens it again, then remove the unlocked copy.
+          printf '%s' "$PW" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 -d "out/$name" | cmp - out/wishlist.dump
+          rm -f out/wishlist.dump out/contents.txt
+          echo "NAME=$name" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.NAME }}
+          path: out/${{ env.NAME }}
+          retention-days: 90
+          if-no-files-found: error

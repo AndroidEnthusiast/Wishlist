@@ -415,17 +415,6 @@ private fun PriceChangeRow(w: Wish) {
 }
 
 /**
- * What all wishes with a price on a list add up to, for example "€245.50". Wishes in different currencies are added
- * up per currency ("€120.00 + $30.00"). Null when no wish has a price.
- */
-fun totalValue(wishes: List<Wish>): String? {
-    val sums = wishes.filter { it.price != null }.groupBy { it.currency }
-        .map { (cur, ws) -> cur to ws.sumOf { it.price ?: 0.0 } }
-    if (sums.isEmpty()) return null
-    return sums.sortedByDescending { it.second }.joinToString(" + ") { (cur, sum) -> money(sum, cur) }
-}
-
-/**
  * A section title, with a small round + button when something can be added, and a › after the words when [onMore]
  * opens all of it (owner, 7 November 2026: "Your wishlists ›").
  */

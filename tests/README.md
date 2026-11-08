@@ -12,6 +12,7 @@ The last line must say `ALL SUITES OK`. Each suite also exits with an error code
 
 | Folder | What it checks | Checks |
 |---|---|---|
+| `shared/test.js` | `tests/shared/same-answers.json` answered by `web/parse.js` and `web/occasion.js`; the app answers the same file in `SameAnswersTest.kt`, so app and web can't drift | 49 |
 | `parse/parse_test.js` | `web/parse.js` reads product pages (prices, currencies, Amazon, JSON-LD, Funda, blocked pages); mirrors `Fetch.kt` | 63 |
 | `function/test.ts` | `supabase/functions/fetch-page/index.ts` in real Deno: private addresses, redirects, size and time limits, wrong keys, a group link as key | 101 |
 | `index-page/test.js` | `web/index.html` in jsdom: friends' page, invite page (Android vs. other devices), clipboard copy | 140 |
@@ -30,9 +31,15 @@ Notes
 
 `function/push_test.ts` (in `run-all.sh`) checks `supabase/functions/push`: the signed Google token request, one push per message, old messages skipped, no text in the push, forgotten addresses, bad input. `sql/push_test.sql` (not in `run-all.sh`, needs PostgreSQL) checks `supabase-push.sql` after the chat setup: fetching doesn't mark read, `wl_chat_seen`, push addresses, the trigger. Locally pg_net doesn't exist: create a schema `net` with a table `net.calls(url text, body jsonb)` and a function `net.http_post(url text, body jsonb, headers jsonb)` that inserts into it, and leave out the `create extension` line. It ends with `ALL PUSH CHECKS OK`. 20 checks.
 
+## App tests (Android, since 8 November 2026, ROADMAP S0.1/S0.2)
+
+`app/src/test/java/com/wishlist/app/`: plain JUnit checks of the app's logic (no phone needed): `TotalsTest`, `QuantityTest`, `OccasionTest`, `SortingTest`, `ChartMathTest`, `WishJsonTest`, `CurrencyTest`, `SameAnswersTest` (reads `tests/shared/same-answers.json`), and `StartupTest` (Robolectric: the app starts with crash reports on). **The GitHub build runs them before it makes the APK** (`gradle testReleaseUnitTest assembleRelease`): if one fails, no new app is published and the job keeps the report as the file `test-report`. Run them here with `gradle testReleaseUnitTest` (about 1 minute once the SDK is set up). New pure logic goes in a file without screens (like `Totals.kt`, `Quantity.kt`) and gets a check; a rule that also lives in `web/` gets a case in `same-answers.json`.
+
+The session environment "Wishlist" (owner, D1, 8 November 2026) allows `dl.google.com`, so `bash tests/android-setup.sh` works; it also points Robolectric at Google's copy of Maven Central (`wl.mavenMirror` in `~/.gradle/gradle.properties`).
+
 ## App screenshots and shop icons (Android, since 5 November 2026)
 
-**Not in use:** they need Network access "Full", which the owner switched off again on 5 November 2026 (too slow). Only run them if the owner turns it on and asks.
+Not in the normal run: only with `-Pwl.screens` (`gradle testDebugUnitTest -Pwl.screens`), and only when the owner asks.
 
 These run the real app code on a computer (Robolectric), not on a phone. A fresh cloud computer needs the Android SDK first (Network access must be "Full"): `bash tests/android-setup.sh` (about 1 minute). Maven Central answers cloud computers with "429 Too Many Requests", so the setup script also points Gradle on this computer (not the GitHub build) at Google's exact copy of Maven Central; with it, a build from an empty cache downloaded everything without one error (5 November 2026).
 

@@ -67,16 +67,22 @@ order, one stage at a time**; tick off steps here (`[x]`) in the same commit tha
 
 ## Stage 0 — Safety nets (1–2 sessions)
 Goal: catch mistakes before they reach the phone, and never lose server data.
-- [ ] S0.1 GitHub build also runs the app's unit tests (`gradle testReleaseUnitTest`) and fails if one fails; keep
+- [x] S0.1 GitHub build also runs the app's unit tests (`gradle testReleaseUnitTest`) and fails if one fails; keep
   the screenshot tests out of CI (owner's choice of 5 November).
-- [ ] S0.2 First real app tests: move pure logic out of screens where it's easy (price parsing, totals, sorting,
+- [x] S0.2 First real app tests: move pure logic out of screens where it's easy (price parsing, totals, sorting,
   occasion dates, quantity labels, reservation labels) and test it with plain JUnit (no Android needed).
 - [ ] S0.3 Product reader fixtures: saved copies of real product pages (only the HTML, no pictures) for the 20 starter
   shops in `tests/parse/pages/`, checked by both `Fetch.kt` (JUnit) and `web/parse.js`; the same page must give the
   same answer in both (P9). Pages are saved by a session with network access or uploaded by the owner.
-- [ ] S0.4 D3 backups and D4 keep-awake, if the owner said yes.
-- [ ] S0.5 D2 crash reports, if the owner said yes (`Licences.kt` if a new library is added).
+- [ ] S0.4 D3 backups and D4 keep-awake, if the owner said yes. *(2.153: both jobs built, `.github/workflows/backup.yml`
+  and `keep-awake.yml`. Done when the owner has added the two backup secrets and the first backup run is green.)*
+- [x] S0.5 D2 crash reports, if the owner said yes (`Licences.kt` if a new library is added).
 Owner tests: nothing changes on the phone. Done when the build runs tests and the backups exist.
+*Notes (session 1, 8 November 2026, 2.153):* D1–D5 answered (DECISIONS "Roadmap decisions D1–D5"). 32 app checks (31 plain
+JUnit + 1 Robolectric start check) and 49 shared app/web checks; the first S0.2 moves: `Totals.kt`, `OccasionUi.kt`,
+`QuantityUi.kt`. More pure logic (price parsing helpers, reservation counts on lists) moves when Stage 1 touches those
+screens. S0.3 still open: this environment can't reach the shops (most answer cloud computers with a bot check), so the
+saved pages must be uploaded by the owner, or fetched by a session with those hosts allowed.
 
 ## Stage 1 — Screens that manage themselves (3–5 sessions)  (P1)
 Goal: one screen at a time, Back always right, `MainActivity.kt` small.

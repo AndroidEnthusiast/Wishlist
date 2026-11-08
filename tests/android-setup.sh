@@ -26,4 +26,7 @@ settingsEvaluated {
     dependencyResolutionManagement.repositories.useMirror()
 }
 KTS
+# Robolectric (the app start and screenshot tests) downloads Android from Maven Central itself: the same copy.
+touch ~/.gradle/gradle.properties
+grep -q '^wl.mavenMirror=' ~/.gradle/gradle.properties || echo "wl.mavenMirror=https://maven-central.storage-download.googleapis.com/maven2" >> ~/.gradle/gradle.properties
 echo "Android SDK ready in $SDK"

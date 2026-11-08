@@ -10,8 +10,11 @@ android {
         applicationId = "com.wishlist.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 153
-        versionName = "2.152"
+        versionCode = 154
+        versionName = "2.153"
+        // Crash reports (Crash.kt): Crashlytics wants a build id, which its Gradle plugin would normally add. The app
+        // isn't shrunk or renamed (isMinifyEnabled = false), so there is no mapping file to upload; one id per version.
+        resValue("string", "com.google.firebase.crashlytics.mapping_file_id", "wishlist-$versionCode")
     }
     // The release key is NOT in this project. GitHub puts it in place while building, from the repository secrets
     // KEYSTORE_BASE64, KEYSTORE_PASSWORD and KEY_ALIAS (see .github/workflows/build.yml). Keep a copy of the key safe:
@@ -40,20 +43,29 @@ android {
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
     // A release build also runs Android's lint checks; they are advice here, not a reason to stop the build.
     lint { checkReleaseBuilds = false }
-    // Screenshot tests (app/src/test, Roborazzi + Robolectric): run by Claude before a push, never by the GitHub
-    // build (that only runs assembleRelease). See tests/README.md, "App screenshots".
+    // App tests (app/src/test). The plain JUnit checks of the app's logic run on every GitHub build before the APK is
+    // made (gradle testReleaseUnitTest assembleRelease): a failing check stops the update (ROADMAP S0.1). The screenshot
+    // tests (Roborazzi + Robolectric) are slow and only run on request with -Pwl.screens (owner, 5 November 2026: never
+    // in the GitHub build). See tests/README.md, "App tests".
     testOptions {
         unitTests.isIncludeAndroidResources = true
         unitTests.all {
+            val screens = project.hasProperty("wl.screens")
+            if (!screens) it.filter.excludeTestsMatching("*Screenshot*")
             it.systemProperty("roborazzi.test.record", "true")
             it.systemProperty("robolectric.graphicsMode", "NATIVE")
             it.maxHeapSize = "3g"
-            // Each test class in a fresh Java process: the app keeps its state in objects (Repo, ...), and one
-            // class (dark) left the next (light) unable to settle.
-            it.forkEvery = 1
+            // Screenshots: each test class in a fresh Java process: the app keeps its state in objects (Repo, ...),
+            // and one class (dark) left the next (light) unable to settle.
+            if (screens) it.forkEvery = 1
             // The shop checks need the internet; they only run with -Pwl.shops (tests/README.md).
             it.systemProperty("wl.shops", if (project.hasProperty("wl.shops")) "1" else "")
             it.testLogging.showStandardStreams = project.hasProperty("wl.shops")
+            // Robolectric downloads Android itself from Maven Central, which answers cloud computers with "429"; on
+            // such a computer tests/android-setup.sh sets wl.mavenMirror to Google's copy (the GitHub build doesn't).
+            (project.findProperty("wl.mavenMirror") as String?)?.let { m -> it.systemProperty("robolectric.dependency.repo.url", m) }
+            it.testLogging.events("failed")
+            it.testLogging.exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
         }
     }
 }
@@ -73,9 +85,13 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.6.0")
     // Instant message notifications (Push.kt). Set up in code from Config, so no google-services plugin or file.
     implementation("com.google.firebase:firebase-messaging:24.0.0")
+    // Crash reports (owner, D2, 8 November 2026; Crash.kt). Same Firebase release as firebase-messaging 24.0.0.
+    implementation("com.google.firebase:firebase-crashlytics:19.0.0")
 
-    // Only for the screenshot tests; none of this goes into the app.
+    // Only for the tests; none of this goes into the app.
     testImplementation("junit:junit:4.13.2")
+    // The real org.json for plain JUnit (Android's own copy only works on a phone).
+    testImplementation("org.json:json:20240303")
     testImplementation("org.robolectric:robolectric:4.12.2")
     testImplementation("io.github.takahirom.roborazzi:roborazzi:1.20.0")
     testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.20.0")

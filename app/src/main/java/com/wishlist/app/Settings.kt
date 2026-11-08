@@ -256,6 +256,11 @@ fun SettingsScreen(snack: SnackbarHostState, onMenu: () -> Unit) {
                     }
                 }) { Text(tr("Share app")) }
             }
+            // Crash reports (owner, D2, 8 November 2026; Crash.kt): said plainly, next to the licences.
+            Text(
+                tr("If Wishlist crashes, a crash report goes to Google Firebase so it can be fixed: where it went wrong, the phone model and Android version. Never your wishes, names or messages."),
+                style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
+            )
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     tr("The icons, fonts and building blocks in Wishlist, and their licences."),

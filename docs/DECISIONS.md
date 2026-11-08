@@ -423,3 +423,10 @@ What the owner has decided, and why. Follow these unless the owner changes their
 
 ## A real app (owner, 8 November 2026)
 - **The foundations get rebuilt before new features**: "I want the foundations to work for me and my partner but at the same time allow to scale up in the future." The plan is `docs/ROADMAP.md` (Stages 0–5: safety nets, navigation and ViewModels, a Room database on the phone, per-wish sync and live updates, server limits/photos/identity). Features are frozen until Stage 3 is done; small fixes are still fine. Open decisions D1–D5 are asked at the start of Stage 0.
+
+## Roadmap decisions D1–D5 (owner, 8 November 2026, start of Stage 0)
+- **D1 Network access: on for the rebuild (Stages 1–3).** Done as a personal environment called **"Wishlist"** (package registries plus `dl.google.com` for the Android SDK, not "Full"), so the app can be compiled and its tests run here before a push. The "Default" environment stays as it was. Setup per session: `bash tests/android-setup.sh`.
+- **D2 Crash reports: Firebase Crashlytics.** Crash details only (where it broke, phone model, Android version), never wishes, names, notes or chat; mentioned in the privacy text and credited in Licences. Checked at the start of each session, fixes first.
+- **D3 Database backups: a weekly GitHub job**, each copy kept privately for 90 days. Needs one GitHub secret with the Supabase database connection (the owner adds it).
+- **D4 Keeping Supabase awake: a simple touch every 2 days** by a scheduled GitHub job. The owner first asked for "only if it wasn't used for 2.5 days"; Claude pointed out that checking is itself a use, so it's the same thing with more parts; the owner chose the simple touch.
+- **D5 Identity: Supabase anonymous accounts** (no e-mail, no sign-up screen; later linkable to Google so a new phone gets everything back). Built in Stage 4 (S4.5), step by step, with every existing owner token, device id and link still working. Nothing is built for it before then.
