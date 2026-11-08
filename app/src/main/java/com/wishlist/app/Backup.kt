@@ -60,7 +60,11 @@ object Backup {
 
     /** Writes everything to [uri] (a file the person chose). */
     suspend fun export(c: Context, uri: Uri) = withContext(Dispatchers.IO) {
-        val prefs = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).all
+        // Your lists, wishes, bin, history, friends' lists and notifications as the database holds them (S2.4, 2.170),
+        // in the format Export files have always had; everything else from the settings store.
+        ListStore.flush()
+        val prefs = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).all.toMutableMap()
+        ListStore.current()?.let { s -> prefs.putAll(DbMove.toStore(s)) }
         val values = JSONObject()
         for ((k, v) in prefs) {
             if (k in phoneOnlyKeys) continue
@@ -122,6 +126,8 @@ object Backup {
         val newDir = c.filesDir.absolutePath
         fun fix(s: String) = if (oldDir.isNotEmpty() && oldDir != newDir) s.replace(oldDir, newDir) else s
 
+        // The database stops saving and is emptied: the next start moves the file's data in (S2.4, 2.170).
+        ListStore.forImport(c)
         // Replace the files (this phone's own Firebase files stay; a backup's copies of them are skipped).
         c.filesDir.listFiles()?.forEach { if (!phoneOnly(it.name)) it.deleteRecursively() }
         val root = c.filesDir.canonicalFile

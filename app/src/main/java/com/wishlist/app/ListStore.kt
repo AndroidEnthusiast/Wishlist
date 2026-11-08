@@ -182,12 +182,37 @@ object ListStore {
         }
     }
 
+    /**
+     * What the database holds now, for Export (S2.4): every save asked for so far is written first. Null when the
+     * database can't be used (Export then takes the settings store as it is).
+     */
+    fun current(): Snapshot? {
+        val c = app ?: return null
+        if (!live) return null
+        return try { io.submit<Snapshot> { read(WishlistDb.get(c).dao()) }.get() } catch (e: Throwable) { Crash.report(e); null }
+    }
+
+    /**
+     * Import (S2.4): stop saving, empty the database and forget it, so nothing is written halfway while the file's
+     * data goes into the settings store, and the next start moves it in fresh (no "differed" report).
+     */
+    fun forImport(c: Context) {
+        reset()
+        try {
+            io.submit {
+                WishlistDb.get(c).let { db -> db.runInTransaction { db.dao().clearData(); db.dao().clearMeta() } }
+            }.get()
+        } catch (e: Throwable) {
+            Crash.report(e)
+        }
+    }
+
     /** Waits until every copy asked for so far is written (the checks; Export later). */
     fun flush() {
         io.submit {}.get()
     }
 
-    /** For the checks: forget this start, as a new start of the app would. */
+    /** Forget this start, as a new start of the app would (the checks, and Import before it restarts the app). */
     @Synchronized
     internal fun reset() {
         app?.let { prefs(it).unregisterOnSharedPreferenceChangeListener(listener) }

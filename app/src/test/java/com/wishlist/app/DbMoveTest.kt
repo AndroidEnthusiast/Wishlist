@@ -86,6 +86,33 @@ class DbMoveTest {
         assertEquals(before, prefs.all.toMap())
     }
 
+    /** Writes what [DbMove.toStore] gives into the settings store, as Import does. */
+    private fun putStore(m: Map<String, Any>) {
+        val e = prefs.edit().clear()
+        for ((k, v) in m) when (v) {
+            is String -> e.putString(k, v)
+            is Set<*> -> e.putStringSet(k, v.map { it.toString() }.toSet())
+        }
+        e.commit()
+    }
+
+    @Test fun exportFormatRoundTrip() {
+        // S2.4: what the database holds, written in the Export format, reads back the same.
+        val s = ListStore.same(Snapshot(
+            listOf(
+                MineData("main", "My wishlist", "Hi", listOf("Home"), listOf(w(1L, "Teapot") { it.copy(star = true, qty = 2) }), "WL-AAAA2345", "t", setOf("p.jpg")),
+                MineData("b7", "Birthday", "", listOf("Home"), listOf(w(1L, "Copied"), w(9L, "Novel")), null, null, emptySet())
+            ),
+            listOf("main" to w(20L, "Old") { it.copy(bin = 3L) }, "gone_5" to w(21L, "From a deleted list") { it.copy(bin = 4L) }),
+            listOf("Home"),
+            mapOf(1L to listOf(PricePoint(100, 12.0), PricePoint(200, 10.0))),
+            listOf(Friend("WL-ABCD2345", "Robin")),
+            listOf(PriceNote(1L, "m:main", "Teapot", "", -10.0, 5L, true, "price", 0.0, "EUR"))
+        ))
+        putStore(DbMove.toStore(s))
+        assertEquals(s, ListStore.same(DbMove.snapshot(prefs)))
+    }
+
     @Test fun aSecondCopyReplacesTheFirst() {
         prefs.edit().clear().putString("wishes", arr(w(1L, "A"), w(2L, "B"))).commit()
         DbMove.copy(db, DbMove.snapshot(prefs), "1")
@@ -147,6 +174,10 @@ class DbMoveTest {
         ListStore.reset(); ListStore.start(c)
         assertEquals(true, ListStore.matched)
         assertEquals(s.lists.single { it.id == MAIN_LIST }.wishes, MyLists.read(prefs, MAIN_LIST).wishes)
+        // S2.4: the real data in the Export format reads back the same.
+        val real = ListStore.same(s)
+        putStore(DbMove.toStore(real))
+        assertEquals(real, ListStore.same(DbMove.snapshot(prefs)))
         ListStore.reset(); WishlistDb.reset()
     }
 }

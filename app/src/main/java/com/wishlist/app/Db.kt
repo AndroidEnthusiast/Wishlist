@@ -171,6 +171,7 @@ interface WishlistDao {
     @Query("DELETE FROM price_points") fun clearPricePoints()
     @Query("DELETE FROM friend_lists") fun clearFriendLists()
     @Query("DELETE FROM notifications") fun clearNotes()
+    @Query("DELETE FROM meta") fun clearMeta()
 
     /** Empties every table except `meta` (inside the caller's transaction). */
     fun clearData() {

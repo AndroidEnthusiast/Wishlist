@@ -139,7 +139,8 @@ values (wishes ~3 KB), plus ~100 leftover shop-icon entries from old versions th
   Tested first with an Export file of the owner's real data. *(2.166, version B: a rehearsal at every start, the app
   still uses the settings store; the owner's real Export moved exactly (1 list, 7 wishes, 1 bin, 17 price points,
   5 notifications). The flag that switches the app over comes with version C.)*
-- [ ] S2.4 Export/Import read and write the new database (old Export files still import).
+- [x] S2.4 Export/Import read and write the new database (old Export files still import). *(2.170: Export from the
+  database in the old file format; Import empties the database and the next start moves the file in.)*
 - [ ] S2.5 Only after the owner confirms on both phones: remove the old storage code (`MyLists` blobs, `SafeStore`).
 Owner tests: everything is still there after updating (lists, bin, history, categories, covers), on both phones.
 

@@ -60,4 +60,27 @@ class BackupTest {
         assertFalse(Backup.phoneOnly("profile_1793643713116.jpg"))
         assertFalse(Backup.phoneOnly("friends/JC6X7SF3MQFN3Z8P4Q9C_1.jpg"))
     }
+
+    @Test fun exportAndImportGoThroughTheDatabase() = runBlocking {
+        // S2.4 (2.170): Export takes your lists from the database; Import empties it, and the next start moves the
+        // file's data in, matching (no "differed" report).
+        ListStore.reset(); WishlistDb.reset()
+        val prefs = c.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
+        val teapot = Wish(1, "https://shop.example/1", "Teapot", "", "", 10.0, null, "EUR", "Home")
+        prefs.edit().clear().putString("wishes", org.json.JSONArray().put(wishToJson(teapot)).toString()).putString("cats", "Home").commit()
+        ListStore.start(c)
+        val file = File(c.cacheDir, "backup2.zip")
+        Backup.export(c, Uri.fromFile(file))
+        val text = ZipFile(file).use { z -> String(z.getInputStream(z.getEntry("prefs.json")).readBytes()) }
+        assertTrue(text.contains("Teapot"))
+
+        // Another phone with a different list: Import replaces it.
+        prefs.edit().clear().putString("wishes", "[]").commit()
+        Backup.import(c, Uri.fromFile(file))
+        // The app restarts after an Import: a new start.
+        ListStore.reset(); ListStore.start(c)
+        assertEquals(true, ListStore.matched)
+        assertEquals(listOf("Teapot"), ListStore.get(MAIN_LIST)!!.wishes.map { it.title })
+        ListStore.reset(); WishlistDb.reset()
+    }
 }

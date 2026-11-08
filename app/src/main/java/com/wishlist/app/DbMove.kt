@@ -120,4 +120,41 @@ object DbMove {
         }
         return count!!
     }
+
+    /**
+     * The other way round (S2.4, 2.170): [s] as the settings store keeps it, key by key, in the format Export files
+     * have always had. Export writes these instead of reading the settings store, so a file always holds what the
+     * database holds; Import puts them back and the next start moves them in. [snapshot] of the result gives [s] back.
+     */
+    fun toStore(s: Snapshot): Map<String, Any> {
+        val out = LinkedHashMap<String, Any>()
+        fun arr(ws: List<Wish>) = JSONArray().apply { ws.forEach { put(wishToJson(it)) } }.toString()
+        out["mine_ids"] = JSONArray(s.lists.map { it.id }).toString()
+        for (l in s.lists) {
+            if (l.id == MAIN_LIST) {
+                out["wishes"] = arr(l.wishes); out["name"] = l.name; out["about"] = l.about
+                out["cats"] = l.cats.joinToString("\n")
+                l.code?.let { out["code"] = it }; l.token?.let { out["token"] = it }
+                out["photosUp"] = l.photos.toSet()
+            } else {
+                out[MyLists.blobKey(l.id)] = JSONObject()
+                    .put("name", l.name).put("about", l.about).put("cats", JSONArray(l.cats)).put("wishes", JSONArray(arr(l.wishes)))
+                    .put("code", l.code ?: "").put("token", l.token ?: "").put("photos", JSONArray(l.photos.toList())).toString()
+            }
+        }
+        out["bin"] = arr(s.bin.map { it.second })
+        out["bin_owner"] = JSONObject().apply { s.bin.forEach { (l, w) -> if (l != MAIN_LIST) put(w.id.toString(), l) } }.toString()
+        out["history"] = JSONObject().apply {
+            s.history.forEach { (id, ps) -> put(id.toString(), JSONArray().apply { ps.forEach { put(JSONArray().put(it.t).put(it.p)) } }) }
+        }.toString()
+        out["friends"] = JSONArray().apply { s.friends.forEach { put(JSONObject().put("code", it.code).put("name", it.name)) } }.toString()
+        out["notes"] = JSONArray().apply {
+            s.notes.forEach {
+                put(JSONObject().put("id", it.wishId).put("list", it.listKey).put("title", it.title).put("image", it.image)
+                    .put("pct", it.pct).put("time", it.time).put("read", it.read)
+                    .put("kind", it.kind).put("amount", it.amount).put("cur", it.currency))
+            }
+        }.toString()
+        return out
+    }
 }
