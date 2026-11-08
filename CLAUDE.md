@@ -1,6 +1,6 @@
 # Wishlist: standing notes for Claude Code
 
-Read this first, then `docs/STYLE.md` (the style guide: every screen, dialog and feature follows it; owner, 7 November 2026), then `docs/DECISIONS.md` (what the owner has decided and why: follow it, and add to it whenever the owner decides something new). The long history, a short summary of every session, the open to-do list and **what the owner wants to do next** ("Next session") are in `docs/HANDOFF.md`: read it at the start of a session, and before a session ends add a short summary of it and update "Next session". Every version's technical notes are in `README.md`.
+Read this first, then **`docs/ROADMAP.md` (the plan to turn the app into a real, scalable app: follow it stage by stage before building new features; owner, 8 November 2026)**, then `docs/STYLE.md` (the style guide: every screen, dialog and feature follows it; owner, 7 November 2026), then `docs/DECISIONS.md` (what the owner has decided and why: follow it, and add to it whenever the owner decides something new). The long history, a short summary of every session, the open to-do list and **what the owner wants to do next** ("Next session") are in `docs/HANDOFF.md`: read it at the start of a session, and before a session ends add a short summary of it and update "Next session". Every version's technical notes are in `README.md`.
 
 ## Who you are working with
 - The owner is a beginner. They work from an Android phone and a Chromebook (browser only), with no terminal or IDE. They write in plain English.
