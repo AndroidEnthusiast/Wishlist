@@ -149,6 +149,7 @@ interface WishlistDao {
     @Query("SELECT * FROM bin ORDER BY position") fun bin(): List<BinRow>
     @Query("SELECT * FROM categories ORDER BY position") fun categories(): List<CategoryRow>
     @Query("SELECT * FROM price_points WHERE wish_id = :wishId ORDER BY at") fun pricePoints(wishId: Long): List<PricePointRow>
+    @Query("SELECT * FROM price_points ORDER BY wish_id, at") fun allPricePoints(): List<PricePointRow>
     @Query("SELECT * FROM friend_lists ORDER BY position") fun friendLists(): List<FriendListRow>
     @Query("SELECT * FROM notifications ORDER BY position") fun notes(): List<NoteRow>
     @Query("SELECT value FROM meta WHERE `key` = :key") fun meta(key: String): String?

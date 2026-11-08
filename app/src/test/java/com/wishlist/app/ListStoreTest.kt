@@ -86,4 +86,38 @@ class ListStoreTest {
         assertEquals(listOf("Novel", "Copied teapot"), ListStore.get("b7")!!.wishes.map { it.title })
         assertEquals(2, db { dao.countLists() })
     }
+
+    @Test fun binHistoryFriendsAndNotesComeFromTheDatabase() {
+        // Version C2 (2.168): read once at start from the database, after the same check.
+        prefs.edit().clear().putString("wishes", arr(w(1, "Teapot"))).putString("cats", "Home")
+            .putString("bin", arr(w(20, "Old lamp").copy(bin = 100L)))
+            .putString("history", org.json.JSONObject()
+                .put("1", JSONArray().put(JSONArray().put(200).put(10.0)).put(JSONArray().put(100).put(12.0)))
+                .put("5", JSONArray()).toString())
+            .putString("friends", JSONArray()
+                .put(org.json.JSONObject().put("code", "WL-ABCD2345").put("name", "Robin"))
+                .put(org.json.JSONObject().put("code", "WL-ABCD2345").put("name", "Robin again")).toString())
+            .putString("notes", JSONArray().put(org.json.JSONObject().put("id", 1).put("list", "m:main").put("title", "Teapot").put("pct", -10.0).put("time", 5L)).toString())
+            .commit()
+        ListStore.start(c)
+        assertEquals(true, ListStore.matched)
+        assertEquals(listOf("Old lamp"), ListStore.bin()!!.map { it.title })
+        // In time order, without the empty history.
+        assertEquals(mapOf(1L to listOf(PricePoint(100, 12.0), PricePoint(200, 10.0))), ListStore.history())
+        assertEquals(listOf(Friend("WL-ABCD2345", "Robin")), ListStore.friends())
+        assertEquals(listOf("Teapot"), ListStore.notes()!!.map { it.title })
+        // A lost bin row is noticed and repaired from the fallback.
+        db { WishlistDb.get(c).runInTransaction { dao.clearBin() } }
+        restart()
+        assertEquals(false, ListStore.matched)
+        assertEquals(listOf("Old lamp"), ListStore.bin()!!.map { it.title })
+    }
+
+    @Test fun withoutTheDatabaseTheAppReadsTheSettingsStore() {
+        // Nothing comes from the database when it couldn't be used: every reader falls back.
+        ListStore.reset()
+        assertEquals(null, ListStore.bin()); assertEquals(null, ListStore.history())
+        assertEquals(null, ListStore.friends()); assertEquals(null, ListStore.notes())
+        assertEquals(null, ListStore.get(MAIN_LIST))
+    }
 }

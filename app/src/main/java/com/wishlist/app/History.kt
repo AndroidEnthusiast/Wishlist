@@ -27,6 +27,8 @@ object History {
     fun load(c: Context) {
         if (loaded) return
         loaded = true
+        // From the database (ListStore, 2.168), or the settings store when the database can't be used.
+        ListStore.history()?.let { all = it; return }
         val s = prefs(c).getString("history", null) ?: return
         try {
             val o = JSONObject(s)

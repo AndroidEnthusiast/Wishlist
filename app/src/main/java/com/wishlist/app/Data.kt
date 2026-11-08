@@ -224,7 +224,8 @@ object Repo {
         ListStore.start(c)
         val p = prefs(c)
         myWishes = SafeStore.readList(p, "wishes") { wishFromJson(it) }
-        myBin = SafeStore.readList(p, "bin") { wishFromJson(it) }
+        // The bin from the database (ListStore, 2.168), or the settings store when the database can't be used.
+        myBin = ListStore.bin() ?: SafeStore.readList(p, "bin") { wishFromJson(it) }
         History.load(c)
         History.seed(c, myWishes)
         p.getString("cats", null)?.let { s ->
@@ -337,7 +338,7 @@ object Repo {
         Targets.load(c)
         Sync.attach(c)
         Shared.load(c)
-        friends = SafeStore.readList(p, "friends") { o -> Friend(o.getString("code"), o.optString("name", "Wishlist")) }
+        friends = ListStore.friends() ?: SafeStore.readList(p, "friends") { o -> Friend(o.getString("code"), o.optString("name", "Wishlist")) }
         deviceId = p.getString("device", null)
             ?: UUID.randomUUID().toString().also { p.edit().putString("device", it).apply() }
     }

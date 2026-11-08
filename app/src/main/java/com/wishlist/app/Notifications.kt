@@ -89,6 +89,8 @@ object Notifications {
     fun load(c: Context) {
         if (loaded) return
         loaded = true
+        // From the database (ListStore, 2.168), or the settings store when the database can't be used.
+        ListStore.notes()?.let { all = it; return }
         all = try {
             val a = JSONArray(prefs(c).getString(KEY, null) ?: "[]")
             (0 until a.length()).map { i ->
