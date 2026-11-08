@@ -45,6 +45,9 @@ abstract class NavigationBase {
         val app = ApplicationProvider.getApplicationContext<android.app.Application>()
         WorkManagerTestInitHelper.initializeTestWorkManager(app, Configuration.Builder().build())
         Shadows.shadowOf(app).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
+        // Animations off, as on a phone with "Remove animations": November's snow on Home (Snow.kt) never stops
+        // otherwise, and on GitHub's slower computer the pretend phone then never settles (2.158's build failed so).
+        android.provider.Settings.Global.putFloat(app.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 0f)
         // No welcome, no background question and a name, so no pop-up covers the screens.
         app.getSharedPreferences("wishlist", Context.MODE_PRIVATE).edit()
             .putBoolean("welcomed", true).putBoolean("asked_background", true).putString("sh_me", "Sam").commit()
@@ -177,6 +180,17 @@ class NavigationTest : NavigationBase() {
         tabOn("Friends")
         phoneBack()
         tabOn("Home")
+    }
+
+    @Test fun giftExchangesKeepTheBarAndGoBackHome() {
+        // Gift exchanges (Home, a link, a notification): its own screen with the bottom bar, Home lit; ← returns Home.
+        tap("Friends")
+        compose.runOnUiThread { ExchangeNav.show = true }
+        shows("Gift exchange")
+        tabOn("Home")
+        tap("Back")
+        tabOn("Home")
+        compose.onAllNodes(hasText("Gift exchange", substring = false)).assertCountEquals(0)
     }
 
     @Test fun friendsListFromALinkBackHome() {

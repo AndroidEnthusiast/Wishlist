@@ -23,6 +23,11 @@ class StartupTest {
         assertFalse(crashlytics.didCrashOnPreviousExecution())
         // The checks never send reports to the real Crashlytics page (2.155): Crash.start switches collection off here.
         assertTrue(Crash.onComputer)
+        // Nor do they reach the real server (Cloud.kt): a call fails at once, as on a phone that is offline.
+        val refused = try {
+            kotlinx.coroutines.runBlocking { Cloud.rpc("wl_news_get", org.json.JSONObject()) }; false
+        } catch (e: java.io.IOException) { true }
+        assertTrue(refused)
         // A second start (or Push.init later) changes nothing and doesn't throw.
         Crash.start(app)
         Crash.report(IllegalStateException("test"))

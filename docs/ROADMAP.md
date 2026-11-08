@@ -98,7 +98,8 @@ Goal: one screen at a time, Back always right, `MainActivity.kt` small.
   the tabs, then the list screen last. Each move removes its on/off switches from `MainActivity`.
   *(2.154: Profile, App settings, Bin, Notifications are routes; 4 of the 75 switches gone. 2.156: Received gifts,
   Gifts I reserved, Price changes, a list's settings; 8 gone. 2.157: a list opened from its link or code; 9 gone. 2.158: the tabs
-  (Messages, My shops, Friends); 12 gone. Next: groups and gift exchanges, then Home and the list screen last.)*
+  (Messages, My shops, Friends); 12 gone. 2.159: a wishlist group, Gift exchanges; 14 gone. Next: Home and the list
+  screen (the last of "main"), then S1.3 and S1.4.)*
 - [ ] S1.3 Notifications and links (`OPEN_*` extras, App Links) open routes instead of setting switches.
 - [ ] S1.4 Dialogs that belong to one screen move into that screen; app-wide ones (delete/undo, move, share) stay in
   one place.

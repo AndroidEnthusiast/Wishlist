@@ -25,8 +25,18 @@ const val ABOUT_ITEM_ID = 0L
 
 /** Talks to the Supabase functions created by supabase-setup.sql. */
 object Cloud {
+    /**
+     * The app's own checks (Robolectric, also in the GitHub build) never reach the real server: every call fails at
+     * once as if the phone were offline. Keeps the checks fast and predictable (2.159: waiting on the real server kept
+     * the pretend phone busy) and real lists safe from them.
+     */
+    private fun noServerInChecks() {
+        if (Crash.onComputer) throw java.io.IOException("No server in the app's checks")
+    }
+
     internal suspend fun rpc(fn: String, body: JSONObject): String = withContext(Dispatchers.IO) {
         if (!Config.enabled) throw CloudException(tr("Online sharing isn’t set up in this build."))
+        noServerInChecks()
         val conn = URL(Config.SUPABASE_URL.trimEnd('/') + "/rest/v1/rpc/" + fn)
             .openConnection() as HttpURLConnection
         try {
@@ -67,6 +77,7 @@ object Cloud {
         code: String, token: String, name: String, bytes: ByteArray, header: String = "x-owner-token"
     ) = withContext(Dispatchers.IO) {
         if (!Config.enabled) throw CloudException(tr("Online sharing isn’t set up in this build."))
+        noServerInChecks()
         val conn = URL(storageUrl(Config.PHOTO_BUCKET + "/" + code + "/" + name)).openConnection() as HttpURLConnection
         try {
             conn.requestMethod = "POST"
@@ -94,6 +105,7 @@ object Cloud {
         code: String, token: String, name: String, header: String = "x-owner-token"
     ) = withContext(Dispatchers.IO) {
         if (!Config.enabled) throw CloudException(tr("Online sharing isn’t set up in this build."))
+        noServerInChecks()
         val conn = URL(storageUrl(Config.PHOTO_BUCKET + "/" + code + "/" + name)).openConnection() as HttpURLConnection
         try {
             conn.requestMethod = "DELETE"
