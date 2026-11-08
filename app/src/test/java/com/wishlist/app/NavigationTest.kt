@@ -32,16 +32,16 @@ import org.robolectric.annotation.Config as Robo
  */
 @RunWith(RobolectricTestRunner::class)
 @Robo(sdk = [34], qualifiers = "w411dp-h891dp-xxhdpi")
-class NavigationTest {
+abstract class NavigationBase {
     private val setup = object : TestRule {
         override fun apply(base: Statement, d: Description) = object : Statement() {
             override fun evaluate() { prepare(); base.evaluate() }
         }
     }
-    private val compose = createAndroidComposeRule<MainActivity>()
+    protected val compose = createAndroidComposeRule<MainActivity>()
     @get:Rule val rules: RuleChain = RuleChain.outerRule(setup).around(compose)
 
-    private fun prepare() {
+    protected fun prepare() {
         val app = ApplicationProvider.getApplicationContext<android.app.Application>()
         WorkManagerTestInitHelper.initializeTestWorkManager(app, Configuration.Builder().build())
         Shadows.shadowOf(app).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
@@ -55,41 +55,43 @@ class NavigationTest {
     }
 
     /** The bottom bar's tab with this name is the one on screen. */
-    private fun tabOn(name: String) {
+    protected fun tabOn(name: String) {
         compose.waitForIdle()
         compose.onAllNodes(hasContentDescription(name) and isSelected()).onFirst().assertExists()
     }
 
-    private fun shows(text: String) {
+    protected fun shows(text: String) {
         compose.waitForIdle()
         compose.onAllNodes(hasText(text, substring = false)).onFirst().assertExists()
     }
 
     /** No bottom bar: a route on top covers the whole screen. */
-    private fun noBar() {
+    protected fun noBar() {
         compose.waitForIdle()
         compose.onAllNodes(hasContentDescription("Messages") and SemanticsMatcher.keyIsDefined(
             androidx.compose.ui.semantics.SemanticsProperties.Selected
         )).assertCountEquals(0)
     }
 
-    private fun tap(text: String) {
+    protected fun tap(text: String) {
         compose.waitForIdle()
         val node = compose.onAllNodes((hasText(text, substring = false) or hasContentDescription(text)) and hasClickAction()).onFirst()
         node.assertExists()
         node.performClick()
     }
 
-    private fun phoneBack() {
+    protected fun phoneBack() {
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
     }
 
     /** Profile sheet → one of its screens. */
-    private fun fromSheet(item: String) {
+    protected fun fromSheet(item: String) {
         tap("Profile and settings")
         tap(item)
     }
+}
 
+class NavigationTest : NavigationBase() {
     @Test fun appSettingsBackToHome() {
         tabOn("Home")
         fromSheet("App settings")
@@ -132,6 +134,50 @@ class NavigationTest {
         shows("App settings")
         compose.runOnUiThread { NotesNav.open = true }
         shows("Notifications")
+        phoneBack()
+        tabOn("Home")
+    }
+
+    @Test fun receivedAndReservedFromTheSheet() {
+        // Full-screen pop-ups until 2.156, routes now: Back returns to the tab they were opened on.
+        tap("Friends")
+        fromSheet("Received gifts")
+        shows("Received gifts"); noBar()
+        phoneBack()
+        tabOn("Friends")
+        fromSheet("Gifts I reserved")
+        shows("Gifts I reserved"); noBar()
+        tap("Back")
+        tabOn("Friends")
+    }
+
+    @Test fun priceChangesBackToWhereItWasOpened() {
+        // "All price changes" (a wish's price page, or a notification) from the Messages tab.
+        tap("Messages")
+        tabOn("Messages")
+        compose.runOnUiThread { PricesNav.open = true }
+        shows("Price changes"); noBar()
+        phoneBack()
+        tabOn("Messages")
+    }
+}
+
+/**
+ * Its own class, so its own fresh process (build.gradle.kts, forkEvery): after the list's settings screen (its cover
+ * photo part), Robolectric's pretend phone keeps Compose busy for the next check in the same process. Only seen on the
+ * computer; each check class starts clean.
+ */
+class ListNavigationTest : NavigationBase() {
+    @Test fun listSettingsBackToTheList() {
+        // A notification about a wish on your own list opens that list; its ⚙ opens the list's settings.
+        val id = Repo.mineIds.first()
+        compose.runOnUiThread { NoteNav.key = "m:$id" }
+        tap("Wishlist settings")
+        shows("Wishlist settings"); noBar()
+        phoneBack()
+        // The list again: its ⚙ is back, and Back from there goes Home.
+        compose.waitForIdle()
+        compose.onAllNodes(hasContentDescription("Wishlist settings") and hasClickAction()).onFirst().assertExists()
         phoneBack()
         tabOn("Home")
     }

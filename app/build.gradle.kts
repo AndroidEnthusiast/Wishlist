@@ -10,8 +10,8 @@ android {
         applicationId = "com.wishlist.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 156
-        versionName = "2.155"
+        versionCode = 157
+        versionName = "2.156"
         // Crash reports (Crash.kt): Crashlytics wants a build id, which its Gradle plugin would normally add. The app
         // isn't shrunk or renamed (isMinifyEnabled = false), so there is no mapping file to upload; one id per version.
         resValue("string", "com.google.firebase.crashlytics.mapping_file_id", "wishlist-$versionCode")
@@ -55,9 +55,9 @@ android {
             it.systemProperty("roborazzi.test.record", "true")
             it.systemProperty("robolectric.graphicsMode", "NATIVE")
             it.maxHeapSize = "3g"
-            // Screenshots: each test class in a fresh Java process: the app keeps its state in objects (Repo, ...),
-            // and one class (dark) left the next (light) unable to settle.
-            if (screens) it.forkEvery = 1
+            // Each test class in a fresh Java process: the app keeps its state in objects (Repo, ...), and a class
+            // could leave the next unable to settle (screenshots: dark then light; ListNavigationTest, 2.156).
+            it.forkEvery = 1
             // The shop checks need the internet; they only run with -Pwl.shops (tests/README.md).
             it.systemProperty("wl.shops", if (project.hasProperty("wl.shops")) "1" else "")
             it.testLogging.showStandardStreams = project.hasProperty("wl.shops")

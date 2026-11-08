@@ -157,16 +157,13 @@ fun ReceivedList(modifier: Modifier = Modifier) {
     }
 }
 
-/** The "Received gifts" page (side menu, under Bin): full screen, ← closes it. */
+/** The "Received gifts" page (profile sheet): a route (Nav.kt, 2.156), ← or Back returns to where it was opened. */
 @Composable
 fun ReceivedScreen(onClose: () -> Unit) {
     // "Mark as received" at any time (owner, 2.129), not only after an occasion: pick a list, then tick.
     var pickList by remember { mutableStateOf(false) }
     var askList by remember { mutableStateOf<String?>(null) }
-    androidx.compose.ui.window.Dialog(
-        onDismissRequest = onClose,
-        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
-    ) {
+    androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
         androidx.compose.material3.Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             Column(Modifier.statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())) {
                 Row(Modifier.fillMaxWidth().padding(4.dp), verticalAlignment = Alignment.CenterVertically) {

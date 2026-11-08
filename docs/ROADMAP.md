@@ -96,8 +96,9 @@ Goal: one screen at a time, Back always right, `MainActivity.kt` small.
   App settings, Bin, Notifications, Gifts I reserved, Received gifts, groups, gift exchanges, price pages.
 - [ ] S1.2 Move screens over **one at a time**, starting with the simplest (Bin, App settings, Notifications), then
   the tabs, then the list screen last. Each move removes its on/off switches from `MainActivity`.
-  *(2.154: Profile, App settings, Bin, Notifications are routes; 4 of the 75 switches gone. Next: Received gifts and
-  Gifts I reserved (now full-screen pop-ups), Price changes, a friend's link list, list settings, then the tabs.)*
+  *(2.154: Profile, App settings, Bin, Notifications are routes; 4 of the 75 switches gone. 2.156: Received gifts,
+  Gifts I reserved, Price changes, a list's settings; 8 gone. Next: a friend's link list (`friendCode`), then the
+  tabs (Messages, My shops, Friends), groups and gift exchanges, the list screen last.)*
 - [ ] S1.3 Notifications and links (`OPEN_*` extras, App Links) open routes instead of setting switches.
 - [ ] S1.4 Dialogs that belong to one screen move into that screen; app-wide ones (delete/undo, move, share) stay in
   one place.

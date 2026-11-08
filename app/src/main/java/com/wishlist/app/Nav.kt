@@ -12,9 +12,9 @@ import androidx.navigation.NavController
  * stack, so the phone's Back (and the ← in its top bar) always returns to the screen it was opened from, without the
  * on/off switches in [App] having to know about it.
  *
- * Moved so far (2.154): Profile, App settings, Bin, Notifications. Everything else (Home, the tabs, a list, a friend's
- * list, groups, gift exchanges, price pages) still lives on [MAIN] with its switches, and moves over one screen at a
- * time. Each move adds its name here.
+ * Moved so far: Profile, App settings, Bin, Notifications (2.154); Received gifts, Gifts I reserved, Price changes and
+ * a list's settings (2.156). Everything else (Home, the tabs, a list, a friend's list, groups, gift exchanges) still
+ * lives on [MAIN] with its switches, and moves over one screen at a time. Each move adds its name here.
  */
 object Route {
     /** Home, the tabs and the lists: the screens that haven't moved yet. Always at the bottom of the back stack. */
@@ -23,9 +23,14 @@ object Route {
     const val SETTINGS = "settings"
     const val BIN = "bin"
     const val NOTES = "notifications"
+    const val RECEIVED = "received"
+    const val RESERVED = "reserved"
+    const val PRICES = "prices"
+    /** The settings of the list open on [MAIN] (its ⚙). */
+    const val LIST_SETTINGS = "list-settings"
 
-    /** The routes that open on top of [MAIN] (from the profile sheet, the bell or a notification). */
-    val onTop = listOf(PROFILE, SETTINGS, BIN, NOTES)
+    /** The routes that open on top of [MAIN] (from the profile sheet, the bell, a list or a notification). */
+    val onTop = listOf(PROFILE, SETTINGS, BIN, NOTES, RECEIVED, RESERVED, PRICES, LIST_SETTINGS)
 }
 
 /**

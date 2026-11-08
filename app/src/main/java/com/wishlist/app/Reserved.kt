@@ -34,8 +34,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 
 /*
  * "Gifts I reserved" (side menu, owner 6 November 2026): everything this phone reserved, on friends' wishlists (also
@@ -85,7 +83,7 @@ object ReservedGifts {
     }
 }
 
-/** The "Gifts I reserved" page: full screen, ← closes it. */
+/** The "Gifts I reserved" page (profile sheet): a route (Nav.kt, 2.156), ← or Back returns to where it was opened. */
 @Composable
 fun ReservedScreen(onClose: () -> Unit, onOpen: (ReservedGroup) -> Unit) {
     val ctx = LocalContext.current
@@ -100,7 +98,7 @@ fun ReservedScreen(onClose: () -> Unit, onOpen: (ReservedGroup) -> Unit) {
         groups = ReservedGifts.load(ctx)
         loading = false
     }
-    Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+    androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
         Surface(Modifier.fillMaxSize(), color = cs.background) {
             Column(Modifier.statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())) {
                 Row(Modifier.fillMaxWidth().padding(4.dp), verticalAlignment = Alignment.CenterVertically) {

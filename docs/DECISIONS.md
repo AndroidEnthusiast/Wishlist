@@ -438,4 +438,8 @@ What the owner has decided, and why. Follow these unless the owner changes their
   "Back always goes where you think"): Profile, App settings, Bin and Notifications opened from the Friends tab go back
   to Friends (before: Home). Screens keep changing at once, without slide or fade animations (nothing else visible
   changes in Stages 1–3).
+- **Price changes has no bottom bar** (owner, 8 November 2026, 2.156): like every screen opened on top (App settings,
+  Bin, Notifications), with ← and Back returning to where it was opened. The owner didn't remember where "All price
+  changes" lives: a wish's price page (tap a wish's price) and a notification about several prices. Worth a look in a
+  later page review (features stay frozen until Stage 3).
 - **No download line during the roadmap** (owner, 8 November 2026): "I don't need to see an app download link. Instead I need your guidance on what to do next." Until the roadmap's stages are done, messages end with the next steps for the owner, not the download link (say it in a line when an update needs installing).

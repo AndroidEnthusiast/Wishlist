@@ -453,24 +453,17 @@ fun App(
     var prefillMeta by remember { mutableStateOf<Meta?>(null) }
     var fromShop by remember { mutableStateOf(false) }
     var catDlg by remember { mutableStateOf(false) }
-    // "Received gifts" and "What did you get?" for one of your lists (2.128).
-    var receivedOpen by remember { mutableStateOf(false) }
+    // "What did you get?" for one of your lists (2.128). (Received gifts itself is a route, Nav.kt.)
     var receivedAsk by remember { mutableStateOf<String?>(null) }
-    // "Gifts I reserved" (menu, 2.129, Reserved.kt).
-    var reservedOpen by remember { mutableStateOf(false) }
     // Gift exchange (menu, 2.129, ExchangeUi.kt): your exchanges, or one of them (ExchangeNav.open).
     var exchangesOpen by remember { mutableStateOf(false) }
     var newExchange by remember { mutableStateOf(false) }
-    // The settings of the open list (its ⚙), apart from the app's Settings in the menu.
-    var listSettings by remember { mutableStateOf(false) }
     var friendCode by remember { mutableStateOf<String?>(null) }
     var newShared by remember { mutableStateOf(false) }
     // The dashboard (Hub.kt) is the start screen; tapping a list opens it, Back returns to the dashboard.
     var hub by remember { mutableStateOf(true) }
     var newMine by remember { mutableStateOf(false) }
     // The bottom bar's pages and actions (BottomBar.kt).
-    // "Price changes" (owner, 7 November 2026: no longer a tab; a wish's price page has "All price changes").
-    var pricesOpen by remember { mutableStateOf(false) }
     // Discover, the shops (bottom bar, owner 7 November 2026).
     var discoverOpen by remember { mutableStateOf(false) }
     var friendsOpen by remember { mutableStateOf(false) }
@@ -487,8 +480,8 @@ fun App(
      */
     fun closeAll() {
         nav.backToMain()
-        friendCode = null; listSettings = false
-        pricesOpen = false; friendsOpen = false; messagesOpen = false
+        friendCode = null
+        friendsOpen = false; messagesOpen = false
         groupOpen = null; exchangesOpen = false; discoverOpen = false
     }
     var createChoice by remember { mutableStateOf(false) }
@@ -577,7 +570,7 @@ fun App(
             // A gift list invitation (2.142).
             key.startsWith("i:") -> GiftInviteNav.open = key.removePrefix("i:")
             // A "Still buying …?" question (2.142): answered in Gifts I reserved.
-            key == "v:" -> { closeAll(); reservedOpen = true }
+            key == "v:" -> { closeAll(); nav.openOnTop(Route.RESERVED) }
             key.startsWith("r:") -> { FriendsNav.reset(); friendsOpen = true }
             key.startsWith("p:") -> { FriendsNav.reset(); FriendsNav.person = key.removePrefix("p:"); friendsOpen = true }
             key.startsWith("g:") -> GroupNav.openInvite(key.removePrefix("g:"), null)
@@ -632,13 +625,12 @@ fun App(
         closeAll()
     }
     // Back from a list goes to the dashboard; back from Prices or a tab to where you were.
-    BackHandler(enabled = onMain && friendCode == null && !listSettings && !hub && !pricesOpen && !discoverOpen && !friendsOpen && !messagesOpen) {
+    BackHandler(enabled = onMain && friendCode == null && !hub && !discoverOpen && !friendsOpen && !messagesOpen) {
         hub = true
     }
-    BackHandler(enabled = onMain && friendCode == null && (pricesOpen || discoverOpen || friendsOpen || messagesOpen)) {
-        // Back from Price changes goes to where it was opened (a list or Home); from a tab to where you were.
-        if (pricesOpen) pricesOpen = false
-        else { discoverOpen = false; friendsOpen = false; messagesOpen = false }
+    BackHandler(enabled = onMain && friendCode == null && (discoverOpen || friendsOpen || messagesOpen)) {
+        // Back from a tab goes to where you were.
+        discoverOpen = false; friendsOpen = false; messagesOpen = false
     }
     // A new message alert, or "Message" on a friend's page: Messages, at that conversation.
     LaunchedEffect(ChatNav.openTab) {
@@ -663,7 +655,7 @@ fun App(
             Repo.touchRecent(ctx, "g:$g")
         }
     }
-    BackHandler(enabled = onMain && groupOpen != null && friendCode == null && !listSettings) {
+    BackHandler(enabled = onMain && groupOpen != null && friendCode == null) {
         groupOpen = null
     }
 
@@ -690,9 +682,8 @@ fun App(
     LaunchedEffect(PricesNav.open) {
         if (PricesNav.open) {
             PricesNav.open = false
-            nav.backToMain()
-            discoverOpen = false; friendsOpen = false; messagesOpen = false
-            pricesOpen = true
+            // Back returns to where it was opened (a list, Home, a tab), as from the other routes.
+            nav.openOnTop(Route.PRICES)
         }
     }
     // A friend request alert was tapped: the Friends tab.
@@ -738,17 +729,13 @@ fun App(
             // While the keyboard is open the bottom bar steps aside and the screen above it makes room (edge to edge, 2.102).
             val imeOpen = WindowInsets.isImeVisible
             // An open conversation has a back arrow and no bottom bar.
-            val inChat = messagesOpen && ChatNav.peer != null && fr == null && !listSettings
-            val showBar = fr == null && !listSettings && !inChat && !imeOpen
+            val inChat = messagesOpen && ChatNav.peer != null && fr == null
+            val showBar = fr == null && !inChat && !imeOpen
             Column(Modifier.fillMaxSize()) {
             // With the bottom bar, the screens above it don't leave room for the phone's own navigation bar again.
             Box(Modifier.weight(1f).imePadding().then(if (showBar) Modifier.consumeWindowInsets(WindowInsets.navigationBars) else Modifier)) {
                 when {
                     fr != null -> FriendScreen(fr, snack, onRemoved = { friendCode = null })
-                    listSettings -> key(Shared.active, Repo.openMine) {
-                        ListSettingsScreen(snack, onDeleted = { listSettings = false; pricesOpen = false; friendsOpen = false; hub = true }) { listSettings = false; pricesOpen = false; friendsOpen = false }
-                    }
-                    pricesOpen -> PricesScreen(snack, onBack = { pricesOpen = false })
                     discoverOpen -> DiscoverScreen(
                         snack, onProfile = { nav.openOnTop(Route.PROFILE) },
                         onFound = { u, m -> addTarget = null; prefillMeta = m; fromShop = true; prefill = u; adding = true }
@@ -770,7 +757,7 @@ fun App(
                         onOpenWishGroup = { GroupNav.openGroup(it) },
                         onNewWishGroup = { newWishGroup = true },
                         onFriends = { FriendsNav.reset(); closeAll(); friendsOpen = true },
-                        onReserved = { reservedOpen = true },
+                        onReserved = { nav.openOnTop(Route.RESERVED) },
                         onCreateList = { createChoice = true },
                         onAddWish = { addTarget = Repo.lastSaveTo; prefill = ""; adding = true },
                         onNewExchange = { newExchange = true }
@@ -781,7 +768,7 @@ fun App(
                             onAdd = { prefill = ""; adding = true },
                             onNewCat = { catDlg = true },
                             onInvite = { inviteDlg = true },
-                            onListSettings = { listSettings = true },
+                            onListSettings = { nav.openOnTop(Route.LIST_SETTINGS) },
                             onBack = { HubNav.page = null; closeAll(); hub = true }
                         )
                     }
@@ -790,25 +777,25 @@ fun App(
             if (showBar) {
                 AppBottomBar(
                     current = when {
-                        pricesOpen -> ""; discoverOpen -> "discover"; friendsOpen -> "friends"; messagesOpen -> "messages"
+                        discoverOpen -> "discover"; friendsOpen -> "friends"; messagesOpen -> "messages"
                         hub -> "home"; else -> ""
                     },
                     onHome = { HubNav.page = null; closeAll(); hub = true },
                     // "Messages" (owner, 2.98) took the place of "Wishlists"; your wishlists are on Home and its number.
                     onMessages = {
                         if (messagesOpen) ChatNav.peer = null
-                        pricesOpen = false; discoverOpen = false; friendsOpen = false; messagesOpen = true
+                        discoverOpen = false; friendsOpen = false; messagesOpen = true
                     },
                     onAdd = {
-                        val onAList = !hub && !pricesOpen && !discoverOpen && !friendsOpen && !messagesOpen
+                        val onAList = !hub && !discoverOpen && !friendsOpen && !messagesOpen
                         addTarget = if (onAList) (Shared.active ?: MyLists.saveKey(Repo.openMine, false)) else Repo.lastSaveTo
                         prefill = ""; adding = true
                     },
-                    onDiscover = { discoverOpen = true; pricesOpen = false; friendsOpen = false; messagesOpen = false },
+                    onDiscover = { discoverOpen = true; friendsOpen = false; messagesOpen = false },
                     onFriends = {
                         // Tapping Friends again goes back to its first page.
                         if (friendsOpen) FriendsNav.reset()
-                        friendsOpen = true; pricesOpen = false; discoverOpen = false; messagesOpen = false
+                        friendsOpen = true; discoverOpen = false; messagesOpen = false
                     },
                     friendsDot = Friends.waiting > 0,
                     messagesDot = Chat.unreadTotal > 0
@@ -820,6 +807,27 @@ fun App(
         composable(Route.SETTINGS) { RouteBox { SettingsScreen(snack) } }
         composable(Route.BIN) { RouteBox { BinScreen(snack) } }
         composable(Route.NOTES) { RouteBox { NotificationsScreen(snack) { key -> openNote(key) } } }
+        composable(Route.RECEIVED) { RouteBox { ReceivedScreen { nav.popBackStack() } } }
+        // "Gifts I reserved" (2.129): tapping a list opens it where it lives (a friend, a group, a gift exchange, a
+        // collab wishlist).
+        composable(Route.RESERVED) {
+            RouteBox {
+                ReservedScreen(onClose = { nav.popBackStack() }) { g ->
+                    nav.backToMain()
+                    if (!g.gift) openListByCode(g.code)
+                    else if (Shared.lists.any { it.code == g.code }) openGroup(g.code)
+                }
+            }
+        }
+        composable(Route.PRICES) { RouteBox { PricesScreen(snack, onBack = { nav.popBackStack() }) } }
+        // The list open on the main route underneath (Shared.active or Repo.openMine).
+        composable(Route.LIST_SETTINGS) {
+            RouteBox {
+                key(Shared.active, Repo.openMine) {
+                    ListSettingsScreen(snack, onDeleted = { nav.backToMain(); hub = true }) { nav.popBackStack() }
+                }
+            }
+        }
     }
 
     if (adding) key(prefill) {
@@ -838,27 +846,11 @@ fun App(
         onClose = { AccountNav.open = false },
         // Back from these returns to the screen the sheet was opened on (ROADMAP Stage 1).
         onProfile = { AccountNav.open = false; nav.openOnTop(Route.PROFILE) },
-        onReserved = { AccountNav.open = false; reservedOpen = true },
-        onReceived = { AccountNav.open = false; receivedOpen = true },
+        onReserved = { AccountNav.open = false; nav.openOnTop(Route.RESERVED) },
+        onReceived = { AccountNav.open = false; nav.openOnTop(Route.RECEIVED) },
         onBin = { AccountNav.open = false; nav.openOnTop(Route.BIN) },
         onSettings = { AccountNav.open = false; nav.openOnTop(Route.SETTINGS) }
     )
-    if (receivedOpen) ReceivedScreen { receivedOpen = false }
-    // "Gifts I reserved" (2.129): tapping a list opens it where it lives (a friend, a group, a gift exchange, a gift list).
-    if (reservedOpen) ReservedScreen(onClose = { reservedOpen = false }) { g ->
-        reservedOpen = false
-        if (g.gift) {
-            if (Shared.lists.any { it.code == g.code }) openGroup(g.code)
-        } else {
-            val group = Groups.groups.firstOrNull { gr -> gr.members.any { it.list?.code == g.code } }
-            val exchange = Exchanges.list.firstOrNull { it.me.giftee?.list?.code == g.code }
-            when {
-                group != null -> GroupNav.openGroup(group.id)
-                exchange != null -> ExchangeNav.openExchange(exchange.id)
-                else -> openFriend(g.code)
-            }
-        }
-    }
     if (newExchange) NewExchangeDialog(
         onCreated = { gx -> newExchange = false; ExchangeNav.inviteNow = gx; ExchangeNav.openExchange(gx) },
         onClose = { newExchange = false }
