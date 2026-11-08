@@ -147,6 +147,8 @@ values (wishes ~3 KB), plus ~100 leftover shop-icon entries from old versions th
   the fallback when the database can't be read, and for phones coming from older versions. Removing that code is
   for later, once the partner's phone has moved too.)*
 Owner tests: everything is still there after updating (lists, bin, history, categories, covers), on both phones.
+**Signed off by the owner on 8 November 2026** (2.171 on their phone: "Yes, all works"). The partner's phone moves
+its data on its first start of a new version; removing the old storage code (S2.5's last part) waits for that.
 
 ## Stage 3 — Syncing like a real app (2–3 sessions)  (P3, P4)
 Goal: small, fast saves; changes arrive when they happen; less battery.

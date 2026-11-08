@@ -37,6 +37,7 @@ object Cloud {
     internal suspend fun rpc(fn: String, body: JSONObject): String = withContext(Dispatchers.IO) {
         if (!Config.enabled) throw CloudException(tr("Online sharing isn’t set up in this build."))
         noServerInChecks()
+        Calls.count(fn)
         val conn = URL(Config.SUPABASE_URL.trimEnd('/') + "/rest/v1/rpc/" + fn)
             .openConnection() as HttpURLConnection
         try {
@@ -78,6 +79,7 @@ object Cloud {
     ) = withContext(Dispatchers.IO) {
         if (!Config.enabled) throw CloudException(tr("Online sharing isn’t set up in this build."))
         noServerInChecks()
+        Calls.count("photo upload")
         val conn = URL(storageUrl(Config.PHOTO_BUCKET + "/" + code + "/" + name)).openConnection() as HttpURLConnection
         try {
             conn.requestMethod = "POST"
@@ -106,6 +108,7 @@ object Cloud {
     ) = withContext(Dispatchers.IO) {
         if (!Config.enabled) throw CloudException(tr("Online sharing isn’t set up in this build."))
         noServerInChecks()
+        Calls.count("photo delete")
         val conn = URL(storageUrl(Config.PHOTO_BUCKET + "/" + code + "/" + name)).openConnection() as HttpURLConnection
         try {
             conn.requestMethod = "DELETE"

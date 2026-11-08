@@ -441,6 +441,17 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **S2.5: the database becomes the only source** (owner, 8 November 2026: "ok let's continue, I made a backup"):
   2.171 stops writing the old storage for lists, wishes, bin, history, friends' lists and notifications; the old
   values stay on the phone untouched; the old code stays as the fallback when the database can't be read.
+- **Stage 3 answers** (owner, 8 November 2026, pop-up questions at the start of Stage 3; Stage 2 signed off the same
+  moment: "Yes, all works"):
+  - **S3.1 a failed save of your own list keeps your change** and retries later (next change, next start, background
+    check); no undo and no message (Claude pushed back on the roadmap's "undo like collab wishlists": on your own list
+    the phone holds the real copy). The full-list save stays for older apps and the group/exchange pages.
+  - **S3.2 live updates in the app** for collab wishlists, a friend's list and the open chat. **The web pages keep
+    polling for now: remind the owner later** ("remind me of web pages later"). When the live connection can't be
+    reached, **quietly fall back to the old polling** (20 s lists, 8 s chat) and try live again later.
+  - **S3.3 the background check stays every 30 minutes**, but asks the server "what changed for me?" in one call first.
+  - **S3.4 the server calls are counted on the phone** and shown in App settings > About (today, yesterday, Details).
+  - **All of Stage 3 in a row, tested at the end** (no separate "before" day on the phone; Claude's estimate instead).
 - **Stage 2, the slimmer route** (owner, 8 November 2026, after Claude pushed back on rebuilding every screen around
   ViewModels: screens already update by themselves, and that rebuild changes nothing for the user): finish Stage 2
   with one-wish-at-a-time saving, Export/Import from the database and then removing the old storage; ViewModels come

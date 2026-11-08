@@ -7,5 +7,6 @@ class WishlistApp : Application() {
     override fun onCreate() {
         super.onCreate()
         Crash.start(this)
+        Calls.attach(this)
     }
 }

@@ -269,6 +269,8 @@ fun SettingsScreen(snack: SnackbarHostState) {
                 )
                 TextButton(onClick = { licences = true }) { Text(tr("Licences")) }
             }
+            // How often this phone asks the server (ROADMAP S3.4, owner 8 November 2026).
+            ServerCallsRow()
         }
     }
     if (licences) LicencesDialog { licences = false }
