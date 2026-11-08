@@ -74,8 +74,8 @@ Goal: catch mistakes before they reach the phone, and never lose server data.
 - [ ] S0.3 Product reader fixtures: saved copies of real product pages (only the HTML, no pictures) for the 20 starter
   shops in `tests/parse/pages/`, checked by both `Fetch.kt` (JUnit) and `web/parse.js`; the same page must give the
   same answer in both (P9). Pages are saved by a session with network access or uploaded by the owner.
-- [ ] S0.4 D3 backups and D4 keep-awake, if the owner said yes. *(2.153: both jobs built, `.github/workflows/backup.yml`
-  and `keep-awake.yml`. Done when the owner has added the two backup secrets and the first backup run is green.)*
+- [x] S0.4 D3 backups and D4 keep-awake, if the owner said yes. *(Both jobs green on 8 November 2026: the first backup
+  copied 29 tables (Postgres 17), locked, kept until 6 February 2027.)*
 - [x] S0.5 D2 crash reports, if the owner said yes (`Licences.kt` if a new library is added).
 Owner tests: nothing changes on the phone. Done when the build runs tests and the backups exist.
 *Notes (session 1, 8 November 2026, 2.153):* D1–D5 answered (DECISIONS "Roadmap decisions D1–D5"). 32 app checks (31 plain
