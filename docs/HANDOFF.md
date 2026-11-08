@@ -190,6 +190,7 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 - 6 November (night): Friends review; **2.139**. Not checked: the friend link on a phone (Chrome on Android should open wishlist://friend from the page; some browsers ask first).
 
 ## Next session
+- **2.176 (8 November 2026, small fix between stages):** a Friend's page showed no wishes for a long time after sharing a gift from their list into the app. Lists now load in parallel, show as they arrive and stay on screen when you come back. Cause not proven (likely a call hanging on an old connection after the app was in the background). Ask the owner whether it's gone; if a single list still takes ~20 s after returning from another app, look at `Cloud.rpc`'s connection reuse (retry a read-only call once on a stale connection).
 - **START HERE (written at the end of the Stage 3 session, 8 November 2026).** **Stage 3 signed off by the owner** (ran
   supabase-sync.sql, installed 2.175 straight from 2.171, which is fine; out of credits, so not tested with two phones yet).
   Ask first how live updates, chat and saving felt, and for App settings > About > Details numbers (S3.4); fix anything
