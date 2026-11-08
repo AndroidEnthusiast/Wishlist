@@ -1,6 +1,7 @@
 package com.wishlist.app
 
 import android.content.Context
+import android.os.Build
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 
 /*
@@ -12,10 +13,16 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
  * the Firebase console (Crashlytics) and are read at the start of each session (ROADMAP Stage 5).
  */
 object Crash {
+    /**
+     * The app's own checks run it on a computer (Robolectric, app/src/test), on GitHub too. Nothing is sent from there:
+     * 2.154's checks sent 3 "crashes" of the computer's pretend phone to the real Crashlytics page (8 November 2026).
+     */
+    val onComputer: Boolean get() = Build.FINGERPRINT == "robolectric"
+
     fun start(c: Context) {
         try {
             if (!Push.init(c)) return
-            FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(true)
+            FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(!onComputer)
         } catch (e: Throwable) {
             // Crash reports must never be the reason the app doesn't start.
         }
@@ -23,6 +30,7 @@ object Crash {
 
     /** A problem that didn't crash the app but should be fixed (for example a stored list that couldn't be read). */
     fun report(e: Throwable) {
+        if (onComputer) return
         try {
             FirebaseCrashlytics.getInstance().recordException(e)
         } catch (x: Throwable) {
