@@ -83,6 +83,18 @@ abstract class NavigationBase {
         node.performClick()
     }
 
+    /** A tapped notification or an opened link reaches the app (MainActivity.handle, as onNewIntent does). */
+    protected fun send(i: android.content.Intent) {
+        compose.runOnUiThread { compose.activity.handle(i) }
+        if (compose.mainClock.autoAdvance) compose.waitForIdle()
+    }
+
+    protected fun open(extra: String, value: String): android.content.Intent =
+        android.content.Intent(ApplicationProvider.getApplicationContext(), MainActivity::class.java).putExtra(extra, value)
+
+    protected fun link(url: String): android.content.Intent =
+        android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+
     protected fun phoneBack() {
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
     }
@@ -157,7 +169,7 @@ class NavigationTest : NavigationBase() {
     @Test fun backOnATabGoesHome() {
         // Owner, 8 November 2026: Back on a tab's first page goes Home, also when a list was open before.
         val id = Repo.mineIds.first()
-        compose.runOnUiThread { NoteNav.key = "m:$id" }
+        send(open(MainActivity.OPEN_NOTE, "m:$id"))
         compose.waitForIdle()
         compose.onAllNodes(hasContentDescription("Wishlist settings") and hasClickAction()).onFirst().assertExists()
         tap("Messages")
@@ -196,7 +208,7 @@ class NavigationTest : NavigationBase() {
     @Test fun aListHasTheBarAndGoesHome() {
         // The open list is its own screen (2.160): the bottom bar shows with no tab lit, Back goes Home.
         val id = Repo.mineIds.first()
-        compose.runOnUiThread { NoteNav.key = "m:$id" }
+        send(open(MainActivity.OPEN_NOTE, "m:$id"))
         compose.waitForIdle()
         compose.onAllNodes(hasContentDescription("Wishlist settings") and hasClickAction()).onFirst().assertExists()
         compose.onAllNodes(hasContentDescription("Messages") and hasClickAction()).onFirst().assertExists()
@@ -209,7 +221,7 @@ class NavigationTest : NavigationBase() {
         // A list saved from a link (a notification about it opens it): its own screen, Back returns Home.
         val app = ApplicationProvider.getApplicationContext<android.app.Application>()
         compose.runOnUiThread { Repo.addFriend(app, Friend("TESTCODE1", "Robin’s wishlist")) }
-        compose.runOnUiThread { NoteNav.key = "c:TESTCODE1" }
+        send(open(MainActivity.OPEN_NOTE, "c:TESTCODE1"))
         compose.waitForIdle()
         compose.onAllNodes(hasContentDescription("Remove this list") and hasClickAction()).onFirst().assertExists()
         noBar()
@@ -237,7 +249,7 @@ class ListNavigationTest : NavigationBase() {
     @Test fun listSettingsBackToTheList() {
         // A notification about a wish on your own list opens that list; its ⚙ opens the list's settings.
         val id = Repo.mineIds.first()
-        compose.runOnUiThread { NoteNav.key = "m:$id" }
+        send(open(MainActivity.OPEN_NOTE, "m:$id"))
         tap("Wishlist settings")
         shows("Wishlist settings"); noBar()
         phoneBack()

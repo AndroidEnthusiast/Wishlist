@@ -172,11 +172,8 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
-    private var sharedUrl by mutableStateOf<String?>(null)
-    private var sharedCode by mutableStateOf<String?>(null)
-    private var sharedInvite by mutableStateOf<String?>(null)
-    /** A "your reserved gift has been moved to the bin" alert was tapped: the list code and the wish to show in the bin. */
-    private var binTarget by mutableStateOf<Pair<String, Long>?>(null)
+    /** Where a notification, a link or something shared asks the app to open (Deep.kt); App opens it and clears it. */
+    private var deep by mutableStateOf<Deep?>(null)
 
     companion object {
         const val BIN_CODE = "bin_code"
@@ -228,9 +225,7 @@ class MainActivity : ComponentActivity() {
                     Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
                         .windowInsetsPadding(WindowInsets.statusBars)
                 ) {
-                    App(sharedUrl, sharedCode, sharedInvite, binTarget, { binTarget = null }) {
-                        sharedUrl = null; sharedCode = null; sharedInvite = null
-                    }
+                    App(deep) { deep = null }
                 }
             }
         }
@@ -253,7 +248,7 @@ class MainActivity : ComponentActivity() {
             if (p.getLong("inv_clip_for", 0L) == stamp) return
             p.edit().putLong("inv_clip_for", stamp).apply()
             // An invitation that came in as a link or a shared text wins over the clipboard.
-            if (sharedInvite != null) return
+            if (deep is Deep.Invite) return
             val cm = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
             val clip = cm.primaryClip
             val text = if (clip != null && clip.itemCount > 0) clip.getItemAt(0).coerceToText(this)?.toString() else null
@@ -264,146 +259,35 @@ class MainActivity : ComponentActivity() {
                 else cm.setPrimaryClip(android.content.ClipData.newPlainText("", ""))
             } catch (e: Exception) {
             }
-            sharedInvite = key
+            deep = Deep.Invite(key)
         } catch (e: Exception) {
         }
     }
 
-    /** A friend link: the Friends tab with "Send … a friend request?" (owner, 2.139). */
-    private fun openFriendLink(code: String, name: String) {
-        FriendsNav.reset()
-        FriendsNav.addName = name
-        FriendsNav.addCode = code
-        FriendsNav.openTab = true
-    }
-
-    /**
-     * A web link of ours (App Links, owner 7 November 2026): an invite (?j=), a friends' link (?c=), a group (?g=, or a
-     * browser member's My link), a gift exchange (?x=) or a friend link (/friend/?f=). False when it is none of these.
-     */
-    private fun openWebLink(u: String): Boolean {
-        Groups.parseMe(u)?.let { GroupNav.takeover = it; GroupNav.request++; return true }
-        Groups.parseLink(u)?.let { GroupNav.openInvite(null, it); return true }
-        Exchanges.parseLink(u)?.let { ExchangeNav.openInvite(null, it); return true }
-        if (u.contains("/friend", ignoreCase = true)) Friends.parseFriendLink(u)?.let { (c, n) -> openFriendLink(c, n); return true }
-        if (u.uppercase().contains("J=")) Sync.parseInvite(u)?.let { sharedInvite = it; return true }
-        Regex("[?&]c=([A-Za-z0-9-]{8,11})(?![A-Za-z0-9])", RegexOption.IGNORE_CASE).find(u)?.let { m ->
-            Sync.parseCode(m.groupValues[1])?.let { sharedCode = it; return true }
-        }
-        return false
-    }
-
-    private fun handle(i: Intent?) {
+    /** Reads a tapped notification, an opened link or something shared into the app (ROADMAP S1.3). */
+    internal fun handle(i: Intent?) {
+        if (i == null) return
         // A tapped push notification: its line on the Notifications page is seen already (owner, 2.126: no red dot).
-        if (i != null && i.hasExtra(ASK_ID)) {
+        if (i.hasExtra(ASK_ID)) {
             Asks.answerFromNotification(this, i.getLongExtra(ASK_ID, 0L), i.getBooleanExtra(ASK_YES, false), i.getIntExtra(ASK_NID, 0))
             i.removeExtra(ASK_ID)
             return
         }
-        if (i != null && i.hasExtra(Alerts.NOTE_KIND)) {
+        if (i.hasExtra(Alerts.NOTE_KIND)) {
             val kind = i.getStringExtra(Alerts.NOTE_KIND).orEmpty()
             // "X is free. Reserve it now?" / "Your reservation of X has ended" (2.142): the list opens on that wish.
             val list = i.getStringExtra(Alerts.NOTE_LIST).orEmpty()
             val wish = i.getLongExtra(Alerts.NOTE_ID, 0L)
             if ((kind == "ask_free" || kind == "ask_ended" || kind == "ask_yes" || kind == "ask_sent") && wish > 0L && list.length > 2)
                 AskNav.focus = Triple(list.substring(2), wish, kind == "ask_free")
-            if (kind.isNotEmpty()) Notifications.markRead(this, kind, i.getStringExtra(Alerts.NOTE_LIST).orEmpty(), i.getLongExtra(Alerts.NOTE_ID, 0L))
+            if (kind.isNotEmpty()) Notifications.markRead(this, kind, list, wish)
             // A push about one wish on your own list opens the list on that wish (2.161).
             if (i.hasExtra(OPEN_NOTE)) WishFocus.forNote(list, wish, kind)
             i.removeExtra(Alerts.NOTE_KIND)
         }
-        if (i != null && i.getBooleanExtra(OPEN_NOTES, false)) {
-            NotesNav.open = true
-            i.removeExtra(OPEN_NOTES)
-            return
-        }
-        if (i != null && i.hasExtra(OPEN_NOTE)) {
-            NoteNav.key = i.getStringExtra(OPEN_NOTE)
-            i.removeExtra(OPEN_NOTE)
-            return
-        }
-        if (i != null && i.getBooleanExtra(OPEN_PRICES, false)) {
-            PricesNav.open = true
-            i.removeExtra(OPEN_PRICES)
-            return
-        }
-        if (i != null && i.hasExtra(HISTORY_ID)) {
-            HistoryNav.open = i.getLongExtra(HISTORY_ID, 0L)
-            i.removeExtra(HISTORY_ID)
-            return
-        }
-        if (i != null && i.hasExtra(OPEN_CHAT)) {
-            ChatNav.peer = i.getStringExtra(OPEN_CHAT)
-            i.removeExtra(OPEN_CHAT)
-            ChatNav.openTab = true
-            return
-        }
-        if (i != null && i.hasExtra(OPEN_FRIEND)) {
-            val id = i.getStringExtra(OPEN_FRIEND)
-            i.removeExtra(OPEN_FRIEND)
-            FriendsNav.reset()
-            FriendsNav.person = id
-            FriendsNav.openTab = true
-            return
-        }
-        if (i != null && i.hasExtra(OPEN_GROUP)) {
-            val gid = i.getStringExtra(OPEN_GROUP).orEmpty()
-            i.removeExtra(OPEN_GROUP)
-            if (gid.isNotEmpty()) GroupNav.openInvite(gid, null)
-            return
-        }
-        if (i != null && i.hasExtra(OPEN_EXCHANGE)) {
-            val gx = i.getStringExtra(OPEN_EXCHANGE).orEmpty()
-            i.removeExtra(OPEN_EXCHANGE)
-            ExchangeNav.openInvite(gx.ifEmpty { null }, null)
-            return
-        }
-        if (i != null && i.hasExtra(OPEN_FRIENDS)) {
-            i.removeExtra(OPEN_FRIENDS)
-            FriendsNav.reset()
-            FriendsNav.openTab = true
-            return
-        }
-        if (i != null && i.hasExtra(FRIEND_CODE)) {
-            sharedCode = i.getStringExtra(FRIEND_CODE)
-            i.removeExtra(FRIEND_CODE)
-            return
-        }
-        if (i != null && i.hasExtra(BIN_ID)) {
-            binTarget = (i.getStringExtra(BIN_CODE) ?: "") to i.getLongExtra(BIN_ID, 0L)
-            // Handled once: turning the phone must not open the bin again.
-            i.removeExtra(BIN_ID)
-            return
-        }
-        // An invite link that was opened (wishlist://join?j=KEY), for example from the button on the invite web page.
-        if (i?.action == Intent.ACTION_VIEW) {
-            val d = i.dataString.orEmpty()
-            // App Links (2.142): one of our web links opened the app. A link it can't read just opens the app.
-            if (d.startsWith("https://", ignoreCase = true)) { openWebLink(d); return }
-            // Wishlist groups (2.108): a group link (wishlist://group?g=KEY) or a browser member's "My link".
-            Groups.parseMe(d)?.let { GroupNav.takeover = it; GroupNav.request++; return }
-            Groups.parseLink(d)?.let { GroupNav.openInvite(null, it); return }
-            // Gift exchange (2.129): wishlist://exchange?x=KEY.
-            Exchanges.parseLink(d)?.let { ExchangeNav.openInvite(null, it); return }
-            // A friend link (2.139): wishlist://friend?f=CODE&n=Name.
-            if (d.startsWith("wishlist://friend")) Friends.parseFriendLink(d)?.let { (c, n) -> openFriendLink(c, n); return }
-            Sync.parseInvite(d)?.let { sharedInvite = it }
-            return
-        }
-        if (i?.action == Intent.ACTION_SEND) {
-            val t = i.getStringExtra(Intent.EXTRA_TEXT).orEmpty()
-            // A group link or "My link" shared into the app (2.108).
-            Groups.parseMe(t)?.let { GroupNav.takeover = it; GroupNav.request++; return }
-            Groups.parseLink(t)?.let { GroupNav.openInvite(null, it); return }
-            Exchanges.parseLink(t)?.let { ExchangeNav.openInvite(null, it); return }
-            if (t.contains("/friend/?f=")) Friends.parseFriendLink(t)?.let { (c, n) -> openFriendLink(c, n); return }
-            // An invite link shared into the app (the share sheet) opens the "Join" screen.
-            val invite = if (t.uppercase().contains("J=")) Sync.parseInvite(t) else null
-            val code = Sync.embeddedCode(t)
-            if (invite != null) sharedInvite = invite
-            else if (code != null) sharedCode = code
-            else cleanUrl(t)?.let { sharedUrl = it }
-        }
+        // Each is handled once (removed from the Intent): turning the phone must not open it again.
+        val d = deepOf(i)
+        if (d != null) deep = d
     }
 
 }
@@ -437,10 +321,7 @@ fun MenuSlot(back: Boolean = true) {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun App(
-    sharedUrl: String?, sharedCode: String?, sharedInvite: String?,
-    binTarget: Pair<String, Long>?, onBinUsed: () -> Unit, onSharedUsed: () -> Unit
-) {
+fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val snack = remember { SnackbarHostState() }
@@ -488,13 +369,13 @@ fun App(
     fun openMine(id: String) {
         Shared.close()
         Repo.openMine(ctx, id)
-        closeAll(); nav.openTab(Route.LIST)
+        closeAll(); nav.openTab(Route.list("m:$id"))
     }
 
     /** Opens a group wishlist. */
     fun openGroup(code: String) {
         Shared.open(ctx, code)
-        closeAll(); nav.openTab(Route.LIST)
+        closeAll(); nav.openTab(Route.list("s:$code"))
     }
 
     fun openFriend(code: String) {
@@ -569,10 +450,6 @@ fun App(
             key.startsWith("e:") -> ExchangeNav.openInvite(key.removePrefix("e:").ifEmpty { null }, null)
         }
     }
-    // A tapped "gift you reserved is no longer on …" push (2.126) opens that list.
-    LaunchedEffect(NoteNav.key) {
-        NoteNav.key?.let { k -> NoteNav.key = null; openNote(k) }
-    }
 
     // The welcome comes first on the very first start (Welcome.kt); the permission questions after it.
     var welcome by remember { mutableStateOf(Welcome.needed(ctx)) }
@@ -583,30 +460,44 @@ fun App(
         ) perm.launch(Manifest.permission.POST_NOTIFICATIONS)
         else askBackground = true
     }
-    LaunchedEffect(sharedUrl) {
-        if (sharedUrl != null) {
-            closeAll(); prefill = sharedUrl; adding = true
-            onSharedUsed()
+    /**
+     * Opens a place the app was asked to open from outside: a tapped notification, a link or something shared into
+     * the app (Deep.kt, ROADMAP S1.3). One place, with the routes; what was open before closes (as before), except
+     * the Notifications page and Price changes, which open on top so Back returns there.
+     */
+    fun go(d: Deep) {
+        when (d) {
+            is Deep.Note -> openNote(d.key)
+            Deep.Notes -> nav.openOnTop(Route.NOTES)
+            Deep.Prices -> nav.openOnTop(Route.PRICES)
+            // The price page is a pop-up over whatever is on screen.
+            is Deep.History -> HistoryNav.open = d.wishId
+            is Deep.Chat -> {
+                ChatNav.peer = d.peer
+                closeAll(); nav.openTab(Route.MESSAGES)
+                if (FriendsNav.fromChat != null) FriendsNav.reset()
+            }
+            is Deep.Person -> { FriendsNav.reset(); FriendsNav.person = d.id; closeAll(); nav.openTab(Route.FRIENDS) }
+            Deep.FriendsTab -> { FriendsNav.reset(); closeAll(); nav.openTab(Route.FRIENDS) }
+            // "Send … a friend request?" on Friends (owner, 2.139).
+            is Deep.FriendLink -> {
+                FriendsNav.reset(); FriendsNav.addName = d.name; FriendsNav.addCode = d.code
+                closeAll(); nav.openTab(Route.FRIENDS)
+            }
+            is Deep.FriendList -> openFriend(d.code)
+            // Groups and exchanges: their own screen when it is on this phone, otherwise the Join screen.
+            is Deep.Group -> GroupNav.openInvite(d.id, null)
+            is Deep.GroupLink -> GroupNav.openInvite(null, d.link)
+            is Deep.GroupMe -> GroupNav.takeover = d.me
+            is Deep.Exchange -> ExchangeNav.openInvite(d.id, null)
+            is Deep.ExchangeLink -> ExchangeNav.openInvite(null, d.link)
+            is Deep.Bin -> { Bin.focus = d.code to d.wishId; closeAll(); nav.openOnTop(Route.BIN) }
+            is Deep.Invite -> { closeAll(); joinDlg = d.key }
+            is Deep.AddLink -> { closeAll(); addTarget = null; prefill = d.url; adding = true }
         }
     }
-    LaunchedEffect(sharedCode) {
-        if (sharedCode != null) {
-            openFriend(sharedCode)
-            onSharedUsed()
-        }
-    }
-    LaunchedEffect(binTarget) {
-        if (binTarget != null) {
-            Bin.focus = binTarget
-            closeAll(); nav.openOnTop(Route.BIN)
-            onBinUsed()
-        }
-    }
-    LaunchedEffect(sharedInvite) {
-        if (sharedInvite != null) {
-            closeAll(); joinDlg = sharedInvite
-            onSharedUsed()
-        }
+    LaunchedEffect(deep) {
+        deep?.let { go(it); onDeepUsed() }
     }
 
     // (Back from a list, a tab or a section goes Home by itself: Nav.kt and the routes below.)
@@ -730,8 +621,11 @@ fun App(
         }
         // The open wishlist: one of yours (Repo.openMine) or a collab wishlist (Shared.active). Back (or its ←) goes
         // Home; inside it, search and selecting go back first (their own Back handlers).
-        composable(Route.LIST) {
-            key(Shared.active, Repo.openMine) {
+        composable(Route.LIST) { entry ->
+            val listKey = entry.arguments?.getString("key").orEmpty()
+            val here = remember(listKey) { openListOf(ctx, listKey) }
+            if (!here) LaunchedEffect(listKey) { goHome() }
+            else key(Shared.active, Repo.openMine) {
                 HomeScreen(
                     snack,
                     onAdd = { prefill = ""; adding = true },

@@ -51,11 +51,6 @@ import org.json.JSONObject
 import kotlin.math.abs
 import kotlin.math.roundToLong
 
-/** A tapped push notification that should open a place in the app (MainActivity.OPEN_NOTE, 2.126). */
-object NoteNav {
-    var key by mutableStateOf<String?>(null)
-}
-
 /** The red of the "something new" dot (menu button and the Notifications item). */
 val NewDot = Color(0xFFE53935)
 

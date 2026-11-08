@@ -100,7 +100,9 @@ Goal: one screen at a time, Back always right, `MainActivity.kt` small.
   Gifts I reserved, Price changes, a list's settings; 8 gone. 2.157: a list opened from its link or code; 9 gone. 2.158: the tabs
   (Messages, My shops, Friends); 12 gone. 2.159: a wishlist group, Gift exchanges; 14 gone. 2.160: Home and the open
   list; every screen is a route, the screen switches and "main" Back rules are all gone.)*
-- [ ] S1.3 Notifications and links (`OPEN_*` extras, App Links) open routes instead of setting switches.
+- [x] S1.3 Notifications and links (`OPEN_*` extras, App Links) open routes instead of setting switches. *(2.162:
+  `Deep.kt`, one `App.go`; a check per entry point. In-app requests between screens (GroupNav, ExchangeNav, ChatNav,
+  FriendsNav, PricesNav, NotesNav) still use their flags; they move with S1.4 or the ViewModels.)*
 - [ ] S1.4 Dialogs that belong to one screen move into that screen; app-wide ones (delete/undo, move, share) stay in
   one place.
 - [x] S1.5 Delete the switched-off side menu code (owner decided 7 November 2026, if still wanted). *(2.154, owner

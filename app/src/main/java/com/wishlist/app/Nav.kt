@@ -44,8 +44,13 @@ object Route {
     const val GROUP = "group/{id}"
     fun group(id: String) = "group/" + android.net.Uri.encode(id)
     const val EXCHANGES = "exchanges"
-    /** The open wishlist (Repo.openMine, or Shared.active for a collab wishlist): with the bar, nothing lit. */
-    const val LIST = "list"
+    /**
+     * The open wishlist, `list/m:<id>` (yours, Repo.openMine) or `list/s:<code>` (a collab wishlist, Shared.active):
+     * with the bar, nothing lit. The route names its list, so when Android brings the app back after closing it in
+     * the background, the same list opens again ([openListOf]).
+     */
+    const val LIST = "list/{key}"
+    fun list(key: String) = "list/" + android.net.Uri.encode(key)
     val sections = listOf(GROUP, EXCHANGES, LIST)
 
     /** A list someone else owns, opened from its link or code (not through Friends): `friend/<code>`. */
@@ -99,4 +104,26 @@ fun NavController.backToMain() {
 @Composable
 fun RouteBox(content: @Composable () -> Unit) {
     Box(Modifier.fillMaxSize().imePadding()) { content() }
+}
+
+/**
+ * Makes the list named by a [Route.LIST] key the open one, when it isn't already (the app came back after Android
+ * closed it in the background: Repo remembers your last list, but a collab wishlist has to be opened again). False when
+ * that list is no longer on this phone: the route then closes and Home shows.
+ */
+fun openListOf(c: android.content.Context, key: String): Boolean {
+    val v = key.drop(2)
+    return when {
+        key.startsWith("s:") -> when {
+            Shared.active == v -> true
+            Shared.lists.any { it.code == v } -> { Shared.open(c, v); true }
+            else -> false
+        }
+        key.startsWith("m:") -> when {
+            Shared.active == null && Repo.openMine == v -> true
+            v in Repo.mineIds -> { Shared.close(); Repo.openMine(c, v); true }
+            else -> false
+        }
+        else -> false
+    }
 }
