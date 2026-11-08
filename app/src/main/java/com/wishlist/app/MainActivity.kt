@@ -458,7 +458,6 @@ fun App(
     // Gift exchange (menu, 2.129, ExchangeUi.kt): your exchanges, or one of them (ExchangeNav.open).
     var exchangesOpen by remember { mutableStateOf(false) }
     var newExchange by remember { mutableStateOf(false) }
-    var friendCode by remember { mutableStateOf<String?>(null) }
     var newShared by remember { mutableStateOf(false) }
     // The dashboard (Hub.kt) is the start screen; tapping a list opens it, Back returns to the dashboard.
     var hub by remember { mutableStateOf(true) }
@@ -480,7 +479,6 @@ fun App(
      */
     fun closeAll() {
         nav.backToMain()
-        friendCode = null
         friendsOpen = false; messagesOpen = false
         groupOpen = null; exchangesOpen = false; discoverOpen = false
     }
@@ -521,7 +519,7 @@ fun App(
             return
         }
         if (Repo.friends.any { it.code == code }) {
-            closeAll(); friendCode = code
+            closeAll(); nav.openOnTop(Route.friend(code))
             return
         }
         scope.launch {
@@ -531,7 +529,7 @@ fun App(
                     snack.showToast(tr("No list found for that code."))
                 } else {
                     Repo.addFriend(ctx, Friend(code, r.name))
-                    closeAll(); friendCode = code
+                    closeAll(); nav.openOnTop(Route.friend(code))
                 }
             } catch (e: Exception) {
                 snack.showToast(tr("Couldn’t reach the server. Check your connection."))
@@ -621,14 +619,11 @@ fun App(
 
     // Back on the screens of the "main" route (the routes go back by themselves, Nav.kt). Each handler checks
     // [onMain], so none of them can take Back away from a route on top.
-    BackHandler(enabled = onMain && friendCode != null) {
-        closeAll()
-    }
     // Back from a list goes to the dashboard; back from Prices or a tab to where you were.
-    BackHandler(enabled = onMain && friendCode == null && !hub && !discoverOpen && !friendsOpen && !messagesOpen) {
+    BackHandler(enabled = onMain && !hub && !discoverOpen && !friendsOpen && !messagesOpen) {
         hub = true
     }
-    BackHandler(enabled = onMain && friendCode == null && (discoverOpen || friendsOpen || messagesOpen)) {
+    BackHandler(enabled = onMain && (discoverOpen || friendsOpen || messagesOpen)) {
         // Back from a tab goes to where you were.
         discoverOpen = false; friendsOpen = false; messagesOpen = false
     }
@@ -655,7 +650,7 @@ fun App(
             Repo.touchRecent(ctx, "g:$g")
         }
     }
-    BackHandler(enabled = onMain && groupOpen != null && friendCode == null) {
+    BackHandler(enabled = onMain && groupOpen != null) {
         groupOpen = null
     }
 
@@ -667,7 +662,7 @@ fun App(
             exchangesOpen = true
         }
     }
-    BackHandler(enabled = onMain && exchangesOpen && ExchangeNav.open == null && friendCode == null) {
+    BackHandler(enabled = onMain && exchangesOpen && ExchangeNav.open == null) {
         exchangesOpen = false; hub = true
     }
 
@@ -725,22 +720,20 @@ fun App(
         popEnterTransition = { EnterTransition.None }, popExitTransition = { ExitTransition.None }
     ) {
         composable(Route.MAIN) {
-            val fr = Repo.friends.firstOrNull { it.code == friendCode }
             // While the keyboard is open the bottom bar steps aside and the screen above it makes room (edge to edge, 2.102).
             val imeOpen = WindowInsets.isImeVisible
             // An open conversation has a back arrow and no bottom bar.
-            val inChat = messagesOpen && ChatNav.peer != null && fr == null
-            val showBar = fr == null && !inChat && !imeOpen
+            val inChat = messagesOpen && ChatNav.peer != null
+            val showBar = !inChat && !imeOpen
             Column(Modifier.fillMaxSize()) {
             // With the bottom bar, the screens above it don't leave room for the phone's own navigation bar again.
             Box(Modifier.weight(1f).imePadding().then(if (showBar) Modifier.consumeWindowInsets(WindowInsets.navigationBars) else Modifier)) {
                 when {
-                    fr != null -> FriendScreen(fr, snack, onRemoved = { friendCode = null })
                     discoverOpen -> DiscoverScreen(
                         snack, onProfile = { nav.openOnTop(Route.PROFILE) },
                         onFound = { u, m -> addTarget = null; prefillMeta = m; fromShop = true; prefill = u; adding = true }
                     )
-                    friendsOpen -> FriendsScreen(snack, onProfile = { nav.openOnTop(Route.PROFILE) }, onOpenLink = { friendCode = it })
+                    friendsOpen -> FriendsScreen(snack, onProfile = { nav.openOnTop(Route.PROFILE) }, onOpenLink = { nav.openOnTop(Route.friend(it)) })
                     messagesOpen -> MessagesScreen(snack, onProfile = { nav.openOnTop(Route.PROFILE) })
                     exchangesOpen -> ExchangesScreen(snack, onOpenMine = { openMine(it) }, onNew = { newExchange = true })
                     groupOpen != null -> key(groupOpen) {
@@ -818,6 +811,14 @@ fun App(
                     else if (Shared.lists.any { it.code == g.code }) openGroup(g.code)
                 }
             }
+        }
+        // A list opened from its link or code (Friends > a link, a shared link, a notification). Removing it from this
+        // phone (its 🗑) closes it.
+        composable(Route.FRIEND) { entry ->
+            val code = entry.arguments?.getString("code").orEmpty()
+            val fr = Repo.friends.firstOrNull { it.code == code }
+            if (fr == null) LaunchedEffect(code) { nav.popBackStack() }
+            else RouteBox { key(code) { FriendScreen(fr, snack, onRemoved = { nav.popBackStack() }) } }
         }
         composable(Route.PRICES) { RouteBox { PricesScreen(snack, onBack = { nav.popBackStack() }) } }
         // The list open on the main route underneath (Shared.active or Repo.openMine).

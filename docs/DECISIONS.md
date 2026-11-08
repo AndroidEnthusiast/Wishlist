@@ -440,6 +440,8 @@ What the owner has decided, and why. Follow these unless the owner changes their
   changes in Stages 1–3).
 - **Price changes has no bottom bar** (owner, 8 November 2026, 2.156): like every screen opened on top (App settings,
   Bin, Notifications), with ← and Back returning to where it was opened. The owner didn't remember where "All price
-  changes" lives: a wish's price page (tap a wish's price) and a notification about several prices. Worth a look in a
-  later page review (features stay frozen until Stage 3).
+  changes" lives: a wish's price page and a notification about several prices. A wish's price page opens from a
+  price-drop card on Home or a price notification, **not** by tapping a price in a list (Claude wrongly said it did).
+  The owner doesn't want that built now: "the price changes is a feature we will improve later. As long as price
+  change notifications work it's fine." 
 - **No download line during the roadmap** (owner, 8 November 2026): "I don't need to see an app download link. Instead I need your guidance on what to do next." Until the roadmap's stages are done, messages end with the next steps for the owner, not the download link (say it in a line when an update needs installing).

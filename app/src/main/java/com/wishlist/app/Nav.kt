@@ -13,7 +13,7 @@ import androidx.navigation.NavController
  * on/off switches in [App] having to know about it.
  *
  * Moved so far: Profile, App settings, Bin, Notifications (2.154); Received gifts, Gifts I reserved, Price changes and
- * a list's settings (2.156). Everything else (Home, the tabs, a list, a friend's list, groups, gift exchanges) still
+ * a list's settings (2.156); a friend's list opened from a link or code (2.157). Everything else (Home, the tabs, a list, a friend's list, groups, gift exchanges) still
  * lives on [MAIN] with its switches, and moves over one screen at a time. Each move adds its name here.
  */
 object Route {
@@ -29,8 +29,12 @@ object Route {
     /** The settings of the list open on [MAIN] (its ⚙). */
     const val LIST_SETTINGS = "list-settings"
 
+    /** A list someone else owns, opened from its link or code (not through Friends): `friend/<code>`. */
+    const val FRIEND = "friend/{code}"
+    fun friend(code: String) = "friend/" + android.net.Uri.encode(code)
+
     /** The routes that open on top of [MAIN] (from the profile sheet, the bell, a list or a notification). */
-    val onTop = listOf(PROFILE, SETTINGS, BIN, NOTES, RECEIVED, RESERVED, PRICES, LIST_SETTINGS)
+    val onTop = listOf(PROFILE, SETTINGS, BIN, NOTES, RECEIVED, RESERVED, PRICES, LIST_SETTINGS, FRIEND)
 }
 
 /**
@@ -41,7 +45,8 @@ object Route {
 fun NavController.openOnTop(route: String) {
     navigate(route) {
         popUpTo(Route.MAIN)
-        launchSingleTop = true
+        // A route with a value (a friend's list) is a new screen for each value; the others open once.
+        launchSingleTop = '/' !in route
     }
 }
 

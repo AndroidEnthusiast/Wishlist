@@ -151,6 +151,18 @@ class NavigationTest : NavigationBase() {
         tabOn("Friends")
     }
 
+    @Test fun friendsListFromALinkBackHome() {
+        // A list saved from a link (a notification about it opens it): its own screen, Back returns Home.
+        val app = ApplicationProvider.getApplicationContext<android.app.Application>()
+        compose.runOnUiThread { Repo.addFriend(app, Friend("TESTCODE1", "Robin’s wishlist")) }
+        compose.runOnUiThread { NoteNav.key = "c:TESTCODE1" }
+        compose.waitForIdle()
+        compose.onAllNodes(hasContentDescription("Remove this list") and hasClickAction()).onFirst().assertExists()
+        noBar()
+        phoneBack()
+        tabOn("Home")
+    }
+
     @Test fun priceChangesBackToWhereItWasOpened() {
         // "All price changes" (a wish's price page, or a notification) from the Messages tab.
         tap("Messages")
