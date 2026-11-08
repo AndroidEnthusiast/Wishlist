@@ -9,6 +9,9 @@
 --    are looking at it "this changed" (never the wishes or messages themselves). The phone then fetches through the
 --    same checked functions as before. Channel names are fingerprints (sha256), so they don't give away a list code or
 --    a profile. A signal that can't be sent never stops a save.
+-- 3. One background question (S3.3): wl_pulse answers "what changed for me?" with a short fingerprint per part (your
+--    friends, chats, groups, gift exchanges, news, every collab list and every friend's list you reserved on). The
+--    phone's half-hourly check then only asks about the parts whose fingerprint changed, instead of about ten calls.
 
 -- ---------- 1. Small saves of your own lists ----------
 -- p_items: the wishes that are new or changed (whole wishes, as wl_sync_list takes them; the note item id 0 too).
@@ -157,12 +160,76 @@ create trigger wl_live_msgs_upd after update on wl_messages referencing new tabl
 create trigger wl_live_msgs_del after delete on wl_messages referencing old table as o
   for each statement execute function wl_live_msgs_old();
 
+-- ---------- 3. One background question ----------
+-- A list's fingerprint for the half-hourly check: its name, wishes and categories, and only the reservations of
+-- p_device (when p_all is false), so the owner of a list can never use this to notice that someone reserved something.
+-- 'gone' when there is no such list, 'off' when its link is switched off (the friends' link then shows nothing either).
+create or replace function wl_pulse_list(p_code text, p_device text, p_all boolean)
+returns text language plpgsql stable security definer set search_path = public as $$
+declare l record;
+begin
+  select name, cats, link_off into l from wl_lists where code = p_code;
+  if not found then return 'gone'; end if;
+  if l.link_off and not p_all then return 'off'; end if;
+  return md5(coalesce(l.name, '') || '|' || l.cats::text || '|' ||
+    coalesce((select string_agg(i.id::text || ':' || md5(i.data::text), ',' order by i.id)
+              from wl_items i where i.list_code = p_code), '') || '|' ||
+    coalesce((select string_agg(r.item_id::text || ':' || r.device || ':' || r.n, ',' order by r.item_id, r.device)
+              from wl_reservations r where r.list_code = p_code and (p_all or r.device = p_device)), '') || '|' ||
+    coalesce((select string_agg(m.item_id::text || ':' || m.to_code, ',' order by m.item_id)
+              from wl_moved m where m.from_code = p_code
+                and exists (select 1 from wl_reservations r where r.list_code = m.to_code and r.item_id = m.item_id
+                            and r.device = p_device)), ''));
+end $$;
+
+-- p_id / p_token: your profile (both null on a phone without one: then only the lists are answered).
+-- p_keys: the edit keys of your collab lists; p_codes: the friends' lists this phone reserved on. At most 200 each.
+-- Answers {"fr", "chat", "gr", "gx", "news": fingerprints, "lists": {code: fp}, "shared": {key: {"fp", "claim"}}}.
+-- A part that can't be worked out is left out; the phone then simply asks about it as before.
+create or replace function wl_pulse(p_id text, p_token text, p_device text, p_keys jsonb, p_codes jsonb)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare v jsonb := '{}'::jsonb; v_lists jsonb := '{}'::jsonb; v_shared jsonb := '{}'::jsonb; k text; v_code text; v_me boolean;
+begin
+  if length(coalesce(p_device, '')) < 8 then raise exception 'not allowed'; end if;
+  if (p_keys is not null and (jsonb_typeof(p_keys) <> 'array' or jsonb_array_length(p_keys) > 200))
+     or (p_codes is not null and (jsonb_typeof(p_codes) <> 'array' or jsonb_array_length(p_codes) > 200)) then
+    raise exception 'too many';
+  end if;
+  v_me := coalesce(p_id, '') <> '' and exists (select 1 from wl_profiles where id = p_id and token = p_token);
+  if coalesce(p_id, '') <> '' and not v_me then raise exception 'not allowed'; end if;
+  if v_me then
+    begin v := v || jsonb_build_object('fr', md5(wl_fr_state(p_id, p_token)::text)); exception when others then null; end;
+    begin v := v || jsonb_build_object('chat', md5(wl_chat_list(p_id, p_token)::text)); exception when others then null; end;
+    begin v := v || jsonb_build_object('gr', md5(wl_gr_state(p_id, p_token)::text)); exception when others then null; end;
+    begin v := v || jsonb_build_object('gx', md5(wl_gx_state(p_id, p_token)::text)); exception when others then null; end;
+    begin v := v || jsonb_build_object('news', md5(wl_news_get(p_id, p_token, p_device)::text)); exception when others then null; end;
+  end if;
+  for k in select distinct t.e #>> '{}' from jsonb_array_elements(coalesce(p_codes, '[]'::jsonb)) t(e)
+           where jsonb_typeof(t.e) = 'string' loop
+    v_lists := v_lists || jsonb_build_object(k, wl_pulse_list(k, p_device, false));
+  end loop;
+  for k in select distinct t.e #>> '{}' from jsonb_array_elements(coalesce(p_keys, '[]'::jsonb)) t(e)
+           where jsonb_typeof(t.e) = 'string' and length(t.e #>> '{}') >= 16 loop
+    select code into v_code from wl_lists where edit_key = k;
+    if v_code is null then
+      v_shared := v_shared || jsonb_build_object(k, jsonb_build_object('fp', 'gone', 'claim', false));
+    else
+      v_shared := v_shared || jsonb_build_object(k, jsonb_build_object(
+        'fp', wl_pulse_list(v_code, p_device, true),
+        'claim', v_me and exists (select 1 from wl_lists where code = v_code and owner_next = p_id and owner_next_token <> '')));
+    end if;
+  end loop;
+  return v || jsonb_build_object('lists', v_lists, 'shared', v_shared);
+end $$;
+
 revoke execute on function
   wl_live_topic(text, text),
   wl_live_send(text),
   wl_live_items_new(), wl_live_items_old(), wl_live_lists(),
-  wl_live_res_new(), wl_live_res_old(), wl_live_msgs_new(), wl_live_msgs_old()
+  wl_live_res_new(), wl_live_res_old(), wl_live_msgs_new(), wl_live_msgs_old(),
+  wl_pulse_list(text, text, boolean)
 from public, anon;
 grant execute on function
-  wl_mine_put(text, text, text, jsonb, jsonb, jsonb)
+  wl_mine_put(text, text, text, jsonb, jsonb, jsonb),
+  wl_pulse(text, text, text, jsonb, jsonb)
 to anon;

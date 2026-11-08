@@ -190,11 +190,32 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 - 6 November (night): Friends review; **2.139**. Not checked: the friend link on a phone (Chrome on Android should open wishlist://friend from the page; some browsers ask first).
 
 ## Next session
-- **START HERE (written at the end of the session of 8 November 2026).** The owner wants to start AND finish **Stage 3** in the next session.
-  1. First ask whether **2.171** works on their phone (everything still there after the update; add/edit/delete/move a wish; close and reopen; one more Export). They hadn't tested it yet when the session ended. If yes: **Stage 2 is signed off** (tick it in ROADMAP; the partner's phone updates later and moves its data on its first start).
-  2. Then **Stage 3** (ROADMAP: S3.1 own lists online one wish at a time with `wl_put_mine`, S3.2 Supabase Realtime instead of 20 s polling, S3.3 one background "what's new" call, S3.4 measure requests). Ask the questions first (risks: old app versions still use `wl_sync_list`, offline saves, two phones, the free plan's Realtime limits, battery). S3.1/S3.2 need SQL: give the owner the steps and links, script first, then the app.
-  3. Use the environment "Wishlist" (a session may start on "Default": switch first), run `bash tests/android-setup.sh`, then `gradle testReleaseUnitTest`. The app's checks never reach the real server and run with animations off.
-  4. The owner's real Export copy was deleted from the scratch folder on 8 November (owner's rule); ask for a new one if a later step needs real data.
+- **START HERE (written at the end of the Stage 3 session, 8 November 2026).** Stage 3 is built (2.172–2.175); the
+  owner chose to test all of it at the end.
+  1. Ask whether the owner ran [supabase-sync.sql](https://github.com/AndroidEnthusiast/Wishlist/blob/main/supabase-sync.sql)
+     (after all the other scripts) and installed 2.175. Without the script the app still works the old way (whole
+     lists, polling, every check) — so "it works" alone doesn't prove Stage 3 is on.
+  2. Owner tests for Stage 3 (ROADMAP): two phones (or a phone and the browser editor) editing the same collab
+     wishlist: a change shows on the other phone within a few seconds; a friend's list updates while open; a chat
+     message appears at once in an open chat and in Messages; your own list: edit a wish, then check the friends' page
+     shows it; airplane mode, edit a wish, airplane off, reopen the app: the friends' page catches up. Battery over a
+     normal day. Then **App settings > About > Details after a normal day**: write the real numbers into ROADMAP S3.4
+     (the table there is only Claude's estimate), especially `wl_pulse` vs the others and `live connect`.
+  3. If all is well: Stage 3 signed off; then Stage 4 (questions first, ROADMAP).
+  4. **Remind the owner about live updates for the web pages** (owner: "remind me of web pages later"): the browser
+     editor, friends' page, group and exchange pages still poll every 20 s. Would need a small WebSocket script and
+     `connect-src wss://…supabase.co` in every page's Content-Security-Policy.
+  5. Later, once the partner's phone has moved to the database: remove the old storage code (S2.5's last part).
+- Session summary (8 November 2026, Stage 3 session): Stage 2 signed off by the owner (2.171 "Yes, all works").
+  Stage 3 interview (DECISIONS "Stage 3 answers"), then built in a row: **2.172** server calls counted (App settings >
+  About), **2.173** own lists online in small saves (`MineSync.kt`, `wl_mine_put`; a failed save keeps the change and
+  is retried), **2.174** live updates (`Live.kt`, Supabase Realtime, polling fallback, nothing in the background),
+  **2.175** one background question (`Pulse.kt`, `wl_pulse`; first check of the day asks everything; reactions asked
+  once before the evening). New script `supabase-sync.sql` with `tests/sql/sync_test.sql` (run on a local PostgreSQL
+  16 here with a pretend Realtime: all checks OK, also when the script runs twice). App checks: 93 → 110 (CallLog 3,
+  MineSync 8, Live 2, Pulse 4). Checked against the real Supabase (read-only): a public Realtime channel joins with the
+  publishable key and delivers a "changed" broadcast in the shape `Live.kt` reads. Not checked here: Postgres sending
+  `realtime.send` on the real project (needs the script), how it feels on phones, battery.
 - Session summary (8 November 2026, long session): Stage 0 finished (backup after password reset), **Stage 1 done and signed off** (2.154–2.163: every screen a route, `Deep.kt` for every way in, MainActivity 142 lines, 63 checks), **Stage 2 built** (2.164–2.171: Export without Firebase files, Room database, the move tested on the owner's real Export, lists/wishes/bin/history/friends/notes read from the database, only changed rows written, Export/Import through the database, the database the only source; 93 checks). Also: a notification about one wish opens it (2.161), crash reports from the checks stopped (2.155), the build's draft-release 404 fixed.
 - **2.171 (8 November 2026): S2.5** (owner made an Export first and said continue). The database is the only source. Also fixed: the release had stayed a draft (download 404); build.yml now publishes it and fails if it doesn't. **Next:** ask whether 2.171 works (everything still there after the update; changes; close and reopen; Export once more). Then the Stage 2 sign-off (owner's tests: Stage 2's list in ROADMAP), delete `scratchpad/export/` (owner's rule: after the move is tested; it is), and Stage 3 (questions first). Later, once the partner's phone has updated: remove the old storage code (MyLists blobs, SafeStore, DbMove.snapshot stays for Import).
 - **2.170 (8 November 2026):** S2.4 done (owner: "continue"; they didn't say whether 2.169 was tried). **Next:** ask the owner to try Export, and if they like, Import of that same file (their data should come back; the app restarts). Then S2.5: ask the owner's OK, then stop writing the settings store for lists, wishes, bin, history, friends' lists and notifications (the old values stay untouched as they are, for at least two versions), with a way back written down. Then the Stage 2 sign-off and Stage 3.

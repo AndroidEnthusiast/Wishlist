@@ -156,6 +156,12 @@ object Reactions {
         val p = prefs(c)
         val today = LocalDate.now().toString()
         if (p.getString("rx_told_day", "") == today) return
+        // Before the evening only a reaction waiting since yesterday is told, so asking once is enough (2.175: it
+        // asked every half hour, for every list, only to wait for the evening).
+        if (LocalTime.now().hour < 19) {
+            if (p.getString("rx_morning", "") == today) return
+            p.edit().putString("rx_morning", today).apply()
+        }
         val since = p.getLong("rx_told_at", 0L)
         val fresh = ArrayList<Pair<MineData, React>>()
         for (d in Repo.allMine(c)) {

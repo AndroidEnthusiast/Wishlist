@@ -52,9 +52,9 @@ object Members {
         return true
     }
 
-    /** The background check: every gift list you're on, for a handed-over ownership. */
-    suspend fun claimAll(c: Context) {
-        for (l in Shared.lists.toList()) claim(c, l)
+    /** The background check: every gift list you're on ([only]: those the server says were handed to you), for a handed-over ownership. */
+    suspend fun claimAll(c: Context, only: Set<String>? = null) {
+        for (l in Shared.lists.toList()) if (only == null || l.code in only) claim(c, l)
     }
 
     /** You left [key]'s list: off its members. */

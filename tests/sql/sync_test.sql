@@ -149,4 +149,63 @@ reset role;
 create function realtime.send(payload jsonb, event text, topic text, private boolean) returns void language sql as
   'insert into realtime.sent(topic, event, private) values (topic, event, private)';
 
+-- ---------- 3. wl_pulse ----------
+set role anon;
+select wl_create_list('FRIEND01', 'fowner_fowner_fowner', 'Friend list');
+select wl_mine_put('FRIEND01', 'fowner_fowner_fowner', null, null, '[{"id":1,"title":"Kite"},{"id":2,"title":"Ball"}]', null);
+select wl_pulse(null, null, 'my-device-1234', null, '["FRIEND01","NOSUCHLS"]') as p1 \gset
+select pg_temp.ok((:'p1'::jsonb)->'lists'->>'NOSUCHLS' = 'gone', 'unknown list: gone');
+select pg_temp.ok((:'p1'::jsonb)->>'fr' is null and (:'p1'::jsonb)->>'chat' is null, 'no profile: only lists');
+-- Someone else reserving doesn't change it (the owner could otherwise notice a reservation).
+select wl_reserve_item('FRIEND01', 1, 'someone-else-5678');
+select pg_temp.ok(wl_pulse(null, null, 'my-device-1234', null, '["FRIEND01"]')->'lists'->>'FRIEND01' = (:'p1'::jsonb)->'lists'->>'FRIEND01', 'another device''s reservation: same fingerprint');
+select pg_temp.ok(wl_pulse(null, null, 'fowner-device-99', null, '["FRIEND01"]')->'lists'->>'FRIEND01' = (:'p1'::jsonb)->'lists'->>'FRIEND01', 'the owner''s device sees no change either');
+select wl_reserve_item('FRIEND01', 2, 'my-device-1234');
+select wl_pulse(null, null, 'my-device-1234', null, '["FRIEND01"]') as p2 \gset
+select pg_temp.ok((:'p2'::jsonb)->'lists'->>'FRIEND01' <> (:'p1'::jsonb)->'lists'->>'FRIEND01', 'my own reservation changes it');
+select wl_mine_put('FRIEND01', 'fowner_fowner_fowner', null, null, null, '[2]');
+select pg_temp.ok(wl_pulse(null, null, 'my-device-1234', null, '["FRIEND01"]')->'lists'->>'FRIEND01' <> (:'p2'::jsonb)->'lists'->>'FRIEND01', 'a wish taken off changes it');
+reset role;
+update wl_lists set link_off = true where code = 'FRIEND01';
+set role anon;
+select pg_temp.ok(wl_pulse(null, null, 'my-device-1234', null, '["FRIEND01"]')->'lists'->>'FRIEND01' = 'off', 'link switched off: off');
+reset role;
+update wl_lists set link_off = false where code = 'FRIEND01';
+set role anon;
+-- Collab lists by edit key: every reservation counts (everyone on it sees them anyway), and a handed-over ownership.
+select wl_pulse(null, null, 'my-device-1234', '["editkey_editkey_editkey9","wrong_key_wrong_key_wrong"]', null) as p3 \gset
+select pg_temp.ok((:'p3'::jsonb)->'shared'->'wrong_key_wrong_key_wrong'->>'fp' = 'gone', 'wrong key: gone');
+select pg_temp.ok(((:'p3'::jsonb)->'shared'->'editkey_editkey_editkey9'->>'claim')::boolean = false, 'nothing to claim');
+select wl_reserve_item('COLLAB09', 7, 'another-giver-99');
+select pg_temp.ok(wl_pulse(null, null, 'my-device-1234', '["editkey_editkey_editkey9"]', null)->'shared'->'editkey_editkey_editkey9'->>'fp'
+  <> (:'p3'::jsonb)->'shared'->'editkey_editkey_editkey9'->>'fp', 'a collab reservation changes it');
+reset role;
+update wl_lists set owner_next = 'XXXXXXXXXXXXXXXXXXXX', owner_next_token = 'newtoken_newtoken_ne' where code = 'COLLAB09';
+set role anon;
+select pg_temp.ok((wl_pulse('XXXXXXXXXXXXXXXXXXXX','tokX_tokX_tokX_tokX_', 'my-device-1234', '["editkey_editkey_editkey9"]', null)
+  ->'shared'->'editkey_editkey_editkey9'->>'claim')::boolean, 'a list handed to me: claim');
+select pg_temp.ok(not (wl_pulse('YYYYYYYYYYYYYYYYYYYY','tokY_tokY_tokY_tokY_', 'my-device-1234', '["editkey_editkey_editkey9"]', null)
+  ->'shared'->'editkey_editkey_editkey9'->>'claim')::boolean, 'handed to someone else: no claim');
+-- Your profile's parts.
+select wl_pulse('XXXXXXXXXXXXXXXXXXXX','tokX_tokX_tokX_tokX_', 'my-device-1234', null, null) as p4 \gset
+select pg_temp.ok((:'p4'::jsonb) ?& array['fr','chat','gr','gx','news'], 'all five parts');
+select wl_chat_send('YYYYYYYYYYYYYYYYYYYY','tokY_tokY_tokY_tokY_','XXXXXXXXXXXXXXXXXXXX','bmV3','','');
+select wl_pulse('XXXXXXXXXXXXXXXXXXXX','tokX_tokX_tokX_tokX_', 'my-device-1234', null, null) as p5 \gset
+select pg_temp.ok((:'p5'::jsonb)->>'chat' <> (:'p4'::jsonb)->>'chat', 'a new message changes chat');
+select pg_temp.ok((:'p5'::jsonb)->>'fr' = (:'p4'::jsonb)->>'fr' and (:'p5'::jsonb)->>'gr' = (:'p4'::jsonb)->>'gr', 'friends and groups unchanged');
+select pg_temp.ok(wl_pulse('XXXXXXXXXXXXXXXXXXXX','tokX_tokX_tokX_tokX_', 'my-device-1234', null, null)->>'chat' = (:'p5'::jsonb)->>'chat', 'asking again: the same');
+select wl_pf_save('ZZZZZZZZZZZZZZZZZZZZ','tokZ_tokZ_tokZ_tokZ_','Zoe') as cz \gset
+select wl_fr_add('ZZZZZZZZZZZZZZZZZZZZ','tokZ_tokZ_tokZ_tokZ_', :'cx');
+select pg_temp.ok(wl_pulse('XXXXXXXXXXXXXXXXXXXX','tokX_tokX_tokX_tokX_', 'my-device-1234', null, null)->>'fr' <> (:'p5'::jsonb)->>'fr', 'a friend request changes friends');
+-- Refused.
+do $$ begin perform wl_pulse('XXXXXXXXXXXXXXXXXXXX','wrong', 'my-device-1234', null, null); raise exception 'FAIL pulse with a wrong token';
+exception when others then if sqlerrm like 'FAIL%' then raise; end if; end $$;
+do $$ begin perform wl_pulse(null, null, 'short', null, null); raise exception 'FAIL pulse with a short device';
+exception when others then if sqlerrm like 'FAIL%' then raise; end if; end $$;
+do $$ begin perform wl_pulse(null, null, 'my-device-1234', null, (select jsonb_agg(i::text) from generate_series(1, 201) i)); raise exception 'FAIL 201 codes';
+exception when others then if sqlerrm like 'FAIL%' then raise; end if; end $$;
+do $$ begin perform wl_pulse_list('FRIEND01', 'x', true); raise exception 'FAIL wl_pulse_list callable';
+exception when others then if sqlerrm like 'FAIL%' then raise; end if; end $$;
+reset role;
+
 select 'ALL SYNC CHECKS OK';

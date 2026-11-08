@@ -152,15 +152,39 @@ its data on its first start of a new version; removing the old storage code (S2.
 
 ## Stage 3 — Syncing like a real app (2–3 sessions)  (P3, P4)
 Goal: small, fast saves; changes arrive when they happen; less battery.
-- [ ] S3.1 Own lists save one wish at a time, only changed fields (new `wl_put_mine` with the owner token, like
+- [x] S3.1 Own lists save one wish at a time, only changed fields (new `wl_put_mine` with the owner token, like
   `wl_sh_put_item`), with the same undo-on-failure rule as collab wishlists. The full-list sync stays for older apps
-  only.
-- [ ] S3.2 Supabase Realtime for open lists, collab wishlists and chat instead of 20-second polling (falls back to
+  only. *(2.173: `wl_mine_put` sends only new/changed wishes and removed ids in one call (`MineSync.kt`, fingerprints
+  of what the server has); whole wishes, since only the owner's phone writes them. Owner's choice: **a failed save
+  keeps the change** and is retried (next change, start, background check), no undo. The whole list still goes the
+  first time, weekly as a repair, and while the script isn't run.)*
+- [x] S3.2 Supabase Realtime for open lists, collab wishlists and chat instead of 20-second polling (falls back to
   polling when Realtime isn't reachable). Needs RLS-safe channels: broadcast "something changed" only, never data;
-  the app then fetches through the existing checked functions.
-- [ ] S3.3 One background job that asks the server "what's new for me?" in one call (extend `wl_news_get`) instead of
-  ten separate checks; pushes stay for urgent things.
-- [ ] S3.4 Measure: requests per user per day before and after (log counts in debug builds), written down here.
+  the app then fetches through the existing checked functions. *(2.174, `Live.kt`: collab wishlists, a friend's
+  list, Messages and an open chat; public channels named by SHA-256 fingerprints, triggers in supabase-sync.sql; at
+  most one fetch per 2 s per screen; polling as before when not live; nothing in the background. Web pages still
+  poll: the owner wants a reminder later.)*
+- [x] S3.3 One background job that asks the server "what's new for me?" in one call (extend `wl_news_get`) instead of
+  ten separate checks; pushes stay for urgent things. *(2.175, `Pulse.kt` + `wl_pulse`: fingerprints per part; only
+  changed parts are asked; the first check of each day asks everything (date-based reminders); friends' lists only
+  count this phone's own reservations, so an owner can't notice a reservation. Also: reactions asked once before the
+  evening instead of every half hour.)*
+- [x] S3.4 Measure: requests per user per day before and after (log counts in debug builds), written down here.
+  *(2.172: counted on every phone, App settings > About > Details. The owner chose to test all of Stage 3 at the end,
+  so there is no measured "before" day; the estimate below is worked out from the code for the owner's use (1 own
+  list online, 1 collab list, 2 friends' lists reserved on, a profile with chats). Replace it with the phone's real
+  numbers after a normal day on 2.175 + supabase-sync.sql.)*
+
+  | What | Before (2.171) | After (2.175) |
+  |---|---|---|
+  | Background check, 48 a day | ~11 calls each (+1 reactions per list until the evening) ≈ 550/day | 1 pulse + only changed parts; first check of the day ~11 ≈ 60–75/day |
+  | A collab list open 1 hour | 2 calls / 20 s = 360 | 1 connection + 2 calls per change (and own saves' echo) |
+  | A friend's list open 1 hour | 2 calls / 20 s = 360 | 1 connection + 2 calls per change |
+  | Messages tab open 10 minutes | 1 / 8 s = 75 | 1 per message that comes or goes |
+  | A chat open 10 minutes, 10 messages | ~2.5 / 3 s = 500 | ~25 |
+  | Editing one wish on your own list | the whole list (every wish) | one small call with that wish |
+  | Starting the app | the whole open list + the owner name | nothing, unless a save was waiting |
+  | In the background with a list or chat open | kept polling | nothing |
 Owner tests: two phones editing the same list, chat, collab list updates arrive within seconds, battery over a day.
 
 ## Stage 4 — The server, ready to grow (2–3 sessions)  (P5, P7, P8)

@@ -108,19 +108,28 @@ object FriendWatch {
         Reminders.giver(c, f.code, gift = false, occ = list.occ, owner = list.owner, listName = list.name.ifBlank { f.name }, titles = titles)
     }
 
-    /** The background check of every friend's list. A list that can't be loaded (or isn't shared any more) is skipped. */
-    suspend fun checkAll(c: Context) {
-        // Every list this phone reserved on (also friends' lists opened from the Friends tab).
-        val codes = prefs(c).all.keys.filter { it.startsWith("fres_") }.map { it.removePrefix("fres_") }
-        for (code in codes) {
+    /**
+     * The background check of every friend's list ([only]: just these; null: all). A list that can't be loaded (or
+     * isn't shared any more) is skipped. Returns the lists that were looked at.
+     */
+    suspend fun checkAll(c: Context, only: Set<String>? = null): Set<String> {
+        val handled = HashSet<String>()
+        for (code in codes(c)) {
+            // The background check asks only about lists that changed (Pulse.kt, ROADMAP S3.3).
+            if (only != null && code !in only) continue
             val f = Repo.friends.firstOrNull { it.code == code } ?: Friend(code, "")
-            if (read(c, f.code).isEmpty()) continue
+            if (read(c, f.code).isEmpty()) { handled += code; continue }
             val list = try {
                 Cloud.fetchList(f.code)
             } catch (e: Exception) {
                 null
             } ?: continue
             check(c, f, list, moved = movedFrom(c, f.code, list))
+            handled += code
         }
+        return handled
     }
+
+    /** Every list this phone reserved on (also friends' lists opened from the Friends tab). */
+    fun codes(c: Context): List<String> = prefs(c).all.keys.filter { it.startsWith("fres_") }.map { it.removePrefix("fres_") }
 }

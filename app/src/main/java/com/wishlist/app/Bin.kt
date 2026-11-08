@@ -205,11 +205,15 @@ object Bin {
 
     /**
      * Deletes old wishes from the bins, and alerts once for every gift this phone reserved on a shared wishlist that
-     * someone else moved to the bin. Runs in the background ([BinWorker]) and when the app starts.
+     * someone else moved to the bin. Runs in the background ([BinWorker]). [only]: just these lists (null: all).
+     * Returns the lists that were looked at (the others couldn't be loaded and are tried again next time).
      */
-    suspend fun watch(c: Context) {
+    suspend fun watch(c: Context, only: Set<String>? = null): Set<String> {
         purgeMine(c)
+        val handled = HashSet<String>()
         for (l in Shared.lists.toList()) {
+            // The background check asks only about lists that changed (Pulse.kt, ROADMAP S3.3).
+            if (only != null && l.code !in only) continue
             val r = try {
                 Cloud.shGet(l.key)
             } catch (e: Exception) {
@@ -239,11 +243,16 @@ object Bin {
                 }
             }
             remember(c, l.code, (told + fresh.map { mark(it) }).intersect(marks))
+            handled += l.code
         }
+        return handled
     }
 }
 
-/** Runs [Bin.watch], [FriendWatch.checkAll] and [Friends.poll] every half hour (see [Alerts.scheduleBin]). */
+/**
+ * The half-hourly background check (see [Alerts.scheduleBin]). Since 2.175 it first asks the server what changed
+ * ([Pulse], one call) and then only asks about those parts; the first check of each day asks about everything.
+ */
 class BinWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {
     override suspend fun doWork(): Result {
         val c = applicationContext
@@ -253,54 +262,64 @@ class BinWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, p
             Sync.catchUp(c)
         } catch (e: Exception) {
         }
+        val plan = Pulse.plan(c)
         try {
-            Bin.watch(c)
+            // Collab lists: someone binned a gift you reserved; old wishes leave the bin after 30 days.
+            Bin.watch(c, plan.lists("s:", Shared.lists.map { it.code })).forEach { plan.ok("s:$it") }
         } catch (e: Exception) {
         }
         try {
-            FriendWatch.checkAll(c)
+            // Friends' lists you reserved on: a reserved gift taken off, moved or bought.
+            FriendWatch.checkAll(c, plan.lists("l:", FriendWatch.codes(c))).forEach { plan.ok("l:$it") }
         } catch (e: Exception) {
         }
         // A gift list handed to you by its creator (2.128).
         try {
-            Members.claimAll(c)
+            Members.claimAll(c, if (plan.all) null else plan.claims)
         } catch (e: Exception) {
         }
-        // "Did your wishes come true?" the day after an occasion of your own lists (2.128).
+        // "Did your wishes come true?" the day after an occasion of your own lists (2.128). On the phone only.
         try {
             Reminders.checkMine(c)
         } catch (e: Exception) {
         }
         // Friend requests, and requests of yours that were approved (Friends.kt).
-        try {
+        if (plan.due("fr")) try {
             Friends.poll(c)
+            plan.ok("fr")
         } catch (e: Exception) {
         }
         // New messages (Chat.kt).
-        try {
+        if (plan.due("chat")) try {
             Chat.poll(c)
+            plan.ok("chat")
         } catch (e: Exception) {
         }
         // Wishlist group invites and news (Groups.kt, 2.108).
-        try {
+        if (plan.due("gr")) try {
             Groups.poll(c)
+            plan.ok("gr")
         } catch (e: Exception) {
         }
         // News from the server (GiftInvites.kt, 2.142): invitations to gift lists, "Still buying …?" and its answers,
-        // in case a push didn't arrive. And the reactions on your wishes, told once a day in the evening (Reactions.kt).
-        try {
+        // in case a push didn't arrive.
+        if (plan.due("news")) try {
             News.poll(c)
+            plan.ok("news")
         } catch (e: Exception) {
         }
+        // The reactions on your wishes, told once a day in the evening (Reactions.kt).
         try {
             Reactions.daily(c)
         } catch (e: Exception) {
         }
         // Gift exchange news, anonymous messages and the exchange day (Exchange.kt, 2.129).
-        try {
+        if (plan.due("gx")) try {
             Exchanges.poll(c)
+            plan.ok("gx")
         } catch (e: Exception) {
         }
+        Pulse.finish(c, plan)
         return Result.success()
     }
 }

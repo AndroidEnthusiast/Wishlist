@@ -211,6 +211,13 @@ object Live {
                             s.joined = false
                             s.signals.trySend(Signal.STATE)
                         }
+                        // Only this channel stopped (the connection is still there): the screen polls; join again soon.
+                        if (subs.any { it.topic == topic }) scope.launch {
+                            delay(5_000)
+                            synchronized(Live) {
+                                if (ws === webSocket && open && subs.any { it.topic == topic && !it.joined }) join(topic)
+                            }
+                        }
                     }
                 }
             }
