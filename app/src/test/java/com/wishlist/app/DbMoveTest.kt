@@ -167,12 +167,14 @@ class DbMoveTest {
         Repo.load(c)
         assertEquals(Repo.allMine(c).map { it.id to it.wishes.size }, s.lists.map { it.id to it.wishes.size })
         println("REAL EXPORT: $count; lists ${s.lists.map { it.wishes.size }}")
-        // Version C1: the app's own start moves it into its database and then reads it back: it must match, twice.
-        ListStore.reset(); WishlistDb.reset()
+        // The app's own first start (Repo.load above already froze one: start again from no database) moves it in,
+        // checks it (it must match) and freezes the settings store.
+        ListStore.reset(); WishlistDb.reset(); c.deleteDatabase("wishlist.db")
         ListStore.start(c)
         assertEquals(true, ListStore.matched)
+        // The second start reads the database only (S2.5: frozen, no comparing) and finds the same.
         ListStore.reset(); ListStore.start(c)
-        assertEquals(true, ListStore.matched)
+        assertEquals(null, ListStore.matched)
         assertEquals(s.lists.single { it.id == MAIN_LIST }.wishes, MyLists.read(prefs, MAIN_LIST).wishes)
         // S2.4: the real data in the Export format reads back the same.
         val real = ListStore.same(s)

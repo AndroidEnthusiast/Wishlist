@@ -46,6 +46,8 @@ object History {
     }
 
     private fun save(c: Context) {
+        // Since 2.171 saved to the database (ListStore); the settings store only when the database can't be used.
+        if (ListStore.live) { ListStore.changed(); return }
         val o = JSONObject()
         for ((id, list) in all) {
             val a = JSONArray()

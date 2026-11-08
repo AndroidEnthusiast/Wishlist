@@ -107,6 +107,8 @@ object Notifications {
     }
 
     private fun save(c: Context) {
+        // Since 2.171 saved to the database (ListStore); the settings store only when the database can't be used.
+        if (ListStore.live) { ListStore.changed(); return }
         val a = JSONArray()
         all.forEach {
             a.put(

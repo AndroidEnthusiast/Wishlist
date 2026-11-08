@@ -438,6 +438,9 @@ What the owner has decided, and why. Follow these unless the owner changes their
   "Back always goes where you think"): Profile, App settings, Bin and Notifications opened from the Friends tab go back
   to Friends (before: Home). Screens keep changing at once, without slide or fade animations (nothing else visible
   changes in Stages 1–3).
+- **S2.5: the database becomes the only source** (owner, 8 November 2026: "ok let's continue, I made a backup"):
+  2.171 stops writing the old storage for lists, wishes, bin, history, friends' lists and notifications; the old
+  values stay on the phone untouched; the old code stays as the fallback when the database can't be read.
 - **Stage 2, the slimmer route** (owner, 8 November 2026, after Claude pushed back on rebuilding every screen around
   ViewModels: screens already update by themselves, and that rebuild changes nothing for the user): finish Stage 2
   with one-wish-at-a-time saving, Export/Import from the database and then removing the old storage; ViewModels come

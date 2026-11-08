@@ -85,6 +85,8 @@ object MyLists {
     /** Writes a list into the editor (the caller applies it). */
     fun write(e: SharedPreferences.Editor, d: MineData) {
         ListStore.put(d)
+        // Since 2.171 the database is the only source (ListStore saves it); the settings store only without it.
+        if (ListStore.live) { ListStore.changed(); return }
         val arr = JSONArray()
         d.wishes.forEach { arr.put(wishToJson(it)) }
         if (d.id == MAIN_LIST) {

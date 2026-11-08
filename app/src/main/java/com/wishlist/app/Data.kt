@@ -288,7 +288,9 @@ object Repo {
         } catch (e: Exception) {
             emptyList()
         }.let { ids -> if (MAIN_LIST in ids) ids else listOf(MAIN_LIST) + ids }
-        binOwner = try {
+        // Since 2.171 the database is the only source (ListStore); the settings store is read only without it.
+        ListStore.ids()?.let { mineIds = it }
+        binOwner = ListStore.binOwners() ?: try {
             val o = JSONObject(p.getString("bin_owner", null) ?: "{}")
             o.keys().asSequence().associate { it.toLong() to o.getString(it) }
         } catch (e: Exception) {
@@ -341,7 +343,20 @@ object Repo {
         friends = ListStore.friends() ?: SafeStore.readList(p, "friends") { o -> Friend(o.getString("code"), o.optString("name", "Wishlist")) }
         deviceId = p.getString("device", null)
             ?: UUID.randomUUID().toString().also { p.edit().putString("device", it).apply() }
+        // Every change is saved from here into the database (ListStore, 2.171).
+        ListStore.source = { memory(c) }
     }
+
+    /** Everything that lives in the database, as the app holds it now (ListStore saves the difference). */
+    @Synchronized
+    fun memory(c: Context): Snapshot = Snapshot(
+        mineIds.map { mine(c, it) },
+        myBin.map { (binOwner[it.id] ?: MAIN_LIST) to it },
+        myCats,
+        History.all,
+        friends,
+        Notifications.all
+    )
 
     private fun persist(c: Context) {
         val binArr = JSONArray()
@@ -358,10 +373,14 @@ object Repo {
         recent.forEach { (k, v) -> rec.put(k, v) }
         val cp = JSONObject()
         copies.forEach { (k, v) -> cp.put(k, JSONArray(v.toList())) }
-        e.putString("bin", binArr.toString())
+        // Since 2.171 your lists, the bin and friends' lists are saved to the database (ListStore); the settings store
+        // only when the database can't be used.
+        if (!ListStore.live) e.putString("bin", binArr.toString())
             .putString("mine_ids", JSONArray(mineIds).toString())
-            .putString("mine_open", openMine)
             .putString("bin_owner", owners.toString())
+            .putString("friends", fr.toString())
+        ListStore.changed()
+        e.putString("mine_open", openMine)
             .putString("recent", rec.toString())
             .putString("mine_copies", cp.toString())
             .putString("mine_gone", JSONObject(goneNames as Map<*, *>).toString())
@@ -381,7 +400,6 @@ object Repo {
             .putBoolean("notify_rises", notifyRises)
             .putLong("lastCheck", lastCheck)
             .putString("last_save_to", lastSaveTo)
-            .putString("friends", fr.toString())
             .apply()
     }
 

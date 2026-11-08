@@ -7,17 +7,18 @@ import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
 /*
- * Your own lists and wishes come from the database (ROADMAP Stage 2, version C1, 2.167).
+ * Your lists, wishes, bin, price history, friends' lists and notifications live in the database (ROADMAP Stage 2).
  *
- *  - At start ([start]) the lists are read from the database into memory, after a check that they match the settings
- *    store (SharedPreferences), which is still written as the fallback during the safety period (S2.5 removes it after
- *    the owner's OK). The first time, the data is moved in first (DbMove.copy). If they ever differ, or the database
- *    can't be read, the app says so in the crash reports, uses the settings store and copies it over again: nothing
- *    can be lost.
- *  - Every change is written to both: MyLists.write keeps the lists in memory, and a listener on the settings store
- *    copies the changed data into the database on one background thread, in one transaction (all or nothing).
- *  - Since 2.168 (C2) the bin, the price history, friends' lists and the Notifications page come from the database
- *    at start too, with the same check ([bin], [history], [friends], [notes]).
+ * Since 2.171 (S2.5, owner's OK) the database is the only source:
+ *  - At start ([start]) everything is read from the database. The first start of 2.171 (or of any version for a phone
+ *    coming from an old one) still moves the settings store in and checks it, then marks the database "frozen-store":
+ *    from then on the settings store (SharedPreferences) is no longer written for these, and its last values stay on
+ *    the phone untouched.
+ *  - Every change goes from the app's memory ([source], Repo.memory) to the database, only what changed (DbDiff), on
+ *    one background thread, in one transaction.
+ *  - When the database can't be read, the app falls back to the settings store AND writes to it again ([live] false),
+ *    so nothing typed in that session is lost; the crash reports say so.
+ * (2.167–2.170 wrote both and compared them at every start.)
  */
 object ListStore {
     /** True once the lists in memory came from the database (or were checked against it) at this start. */
@@ -31,22 +32,19 @@ object ListStore {
     private var data: Snapshot? = null
     /** What the database holds now, so a change writes only the difference (DbDiff); null: unknown, copy it all. */
     private var inDb: Snapshot? = null
+    /** Builds what the app holds now (Repo.memory); set by Repo.load. */
+    @Volatile var source: (() -> Snapshot)? = null
+    private val main = android.os.Handler(android.os.Looper.getMainLooper())
+    private val building = AtomicBoolean(false)
+
     /** Rows written and removed since this start, added up over every save (for the checks); -1 deletes: a full copy. */
     @Volatile var written = DbDiff.Written(0, 0)
         private set
     private val io = Executors.newSingleThreadExecutor { r -> Thread(r, "wishlist-db").apply { isDaemon = true } }
     private val pending = AtomicBoolean(false)
+    @Volatile private var latest: Snapshot? = null
     private var started = false
     private var app: Context? = null
-
-    /** The keys of the settings store whose data is in the database: a change to one copies it over. */
-    private fun moves(key: String?) = key != null && (
-        key in setOf("wishes", "name", "about", "cats", "code", "token", "photosUp", "mine_ids", "bin", "bin_owner", "history", "friends", "notes") ||
-            key.startsWith("mine_")
-        )
-
-    // Kept here: the settings store only keeps a weak link to its listeners.
-    private val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key -> if (moves(key)) changed() }
 
     private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
 
@@ -61,32 +59,39 @@ object ListStore {
         try {
             // The database is read on its own thread (Room refuses the screen's thread); the start waits for it, as it
             // waited for the settings store before. It is small: one row per wish.
-            val fromDb = io.submit<Snapshot> {
-                val dao = WishlistDb.get(c).dao()
+            val db = WishlistDb.get(c)
+            val (fromDb, frozen) = io.submit<Pair<Snapshot, Boolean>> {
+                val dao = db.dao()
                 if (dao.meta("lists_live") != "1") {
-                    DbMove.copy(WishlistDb.get(c), fromStore, version(c))
+                    DbMove.copy(db, fromStore, version(c))
                     dao.putMeta(MetaRow("lists_live", "1"))
                 }
-                read(dao)
+                read(dao) to (dao.meta("store_frozen") == "1")
             }.get()
-            val expected = same(fromStore)
-            matched = fromDb == expected
-            inDb = fromDb
-            if (fromDb == expected) {
+            if (frozen) {
+                // The database is the only source (S2.5): the settings store holds an old copy, never compared.
                 data = fromDb
+                inDb = fromDb
             } else {
-                Crash.report(IllegalStateException("The database differed from the settings store (" + diff(fromDb, expected) + "); copied again"))
+                // The last start that compares: the settings store is still up to date. When they differ, the settings
+                // store wins and is copied over (now, before freezing).
+                val expected = same(fromStore)
+                matched = fromDb == expected
+                if (fromDb != expected) {
+                    Crash.report(IllegalStateException("The database differed from the settings store (" + diff(fromDb, expected) + "); copied again"))
+                    io.submit { DbMove.copy(db, expected, version(c)) }.get()
+                }
                 data = expected
-                changed()
+                inDb = expected
+                io.submit { db.dao().putMeta(MetaRow("store_frozen", "1")) }.get()
             }
             data!!.lists.forEach { lists[it.id] = it }
             live = true
         } catch (e: Throwable) {
-            Crash.report(IllegalStateException("Reading from the database failed", e))
-            lists.clear(); data = null
+            Crash.report(IllegalStateException("Reading from the database failed; using the settings store", e))
+            lists.clear(); data = null; inDb = null
             live = false
         }
-        p.registerOnSharedPreferenceChangeListener(listener)
     }
 
     /** Everything that is in the database, in the same shape as [DbMove.snapshot] reads the settings store. */
@@ -151,13 +156,25 @@ object ListStore {
         if (live) lists[d.id] = d
     }
 
-    /** Something that lives in the database changed: copy it over soon, once for several changes in a row. */
+    /**
+     * Something that lives in the database changed: save it soon, once for several changes in a row. What is saved is
+     * read from the app's memory on the main thread once the current change is complete (a list made, then opened…).
+     */
     fun changed() {
+        if (!live || source == null) return
+        if (!building.compareAndSet(false, true)) return
+        main.post { building.set(false); save() }
+    }
+
+    /** Takes what the app holds now and writes the difference on the database's thread. */
+    private fun save() {
         val c = app ?: return
+        val now = try { same(source?.invoke() ?: return) } catch (e: Throwable) { Crash.report(e); return }
+        latest = now
         if (!pending.compareAndSet(false, true)) return
         io.execute {
             pending.set(false)
-            val now = same(DbMove.snapshot(prefs(c)))
+            val now = latest ?: return@execute
             val db = WishlistDb.get(c)
             try {
                 // Only what changed (2.169); everything when it isn't known what the database holds.
@@ -174,7 +191,8 @@ object ListStore {
                     inDb = now
                     Crash.report(IllegalStateException("Saving the changes to the database failed; copied it all", e))
                 } catch (e2: Throwable) {
-                    // The settings store still has it all; the next start finds the difference and copies again.
+                    // Kept in memory: the next change tries a full copy again. Only if the app closes before that is
+                    // this change missing from the database (the crash report says so).
                     inDb = null
                     Crash.report(IllegalStateException("Saving to the database failed", e2))
                 }
@@ -207,15 +225,26 @@ object ListStore {
         }
     }
 
-    /** Waits until every copy asked for so far is written (the checks; Export later). */
+    /** Waits until every save asked for so far is written (Export; the checks). */
     fun flush() {
+        if (building.getAndSet(false)) {
+            if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) save()
+            else java.util.concurrent.CountDownLatch(1).also { l -> main.post { save(); l.countDown() } }.await()
+        }
         io.submit {}.get()
     }
+
+    /** Your lists' ids in their order, as the database had them at this start, or null. */
+    @Synchronized fun ids(): List<String>? = if (live) data?.lists?.map { it.id } else null
+
+    /** Which list each wish in the bin came from (only those not from "main"), as the database had it, or null. */
+    @Synchronized fun binOwners(): Map<Long, String>? =
+        if (live) data?.bin?.filter { it.first != MAIN_LIST }?.associate { it.second.id to it.first } else null
 
     /** Forget this start, as a new start of the app would (the checks, and Import before it restarts the app). */
     @Synchronized
     internal fun reset() {
-        app?.let { prefs(it).unregisterOnSharedPreferenceChangeListener(listener) }
+        source = null; building.set(false); latest = null
         started = false; live = false; matched = null; lists.clear(); data = null; inDb = null; written = DbDiff.Written(0, 0); app = null
     }
 }

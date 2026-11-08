@@ -142,6 +142,10 @@ values (wishes ~3 KB), plus ~100 leftover shop-icon entries from old versions th
 - [x] S2.4 Export/Import read and write the new database (old Export files still import). *(2.170: Export from the
   database in the old file format; Import empties the database and the next start moves the file in.)*
 - [ ] S2.5 Only after the owner confirms on both phones: remove the old storage code (`MyLists` blobs, `SafeStore`).
+  *(2.171, owner's OK on their phone (the partner updates later): the settings store is no longer written for lists,
+  wishes, bin, history, friends' lists and notifications; its last copy stays untouched; the old code stays only as
+  the fallback when the database can't be read, and for phones coming from older versions. Removing that code is
+  for later, once the partner's phone has moved too.)*
 Owner tests: everything is still there after updating (lists, bin, history, categories, covers), on both phones.
 
 ## Stage 3 — Syncing like a real app (2–3 sessions)  (P3, P4)
