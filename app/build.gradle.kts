@@ -10,8 +10,8 @@ android {
         applicationId = "com.wishlist.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 164
-        versionName = "2.163"
+        versionCode = 165
+        versionName = "2.164"
         // Crash reports (Crash.kt): Crashlytics wants a build id, which its Gradle plugin would normally add. The app
         // isn't shrunk or renamed (isMinifyEnabled = false), so there is no mapping file to upload; one id per version.
         resValue("string", "com.google.firebase.crashlytics.mapping_file_id", "wishlist-$versionCode")
@@ -55,6 +55,8 @@ android {
             it.systemProperty("roborazzi.test.record", "true")
             it.systemProperty("robolectric.graphicsMode", "NATIVE")
             it.maxHeapSize = "3g"
+            // Robolectric opens files through Android's file descriptors (BackupTest writes a real Export file).
+            it.jvmArgs("--add-opens=java.base/java.io=ALL-UNNAMED")
             // Each test class in a fresh Java process: the app keeps its state in objects (Repo, ...), and a class
             // could leave the next unable to settle (screenshots: dark then light; ListNavigationTest, 2.156).
             it.forkEvery = 1

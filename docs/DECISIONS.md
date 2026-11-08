@@ -438,6 +438,12 @@ What the owner has decided, and why. Follow these unless the owner changes their
   "Back always goes where you think"): Profile, App settings, Bin and Notifications opened from the Friends tab go back
   to Friends (before: Home). Screens keep changing at once, without slide or fade animations (nothing else visible
   changes in Stages 1–3).
+- **Stage 2 ground rules** (owner, 8 November 2026): the data move is tested first with the owner's real Export
+  (kept only in the session's scratch folder, never in the project or on GitHub, deleted after the move is tested);
+  **only the owner's phone tests Stage 2** (the partner isn't available to test, so they update later); no extra
+  Export reminder (the app's own untouched copy of the old data is enough); **the data moves in its own version**
+  (first a version that adds the database and moves nothing, then the move, then the rest). Export stops taking the
+  phone's own Firebase files along, now (2.164).
 - **Stage 1 signed off** (owner, 8 November 2026): "All seems to work and if I overlooked something I want to fix it
   later." ViewModels moved from S1.1 to S2.2 (they need the data layer).
 - **A notification about one wish opens its list on that wish** (owner, 8 November 2026, 2.161, a small fix during

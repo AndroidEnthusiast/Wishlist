@@ -119,6 +119,9 @@ test ("all seems to work"; anything noticed later is fixed first).*
 
 ## Stage 2 — A real database on the phone (3–4 sessions)  (P2)
 Goal: fast, safe local data that can't be half-saved.
+*Owner's ground rules (8 November 2026): tested with their real Export first; their phone only (the partner updates
+later); the move in its own version; Export no longer carries Firebase files (2.164). The real Export has 241 stored
+values (wishes ~3 KB), plus ~100 leftover shop-icon entries from old versions that the move can leave behind.*
 - [ ] S2.1 Add Room (SQLite). Tables: lists, wishes (one row per wish per list, so copies are just rows), bin,
   price history, categories, friends' lists, notifications. Keep JSON only where it is truly free-form.
 - [ ] S2.2 A data layer (repositories) between screens and storage; ViewModels read from it as streams, so every

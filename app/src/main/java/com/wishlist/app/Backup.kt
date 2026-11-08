@@ -43,11 +43,27 @@ object Backup {
     private const val PREFS = "wishlist"
     private const val VERSION = 1
 
+    /**
+     * Files that belong to this phone, not to you (2.164): Firebase's identity for notifications and its crash report
+     * files, and Android's own markers. Export leaves them out and Import keeps the new phone's own ones, so two phones
+     * never share one notification identity (until 2.163 a backup carried them along).
+     */
+    internal fun phoneOnly(path: String): Boolean {
+        val p = path.replace('\\', '/')
+        val first = p.substringBefore('/')
+        return first.startsWith(".") || first == "datastore" || first.startsWith("PersistedInstallation") ||
+            first == "generatefid.lock" || first.startsWith("profileInstalled") || first.startsWith("profileinstaller")
+    }
+
+    /** Settings that belong to this phone: the notification token it last told the server (each phone has its own). */
+    internal val phoneOnlyKeys = setOf("push_token", "push_day")
+
     /** Writes everything to [uri] (a file the person chose). */
     suspend fun export(c: Context, uri: Uri) = withContext(Dispatchers.IO) {
         val prefs = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).all
         val values = JSONObject()
         for ((k, v) in prefs) {
+            if (k in phoneOnlyKeys) continue
             val o = JSONObject()
             when (v) {
                 is String -> o.put("t", "s").put("v", v)
@@ -66,7 +82,7 @@ object Backup {
         ZipOutputStream(out.buffered()).use { z ->
             z.putNextEntry(ZipEntry("manifest.json")); z.write(manifest.toString().toByteArray()); z.closeEntry()
             z.putNextEntry(ZipEntry("prefs.json")); z.write(values.toString().toByteArray()); z.closeEntry()
-            c.filesDir.walkTopDown().filter { it.isFile }.forEach { f ->
+            c.filesDir.walkTopDown().filter { it.isFile && !phoneOnly(it.relativeTo(c.filesDir).path) }.forEach { f ->
                 z.putNextEntry(ZipEntry("files/" + f.relativeTo(c.filesDir).path))
                 f.inputStream().use { it.copyTo(z) }
                 z.closeEntry()
@@ -106,19 +122,24 @@ object Backup {
         val newDir = c.filesDir.absolutePath
         fun fix(s: String) = if (oldDir.isNotEmpty() && oldDir != newDir) s.replace(oldDir, newDir) else s
 
-        // Replace the files.
-        c.filesDir.listFiles()?.forEach { it.deleteRecursively() }
+        // Replace the files (this phone's own Firebase files stay; a backup's copies of them are skipped).
+        c.filesDir.listFiles()?.forEach { if (!phoneOnly(it.name)) it.deleteRecursively() }
         val root = c.filesDir.canonicalFile
         for ((path, bytes) in files) {
+            if (phoneOnly(path)) continue
             val f = File(c.filesDir, path).canonicalFile
             // Never write outside the app's own folder.
             if (!f.path.startsWith(root.path + File.separator)) continue
             f.parentFile?.mkdirs()
             f.writeBytes(bytes)
         }
-        // Replace the settings and data.
-        val e = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().clear()
+        // Replace the settings and data (this phone's notification token stays).
+        val sp = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val keep = sp.all.filterKeys { it in phoneOnlyKeys }
+        val e = sp.edit().clear()
+        keep.forEach { (k, x) -> when (x) { is String -> e.putString(k, x); is Long -> e.putLong(k, x) } }
         for (k in v.keys()) {
+            if (k in phoneOnlyKeys) continue
             val o = v.getJSONObject(k)
             when (o.optString("t")) {
                 "s" -> e.putString(k, fix(o.getString("v")))
