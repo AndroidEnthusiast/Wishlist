@@ -63,6 +63,8 @@ class MainActivity : ComponentActivity() {
         Alerts.ensureChannel(this)
         Alerts.schedule(this, Repo.intervalHours, false)
         Alerts.scheduleBin(this)
+        // Stage 2, version A: the database is opened once, empty, to see it works on this phone (Db.kt).
+        if (!Crash.onComputer) WishlistDb.warmUp(this)
         Sync.push()
         // Edge to edge (owner, 2.102): the app draws behind the system bars and handles them itself. Before, Android
         // shrank the whole window for the keyboard ("adjustResize"), also for a keyboard that was still closing in

@@ -1,7 +1,11 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("com.google.devtools.ksp")
 }
+
+// Room keeps a copy of each database version's layout in app/schemas, so later versions can be checked against it.
+ksp { arg("room.schemaLocation", "$projectDir/schemas") }
 
 android {
     namespace = "com.wishlist.app"
@@ -10,8 +14,8 @@ android {
         applicationId = "com.wishlist.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 165
-        versionName = "2.164"
+        versionCode = 166
+        versionName = "2.165"
         // Crash reports (Crash.kt): Crashlytics wants a build id, which its Gradle plugin would normally add. The app
         // isn't shrunk or renamed (isMinifyEnabled = false), so there is no mapping file to upload; one id per version.
         resValue("string", "com.google.firebase.crashlytics.mapping_file_id", "wishlist-$versionCode")
@@ -82,6 +86,10 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.9.0")
     // Screens as routes with their own back stack (ROADMAP Stage 1, Nav.kt). 2.7.x fits Compose 1.6 (the BOM above).
     implementation("androidx.navigation:navigation-compose:2.7.7")
+    // The database on the phone (ROADMAP Stage 2, Db.kt). 2.6.x fits Kotlin 1.9.
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    ksp("androidx.room:room-compiler:2.6.1")
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")

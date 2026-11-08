@@ -1,0 +1,610 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "a31ef43f2e717bdbb5a1c817caa5678d",
+    "entities": [
+      {
+        "tableName": "lists",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `about` TEXT NOT NULL, `code` TEXT, `token` TEXT, `photos` TEXT NOT NULL, `position` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "about",
+            "columnName": "about",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "code",
+            "columnName": "code",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "token",
+            "columnName": "token",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "photos",
+            "columnName": "photos",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "wishes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`list_id` TEXT NOT NULL, `id` INTEGER NOT NULL, `position` INTEGER NOT NULL, `url` TEXT NOT NULL, `title` TEXT NOT NULL, `desc` TEXT NOT NULL, `image` TEXT NOT NULL, `price` REAL, `old_price` REAL, `currency` TEXT NOT NULL, `category` TEXT NOT NULL, `got` INTEGER NOT NULL, `star` INTEGER NOT NULL, `note` TEXT NOT NULL, `size` TEXT NOT NULL, `by_name` TEXT NOT NULL, `bin` INTEGER NOT NULL, `bin_by` TEXT NOT NULL, `checked` INTEGER NOT NULL, `priv` INTEGER NOT NULL, `qty` INTEGER NOT NULL, `exact` TEXT NOT NULL, `recv` INTEGER NOT NULL, PRIMARY KEY(`list_id`, `id`), FOREIGN KEY(`list_id`) REFERENCES `lists`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "listId",
+            "columnName": "list_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.url",
+            "columnName": "url",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.desc",
+            "columnName": "desc",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.image",
+            "columnName": "image",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.price",
+            "columnName": "price",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "w.oldPrice",
+            "columnName": "old_price",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "w.currency",
+            "columnName": "currency",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.category",
+            "columnName": "category",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.got",
+            "columnName": "got",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.star",
+            "columnName": "star",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.note",
+            "columnName": "note",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.size",
+            "columnName": "size",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.by",
+            "columnName": "by_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.bin",
+            "columnName": "bin",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.binBy",
+            "columnName": "bin_by",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.checked",
+            "columnName": "checked",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.priv",
+            "columnName": "priv",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.qty",
+            "columnName": "qty",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.exact",
+            "columnName": "exact",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.recv",
+            "columnName": "recv",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "list_id",
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_wishes_list_id",
+            "unique": false,
+            "columnNames": [
+              "list_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_wishes_list_id` ON `${TABLE_NAME}` (`list_id`)"
+          },
+          {
+            "name": "index_wishes_id",
+            "unique": false,
+            "columnNames": [
+              "id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_wishes_id` ON `${TABLE_NAME}` (`id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "lists",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "list_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "bin",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`list_id` TEXT NOT NULL, `id` INTEGER NOT NULL, `position` INTEGER NOT NULL, `url` TEXT NOT NULL, `title` TEXT NOT NULL, `desc` TEXT NOT NULL, `image` TEXT NOT NULL, `price` REAL, `old_price` REAL, `currency` TEXT NOT NULL, `category` TEXT NOT NULL, `got` INTEGER NOT NULL, `star` INTEGER NOT NULL, `note` TEXT NOT NULL, `size` TEXT NOT NULL, `by_name` TEXT NOT NULL, `bin` INTEGER NOT NULL, `bin_by` TEXT NOT NULL, `checked` INTEGER NOT NULL, `priv` INTEGER NOT NULL, `qty` INTEGER NOT NULL, `exact` TEXT NOT NULL, `recv` INTEGER NOT NULL, PRIMARY KEY(`list_id`, `id`))",
+        "fields": [
+          {
+            "fieldPath": "listId",
+            "columnName": "list_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.url",
+            "columnName": "url",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.desc",
+            "columnName": "desc",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.image",
+            "columnName": "image",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.price",
+            "columnName": "price",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "w.oldPrice",
+            "columnName": "old_price",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "w.currency",
+            "columnName": "currency",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.category",
+            "columnName": "category",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.got",
+            "columnName": "got",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.star",
+            "columnName": "star",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.note",
+            "columnName": "note",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.size",
+            "columnName": "size",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.by",
+            "columnName": "by_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.bin",
+            "columnName": "bin",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.binBy",
+            "columnName": "bin_by",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.checked",
+            "columnName": "checked",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.priv",
+            "columnName": "priv",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.qty",
+            "columnName": "qty",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.exact",
+            "columnName": "exact",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "w.recv",
+            "columnName": "recv",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "list_id",
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "categories",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `position` INTEGER NOT NULL, PRIMARY KEY(`name`))",
+        "fields": [
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "name"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "price_points",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`wish_id` INTEGER NOT NULL, `at` INTEGER NOT NULL, `price` REAL NOT NULL, PRIMARY KEY(`wish_id`, `at`))",
+        "fields": [
+          {
+            "fieldPath": "wishId",
+            "columnName": "wish_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "at",
+            "columnName": "at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "price",
+            "columnName": "price",
+            "affinity": "REAL",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "wish_id",
+            "at"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "friend_lists",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`code` TEXT NOT NULL, `name` TEXT NOT NULL, `position` INTEGER NOT NULL, PRIMARY KEY(`code`))",
+        "fields": [
+          {
+            "fieldPath": "code",
+            "columnName": "code",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "code"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "notifications",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`row` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `wish_id` INTEGER NOT NULL, `list_key` TEXT NOT NULL, `title` TEXT NOT NULL, `image` TEXT NOT NULL, `pct` REAL NOT NULL, `time` INTEGER NOT NULL, `read` INTEGER NOT NULL, `kind` TEXT NOT NULL, `amount` REAL NOT NULL, `currency` TEXT NOT NULL, `position` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "row",
+            "columnName": "row",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "wishId",
+            "columnName": "wish_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "listKey",
+            "columnName": "list_key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "image",
+            "columnName": "image",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pct",
+            "columnName": "pct",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "time",
+            "columnName": "time",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "read",
+            "columnName": "read",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "amount",
+            "columnName": "amount",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "currency",
+            "columnName": "currency",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "row"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "meta",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`key` TEXT NOT NULL, `value` TEXT NOT NULL, PRIMARY KEY(`key`))",
+        "fields": [
+          {
+            "fieldPath": "key",
+            "columnName": "key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "value",
+            "columnName": "value",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "key"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a31ef43f2e717bdbb5a1c817caa5678d')"
+    ]
+  }
+}
