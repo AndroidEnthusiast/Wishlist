@@ -95,6 +95,7 @@ internal fun shownPrice(d: Document, host: String): Pair<Double, String>? {
         if (++n > 400) break
         val cls = (e.className() + " " + e.id()).lowercase()
         if (OLD_PRICE.containsMatchIn(cls)) continue
+        if (foreign(e, d.location())) continue
         if (e.parents().any { it.tagName() in listOf("del", "s", "strike") || OLD_PRICE.containsMatchIn((it.className()).lowercase()) }) continue
         if (e.tagName() in listOf("del", "s", "strike", "script", "style", "meta")) continue
         val t = e.ownText().ifBlank { e.text() }.trim()
@@ -105,6 +106,35 @@ internal fun shownPrice(d: Document, host: String): Pair<Double, String>? {
         return amount to currencyOf(t, host)
     }
     return null
+}
+
+/**
+ * Another product on the page (owner, 8 November 2026: Zalando's "Gesponsord" tile above the product gave a wish its
+ * €159,95): an element inside a sponsored, "you might also like" or related block, or inside a link to another page.
+ * Its price is never this product's price. Same rules as foreign() in web/parse.js.
+ */
+private val FOREIGN = Regex("sponsor|gesponsord|recommend|aanbevol|related|similar|you-may|you-might|also-like|ook-leuk|upsell|cross-sell|crosssell|reco-|reco_|carousel")
+
+private fun pathOf(u: String, base: String): String = try {
+    val x = java.net.URI(base.ifEmpty { "https://x.invalid/" }).resolve(u.trim().replace(" ", "%20"))
+    (x.host.orEmpty()) + (x.path.orEmpty()).trimEnd('/')
+} catch (e: Exception) { "" }
+
+internal fun foreign(e: org.jsoup.nodes.Element, base: String): Boolean {
+    val here = if (base.isNotEmpty()) pathOf(base, base) else ""
+    var a: org.jsoup.nodes.Element? = e
+    while (a != null) {
+        val tag = a.tagName().lowercase()
+        if (tag == "body" || tag == "html") break
+        val marks = listOf(a.className(), a.id(), a.attr("aria-label"), a.attr("data-testid")).joinToString(" ").lowercase()
+        if (FOREIGN.containsMatchIn(marks)) return true
+        if (tag == "a" && here.isNotEmpty()) {
+            val h = a.attr("href").trim()
+            if (h.isNotEmpty() && !h.startsWith("#") && !h.lowercase().startsWith("javascript:") && pathOf(h, base) != here) return true
+        }
+        a = a.parent()
+    }
+    return false
 }
 
 /** "€ 39,90", "€39.90", "39,90 €", "£12", "$9.99", "12,50 EUR". */
@@ -270,9 +300,12 @@ internal fun parsePage(d: Document, host: String, status: Int): Meta? {
 
     fun m(vararg keys: String): String {
         for (k in keys) {
-            val v = d.selectFirst("meta[property=\"$k\"], meta[name=\"$k\"], meta[itemprop=\"$k\"]")
-                ?.attr("content")?.trim().orEmpty()
-            if (v.isNotEmpty()) return v
+            // Not the price of another product's tile (sponsored, related).
+            for (e in d.select("meta[property=\"$k\"], meta[name=\"$k\"], meta[itemprop=\"$k\"]")) {
+                if (foreign(e, d.location())) continue
+                val v = e.attr("content").trim()
+                if (v.isNotEmpty()) return v
+            }
         }
         return ""
     }
@@ -306,7 +339,7 @@ internal fun parsePage(d: Document, host: String, status: Int): Meta? {
         if (cur.isEmpty()) cur = ld.currency
     }
     if (price == null) {
-        price = d.selectFirst("[itemprop=price]")?.let { it.attr("content").ifEmpty { it.text() } }?.toNum()
+        price = d.select("[itemprop=price]").firstOrNull { !foreign(it, d.location()) }?.let { it.attr("content").ifEmpty { it.text() } }?.toNum()
     }
     if (price == null && ld == null) {
         // Product data that isn't valid JSON: the first "price" in it, as before 2.145.
@@ -386,16 +419,16 @@ object ReaderUpgrade {
     @Synchronized
     fun quiet(c: Context, id: Long): Boolean {
         val p = prefs(c)
-        var since = p.getLong("rd2_since", 0L)
-        if (since == 0L) { since = System.currentTimeMillis(); p.edit().putLong("rd2_since", since).apply() }
-        return id < since && id.toString() !in (p.getStringSet("rd2_done", null) ?: emptySet())
+        var since = p.getLong("rd3_since", 0L)
+        if (since == 0L) { since = System.currentTimeMillis(); p.edit().putLong("rd3_since", since).apply() }
+        return id < since && id.toString() !in (p.getStringSet("rd3_done", null) ?: emptySet())
     }
 
     /** Wish [id] was checked with the new reader. */
     @Synchronized
     fun done(c: Context, id: Long) {
         val p = prefs(c)
-        val s = (p.getStringSet("rd2_done", null) ?: emptySet()).toMutableSet()
-        if (s.add(id.toString())) p.edit().putStringSet("rd2_done", s).apply()
+        val s = (p.getStringSet("rd3_done", null) ?: emptySet()).toMutableSet()
+        if (s.add(id.toString())) p.edit().putStringSet("rd3_done", s).apply()
     }
 }

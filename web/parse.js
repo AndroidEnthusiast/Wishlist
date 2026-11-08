@@ -215,7 +215,30 @@
   var SHOWN_PRICE = /([€$£])\s?([0-9][0-9.,]*)|([0-9][0-9.,]*)\s?(?:€|EUR|£|GBP|USD)/;
   var OLD_PRICE = /old|was|strike|compare|before|previous|original|crossed|rrp|msrp|list-price|from-price/;
   var NOT_A_PRICE = /verzend|bezorg|shipping|delivery|versand|livraison|vanaf|from|per maand|\/mnd|p\/m/;
-  function shownPrice(d, host) {
+  // Another product on the page (owner, 8 November 2026: Zalando's "Gesponsord" tile above the product gave a wish
+  // its €159,95): an element inside a sponsored, "you might also like" or related block, or inside a link to another
+  // page. Its price is never this product's price. Same rules as foreign() in Fetch.kt.
+  var FOREIGN = /sponsor|gesponsord|recommend|aanbevol|related|similar|you-may|you-might|also-like|ook-leuk|upsell|cross-sell|crosssell|reco-|reco_|carousel/;
+  function pathOf(u, base) {
+    try { var x = new URL(u, base || "https://x.invalid/"); return x.host + x.pathname.replace(/\/+$/, ""); } catch (e) { return ""; }
+  }
+  function foreign(e, base) {
+    var here = base ? pathOf(base, base) : "";
+    for (var a = e; a && a.getAttribute; a = a.parentElement) {
+      var tag = String(a.tagName || "").toLowerCase();
+      if (tag === "body" || tag === "html") break;
+      var marks = [a.getAttribute("class"), a.id, a.getAttribute("aria-label"), a.getAttribute("data-testid")]
+        .map(function (x) { return String(x || ""); }).join(" ").toLowerCase();
+      if (FOREIGN.test(marks)) return true;
+      if (tag === "a" && here) {
+        var h = String(a.getAttribute("href") || "").trim();
+        if (h && h.charAt(0) !== "#" && !/^javascript:/i.test(h) && pathOf(h, base) !== here) return true;
+      }
+    }
+    return false;
+  }
+
+  function shownPrice(d, host, base) {
     var els = d.querySelectorAll('[class*="price" i], [id*="price" i]');
     for (var i = 0; i < els.length && i < 400; i++) {
       var e = els[i];
@@ -223,6 +246,7 @@
       if (["del", "s", "strike", "script", "style", "meta"].indexOf(tag) >= 0) continue;
       var cls = (String(e.getAttribute("class") || "") + " " + String(e.id || "")).toLowerCase();
       if (OLD_PRICE.test(cls)) continue;
+      if (foreign(e, base)) continue;
       var bad = false;
       for (var a = e.parentElement; a && !bad; a = a.parentElement) {
         var at = String(a.tagName || "").toLowerCase();
@@ -252,9 +276,13 @@
     function m() {
       for (var i = 0; i < arguments.length; i++) {
         var k = arguments[i];
-        var e = d.querySelector('meta[property="' + k + '"], meta[name="' + k + '"], meta[itemprop="' + k + '"]');
-        var v = e ? String(e.getAttribute("content") || "").trim() : "";
-        if (v) return v;
+        var es = d.querySelectorAll('meta[property="' + k + '"], meta[name="' + k + '"], meta[itemprop="' + k + '"]');
+        for (var j = 0; j < es.length; j++) {
+          // Not the price of another product's tile (sponsored, related).
+          if (foreign(es[j], base)) continue;
+          var v = String(es[j].getAttribute("content") || "").trim();
+          if (v) return v;
+        }
       }
       return "";
     }
@@ -288,8 +316,10 @@
       if (!cur) cur = ld.currency;
     }
     if (price === null) {
-      var ip = d.querySelector("[itemprop=price]");
-      if (ip) price = toNum(ip.getAttribute("content") || ip.textContent);
+      var ips = d.querySelectorAll("[itemprop=price]");
+      for (var q = 0; q < ips.length && price === null; q++) {
+        if (!foreign(ips[q], base)) price = toNum(ips[q].getAttribute("content") || ips[q].textContent);
+      }
     }
     if (price === null && !ld) {
       // Product data that isn't valid JSON: the first "price" in it, as before 2.145.
@@ -304,7 +334,7 @@
     }
     if (price === null) {
       // The price the page shows (2.145; the owner chose this last try knowing it can now and then pick a wrong one).
-      var sp = shownPrice(d, host);
+      var sp = shownPrice(d, host, base);
       if (sp) { price = sp.price; if (!cur) cur = sp.currency; }
     }
     if (price === null && d.body) {

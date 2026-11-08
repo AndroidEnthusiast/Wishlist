@@ -147,5 +147,24 @@ r = meta('<html><head><title>Set</title></head><body><div id="ProductPrice">39,9
 check("shown price: amount before the euro sign, id with Price", r.price === 39.9);
 r = meta('<html><head><title>Broken</title><script type="application/ld+json">{"@type":"Product","offers":{"price":"25.00",}}</script></head></html>', "shop.example");
 check("product data that isn't valid JSON: its first price, as before", r.price === 25 && r.product === true);
+// Another product's price (owner, 8 November 2026: Zalando's "Gesponsord" tile above the jacket gave €159,95).
+function at(html, url) {
+  const d = new dom.window.DOMParser().parseFromString(html, "text/html");
+  return P.parsePage(d, new URL(url).host, 200, url);
+}
+const JACKET = "https://www.zalando.nl/barbour-marlow-jas-ba221e04h-g11.html?selectedsizes=S";
+r = at('<html><head><title>Barbour MARLOW</title></head><body>' +
+  '<section aria-label="Gesponsord"><a href="/samsoe-aautumn-jacket.html"><span class="price">€ 159,95</span><meta itemprop="price" content="159.95"></a></section>' +
+  '<h1>Barbour MARLOW - Jas</h1><p><span class="x1y2">€ 299,95</span></p><span class="price">€ 299,95</span></body></html>', JACKET);
+check("sponsored tile first: the product's own price, not the tile's", r.price === 299.95);
+r = at('<html><head><title>Jas</title></head><body><div class="grid"><a href="/other-jacket.html"><div class="p9"><span itemprop="price" content="159.95">€ 159,95</span></div></a></div>' +
+  '<div><span itemprop="price" content="299.95">€ 299,95</span></div></body></html>', JACKET);
+check("a price inside a link to another page is skipped", r.price === 299.95);
+r = at('<html><head><title>Jas</title></head><body><div class="you-might-also-like"><span class="price">€ 19,95</span></div><span class="product-price">€ 49,95</span></body></html>', JACKET);
+check("\"you might also like\" block skipped", r.price === 49.95);
+r = at('<html><head><title>Jas</title></head><body><a href="/barbour-marlow-jas-ba221e04h-g11.html?selectedsizes=M"><span class="price">€ 299,95</span></a></body></html>', JACKET);
+check("a link to this same product (another size) still counts", r.price === 299.95);
+r = at('<html><head><title>Jas</title></head><body><a href="#reviews"><span class="price">€ 299,95</span></a></body></html>', JACKET);
+check("a link within the page still counts", r.price === 299.95);
 console.log(fails === 0 ? "ALL PASSED (" + n + " checks)" : fails + " FAILED of " + n);
 process.exit(fails ? 1 : 0);
