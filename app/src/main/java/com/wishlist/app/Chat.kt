@@ -56,6 +56,9 @@ object Chat {
 
     private val keyCache = HashMap<String, ByteArray>()
 
+    /** Your chat's live channel (Live.kt), made from your profile's secret token; null without a profile. */
+    fun liveTopic(c: Context): String? = profile(c)?.second?.let { Live.chatTopic(it) }
+
     private fun profile(c: Context): Pair<String, String>? {
         val p = prefs(c)
         val id = p.getString("pf_id", null) ?: return null

@@ -96,9 +96,10 @@ fun FriendScreen(
     LaunchedEffect(f.code) {
         try { Cloud.rpc("wl_view", org.json.JSONObject().put("p_code", f.code).put("p_device", Repo.deviceId)) } catch (e: Exception) {}
     }
-    // Load now, then refresh every 20 seconds while this screen is open.
+    // Load now, then again whenever the list changes (live, ROADMAP S3.2, Live.kt); without the live connection every
+    // 20 seconds, as before. Nothing while the app is in the background.
     LaunchedEffect(f.code, tick) {
-        while (true) {
+        Live.follow(Live.listTopic(f.code), 20000) {
             try {
                 val r = if (fetch != null) fetch() else Cloud.fetchList(f.code)
                 if (r == null) {
@@ -115,7 +116,6 @@ fun FriendScreen(
             } catch (e: Exception) {
                 if (remote == null) state = "offline"
             }
-            delay(20000)
         }
     }
 

@@ -69,7 +69,7 @@ select pg_temp.ok((select bool_and(topic not like '%MINE0001%') from realtime.se
 select pg_temp.ok(wl_live_topic('l', 'MINE0001') <> wl_live_topic('l', 'OTHER001') and wl_live_topic('l', 'X') <> wl_live_topic('c', 'X'), 'different topics');
 select pg_temp.ok(wl_live_topic('l', 'MINE0001') ~ '^wll-[0-9a-f]{64}$', 'topic shape');
 -- The same fingerprint as the app computes (Live.kt): sha256 of "wishlist-l:MINE0001".
-select pg_temp.ok(wl_live_topic('l', 'MINE0001') = 'wll-' || encode(sha256('wishlist-l:MINE0001'::bytea), 'hex'), 'same as the app');
+select pg_temp.ok(wl_live_topic('l', 'MINE0001') = 'wll-66c508165d9e2f6674dbfa85793a0cfe400eaecd18791709668802c3b79b6ac6', 'same as the app (LiveTest)');
 delete from realtime.sent;
 set role anon;
 select wl_sync_list('MINE0001', 'owner_owner_owner_ow', 'My wishes', '[]', '[{"id":2,"title":"Book"},{"id":3,"title":"Pen"},{"id":4,"title":"Cup"}]');

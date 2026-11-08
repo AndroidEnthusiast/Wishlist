@@ -14,8 +14,8 @@ android {
         applicationId = "com.wishlist.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 174
-        versionName = "2.173"
+        versionCode = 175
+        versionName = "2.174"
         // Crash reports (Crash.kt): Crashlytics wants a build id, which its Gradle plugin would normally add. The app
         // isn't shrunk or renamed (isMinifyEnabled = false), so there is no mapping file to upload; one id per version.
         resValue("string", "com.google.firebase.crashlytics.mapping_file_id", "wishlist-$versionCode")
@@ -97,6 +97,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("org.jsoup:jsoup:1.17.2")
     implementation("io.coil-kt:coil-compose:2.6.0")
+    // Live updates (Live.kt, 2.174): the WebSocket to Supabase Realtime. The same OkHttp Coil already brought along.
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     // Instant message notifications (Push.kt). Set up in code from Config, so no google-services plugin or file.
     implementation("com.google.firebase:firebase-messaging:24.0.0")
     // Crash reports (owner, D2, 8 November 2026; Crash.kt). Same Firebase release as firebase-messaging 24.0.0.

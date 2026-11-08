@@ -65,7 +65,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -81,9 +80,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.launch
@@ -125,27 +121,12 @@ fun HomeScreen(
     val selecting = picked.isNotEmpty() && Shared.active == null
     BackHandler(enabled = selecting) { picked = emptySet() }
     fun toggle(w: Wish) { picked = if (w.id in picked) picked - w.id else picked + w.id }
-    // A shared wishlist is refreshed every 20 seconds while this screen is in front.
-    val lifeOwner = ctx as? LifecycleOwner
-    var foreground by remember { mutableStateOf(true) }
-    DisposableEffect(lifeOwner) {
-        val obs = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_START) {
-                foreground = true
-            } else if (event == Lifecycle.Event.ON_STOP) {
-                foreground = false
-            }
-        }
-        lifeOwner?.lifecycle?.addObserver(obs)
-        onDispose { lifeOwner?.lifecycle?.removeObserver(obs) }
-    }
-    LaunchedEffect(foreground) {
-        if (foreground && Shared.active != null) {
-            while (true) {
-                Shared.refresh(ctx)
-                delay(20_000)
-            }
-        }
+    // A collab wishlist updates live while it is open (ROADMAP S3.2, Live.kt): someone else's change shows within a
+    // second or two. Without the live connection: every 20 seconds, as before. Nothing while the app is in the background.
+    LiveRefresh(Shared.active?.let { Live.listTopic(it) }, Shared.active != null, 20_000) {
+        // A save of this phone still on its way: wait for it, then fetch (else this answer would be thrown away).
+        while (Shared.busy()) delay(300)
+        Shared.refresh(ctx)
     }
     LaunchedEffect(Shared.notice) {
         val m = Shared.notice

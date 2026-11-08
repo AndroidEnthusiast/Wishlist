@@ -194,6 +194,9 @@ object Shared {
     }
 
     /** Fetches the online copy of the open list. Returns false when the server couldn't be reached (the screen keeps what it has). */
+    /** A save of this phone is still on its way (a refresh now would be thrown away). */
+    fun busy(): Boolean = pending.get() > 0
+
     suspend fun refresh(c: Context): Boolean {
         val l = current ?: return true
         if (pending.get() > 0) return true

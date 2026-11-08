@@ -181,8 +181,10 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
     // bar: the bottom bar's + adds a wish, two pluses were confusing.
     var tab by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(0) }
     Friends.load(ctx)
+    // Live (ROADMAP S3.2, Live.kt): fetched again when a message comes or goes; without the live connection every
+    // 8 seconds, as before.
     LaunchedEffect(Unit) {
-        while (true) {
+        Live.follow(Chat.liveTopic(ctx), 8000) {
             problem = try {
                 Chat.refresh(ctx)
                 false
@@ -190,7 +192,6 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
                 true
             }
             loaded = true
-            delay(8000)
         }
     }
     Scaffold(
@@ -390,14 +391,16 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
     }
     val listState = rememberLazyListState()
 
-    // Load, then ask for new messages (and read ticks) every 3 seconds while the chat is open.
+    // Load, then ask for new messages (and read ticks) whenever something changes in your chats (live, ROADMAP S3.2,
+    // Live.kt); without the live connection every 3 seconds, as before.
     LaunchedEffect(peer) {
         var round = 0
-        while (true) {
+        Live.follow(Chat.liveTopic(ctx), 3000) { live ->
             try {
-                // Every 10th time (about every 30 seconds) the whole chat is loaded again, so a message its sender
-                // deleted disappears here too; in between only new messages and read ticks are fetched.
-                val full = round % 10 == 0
+                // Every 10th time (about every 30 seconds when polling; every 5th signal when live) the whole chat is
+                // loaded again, so a message its sender deleted disappears here too; in between only new messages and
+                // read ticks are fetched.
+                val full = round % (if (live) 5 else 10) == 0
                 val after = if (full) 0L else msgs.lastOrNull()?.id ?: 0L
                 val fresh = Chat.messages(ctx, peer, after)
                 if (full) msgs = fresh
@@ -409,11 +412,11 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
                 }
             } catch (e: Exception) {
             }
-            // Reactions can change on any message, so they are fetched for the whole chat (every other round).
-            if (round % 2 == 0) try { reacts = Chat.reactions(ctx, peer) } catch (e: Exception) {}
+            // Reactions can change on any message, so they are fetched for the whole chat (every other round; every
+            // round when live, since a round then only happens when something changed).
+            if (live || round % 2 == 0) try { reacts = Chat.reactions(ctx, peer) } catch (e: Exception) {}
             loading = false
             round++
-            delay(3000)
         }
     }
     LaunchedEffect(msgs.size) { if (msgs.isNotEmpty()) listState.animateScrollToItem(msgs.size - 1) }
