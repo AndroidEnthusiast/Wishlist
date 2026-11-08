@@ -14,13 +14,12 @@ import androidx.navigation.NavController
  *
  * Moved so far: Profile, App settings, Bin, Notifications (2.154); Received gifts, Gifts I reserved, Price changes and
  * a list's settings (2.156); a friend's list opened from a link or code (2.157); the tabs Messages, My shops and
- * Friends (2.158); a wishlist group and Gift exchanges (2.159). Home and a list still live on [MAIN] with their
- * switches, and move last.
+ * Friends (2.158); a wishlist group and Gift exchanges (2.159); Home and the open list (2.160): every screen is a route.
  *
  * The back stack is at most three deep: [MAIN], then perhaps one tab or section, then perhaps one screen on top.
  */
 object Route {
-    /** Home and the lists: the screens that haven't moved yet. Always at the bottom of the back stack. */
+    /** Home (Hub.kt), the start screen. Always at the bottom of the back stack. */
     const val MAIN = "main"
     const val PROFILE = "profile"
     const val SETTINGS = "settings"
@@ -45,7 +44,9 @@ object Route {
     const val GROUP = "group/{id}"
     fun group(id: String) = "group/" + android.net.Uri.encode(id)
     const val EXCHANGES = "exchanges"
-    val sections = listOf(GROUP, EXCHANGES)
+    /** The open wishlist (Repo.openMine, or Shared.active for a collab wishlist): with the bar, nothing lit. */
+    const val LIST = "list"
+    val sections = listOf(GROUP, EXCHANGES, LIST)
 
     /** A list someone else owns, opened from its link or code (not through Friends): `friend/<code>`. */
     const val FRIEND = "friend/{code}"

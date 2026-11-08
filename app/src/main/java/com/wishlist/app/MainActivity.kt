@@ -459,7 +459,6 @@ fun App(
     var newExchange by remember { mutableStateOf(false) }
     var newShared by remember { mutableStateOf(false) }
     // The dashboard (Hub.kt) is the start screen; tapping a list opens it, Back returns to the dashboard.
-    var hub by remember { mutableStateOf(true) }
     var newMine by remember { mutableStateOf(false) }
     // (The bottom bar's tabs Messages, My shops and Friends are routes since 2.158, Nav.kt.)
     // A wishlist group on screen (2.108, GroupsUi.kt), by its id.
@@ -487,13 +486,13 @@ fun App(
     fun openMine(id: String) {
         Shared.close()
         Repo.openMine(ctx, id)
-        closeAll(); hub = false
+        closeAll(); nav.openTab(Route.LIST)
     }
 
     /** Opens a group wishlist. */
     fun openGroup(code: String) {
         Shared.open(ctx, code)
-        closeAll(); hub = false
+        closeAll(); nav.openTab(Route.LIST)
     }
 
     fun openFriend(code: String) {
@@ -608,12 +607,7 @@ fun App(
         }
     }
 
-    // Back on the screens of the "main" route (the routes go back by themselves, Nav.kt). Each handler checks
-    // [onMain], so none of them can take Back away from a route on top.
-    // Back from a list goes to the dashboard. (Back on a tab goes Home: the tab routes, below.)
-    BackHandler(enabled = onMain && !hub) {
-        hub = true
-    }
+    // (Back from a list, a tab or a section goes Home by itself: Nav.kt and the routes below.)
     // A new message alert, or "Message" on a friend's page: Messages, at that conversation.
     LaunchedEffect(ChatNav.openTab) {
         if (ChatNav.openTab) {
@@ -631,7 +625,7 @@ fun App(
         val g = GroupNav.open
         if (g != null) {
             GroupNav.open = null
-            closeAll(); hub = true; HubNav.page = null
+            closeAll(); HubNav.page = null
             nav.openTab(Route.group(g))
             // Home puts the group you opened last first in its section (2.110).
             Repo.touchRecent(ctx, "g:$g")
@@ -642,7 +636,7 @@ fun App(
     LaunchedEffect(ExchangeNav.show) {
         if (ExchangeNav.show) {
             ExchangeNav.show = false
-            closeAll(); hub = true; HubNav.page = null
+            closeAll(); HubNav.page = null
             nav.openTab(Route.EXCHANGES)
         }
     }
@@ -696,7 +690,7 @@ fun App(
     val tab = route?.takeIf { it in Route.tabs }
     val section = route?.takeIf { it in Route.sections }
     /** Home, as the bar's Home button and Back on a tab's first page (owner, 8 November 2026). */
-    fun goHome() { HubNav.page = null; closeAll(); hub = true }
+    fun goHome() { HubNav.page = null; closeAll() }
     // While the keyboard is open the bottom bar steps aside and the screen above it makes room (edge to edge, 2.102).
     val imeOpen = WindowInsets.isImeVisible
     // The bar shows on Home, a list and the tabs; an open conversation has a back arrow and no bar.
@@ -705,42 +699,45 @@ fun App(
     Column(Modifier.fillMaxSize()) {
     // With the bottom bar, the screens above it don't leave room for the phone's own navigation bar again.
     Box(Modifier.weight(1f).imePadding().then(if (showBar) Modifier.consumeWindowInsets(WindowInsets.navigationBars) else Modifier)) {
-    // Every screen is a route (ROADMAP Stage 1, Nav.kt). Home, the lists, groups and exchanges still share the "main"
-    // route and move to routes of their own one at a time; the pop-ups below show over every route.
+    // Every screen is a route (ROADMAP Stage 1, Nav.kt): Home at the bottom, then a list, a tab or a section, then
+    // perhaps one screen on top. The pop-ups below show over every route.
     NavHost(
         nav, startDestination = Route.MAIN,
         // Screens change at once, as they always have (no sliding or fading).
         enterTransition = { EnterTransition.None }, exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None }, popExitTransition = { ExitTransition.None }
     ) {
+        // Home (Hub.kt), the start screen.
         composable(Route.MAIN) {
-            when {
-                hub -> HubScreen(
+            HubScreen(
+                snack,
+                onOpenMine = { openMine(it) },
+                onOpenGroup = { openGroup(it) },
+                onNewMine = { newMine = true },
+                onNewGroup = { newShared = true },
+                onProfile = { nav.openOnTop(Route.PROFILE) },
+                onAddTo = { t -> addTarget = t; prefill = ""; adding = true },
+                onOpenWishGroup = { GroupNav.openGroup(it) },
+                onNewWishGroup = { newWishGroup = true },
+                onFriends = { FriendsNav.reset(); nav.openTab(Route.FRIENDS) },
+                onReserved = { nav.openOnTop(Route.RESERVED) },
+                onCreateList = { createChoice = true },
+                onAddWish = { addTarget = Repo.lastSaveTo; prefill = ""; adding = true },
+                onNewExchange = { newExchange = true }
+            )
+        }
+        // The open wishlist: one of yours (Repo.openMine) or a collab wishlist (Shared.active). Back (or its ←) goes
+        // Home; inside it, search and selecting go back first (their own Back handlers).
+        composable(Route.LIST) {
+            key(Shared.active, Repo.openMine) {
+                HomeScreen(
                     snack,
-                    onOpenMine = { openMine(it) },
-                    onOpenGroup = { openGroup(it) },
-                    onNewMine = { newMine = true },
-                    onNewGroup = { newShared = true },
-                    onProfile = { nav.openOnTop(Route.PROFILE) },
-                    onAddTo = { t -> addTarget = t; prefill = ""; adding = true },
-                    onOpenWishGroup = { GroupNav.openGroup(it) },
-                    onNewWishGroup = { newWishGroup = true },
-                    onFriends = { FriendsNav.reset(); nav.openTab(Route.FRIENDS) },
-                    onReserved = { nav.openOnTop(Route.RESERVED) },
-                    onCreateList = { createChoice = true },
-                    onAddWish = { addTarget = Repo.lastSaveTo; prefill = ""; adding = true },
-                    onNewExchange = { newExchange = true }
+                    onAdd = { prefill = ""; adding = true },
+                    onNewCat = { catDlg = true },
+                    onInvite = { inviteDlg = true },
+                    onListSettings = { nav.openOnTop(Route.LIST_SETTINGS) },
+                    onBack = { goHome() }
                 )
-                else -> key(Shared.active, Repo.openMine) {
-                    HomeScreen(
-                        snack,
-                        onAdd = { prefill = ""; adding = true },
-                        onNewCat = { catDlg = true },
-                        onInvite = { inviteDlg = true },
-                        onListSettings = { nav.openOnTop(Route.LIST_SETTINGS) },
-                        onBack = { goHome() }
-                    )
-                }
             }
         }
         // The tabs. Each remembers where you were (FriendsNav, ChatNav); Back on its first page goes Home (the screen's
@@ -760,7 +757,7 @@ fun App(
         // Back (inside an exchange: first back to the list of exchanges) returns Home.
         composable(Route.GROUP) { entry ->
             val gid = entry.arguments?.getString("id").orEmpty()
-            key(gid) { GroupScreen(gid, snack, onBack = { nav.popBackStack(); hub = true }, onOpenMine = { openMine(it) }) }
+            key(gid) { GroupScreen(gid, snack, onBack = { nav.popBackStack() }, onOpenMine = { openMine(it) }) }
         }
         composable(Route.EXCHANGES) {
             ExchangesScreen(snack, onOpenMine = { openMine(it) }, onNew = { newExchange = true })
@@ -798,7 +795,7 @@ fun App(
         composable(Route.LIST_SETTINGS) {
             RouteBox {
                 key(Shared.active, Repo.openMine) {
-                    ListSettingsScreen(snack, onDeleted = { nav.backToMain(); hub = true }) { nav.popBackStack() }
+                    ListSettingsScreen(snack, onDeleted = { nav.backToMain() }) { nav.popBackStack() }
                 }
             }
         }
@@ -809,7 +806,7 @@ fun App(
         AppBottomBar(
             current = when {
                 tab == Route.SHOPS -> "discover"; tab == Route.FRIENDS -> "friends"; tab == Route.MESSAGES -> "messages"
-                (onMain && hub) || section != null -> "home"; else -> ""
+                onMain || (section != null && section != Route.LIST) -> "home"; else -> ""
             },
             onHome = { goHome() },
             // "Messages" (owner, 2.98) took the place of "Wishlists"; your wishlists are on Home and its number.
@@ -819,7 +816,7 @@ fun App(
                 nav.openTab(Route.MESSAGES)
             },
             onAdd = {
-                val onAList = onMain && !hub
+                val onAList = route == Route.LIST
                 addTarget = if (onAList) (Shared.active ?: MyLists.saveKey(Repo.openMine, false)) else Repo.lastSaveTo
                 prefill = ""; adding = true
             },
@@ -891,7 +888,6 @@ fun App(
                 newShared = false
                 // It appears under Group wishlists on the dashboard; the invite comes up so you can ask people in.
                 Shared.open(ctx, code); closeAll()
-                hub = true
                 inviteDlg = true
             },
             onClose = { newShared = false }
@@ -923,7 +919,7 @@ fun App(
             onCreated = { id ->
                 newMine = false
                 // It appears under My wishlists on the dashboard.
-                closeAll(); hub = true
+                closeAll()
                 scope.launch { snack.showToast(tr("“%s” is ready", Repo.mineName(id))) }
             },
             onClose = { newMine = false }

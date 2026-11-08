@@ -193,6 +193,18 @@ class NavigationTest : NavigationBase() {
         compose.onAllNodes(hasText("Gift exchange", substring = false)).assertCountEquals(0)
     }
 
+    @Test fun aListHasTheBarAndGoesHome() {
+        // The open list is its own screen (2.160): the bottom bar shows with no tab lit, Back goes Home.
+        val id = Repo.mineIds.first()
+        compose.runOnUiThread { NoteNav.key = "m:$id" }
+        compose.waitForIdle()
+        compose.onAllNodes(hasContentDescription("Wishlist settings") and hasClickAction()).onFirst().assertExists()
+        compose.onAllNodes(hasContentDescription("Messages") and hasClickAction()).onFirst().assertExists()
+        compose.onAllNodes(hasContentDescription("Home") and isSelected()).assertCountEquals(0)
+        phoneBack()
+        tabOn("Home")
+    }
+
     @Test fun friendsListFromALinkBackHome() {
         // A list saved from a link (a notification about it opens it): its own screen, Back returns Home.
         val app = ApplicationProvider.getApplicationContext<android.app.Application>()
