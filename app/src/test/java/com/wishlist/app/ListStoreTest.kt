@@ -50,6 +50,8 @@ class ListStoreTest {
         ListStore.flush()
         assertEquals(listOf("Teapot", "Book"), db { dao.wishes(MAIN_LIST).map { it.w.title } })
         assertEquals(listOf("Teapot", "Book"), MyLists.read(prefs, MAIN_LIST, keep = false).wishes.map { it.title })
+        // Only the new wish was written (2.169), not the whole list (one edit can reach the store as several saves).
+        assertEquals(DbDiff.Written(1, 0), ListStore.written)
         // The next start reads the database and finds it matches.
         restart()
         assertEquals(true, ListStore.matched)

@@ -128,8 +128,9 @@ values (wishes ~3 KB), plus ~100 leftover shop-icon entries from old versions th
   settings (theme, view, sort…), profile, shared lists' caches and keys, groups, exchanges: they stay in the
   settings store for now; Stage 2's goal is your lists and wishes.)*
 - [ ] S2.2 *(2.167, part C1: `ListStore`, your lists and wishes read from the database, the settings store written
-  too as the fallback. 2.168, part C2: the bin, price history, notifications and friends' lists too. Next: ViewModels and
-  streams so screens update by themselves; then writing one wish at a time instead of copying everything.)*
+  too as the fallback. 2.168, part C2: the bin, price history, notifications and friends' lists too. 2.169: only what changed is
+  written (DbDiff). ViewModels/streams: not as one rebuild (owner chose the slimmer route, DECISIONS); screens already
+  update by themselves through Repo's state, and ViewModels come screen by screen when a screen is changed anyway.)*
   A data layer (repositories) between screens and storage; ViewModels read from it as streams, so every
   screen updates by itself when data changes (replaces `mineVersion` and manual refreshes).
 - [ ] S2.3 **Moving existing data:** on first start of the new version, copy everything from the settings store into

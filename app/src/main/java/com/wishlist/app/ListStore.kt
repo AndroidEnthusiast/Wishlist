@@ -29,6 +29,11 @@ object ListStore {
     private val lists = HashMap<String, MineData>()
     /** What the database held at this start (checked), for the parts that are read once: bin, history, friends, notes. */
     private var data: Snapshot? = null
+    /** What the database holds now, so a change writes only the difference (DbDiff); null: unknown, copy it all. */
+    private var inDb: Snapshot? = null
+    /** Rows written and removed since this start, added up over every save (for the checks); -1 deletes: a full copy. */
+    @Volatile var written = DbDiff.Written(0, 0)
+        private set
     private val io = Executors.newSingleThreadExecutor { r -> Thread(r, "wishlist-db").apply { isDaemon = true } }
     private val pending = AtomicBoolean(false)
     private var started = false
@@ -66,6 +71,7 @@ object ListStore {
             }.get()
             val expected = same(fromStore)
             matched = fromDb == expected
+            inDb = fromDb
             if (fromDb == expected) {
                 data = fromDb
             } else {
@@ -84,7 +90,7 @@ object ListStore {
     }
 
     /** Everything that is in the database, in the same shape as [DbMove.snapshot] reads the settings store. */
-    private fun read(dao: WishlistDao): Snapshot {
+    internal fun read(dao: WishlistDao): Snapshot {
         val cats = dao.categories().map { it.name }
         val lists = dao.lists().map { r ->
             val photos = try {
@@ -151,11 +157,27 @@ object ListStore {
         if (!pending.compareAndSet(false, true)) return
         io.execute {
             pending.set(false)
+            val now = same(DbMove.snapshot(prefs(c)))
+            val db = WishlistDb.get(c)
             try {
-                DbMove.copy(WishlistDb.get(c), DbMove.snapshot(prefs(c)), version(c))
+                // Only what changed (2.169); everything when it isn't known what the database holds.
+                val old = inDb
+                val w = if (old != null) DbDiff.apply(db, old, now)
+                else DbMove.copy(db, now, version(c)).let { DbDiff.Written(it.lists + it.wishes + it.bin + it.points, -1) }
+                written = if (w.deletes < 0 || written.deletes < 0) DbDiff.Written(written.upserts + w.upserts, -1)
+                else DbDiff.Written(written.upserts + w.upserts, written.deletes + w.deletes)
+                inDb = now
             } catch (e: Throwable) {
-                // The settings store still has it all; the next start finds the difference and copies again.
-                Crash.report(IllegalStateException("Saving to the database failed", e))
+                try {
+                    // A save that went wrong is undone by its transaction; a full copy puts the database right.
+                    DbMove.copy(db, now, version(c))
+                    inDb = now
+                    Crash.report(IllegalStateException("Saving the changes to the database failed; copied it all", e))
+                } catch (e2: Throwable) {
+                    // The settings store still has it all; the next start finds the difference and copies again.
+                    inDb = null
+                    Crash.report(IllegalStateException("Saving to the database failed", e2))
+                }
             }
         }
     }
@@ -169,6 +191,6 @@ object ListStore {
     @Synchronized
     internal fun reset() {
         app?.let { prefs(it).unregisterOnSharedPreferenceChangeListener(listener) }
-        started = false; live = false; matched = null; lists.clear(); data = null; app = null
+        started = false; live = false; matched = null; lists.clear(); data = null; inDb = null; written = DbDiff.Written(0, 0); app = null
     }
 }

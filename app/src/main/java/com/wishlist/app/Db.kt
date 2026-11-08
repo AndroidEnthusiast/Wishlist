@@ -160,6 +160,9 @@ interface WishlistDao {
     @Query("SELECT COUNT(*) FROM price_points") fun countPricePoints(): Int
 
     @Query("DELETE FROM lists WHERE id = :id") fun deleteList(id: String)
+    @Query("DELETE FROM wishes WHERE list_id = :listId AND id = :id") fun deleteWish(listId: String, id: Long)
+    @Query("DELETE FROM bin WHERE list_id = :listId AND id = :id") fun deleteBinRow(listId: String, id: Long)
+    @Query("DELETE FROM price_points WHERE wish_id = :wishId AND at = :at") fun deletePricePoint(wishId: Long, at: Long)
 
     @Query("DELETE FROM wishes") fun clearWishes()
     @Query("DELETE FROM lists") fun clearLists()
