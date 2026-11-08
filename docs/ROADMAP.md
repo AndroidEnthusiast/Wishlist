@@ -186,6 +186,8 @@ Goal: small, fast saves; changes arrive when they happen; less battery.
   | Starting the app | the whole open list + the owner name | nothing, unless a save was waiting |
   | In the background with a list or chat open | kept polling | nothing |
 Owner tests: two phones editing the same list, chat, collab list updates arrive within seconds, battery over a day.
+**Signed off by the owner on 8 November 2026** (supabase-sync.sql run, 2.175 installed; checked here read-only: `wl_pulse` and
+`wl_mine_put` are installed). The two-phone tests and the real S3.4 numbers were not done yet: anything noticed later is fixed first.
 
 ## Stage 4 — The server, ready to grow (2–3 sessions)  (P5, P7, P8)
 - [ ] S4.1 Photos (profile, group, exchange) move to Supabase Storage with small file sizes; the database keeps only

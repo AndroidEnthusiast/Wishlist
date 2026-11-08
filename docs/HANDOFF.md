@@ -190,8 +190,10 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 - 6 November (night): Friends review; **2.139**. Not checked: the friend link on a phone (Chrome on Android should open wishlist://friend from the page; some browsers ask first).
 
 ## Next session
-- **START HERE (written at the end of the Stage 3 session, 8 November 2026).** Stage 3 is built (2.172–2.175); the
-  owner chose to test all of it at the end.
+- **START HERE (written at the end of the Stage 3 session, 8 November 2026).** **Stage 3 signed off by the owner** (ran
+  supabase-sync.sql, installed 2.175 straight from 2.171, which is fine; out of credits, so not tested with two phones yet).
+  Ask first how live updates, chat and saving felt, and for App settings > About > Details numbers (S3.4); fix anything
+  noticed, then start Stage 4 (questions first). Points 1–2 below are done except the two-phone tests and the numbers.
   1. Ask whether the owner ran [supabase-sync.sql](https://github.com/AndroidEnthusiast/Wishlist/blob/main/supabase-sync.sql)
      (after all the other scripts) and installed 2.175. Without the script the app still works the old way (whole
      lists, polling, every check) — so "it works" alone doesn't prove Stage 3 is on.
