@@ -438,6 +438,8 @@ What the owner has decided, and why. Follow these unless the owner changes their
   "Back always goes where you think"): Profile, App settings, Bin and Notifications opened from the Friends tab go back
   to Friends (before: Home). Screens keep changing at once, without slide or fade animations (nothing else visible
   changes in Stages 1–3).
+- **Stage 1 signed off** (owner, 8 November 2026): "All seems to work and if I overlooked something I want to fix it
+  later." ViewModels moved from S1.1 to S2.2 (they need the data layer).
 - **A notification about one wish opens its list on that wish** (owner, 8 November 2026, 2.161, a small fix during
   the roadmap): scroll + the glow of "All your wishes"; own lists and collab wishlists only.
 - **The tabs** (owner, 8 November 2026, 2.158): each tab (Messages, My shops, Friends) **remembers where you were**

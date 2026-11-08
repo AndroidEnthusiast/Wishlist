@@ -114,7 +114,8 @@ Done when `MainActivity.kt` only sets up the app (< 300 lines) and every screen 
 *Code work done 8 November 2026 (2.154–2.163): every screen is a route (2.160), every way in goes through `Deep.kt`
 (2.162), `MainActivity.kt` 142 lines (2.163), 63 app checks. Left for later on purpose: in-app requests between
 screens still use small flag objects (GroupNav, ExchangeNav, ChatNav, FriendsNav, PricesNav, NotesNav, HistoryNav);
-they go when those screens get ViewModels (S2.2). Waiting for: the owner's final Stage 1 test.*
+they go when those screens get ViewModels (S2.2). **Signed off by the owner on 8 November 2026** after the final
+test ("all seems to work"; anything noticed later is fixed first).*
 
 ## Stage 2 — A real database on the phone (3–4 sessions)  (P2)
 Goal: fast, safe local data that can't be half-saved.
