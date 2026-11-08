@@ -8,5 +8,7 @@ class WishlistApp : Application() {
         super.onCreate()
         Crash.start(this)
         Calls.attach(this)
+        // Live updates follow the whole app being in front, not one window (AppForeground.kt).
+        registerActivityLifecycleCallbacks(AppForeground { Live.foreground(it) }.callbacks())
     }
 }

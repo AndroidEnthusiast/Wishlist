@@ -86,16 +86,7 @@ class MainActivity : ComponentActivity() {
      * install. So the page's "Download app" button puts the invitation on the clipboard, and the first time the app
      * starts after an install (or update) it looks for it there and offers to join. It looks only once per install.
      */
-    // Live updates (Live.kt) only while the app is in front: the connection closes in the background (battery).
-    override fun onStart() {
-        super.onStart()
-        Live.foreground(true)
-    }
-
-    override fun onStop() {
-        Live.foreground(false)
-        super.onStop()
-    }
+    // (Live updates follow the whole app being in front: AppForeground.kt, registered in WishlistApp.)
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
