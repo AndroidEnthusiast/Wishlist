@@ -46,6 +46,10 @@ order, one stage at a time**; tick off steps here (`[x]`) in the same commit tha
 5. **Checks come with the change.** Every step adds or updates automated checks; a fix comes with a check that fails
    without it (as with the Zalando prices).
 6. **Supabase scripts stay additive** (old apps keep working: run the script first, then install the app).
+7. **A concrete summary at the end of every session** (owner, 8 November 2026): which roadmap steps were done (with
+   their numbers), what is now better for the user and in the code (measurable where possible: lines removed from
+   `MainActivity.kt`, checks added, requests saved), what was tested and what couldn't be, and the next step. The goal
+   is a real Android app, not something that feels vibe coded: no shortcuts that leave the foundations worse.
 
 ## Decisions to ask the owner at the start of Stage 0 (pop-up questions)
 - **D1 Full network access during the rebuild** (to compile and run the app's tests here before pushing). The owner
