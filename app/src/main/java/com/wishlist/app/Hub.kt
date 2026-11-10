@@ -272,6 +272,8 @@ fun HubScreen(
             Modifier.padding(pad).fillMaxSize().lookBackdrop(look).verticalScroll(rememberScrollState())
                 .padding(bottom = 32.dp)
         ) {
+            // "A new version is ready" (owner, 10 November 2026; AppInfo.kt): only when there is one.
+            UpdateBar()
             // Your picture and name, and the numbers (2.89: the cover photo card is gone).
             ProfileSummary(onProfile, onFriends, onAddWish)
 

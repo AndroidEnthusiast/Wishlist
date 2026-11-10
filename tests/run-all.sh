@@ -3,7 +3,7 @@
 set -u
 cd "$(dirname "$0")"
 fail=0
-run() { echo "== $1"; shift; "$@" 2>&1 | tail -n 6; [ "${PIPESTATUS[0]}" -eq 0 ] || fail=1; }
+run() { echo "== $1"; shift; "$@" 2>&1 | tail -n 16; [ "${PIPESTATUS[0]}" -eq 0 ] || fail=1; }
 DENO=./node_modules/.bin/deno
 [ -x "$DENO" ] || DENO=deno
 run "parse.js (reads product pages)" node parse/parse_test.js
@@ -17,6 +17,7 @@ run "friend link page (web/friend/)" node friend/test.js
 run "group page against the real SQL (web/group.html)" node group/test.js
 run "gift exchange page against the real SQL (web/exchange.html)" node exchange/test.js
 run "reactions and still-being-bought against the real SQL (together.js)" node together/test.js
+run "database scripts against a real PostgreSQL (tests/sql)" bash sql/run.sh
 for t in e2e/t1.js e2e/t2.js e2e/t3.js e2e/t4.js e2e/t5.js e2e/t6.js e2e/t7.js; do run "browser editor $t" node "$t"; done
 [ "$fail" -eq 0 ] && echo "ALL SUITES OK" || echo "SOMETHING FAILED"
 exit $fail

@@ -527,6 +527,10 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
         )
     }
     if (welcome) WelcomeFlow { welcome = false }
+    // The newest and the oldest working version (AppInfo.kt, ROADMAP R6): asked at most twice a day.
+    LaunchedEffect(Unit) { AppInfo.load(ctx); AppInfo.refresh(ctx) }
+    // A version that no longer works with the server: only the update is offered, over everything else.
+    if (AppInfo.tooOld(AppInfo.installed(ctx), AppInfo.info)) TooOldScreen()
     // Everyone has a name (owner, 2.135): asked once at the start when it's missing, and before sharing.
     LaunchedEffect(welcome) { if (!welcome) NameGate.askAtStart() }
     NameGate.Host()

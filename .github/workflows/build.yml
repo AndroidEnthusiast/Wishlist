@@ -69,7 +69,7 @@ jobs:
   # The checks of the web pages and the helper functions (tests/run-all.sh), on GitHub too (owner, 10 November 2026):
   # the web pages are only published when they pass, so a broken page can't go live because a session skipped them.
   # A suite that fails is tried once more (one browser check fails now and then without a cause). The three suites
-  # that need a PostgreSQL say SKIPPED here, as they do without WL_PG anywhere (tests/README.md).
+  # that need a PostgreSQL, and the database checks of tests/sql, run against a throw-away one (R5, 10 November 2026).
   web-checks:
     runs-on: ubuntu-latest
     permissions:
@@ -84,7 +84,16 @@ jobs:
         run: |
           npm install --no-audit --no-fund
           npx playwright install --with-deps chromium
-      - name: Check the web pages and the helper functions
+      # A throw-away PostgreSQL (the one GitHub's computer already has), so the database checks and the page suites
+      # that need the real supabase-*.sql scripts run here too (ROADMAP R5). Never the real Supabase.
+      - name: Start a throw-away PostgreSQL
+        run: |
+          bin=$(ls -d /usr/lib/postgresql/*/bin | sort -V | tail -n 1)
+          mkdir -p "$RUNNER_TEMP/pg"
+          "$bin/initdb" -D "$RUNNER_TEMP/pg/data" -U postgres -A trust > /dev/null
+          "$bin/pg_ctl" -D "$RUNNER_TEMP/pg/data" -o "-p 5499 -k $RUNNER_TEMP/pg -c listen_addresses=''" -l "$RUNNER_TEMP/pg/log" -w start
+          echo "WL_PG=-h $RUNNER_TEMP/pg -p 5499 -U postgres" >> "$GITHUB_ENV"
+      - name: Check the web pages, the helper functions and the database scripts
         working-directory: tests
         run: |
           bash run-all.sh || { echo "::warning::A web check failed; trying all of them once more."; bash run-all.sh; }
@@ -103,6 +112,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The whole history: app.json needs the moment the version number last changed.
+          fetch-depth: 0
       - name: Unpack project zip
         run: |
           if [ -f wishlist-android.zip ]; then unzip -q -o wishlist-android.zip; fi
@@ -118,6 +130,26 @@ jobs:
           v="${GITHUB_SHA:0:7}"
           sed -i "s/?v=dev\"/?v=$v\"/g" web/*.html
           grep -c "?v=$v" web/index.html web/edit.html
+      # What the app is told about itself (AppInfo.kt, ROADMAP R6): the newest version and since when, from the
+      # app's build file; "min" (the oldest version that still works) and "notice" are set by hand in web/app.json.
+      - name: Write app.json for the update notice
+        if: steps.web.outputs.found == 'yes'
+        run: |
+          python3 - <<'PY'
+          import json, re, subprocess
+          g = open("app/build.gradle.kts").read()
+          code = int(re.search(r"versionCode\s*=\s*(\d+)", g).group(1))
+          name = re.search(r'versionName\s*=\s*"([^"]+)"', g).group(1)
+          # Since when this version is out: the commit that last changed the version number.
+          since = int(subprocess.check_output(["git", "log", "-1", "--format=%ct", "-G", "versionCode", "--", "app/build.gradle.kts"]).decode().strip() or 0)
+          o = json.load(open("web/app.json"))
+          m = int(o.get("min", 0))
+          assert 0 <= m <= code, "web/app.json: min (%d) is newer than the app itself (%d): that would lock everyone out" % (m, code)
+          assert since > 0, "couldn't find when the version changed"
+          out = {"latest": code, "name": name, "since": since, "min": m, "notice": str(o.get("notice", ""))[:300]}
+          json.dump(out, open("web/app.json", "w"))
+          print(out)
+          PY
       - name: Package the web page
         if: steps.web.outputs.found == 'yes'
         uses: actions/upload-pages-artifact@v3

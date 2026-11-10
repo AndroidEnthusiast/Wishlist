@@ -221,3 +221,5 @@ Kept as they are (short enough or needed): “That’s your own list. Friends re
 | # | Where | Text |
 |---|---|---|
 | P1 | A wish’s price page, grey line under the price alert | Price checked less than an hour ago. · Price checked 1 hour ago. · Price checked 5 hours ago. · Price checked 3 days ago. · This shop’s price couldn’t be read since 3 November. |
+| P2 | Home, update bar (2.179) | A new version of Wishlist is ready. · Later · Update |
+| P3 | Too-old screen (2.179) | **Please update Wishlist** This version is too old to work. Install the newest one over it: your wishes stay. · Update |

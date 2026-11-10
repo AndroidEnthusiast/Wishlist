@@ -289,9 +289,9 @@ Small steps; each one protects against something that can't be undone later.
   Chromebook (open the product, Ctrl+S, "Web page, HTML only") and uploads them, or shares a link when a price reads
   wrong. Ask whether a "This price is wrong" button in the app would be welcome (it could send the link and what was
   read, nothing personal).
-- [ ] **R5 GitHub runs the database checks too.** The `tests/sql/*.sql` checks and the three page suites that need a
+- [x] **R5 GitHub runs the database checks too.** *(2.179: `tests/sql/run.sh`, in `run-all.sh` and the `web-checks` job with a throw-away PostgreSQL; 13 check files and "every script runs twice".)* The `tests/sql/*.sql` checks and the three page suites that need a
   PostgreSQL run only by hand today, while the scripts they check are pasted into the real database by the owner.
-- [ ] **R6 The server can talk to old apps.** One tiny function (for example `wl_app_info`): the newest version, the
+- [x] **R6 The server can talk to old apps.** *(2.179, `AppInfo.kt`: built as one small file next to the web pages, `app.json`, instead of a database function: one moving part less, no script for the owner, and still reachable if the database moves. Owner chose the slim bar on Home: shown once a version is a day old, Later hides it a week; below `min` in `web/app.json` a full "Please update" screen. To make a version required: raise `min` in `web/app.json` to that versionCode, never above the newest.)* One tiny function (for example `wl_app_info`): the newest version, the
   oldest version that still works, and an optional notice. The app shows "Update available" (with the download) and,
   below the minimum, a kind "Please update" screen. One moving part that covers updates, a server move and
   maintenance. Interview first (how often to nag, wording).
