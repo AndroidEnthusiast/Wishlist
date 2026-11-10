@@ -95,6 +95,9 @@ object Sync {
 
     /** [live]: the open list, whose picture status shows in its settings. */
     private suspend fun pushData(d: MineData, wishes: List<Wish>, live: Boolean) {
+        // The database couldn't be read and the lists on screen are an old copy (ListStore.stale, 2.178): never send
+        // that online, it would remove newer wishes and their reservations for friends.
+        if (ListStore.stale) return
         val code = d.code ?: return
         val token = d.token ?: return
         val c = app

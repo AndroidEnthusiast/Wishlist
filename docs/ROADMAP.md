@@ -1,7 +1,9 @@
 # Roadmap: from "it works" to a real app
 
 Written 8 November 2026 at the owner's request: *"I want the foundations to work for me and my partner but at the same
-time allow to scale up in the future."* This is the plan every session follows until it is done. Work through it **in
+time allow to scale up in the future."* This is the plan every session follows until it is done. **A second review on 10
+November 2026 re-checked Stages 0–3 and added Stage R, more Stage 4 steps, Stage 6 (Google Play) and a checklist for
+every new feature: see "Second review" further down, and do Stage R before Stage 4.** Work through it **in
 order, one stage at a time**; tick off steps here (`[x]`) in the same commit that does them, and note anything learned.
 
 ## The goal, in one line per person
@@ -71,7 +73,8 @@ Goal: catch mistakes before they reach the phone, and never lose server data.
   the screenshot tests out of CI (owner's choice of 5 November).
 - [x] S0.2 First real app tests: move pure logic out of screens where it's easy (price parsing, totals, sorting,
   occasion dates, quantity labels, reservation labels) and test it with plain JUnit (no Android needed).
-- [ ] S0.3 Product reader fixtures: saved copies of real product pages (only the HTML, no pictures) for the 20 starter
+- [ ] S0.3 *(2.178: the shared `pages` list exists, with 14 hand-made pages answered by both readers; real shop
+  pages are step R4 of the second review.)* Product reader fixtures: saved copies of real product pages (only the HTML, no pictures) for the 20 starter
   shops in `tests/parse/pages/`, checked by both `Fetch.kt` (JUnit) and `web/parse.js`; the same page must give the
   same answer in both (P9). Pages are saved by a session with network access or uploaded by the owner.
 - [x] S0.4 D3 backups and D4 keep-awake, if the owner said yes. *(Both jobs green on 8 November 2026: the first backup
@@ -203,11 +206,163 @@ Owner tests: photos still show everywhere (app and web); nothing else changes.
 
 ## Stage 5 — Keeping it real (ongoing)
 - [ ] Crash and error review at the start of each session (D2), fixes first.
-- [ ] New features only with: who it's for, the risks asked, checks added, and the data layer used (no new global state).
+- [ ] New features only with: who it's for, the risks asked, checks added, and the data layer used (no new global
+  state: a screen that is changed gets its state out of global `object`s), and the checklist "Think of this with every
+  new feature" gone through.
 - [ ] The product reader: a new shop problem gets a saved page in `tests/parse/pages/` and a fix in both readers.
 - [ ] Update this file's "Honest state" when a stage is done.
 
+## Second review, 10 November 2026 (2.178) — read this before starting Stage 4
+The owner asked a newer model to re-evaluate the stages, find what was missed, and write down everything that should be
+thought of **before** it bites ("to avoid hindsight fixing obvious things or safety things"). This section is that
+review. **Order from here: Stage R (below) first, then Stage 4, then Stage 6 when the owner wants Google Play.**
+
+### What Stages 0–3 really achieved (claim against the code)
+| Stage | Signed off as | What the code shows | What is still owed |
+|---|---|---|---|
+| 0 Safety nets | Done, S0.3 open | Build runs the app's checks; weekly backup; crash reports. | The product reader was only ever tested on hand-written pages (**R4**). The backup has never been restored once, leaves out the uploaded pictures, and its files can be downloaded by anyone with a GitHub account (locked with `BACKUP_PASSWORD` only) (**R3**). The web and database checks ran only by hand until 2.178 (**R5**). |
+| 1 Screens | Done | Every screen is a route; `MainActivity.kt` is small. **But "screens that manage themselves" is half done:** 0 ViewModels, 84 global `object`s, 29 files keep screen state in globals, and the `*Nav` flag objects remain. | State in globals is lost when Android closes the app in the background (one case was found and fixed in 2.162; others are likely) (**R9**). No big rewrite (owner's "slimmer route" stands), but the rule in Stage 5 is now firm. |
+| 2 Database | Done | Room is the source of lists, wishes, bin, history, notifications. | The fallback was dangerous: when the database couldn't be read, the app quietly used the **old** copy frozen in 2.171 and could send it online over newer lists. 2.178 stops the sending; the proper fix is a clear screen (**R1**). The database had no way to change its layout: 2.178 adds the first migration and a check that runs every migration on a database built from the saved layouts (`DbMigrationTest`). Settings, profile, keys, collab caches, groups and exchanges are still in one settings file that 32 files write to. |
+| 3 Syncing | Done | `MineSync`, `Live`, `Pulse` exist and are checked on a local database. | Never tried with two phones; the S3.4 table is still an estimate (**R7**). The web pages still poll every 20 s. Supabase's free plan allows a limited number of live connections at once (check the current number on Supabase's pricing page before growing; 200 when this was written): above that the app falls back to polling, which is the P4 problem again. |
+
+### New problems found (P11 and on)
+| # | Problem | What a user notices | Fix |
+|---|---------|--------------------|-----|
+| P11 | **A price was believed after one reading**, in any currency, even from a "not found" page; a hand-corrected price was overwritten; a copied wish was read and told twice; shops were always asked for American English. | Wrong prices and false "price drop" notifications. | **Fixed in 2.178** (`PriceWatch.kt`, below). Left: real shop pages (R4). |
+| P12 | **The signing key may exist only inside GitHub's secrets**, which can never be read back. | If it is lost, nobody can ever update the app again. | **R0, urgent.** |
+| P13 | **Every push to `main` is a release to everyone, and nobody is told there is an update.** No test channel, no "update available", no "this version is too old". | People stay on old versions for ever; a bad push reaches everyone. | **R6.** |
+| P14 | **No privacy text and no way to delete your data from the server** (names, photos, birthdays, sizes, friends, chats, reservations). D2 promised "mentioned in the privacy text": there is none. | A legal duty in the EU (GDPR) as soon as strangers use the app; Google Play refuses the app without both. | **S4.6, S4.7** (owner: yes). |
+| P15 | **No report or block** for chat and shared content (only Unfriend), and no limits (S4.2). | One abuser can spam; Google Play requires report + block for apps where people share content. | **S4.2, S4.8.** |
+| P16 | **One person, three accounts** (GitHub, Supabase, Google/Firebase) hold everything. | A lost or hacked account ends the app. | **R8** (two-step sign-in, recovery codes). |
+| P17 | **The Firebase key has no restrictions.** It is public by design and can't call Gemini today (checked: "Gemini API … disabled" for this project), but an unrestricted key works for any Google service that is ever switched on in that project. | Nothing now; a surprise bill or abuse later. | **R2.** |
+| P18 | **The app's Android package name (`com.wishlist.app`), its web address (`androidenthusiast.github.io/Wishlist`) and its Supabase address are built into every installed app and every link ever shared.** All three are hard or impossible to change later: Google Play fixes a package name for ever (and a generic one may already be taken); a new web address breaks every old link; a new Supabase project breaks every old app. | Nothing now; a painful move later. | Decide all three **before** Play and before many links are out (**Stage 6**, first step). R6 gives a way to tell old apps "the server moved". |
+| P19 | **Old libraries**: Android target 34, Compose from mid-2024, Kotlin 1.9. | Nothing now. Google Play only accepts apps that target a recent Android version (it moves up every August). | **Stage 6** (an upgrade step of its own, with the screenshot checks). |
+| P20 | **Android's own cloud backup is on without any rules** (`allowBackup`): Android may copy the app's data (list keys, the chat's private key, the device id) to the owner's Google account and put it on a new phone. Never tested. | Either a lucky "new phone" rescue, or two phones that think they are the same device, with chat keys in a Google backup. | Decide together with identity (**S4.5**); don't change it before. |
+| P21 | **The chat is end-to-end encrypted, but nobody can check the other person's key.** The server hands out the public keys, so whoever runs the server could swap one. Also one fixed key per person (no forward secrecy). | Nothing. But "nobody can read your messages, not even us" is only true as long as the server is honest. | Say it honestly in the privacy page (S4.6); a "verify this friend" code later if wanted. |
+| P22 | **GitHub shows the whole project as "SIL Open Font License"** because the font's licence file sits at the top. The code itself has no licence (so legally nobody may reuse it), which may or may not be what the owner wants for a public repository. | Confusing for anyone who looks. | **R8** (move the file; the owner chooses a licence or "all rights reserved"). |
+| P23 | **Nothing is ever tried on a real or pretend phone automatically**; the owner is the only tester of every screen, and two-phone flows are untested. | Layout and flow bugs reach the owner first. | **R7** now; Stage 6 considers Firebase Test Lab (a robot that taps through the app on real phones and returns pictures; free daily allowance). |
+| P24 | **Prices are decimal numbers, wish ids are "the time it was made"**. Fine today. Two people adding a wish to a collab list in the same millisecond would get the same id; adding up decimals drifts by cents. | Nothing today. | Before any money feature (**chip in**, important to the owner): amounts in whole cents, and never handle payments ourselves. New kinds of things get random ids. |
+
+### What 2.178 changed (the price check, P11)
+`PriceWatch.kt` holds the rules, `PriceWatchTest`/`PriceCheckTest` check them (owner's answers of 10 November 2026):
+1. **Twice.** A different price counts only when a second reading agrees (later in the same check, else the next check).
+2. **The first look is quiet.** A price the person typed stays; a price the app read itself is corrected without a
+   notification. After that only a change at the shop counts.
+3. **Same currency only**, and **an error page ("not found") never gives a price** (app and `web/parse.js`).
+4. **Shops are asked in the phone's language**, not always American English.
+5. **A copied wish is read and told once.**
+6. **A wish's price page says when it was last checked**, or since when the shop can't be read.
+7. `tests/shared/same-answers.json` got **`pages`**: whole product pages that the app's reader and the web reader must
+   answer identically. This is the home for real shop pages (R4, the old S0.3).
+Known limit, said to the owner: a typed price follows the shop once the shop's own price changes (the wish then takes
+the shop's price). Collab wishlists use rules 1 and 3 only (their prices are shared between phones).
+
+### Owner's answers (10 November 2026)
+- **Google Play: yes in the end, the download is fine for now.** So: Stage 6 exists, nothing store-specific is
+  built yet, but nothing new may make Play harder.
+- **Signing key:** the owner has a 16-character password saved and isn't sure about the key file → **R0**.
+- **Privacy page and "Delete my profile and data": yes** → S4.6, S4.7.
+- **GitHub runs the web checks before publishing the pages: yes, "as long as Claude can fix the issue"** → done in
+  2.178 (`web-checks` job; a failing suite is tried once more).
+
+## Stage R — Repairs before growing (1–2 sessions, before Stage 4)
+Small steps; each one protects against something that can't be undone later.
+- [ ] **R0 The signing key has a second home (urgent).** The key is a *file* (it ends in `.jks`, `.keystore` or
+  `.p12`), or the very long text that was pasted into the secret `KEYSTORE_BASE64` (thousands of letters and digits,
+  often starting with `MII` or `/u3+7Q`); a 16-character password alone is not the key (and may be `BACKUP_PASSWORD`,
+  which must be at least 16 characters). If the owner can't find the file or the long text: a one-off GitHub job
+  that locks the key with `BACKUP_PASSWORD` and offers it as a download for one day, the owner saves it, the job is
+  deleted. Ask before building it. Never print or commit the key.
+- [ ] **R1 When the database can't be read, say so.** Replace the silent fallback to the old copy with a clear
+  screen ("Wishlist couldn't open your lists. Nothing is sent or deleted.") and two ways out: try again, and "Get my
+  lists back from the online copy" (the server has every list that was shared). Interview the owner first (wording,
+  what happens to private wishes, which never went online). Then remove the old storage code (S2.5's last part) once
+  the partner's phone has moved. *(2.178: an old copy is never sent online any more: `ListStore.stale`.)*
+- [ ] **R2 Restrict the Firebase key** (owner, in Google Cloud Console; steps were given on 10 November 2026): only
+  the Firebase services the app uses. Then check that a chat message still buzzes the other phone and that
+  Crashlytics still shows the app.
+- [ ] **R3 Backups you can trust:** restore one backup into a throw-away database once and write down that it
+  worked (`docs/BACKUPS.md`); copy the uploaded pictures too; move the job to a **private** repository so the files
+  aren't downloadable by every GitHub user (ask the owner: it means one more repository and moving two secrets).
+- [ ] **R4 Real shop pages (the old S0.3).** For each starter shop one real product page in
+  `tests/shared/same-answers.json` → `pages`. Sessions can't reach most shops, so the owner saves pages on the
+  Chromebook (open the product, Ctrl+S, "Web page, HTML only") and uploads them, or shares a link when a price reads
+  wrong. Ask whether a "This price is wrong" button in the app would be welcome (it could send the link and what was
+  read, nothing personal).
+- [ ] **R5 GitHub runs the database checks too.** The `tests/sql/*.sql` checks and the three page suites that need a
+  PostgreSQL run only by hand today, while the scripts they check are pasted into the real database by the owner.
+- [ ] **R6 The server can talk to old apps.** One tiny function (for example `wl_app_info`): the newest version, the
+  oldest version that still works, and an optional notice. The app shows "Update available" (with the download) and,
+  below the minimum, a kind "Please update" screen. One moving part that covers updates, a server move and
+  maintenance. Interview first (how often to nag, wording).
+- [ ] **R7 The two-phone test of Stage 3**, with a written list (collab list, a friend's list, chat, own list, airplane
+  mode), and the real numbers from App settings > About > Details into S3.4.
+- [ ] **R8 Account and repository safety (owner, with steps):** two-step sign-in and saved recovery codes on GitHub,
+  Supabase and the Google account; Dependabot **alerts** on (Settings > Advanced Security; alerts only, no pull
+  requests); move `FONT-LICENSE-OFL.txt` out of the top folder so GitHub stops labelling the whole project with the
+  font's licence, and choose what the code's licence is.
+- [ ] **R9 Screens survive Android closing the app.** No big rewrite: a check per main screen that closes and
+  restores the app (Robolectric can), fixes where it fails, and from now on no new screen state in a global `object`.
+
+## Additions to Stage 4 (same stage, more steps)
+- [ ] S4.6 **Privacy page** on the website (plain words: what is stored where, crash reports, how long, who can see
+  it, how to delete, the honest line about chat keys of P21), linked from App settings, the welcome and every web
+  page. The owner approves the text.
+- [ ] S4.7 **"Delete my profile and data"** in the app (profile, friendships, photos, chats, group and exchange
+  places, reservations, own lists online), with a clear warning and no way to do it to someone else. For browser-only
+  people: the page says how to ask. Needed for GDPR and for Google Play (which also wants a web address where
+  deletion can be asked for without the app).
+- [ ] S4.8 **Report and block** (needed before Play; think it through with the owner: what a report contains when
+  chats are end-to-end encrypted, who reads reports, what "blocked" does on shared lists and groups).
+- [ ] S4.2 also covers: the `fetch-page` helper per key (it loads any web page for whoever holds a list key), friend
+  codes (6 characters: guessing must be slowed down), and, with S4.5, how many anonymous accounts one device may make.
+- [ ] S4.5 also decides P20 (Android's cloud backup) and must be designed knowing that linking a Google account
+  later needs the signing key's fingerprint registered with Google (another reason for R0).
+- [ ] S4.9 **The free plan's limits, written down with today's use** (database size, storage, traffic out, live
+  connections, function calls; look them up on Supabase's pricing page, they change) and which limit is reached
+  first at 100, 1,000 and 10,000 users.
+
+## Stage 6 — Google Play (when the owner says so)
+Decide first, build second; several of these can't be changed afterwards.
+- [ ] S6.1 **Three permanent names** (P18): the app's name (the owner already planned a naming session), the
+  package name (unique on Play, permanent), and the web address for links (a domain of your own, about 10–15 euros a
+  year, can still be served by GitHub Pages; old `github.io` links must keep working).
+- [ ] S6.2 **Keep today's users**: Play can sign the app with the *existing* key ("Play App Signing" with your own
+  key), so people who installed the download can update from Play without reinstalling. Needs R0.
+- [ ] S6.3 Android target and libraries brought up to date (P19), in its own version, with the screenshot checks.
+- [ ] S6.4 The store's forms: privacy page (S4.6), data safety form, data deletion address (S4.7), content
+  rating, report/block (S4.8), what Crashlytics and Firebase collect.
+- [ ] S6.5 A test round: a new personal developer account must run a closed test with 12 testers for 14 days
+  before it may publish (check the current rule). Plan who they are.
+- [ ] S6.6 A test channel from then on (internal test → everyone), instead of "every push goes to everyone";
+  Play's in-app update prompt replaces R6's notice for Play installs.
+- [ ] S6.7 Consider a robot test on real phones in the build (Firebase Test Lab) and shrinking the app (R8/minify).
+
+## Think of this with every new feature (the checklist that prevents hindsight)
+Ask these while designing, and ask the owner where the answer is a choice:
+1. **Old versions:** what does an app from three months ago do with this? (Scripts only add; R6 for the rest.)
+2. **Offline, slow, failed:** what shows, what is kept, what is retried; never a spinner without an end.
+3. **A new or second phone, and the browser:** does it still belong to the person? (Identity, S4.5.)
+4. **The other person:** what if they left, deleted it, blocked you, or are on an old version?
+5. **Abuse:** what can a stranger with the public key and unlimited tries do? What is the limit, and who notices?
+6. **Cost:** how many server calls, how many bytes stored and sent, per user per day; which free-plan limit moves.
+7. **Personal data:** is something new stored about a person? Then the privacy page, "Delete my data", Export and
+   the backup all need it, in the same update.
+8. **Surprise:** can the list's owner learn, in any way (counts, timing, notifications, logs), what was reserved?
+9. **Three places:** app, web pages, database. And the two readers (`Fetch.kt`, `web/parse.js`) stay the same.
+10. **Stored layouts change only by adding:** a database change is a migration with a check (`DbMigrationTest`); a
+    wish field goes through every place in CLAUDE.md rule 1.
+11. **Android closing the app, rotating, a big font, TalkBack, dark mode, all five styles.**
+12. **Notifications:** is it worth a buzz, can it arrive late, can it arrive twice, does it bundle (`NotifyPace`)?
+13. **Money and time:** amounts in cents when they're added up or split; dates in the person's own time zone;
+    never trust a phone's clock for "who was first".
+14. **Google Play's rules** (Stage 6): would this need a permission, a form, or a policy answer?
+15. **A check that fails without the fix**, at the layer where the bug lives; and what could NOT be checked, said out loud.
+16. **How will we know it works for people?** (A crash report, a counter in App settings > About, or a question to
+    ask the owner after a week.)
+
 ## Rough size
+*(10 November 2026: Stage R adds 1–2 sessions, the Stage 4 additions 1–2, Stage 6 about 2–3.)*
 Stages 0–4 are about 12–17 sessions. The app keeps working throughout; the owner can stop after any stage and still
 have a better app than before. Stages 1 and 2 give the biggest gain for the two of you; Stages 3 and 4 are what lets the
 app grow.

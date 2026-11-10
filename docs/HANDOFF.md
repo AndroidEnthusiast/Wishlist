@@ -190,6 +190,31 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 - 6 November (night): Friends review; **2.139**. Not checked: the friend link on a phone (Chrome on Android should open wishlist://friend from the page; some browsers ask first).
 
 ## Next session
+- **START HERE (written 10 November 2026, the second review, 2.178).** Read ROADMAP "Second review" first: **Stage R
+  comes before Stage 4.** Ask the owner, in this order:
+  1. **R0, urgent: did they find the signing key file** (a `.jks`/`.keystore`/`.p12` file, or the long text pasted into
+     `KEYSTORE_BASE64`)? The 16-character password they have is probably `BACKUP_PASSWORD` or the key's password, not
+     the key. If not found: propose the one-off locked-download job (ask first).
+  2. **Did 2.178 install over the app with all lists still there?** (It is the first version that changes the
+     database's layout; `DbMigrationTest` covers it, a phone never ran it before.) Then the price checks: any false
+     "price drop" since? Does a hand-corrected price stay? The grey line on a wish's price page (Home's price-drop
+     card or a price notification opens that page). The first check after the update is quiet on purpose.
+  3. **R2: did they restrict the Firebase key** (steps given in chat on 10 November)? Then a chat message must still
+     buzz the other phone and Crashlytics must still show the app.
+  4. **Was the first GitHub run with the new `web-checks` job green?** If it failed: open the job, fix first.
+  5. Then Stage R in order (R1 needs an interview: the "couldn't open your lists" screen), then Stage 4.
+  Still open from before: the two-phone test of Stage 3 and the real S3.4 numbers (now R7); live updates for the web
+  pages (owner: "remind me later"); chip in (#3, important to the owner: see P24 before designing it).
+- Session summary (10 November 2026, second review): re-evaluated Stages 0–3 against the code and wrote the review,
+  Stage R, the Stage 4 additions, Stage 6 (Google Play) and the feature checklist into ROADMAP; 7 pop-up answers in
+  DECISIONS. Built **2.178**: the price check believes a price only after two agreeing readings, first look quiet,
+  typed prices stay, same currency only, no price from error pages, the phone's language, copies read once, "Price
+  checked…" line (`PriceWatch.kt`, table `price_watch`, the first database migration with `DbMigrationTest`); an old
+  copy of the lists is never sent online when the database can't be read or was lost (`ListStore.stale`); GitHub runs
+  the web checks before publishing (`web-checks`). Checked the Firebase key against Google (Gemini is off for the
+  project; the key has no restrictions) and the whole git history for secrets (none). App checks 140 (were 110 + the
+  later ones), all web suites pass (the three that need PostgreSQL were skipped here: no SQL changed). Not checked:
+  anything on a phone, real shops, the migration on a real phone, the new GitHub job before the push.
 - **2.177 (8 November 2026): the real cause of the spinning Friend's list** (owner's recording): a Stage 3 foundation bug, `Live.foreground` was switched per window and ended "off" after sharing into the app (a second window). Fixed with `AppForeground` (counts started windows) + `AppForegroundTest`. Ask the owner to repeat the share test. 2.176's parallel loading of a friend's page stays (harmless), but its keep-loaded cache lives in `FriendsNav` (global UI state): move it into the data layer when Stage 4/5 touches friends' lists.
 - **2.176 (8 November 2026, small fix between stages):** a Friend's page showed no wishes for a long time after sharing a gift from their list into the app. Lists now load in parallel, show as they arrive and stay on screen when you come back. Cause not proven (likely a call hanging on an old connection after the app was in the background). Ask the owner whether it's gone; if a single list still takes ~20 s after returning from another app, look at `Cloud.rpc`'s connection reuse (retry a read-only call once on a stale connection).
 - **START HERE (written at the end of the Stage 3 session, 8 November 2026).** **Stage 3 signed off by the owner** (ran

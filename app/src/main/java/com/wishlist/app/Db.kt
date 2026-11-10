@@ -112,6 +112,32 @@ data class NoteRow(
     val position: Int
 )
 
+/**
+ * What the price check knows about one wish of your own (PriceWatch.kt, 2.178): the price the shop's page was last
+ * believed to show, so one odd reading never changes a wish. Only on this phone, never online and not in Export: when
+ * a row is lost, the next check quietly starts again.
+ */
+@Entity(tableName = "price_watch")
+data class PriceWatchRow(
+    @PrimaryKey @ColumnInfo(name = "wish_id") val wishId: Long,
+    /** The link the readings belong to (another link starts again). */
+    val url: String,
+    /** The price the shop's page was last believed to show; null until two readings agreed. */
+    val read: Double?,
+    /** The currency the page named with it ("" when it named none). */
+    val cur: String,
+    /** The wish's own price when the check last looked: a different one now was typed in by hand since. */
+    val own: Double?,
+    /** The price on the wish was typed in by the person, so the first check leaves it alone. */
+    val typed: Boolean,
+    /** A different reading that waits for a second reading to agree. */
+    val cand: Double?,
+    /** When the shop's page was last read (milliseconds; 0 = never). */
+    @ColumnInfo(name = "ok_at") val okAt: Long,
+    /** Since when reading the page keeps failing (milliseconds; 0 = it works). */
+    @ColumnInfo(name = "fail_since") val failSince: Long
+)
+
 /** Small facts about the database itself, such as when the data was moved in and how much (S2.3). */
 @Entity(tableName = "meta")
 data class MetaRow(@PrimaryKey val key: String, val value: String)
@@ -143,6 +169,7 @@ interface WishlistDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) fun putFriendLists(rows: List<FriendListRow>)
     @Insert(onConflict = OnConflictStrategy.REPLACE) fun putNotes(rows: List<NoteRow>)
     @Insert(onConflict = OnConflictStrategy.REPLACE) fun putMeta(row: MetaRow)
+    @Insert(onConflict = OnConflictStrategy.REPLACE) fun putWatch(row: PriceWatchRow)
 
     @Query("SELECT * FROM lists ORDER BY position") fun lists(): List<ListRow>
     @Query("SELECT * FROM wishes WHERE list_id = :listId ORDER BY position") fun wishes(listId: String): List<WishRow>
@@ -153,6 +180,9 @@ interface WishlistDao {
     @Query("SELECT * FROM friend_lists ORDER BY position") fun friendLists(): List<FriendListRow>
     @Query("SELECT * FROM notifications ORDER BY position") fun notes(): List<NoteRow>
     @Query("SELECT value FROM meta WHERE `key` = :key") fun meta(key: String): String?
+    @Query("SELECT * FROM price_watch WHERE wish_id = :wishId") fun watch(wishId: Long): PriceWatchRow?
+    @Query("SELECT wish_id FROM price_watch") fun watchIds(): List<Long>
+    @Query("DELETE FROM price_watch WHERE wish_id = :wishId") fun deleteWatch(wishId: Long)
 
     @Query("SELECT COUNT(*) FROM lists") fun countLists(): Int
     @Query("SELECT COUNT(*) FROM wishes") fun countWishes(): Int
@@ -182,9 +212,9 @@ interface WishlistDao {
 @Database(
     entities = [
         ListRow::class, WishRow::class, BinRow::class, CategoryRow::class, PricePointRow::class,
-        FriendListRow::class, NoteRow::class, MetaRow::class
+        FriendListRow::class, NoteRow::class, MetaRow::class, PriceWatchRow::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 abstract class WishlistDb : RoomDatabase() {
@@ -198,7 +228,27 @@ abstract class WishlistDb : RoomDatabase() {
 
         /** The app's one database, "wishlist.db" in the app's own folder. */
         fun get(c: Context): WishlistDb = db ?: synchronized(this) {
-            db ?: Room.databaseBuilder(c.applicationContext, WishlistDb::class.java, "wishlist.db").build().also { db = it }
+            db ?: Room.databaseBuilder(c.applicationContext, WishlistDb::class.java, "wishlist.db")
+                .addMigrations(*MIGRATIONS).build().also { db = it }
         }
+
+        /**
+         * How a phone with an older database gets the newest one, a step per version. Rules (ROADMAP "Data is
+         * sacred"): a step only adds (a table, a column with a default), never drops or rewrites what is there; every
+         * step is run by DbMigrationTest on a database made from the saved layout in app/schemas, with data in it.
+         * Never add fallbackToDestructiveMigration: it would empty the database.
+         */
+        internal val MIGRATIONS = arrayOf<androidx.room.migration.Migration>(
+            // 2 (2.178): the price check's own notes per wish (PriceWatchRow).
+            object : androidx.room.migration.Migration(1, 2) {
+                override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    db.execSQL(
+                        "CREATE TABLE IF NOT EXISTS `price_watch` (`wish_id` INTEGER NOT NULL, `url` TEXT NOT NULL, " +
+                            "`read` REAL, `cur` TEXT NOT NULL, `own` REAL, `typed` INTEGER NOT NULL, `cand` REAL, " +
+                            "`ok_at` INTEGER NOT NULL, `fail_since` INTEGER NOT NULL, PRIMARY KEY(`wish_id`))"
+                    )
+                }
+            }
+        )
     }
 }

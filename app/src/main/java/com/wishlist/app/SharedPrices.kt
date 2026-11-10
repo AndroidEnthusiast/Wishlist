@@ -35,20 +35,39 @@ object SharedPrices {
             } ?: continue
             // Wishes in the bin get no price checks and no alerts.
             var wishes = r.list.wishes.filter { it.bin == 0L }
+            // A different price waits for a second reading that agrees (2.178, PriceWatch rule 1).
+            val again = ArrayList<Pair<Wish, Double>>()
             for (w in wishes.toList()) {
                 if (w.url.isBlank()) continue
                 if (System.currentTimeMillis() - w.checked < fresh) continue
                 // A shop that couldn't be read is not marked: another phone may have more luck.
-                val np = fetchMeta(w.url, c, w.price != null)?.price ?: continue
+                val r = PriceCheck.reader(c, w.url, w.price != null) ?: continue
+                // A page in another currency than the wish is not a price change (2.178).
+                if (otherCurrency(w, r)) continue
+                val np = r.price
                 // The first check with the better reader of 2.145 is quiet: no old price, so no alert anywhere.
                 val quiet = ReaderUpgrade.quiet(c, w.id)
                 if (quiet) ReaderUpgrade.done(c, w.id)
                 val changed = if (quiet && w.price != null) {
                     if (np < w.price - 0.005 || np > w.price + 0.005) w.copy(price = np, oldPrice = null) else null
                 } else newPrice(w, np)
+                if (changed != null && w.price != null && !quiet) { again.add(w to np); continue }
                 val upd = (changed ?: w).copy(checked = System.currentTimeMillis())
                 try {
                     Cloud.shPut(l.key, upd, if (changed != null) listOf("price", "old", "chk") else listOf("chk"))
+                    wishes = wishes.map { if (it.id == w.id) upd else it }
+                } catch (e: Exception) {
+                }
+            }
+            if (again.isNotEmpty()) kotlinx.coroutines.delay(PriceCheck.againAfterMs)
+            for ((w, np) in again) {
+                // No second reading, or another price: nothing is believed and nothing is marked, so the next check
+                // (this phone's or someone else's) looks again.
+                val r2 = PriceCheck.reader(c, w.url, true) ?: continue
+                if (!PriceWatch.same(r2.price, np) || otherCurrency(w, r2)) continue
+                val upd = (newPrice(w, np) ?: continue).copy(checked = System.currentTimeMillis())
+                try {
+                    Cloud.shPut(l.key, upd, listOf("price", "old", "chk"))
                     wishes = wishes.map { if (it.id == w.id) upd else it }
                 } catch (e: Exception) {
                 }
@@ -70,7 +89,10 @@ object SharedPrices {
         return dropped
     }
 
-    /** The wish with the price a shop gave now, or null when nothing changes. Same rules as for My wishlist. */
+    /** True when the page named a currency itself and it isn't the wish's: never compared as a price. */
+    fun otherCurrency(w: Wish, r: PriceWatch.Reading): Boolean = r.sure && w.currency.isNotBlank() && r.cur != w.currency
+
+    /** The wish with the price a shop gave now, or null when nothing changes. */
     fun newPrice(w: Wish, np: Double): Wish? {
         val cur = w.price
         return when {

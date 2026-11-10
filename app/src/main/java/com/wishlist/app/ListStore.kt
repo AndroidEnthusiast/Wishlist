@@ -24,6 +24,14 @@ object ListStore {
     /** True once the lists in memory came from the database (or were checked against it) at this start. */
     @Volatile var live = false
         private set
+    /**
+     * True when the database couldn't be read at this start, or was lost, while it was the only source before (2.178):
+     * the lists on screen then come from the settings store's OLD copy (frozen in 2.171), so they must never be sent
+     * online, where they would wipe newer wishes and their reservations. See Sync.pushData. It stays true until an
+     * Import. ROADMAP R1 replaces this silent fallback with a clear screen and a way to get the online copy back.
+     */
+    @Volatile var stale = false
+        private set
     /** Whether the database matched the settings store at this start (null: not read). For the checks. */
     @Volatile var matched: Boolean? = null
         private set
@@ -47,6 +55,10 @@ object ListStore {
     private var app: Context? = null
 
     private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
+    /** Settings-store flag: the database has been the only source of the lists on this phone. */
+    private const val DB_ONLY = "db_only"
+    /** Database note: its lists were refilled from the settings store's old copy after the database was lost. */
+    private const val OLD_COPY = "old_copy"
 
     /** Reads the lists from the database (moving the data in first, the first time). Called by Repo.load, once. */
     @Synchronized
@@ -60,13 +72,18 @@ object ListStore {
             // The database is read on its own thread (Room refuses the screen's thread); the start waits for it, as it
             // waited for the settings store before. It is small: one row per wish.
             val db = WishlistDb.get(c)
-            val (fromDb, frozen) = io.submit<Pair<Snapshot, Boolean>> {
+            val (fromDb, frozen, old) = io.submit<Triple<Snapshot, Boolean, Boolean>> {
                 val dao = db.dao()
                 if (dao.meta("lists_live") != "1") {
+                    // An empty database on a phone where it was the only source: the file was lost or damaged
+                    // (Android then starts a new one). The settings store's old copy is all there is; it is used,
+                    // and marked, so it is never sent online over the newer lists there (2.178).
+                    val lost = p.getBoolean(DB_ONLY, false)
                     DbMove.copy(db, fromStore, version(c))
                     dao.putMeta(MetaRow("lists_live", "1"))
+                    if (lost) dao.putMeta(MetaRow(OLD_COPY, "1"))
                 }
-                read(dao) to (dao.meta("store_frozen") == "1")
+                Triple(read(dao), dao.meta("store_frozen") == "1", dao.meta(OLD_COPY) == "1")
             }.get()
             if (frozen) {
                 // The database is the only source (S2.5): the settings store holds an old copy, never compared.
@@ -87,8 +104,13 @@ object ListStore {
             }
             data!!.lists.forEach { lists[it.id] = it }
             live = true
+            stale = old
+            if (old) Crash.report(IllegalStateException("The database was lost; the lists are the settings store's OLD copy (nothing is sent online)"))
+            // Remembered outside the database: from now on the settings store's copy is an old one.
+            if (!p.getBoolean(DB_ONLY, false)) p.edit().putBoolean(DB_ONLY, true).apply()
         } catch (e: Throwable) {
-            Crash.report(IllegalStateException("Reading from the database failed; using the settings store", e))
+            stale = p.getBoolean(DB_ONLY, false)
+            Crash.report(IllegalStateException("Reading from the database failed; using the settings store" + if (stale) " (an OLD copy: nothing is sent online)" else "", e))
             lists.clear(); data = null; inDb = null
             live = false
         }
@@ -216,6 +238,8 @@ object ListStore {
      */
     fun forImport(c: Context) {
         reset()
+        // The file's data goes into the settings store, which is then the newest copy again.
+        prefs(c).edit().remove(DB_ONLY).apply()
         try {
             io.submit {
                 WishlistDb.get(c).let { db -> db.runInTransaction { db.dao().clearData(); db.dao().clearMeta() } }
@@ -245,6 +269,6 @@ object ListStore {
     @Synchronized
     internal fun reset() {
         source = null; building.set(false); latest = null
-        started = false; live = false; matched = null; lists.clear(); data = null; inDb = null; written = DbDiff.Written(0, 0); app = null
+        started = false; live = false; stale = false; matched = null; lists.clear(); data = null; inDb = null; written = DbDiff.Written(0, 0); app = null
     }
 }

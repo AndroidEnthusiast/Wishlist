@@ -54,6 +54,30 @@ class ListStoreTest {
         assertEquals(listOf("Teapot", "Lamp"), titles())
     }
 
+    @Test fun aLostDatabaseNeverSendsTheOldCopyOnline() {
+        // 2.178: the database was the only source, then its file is damaged. Whatever Android does with it (refuse it,
+        // or start an empty one), the lists that come back are the settings store's old copy: marked, never sent online.
+        prefs.edit().clear().putString("wishes", arr(w(1, "Teapot"))).putString("cats", "Home").commit()
+        start()
+        assertTrue(ListStore.live)
+        assertTrue(!ListStore.stale)
+        ListStore.reset(); WishlistDb.reset()
+        val f = c.getDatabasePath("wishlist.db")
+        java.io.File(f.path + "-wal").delete(); java.io.File(f.path + "-shm").delete()
+        f.writeBytes(ByteArray(8192) { 7 })
+        ListStore.start(c)
+        assertTrue("an old copy is marked", ListStore.stale)
+        // And it stays marked at the next start.
+        ListStore.reset(); WishlistDb.reset()
+        ListStore.start(c)
+        assertTrue("still marked after a restart", ListStore.stale)
+        // An Import brings a newer copy: the mark goes.
+        ListStore.forImport(c)
+        WishlistDb.reset()
+        ListStore.start(c)
+        assertTrue(!ListStore.stale)
+    }
+
     @Test fun afterwardsTheDatabaseIsTheOnlySource() {
         prefs.edit().clear().putString("wishes", arr(w(1, "Teapot"))).putString("cats", "Home").commit()
         start()

@@ -66,7 +66,31 @@ jobs:
           gh release edit latest --draft=false --latest || true
           test "$(gh release view latest --json isDraft --jq .isDraft)" = "false"
 
+  # The checks of the web pages and the helper functions (tests/run-all.sh), on GitHub too (owner, 10 November 2026):
+  # the web pages are only published when they pass, so a broken page can't go live because a session skipped them.
+  # A suite that fails is tried once more (one browser check fails now and then without a cause). The three suites
+  # that need a PostgreSQL say SKIPPED here, as they do without WL_PG anywhere (tests/README.md).
+  web-checks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Get the test tools
+        working-directory: tests
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Check the web pages and the helper functions
+        working-directory: tests
+        run: |
+          bash run-all.sh || { echo "::warning::A web check failed; trying all of them once more."; bash run-all.sh; }
+
   pages:
+    needs: web-checks
     runs-on: ubuntu-latest
     permissions:
       pages: write

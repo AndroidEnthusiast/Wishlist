@@ -216,3 +216,8 @@ Kept as they are (short enough or needed): “That’s your own list. Friends re
 | D10 | Draw check (organiser) | ✓ Everyone has someone ✓ Nobody has themselves ✓ All rules kept · “3 of 4 have opened their name” · “Add to the draw”: Everyone has seen their name, so one person gets Dana instead. They’ll be told. |
 | D11 | Notifications | Names are drawn in “…” · Your name changed in “…” · Your Secret Santa wrote · 7 days to “…” 🎄 Got something for Ben yet? · Today is the exchange! 🎄 |
 | D12 | Wishlist of your giftee | Label “Over budget” |
+
+## Price page, 2.178 (10 November 2026; new texts, not yet reviewed by the owner)
+| # | Where | Text |
+|---|---|---|
+| P1 | A wish’s price page, grey line under the price alert | Price checked less than an hour ago. · Price checked 1 hour ago. · Price checked 5 hours ago. · Price checked 3 days ago. · This shop’s price couldn’t be read since 3 November. |

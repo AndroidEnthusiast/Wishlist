@@ -130,6 +130,10 @@ fun WishDialog(
         onClose()
     }
 
+    // The price as the page gave it (2.178): another price at Save was typed by the person, and the first price check
+    // leaves a typed price alone (PriceWatch).
+    var readPrice by remember { mutableStateOf<String?>(null) }
+
     // Fills the form from what was read from a page (a link, or the shop page on screen in Find a gift).
     fun useMeta(m: Meta?) {
         if (m == null) {
@@ -141,7 +145,7 @@ fun WishDialog(
             title = m.title; cur = m.currency
             // A picture you chose yourself is kept. Otherwise the image comes from the link.
             if (!ImageStore.isLocal(image)) image = if (m.image.isNotEmpty() || edit == null) m.image else image
-            if (m.price != null || edit == null) price = m.price?.let { "%.2f".format(Locale.US, it) }.orEmpty()
+            if (m.price != null || edit == null) { price = m.price?.let { "%.2f".format(Locale.US, it) }.orEmpty(); readPrice = price }
             if (m.price == null) err = tr("No price found on that page. Add it to track price drops.")
         }
     }
@@ -330,11 +334,16 @@ fun WishDialog(
                     // A picture that was replaced or removed in this dialog is no longer needed.
                     if (edit != null && edit.image != image) ImageStore.delete(ctx, edit.image)
                     picked = ""
+                    // Your own wishlists only: collab wishlists share one price between everyone's phones.
+                    val typedPrice = p != null && Shared.active == null && u.isNotBlank() && price != readPrice &&
+                        (edit == null || !PriceWatch.same(p, edit.price))
                     if (edit == null) {
+                        val newId = System.currentTimeMillis()
+                        if (typedPrice && p != null) PriceWatch.noteTyped(ctx, newId, u, p)
                         Repo.add(
                             ctx,
                             Wish(
-                                System.currentTimeMillis(), u, title.trim(), desc, image, p, null, cur, cat,
+                                newId, u, title.trim(), desc, image, p, null, cur, cat,
                                 star = star && Shared.active == null, note = note.trim(), size = sizeSel, by = Repo.authorName,
                                 priv = priv && Shared.active == null, qty = qty, exact = exact
                             )
@@ -342,6 +351,7 @@ fun WishDialog(
                         if (chooseList) Repo.setLastSaveTo(ctx, Shared.active ?: MyLists.saveKey(Repo.openMine, false))
                         if (fromShop) ShopNav.saved(Repo.listName)
                     } else {
+                        if (typedPrice && p != null) PriceWatch.noteTyped(ctx, edit.id, u, p)
                         Repo.replace(
                             ctx,
                             edit.copy(

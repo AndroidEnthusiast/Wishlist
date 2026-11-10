@@ -64,6 +64,11 @@
     return s.length >= suffix.length && s.slice(s.length - suffix.length) === suffix;
   }
 
+  // True when the text itself says which currency it is: a symbol or a three-letter code. Same as Fetch.kt.
+  function namesCurrency(text) {
+    return /[€£$₹¥]|\b(EUR|GBP|USD|CAD|AUD|CHF|SEK|NOK|DKK|PLN|JPY|INR)\b/.test(String(text || ""));
+  }
+
   function currencyOf(text, host) {
     text = String(text || ""); host = String(host || "");
     if (text.indexOf("£") >= 0 || endsWith(host, ".co.uk")) return "GBP";
@@ -300,28 +305,33 @@
     }
 
     var ld = ldProduct(d, base || "");
-    var price = toNum(m("product:price:amount", "og:price:amount", "price"));
+    // An error page (404 "not found", 410, 500…) is not the product (2.178): the prices on it belong to the shop's
+    // suggestions, so none is read. The name and picture are still read, as before. Same as Fetch.kt.
+    var gone = status >= 400;
+    var price = gone ? null : toNum(m("product:price:amount", "og:price:amount", "price"));
     var cur = m("product:price:currency", "og:price:currency", "priceCurrency");
-    if (price === null && isAmazon) {
+    // Did the page name the currency itself (its product data, or a symbol next to the price)? See Meta.currencySure.
+    var sure = !!cur;
+    if (price === null && isAmazon && !gone) {
       for (var i = 0; i < AMAZON_PRICE.length; i++) {
         var pe = d.querySelector(AMAZON_PRICE[i]);
         var t = pe ? pe.textContent : "";
         var n = toNum(t);
-        if (n !== null && n > 0) { price = n; cur = currencyOf(t, host); break; }
+        if (n !== null && n > 0) { price = n; cur = currencyOf(t, host); sure = namesCurrency(t); break; }
       }
     }
     // The product's own data (2.145): its own price, not the first "price" anywhere in the page.
-    if (price === null && ld && ld.price !== null) {
+    if (price === null && ld && ld.price !== null && !gone) {
       price = ld.price;
-      if (!cur) cur = ld.currency;
+      if (!cur) { cur = ld.currency; sure = !!cur; }
     }
-    if (price === null) {
+    if (price === null && !gone) {
       var ips = d.querySelectorAll("[itemprop=price]");
       for (var q = 0; q < ips.length && price === null; q++) {
         if (!foreign(ips[q], base)) price = toNum(ips[q].getAttribute("content") || ips[q].textContent);
       }
     }
-    if (price === null && !ld) {
+    if (price === null && !ld && !gone) {
       // Product data that isn't valid JSON: the first "price" in it, as before 2.145.
       var raw = Array.prototype.map.call(d.querySelectorAll('script[type="application/ld+json"]'),
         function (s) { return s.textContent; }).join(" ");
@@ -330,14 +340,15 @@
       if (price !== null && !cur) {
         var cm = /"priceCurrency"\s*:\s*"([A-Z]{3})"/.exec(raw);
         cur = cm ? cm[1] : "";
+        sure = !!cur;
       }
     }
-    if (price === null) {
+    if (price === null && !gone) {
       // The price the page shows (2.145; the owner chose this last try knowing it can now and then pick a wrong one).
       var sp = shownPrice(d, host, base);
-      if (sp) { price = sp.price; if (!cur) cur = sp.currency; }
+      if (sp) { price = sp.price; if (!cur) { cur = sp.currency; sure = true; } }
     }
-    if (price === null && d.body) {
+    if (price === null && d.body && !gone) {
       // Last resort for sites that only print the price as text.
       var copy = d.body.cloneNode(true);
       Array.prototype.forEach.call(copy.querySelectorAll("script, style, noscript, template"), function (x) { x.remove(); });
@@ -345,12 +356,12 @@
       var hit = PRICE_WORD.exec(text);
       if (hit) {
         price = toNum(hit[3]);
-        if (price !== null) cur = currencyOf(hit[2], host);
+        if (price !== null) { cur = currencyOf(hit[2], host); sure = true; }
       } else if (String(host).indexOf("funda.") >= 0) {
         var e = EURO_THOUSANDS.exec(text);
         if (e) {
           price = toNum(e[1]);
-          if (price !== null) cur = "EUR";
+          if (price !== null) { cur = "EUR"; sure = true; }
         }
       }
     }
@@ -362,7 +373,8 @@
     return {
       title: cleanTitle(title, host).slice(0, 120),
       desc: m("og:description", "twitter:description", "description").slice(0, 200),
-      image: image, price: price, currency: cur || currencyOf("", host), blocked: false, product: product
+      image: image, price: price, currency: cur || currencyOf("", host), blocked: false, product: product,
+      currencySure: sure && price !== null
     };
   }
 

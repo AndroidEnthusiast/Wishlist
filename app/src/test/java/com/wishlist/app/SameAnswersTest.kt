@@ -31,6 +31,20 @@ class SameAnswersTest {
         for (r in rows("currency")) assertEquals("${r.getString(0)} on ${r.getString(1)}", r.getString(2), currencyOf(r.getString(0), r.getString(1)))
     }
 
+    /** Whole product pages (2.178): the same page, the same price, currency and "the page named the currency itself". */
+    @Test fun pages() {
+        val a = cases.getJSONArray("pages")
+        for (i in 0 until a.length()) {
+            val pg = a.getJSONObject(i)
+            val name = pg.getString("name")
+            val got = parsePage(org.jsoup.Jsoup.parse(pg.getString("html"), pg.getString("url")), pg.getString("host"), pg.getInt("status"))
+            assertEquals("$name: price", if (pg.isNull("price")) null else pg.getDouble("price"), got?.price)
+            if (pg.has("currency")) assertEquals("$name: currency", pg.getString("currency"), got?.currency)
+            if (pg.has("sure")) assertEquals("$name: sure", pg.getBoolean("sure"), got?.currencySure)
+            if (pg.has("product")) assertEquals("$name: product", pg.getBoolean("product"), got?.product)
+        }
+    }
+
     @Test fun occasions() {
         for (r in rows("occasion")) {
             val o = Occasion.fromJson(r.getJSONObject(0))

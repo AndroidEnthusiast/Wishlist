@@ -1,37 +1,437 @@
 {
-  "_about": "One list of questions, answered by both the app (app/src/test/.../SameAnswersTest.kt, plain JUnit) and the web pages (tests/shared/test.js). The app and web/ must give the same answer to each: add a case here when a rule changes in Fetch.kt/parse.js or Occasion.kt/occasion.js.",
-  "toNum": [
-    ["725.000", 725000], ["€ 725.000 k.k.", 725000], ["1.299.000", 1299000], ["$1,299.00", 1299],
-    ["1.299,00 €", 1299], ["12,50", 12.5], ["19.99", 19.99], ["19.99,", 19.99], ["725000.00", 725000],
-    ["", null], ["abc", null], ["1.2.3", null], ["1,234,567.89", 1234567.89], ["1,5", 15], ["1,234", 1234],
-    ["EUR 49,95", 49.95], ["£1,000", 1000], ["0,99", 0.99]
+ "_about": "One list of questions, answered by both the app (app/src/test/.../SameAnswersTest.kt, plain JUnit) and the web pages (tests/shared/test.js). The app and web/ must give the same answer to each: add a case here when a rule changes in Fetch.kt/parse.js or Occasion.kt/occasion.js. \"pages\" are whole product pages (2.178): the same page must give the same price, currency and 'did the page name the currency itself' (sure) in both readers; a shop that reads badly gets its page added here (ROADMAP S0.3).",
+ "toNum": [
+  [
+   "725.000",
+   725000
   ],
-  "currency": [
-    ["£12", "shop.example", "GBP"], ["12", "shop.co.uk", "GBP"], ["€ 19,99", "nike.com", "EUR"], ["19,99", "bol.nl", "EUR"],
-    ["$19.99", "nike.com", "USD"], ["₹ 999", "shop.example", "INR"], ["¥1200", "shop.example", "JPY"],
-    ["19.99", "shop.ca", "CAD"], ["19.99", "shop.com.au", "AUD"], ["19.99", "shop.com.mx", "MXN"]
+  [
+   "€ 725.000 k.k.",
+   725000
   ],
-  "occasion": [
-    [{"k": "christmas"}, "2026-11-05", "Christmas · in 7 weeks"],
-    [{"k": "sinterklaas"}, "2026-12-05", "Sinterklaas · today"],
-    [{"k": "christmas"}, "2026-12-26", "Christmas · in 12 months"],
-    [{"k": "mother"}, "2027-05-01", "Mother’s Day · in 8 days"],
-    [{"k": "father"}, "2026-06-21", "Father’s Day · today"],
-    [{"k": "valentine"}, "2026-02-13", "Valentine’s Day · tomorrow"],
-    [{"k": "birthday", "d": "07-14"}, "2026-07-15", "Birthday · in 12 months"],
-    [{"k": "birthday", "d": "02-29"}, "2027-02-27", "Birthday · tomorrow"],
-    [{"k": "birthday", "d": "02-29"}, "2028-02-29", "Birthday · today"],
-    [{"k": "anniversary", "d": "03-26"}, "2027-03-05", "Anniversary · in 3 weeks"],
-    [{"k": "birthday", "d": "11-18"}, "2026-11-08", "Birthday · in 10 days"],
-    [{"k": "birthday", "d": "11-21"}, "2026-11-08", "Birthday · in 13 days"],
-    [{"k": "birthday", "d": "11-22"}, "2026-11-08", "Birthday · in 2 weeks"],
-    [{"k": "birthday", "d": "01-09"}, "2026-11-08", "Birthday · in 9 weeks"],
-    [{"k": "birthday", "d": "01-10"}, "2026-11-08", "Birthday · in 2 months"],
-    [{"k": "own", "n": "Party", "d": "2026-11-04"}, "2026-11-05", ""],
-    [{"k": "own", "n": "Party", "d": "2026-11-05"}, "2026-11-05", "Party · today"],
-    [{"k": "own", "d": "2026-11-06"}, "2026-11-05", "Occasion · tomorrow"],
-    [{"k": "zzz"}, "2026-01-01", ""],
-    [{"k": "birthday", "d": "13-40"}, "2026-01-01", ""],
-    [{"k": "birthday"}, "2026-01-01", ""]
+  [
+   "1.299.000",
+   1299000
+  ],
+  [
+   "$1,299.00",
+   1299
+  ],
+  [
+   "1.299,00 €",
+   1299
+  ],
+  [
+   "12,50",
+   12.5
+  ],
+  [
+   "19.99",
+   19.99
+  ],
+  [
+   "19.99,",
+   19.99
+  ],
+  [
+   "725000.00",
+   725000
+  ],
+  [
+   "",
+   null
+  ],
+  [
+   "abc",
+   null
+  ],
+  [
+   "1.2.3",
+   null
+  ],
+  [
+   "1,234,567.89",
+   1234567.89
+  ],
+  [
+   "1,5",
+   15
+  ],
+  [
+   "1,234",
+   1234
+  ],
+  [
+   "EUR 49,95",
+   49.95
+  ],
+  [
+   "£1,000",
+   1000
+  ],
+  [
+   "0,99",
+   0.99
   ]
+ ],
+ "currency": [
+  [
+   "£12",
+   "shop.example",
+   "GBP"
+  ],
+  [
+   "12",
+   "shop.co.uk",
+   "GBP"
+  ],
+  [
+   "€ 19,99",
+   "nike.com",
+   "EUR"
+  ],
+  [
+   "19,99",
+   "bol.nl",
+   "EUR"
+  ],
+  [
+   "$19.99",
+   "nike.com",
+   "USD"
+  ],
+  [
+   "₹ 999",
+   "shop.example",
+   "INR"
+  ],
+  [
+   "¥1200",
+   "shop.example",
+   "JPY"
+  ],
+  [
+   "19.99",
+   "shop.ca",
+   "CAD"
+  ],
+  [
+   "19.99",
+   "shop.com.au",
+   "AUD"
+  ],
+  [
+   "19.99",
+   "shop.com.mx",
+   "MXN"
+  ]
+ ],
+ "occasion": [
+  [
+   {
+    "k": "christmas"
+   },
+   "2026-11-05",
+   "Christmas · in 7 weeks"
+  ],
+  [
+   {
+    "k": "sinterklaas"
+   },
+   "2026-12-05",
+   "Sinterklaas · today"
+  ],
+  [
+   {
+    "k": "christmas"
+   },
+   "2026-12-26",
+   "Christmas · in 12 months"
+  ],
+  [
+   {
+    "k": "mother"
+   },
+   "2027-05-01",
+   "Mother’s Day · in 8 days"
+  ],
+  [
+   {
+    "k": "father"
+   },
+   "2026-06-21",
+   "Father’s Day · today"
+  ],
+  [
+   {
+    "k": "valentine"
+   },
+   "2026-02-13",
+   "Valentine’s Day · tomorrow"
+  ],
+  [
+   {
+    "k": "birthday",
+    "d": "07-14"
+   },
+   "2026-07-15",
+   "Birthday · in 12 months"
+  ],
+  [
+   {
+    "k": "birthday",
+    "d": "02-29"
+   },
+   "2027-02-27",
+   "Birthday · tomorrow"
+  ],
+  [
+   {
+    "k": "birthday",
+    "d": "02-29"
+   },
+   "2028-02-29",
+   "Birthday · today"
+  ],
+  [
+   {
+    "k": "anniversary",
+    "d": "03-26"
+   },
+   "2027-03-05",
+   "Anniversary · in 3 weeks"
+  ],
+  [
+   {
+    "k": "birthday",
+    "d": "11-18"
+   },
+   "2026-11-08",
+   "Birthday · in 10 days"
+  ],
+  [
+   {
+    "k": "birthday",
+    "d": "11-21"
+   },
+   "2026-11-08",
+   "Birthday · in 13 days"
+  ],
+  [
+   {
+    "k": "birthday",
+    "d": "11-22"
+   },
+   "2026-11-08",
+   "Birthday · in 2 weeks"
+  ],
+  [
+   {
+    "k": "birthday",
+    "d": "01-09"
+   },
+   "2026-11-08",
+   "Birthday · in 9 weeks"
+  ],
+  [
+   {
+    "k": "birthday",
+    "d": "01-10"
+   },
+   "2026-11-08",
+   "Birthday · in 2 months"
+  ],
+  [
+   {
+    "k": "own",
+    "n": "Party",
+    "d": "2026-11-04"
+   },
+   "2026-11-05",
+   ""
+  ],
+  [
+   {
+    "k": "own",
+    "n": "Party",
+    "d": "2026-11-05"
+   },
+   "2026-11-05",
+   "Party · today"
+  ],
+  [
+   {
+    "k": "own",
+    "d": "2026-11-06"
+   },
+   "2026-11-05",
+   "Occasion · tomorrow"
+  ],
+  [
+   {
+    "k": "zzz"
+   },
+   "2026-01-01",
+   ""
+  ],
+  [
+   {
+    "k": "birthday",
+    "d": "13-40"
+   },
+   "2026-01-01",
+   ""
+  ],
+  [
+   {
+    "k": "birthday"
+   },
+   "2026-01-01",
+   ""
+  ]
+ ],
+ "pages": [
+  {
+   "name": "price in the page's own tags, with its currency",
+   "html": "<html><head><title>Teapot</title><meta property=\"product:price:amount\" content=\"34.95\"><meta property=\"product:price:currency\" content=\"EUR\"></head><body></body></html>",
+   "host": "shop.example",
+   "status": 200,
+   "url": "https://shop.example/p/1",
+   "price": 34.95,
+   "currency": "EUR",
+   "sure": true,
+   "product": true
+  },
+  {
+   "name": "product data with its currency, a related product is skipped",
+   "html": "<html><head><title>Gift set</title><script type=\"application/ld+json\">{\"@type\": \"ItemList\", \"itemListElement\": [{\"@type\": \"Product\", \"name\": \"Other\", \"offers\": {\"price\": \"9.99\", \"priceCurrency\": \"EUR\"}}]}</script><script type=\"application/ld+json\">{\"@type\": \"Product\", \"name\": \"Gift set\", \"offers\": {\"@type\": \"Offer\", \"price\": \"39.90\", \"priceCurrency\": \"EUR\"}}</script></head><body></body></html>",
+   "host": "www.rituals.com",
+   "status": 200,
+   "url": "https://www.rituals.com/p/1",
+   "price": 39.9,
+   "currency": "EUR",
+   "sure": true,
+   "product": true
+  },
+  {
+   "name": "product data without a currency: the currency is a guess",
+   "html": "<html><head><title>Mug</title><script type=\"application/ld+json\">{\"@type\": \"Product\", \"name\": \"Mug\", \"offers\": {\"price\": 12.5}}</script></head><body></body></html>",
+   "host": "shop.nl",
+   "status": 200,
+   "url": "https://shop.nl/p/1",
+   "price": 12.5,
+   "currency": "EUR",
+   "sure": false,
+   "product": true
+  },
+  {
+   "name": "a 'not found' page: the suggestions' prices are not this product's",
+   "html": "<html><head><title>Page not found</title><meta property=\"product:price:amount\" content=\"19.99\"></head><body><div class=\"price\">€ 19,99</div><p>Price: €19.99</p></body></html>",
+   "host": "shop.example",
+   "status": 404,
+   "url": "https://shop.example/p/1",
+   "price": null,
+   "sure": false
+  },
+  {
+   "name": "a product that is gone (410) with product data left on the page",
+   "html": "<html><head><title>No longer available</title><script type=\"application/ld+json\">{\"@type\": \"Product\", \"name\": \"Old\", \"offers\": {\"price\": \"59.00\", \"priceCurrency\": \"EUR\"}}</script></head><body><span itemprop=\"price\" content=\"59.00\"></span></body></html>",
+   "host": "shop.example",
+   "status": 410,
+   "url": "https://shop.example/p/1",
+   "price": null,
+   "sure": false
+  },
+  {
+   "name": "the price shown on the page, next to its symbol",
+   "html": "<html><head><title>Lamp</title></head><body><div class=\"product-price\">€ 39,90</div></body></html>",
+   "host": "shop.com",
+   "status": 200,
+   "url": "https://shop.com/p/1",
+   "price": 39.9,
+   "currency": "EUR",
+   "sure": true,
+   "product": true
+  },
+  {
+   "name": "an old (crossed-out) price is never the price",
+   "html": "<html><head><title>Lamp</title></head><body><div class=\"price-old\">€ 59,90</div><div class=\"price-now\">€ 39,90</div></body></html>",
+   "host": "shop.com",
+   "status": 200,
+   "url": "https://shop.com/p/1",
+   "price": 39.9,
+   "currency": "EUR",
+   "sure": true
+  },
+  {
+   "name": "a sponsored tile above the product is skipped",
+   "html": "<html><head><title>Jacket</title></head><body><div data-testid=\"sponsored-tile\"><span class=\"price\">€ 159,95</span></div><div class=\"pdp\"><span class=\"price\">€ 89,95</span></div></body></html>",
+   "host": "www.zalando.nl",
+   "status": 200,
+   "url": "https://www.zalando.nl/p/1",
+   "price": 89.95,
+   "currency": "EUR",
+   "sure": true
+  },
+  {
+   "name": "a price inside a link to another product is skipped",
+   "html": "<html><head><title>Jacket</title></head><body><a href=\"/p/2\"><span class=\"price\">€ 10,00</span></a><span class=\"price\">€ 20,00</span></body></html>",
+   "host": "shop.example",
+   "status": 200,
+   "url": "https://shop.example/p/1",
+   "price": 20,
+   "currency": "EUR",
+   "sure": true
+  },
+  {
+   "name": "Amazon: the price to pay, with its symbol",
+   "html": "<html><head><title>Amazon.de: Gadget : Elektronik</title></head><body><div id=\"corePrice_feature_div\"><span class=\"a-price a-text-price\"><span class=\"a-offscreen\">1.499,00 €</span></span><span class=\"a-price priceToPay\"><span class=\"a-offscreen\">1.299,00 €</span></span></div></body></html>",
+   "host": "www.amazon.de",
+   "status": 200,
+   "url": "https://www.amazon.de/dp/B0ABCDEFGH",
+   "price": 1299,
+   "currency": "EUR",
+   "sure": true
+  },
+  {
+   "name": "sizes and colours: the variant of this page",
+   "html": "<html><head><title>Jacket</title><script type=\"application/ld+json\">{\"@type\": \"ProductGroup\", \"name\": \"Jacket\", \"hasVariant\": [{\"@type\": \"Product\", \"url\": \"https://shop.example/jacket?size=s\", \"offers\": {\"price\": \"100\", \"priceCurrency\": \"EUR\"}}, {\"@type\": \"Product\", \"url\": \"https://shop.example/jacket?size=m\", \"offers\": {\"price\": \"110\", \"priceCurrency\": \"EUR\"}}]}</script></head><body></body></html>",
+   "host": "shop.example",
+   "status": 200,
+   "url": "https://shop.example/jacket?size=m",
+   "price": 110,
+   "currency": "EUR",
+   "sure": true
+  },
+  {
+   "name": "several sellers: the lowest price (AggregateOffer)",
+   "html": "<html><head><title>Book</title><script type=\"application/ld+json\">{\"@type\": \"Product\", \"name\": \"Book\", \"offers\": {\"@type\": \"AggregateOffer\", \"lowPrice\": \"12.50\", \"highPrice\": \"20.00\", \"priceCurrency\": \"GBP\"}}</script></head><body></body></html>",
+   "host": "shop.co.uk",
+   "status": 200,
+   "url": "https://shop.co.uk/p/1",
+   "price": 12.5,
+   "currency": "GBP",
+   "sure": true
+  },
+  {
+   "name": "a price in words with its symbol",
+   "html": "<html><head><title>Mug</title></head><body><p>Price: $19.99</p></body></html>",
+   "host": "shop.example",
+   "status": 200,
+   "url": "https://shop.example/p/1",
+   "price": 19.99,
+   "currency": "USD",
+   "sure": true
+  },
+  {
+   "name": "a page without any price",
+   "html": "<html><head><title>Mug</title></head><body><p>Nice mug</p></body></html>",
+   "host": "shop.example",
+   "status": 200,
+   "url": "https://shop.example/p/1",
+   "price": null,
+   "sure": false,
+   "product": false
+  }
+ ]
 }

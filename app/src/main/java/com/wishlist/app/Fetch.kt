@@ -17,7 +17,10 @@ data class Meta(
     val blocked: Boolean = false,
     // The page is a product page (2.145): the shop's product data, og:type product, product microdata, or a price.
     // A product without a readable price still counts; its price is left empty to fill in.
-    val product: Boolean = false
+    val product: Boolean = false,
+    // The page itself named the currency (its product data, or a symbol next to the price), so [currency] isn't a
+    // guess from the web address or the phone's country (2.178): a price check never compares across currencies.
+    val currencySure: Boolean = false
 )
 
 /** What the shop's own product data (JSON-LD, schema.org) says: the product itself, never "related" products. */
@@ -187,6 +190,24 @@ internal fun String.toNum(): Double? {
     return n.toDoubleOrNull()
 }
 
+/** True when [text] itself says which currency it is: a symbol or a three-letter code ("€ 12", "12 EUR"). */
+internal fun namesCurrency(text: String): Boolean = Regex("[€£\$₹¥]|\\b(EUR|GBP|USD|CAD|AUD|CHF|SEK|NOK|DKK|PLN|JPY|INR)\\b").containsMatchIn(text)
+
+/**
+ * The languages a shop is asked for (2.178): the phone's own first, like its browser sends, then English. Before, every
+ * request said "American English", so a shop could answer with its American page and prices while you saved the wish
+ * from its Dutch one. "nl-NL,nl;q=0.9,en;q=0.8".
+ */
+internal fun acceptLanguage(l: java.util.Locale = java.util.Locale.getDefault()): String {
+    val lang = l.language.lowercase().takeIf { Regex("[a-z]{2,3}").matches(it) } ?: return "en-US,en;q=0.9"
+    val country = l.country.uppercase().takeIf { Regex("[A-Z]{2}").matches(it) }
+    val parts = ArrayList<String>()
+    if (country != null) parts.add("$lang-$country")
+    parts.add(if (parts.isEmpty()) lang else "$lang;q=0.9")
+    if (lang != "en") parts.add("en;q=0.8")
+    return parts.joinToString(",")
+}
+
 internal fun currencyOf(text: String, host: String): String = when {
     text.contains("£") || host.endsWith(".co.uk") -> "GBP"
     text.contains("€") || host.endsWith(".de") || host.endsWith(".fr") ||
@@ -323,46 +344,52 @@ internal fun parsePage(d: Document, host: String, status: Int): Meta? {
     }
 
     val ld = ldProduct(d, d.location())
-    var price = m("product:price:amount", "og:price:amount", "price").toNum()
+    // An error page (404 "not found", 410, 500…) is not the product (2.178): the prices on it belong to the shop's
+    // suggestions, so none is read. The name and picture are still read, as before.
+    val gone = status >= 400
+    var price = if (gone) null else m("product:price:amount", "og:price:amount", "price").toNum()
     var cur = m("product:price:currency", "og:price:currency", "priceCurrency")
-    if (price == null && isAmazon) {
+    // Did the page name the currency itself (see Meta.currencySure)?
+    var sure = cur.isNotEmpty()
+    if (price == null && isAmazon && !gone) {
         for (sel in AMAZON_PRICE) {
             val t = d.selectFirst(sel)?.text().orEmpty()
             val n = t.toNum()
-            if (n != null && n > 0) { price = n; cur = currencyOf(t, host); break }
+            if (n != null && n > 0) { price = n; cur = currencyOf(t, host); sure = namesCurrency(t); break }
         }
     }
     // The product's own data (2.145): its own price, not the first "price" anywhere in the page (that could be a
     // product under "you may also like").
-    if (price == null && ld?.price != null) {
+    if (price == null && ld?.price != null && !gone) {
         price = ld.price
-        if (cur.isEmpty()) cur = ld.currency
+        if (cur.isEmpty()) { cur = ld.currency; sure = cur.isNotEmpty() }
     }
-    if (price == null) {
+    if (price == null && !gone) {
         price = d.select("[itemprop=price]").firstOrNull { !foreign(it, d.location()) }?.let { it.attr("content").ifEmpty { it.text() } }?.toNum()
     }
-    if (price == null && ld == null) {
+    if (price == null && ld == null && !gone) {
         // Product data that isn't valid JSON: the first "price" in it, as before 2.145.
         val raw = d.select("script[type=application/ld+json]").joinToString(" ") { it.data() }
         price = Regex("\"price\"\\s*:\\s*\"?([0-9][0-9.,]*)").find(raw)?.groupValues?.get(1)?.toNum()
-        if (price != null && cur.isEmpty()) cur = Regex("\"priceCurrency\"\\s*:\\s*\"([A-Z]{3})\"").find(raw)?.groupValues?.get(1).orEmpty()
+        if (price != null && cur.isEmpty()) { cur = Regex("\"priceCurrency\"\\s*:\\s*\"([A-Z]{3})\"").find(raw)?.groupValues?.get(1).orEmpty(); sure = cur.isNotEmpty() }
     }
-    if (price == null) {
+    if (price == null && !gone) {
         // The price the page shows (2.145; the owner chose this last try knowing it can now and then pick a wrong one).
-        shownPrice(d, host)?.let { (n, c) -> price = n; if (cur.isEmpty()) cur = c }
+        // It always stands next to a currency symbol or code.
+        shownPrice(d, host)?.let { (n, c) -> price = n; if (cur.isEmpty()) { cur = c; sure = true } }
     }
-    if (price == null) {
+    if (price == null && !gone) {
         // Last resort for sites that only print the price as text.
         val text = d.body().text()
         val hit = PRICE_WORD.find(text)
         if (hit != null) {
             price = hit.groupValues[3].toNum()
-            if (price != null) cur = currencyOf(hit.groupValues[2], host)
+            if (price != null) { cur = currencyOf(hit.groupValues[2], host); sure = true }
         } else if (host.contains("funda.")) {
             val e = EURO_THOUSANDS.find(text)
             if (e != null) {
                 price = e.groupValues[1].toNum()
-                if (price != null) cur = "EUR"
+                if (price != null) { cur = "EUR"; sure = true }
             }
         }
     }
@@ -374,7 +401,7 @@ internal fun parsePage(d: Document, host: String, status: Int): Meta? {
     else Meta(
         cleanTitle(title, host).take(120),
         m("og:description", "twitter:description", "description").take(200),
-        image, price, cur.ifEmpty { currencyOf("", host) }, product = product
+        image, price, cur.ifEmpty { currencyOf("", host) }, product = product, currencySure = sure && price != null
     )
 }
 
@@ -389,7 +416,7 @@ suspend fun fetchMeta(url: String, ctx: Context? = null, browser: Boolean = true
         try {
             val res = Jsoup.connect(url).userAgent(UA)
                 .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-                .header("Accept-Language", "en-US,en;q=0.9")
+                .header("Accept-Language", acceptLanguage())
                 .timeout(15000).followRedirects(true).ignoreHttpErrors(true).execute()
             first = parsePage(res.parse(), res.url().host.orEmpty(), res.statusCode())
         } catch (e: Exception) {

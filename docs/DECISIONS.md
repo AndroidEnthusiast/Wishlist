@@ -476,3 +476,29 @@ What the owner has decided, and why. Follow these unless the owner changes their
   The owner doesn't want that built now: "the price changes is a feature we will improve later. As long as price
   change notifications work it's fine." 
 - **No download line during the roadmap** (owner, 8 November 2026): "I don't need to see an app download link. Instead I need your guidance on what to do next." Until the roadmap's stages are done, messages end with the next steps for the owner, not the download link (say it in a line when an update needs installing).
+
+## Second review (owner, 10 November 2026, built in 2.178; the review itself is in `docs/ROADMAP.md`)
+- **A changed price is believed after two readings that agree, in the same check** (owner chose this over waiting for
+  the next scheduled check, which is safer but tells every real drop one check later, and over believing the first
+  reading). When the second reading fails, the first waits for the next check.
+- **The first check of a new, re-linked or hand-edited wish is quiet**: "my typed price stays, read prices fix
+  quietly". A price typed or corrected by hand is never overwritten by that check; a price the app read itself is
+  corrected without a notification or a crossed-out old price. From then on only a change at the shop counts.
+  (Claude, not asked, said to the owner: once the shop's own price changes, a typed price follows it: the wish takes
+  the shop's price and the notification compares it with the typed one. Collab wishlists only get the two readings
+  and the currency rule, because their price is shared between everyone's phones.)
+- **A wish's price page shows one grey line**: "Price checked 2 hours ago", or "This shop’s price couldn’t be read
+  since 3 November." after a day of failed checks. Nothing on the wish cards (owner chose the line only).
+- **Never across currencies, never from an error page** (Claude, part of the fix): a page that names another currency
+  than last time, or a "not found" page, gives no price. Shops are asked in the phone's language.
+- **Google Play: "for sure", but the download is fine for now** (ROADMAP Stage 6). Nothing may be built that makes
+  Play harder; nothing is submitted without the owner.
+- **Privacy page and "Delete my profile and data": yes** (ROADMAP S4.6, S4.7).
+- **GitHub runs the web checks before it publishes the web pages: yes, "as long as Claude can fix the issue"** (the
+  `web-checks` job in `build.yml`). A session that sees it fail fixes it before anything else.
+- **Signing key**: the owner has a 16-character password saved and wasn't sure about the key file (ROADMAP R0; not
+  settled yet).
+- **The Firebase key in `Config.kt` is meant to be public** (checked on 10 November 2026 after a scanner's e-mail: the
+  key can't use Gemini, the project has it switched off). No history rewrite, no new key. The owner restricts the key
+  in Google Cloud Console (ROADMAP R2). E-mails from scanners the owner never signed up for are not acted on; GitHub's
+  own alerts are.

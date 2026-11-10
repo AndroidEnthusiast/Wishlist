@@ -26,5 +26,14 @@ for (const [o, today, want] of cases.occasion) {
   const got = w.occasionLine(o, new w.Date(y, m - 1, d));
   check("occasion " + JSON.stringify(o) + " on " + today + " = " + JSON.stringify(want) + " (got " + JSON.stringify(got) + ")", got === want);
 }
+// Whole product pages (2.178): the same page, the same price, currency and "the page named the currency itself".
+for (const pg of cases.pages) {
+  const d = new w.DOMParser().parseFromString(pg.html, "text/html");
+  const got = w.WLParse.parsePage(d, pg.host, pg.status, pg.url);
+  check("page: " + pg.name + " price = " + pg.price + " (got " + (got && got.price) + ")", !!got && got.price === pg.price);
+  if (got && pg.currency !== undefined) check("page: " + pg.name + " currency = " + pg.currency + " (got " + got.currency + ")", got.currency === pg.currency);
+  if (got && pg.sure !== undefined) check("page: " + pg.name + " sure = " + pg.sure + " (got " + got.currencySure + ")", got.currencySure === pg.sure);
+  if (got && pg.product !== undefined) check("page: " + pg.name + " product = " + pg.product + " (got " + got.product + ")", got.product === pg.product);
+}
 console.log((fails ? fails + " of " : "all ") + n + " shared checks " + (fails ? "FAILED" : "passed"));
 process.exit(fails ? 1 : 0);

@@ -7,6 +7,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.launch
 import androidx.work.WorkerParameters
 
@@ -33,54 +36,108 @@ class PriceWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx,
     }
 }
 
-/** The price check of My wishlist, used by [PriceWorker] and by pulling down on the list. */
+/** The price check of your own wishlists, used by [PriceWorker] and by pulling down on the list. */
 object PriceCheck {
+    /** One check at a time: the background check and a pull down must never tell the same change twice. */
+    private val lock = Mutex()
+
+    /** How long to wait before a page is read a second time (see [PriceWatch], rule 1). The checks set it to 0. */
+    internal var againAfterMs = 2000L
+
+    /** How a shop's page is read; the checks put their own pages here. */
+    internal var reader: suspend (Context, String, Boolean) -> PriceWatch.Reading? = { c, url, browser -> PriceWatch.read(c, url, browser) }
+
     /**
      * Asks every shop for its price now, for every wishlist of your own (open or not). Returns how many prices
-     * dropped (each drop also sends a notification).
+     * dropped (each drop also sends a notification). What is believed, and when, is in [PriceWatch.judge].
      */
-    suspend fun mine(c: Context): Int {
+    suspend fun mine(c: Context): Int = lock.withLock {
         var dropped = 0
+        // A wish copied to several of your lists is one wish (the same id, owner 2.90): read once, told once.
+        val todo = LinkedHashMap<Long, String>()
+        val onLists = HashSet<Long>()
         for (listId in Repo.mineIds.toList()) {
             for (w in Repo.mine(c, listId).wishes) {
-                if (w.got || w.url.isBlank()) continue
+                onLists.add(w.id)
+                if (!w.got && w.url.isNotBlank()) todo.putIfAbsent(w.id, w.url)
+            }
+        }
+        val again = ArrayList<Long>()
+        for (second in listOf(false, true)) {
+            if (second) {
+                if (again.isEmpty()) break
+                delay(againAfterMs)
+            }
+            for (id in if (second) again.toList() else todo.keys.toList()) {
+                val url = todo[id] ?: continue
+                val before = holder(c, id)?.second ?: continue
                 // Items that already have a price may use the slower hidden-browser read; priceless ones are skipped cheaply.
-                val np = fetchMeta(w.url, c, w.price != null)?.price ?: continue
-                // Re-read the wish: it may have been edited (or the list deleted) while the page was loading.
-                if (listId !in Repo.mineIds) break
-                val cw = Repo.mine(c, listId).wishes.firstOrNull { it.id == w.id } ?: continue
-                val cur = cw.price
-                // The first check with the better reader of 2.145 is quiet (ReaderUpgrade, owner's choice).
-                if (ReaderUpgrade.quiet(c, cw.id)) {
-                    ReaderUpgrade.done(c, cw.id)
-                    if (cur != null && (np < cur - 0.005 || np > cur + 0.005)) {
-                        val q = cw.copy(price = np, oldPrice = null)
-                        Repo.updateMine(c, listId) { l -> l.map { if (it.id == q.id) q else it } }
-                        continue
-                    }
+                val r = reader(c, url, before.price != null)
+                // Re-read the wish: it may have been edited (or its list deleted) while the page was loading.
+                val (listId, w) = holder(c, id) ?: continue
+                if (w.url != url || w.got) continue
+                val now = System.currentTimeMillis()
+                val st = PriceWatch.get(c, id)
+                if (r == null) {
+                    // A second reading that fails leaves the first one waiting for the next check.
+                    if (!second) PriceWatch.put(c, PriceWatch.failed(w, st, now))
+                    continue
                 }
-                // A price that went up keeps the old price too, so the wish shows "+12%".
-                val nw = when {
-                    cur == null -> cw.copy(price = np)
-                    np < cur - 0.005 || np > cur + 0.005 -> cw.copy(price = np, oldPrice = cur)
-                    else -> null
-                } ?: continue
-                Repo.updateMine(c, listId) { l -> l.map { if (it.id == nw.id) nw else it } }
-                // Came down to your target price? (see Targets.kt)
-                Targets.check(c, "m:$listId", nw)
-                // A changed price becomes a point in the price history.
-                History.record(c, nw.id, np)
-                // Kept for the Notifications page (drops and rises as switched on in App settings).
-                if (cur != null) Notifications.priceChanged(c, "m:$listId", cw, cur, np)
-                if (cur != null && np < cur - 0.005) {
-                    if (Repo.notifyDrops) Alerts.notifyDrop(c, cw.id.toInt(), cw.label, cur, np, cw.currency, wishId = cw.id)
-                    dropped++
-                } else if (cur != null && np > cur + 0.005) {
-                    if (Repo.notifyRises) Alerts.notifyRise(c, cw.id.toInt(), cw.label, cur, np, cw.currency, wishId = cw.id)
+                val j = PriceWatch.judge(w, st, r, now)
+                when (j.verdict) {
+                    PriceWatch.Verdict.UNREADABLE -> PriceWatch.put(c, PriceWatch.failed(w, st, now))
+                    PriceWatch.Verdict.NOTHING -> PriceWatch.put(c, j.row)
+                    PriceWatch.Verdict.AGAIN -> { PriceWatch.put(c, j.row); if (!second) again.add(id) }
+                    PriceWatch.Verdict.QUIET -> {
+                        val np = j.price ?: continue
+                        change(c, id) { it.copy(price = np, oldPrice = null, currency = j.currency.ifBlank { it.currency }) }
+                        PriceWatch.put(c, j.row)
+                        // A wish that had no price starts its history (and may already be at its price alert).
+                        if (w.price == null) {
+                            Targets.check(c, "m:$listId", w.copy(price = np))
+                            History.record(c, id, np)
+                        }
+                    }
+                    PriceWatch.Verdict.CHANGED -> {
+                        val np = j.price ?: continue
+                        val cur = w.price
+                        // A price that went up keeps the old price too, so the wish shows "+12%".
+                        val nw = w.copy(price = np, oldPrice = cur)
+                        change(c, id) { it.copy(price = np, oldPrice = cur) }
+                        PriceWatch.put(c, j.row)
+                        // Came down to your price alert? (see Targets.kt)
+                        Targets.check(c, "m:$listId", nw)
+                        // A changed price becomes a point in the price history.
+                        History.record(c, id, np)
+                        if (cur == null) continue
+                        // Kept for the Notifications page (drops and rises as switched on in App settings).
+                        Notifications.priceChanged(c, "m:$listId", w, cur, np)
+                        if (np < cur - 0.005) {
+                            if (Repo.notifyDrops) Alerts.notifyDrop(c, id.toInt(), w.label, cur, np, w.currency, wishId = id)
+                            dropped++
+                        } else if (np > cur + 0.005) {
+                            if (Repo.notifyRises) Alerts.notifyRise(c, id.toInt(), w.label, cur, np, w.currency, wishId = id)
+                        }
+                    }
                 }
             }
         }
-        return dropped
+        PriceWatch.prune(c, onLists)
+        dropped
+    }
+
+    /** The first of your lists that holds wish [id], with the wish as it is now. */
+    private fun holder(c: Context, id: Long): Pair<String, Wish>? {
+        for (listId in Repo.mineIds.toList()) Repo.mine(c, listId).wishes.firstOrNull { it.id == id }?.let { return listId to it }
+        return null
+    }
+
+    /** Changes wish [id] on every list of yours that holds it (a copy is the same wish). */
+    private fun change(c: Context, id: Long, f: (Wish) -> Wish) {
+        for (listId in Repo.mineIds.toList()) {
+            if (Repo.mine(c, listId).wishes.none { it.id == id }) continue
+            Repo.updateMine(c, listId) { l -> l.map { if (it.id == id) f(it) else it } }
+        }
     }
 }
 

@@ -39,6 +39,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -172,6 +173,10 @@ fun PriceHistoryDialog(w: Wish, highlight: Boolean = false, showAll: Boolean = t
     val target = Targets.all[w.id]
     val reached = Targets.reached(w)
     val gold = targetGold(LocalLook.current.dark)
+    var checkedLine by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(w.id, w.price) {
+        checkedLine = if (w.url.isBlank()) null else PriceWatch.line(PriceWatch.get(ctx, w.id), System.currentTimeMillis())
+    }
     AlertDialog(
         onDismissRequest = onClose,
         title = { Text(tr("Price history")) },
@@ -188,6 +193,8 @@ fun PriceHistoryDialog(w: Wish, highlight: Boolean = false, showAll: Boolean = t
                 }
                 // Under "Tracking since…": the price alert, gold when the price is at or below it.
                 if (w.price != null) TargetRow(w, reached, gold, highlight)
+                // When the shop was last read, or since when it can't be (owner, 10 November 2026; PriceWatch).
+                if (checkedLine != null) Text(checkedLine!!, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
                 // "All price changes" (owner, 7 November 2026): the overview that was the Price watch tab.
                 if (showAll) Text(
                     tr("All price changes") + " ›", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
