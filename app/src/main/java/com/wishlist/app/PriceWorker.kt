@@ -27,6 +27,8 @@ class PriceWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx,
             }
         }
         Repo.setLastCheck(c, System.currentTimeMillis())
+        // The recovery key's locked copy, when something changed (RecoveryKey.kt, 2.187).
+        try { RecoveryKey.backup(c) } catch (e: Exception) {}
         // Make sure friends see the new prices even if the app is closed right after.
         try {
             Sync.pushNow()

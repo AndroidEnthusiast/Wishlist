@@ -211,7 +211,7 @@ report and block (S4.8). Answers in DECISIONS "Stage 4".*
   left(regexp_replace(query, '\s+', ' ', 'g'), 90) as query from extensions.pg_stat_statements order by total_exec_time
   desc limit 15;`)*
   Indexes checked against the slowest queries (Supabase's query performance page).
-- [ ] S4.5 Identity as decided in D5 (if anonymous accounts: a step-by-step move where every existing owner token and
+- [ ] S4.5 *(Owner, 11 November 2026: a recovery key instead of linking a Google account (DECISIONS "Stage 4"). 2.187: the key and its locked copy (`RecoveryKey.kt`, `supabase-vault.sql`). Next, 2.188: restoring on a new phone, a new key afterwards and the old phone signed out.)* Identity as decided in D5 (if anonymous accounts: a step-by-step move where every existing owner token and
   device keeps working).
 Owner tests: photos still show everywhere (app and web); nothing else changes.
 

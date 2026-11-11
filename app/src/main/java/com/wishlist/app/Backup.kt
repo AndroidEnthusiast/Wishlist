@@ -60,6 +60,22 @@ object Backup {
 
     /** Writes everything to [uri] (a file the person chose). */
     suspend fun export(c: Context, uri: Uri) = withContext(Dispatchers.IO) {
+        val out = c.contentResolver.openOutputStream(uri) ?: throw IllegalStateException("no file")
+        write(c, out, withFiles = true)
+    }
+
+    /**
+     * The backup as bytes, for the recovery key's locked copy (RecoveryKey.kt, 2.187): the same settings and data as an
+     * Export, plus the chat keys (an Export leaves those out, owner's choice; the locked copy brings old chats back),
+     * without picture files (to stay small; pictures that are online come back by themselves).
+     */
+    fun bytesForVault(c: Context): ByteArray {
+        val out = java.io.ByteArrayOutputStream()
+        write(c, out, withFiles = false, chatKeys = true)
+        return out.toByteArray()
+    }
+
+    private fun write(c: Context, outStream: java.io.OutputStream, withFiles: Boolean, chatKeys: Boolean = false) {
         // Your lists, wishes, bin, history, friends' lists and notifications as the database holds them (S2.4, 2.170),
         // in the format Export files have always had; everything else from the settings store.
         ListStore.flush()
@@ -82,11 +98,15 @@ object Backup {
         }
         val manifest = JSONObject().put("app", "Wishlist").put("version", VERSION)
             .put("files", c.filesDir.absolutePath).put("time", System.currentTimeMillis())
-        val out = c.contentResolver.openOutputStream(uri) ?: throw IllegalStateException("no file")
-        ZipOutputStream(out.buffered()).use { z ->
+        ZipOutputStream(outStream.buffered()).use { z ->
             z.putNextEntry(ZipEntry("manifest.json")); z.write(manifest.toString().toByteArray()); z.closeEntry()
             z.putNextEntry(ZipEntry("prefs.json")); z.write(values.toString().toByteArray()); z.closeEntry()
-            c.filesDir.walkTopDown().filter { it.isFile && !phoneOnly(it.relativeTo(c.filesDir).path) }.forEach { f ->
+            if (chatKeys) {
+                val ck = JSONObject()
+                for ((k, v) in c.getSharedPreferences("chatkeys", Context.MODE_PRIVATE).all) if (v is String) ck.put(k, v)
+                z.putNextEntry(ZipEntry("chatkeys.json")); z.write(ck.toString().toByteArray()); z.closeEntry()
+            }
+            if (withFiles) c.filesDir.walkTopDown().filter { it.isFile && !phoneOnly(it.relativeTo(c.filesDir).path) }.forEach { f ->
                 z.putNextEntry(ZipEntry("files/" + f.relativeTo(c.filesDir).path))
                 f.inputStream().use { it.copyTo(z) }
                 z.closeEntry()

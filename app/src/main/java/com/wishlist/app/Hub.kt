@@ -274,6 +274,8 @@ fun HubScreen(
         ) {
             // "A new version is ready" (owner, 10 November 2026; AppInfo.kt): only when there is one.
             UpdateBar()
+            // "Keep your wishlists safe on a new phone" until the recovery key is saved (RecoveryKey.kt, 2.187).
+            RecoveryCard()
             // Your picture and name, and the numbers (2.89: the cover photo card is gone).
             ProfileSummary(onProfile, onFriends, onAddWish)
 

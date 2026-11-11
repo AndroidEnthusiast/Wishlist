@@ -860,6 +860,8 @@ fun AddFriendDialog(onClose: (String?) -> Unit, prefill: String = "", prefillNam
 @Composable
 fun ProfileScreen(snack: SnackbarHostState) {
     val ctx = LocalContext.current
+    var showKey by remember { mutableStateOf(false) }
+    if (showKey) RecoveryKeyDialog { showKey = false }
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
@@ -1093,9 +1095,16 @@ fun ProfileScreen(snack: SnackbarHostState) {
                 tr("Change this in the list’s settings (⚙). Private wishes stay hidden."),
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
             )
+            // The recovery key (owner, 11 November 2026: "Recovery key" in Profile; RecoveryKey.kt).
+            ProfileTitle(tr("Recovery key"))
             Text(
-                tr("New phone? Use App settings > Backup, then import the backup on your new phone."),
-                style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 16.dp)
+                tr("With your recovery key, everything comes back on a new phone."),
+                style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
+            )
+            OutlinedButton(onClick = { showKey = true }) { Text(tr("Show and save your key")) }
+            Text(
+                tr("You can also make a backup file in App settings > Backup."),
+                style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp)
             )
         }
     }

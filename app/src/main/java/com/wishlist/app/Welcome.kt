@@ -91,7 +91,7 @@ fun WelcomeFlow(onDone: () -> Unit) {
             }
             2 -> listName.ifBlank { NameGate.defaultListName() }.let { Repo.renameMine(ctx, Repo.openMine, it) }
         }
-        if (step == 3) finish() else {
+        if (step == 4) finish() else {
             if (step == 1 && !listEdited) listName = tr("%s’s wishlist", name.trim())
             step++
         }
@@ -102,7 +102,7 @@ fun WelcomeFlow(onDone: () -> Unit) {
             Column(Modifier.statusBarsPadding().navigationBarsPadding().padding(24.dp)) {
                 // Top: the step and Skip (skips the whole welcome).
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text(tr("Step %1\$d of %2\$d", step, 3), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
+                    Text(tr("Step %1\$d of %2\$d", step, 4), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
                     // Skip only once your name is there (owner, 2.135: everyone has a name, friends see it).
                     if (step > 1 || Shared.lastName.isNotBlank()) TextButton(onClick = { finish() }) { Text(tr("Skip")) }
                 }
@@ -145,6 +145,12 @@ fun WelcomeFlow(onDone: () -> Unit) {
                                 keyboardOptions = Capitalised, modifier = Modifier.fillMaxWidth()
                             )
                         }
+                        4 -> {
+                            // The recovery key (owner, 11 November 2026: asked during the welcome; RecoveryKey.kt).
+                            PlaceholderIcon("secret", 56.dp, LocalLook.current.accent)
+                            Text(tr("Keep your wishlists safe"), style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 12.dp, bottom = 8.dp))
+                            RecoveryKeyBody(null)
+                        }
                         else -> {
                             PlaceholderIcon("secret", 56.dp, LocalLook.current.accent)
                             Text(tr("Gifts stay a surprise"), style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 12.dp))
@@ -158,7 +164,7 @@ fun WelcomeFlow(onDone: () -> Unit) {
                 }
                 Spacer(Modifier.height(16.dp))
                 Button(enabled = step != 1 || name.isNotBlank(), onClick = { next() }, modifier = Modifier.fillMaxWidth()) {
-                    Text(if (step == 3) tr("Start") else tr("Next"))
+                    Text(if (step == 4) tr("Start") else tr("Next"))
                 }
             }
         }

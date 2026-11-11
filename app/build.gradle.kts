@@ -14,8 +14,8 @@ android {
         applicationId = "com.wishlist.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 187
-        versionName = "2.186"
+        versionCode = 188
+        versionName = "2.187"
         // Crash reports (Crash.kt): Crashlytics wants a build id, which its Gradle plugin would normally add. The app
         // isn't shrunk or renamed (isMinifyEnabled = false), so there is no mapping file to upload; one id per version.
         resValue("string", "com.google.firebase.crashlytics.mapping_file_id", "wishlist-$versionCode")
@@ -103,6 +103,10 @@ dependencies {
     implementation("com.google.firebase:firebase-messaging:24.0.0")
     // Crash reports (owner, D2, 8 November 2026; Crash.kt). Same Firebase release as firebase-messaging 24.0.0.
     implementation("com.google.firebase:firebase-crashlytics:19.0.0")
+    // The recovery key into the phone's password manager, and offered back on a new phone (RecoveryKey.kt, 2.187).
+    // 1.3.x fits compileSdk 34. The second part lets phones with Google Play services use Google Password Manager.
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
 
     // Only for the tests; none of this goes into the app.
     testImplementation("junit:junit:4.13.2")

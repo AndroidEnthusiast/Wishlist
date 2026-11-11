@@ -72,6 +72,10 @@ begin
   get diagnostics v_news = row_count;
   delete from wl_list_view_last where at < now() - interval '1 day';
   get diagnostics v_views = row_count;
+  -- Recovery copies not saved for 13 months (supabase-vault.sql; only when that script was run).
+  if to_regclass('public.wl_vaults') is not null then
+    execute 'delete from wl_vaults where updated_at < now() - interval ''13 months''';
+  end if;
   return jsonb_build_object('warned', v_warned, 'lists', v_lists, 'profiles', v_profiles, 'news', v_news, 'views', v_views);
 end $$;
 

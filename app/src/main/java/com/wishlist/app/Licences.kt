@@ -54,7 +54,7 @@ fun LicencesDialog(onClose: () -> Unit) {
                     tr("Fonts"),
                     "Google Sans, Figtree, Fraunces, Rajdhani, Share Tech Mono, Bungee, Bricolage Grotesque, Caveat — SIL Open Font License 1.1"
                 )
-                Credit(tr("Building blocks"), "AndroidX, Jetpack Compose, Kotlin, Coil, OkHttp, Firebase Cloud Messaging, Firebase Crashlytics — Apache License 2.0")
+                Credit(tr("Building blocks"), "AndroidX, Jetpack Compose, Kotlin, Coil, OkHttp, Credential Manager, Firebase Cloud Messaging, Firebase Crashlytics — Apache License 2.0")
                 // jsoup reads product pages (Fetch.kt); MIT License, its notice is in license_unicode.txt (2.183).
                 Credit(tr("Reading shop pages"), "jsoup, Jonathan Hedley — MIT License")
                 // The emoji picker's names (2.142): Unicode's emoji list, through the unicode-emoji-json package.

@@ -303,6 +303,8 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
         if (Config.enabled && Friends.hasProfile(ctx)) try { Friends.movePhoto(ctx) } catch (e: Exception) {}
         // "The app was opened", once a day; lists removed online after a year come back (Opened.kt, ROADMAP S4.3).
         try { Opened.run(ctx) } catch (e: Exception) {}
+        // The recovery key's locked copy, when something changed (RecoveryKey.kt, 2.187).
+        try { RecoveryKey.backup(ctx) } catch (e: Exception) {}
     }
 
     // The bottom bar's tabs (Messages, My shops, Friends) are routes over "main" (Home or a list); Home is "main".
