@@ -196,7 +196,10 @@ async function attach(ctx) {
   psql("update wl_asks set answered_at = now() - interval '8 days'");
   rpc("wl_ask", { p_code: "ZQELSTW2", p_item: 1, p_device: "otherdevice1", p_id: "", p_token: "" });
   psql("update wl_asks set created_at = now() - interval '3 days' where state = 'open'; select wl_ask_expire();");
-  await s.page.reload();
+  // The page fetches its news when it comes back into view (and every 20 s). It used to reload here, but the old
+  // page's own 20-second refresh could pick the news up just before the reload, leaving the new page nothing to show
+  // (a check that failed on GitHub's slower computer, 11 November 2026). The open page is what Sam sees anyway.
+  await s.page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
   await s.page.waitForSelector(".wlt-panel");
   check("Sam: your reservation has ended", (await s.page.locator(".wlt-panel").innerText()).includes("Your reservation of “Lamp <b>x</b>” has ended"));
   check("the lamp is free", (await s.page.locator(".card", { hasText: "Lamp" }).getByRole("button", { name: "Reserve" }).count()) === 1);

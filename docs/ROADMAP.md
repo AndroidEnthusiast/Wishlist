@@ -281,7 +281,7 @@ Small steps; each one protects against something that can't be undone later.
 - [ ] **R2 Restrict the Firebase key** (owner, in Google Cloud Console; steps were given on 10 November 2026): only
   the Firebase services the app uses. Then check that a chat message still buzzes the other phone and that
   Crashlytics still shows the app.
-- [ ] **R3 Backups you can trust:** restore one backup into a throw-away database once and write down that it
+- [x] **R3 Backups you can trust:** *(11 November 2026: the job moved to the private repository `Wishlist-backups`, copies the pictures too, restores every copy into a throw-away database and compares the rows; first run green: 29 tables, 90 pictures, 360 KB.)* restore one backup into a throw-away database once and write down that it
   worked (`docs/BACKUPS.md`); copy the uploaded pictures too; move the job to a **private** repository so the files
   aren't downloadable by every GitHub user (ask the owner: it means one more repository and moving two secrets).
 - [ ] **R4 Real shop pages (the old S0.3).** *(2.182: the "Price is wrong?" button on a wish's price page saves the shop's page as the phone reads it and opens the share sheet (`PriceReport.kt`; owner chose the button over saving pages on the Chromebook). Open until real pages have arrived and are in `pages`.)* For each starter shop one real product page in

@@ -193,18 +193,11 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 - **START HERE (11 November 2026, finishing Stage R on the Chromebook; 2.183).** Built today: 2.183 (R9 screens after
   Android closes the app, R8 licence: all rights reserved + jsoup credited, R7 two-phone list written in ROADMAP).
   Waiting for the owner:
-  1. **R3**: the owner was creating the private repository `Wishlist-backups` (Private, with a README), adding the
-     secrets `SUPABASE_DB_URL` and `BACKUP_PASSWORD` there, and giving the Claude GitHub app access to it. Then:
-     `add_repo` AndroidEnthusiast/Wishlist-backups (push), put `docs/backup-repo-backup.yml` in it as
-     `.github/workflows/backup.yml` (rehearsed here: copy → restore → same 29 tables and rows), ask the owner to tap
-     **Actions > Weekly database backup > Run workflow** there, check it is green, then delete `backup.yml` and
-     `docs/backup-repo-backup.yml` from this repository, update `docs/BACKUPS.md` (new place, pictures, restore check,
-     60 days) and CLAUDE.md's line about `backup.yml`, and tell the owner they may delete this repository's old backup
-     artifacts (Actions > Weekly database backup > each run > Artifacts > bin) and its two backup secrets.
+  1. **R3 done** (11 November 2026): `Wishlist-backups` is private, has both secrets, its first run was green (29
+     tables, 90 pictures, restore check passed). The old `backup.yml` is gone from this repository. Tell the owner
+     they may delete this repository's old backup artifacts and its two backup secrets (both no longer used).
   2. **R2** Firebase key and **Dependabot alerts**: steps given in chat on 11 November.
   3. **R0**: key file found; left: a second place for `wishlist-release.jks`, the password into a password manager.
-  4. Still open from 2.180: did the owner run `supabase-sync.sql` again? (Checked read-only on 11 November:
-     `wl_mine_get` answers, so it IS installed.)
   5. Remind later: two-step sign-in (R8), the two-phone test (R7). Then Stage R is done → Stage 4 (questions first).
 - **START HERE (11 November 2026, Stage R session).** Owner: 2.178 "went well"; **both key steps later** (R0 signing
   key copy: still urgent, keep reminding; R2 Firebase key restriction). Built and pushed: **2.179** (R6 update bar +
