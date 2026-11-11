@@ -190,6 +190,22 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 - 6 November (night): Friends review; **2.139**. Not checked: the friend link on a phone (Chrome on Android should open wishlist://friend from the page; some browsers ask first).
 
 ## Next session
+- **START HERE (11 November 2026, finishing Stage R on the Chromebook; 2.183).** Built today: 2.183 (R9 screens after
+  Android closes the app, R8 licence: all rights reserved + jsoup credited, R7 two-phone list written in ROADMAP).
+  Waiting for the owner:
+  1. **R3**: the owner was creating the private repository `Wishlist-backups` (Private, with a README), adding the
+     secrets `SUPABASE_DB_URL` and `BACKUP_PASSWORD` there, and giving the Claude GitHub app access to it. Then:
+     `add_repo` AndroidEnthusiast/Wishlist-backups (push), put `docs/backup-repo-backup.yml` in it as
+     `.github/workflows/backup.yml` (rehearsed here: copy → restore → same 29 tables and rows), ask the owner to tap
+     **Actions > Weekly database backup > Run workflow** there, check it is green, then delete `backup.yml` and
+     `docs/backup-repo-backup.yml` from this repository, update `docs/BACKUPS.md` (new place, pictures, restore check,
+     60 days) and CLAUDE.md's line about `backup.yml`, and tell the owner they may delete this repository's old backup
+     artifacts (Actions > Weekly database backup > each run > Artifacts > bin) and its two backup secrets.
+  2. **R2** Firebase key and **Dependabot alerts**: steps given in chat on 11 November.
+  3. **R0**: key file found; left: a second place for `wishlist-release.jks`, the password into a password manager.
+  4. Still open from 2.180: did the owner run `supabase-sync.sql` again? (Checked read-only on 11 November:
+     `wl_mine_get` answers, so it IS installed.)
+  5. Remind later: two-step sign-in (R8), the two-phone test (R7). Then Stage R is done → Stage 4 (questions first).
 - **START HERE (11 November 2026, Stage R session).** Owner: 2.178 "went well"; **both key steps later** (R0 signing
   key copy: still urgent, keep reminding; R2 Firebase key restriction). Built and pushed: **2.179** (R6 update bar +
   "Please update" screen from `app.json`; R5 database checks on GitHub), **2.180** (R1 stop screen + Get my lists
