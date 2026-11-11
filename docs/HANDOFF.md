@@ -190,53 +190,22 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 - 6 November (night): Friends review; **2.139**. Not checked: the friend link on a phone (Chrome on Android should open wishlist://friend from the page; some browsers ask first).
 
 ## Next session
-- **START HERE (11 November 2026, finishing Stage R on the Chromebook; 2.183).** Built today: 2.183 (R9 screens after
-  Android closes the app, R8 licence: all rights reserved + jsoup credited, R7 two-phone list written in ROADMAP).
-  Waiting for the owner:
-  1. **R3 done** (11 November 2026): `Wishlist-backups` is private, has both secrets, its first run was green (29
-     tables, 90 pictures, restore check passed). The old `backup.yml` is gone from this repository. Tell the owner
-     they may delete this repository's old backup artifacts and its two backup secrets (both no longer used).
-  2. **R2 done** (11 November 2026): the Firebase key only allows FCM Registration + Firebase Installations; a chat
-     push still arrived. Google reported earlier use of `identitytoolkit` by someone else (scanners testing the public
-     key); ask what Metrics Explorer showed, whether Firebase > Authentication has users (delete them: the app makes
-     none), the plan (Spark = nothing billable), and whether Crashlytics still shows the app. **Dependabot alerts**:
-     steps given in chat on 11 November.
-  3. **R0**: key file found; left: a second place for `wishlist-release.jks`, the password into a password manager.
-  5. Remind later: two-step sign-in (R8), the two-phone test (R7). Then Stage R is done → Stage 4 (questions first).
-- **START HERE (11 November 2026, Stage R session).** Owner: 2.178 "went well"; **both key steps later** (R0 signing
-  key copy: still urgent, keep reminding; R2 Firebase key restriction). Built and pushed: **2.179** (R6 update bar +
-  "Please update" screen from `app.json`; R5 database checks on GitHub), **2.180** (R1 stop screen + Get my lists
-  back; needs `supabase-sync.sql` run again for lists whose link is off), **2.181** (moving wishes to and from
-  collab wishlists, the owner's extra request; DECISIONS "Stage R"). Ask first:
-  1. Did they run [supabase-sync.sql](https://github.com/AndroidEnthusiast/Wishlist/blob/main/supabase-sync.sql) again?
-  2. Moving on the phone: own → collab (a private wish too), collab → own with Move and with Copy, a wish reserved
-     by someone else (Move greyed out), collab → collab, Undo each time, a wish with its own photo, and what the other
-     phone/browser sees (the wish in that list's bin). None of it was seen on a phone or against the real server.
-  3. The update bar can only show once a version newer than the installed one has been out for a day: ask whether it
-     appeared on Home (and on the partner's phone), and whether `https://androidenthusiast.github.io/Wishlist/app.json`
-     opens in a browser and shows `latest`.
-  **2.182** also built: R4's "Price is wrong?" button on a wish's price page (ask whether the share sheet opens and
-  the file arrives; when the owner uploads a `price-report-….html`, read its first comment, add the page to
-  `tests/shared/same-answers.json` → `pages` and fix both readers).
-  Then the rest of Stage R, in this order: **R3** backups to a private repository (decided: give the owner tap-by-tap steps to create it and add the
-  secrets `SUPABASE_DB_URL` and `BACKUP_PASSWORD`, then move `backup.yml`, add the pictures, rehearse one restore);
-  **R7** two-phone test list; **R8** account safety steps and the licence question (not asked yet); **R9** screens
-  survive Android closing the app; R0 and R2 when the owner is ready.
-- **START HERE (written 10 November 2026, the second review, 2.178).** Read ROADMAP "Second review" first: **Stage R
-  comes before Stage 4.** Ask the owner, in this order:
-  1. **R0, urgent: did they find the signing key file** (a `.jks`/`.keystore`/`.p12` file, or the long text pasted into
-     `KEYSTORE_BASE64`)? The 16-character password they have is probably `BACKUP_PASSWORD` or the key's password, not
-     the key. If not found: propose the one-off locked-download job (ask first).
-  2. **Did 2.178 install over the app with all lists still there?** (It is the first version that changes the
-     database's layout; `DbMigrationTest` covers it, a phone never ran it before.) Then the price checks: any false
-     "price drop" since? Does a hand-corrected price stay? The grey line on a wish's price page (Home's price-drop
-     card or a price notification opens that page). The first check after the update is quiet on purpose.
-  3. **R2: did they restrict the Firebase key** (steps given in chat on 10 November)? Then a chat message must still
-     buzz the other phone and Crashlytics must still show the app.
-  4. **Was the first GitHub run with the new `web-checks` job green?** If it failed: open the job, fix first.
-  5. Then Stage R in order (R1 needs an interview: the "couldn't open your lists" screen), then Stage 4.
-  Still open from before: the two-phone test of Stage 3 and the real S3.4 numbers (now R7); live updates for the web
-  pages (owner: "remind me later"); chip in (#3, important to the owner: see P24 before designing it).
+- **START HERE (11 November 2026, end of Stage R).** Stage R is done (ROADMAP), apart from three things that wait for
+  the owner: **two-step sign-in** on GitHub, Supabase and Google (R8; the owner asked to be reminded later: remind at
+  the start of the next session), **the two-phone test** (R7, the 7-step list in ROADMAP), and real shop pages
+  arriving through "Price is wrong?" (R4). Also ask: does Firebase > Crashlytics still show the app after the key was
+  restricted (R2)? Has a Dependabot e-mail arrived (paste it in)? Did the owner delete the old backup artifacts and
+  the two backup secrets in the Wishlist repository (optional tidy-up)?
+  **Next: Stage 4** (ROADMAP "Stage 4" plus "Additions to Stage 4": photos to storage, limits against abuse, clean-up
+  jobs, indexes, identity with Supabase anonymous accounts (D5), privacy page, "Delete my profile and data", report
+  and block, the free plan's limits written down). **Questions first**, with the feature checklist of the second
+  review; nothing built before the owner's answers.
+- Session summary (11 November 2026, Stage R): built 2.179 (update bar, database checks on GitHub), 2.180 ("couldn't
+  open your lists" screen), 2.181 (moving to and from collab wishlists), 2.182 ("Price is wrong?"), 2.183 (screens
+  after Android closes the app, licence); backups moved to the private repository `Wishlist-backups` (first run green:
+  29 tables, 90 pictures, restore check); a flaky reactions-page check fixed; the Firebase key limited to two services
+  (a chat push still arrives; Google showed a few refused sign-up attempts by strangers around 8 November); the owner
+  saved the signing key and switched on Dependabot alerts. App checks: 163.
 - Session summary (10 November 2026, second review): re-evaluated Stages 0–3 against the code and wrote the review,
   Stage R, the Stage 4 additions, Stage 6 (Google Play) and the feature checklist into ROADMAP; 7 pop-up answers in
   DECISIONS. Built **2.178**: the price check believes a price only after two agreeing readings, first look quiet,
