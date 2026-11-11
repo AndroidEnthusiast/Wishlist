@@ -202,7 +202,15 @@ report and block (S4.8). Answers in DECISIONS "Stage 4".*
   profile/device per hour; friendly errors in the app and web pages.
 - [x] S4.3 *(2.186, `supabase-cleanup.sql` + `Opened.kt`: the owner's 12 months with a warning a month before; lists come back by themselves. Left: pictures of removed lists stay in Storage, and a size report per table is in the weekly backup since 11 November.)* Clean-up jobs (pg_cron): lists nobody opened for a long time (owner decides how long), expired news, old
   view counters; and a size report per table.
-- [ ] S4.4 Indexes checked against the slowest queries (Supabase's query performance page).
+- [x] S4.4 *(11 November 2026: checked with `pg_stat_statements` in the SQL editor (the owner's screenshot): the
+  busiest query had used about 19 seconds in total since the statistics began; the top ones are Supabase's own
+  dashboard queries (function list, time zones), then the app's calls at a few seconds in total each. No index needed;
+  adding them would only slow down saving. Check again with the query below when the app has many more users, or when
+  something feels slow:
+  `select calls, round(mean_exec_time::numeric, 1) as avg_ms, round(total_exec_time::numeric) as total_ms,
+  left(regexp_replace(query, '\s+', ' ', 'g'), 90) as query from extensions.pg_stat_statements order by total_exec_time
+  desc limit 15;`)*
+  Indexes checked against the slowest queries (Supabase's query performance page).
 - [ ] S4.5 Identity as decided in D5 (if anonymous accounts: a step-by-step move where every existing owner token and
   device keeps working).
 Owner tests: photos still show everywhere (app and web); nothing else changes.

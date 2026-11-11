@@ -193,8 +193,8 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 - **(11 November 2026, 2.186)** Owner ran the scripts of 2.184/2.185 (checked read-only: `wl_pf_photo_url` answers).
   Built 2.186: clean-up (`supabase-cleanup.sql`, `Opened.kt`) and the free plan table (ROADMAP S4.9). Ask: did they run
   [supabase-cleanup.sql](https://github.com/AndroidEnthusiast/Wishlist/blob/main/supabase-cleanup.sql)? (Supabase >
-  Integrations > Cron should list `wl-cleanup`.) **S4.4 indexes** waits for a screenshot of Supabase > **Database** >
-  **Query performance** (slowest queries). Then **part B: the recovery key** (DECISIONS "Stage 4"). Standing rule
+  Integrations > Cron should list `wl-cleanup`.) Done the same evening: the owner ran it (cron job 2) and S4.4 (no indexes
+  needed, ROADMAP). Then **part B: the recovery key** (DECISIONS "Stage 4"). Standing rule
   since today: every finished build ends with the download link.
 - **START HERE (11 November 2026, Stage 4 part A, after 2.185).** Built: **2.184** limits against abuse
   (`supabase-limits.sql`), **2.185** photos as files (`PeoplePhotos.kt`, bucket `people-photos`). Ask first whether the
