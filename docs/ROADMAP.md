@@ -267,7 +267,7 @@ the shop's price). Collab wishlists use rules 1 and 3 only (their prices are sha
 
 ## Stage R — Repairs before growing (1–2 sessions, before Stage 4)
 Small steps; each one protects against something that can't be undone later.
-- [ ] **R0 The signing key has a second home (urgent).** The key is a *file* (it ends in `.jks`, `.keystore` or
+- [ ] **R0 The signing key has a second home (urgent).** *(11 November 2026: the owner found `wishlist-release.jks` and two text files, the key as text and its password, on the Chromebook/Drive. Left: a second place for the key file, the password moved into a password manager (not a text file next to the key), and the key's alias written down with it.)* The key is a *file* (it ends in `.jks`, `.keystore` or
   `.p12`), or the very long text that was pasted into the secret `KEYSTORE_BASE64` (thousands of letters and digits,
   often starting with `MII` or `/u3+7Q`); a 16-character password alone is not the key (and may be `BACKUP_PASSWORD`,
   which must be at least 16 characters). If the owner can't find the file or the long text: a one-off GitHub job
@@ -295,13 +295,30 @@ Small steps; each one protects against something that can't be undone later.
   oldest version that still works, and an optional notice. The app shows "Update available" (with the download) and,
   below the minimum, a kind "Please update" screen. One moving part that covers updates, a server move and
   maintenance. Interview first (how often to nag, wording).
-- [ ] **R7 The two-phone test of Stage 3**, with a written list (collab list, a friend's list, chat, own list, airplane
-  mode), and the real numbers from App settings > About > Details into S3.4.
-- [ ] **R8 Account and repository safety (owner, with steps):** two-step sign-in and saved recovery codes on GitHub,
+- [ ] **R7 The two-phone test of Stage 3** (owner, 11 November 2026: "not today"; the list below is done whenever the
+  partner's phone is free, on the newest app, after the newest scripts). Phone A is yours, phone B your partner's.
+  1. *Collab wishlist, live:* both open the same collab wishlist. A adds a wish: it shows on B within about 5 seconds
+     without pulling down. B changes its price: A sees it. A reserves it: B sees "Reserved". B moves it to the bin:
+     it leaves A's screen; A's bin shows it; A puts it back.
+  2. *Moving (2.181):* A moves one of A's own wishes to that collab wishlist: B sees it arrive. B takes a wish off it
+     with Move: A sees it go and finds it in the list's bin. A wish A reserved can't be moved by B (Move greyed out).
+  3. *A friend's list:* A and B are Friends. B opens A's list. A adds a wish and changes another's name: B's open
+     list follows within seconds. B reserves something: A's own list shows nothing of it (the surprise).
+  4. *Chat:* B has the app closed. A sends a message: B's phone buzzes within seconds. B opens the chat: A's ticks
+     turn coloured only then. Both keep the chat open and write back and forth: messages arrive at once.
+  5. *Offline:* A switches on airplane mode, edits a wish on A's own list, switches airplane mode off and reopens the
+     app: within a minute B (or the friends' page in a browser) shows the change.
+  6. *Android closing the app (2.183):* A opens a chat, then a game or the camera for a few minutes, then comes back:
+     the same chat is open. Same with a collab wishlist's settings.
+  7. *Battery and calls:* after a normal day, App settings > About > Details on A: write the numbers of `wl_pulse`,
+     `live connect` and the total into S3.4's table instead of the estimate. Settings > Battery > Wishlist: the
+     percentage of the day.
+  Anything that fails: a screen recording, then it is fixed first.
+- [ ] **R8 Account and repository safety (owner, with steps):** *(11 November 2026: the licence is decided, all rights reserved (`LICENSE`, the font licence moved to `docs/licences-OFL.txt`; jsoup's MIT notice added to the app's Licences page, it was missing). Dependabot alerts: steps given. Two-step sign-in: the owner asked to be reminded later.)* two-step sign-in and saved recovery codes on GitHub,
   Supabase and the Google account; Dependabot **alerts** on (Settings > Advanced Security; alerts only, no pull
   requests); move `FONT-LICENSE-OFL.txt` out of the top folder so GitHub stops labelling the whole project with the
   font's licence, and choose what the code's licence is.
-- [ ] **R9 Screens survive Android closing the app.** No big rewrite: a check per main screen that closes and
+- [x] **R9 Screens survive Android closing the app.** *(2.183: found and fixed a collab wishlist's settings showing another list's settings when Android rebuilt only that screen; an open chat, a friend's page, an open gift exchange and a page of Home now come back (`KeepPlaces.kt`) instead of the tab's first page; checks in `EntryTest` empty the app's memory while the screen goes away. Not kept, on purpose: a half-filled form or dialog. Camera files are only prepared when the camera opens.)* No big rewrite: a check per main screen that closes and
   restores the app (Robolectric can), fixes where it fails, and from now on no new screen state in a global `object`.
 
 ## Additions to Stage 4 (same stage, more steps)

@@ -6,6 +6,7 @@ import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Test
 
@@ -132,6 +133,56 @@ class EntryTest : NavigationBase() {
         // A list that is no longer on this phone isn't opened.
         org.junit.Assert.assertFalse(openListOf(app, "s:NOTHERE1"))
         org.junit.Assert.assertFalse(openListOf(app, "m:not-here"))
+    }
+
+    /**
+     * Android closing the app in the background (ROADMAP R9): the screen is rebuilt from what Android kept, but the
+     * app's memory starts empty. Here the memory is emptied while the old screen goes away, then the screen is rebuilt.
+     */
+    private fun androidClosesTheApp(forget: () -> Unit) {
+        val cb = object : android.app.Application.ActivityLifecycleCallbacks {
+            override fun onActivityDestroyed(a: android.app.Activity) { forget() }
+            override fun onActivityCreated(a: android.app.Activity, b: android.os.Bundle?) {}
+            override fun onActivityStarted(a: android.app.Activity) {}
+            override fun onActivityResumed(a: android.app.Activity) {}
+            override fun onActivityPaused(a: android.app.Activity) {}
+            override fun onActivityStopped(a: android.app.Activity) {}
+            override fun onActivitySaveInstanceState(a: android.app.Activity, b: android.os.Bundle) {}
+        }
+        app.registerActivityLifecycleCallbacks(cb)
+        try { compose.activityRule.scenario.recreate() } finally { app.unregisterActivityLifecycleCallbacks(cb) }
+        compose.waitForIdle()
+    }
+
+    @Test fun aListsSettingsComeBackForThatList() {
+        val second = Repo.createMine(app, "Second list", "")
+        send(open(MainActivity.OPEN_NOTE, "m:$second"))
+        compose.onAllNodes(hasContentDescription("Wishlist settings") and hasClickAction()).onFirst().performClick()
+        compose.waitForIdle()
+        // In the app's memory another list is open again (as after Android closed it); only the settings are rebuilt.
+        androidClosesTheApp { Repo.openMine(app, Repo.mineIds.first()) }
+        org.junit.Assert.assertEquals("the settings belong to the list they were opened from", second, Repo.openMine)
+    }
+
+    @Test fun anOpenChatComesBack() {
+        send(open(MainActivity.OPEN_CHAT, "someone"))
+        noBar()
+        androidClosesTheApp { ChatNav.peer = null }
+        org.junit.Assert.assertEquals("someone", ChatNav.peer)
+        noBar()
+        phoneBack()
+        tabOn("Messages")
+    }
+
+    @Test fun aFriendsPageAndAnExchangeComeBack() {
+        compose.runOnUiThread { FriendsNav.person = "friend-1"; FriendsNav.page = "wishes"; ExchangeNav.open = "gx-1" }
+        androidClosesTheApp { FriendsNav.person = null; FriendsNav.page = null; ExchangeNav.open = null }
+        org.junit.Assert.assertEquals(listOf("friend-1", "wishes", "gx-1"), listOf(FriendsNav.person, FriendsNav.page, ExchangeNav.open))
+    }
+
+    @Test fun keptPlacesSurviveOddIds() {
+        val l = listOf("a\tb", null, "wishes", null, "top")
+        org.junit.Assert.assertEquals(listOf("a b", null, "wishes", null, "top"), Places.unpack(Places.pack(l)))
     }
 
     @Test fun rotatingKeepsTheScreen() {

@@ -897,9 +897,10 @@ fun ProfileScreen(snack: SnackbarHostState) {
         if (uri != null) scope.launch { ImageStore.import(ctx, uri)?.let { pending = it } }
     }
     val cameraFile = remember { java.io.File(java.io.File(ctx.cacheDir, "share").apply { mkdirs() }, "profile_camera.jpg") }
-    val cameraUri = remember { androidx.core.content.FileProvider.getUriForFile(ctx, ctx.packageName + ".files", cameraFile) }
+    // Made when the camera is opened, not when the screen is (2.183): nothing is prepared that may not be used.
+    val cameraUriLazy = remember { lazy { androidx.core.content.FileProvider.getUriForFile(ctx, ctx.packageName + ".files", cameraFile) } }
     val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
-        if (ok) scope.launch { ImageStore.import(ctx, cameraUri)?.let { pending = it } }
+        if (ok) scope.launch { ImageStore.import(ctx, cameraUriLazy.value)?.let { pending = it } }
     }
     fun save(src: String, e: HeroEdit) {
         busy = true
@@ -945,7 +946,7 @@ fun ProfileScreen(snack: SnackbarHostState) {
                         DropdownMenuItem(text = { Text(tr("Take a photo")) }, onClick = {
                             photoMenu = false
                             try {
-                                camera.launch(cameraUri)
+                                camera.launch(cameraUriLazy.value)
                             } catch (e: Exception) {
                             }
                         })

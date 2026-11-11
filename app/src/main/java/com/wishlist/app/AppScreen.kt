@@ -406,8 +406,12 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
             else RouteBox { key(code) { FriendScreen(fr, snack, onRemoved = { nav.popBackStack() }) } }
         }
         composable(Route.PRICES) { RouteBox { PricesScreen(snack, onBack = { nav.popBackStack() }) } }
-        // The list open on the main route underneath (Shared.active or Repo.openMine).
+        // The list open on the main route underneath (Shared.active or Repo.openMine). After Android closed the app in
+        // the background only this screen is rebuilt, not the list under it, so that list is opened again from its
+        // route first (ROADMAP R9, 2.183): otherwise the settings of another list would show.
         composable(Route.LIST_SETTINGS) {
+            val under = nav.previousBackStackEntry?.takeIf { it.destination.route == Route.LIST }?.arguments?.getString("key")
+            remember(under) { if (under != null) openListOf(ctx, under) }
             RouteBox {
                 key(Shared.active, Repo.openMine) {
                     ListSettingsScreen(snack, onDeleted = { nav.backToMain() }) { nav.popBackStack() }
@@ -527,6 +531,8 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
         )
     }
     if (welcome) WelcomeFlow { welcome = false }
+    // Where you were inside a tab comes back after Android closed the app in the background (KeepPlaces.kt, R9).
+    KeepPlaces()
     // The newest and the oldest working version (AppInfo.kt, ROADMAP R6): asked at most twice a day.
     LaunchedEffect(Unit) { AppInfo.load(ctx); AppInfo.refresh(ctx) }
     // A version that no longer works with the server: only the update is offered, over everything else.

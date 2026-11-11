@@ -263,9 +263,10 @@ private fun CoverMenu(cover: ListCover, snack: SnackbarHostState, modifier: Modi
         if (uri != null) scope.launch { ImageStore.import(ctx, uri)?.let { pending = it } }
     }
     val cameraFile = remember { java.io.File(java.io.File(ctx.cacheDir, "share").apply { mkdirs() }, "cover_camera.jpg") }
-    val cameraUri = remember { androidx.core.content.FileProvider.getUriForFile(ctx, ctx.packageName + ".files", cameraFile) }
+    // Made when the camera is opened, not when the screen is (2.183): nothing is prepared that may not be used.
+    val cameraUriLazy = remember { lazy { androidx.core.content.FileProvider.getUriForFile(ctx, ctx.packageName + ".files", cameraFile) } }
     val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
-        if (ok) scope.launch { ImageStore.import(ctx, cameraUri)?.let { pending = it } }
+        if (ok) scope.launch { ImageStore.import(ctx, cameraUriLazy.value)?.let { pending = it } }
     }
     fun save(img: String, e: HeroEdit) {
         scope.launch {
@@ -298,7 +299,7 @@ private fun CoverMenu(cover: ListCover, snack: SnackbarHostState, modifier: Modi
             })
             DropdownMenuItem(text = { Text(tr("Take a photo")) }, onClick = {
                 change = false
-                try { camera.launch(cameraUri) } catch (e: Exception) { }
+                try { camera.launch(cameraUriLazy.value) } catch (e: Exception) { }
             })
             DropdownMenuItem(text = { Text(tr("Adjust this photo")) }, onClick = { change = false; adjusting = true })
         }
@@ -343,9 +344,10 @@ fun CoverSection(snack: androidx.compose.material3.SnackbarHostState) {
         if (uri != null) scope.launch { ImageStore.import(ctx, uri)?.let { pending = it } }
     }
     val cameraFile = remember { java.io.File(java.io.File(ctx.cacheDir, "share").apply { mkdirs() }, "cover_camera.jpg") }
-    val cameraUri = remember { androidx.core.content.FileProvider.getUriForFile(ctx, ctx.packageName + ".files", cameraFile) }
+    // Made when the camera is opened, not when the screen is (2.183): nothing is prepared that may not be used.
+    val cameraUriLazy = remember { lazy { androidx.core.content.FileProvider.getUriForFile(ctx, ctx.packageName + ".files", cameraFile) } }
     val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
-        if (ok) scope.launch { ImageStore.import(ctx, cameraUri)?.let { pending = it } }
+        if (ok) scope.launch { ImageStore.import(ctx, cameraUriLazy.value)?.let { pending = it } }
     }
     fun save(img: String, e: HeroEdit) {
         scope.launch {
@@ -365,7 +367,7 @@ fun CoverSection(snack: androidx.compose.material3.SnackbarHostState) {
         }
         OutlinedButton(onClick = {
             try {
-                camera.launch(cameraUri)
+                camera.launch(cameraUriLazy.value)
             } catch (e: Exception) {
             }
         }) { Text(tr("Take a photo")) }

@@ -383,10 +383,11 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
         }
     }
     val cameraFile = remember { File(File(ctx.cacheDir, "share").apply { mkdirs() }, "chat_camera.jpg") }
-    val cameraUri = remember { androidx.core.content.FileProvider.getUriForFile(ctx, ctx.packageName + ".files", cameraFile) }
+    // Made when the camera is opened, not when the screen is (2.183): nothing is prepared that may not be used.
+    val cameraUriLazy = remember { lazy { androidx.core.content.FileProvider.getUriForFile(ctx, ctx.packageName + ".files", cameraFile) } }
     val takePhoto = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
         if (ok) scope.launch {
-            ImageStore.import(ctx, cameraUri)?.let { preview = it } ?: snack.showToast(tr("Couldn’t open that photo."))
+            ImageStore.import(ctx, cameraUriLazy.value)?.let { preview = it } ?: snack.showToast(tr("Couldn’t open that photo."))
         }
     }
     val listState = rememberLazyListState()
@@ -583,7 +584,7 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
                 },
                 onWish = { wishPick = true },
                 onGallery = { pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
-                onCamera = { try { takePhoto.launch(cameraUri) } catch (e: Exception) { } }
+                onCamera = { try { takePhoto.launch(cameraUriLazy.value) } catch (e: Exception) { } }
             ) else Text(
                 tr("You’re no longer friends, so you can’t send messages here."),
                 color = cs.onSurfaceVariant, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall,

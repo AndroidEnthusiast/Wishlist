@@ -114,12 +114,13 @@ fun WishDialog(
         if (uri != null) scope.launch { imported(ImageStore.import(ctx, uri)) }
     }
     val cameraFile = remember { java.io.File(java.io.File(ctx.cacheDir, "share").apply { mkdirs() }, "wish_camera.jpg") }
-    val cameraUri = remember { androidx.core.content.FileProvider.getUriForFile(ctx, ctx.packageName + ".files", cameraFile) }
+    // Made when the camera is opened, not when the screen is (2.183): nothing is prepared that may not be used.
+    val cameraUriLazy = remember { lazy { androidx.core.content.FileProvider.getUriForFile(ctx, ctx.packageName + ".files", cameraFile) } }
     val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
-        if (ok) scope.launch { imported(ImageStore.import(ctx, cameraUri)) }
+        if (ok) scope.launch { imported(ImageStore.import(ctx, cameraUriLazy.value)) }
     }
     fun pickImage() = picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-    fun takePhoto() = try { camera.launch(cameraUri) } catch (e: Exception) { err = tr("Couldn’t open the camera.") }
+    fun takePhoto() = try { camera.launch(cameraUriLazy.value) } catch (e: Exception) { err = tr("Couldn’t open the camera.") }
 
     fun close() {
         if (picked.isNotEmpty()) ImageStore.delete(ctx, picked)

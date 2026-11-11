@@ -1,0 +1,11 @@
+Copyright (c) 2026 AndroidEnthusiast. All rights reserved.
+
+The code, texts, pictures and designs in this repository may be read on GitHub, but may not be copied, changed,
+published or used in other projects without written permission from the owner.
+
+Parts made by others keep their own licences and are not covered by the line above:
+- Fonts (Google Sans, and the theme fonts downloaded from Google Fonts): SIL Open Font License 1.1, full text in
+  docs/licences-OFL.txt.
+- Material Icons by Google, and the libraries the app is built with (AndroidX, Jetpack Compose, Kotlin, Coil, OkHttp,
+  Room, Jsoup, Firebase): their own licences, mostly the Apache License 2.0. They are listed in the app under
+  App settings > About > Licences.

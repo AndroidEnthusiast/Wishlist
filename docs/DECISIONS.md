@@ -519,3 +519,12 @@ What the owner has decided, and why. Follow these unless the owner changes their
   Copy.** **A wish someone else reserved on a collab wishlist can't be moved away** (your own reservation just ends).
   **Private wishes move without a question** and become visible to everyone on the collab wishlist (owner chose this
   over a warning). Top wish, owned, price history and price alert don't exist on collab wishlists and are dropped.
+- **Finishing Stage R** (owner, 11 November 2026, on the Chromebook): the signing key file and its password were
+  found (R0, a second place still to do); **R3 private backup repository, R2 Firebase key restriction and Dependabot
+  alerts: now**; **two-step sign-in: "remind me later"**; **the code is "all rights reserved"** (the owner asked
+  whether that is legally allowed: yes, the owner holds the copyright of the project; parts made by others keep their
+  own licences, listed in `LICENSE`); **the two-phone test (R7) is written down for later**, not done today.
+- **R3 backup job** (Claude, not asked: details): weekly as before, now also the pictures in Supabase Storage's public
+  buckets, a restore into a throw-away database that must have the same tables and rows (a difference of a row or two
+  from a save during the copy is a warning), everything locked in one file, kept 60 days (a private repository has
+  500 MB for job files on the free plan; a warning above 40 MB a copy).

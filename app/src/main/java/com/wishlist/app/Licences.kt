@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
  *    (downloaded from Google Fonts): SIL Open Font License 1.1.
  *  - Libraries: AndroidX / Jetpack Compose, Kotlin, Coil, OkHttp, Firebase Cloud Messaging, Firebase Crashlytics (Apache License 2.0; it uses
  *    Google Play services on the phone, which come with Android).
+ *  - jsoup (reads product pages): MIT License; it was missing here until 2.183.
  *  - Emoji names for the reaction picker (2.142, assets/emoji.txt): Unicode's emoji list (Unicode License V3) through the
  *    unicode-emoji-json package (MIT License). The emoji themselves are the phone's own.
  * The full texts are in res/raw (license_apache.txt, license_ofl.txt, license_unicode.txt).
@@ -54,6 +55,8 @@ fun LicencesDialog(onClose: () -> Unit) {
                     "Google Sans, Figtree, Fraunces, Rajdhani, Share Tech Mono, Bungee, Bricolage Grotesque, Caveat — SIL Open Font License 1.1"
                 )
                 Credit(tr("Building blocks"), "AndroidX, Jetpack Compose, Kotlin, Coil, OkHttp, Firebase Cloud Messaging, Firebase Crashlytics — Apache License 2.0")
+                // jsoup reads product pages (Fetch.kt); MIT License, its notice is in license_unicode.txt (2.183).
+                Credit(tr("Reading shop pages"), "jsoup, Jonathan Hedley — MIT License")
                 // The emoji picker's names (2.142): Unicode's emoji list, through the unicode-emoji-json package.
                 Credit(tr("Emoji names"), "Unicode emoji data, Unicode, Inc. — Unicode License V3; unicode-emoji-json, Mu-An Chiou — MIT License")
                 Text(
