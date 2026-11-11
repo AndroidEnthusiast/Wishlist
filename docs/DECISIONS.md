@@ -555,3 +555,11 @@ What the owner has decided, and why. Follow these unless the owner changes their
   when it is opened again (reservations made before are gone).
 - **Every finished build ends with the download link** (owner, 11 November 2026: "always end a build by sending me a
   link to the build"), also during the roadmap; replaces "No download line during the roadmap" of 8 November.
+- **Recovery key, details** (owner, 11 November 2026): a new phone gets **everything** back: what is online anyway,
+  plus a **locked copy of what only the phone has** (private wishes, "Only me" lists, bin, price history, chat keys),
+  locked with the recovery key so the server can't read it. **Restoring signs out the old phone** (a new key is made;
+  the old phone sees that the profile moved). **Existing users get one card on Home** after the update ("Keep your
+  wishlists safe on a new phone": Save your key / Later, again after a week, at most 3 times). Called **"Recovery
+  key"** in **Profile**; a new phone has **"I already have lists"** in the welcome. Export/Import stay as they are.
+  (Claude, said to the owner: built in two versions, 2.187 the key and the locked copy, 2.188 restoring; the locked
+  copy leaves out picture files, so a private wish's own photo doesn't come back.)
