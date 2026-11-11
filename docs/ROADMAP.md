@@ -200,7 +200,7 @@ report and block (S4.8). Answers in DECISIONS "Stage 4".*
   the address. Old text photos are moved by a script, then cleared.
 - [x] S4.2 *(2.184, `supabase-limits.sql`: triggers on what is added, the owner's numbers, a scrambled internet address only for new lists/profiles/groups/exchanges, friend-code attempts counted. Not limited yet: picture uploads to Storage (500 KB a file already), and the `fetch-page` helper.)* Limits against abuse inside the functions: how many lists, wishes, messages, reactions, invites per
   profile/device per hour; friendly errors in the app and web pages.
-- [ ] S4.3 Clean-up jobs (pg_cron): lists nobody opened for a long time (owner decides how long), expired news, old
+- [x] S4.3 *(2.186, `supabase-cleanup.sql` + `Opened.kt`: the owner's 12 months with a warning a month before; lists come back by themselves. Left: pictures of removed lists stay in Storage, and a size report per table is in the weekly backup since 11 November.)* Clean-up jobs (pg_cron): lists nobody opened for a long time (owner decides how long), expired news, old
   view counters; and a size report per table.
 - [ ] S4.4 Indexes checked against the slowest queries (Supabase's query performance page).
 - [ ] S4.5 Identity as decided in D5 (if anonymous accounts: a step-by-step move where every existing owner token and
@@ -341,7 +341,17 @@ Small steps; each one protects against something that can't be undone later.
   codes (6 characters: guessing must be slowed down), and, with S4.5, how many anonymous accounts one device may make.
 - [ ] S4.5 also decides P20 (Android's cloud backup) and must be designed knowing that linking a Google account
   later needs the signing key's fingerprint registered with Google (another reason for R0).
-- [ ] S4.9 **The free plan's limits, written down with today's use** (database size, storage, traffic out, live
+- [x] S4.9 *(11 November 2026, below. Check the numbers on supabase.com/pricing before relying on them: they change.)*
+  | Free plan limit (as Claude knew it) | Today (11 November 2026) | What reaches it first |
+  |---|---|---|
+  | Database 500 MB | 14 MB (Supabase's own parts most of it; wishes 152 kB, profiles 280 kB) | Chat messages and wishes, at many thousands of users; the clean-up keeps it down |
+  | File storage 1 GB | 336 kB, 90 wish pictures (+ profile photos from 2.185) | Wish pictures you upload yourself (about 50 kB each): ~20,000 |
+  | Traffic out 5 GB a month | not measured | Pictures and lists loaded by phones and the web pages; the first limit at a few hundred active people a day |
+  | Live connections 200 at once | not measured | Everyone with the app open at the same moment (Stage 3); above it the app falls back to polling |
+  | Edge function calls 500,000 a month | small (pushes, shop pages in the browser) | Pushes for chat messages |
+  | A week without any use pauses the project | prevented by the keep-awake job | |
+  The weekly backup reports the database and storage sizes; traffic out and live connections are on Supabase's
+  **Reports** page. S4.9 **The free plan's limits, written down with today's use** (database size, storage, traffic out, live
   connections, function calls; look them up on Supabase's pricing page, they change) and which limit is reached
   first at 100, 1,000 and 10,000 users.
 

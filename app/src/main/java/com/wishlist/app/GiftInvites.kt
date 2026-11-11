@@ -173,6 +173,8 @@ object News {
                         "sh_invite" -> GiftInvites.told(c, code, d.optString("name"), d.optString("by"))
                         // Only on the Notifications page, no buzz (owner).
                         "sh_declined" -> Notifications.add(c, "gl_declined", "s:$code", d.optString("who").ifBlank { tr("Someone") }, extra = d.optString("name"))
+                        // A year without opening the app: a month before the lists are removed online (S4.3, 2.186).
+                        "cleanup" -> Alerts.notifyCleanup(c)
                         else -> if (kind.startsWith("ask")) Asks.told(c, kind, code, d)
                     }
                 } catch (e: Exception) {

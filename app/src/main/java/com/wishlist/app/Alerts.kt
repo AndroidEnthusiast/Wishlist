@@ -270,6 +270,16 @@ object Alerts {
         NotifyPace.post(c, nid, n, bundle)
     }
 
+    /**
+     * The clean-up's warning (ROADMAP S4.3, 2.186): the app hasn't been opened for 11 months; a month later the lists
+     * are removed online (the phone keeps them). Opening the app is all it takes; tapping this opens it.
+     */
+    fun notifyCleanup(c: Context) {
+        val open = Intent(c, MainActivity::class.java)
+        post(c, GROUPS_CHANNEL, 7_000_301, open, tr("Keep your wishlists online"),
+            tr("Open Wishlist to keep your lists online. Without a visit they’re removed online in a month; they stay on your phone."))
+    }
+
     /** "7 days to Sam’s birthday 🎈" (owner, 2.128, playful): [what] is "Sam’s birthday" or “Mum’s 60th”. */
     fun reminderTitle(days: Int, what: String) = if (days == 1) tr("1 day to %s 🎈", what) else tr("%1\$d days to %2\$s 🎈", days, what)
 
