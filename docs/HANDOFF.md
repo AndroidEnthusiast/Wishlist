@@ -190,6 +190,17 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 - 6 November (night): Friends review; **2.139**. Not checked: the friend link on a phone (Chrome on Android should open wishlist://friend from the page; some browsers ask first).
 
 ## Next session
+- **(11 November 2026, late, 2.187)** Part A of Stage 4 done (S4.4: no indexes needed). Part B started: **2.187** the
+  recovery key and its locked copy. Ask: did the owner run [supabase-vault.sql](https://github.com/AndroidEnthusiast/Wishlist/blob/main/supabase-vault.sql)
+  and [supabase-cleanup.sql](https://github.com/AndroidEnthusiast/Wishlist/blob/main/supabase-cleanup.sql) again (in
+  that order)? Does the Home card show, and does "Save to password manager" work (Google Password Manager should then
+  list "Wishlist recovery key")? **Next: 2.188 restoring** ("I already have lists" on the welcome's first step: the
+  password manager offers the key (Credential Manager GetPasswordOption) or it is pasted; `wl_vault_get`, unlock,
+  `Backup`-style import of prefs.json + chatkeys.json + the DB snapshot, restart; then sign out the old phone: rotate
+  the profile token (new server function needed), each own list's owner token and each collab list made here, make a
+  new key and save a new copy, delete the old copy; the old phone gets "not allowed" on its next call: show a clear
+  "This profile moved to another phone" screen with Start fresh / Import. Interview the owner on that screen's
+  wording and what "Start fresh" keeps.)
 - **(11 November 2026, 2.186)** Owner ran the scripts of 2.184/2.185 (checked read-only: `wl_pf_photo_url` answers).
   Built 2.186: clean-up (`supabase-cleanup.sql`, `Opened.kt`) and the free plan table (ROADMAP S4.9). Ask: did they run
   [supabase-cleanup.sql](https://github.com/AndroidEnthusiast/Wishlist/blob/main/supabase-cleanup.sql)? (Supabase >
