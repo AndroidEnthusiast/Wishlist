@@ -21,6 +21,8 @@ function fakeFetch(url, opts) {
   const fn = url.split("/rpc/")[1];
   const body = JSON.parse(opts.body);
   store.calls.push([fn, body, opts.headers]);
+  // A limit against abuse (supabase-limits.sql): the server refuses with 'rate_limited'.
+  if (store.limited && fn === "wl_reserve_item") return Promise.resolve({ ok: false, status: 400, text: () => Promise.resolve('{"code":"P0001","message":"rate_limited","hint":"Please try again in a moment"}') });
   let out;
   if (fn === "wl_get_list") out = body.p_code === "ZZZZZZZZ" ? null : {name: "Sam's wishlist", owner: store.owner === undefined ? "" : store.owner, cats: store.noCats ? [] : ["Tech","Home","Books"].concat(store.extraCats || []), items};
   else if (fn === "wl_moved_mine") out = store.moved ? store.moved(body) : [];
@@ -572,6 +574,20 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
 
   items.length = 0; saved.forEach(i => items.push(i));
   store.reservations = {};
+
+  // A limit against abuse: the visitor reads "Please try again in a moment" (owner's wording, 11 November 2026).
+  {
+    items.length = 0;
+    items.push({id: 1, url: "https://shop.example/a", title: "Lamp", desc: "", image: "", price: 20, old: null, cur: "EUR", cat: "Home", got: false});
+    store.reservations = {}; store.resRows = undefined; store.limited = true;
+    const lim = await load("?c=ABCD2345");
+    await sleep(300);
+    lim.window.document.querySelector(".card button.act").click();
+    await sleep(200);
+    check("a limit shows: Please try again in a moment", lim.window.document.getElementById("toast").textContent.includes("Please try again in a moment"));
+    check("and the gift isn't reserved", !store.reservations[1] && lim.window.document.querySelector(".card button.act").textContent === "Reserve");
+    store.limited = false;
+  }
 
   console.log(fails ? fails + " FAILED" : "ALL PASSED");
   process.exit(fails ? 1 : 0);

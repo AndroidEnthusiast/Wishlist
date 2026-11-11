@@ -67,6 +67,9 @@ object Live {
     /** The app is in front. In the background no screen fetches and the connection is closed (battery). */
     private val fg = MutableStateFlow(true)
 
+    /** True while the app is on screen. */
+    val inFront: Boolean get() = fg.value
+
     /** From [AppForeground]: the app as a whole came to the front or went to the background. */
     @Synchronized
     fun foreground(on: Boolean) {

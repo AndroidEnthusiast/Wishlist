@@ -533,6 +533,13 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     if (welcome) WelcomeFlow { welcome = false }
     // Where you were inside a tab comes back after Android closed the app in the background (KeepPlaces.kt, R9).
     KeepPlaces()
+    // "Please try again in a moment" when the server's limits against abuse were hit (ServerNotice, ROADMAP S4.2).
+    ServerNotice.text?.let { msg ->
+        LaunchedEffect(msg) {
+            ServerNotice.text = null
+            snack.showToast(msg)
+        }
+    }
     // The newest and the oldest working version (AppInfo.kt, ROADMAP R6): asked at most twice a day.
     LaunchedEffect(Unit) { AppInfo.load(ctx); AppInfo.refresh(ctx) }
     // A version that no longer works with the server: only the update is offered, over everything else.

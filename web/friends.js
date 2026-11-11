@@ -141,7 +141,11 @@ async function rpc(fn, body) {
   if (SUPABASE_KEY.indexOf("eyJ") === 0) h["Authorization"] = "Bearer " + SUPABASE_KEY;
   var r = await fetch(SUPABASE_URL + "/rest/v1/rpc/" + fn, { method: "POST", headers: h, body: JSON.stringify(body) });
   var t = await r.text();
-  if (!r.ok) throw new Error("Server said " + r.status);
+  if (!r.ok) {
+    // A limit against abuse (supabase-limits.sql, ROADMAP S4.2): only reached far above normal use.
+    if (t.indexOf("rate_limited") >= 0) { limitedAt = 0; toast(T("Please try again in a moment")); limitedAt = Date.now(); }
+    throw new Error("Server said " + r.status);
+  }
   return t ? JSON.parse(t) : null;
 }
 
@@ -169,7 +173,11 @@ function el(tag, cls, text) {
 }
 
 var toastTimer = null;
+// After "Please try again in a moment" (a limit against abuse, ROADMAP S4.2), the caller's own error message
+// ("No connection…") would only cover it with something untrue: for a few seconds it keeps the screen.
+var limitedAt = 0;
 function toast(msg) {
+  if (Date.now() - limitedAt < 4000 && msg !== T("Please try again in a moment")) return;
   var t = $("toast");
   t.textContent = msg;
   t.className = "show";

@@ -156,6 +156,12 @@ declare
   r wl_friends;
 begin
   perform wl_pf_check(p_id, p_token);
+  -- Every attempt counts, also a wrong code (ROADMAP S4.2, supabase-limits.sql): friend codes are short, so guessing
+  -- them must be slow. Before supabase-limits.sql is run, nothing is counted.
+  begin
+    perform wl_limit_hit('pf:' || p_id, 'friend_code', 30, 'hour');
+  exception when undefined_function then null;
+  end;
   select * into o from wl_profiles where code = upper(regexp_replace(coalesce(p_code, ''), '[^A-Za-z0-9]', '', 'g'));
   if o.id is null then return jsonb_build_object('status', 'none'); end if;
   if o.id = p_id then return jsonb_build_object('status', 'self'); end if;

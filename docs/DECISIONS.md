@@ -528,3 +528,20 @@ What the owner has decided, and why. Follow these unless the owner changes their
   buckets, a restore into a throw-away database that must have the same tables and rows (a difference of a row or two
   from a save during the copy is a warning), everything locked in one file, kept 60 days (a private repository has
   500 MB for job files on the free plan; a warning above 40 MB a copy).
+
+## Stage 4 (owner, 11 November 2026; first round of questions)
+- **Order: A groundwork** (photos as files, limits against abuse, clean-up, database speed; nothing visible), **then B
+  accounts that survive a new phone, then C privacy page + "Delete my profile and data", then D report and block.**
+- **Clean-up: lists, profiles and links unused for 12 months are deleted online**, with a warning to the owner's
+  phone **one month before** ("Open Wishlist to keep your lists online"). **"Used" means the owner's app was opened**
+  (owner chose this over also counting friends' visits, knowing that a list friends still look at can then go). The
+  copy on the phone is never touched.
+- **Limits against abuse: generous, half of Claude's examples: 100 wishes an hour, 30 messages a minute** (other
+  actions get limits in the same spirit, far above normal use). Someone who hits a limit sees **"Please try again in
+  a moment"**.
+- **A new phone: a recovery key** (no e-mail, no Google account link). The key screen has **"Save to password
+  manager"** (Android's own pop-up, one tap; on a new phone "I already have lists" offers the saved key by itself),
+  then **Share** and **Copy**. The line next to it: **"Keep your wishes safe: never share this key with anyone."**
+  It is asked **during the welcome** for now, and always available in Profile.
+- **Remind the owner** (owner, 11 November 2026): they want to work on a better welcome screen and first-start flow
+  later, visually and in its texts ("I don't see that screen because I'm always in the app").

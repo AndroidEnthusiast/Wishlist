@@ -54,12 +54,13 @@ check "net setup shared friends chat push groups features exchange" exchange_tes
 check "net setup shared friends chat push groups features exchange together" together_test.sql
 check "net setup shared friends chat push groups features exchange together collab" collab_test.sql
 check "net setup shared friends chat push groups features exchange together collab realtime sync" sync_test.sql
+check "net setup shared friends chat push groups features exchange together collab realtime sync limits" limits_test.sql
 # Every script must also be safe to run a second time (the owner is told so).
 sql "drop database if exists $DB" postgres >/dev/null 2>&1; sql "create database $DB" postgres >/dev/null
 sql "$NET" >/dev/null; sql "$REALTIME" >/dev/null
 twice=ok
 for round in 1 2; do
-  for p in setup shared friends chat push groups features exchange together collab sync; do
+  for p in setup shared friends chat push groups features exchange together collab sync limits; do
     grep -v -E 'create extension|cron\.schedule' "$ROOT/supabase-$p.sql" | psql "${PG[@]}" -d "$DB" -v ON_ERROR_STOP=1 -q -f - >/dev/null 2>/tmp/wl_sql_err || { echo "FAIL supabase-$p.sql, run $round: $(tail -n 2 /tmp/wl_sql_err)"; twice=bad; fail=1; }
   done
 done

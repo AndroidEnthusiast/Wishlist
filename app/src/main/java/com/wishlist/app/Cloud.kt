@@ -1,5 +1,8 @@
 package com.wishlist.app
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -8,6 +11,29 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 class CloudException(message: String) : Exception(message)
+
+/**
+ * One message from the server for whoever is looking at the app (2.184): today only "Please try again in a moment"
+ * when a limit against abuse is hit (owner's wording, 11 November 2026). Shown by [App] in its message bar; never
+ * while the app is in the background (a background check that hits a limit simply tries again later).
+ */
+object ServerNotice {
+    var text by androidx.compose.runtime.mutableStateOf<String?>(null)
+    private var lastAt = 0L
+
+    fun limited() {
+        if (!Live.inFront) return
+        val now = System.currentTimeMillis()
+        // Several refused calls at once (a save and its retries) give one message.
+        if (now - lastAt < 10_000) return
+        lastAt = now
+        text = tr("Please try again in a moment")
+    }
+
+    /** True for a plain message that comes within a few seconds of the limit message (it would cover it). */
+    fun covers(message: String): Boolean =
+        message != tr("Please try again in a moment") && System.currentTimeMillis() - lastAt < 4_000
+}
 
 data class RemoteList(
     val name: String, val cats: List<String>, val wishes: List<Wish>, val about: String = "", val owner: String = "",
@@ -55,7 +81,12 @@ object Cloud {
             val status = conn.responseCode
             val stream = if (status in 200..299) conn.inputStream else conn.errorStream
             val text = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
-            if (status !in 200..299) throw CloudException("Server said $status: ${text.take(160)}")
+            if (status !in 200..299) {
+                // A limit against abuse (supabase-limits.sql, ROADMAP S4.2), only reached far above normal use: one
+                // kind message, wherever the call came from (the screen's own "couldn't save" follows as before).
+                if (text.contains("rate_limited")) ServerNotice.limited()
+                throw CloudException("Server said $status: ${text.take(160)}")
+            }
             text
         } finally {
             conn.disconnect()

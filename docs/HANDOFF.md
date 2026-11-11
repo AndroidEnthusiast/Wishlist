@@ -190,6 +190,8 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 - 6 November (night): Friends review; **2.139**. Not checked: the friend link on a phone (Chrome on Android should open wishlist://friend from the page; some browsers ask first).
 
 ## Next session
+- **Remind the owner** (11 November 2026): they want to improve the welcome screen and first-start flow later
+  (visual and texts); they never see it themselves. The recovery key step goes into the welcome for now (Stage 4 B).
 - **START HERE (11 November 2026, end of Stage R).** Stage R is done (ROADMAP), apart from three things that wait for
   the owner: **two-step sign-in** on GitHub, Supabase and Google (R8; the owner asked to be reminded later: remind at
   the start of the next session), **the two-phone test** (R7, the 7-step list in ROADMAP), and real shop pages

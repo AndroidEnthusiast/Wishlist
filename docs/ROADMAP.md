@@ -193,9 +193,12 @@ Owner tests: two phones editing the same list, chat, collab list updates arrive 
 `wl_mine_put` are installed). The two-phone tests and the real S3.4 numbers were not done yet: anything noticed later is fixed first.
 
 ## Stage 4 — The server, ready to grow (2–3 sessions)  (P5, P7, P8)
+*Owner's order (11 November 2026): A groundwork (S4.1 photos, S4.2 limits, S4.3 clean-up, S4.4 indexes, S4.9 the free
+plan's limits), then B identity with a recovery key (S4.5), then C privacy page + delete my data (S4.6, S4.7), then D
+report and block (S4.8). Answers in DECISIONS "Stage 4".*
 - [ ] S4.1 Photos (profile, group, exchange) move to Supabase Storage with small file sizes; the database keeps only
   the address. Old text photos are moved by a script, then cleared.
-- [ ] S4.2 Limits against abuse inside the functions: how many lists, wishes, messages, reactions, invites per
+- [x] S4.2 *(2.184, `supabase-limits.sql`: triggers on what is added, the owner's numbers, a scrambled internet address only for new lists/profiles/groups/exchanges, friend-code attempts counted. Not limited yet: picture uploads to Storage (500 KB a file already), and the `fetch-page` helper.)* Limits against abuse inside the functions: how many lists, wishes, messages, reactions, invites per
   profile/device per hour; friendly errors in the app and web pages.
 - [ ] S4.3 Clean-up jobs (pg_cron): lists nobody opened for a long time (owner decides how long), expired news, old
   view counters; and a size report per table.

@@ -665,7 +665,11 @@ suspend fun SnackbarHostState.showToast(
     actionLabel: String? = null,
     withDismissAction: Boolean = false,
     @Suppress("UNUSED_PARAMETER") duration: SnackbarDuration = SnackbarDuration.Indefinite
-): SnackbarResult = showSnackbar(message, actionLabel, withDismissAction, SnackbarDuration.Indefinite)
+): SnackbarResult =
+    // Right after "Please try again in a moment" (ServerNotice), a screen's own "Couldn't save. Check your connection."
+    // would only cover it with something untrue; a message with a button (Undo) always shows.
+    if (actionLabel == null && ServerNotice.covers(message)) SnackbarResult.Dismissed
+    else showSnackbar(message, actionLabel, withDismissAction, SnackbarDuration.Indefinite)
 
 /** The place where messages show: each one for 5 seconds, and swipe it left or right to dismiss it. */
 @Composable
