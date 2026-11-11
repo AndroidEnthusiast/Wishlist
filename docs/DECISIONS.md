@@ -553,3 +553,5 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Clean-up and people without a profile** (owner, 11 November 2026): their lists can't be warned about, so they are
   removed online after 12 months like the others, and **the app quietly puts them back online** under the same link
   when it is opened again (reservations made before are gone).
+- **Every finished build ends with the download link** (owner, 11 November 2026: "always end a build by sending me a
+  link to the build"), also during the roadmap; replaces "No download line during the roadmap" of 8 November.
