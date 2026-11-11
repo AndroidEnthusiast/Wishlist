@@ -253,8 +253,8 @@
     $("fab").hidden = true;
     var v = view();
     var box = el("div", "gjoin");
-    if (info.photo) {
-      var c = el("div", "gcover"); var im = el("img"); im.src = "data:image/jpeg;base64," + info.photo; im.alt = ""; c.appendChild(im); box.appendChild(c);
+    if (photoSrc(info.photo)) {
+      var c = el("div", "gcover"); var im = el("img"); im.src = photoSrc(info.photo); im.alt = ""; c.appendChild(im); box.appendChild(c);
     }
     box.appendChild(el("h2", "gtitle", T("Join the wishlist group “{0}”", info.name)));
     box.appendChild(el("p", "sub", (info.organiser ? T("Organised by {0}", info.organiser) + " · " : "") +
@@ -335,6 +335,14 @@
     }
     return groups;
   }
+  // A photo from the server: the address of a file in our own photo bucket (since 2.185, ROADMAP S4.1), or an embedded
+  // photo (base64) that an older app saved. Anything else gives no photo.
+  function photoSrc(v) {
+    v = String(v || "");
+    if (!v) return "";
+    if (v.indexOf("https://") === 0) return v.indexOf(SUPABASE_URL + "/storage/v1/object/public/people-photos/") === 0 && v.indexOf("..") < 0 ? v : "";
+    return /^[A-Za-z0-9+\/=\s]+$/.test(v) ? "data:image/jpeg;base64," + v : "";
+  }
   var faceCache = {}, photoCache = {};
   async function loadFaces(g) {
     var todo = g.members.filter(function (m) { return m.pv > 0 && faceCache["f" + m.id + "_" + m.pv] === undefined; });
@@ -342,14 +350,14 @@
       var m = todo[i], k = "f" + m.id + "_" + m.pv;
       try {
         var b64 = await rpc("wl_gr_face", auth({ p_other: m.id }));
-        faceCache[k] = b64 ? "data:image/jpeg;base64," + b64 : "";
+        faceCache[k] = photoSrc(b64);
       } catch (e) { faceCache[k] = ""; }
       m.face = faceCache[k];
     }
     if (g.pv > 0 && photoCache[g.id + "_" + g.pv] === undefined) {
       try {
         var p = await rpc("wl_gr_photo", auth({ p_group: g.id }));
-        photoCache[g.id + "_" + g.pv] = p ? "data:image/jpeg;base64," + p : "";
+        photoCache[g.id + "_" + g.pv] = photoSrc(p);
       } catch (e) { photoCache[g.id + "_" + g.pv] = ""; }
     }
   }

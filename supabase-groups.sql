@@ -76,6 +76,8 @@ create index if not exists wl_group_news_profile on wl_group_news (profile);
 alter table wl_groups enable row level security;
 alter table wl_group_members enable row level security;
 alter table wl_group_invites enable row level security;
+-- The group photo as a file (2.185, see supabase-friends.sql "Photos as files").
+alter table wl_groups add column if not exists photo_url text not null default '';
 alter table wl_group_news enable row level security;
 
 -- ---------- helpers (not callable by the app) ----------
@@ -192,7 +194,7 @@ end $$;
 create or replace function wl_gr_info(p_link text)
 returns jsonb language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
-    'id', g.id, 'name', g.name, 'photo', g.photo, 'pv', g.photo_v,
+    'id', g.id, 'name', g.name, 'photo', coalesce(nullif(g.photo_url, ''), g.photo), 'pv', g.photo_v,
     'organiser', (select p.name from wl_profiles p where p.id = g.organiser),
     'count', (select count(*) from wl_group_members m where m.group_id = g.id)
   ) from wl_groups g where g.link = upper(p_link)
@@ -288,7 +290,7 @@ returns text language plpgsql security definer set search_path = public as $$
 declare v text;
 begin
   perform wl_pf_check(p_id, p_token);
-  select p.photo into v from wl_profiles p where p.id = p_other and (
+  select coalesce(nullif(p.photo_url, ''), p.photo) into v from wl_profiles p where p.id = p_other and (
     exists (select 1 from wl_group_members a join wl_group_members b on a.group_id = b.group_id
             where a.profile = p_id and b.profile = p_other)
     or exists (select 1 from wl_friends f where (f.a = p_id and f.b = p_other) or (f.a = p_other and f.b = p_id)));
@@ -300,7 +302,7 @@ create or replace function wl_gr_photo(p_id text, p_token text, p_group text)
 returns text language plpgsql security definer set search_path = public as $$
 begin
   perform wl_gr_check_member(p_id, p_token, p_group);
-  return (select photo from wl_groups where id = p_group);
+  return (select coalesce(nullif(photo_url, ''), photo) from wl_groups where id = p_group);
 end $$;
 
 -- Invite a friend (the organiser, or any member with "Members can invite too").
@@ -371,15 +373,30 @@ begin
   update wl_groups set name = left(btrim(p_name), 60), invite_all = coalesce(p_invite_all, false) where id = p_group;
 end $$;
 
--- The organiser sets the group's photo (a small JPEG as base64), or '' to remove it.
+-- The organiser sets the group's photo (a small JPEG as base64, apps older than 2.185), or '' to remove it.
 create or replace function wl_gr_set_photo(p_id text, p_token text, p_group text, p_photo text)
 returns void language plpgsql security definer set search_path = public as $$
 begin
   perform wl_gr_check_organiser(p_id, p_token, p_group);
   if length(coalesce(p_photo, '')) > 300000 then raise exception 'photo too big'; end if;
-  update wl_groups set photo = coalesce(p_photo, ''),
+  update wl_groups set photo = coalesce(p_photo, ''), photo_url = '',
     photo_v = case when coalesce(p_photo, '') = '' then 0 else (extract(epoch from clock_timestamp()) * 1000)::bigint end
     where id = p_group;
+end $$;
+
+-- The group's photo as a file (2.185, see wl_pf_photo_url): its address in people-photos/g/<group>/, or ''. Returns
+-- the address it replaces.
+create or replace function wl_gr_photo_url(p_id text, p_token text, p_group text, p_url text)
+returns text language plpgsql security definer set search_path = public as $$
+declare v_old text;
+begin
+  perform wl_gr_check_organiser(p_id, p_token, p_group);
+  if coalesce(p_url, '') <> '' and not wl_people_url_ok(p_url, 'g/' || p_group) then raise exception 'bad photo address'; end if;
+  select photo_url into v_old from wl_groups where id = p_group;
+  update wl_groups set photo_url = coalesce(p_url, ''), photo = '',
+    photo_v = case when coalesce(p_url, '') = '' then 0 else (extract(epoch from clock_timestamp()) * 1000)::bigint end
+    where id = p_group;
+  return coalesce(v_old, '');
 end $$;
 
 -- A new group link: the old one stops working. Invites already sent still work.
@@ -434,6 +451,8 @@ revoke execute on function
   wl_gr_is_member(text, text), wl_gr_check_member(text, text, text), wl_gr_check_organiser(text, text, text),
   wl_gr_check_list(text, text), wl_gr_list_card(text), wl_gr_json(text, text)
 from public, anon;
+
+grant execute on function wl_gr_photo_url(text, text, text, text) to anon;
 
 grant execute on function
   wl_fr_hide(text, text, text, boolean),

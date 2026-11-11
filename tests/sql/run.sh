@@ -55,6 +55,7 @@ check "net setup shared friends chat push groups features exchange together" tog
 check "net setup shared friends chat push groups features exchange together collab" collab_test.sql
 check "net setup shared friends chat push groups features exchange together collab realtime sync" sync_test.sql
 check "net setup shared friends chat push groups features exchange together collab realtime sync limits" limits_test.sql
+check "net setup shared friends chat push groups features exchange together collab" people_photos_test.sql
 # Every script must also be safe to run a second time (the owner is told so).
 sql "drop database if exists $DB" postgres >/dev/null 2>&1; sql "create database $DB" postgres >/dev/null
 sql "$NET" >/dev/null; sql "$REALTIME" >/dev/null

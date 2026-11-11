@@ -55,6 +55,8 @@ create table if not exists wl_gx_invites (
   primary key (gx_id, profile)
 );
 create index if not exists wl_gx_invites_profile on wl_gx_invites (profile);
+-- The exchange photo as a file (2.185, see supabase-friends.sql "Photos as files").
+alter table wl_gx add column if not exists photo_url text not null default '';
 
 -- One row per one-way rule: giver may not draw receiver. "Both ways" is two rows.
 create table if not exists wl_gx_excl (
@@ -592,16 +594,31 @@ returns void language plpgsql security definer set search_path = public as $$
 begin
   perform wl_gx_check_org(p_id, p_token, p_gx);
   if length(coalesce(p_photo, '')) > 300000 then raise exception 'photo too big'; end if;
-  update wl_gx set photo = coalesce(p_photo, ''),
+  update wl_gx set photo = coalesce(p_photo, ''), photo_url = '',
     photo_v = case when coalesce(p_photo, '') = '' then 0 else (extract(epoch from clock_timestamp()) * 1000)::bigint end
     where id = p_gx;
+end $$;
+
+-- The exchange's photo as a file (2.185, see supabase-friends.sql "Photos as files"): its address in
+-- people-photos/x/<exchange>/, or ''. Returns the address it replaces.
+create or replace function wl_gx_photo_url(p_id text, p_token text, p_gx text, p_url text)
+returns text language plpgsql security definer set search_path = public as $$
+declare v_old text;
+begin
+  perform wl_gx_check_org(p_id, p_token, p_gx);
+  if coalesce(p_url, '') <> '' and not wl_people_url_ok(p_url, 'x/' || p_gx) then raise exception 'bad photo address'; end if;
+  select photo_url into v_old from wl_gx where id = p_gx;
+  update wl_gx set photo_url = coalesce(p_url, ''), photo = '',
+    photo_v = case when coalesce(p_url, '') = '' then 0 else (extract(epoch from clock_timestamp()) * 1000)::bigint end
+    where id = p_gx;
+  return coalesce(v_old, '');
 end $$;
 
 create or replace function wl_gx_photo(p_id text, p_token text, p_gx text)
 returns text language plpgsql security definer set search_path = public as $$
 begin
   perform wl_gx_check_member(p_id, p_token, p_gx);
-  return (select photo from wl_gx where id = p_gx);
+  return (select coalesce(nullif(photo_url, ''), photo) from wl_gx where id = p_gx);
 end $$;
 
 -- The photo of someone you share an exchange with. '' when there is none.
@@ -609,7 +626,7 @@ create or replace function wl_gx_face(p_id text, p_token text, p_other text)
 returns text language plpgsql security definer set search_path = public as $$
 begin
   perform wl_pf_check(p_id, p_token);
-  return coalesce((select p.photo from wl_profiles p where p.id = p_other and exists (
+  return coalesce((select coalesce(nullif(p.photo_url, ''), p.photo) from wl_profiles p where p.id = p_other and exists (
     select 1 from wl_gx_members a join wl_gx_members b on a.gx_id = b.gx_id where a.profile = p_id and b.profile = p_other)), '');
 end $$;
 
@@ -854,6 +871,8 @@ revoke execute on function
   wl_gx_json(text, text), wl_gx_repair(text), wl_gx_slot(text, text, boolean), wl_gx_take_out(text, text),
   wl_gx_pair(text, text, text), wl_gx_push_notify(), wl_gx_clean_theme(text)
 from public, anon;
+
+grant execute on function wl_gx_photo_url(text, text, text, text) to anon;
 
 grant execute on function
   wl_gx_info(text),

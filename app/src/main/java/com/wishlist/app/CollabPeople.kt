@@ -111,12 +111,10 @@ object CollabPeople {
                 if (m.id == me || m.pv <= 0 || Friends.photos.containsKey(m.id)) continue
                 val f = File(dir, "${m.id}_${m.pv}.jpg")
                 if (!f.exists()) try {
-                    val b64 = Cloud.rpc("wl_sh_face", org.json.JSONObject().put("p_key", l.key).put("p_profile", m.id))
-                        .trim().removeSurrounding("\"")
-                    if (b64.isEmpty()) continue
+                    val bytes = PeoplePhotos.bytes(Cloud.rpc("wl_sh_face", org.json.JSONObject().put("p_key", l.key).put("p_profile", m.id))) ?: continue
                     withContext(Dispatchers.IO) {
                         (dir.listFiles() ?: emptyArray()).filter { it.name.startsWith(m.id + "_") }.forEach { it.delete() }
-                        f.writeBytes(Base64.decode(b64, Base64.DEFAULT))
+                        f.writeBytes(bytes)
                     }
                 } catch (e: Exception) {
                     continue

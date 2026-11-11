@@ -96,15 +96,67 @@ begin
   return v;
 end $$;
 
--- The profile photo (a small JPEG as base64), or '' to remove it.
+-- Photos as files (ROADMAP S4.1, 2.185): profile, group and gift exchange photos live in Supabase Storage (bucket
+-- "people-photos", set up in supabase-photos.sql) under a random name that changes with every new photo; the database
+-- keeps only that address. The functions that hand a photo out give the address when there is one, else the old
+-- embedded photo (base64), so photos saved by older apps keep showing. An app older than 2.185 can't show a photo that
+-- moved (it shows the first letter instead).
+alter table wl_profiles add column if not exists photo_url text not null default '';
+
+-- True for the address of a file in our "people-photos" bucket, in the folder [p_folder] (for example 'p/<profile>').
+create or replace function wl_people_url_ok(p_url text, p_folder text)
+returns boolean language sql immutable as $$
+  select coalesce(p_url, '') ~ ('^https://[a-z0-9.-]+/storage/v1/object/public/people-photos/' || p_folder || '/[A-Za-z0-9_-]{16,64}\.jpg$')
+$$;
+
+-- The profile photo (a small JPEG as base64, from apps older than 2.185), or '' to remove it.
 create or replace function wl_pf_photo(p_id text, p_token text, p_photo text)
 returns void language plpgsql security definer set search_path = public as $$
 begin
   perform wl_pf_check(p_id, p_token);
   if length(coalesce(p_photo, '')) > 200000 then raise exception 'photo too big'; end if;
   update wl_profiles
-    set photo = coalesce(p_photo, ''), photo_v = (extract(epoch from clock_timestamp()) * 1000)::bigint
+    set photo = coalesce(p_photo, ''), photo_url = '', photo_v = (extract(epoch from clock_timestamp()) * 1000)::bigint
     where id = p_id;
+end $$;
+
+-- The profile photo as a file (2.185): its address in people-photos/p/<your id>/, or '' to remove it. Returns the
+-- address it replaces, so the app can delete that file (the old address then stops working).
+create or replace function wl_pf_photo_url(p_id text, p_token text, p_url text)
+returns text language plpgsql security definer set search_path = public as $$
+declare v_old text;
+begin
+  perform wl_pf_check(p_id, p_token);
+  if coalesce(p_url, '') <> '' and not wl_people_url_ok(p_url, 'p/' || p_id) then raise exception 'bad photo address'; end if;
+  select photo_url into v_old from wl_profiles where id = p_id;
+  update wl_profiles
+    set photo_url = coalesce(p_url, ''), photo = '',
+        photo_v = case when coalesce(p_url, '') = '' then 0 else (extract(epoch from clock_timestamp()) * 1000)::bigint end
+    where id = p_id;
+  return coalesce(v_old, '');
+end $$;
+
+-- Who may put or delete a file in people-photos (the Storage rules in supabase-photos.sql ask this): the folder is
+-- p/<profile> (that profile), g/<group> (its organiser) or x/<gift exchange> (its organiser); the app proves who it is
+-- with the headers x-profile-id and x-profile-token.
+create or replace function wl_people_photo_ok(p_name text)
+returns boolean language plpgsql stable security definer set search_path = public as $$
+declare v_h json; v_id text; v_tok text; v_kind text; v_of text;
+begin
+  begin
+    v_h := nullif(current_setting('request.headers', true), '')::json;
+  exception when others then
+    return false;
+  end;
+  v_id := coalesce(v_h ->> 'x-profile-id', ''); v_tok := coalesce(v_h ->> 'x-profile-token', '');
+  if v_id = '' or v_tok = '' or not exists (select 1 from wl_profiles where id = v_id and token = v_tok) then return false; end if;
+  v_kind := split_part(coalesce(p_name, ''), '/', 1); v_of := split_part(coalesce(p_name, ''), '/', 2);
+  if split_part(p_name, '/', 4) <> '' or split_part(p_name, '/', 3) !~ '^[A-Za-z0-9_-]{16,64}\.jpg$' then return false; end if;
+  return case v_kind
+    when 'p' then v_of = v_id
+    when 'g' then exists (select 1 from wl_groups where id = v_of and organiser = v_id)
+    when 'x' then exists (select 1 from wl_gx where id = v_of and organiser = v_id)
+    else false end;
 end $$;
 
 -- Your birthday ("MM-DD" or '') and "I like…" line (2.95).
@@ -252,7 +304,7 @@ returns text language plpgsql security definer set search_path = public as $$
 declare v text;
 begin
   perform wl_pf_check(p_id, p_token);
-  select p.photo into v from wl_profiles p
+  select coalesce(nullif(p.photo_url, ''), p.photo) into v from wl_profiles p
     where p.id = p_other
       and exists (select 1 from wl_friends f where (f.a = p_id and f.b = p_other) or (f.a = p_other and f.b = p_id));
   return coalesce(v, '');
@@ -322,10 +374,14 @@ begin
 end $$;
 
 revoke execute on function wl_pf_check(text, text), wl_pf_new_code_text(), wl_list_json(text) from public, anon;
+-- The Storage rules (supabase-photos.sql) call wl_people_photo_ok as the caller, so anon may run it; it only answers
+-- true or false.
+grant execute on function wl_people_photo_ok(text), wl_people_url_ok(text, text) to anon;
 
 grant execute on function
   wl_pf_save(text, text, text),
   wl_pf_photo(text, text, text),
+  wl_pf_photo_url(text, text, text),
   wl_pf_new_code(text, text),
   wl_pf_about(text, text, text, text),
   wl_pf_lists(text, text, jsonb),

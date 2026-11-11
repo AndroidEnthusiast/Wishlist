@@ -167,6 +167,12 @@ object Groups {
         prefs(c).edit().putString("gr_state", t).apply()
         news(c, JSONObject(t).optJSONArray("news") ?: JSONArray(), i, onScreen)
         loadPhotos(c)
+        // Photos of groups you organise move from the database to files, once (PeoplePhotos, 2.185).
+        if (onScreen) for (gr in g) if (gr.organiser == myId(c) && gr.pv > 0) {
+            PeoplePhotos.moveOld(c, "g:" + gr.id, { Cloud.rpc("wl_gr_photo", base(c).put("p_group", gr.id)) }) { bytes ->
+                PeoplePhotos.save("g/" + gr.id, base(c), "wl_gr_photo_url", base(c).put("p_group", gr.id), bytes)
+            }
+        }
     }
 
     /** Invites and news are told once: a notification (only in the background) and a line on the Notifications page. */
@@ -218,9 +224,8 @@ object Groups {
         for ((id, name) in want) {
             val f = File(gd, name)
             if (!f.exists()) try {
-                val b64 = str(Cloud.rpc("wl_gr_photo", base(c).put("p_group", id)))
-                if (b64.isEmpty()) continue
-                withContext(Dispatchers.IO) { f.writeBytes(Base64.decode(b64, Base64.DEFAULT)) }
+                val bytes = PeoplePhotos.bytes(Cloud.rpc("wl_gr_photo", base(c).put("p_group", id))) ?: continue
+                withContext(Dispatchers.IO) { f.writeBytes(bytes) }
             } catch (e: Exception) {
                 continue
             }
@@ -238,9 +243,8 @@ object Groups {
         for ((id, name) in wantFaces) {
             val f = File(fd, name)
             if (!f.exists()) try {
-                val b64 = str(Cloud.rpc("wl_gr_face", base(c).put("p_other", id)))
-                if (b64.isEmpty()) continue
-                withContext(Dispatchers.IO) { f.writeBytes(Base64.decode(b64, Base64.DEFAULT)) }
+                val bytes = PeoplePhotos.bytes(Cloud.rpc("wl_gr_face", base(c).put("p_other", id))) ?: continue
+                withContext(Dispatchers.IO) { f.writeBytes(bytes) }
             } catch (e: Exception) {
                 continue
             }
@@ -361,7 +365,7 @@ object Groups {
      * every member. Null [src]: the photo is removed.
      */
     suspend fun setPhoto(c: Context, gid: String, src: String?, edit: HeroEdit, fa: Float) {
-        val b64 = if (src == null) "" else {
+        val jpeg: ByteArray? = if (src == null) null else {
             val cut = renderCover(c, src, edit, fa) ?: throw CloudException("photo")
             withContext(Dispatchers.IO) {
                 val f = File(Uri.parse(cut).path ?: throw CloudException("photo"))
@@ -371,10 +375,13 @@ object Groups {
                 val small = Bitmap.createScaledBitmap(bmp, w, (bmp.height * w / bmp.width.toFloat()).toInt().coerceAtLeast(1), true)
                 val out = java.io.ByteArrayOutputStream()
                 small.compress(Bitmap.CompressFormat.JPEG, 80, out)
-                Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
+                out.toByteArray()
             }
         }
-        Cloud.rpc("wl_gr_set_photo", base(c).put("p_group", gid).put("p_photo", b64))
+        // As a file (2.185, PeoplePhotos), or the old way before the scripts are run.
+        if (!PeoplePhotos.save("g/" + gid, base(c), "wl_gr_photo_url", base(c).put("p_group", gid), jpeg)) {
+            Cloud.rpc("wl_gr_set_photo", base(c).put("p_group", gid).put("p_photo", jpeg?.let { Base64.encodeToString(it, Base64.NO_WRAP) } ?: ""))
+        }
         refresh(c)
     }
 

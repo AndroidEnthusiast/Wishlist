@@ -35,3 +35,25 @@ create policy "wl photos select" on storage.objects for select to anon
 drop policy if exists "wl photos delete" on storage.objects;
 create policy "wl photos delete" on storage.objects for delete to anon
   using (bucket_id = 'wish-photos' and public.wl_owner_ok((storage.foldername(name))[1]));
+
+-- 4. Profile, group and gift exchange photos as files (ROADMAP S4.1, 2.185). Run supabase-friends.sql, -groups.sql
+--    and -exchange.sql first (they make wl_people_photo_ok). A public bucket: a photo can be seen only by someone who
+--    knows its address, which is random, changes with every new photo, and is handed out only by the server's checks
+--    (friends, group and exchange members). Only small JPEGs. Nobody can list or browse the bucket.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('people-photos', 'people-photos', true, 307200, array['image/jpeg'])
+on conflict (id) do update
+  set public = true, file_size_limit = 307200, allowed_mime_types = array['image/jpeg'];
+
+drop policy if exists "wl people photos insert" on storage.objects;
+create policy "wl people photos insert" on storage.objects for insert to anon
+  with check (bucket_id = 'people-photos' and public.wl_people_photo_ok(name));
+
+drop policy if exists "wl people photos select" on storage.objects;
+create policy "wl people photos select" on storage.objects for select to anon
+  using (bucket_id = 'people-photos' and public.wl_people_photo_ok(name));
+
+drop policy if exists "wl people photos delete" on storage.objects;
+create policy "wl people photos delete" on storage.objects for delete to anon
+  using (bucket_id = 'people-photos' and public.wl_people_photo_ok(name));
+

@@ -25,7 +25,7 @@ returns text language plpgsql security definer set search_path = public as $$
 declare v_code text; v text;
 begin
   v_code := wl_sh_code(p_key);
-  select p.photo into v from wl_profiles p
+  select coalesce(nullif(p.photo_url, ''), p.photo) into v from wl_profiles p
     where p.id = p_profile and exists (select 1 from wl_sh_members m where m.list_code = v_code and m.profile = p_profile);
   return coalesce(v, '');
 end $$;

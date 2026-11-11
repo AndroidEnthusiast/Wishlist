@@ -299,6 +299,8 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
         // Gift exchanges and their invitations (2.129): the red dot on the menu item.
         Exchanges.load(ctx)
         if (Config.enabled && Friends.hasProfile(ctx)) try { Exchanges.refresh(ctx) } catch (e: Exception) {}
+        // Your profile photo moves from the database to a file, once (PeoplePhotos, ROADMAP S4.1, 2.185).
+        if (Config.enabled && Friends.hasProfile(ctx)) try { Friends.movePhoto(ctx) } catch (e: Exception) {}
     }
 
     // The bottom bar's tabs (Messages, My shops, Friends) are routes over "main" (Home or a list); Home is "main".

@@ -349,9 +349,8 @@ object Friends {
             val f = File(dir, name)
             if (!f.exists()) {
                 try {
-                    val b64 = str(Cloud.rpc("wl_fr_photo", base(c).put("p_other", id)))
-                    if (b64.isEmpty()) continue
-                    val bytes = Base64.decode(b64, Base64.DEFAULT)
+                    // A file's address or an embedded photo from an older app (PeoplePhotos, 2.185).
+                    val bytes = PeoplePhotos.bytes(Cloud.rpc("wl_fr_photo", base(c).put("p_other", id))) ?: continue
                     withContext(Dispatchers.IO) { f.writeBytes(bytes) }
                 } catch (e: Exception) {
                     continue
@@ -411,8 +410,24 @@ object Friends {
 
     private suspend fun uploadPhoto(c: Context) {
         val f = oldPhotoFile()
-        val b64 = if (f != null && f.exists()) Base64.encodeToString(withContext(Dispatchers.IO) { f.readBytes() }, Base64.NO_WRAP) else ""
-        Cloud.rpc("wl_pf_photo", base(c).put("p_photo", b64))
+        val bytes = if (f != null && f.exists()) withContext(Dispatchers.IO) { f.readBytes() } else null
+        savePhotoBytes(c, bytes)
+    }
+
+    /** Your profile photo online: as a file (2.185, PeoplePhotos), or the old way before the scripts are run. */
+    private suspend fun savePhotoBytes(c: Context, bytes: ByteArray?): Boolean {
+        val b = base(c)
+        if (PeoplePhotos.save("p/" + b.getString("p_id"), b, "wl_pf_photo_url", base(c), bytes)) return true
+        Cloud.rpc("wl_pf_photo", base(c).put("p_photo", bytes?.let { Base64.encodeToString(it, Base64.NO_WRAP) } ?: ""))
+        return true
+    }
+
+    /** Moves your profile photo from the database to a file, once (2.185). */
+    suspend fun movePhoto(c: Context) {
+        val b = auth(c) ?: return
+        PeoplePhotos.moveOld(c, "p", { Cloud.rpc("wl_fr_photo", JSONObject(b.toString()).put("p_other", b.getString("p_id"))) }) { bytes ->
+            PeoplePhotos.save("p/" + b.getString("p_id"), b, "wl_pf_photo_url", base(c), bytes)
+        }
     }
 
     suspend fun removePhoto(c: Context) {
@@ -422,7 +437,7 @@ object Friends {
         photoSrc = ""
         photoEdit = HeroEdit()
         prefs(c).edit().putString("pf_photo", "").putString("pf_src", "").putString("pf_edit", "").apply()
-        if (prefs(c).getBoolean("pf_made", false)) Cloud.rpc("wl_pf_photo", base(c).put("p_photo", ""))
+        if (prefs(c).getBoolean("pf_made", false)) savePhotoBytes(c, null)
     }
 
     // ---- codes and requests ----

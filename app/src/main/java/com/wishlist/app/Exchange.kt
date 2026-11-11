@@ -236,6 +236,12 @@ object Exchanges {
         messages(c, before, x, onScreen)
         days(c, x)
         loadPhotos(c)
+        // Photos of exchanges you organise move from the database to files, once (PeoplePhotos, 2.185).
+        if (onScreen) for (gx in x) if (gx.organiser == myId(c) && gx.pv > 0) {
+            PeoplePhotos.moveOld(c, "x:" + gx.id, { Cloud.rpc("wl_gx_photo", base(c).put("p_gx", gx.id)) }) { bytes ->
+                PeoplePhotos.save("x/" + gx.id, base(c), "wl_gx_photo_url", base(c).put("p_gx", gx.id), bytes)
+            }
+        }
     }
 
     private fun notify(c: Context, gx: String, title: String, text: String, kind: String, onScreen: Boolean) {
@@ -329,9 +335,8 @@ object Exchanges {
         for ((id, name) in want) {
             val f = File(d, name)
             if (!f.exists()) try {
-                val b64 = Cloud.rpc("wl_gx_photo", base(c).put("p_gx", id)).trim().removeSurrounding("\"")
-                if (b64.isEmpty()) continue
-                withContext(Dispatchers.IO) { f.writeBytes(Base64.decode(b64, Base64.DEFAULT)) }
+                val bytes = PeoplePhotos.bytes(Cloud.rpc("wl_gx_photo", base(c).put("p_gx", id))) ?: continue
+                withContext(Dispatchers.IO) { f.writeBytes(bytes) }
             } catch (e: Exception) {
                 continue
             }
@@ -346,7 +351,7 @@ object Exchanges {
      * [src] cut as [edit] in the frame [fa], sent as a small JPEG. Null [src]: back to the theme's cover.
      */
     suspend fun setPhoto(c: Context, gx: String, src: String?, edit: HeroEdit, fa: Float) {
-        val b64 = if (src == null) "" else {
+        val jpeg: ByteArray? = if (src == null) null else {
             val cut = renderCover(c, src, edit, fa) ?: throw CloudException("photo")
             withContext(Dispatchers.IO) {
                 val f = File(Uri.parse(cut).path ?: throw CloudException("photo"))
@@ -356,10 +361,13 @@ object Exchanges {
                 val small = Bitmap.createScaledBitmap(bmp, w, (bmp.height * w / bmp.width.toFloat()).toInt().coerceAtLeast(1), true)
                 val out = java.io.ByteArrayOutputStream()
                 small.compress(Bitmap.CompressFormat.JPEG, 80, out)
-                Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
+                out.toByteArray()
             }
         }
-        Cloud.rpc("wl_gx_set_photo", base(c).put("p_gx", gx).put("p_photo", b64))
+        // As a file (2.185, PeoplePhotos), or the old way before the scripts are run.
+        if (!PeoplePhotos.save("x/" + gx, base(c), "wl_gx_photo_url", base(c).put("p_gx", gx), jpeg)) {
+            Cloud.rpc("wl_gx_set_photo", base(c).put("p_gx", gx).put("p_photo", jpeg?.let { Base64.encodeToString(it, Base64.NO_WRAP) } ?: ""))
+        }
         refresh(c)
     }
 

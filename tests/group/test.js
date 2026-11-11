@@ -110,6 +110,8 @@ const A = "AAAAAAAAAAAAAAAAAAAA", AT = "tokA_tokA_tokA_tokA_", LINK = "LNKABCDEF
   ] });
   rpc("wl_set_link", { p_code: "ANNALIST", p_token: "ownerA_ownerA_ownerA", p_on: false });
   rpc("wl_gr_create", { p_id: A, p_token: AT, p_group: GID, p_link: LINK, p_name: "Family", p_list: "ANNALIST", p_list_token: "ownerA_ownerA_ownerA" });
+  var PHOTO_URL = "https://aspnmvmsvwbezdltykgx.supabase.co/storage/v1/object/public/people-photos/g/" + GID + "/abcdefghijklmnopqrstuvwxyz012345.jpg";
+  rpc("wl_gr_photo_url", { p_id: A, p_token: AT, p_group: GID, p_url: PHOTO_URL });
 
   const browser = await chromium.launch();
   const web = await serveWeb(path.join(ROOT, "web"));
@@ -130,6 +132,8 @@ const A = "AAAAAAAAAAAAAAAAAAAA", AT = "tokA_tokA_tokA_tokA_", LINK = "LNKABCDEF
   await w.page.screenshot({ path: "s_group_join.png" });
   check("preview page goes on to group.html with the key", /group\.html\?g=/i.test(w.page.url()), w.page.url());
   check("join screen names the group", (await w.page.locator(".gtitle").innerText()).includes("Family"));
+  // 2.185 (ROADMAP S4.1): the group photo is a file in our own bucket; another website's address never shows.
+  check("join screen: the group photo from its file", (await w.page.locator(".gjoin .gcover img").getAttribute("src")) === PHOTO_URL);
   check("join screen: organiser and members", (await w.page.locator(".gjoin .sub").innerText()) === "Organised by Anna · 1 member");
   check("join screen: open in the app (Android)", (await w.page.locator(".gjoin a[href^='wishlist://group?g=']").count()) === 1);
   await w.page.getByRole("button", { name: "Join" }).click();

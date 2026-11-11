@@ -56,7 +56,7 @@ object Cloud {
      * once as if the phone were offline. Keeps the checks fast and predictable (2.159: waiting on the real server kept
      * the pretend phone busy) and real lists safe from them.
      */
-    private fun noServerInChecks() {
+    internal fun noServerInChecks() {
         if (Crash.onComputer) throw java.io.IOException("No server in the app's checks")
     }
 

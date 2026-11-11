@@ -196,7 +196,7 @@ Owner tests: two phones editing the same list, chat, collab list updates arrive 
 *Owner's order (11 November 2026): A groundwork (S4.1 photos, S4.2 limits, S4.3 clean-up, S4.4 indexes, S4.9 the free
 plan's limits), then B identity with a recovery key (S4.5), then C privacy page + delete my data (S4.6, S4.7), then D
 report and block (S4.8). Answers in DECISIONS "Stage 4".*
-- [ ] S4.1 Photos (profile, group, exchange) move to Supabase Storage with small file sizes; the database keeps only
+- [x] S4.1 *(2.185, `PeoplePhotos.kt`: files in the bucket `people-photos` with a new random address per photo, old embedded photos still shown and moved by their owner's phone; the owner chose to do it now although the database was 14 MB and the photos 58 kB. Left for a later version, once older apps are gone: clear the remaining embedded photos with a script.)* Photos (profile, group, exchange) move to Supabase Storage with small file sizes; the database keeps only
   the address. Old text photos are moved by a script, then cleared.
 - [x] S4.2 *(2.184, `supabase-limits.sql`: triggers on what is added, the owner's numbers, a scrambled internet address only for new lists/profiles/groups/exchanges, friend-code attempts counted. Not limited yet: picture uploads to Storage (500 KB a file already), and the `fetch-page` helper.)* Limits against abuse inside the functions: how many lists, wishes, messages, reactions, invites per
   profile/device per hour; friendly errors in the app and web pages.
