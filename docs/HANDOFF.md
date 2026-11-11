@@ -190,6 +190,20 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 - 6 November (night): Friends review; **2.139**. Not checked: the friend link on a phone (Chrome on Android should open wishlist://friend from the page; some browsers ask first).
 
 ## Next session
+- **START HERE (11 November 2026, Stage 4 part A, after 2.185).** Built: **2.184** limits against abuse
+  (`supabase-limits.sql`), **2.185** photos as files (`PeoplePhotos.kt`, bucket `people-photos`). Ask first whether the
+  owner ran the scripts, in this order: supabase-friends.sql, supabase-groups.sql, supabase-exchange.sql,
+  supabase-collab.sql, supabase-photos.sql, supabase-limits.sql (check read-only: `wl_pf_photo_url` and
+  `wl_limit_hit`… the latter is locked, so check that a call to `wl_mine_get` still answers and that
+  `wl_pf_photo_url` with a wrong token says "not allowed"/"bad key"). Then on the phone: change your profile photo,
+  a friend sees it; a group photo; the next Sunday's backup shows "photos as text" going down and files in
+  `people-photos`. **Watch** for "Please try again in a moment" in normal use: if it ever shows for a real person,
+  the internet address Supabase passes may be shared (check `x-forwarded-for`), and the limits must be loosened.
+  **Next in part A:** S4.3 clean-up (12 months unused by the owner's app, a push warning a month before to profiles,
+  lists without a profile come back online by themselves; needs an "app opened" signal: decide whether `wl_pulse`
+  from a foreground start counts), S4.4 indexes (the slowest queries in Supabase > Query performance; ask the owner for
+  a screenshot), S4.9 the free plan's limits written down with today's numbers (14 MB database). Then part B: the
+  recovery key (DECISIONS "Stage 4").
 - **Remind the owner** (11 November 2026): they want to improve the welcome screen and first-start flow later
   (visual and texts); they never see it themselves. The recovery key step goes into the welcome for now (Stage 4 B).
 - **START HERE (11 November 2026, end of Stage R).** Stage R is done (ROADMAP), apart from three things that wait for
