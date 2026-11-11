@@ -427,6 +427,63 @@ object Shared {
         }
     }
 
+    // ---- moving to and from collab wishlists (MoveAcross.kt, owner 11 November 2026) ----
+
+    /**
+     * Puts a new wish on collab wishlist [l] (open or not) and waits for the server: throws when it can't be reached,
+     * and nothing has changed then. A picture stored on this phone is uploaded to that list first (the file stays,
+     * for Undo). Returns the wish as it is online.
+     */
+    suspend fun addTo(c: Context, l: SharedList, w: Wish): Wish {
+        var out = w
+        if (ImageStore.isLocal(out.image)) {
+            val name = out.image.substringAfterLast('/')
+            val bytes = ImageStore.shareCopy(out.image)
+            out = if (bytes != null) try {
+                Cloud.uploadPhoto(l.code, l.key, name, bytes, "x-edit-key")
+                out.copy(image = Cloud.photoUrl(l.code, name))
+            } catch (e: Exception) {
+                out.copy(image = "")
+            } else out.copy(image = "")
+        }
+        lock.withLock { Cloud.shPut(l.key, out, null) }
+        if (active == l.code) {
+            if (content.wishes.none { it.id == out.id }) content = content.copy(wishes = listOf(out) + content.wishes)
+            stamp.incrementAndGet()
+            writeCache(c, l.code, content)
+        } else readCache(c, l.code)?.let { ct ->
+            // The phone's copy (the list's block on Home shows its newest wishes).
+            if (ct.wishes.none { it.id == out.id }) writeCache(c, l.code, ct.copy(wishes = listOf(out) + ct.wishes))
+        }
+        return out
+    }
+
+    /**
+     * A wish leaves collab wishlist [l] for another list: into [l]'s bin (so the others can put it back for 30 days),
+     * waiting for the server. Throws when it can't be reached; nothing has changed then.
+     */
+    suspend fun sendAway(c: Context, l: SharedList, w: Wish): Trashed {
+        val at = System.currentTimeMillis()
+        val binned = w.copy(bin = at, binBy = l.me)
+        lock.withLock { Cloud.shPut(l.key, binned, listOf("bin", "binBy")) }
+        var index = 0
+        if (active == l.code) {
+            index = content.wishes.indexOfFirst { it.id == w.id }.coerceAtLeast(0)
+            Bin.binnedHere(c, l.code, w.id, at)
+            Bin.added(BinEntry(binned, l.code, content.name.ifBlank { l.name }, reserved[w.id]))
+            content = content.copy(wishes = content.wishes.filter { it.id != w.id })
+            stamp.incrementAndGet()
+            writeCache(c, l.code, content)
+        } else readCache(c, l.code)?.let { ct -> writeCache(c, l.code, ct.copy(wishes = ct.wishes.filter { it.id != w.id })) }
+        return Trashed(binned, index, l.code)
+    }
+
+    /** The categories collab wishlist [code] has, as this phone last saw them. */
+    fun catsOf(c: Context, code: String): List<String> = if (active == code) content.cats else readCache(c, code)?.cats.orEmpty()
+
+    /** True when [url] is a picture stored online for collab wishlist [code] (it goes when that wish is deleted for good). */
+    fun ownsPhoto(code: String, url: String): Boolean = photoNameOf(code, url) != null
+
     // ---- deleting: the wish goes to the bin at once (for everyone); Undo takes it out again ----
 
     /**

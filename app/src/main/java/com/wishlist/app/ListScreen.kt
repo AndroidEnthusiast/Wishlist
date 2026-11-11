@@ -387,7 +387,7 @@ fun HomeScreen(
                                 onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
                                 reserve = if (inShared) Reserving(r, reserveLabel(Shared.active.orEmpty(), w, r)) { on -> Shared.reserve(w, on) } else null,
                                 onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) }),
-                                onMove = if (inShared) null else ({ MoveFlow.ask(setOf(w.id)) })
+                                onMove = { MoveFlow.ask(setOf(w.id)) }
                             ) { editing = w }
                             // The buttons of Rows and Large cards: Share, the eye (or Reserve on a gift list), Delete.
                             else -> {
@@ -460,6 +460,8 @@ fun HomeScreen(
             onHistory = null,
             onShare = null,
             onOwned = if (inShared) null else ({ menuId = null; OwnedFlow.toggle(ctx, w) }),
+            // To one of your own lists or another collab wishlist (owner, 11 November 2026; MoveAcross.kt).
+            onMove = if (inShared) ({ menuId = null; MoveFlow.ask(setOf(w.id)) }) else null,
             onClose = { menuId = null }
         )
     }

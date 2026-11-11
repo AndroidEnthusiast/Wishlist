@@ -59,7 +59,20 @@ object MoveFlow {
     var picking by mutableStateOf<Set<Long>?>(null)
 
     /** The last move, for its "Moved to …" message and Undo. */
-    class Done(val ids: Set<Long>, val from: String, val to: String, val toName: String, val failed: String?)
+    class Done(
+        val ids: Set<Long>, val from: String, val to: String, val toName: String, val failed: String?,
+        // To or from a collab wishlist (MoveAcross.kt): a copy instead of a move, and its own way back.
+        val copied: Boolean = false, val undoer: (suspend () -> String?)? = null
+    )
+
+    /** Leaving a collab wishlist asks each time (owner, 11 November 2026): the wishes and where they go, waiting for "Move" or "Copy". */
+    var choosing by mutableStateOf<Pair<Set<Long>, String>?>(null)
+
+    /** The list that is open: one of your own (its id) or a collab wishlist (MoveAcross's key). */
+    fun sourceKey(): String = Shared.active?.let { MoveAcross.collabKey(it) } ?: Repo.openMine
+
+    fun nameOf(key: String): String =
+        if (MoveAcross.isCollab(key)) Shared.lists.firstOrNull { it.code == MoveAcross.codeOf(key) }?.name.orEmpty() else Repo.mineName(key)
 
     var done by mutableStateOf<Done?>(null)
         private set
@@ -106,8 +119,10 @@ object MoveFlow {
 
     /** Runs a move from the open list and shows its message. */
     fun start(c: Context, to: String, ids: Set<Long>, scope: kotlinx.coroutines.CoroutineScope) {
-        val from = Repo.openMine
+        val from = sourceKey()
         picking = null
+        if (MoveAcross.isCollab(from)) { choosing = ids to to; return }
+        if (MoveAcross.isCollab(to)) { across(c, to, ids, copy = false, scope = scope); return }
         busy = true
         scope.launch {
             val (moved, problem) = move(c, from, to, ids)
@@ -116,9 +131,30 @@ object MoveFlow {
         }
     }
 
+    /** To or from a collab wishlist (MoveAcross.kt). */
+    fun across(c: Context, to: String, ids: Set<Long>, copy: Boolean, scope: kotlinx.coroutines.CoroutineScope) {
+        val from = sourceKey()
+        choosing = null
+        busy = true
+        scope.launch {
+            val r = MoveAcross.run(c, from, to, ids, copy)
+            busy = false
+            done = Done(r.done, from, to, nameOf(to), r.problem, copied = copy, undoer = r.undo)
+        }
+    }
+
     fun undo(c: Context, d: Done, scope: kotlinx.coroutines.CoroutineScope) {
         done = null
         if (d.ids.isEmpty()) return
+        if (d.undoer != null) {
+            busy = true
+            scope.launch {
+                val problem = d.undoer.invoke()
+                busy = false
+                if (problem != null) done = Done(emptySet(), d.to, d.from, nameOf(d.from), problem)
+            }
+            return
+        }
         busy = true
         scope.launch {
             val (_, problem) = move(c, d.to, d.from, d.ids)
@@ -138,6 +174,28 @@ fun MoveHost(snack: SnackbarHostState) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     MoveFlow.picking?.let { ids -> MoveToDialog(ids, onPick = { to -> MoveFlow.start(ctx, to, ids, scope) }, onClose = { MoveFlow.picking = null }) }
+    // Leaving a collab wishlist: Move or Copy? (owner, 11 November 2026)
+    MoveFlow.choosing?.let { (ids, to) ->
+        val here = shortName(MoveFlow.nameOf(MoveFlow.sourceKey()))
+        val blocked = ids.any { !MoveAcross.mayLeave(Shared.reserved[it]) }
+        AlertDialog(
+            onDismissRequest = { MoveFlow.choosing = null },
+            title = { Text(tr("Move or copy?")) },
+            text = {
+                Text(
+                    if (blocked) tr("Someone reserved this wish, so it stays on “%s”. You can still copy it.", here)
+                    else tr("Move takes it off “%s” for everyone on it. It stays in that list’s bin for 30 days. Copy leaves it there.", here)
+                )
+            },
+            confirmButton = {
+                Row {
+                    TextButton(onClick = { MoveFlow.across(ctx, to, ids, copy = true, scope = scope) }) { Text(tr("Copy")) }
+                    TextButton(onClick = { MoveFlow.across(ctx, to, ids, copy = false, scope = scope) }, enabled = !blocked) { Text(tr("Move")) }
+                }
+            },
+            dismissButton = { TextButton(onClick = { MoveFlow.choosing = null }) { Text(tr("Cancel")) } }
+        )
+    }
     val d = MoveFlow.done
     LaunchedEffect(d) {
         if (d == null) return@LaunchedEffect
@@ -148,7 +206,12 @@ fun MoveHost(snack: SnackbarHostState) {
             return@LaunchedEffect
         }
         val name = shortName(d.toName)
-        val msg = (if (d.ids.size == 1) tr("Moved to “%s”", name) else tr("%1\$d wishes moved to “%2\$s”", d.ids.size, name)) +
+        val msg = (when {
+            d.copied && d.ids.size == 1 -> tr("Copied to “%s”", name)
+            d.copied -> tr("%1\$d wishes copied to “%2\$s”", d.ids.size, name)
+            d.ids.size == 1 -> tr("Moved to “%s”", name)
+            else -> tr("%1\$d wishes moved to “%2\$s”", d.ids.size, name)
+        }) +
             (d.failed?.let { " " + tr("Some couldn’t move.") + " " + it } ?: "")
         val r = snack.showToast(message = msg, actionLabel = tr("Undo"), duration = SnackbarDuration.Short)
         if (r == SnackbarResult.ActionPerformed) MoveFlow.undo(ctx, d, scope) else MoveFlow.finish(d)
@@ -162,14 +225,17 @@ private fun shortName(s: String): String = if (s.length <= 30) s else s.take(29)
 fun MoveToDialog(ids: Set<Long>, onPick: (String) -> Unit, onClose: () -> Unit) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
-    val others = remember(Repo.mineVersion, Repo.mineIds) { Repo.allMine(ctx).filter { it.id != Repo.openMine } }
+    // Your other wishlists (all of them when a collab wishlist is open), then the other collab wishlists.
+    val here = Shared.active
+    val others = remember(Repo.mineVersion, Repo.mineIds, here) { Repo.allMine(ctx).filter { here != null || it.id != Repo.openMine } }
+    val collabs = Shared.lists.filter { it.code != here }
     var newList by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = onClose,
         title = { Text(if (ids.size == 1) tr("Move to…") else tr("Move %d wishes to…", ids.size)) },
         text = {
             Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                if (others.isEmpty()) Text(
+                if (others.isEmpty() && collabs.isEmpty()) Text(
                     tr("You have one wishlist. Make a new one to move wishes to."),
                     style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(bottom = 4.dp)
                 )
@@ -183,6 +249,19 @@ fun MoveToDialog(ids: Set<Long>, onPick: (String) -> Unit, onClose: () -> Unit) 
                             Text(Repo.mineName(d.id), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text(wishesLabel(d.wishes.size), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
                         }
+                    }
+                }
+                if (collabs.isNotEmpty()) Text(
+                    tr("Collab wishlists"), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 8.dp, top = 8.dp)
+                )
+                collabs.forEach { l ->
+                    Row(
+                        Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(RoundedCornerShape(12.dp)).clickable { onPick(MoveAcross.collabKey(l.code)) }
+                            .padding(horizontal = 8.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(l.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
                 Row(

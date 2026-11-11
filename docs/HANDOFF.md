@@ -190,6 +190,25 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 - 6 November (night): Friends review; **2.139**. Not checked: the friend link on a phone (Chrome on Android should open wishlist://friend from the page; some browsers ask first).
 
 ## Next session
+- **START HERE (11 November 2026, Stage R session).** Owner: 2.178 "went well"; **both key steps later** (R0 signing
+  key copy: still urgent, keep reminding; R2 Firebase key restriction). Built and pushed: **2.179** (R6 update bar +
+  "Please update" screen from `app.json`; R5 database checks on GitHub), **2.180** (R1 stop screen + Get my lists
+  back; needs `supabase-sync.sql` run again for lists whose link is off), **2.181** (moving wishes to and from
+  collab wishlists, the owner's extra request; DECISIONS "Stage R"). Ask first:
+  1. Did they run [supabase-sync.sql](https://github.com/AndroidEnthusiast/Wishlist/blob/main/supabase-sync.sql) again?
+  2. Moving on the phone: own → collab (a private wish too), collab → own with Move and with Copy, a wish reserved
+     by someone else (Move greyed out), collab → collab, Undo each time, a wish with its own photo, and what the other
+     phone/browser sees (the wish in that list's bin). None of it was seen on a phone or against the real server.
+  3. The update bar can only show once a version newer than the installed one has been out for a day: ask whether it
+     appeared on Home (and on the partner's phone), and whether `https://androidenthusiast.github.io/Wishlist/app.json`
+     opens in a browser and shows `latest`.
+  Then the rest of Stage R, in this order: **R4** the "Price is wrong?" button (decided, not built: on a wish's price
+  page; saves the shop's page as the phone reads it, with a first line saying the link, what was read and the app
+  version, to a file and opens the share sheet; say that a page read by the hidden browser can show a signed-in
+  name); **R3** backups to a private repository (decided: give the owner tap-by-tap steps to create it and add the
+  secrets `SUPABASE_DB_URL` and `BACKUP_PASSWORD`, then move `backup.yml`, add the pictures, rehearse one restore);
+  **R7** two-phone test list; **R8** account safety steps and the licence question (not asked yet); **R9** screens
+  survive Android closing the app; R0 and R2 when the owner is ready.
 - **START HERE (written 10 November 2026, the second review, 2.178).** Read ROADMAP "Second review" first: **Stage R
   comes before Stage 4.** Ask the owner, in this order:
   1. **R0, urgent: did they find the signing key file** (a `.jks`/`.keystore`/`.p12` file, or the long text pasted into

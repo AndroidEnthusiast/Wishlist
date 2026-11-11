@@ -118,6 +118,15 @@ object ImageStore {
         }
     }
 
+    /** Stores picture bytes (a JPEG fetched from our own storage) as a file of this app. Returns its address, or null. */
+    fun store(c: Context, bytes: ByteArray): String? = try {
+        val f = File(dir(c), "m" + System.currentTimeMillis() + "_" + (bytes.size % 100000) + ".jpg")
+        f.writeBytes(bytes)
+        Uri.fromFile(f).toString()
+    } catch (e: Exception) {
+        null
+    }
+
     /** Deletes a picture this app stored. Web links and anything outside the app's own folder are left alone. */
     fun delete(c: Context, image: String) {
         if (!isLocal(image)) return

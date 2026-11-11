@@ -87,7 +87,7 @@ fun shareItem(c: Context, w: Wish, idea: Boolean = Shared.active != null) {
 @Composable
 fun ItemMenuDialog(
     w: Wish, onEdit: () -> Unit, onHistory: (() -> Unit)?, onShare: (() -> Unit)?, onPrivate: (() -> Unit)? = null,
-    onOwned: (() -> Unit)? = null, onClose: () -> Unit
+    onOwned: (() -> Unit)? = null, onMove: (() -> Unit)? = null, onClose: () -> Unit
 ) {
     val cs = MaterialTheme.colorScheme
     // Tighter than a normal dialog (owner, 2.111: too much white space), but not cramped: a smaller title and rows.
@@ -107,6 +107,7 @@ fun ItemMenuDialog(
                 }) {
                     Icon(AppIcons.Check, null, tint = cs.onSurfaceVariant)
                 }
+                if (onMove != null) MenuRow(tr("Move to…"), onMove, compact = true) { Icon(AppIcons.Swap, null, tint = cs.onSurfaceVariant) }
                 if (onHistory != null) MenuRow(tr("Price history"), onHistory, compact = true) { HistoryIcon(cs.onSurfaceVariant) }
                 if (onShare != null) MenuRow(tr("Share"), onShare, compact = true) { Icon(AppIcons.Share, null, tint = cs.onSurfaceVariant) }
             }
