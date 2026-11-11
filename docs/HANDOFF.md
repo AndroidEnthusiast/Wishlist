@@ -196,7 +196,11 @@ A simple wishlist app in Material Design with the Google Sans font: save product
   1. **R3 done** (11 November 2026): `Wishlist-backups` is private, has both secrets, its first run was green (29
      tables, 90 pictures, restore check passed). The old `backup.yml` is gone from this repository. Tell the owner
      they may delete this repository's old backup artifacts and its two backup secrets (both no longer used).
-  2. **R2** Firebase key and **Dependabot alerts**: steps given in chat on 11 November.
+  2. **R2 done** (11 November 2026): the Firebase key only allows FCM Registration + Firebase Installations; a chat
+     push still arrived. Google reported earlier use of `identitytoolkit` by someone else (scanners testing the public
+     key); ask what Metrics Explorer showed, whether Firebase > Authentication has users (delete them: the app makes
+     none), the plan (Spark = nothing billable), and whether Crashlytics still shows the app. **Dependabot alerts**:
+     steps given in chat on 11 November.
   3. **R0**: key file found; left: a second place for `wishlist-release.jks`, the password into a password manager.
   5. Remind later: two-step sign-in (R8), the two-phone test (R7). Then Stage R is done → Stage 4 (questions first).
 - **START HERE (11 November 2026, Stage R session).** Owner: 2.178 "went well"; **both key steps later** (R0 signing
