@@ -190,6 +190,21 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 - 6 November (night): Friends review; **2.139**. Not checked: the friend link on a phone (Chrome on Android should open wishlist://friend from the page; some browsers ask first).
 
 ## Next session
+- **OWNER'S GOAL FOR 12 NOVEMBER 2026: finish Stage 4.** Left, in this order (owner's order A, B, C, D):
+  1. **B, 2.188 restoring** with the recovery key (see the 2.187 note below for the technical plan).
+  2. **C, S4.6 privacy page** (web page `web/privacy.html` with the same CSP lines, linked from App settings, the welcome
+     and every web page; the owner approves the text; say honestly: chat is end-to-end locked but keys are handed out by
+     the server (P21), crash reports, scrambled internet addresses kept a day for the limits, the 12-month clean-up, the
+     recovery copy the server can't read) and **S4.7 "Delete my profile and data"** (in Profile; removes profile,
+     friendships, chats, group and exchange places, reservations, own lists online, the recovery copy and people
+     photos; a page for browser-only people saying how to ask).
+  3. **D, S4.8 report and block** (think through with the owner: what a report holds when chats are locked, who reads
+     reports (the owner? an e-mail?), what "blocked" does on chats, friend requests, groups and collab lists).
+  **Ask all open questions in the first one or two rounds** (the owner wants it done in one day): the "moved to another
+  phone" screen's wording and what Start fresh keeps; the privacy page's contact address (never guess an e-mail:
+  ask); whether deleting your data also deletes collab wishlists you made (others are on them) or hands them over;
+  report and block details. Then build, test, push, and end every build with the download link (owner's rule).
+  Also remind at the start: two-step sign-in (R8), the welcome screen redesign, the two-phone test (R7), "chip in".
 - **(11 November 2026, late, 2.187)** Part A of Stage 4 done (S4.4: no indexes needed). Part B started: **2.187** the
   recovery key and its locked copy. Ask: did the owner run [supabase-vault.sql](https://github.com/AndroidEnthusiast/Wishlist/blob/main/supabase-vault.sql)
   and [supabase-cleanup.sql](https://github.com/AndroidEnthusiast/Wishlist/blob/main/supabase-cleanup.sql) again (in
