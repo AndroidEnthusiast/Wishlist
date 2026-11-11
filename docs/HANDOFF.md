@@ -202,10 +202,10 @@ A simple wishlist app in Material Design with the Google Sans font: save product
   3. The update bar can only show once a version newer than the installed one has been out for a day: ask whether it
      appeared on Home (and on the partner's phone), and whether `https://androidenthusiast.github.io/Wishlist/app.json`
      opens in a browser and shows `latest`.
-  Then the rest of Stage R, in this order: **R4** the "Price is wrong?" button (decided, not built: on a wish's price
-  page; saves the shop's page as the phone reads it, with a first line saying the link, what was read and the app
-  version, to a file and opens the share sheet; say that a page read by the hidden browser can show a signed-in
-  name); **R3** backups to a private repository (decided: give the owner tap-by-tap steps to create it and add the
+  **2.182** also built: R4's "Price is wrong?" button on a wish's price page (ask whether the share sheet opens and
+  the file arrives; when the owner uploads a `price-report-….html`, read its first comment, add the page to
+  `tests/shared/same-answers.json` → `pages` and fix both readers).
+  Then the rest of Stage R, in this order: **R3** backups to a private repository (decided: give the owner tap-by-tap steps to create it and add the
   secrets `SUPABASE_DB_URL` and `BACKUP_PASSWORD`, then move `backup.yml`, add the pictures, rehearse one restore);
   **R7** two-phone test list; **R8** account safety steps and the licence question (not asked yet); **R9** screens
   survive Android closing the app; R0 and R2 when the owner is ready.

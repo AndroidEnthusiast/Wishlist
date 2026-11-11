@@ -284,7 +284,7 @@ Small steps; each one protects against something that can't be undone later.
 - [ ] **R3 Backups you can trust:** restore one backup into a throw-away database once and write down that it
   worked (`docs/BACKUPS.md`); copy the uploaded pictures too; move the job to a **private** repository so the files
   aren't downloadable by every GitHub user (ask the owner: it means one more repository and moving two secrets).
-- [ ] **R4 Real shop pages (the old S0.3).** For each starter shop one real product page in
+- [ ] **R4 Real shop pages (the old S0.3).** *(2.182: the "Price is wrong?" button on a wish's price page saves the shop's page as the phone reads it and opens the share sheet (`PriceReport.kt`; owner chose the button over saving pages on the Chromebook). Open until real pages have arrived and are in `pages`.)* For each starter shop one real product page in
   `tests/shared/same-answers.json` → `pages`. Sessions can't reach most shops, so the owner saves pages on the
   Chromebook (open the product, Ctrl+S, "Web page, HTML only") and uploads them, or shares a link when a price reads
   wrong. Ask whether a "This price is wrong" button in the app would be welcome (it could send the link and what was

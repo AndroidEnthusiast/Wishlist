@@ -40,6 +40,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -175,6 +176,28 @@ fun PriceHistoryDialog(w: Wish, highlight: Boolean = false, showAll: Boolean = t
     val reached = Targets.reached(w)
     val gold = targetGold(LocalLook.current.dark)
     var checkedLine by remember { mutableStateOf<String?>(null) }
+    var askReport by remember { mutableStateOf(false) }
+    var reporting by remember { mutableStateOf(false) }
+    var reportErr by remember { mutableStateOf("") }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    if (askReport) AlertDialog(
+        onDismissRequest = { askReport = false },
+        title = { Text(tr("Report a wrong price")) },
+        text = {
+            Text(tr("This saves the shop’s page, as your phone reads it, to a file you can send to the app’s maker. Nothing is sent by itself. If you’re signed in to this shop inside Wishlist, the page can show your name."))
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                askReport = false; reporting = true; reportErr = ""
+                scope.launch {
+                    val f = PriceReport.make(ctx, w)
+                    reporting = false
+                    if (f == null || !PriceReport.share(ctx, f)) reportErr = tr("Couldn’t save the shop’s page. Check your connection.")
+                }
+            }) { Text(tr("Save and share")) }
+        },
+        dismissButton = { TextButton(onClick = { askReport = false }) { Text(tr("Cancel")) } }
+    )
     LaunchedEffect(w.id, w.price) {
         checkedLine = if (w.url.isBlank()) null else PriceWatch.line(PriceWatch.get(ctx, w.id), System.currentTimeMillis())
     }
@@ -196,6 +219,15 @@ fun PriceHistoryDialog(w: Wish, highlight: Boolean = false, showAll: Boolean = t
                 if (w.price != null) TargetRow(w, reached, gold, highlight)
                 // When the shop was last read, or since when it can't be (owner, 10 November 2026; PriceWatch).
                 if (checkedLine != null) Text(checkedLine!!, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                // "Price is wrong?" (owner, 10 November 2026; PriceReport.kt): the shop's page as this phone reads it,
+                // saved to a file to send along. Nothing is sent by itself.
+                if (w.url.isNotBlank()) Text(
+                    if (reporting) tr("Saving the shop’s page…") else tr("Price is wrong?"),
+                    style = MaterialTheme.typography.labelLarge, color = cs.primary,
+                    modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(enabled = !reporting) { askReport = true }
+                        .padding(vertical = 12.dp, horizontal = 2.dp)
+                )
+                if (reportErr.isNotEmpty()) Text(reportErr, style = MaterialTheme.typography.bodySmall, color = cs.error)
                 // "All price changes" (owner, 7 November 2026): the overview that was the Price watch tab.
                 if (showAll) Text(
                     tr("All price changes") + " ›", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,

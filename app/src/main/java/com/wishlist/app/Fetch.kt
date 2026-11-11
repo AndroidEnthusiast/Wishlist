@@ -405,6 +405,12 @@ internal fun parsePage(d: Document, host: String, status: Int): Meta? {
     )
 }
 
+/** The plain request to a shop, the same for reading a product (fetchMeta) and for a price report (PriceReport.kt). */
+internal fun shopRequest(url: String): org.jsoup.Connection.Response = Jsoup.connect(url).userAgent(UA)
+    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+    .header("Accept-Language", acceptLanguage())
+    .timeout(15000).followRedirects(true).ignoreHttpErrors(true).execute()
+
 /**
  * Reads title, image, description and price from a product page. Returns blocked=true if the store refused.
  * If a plain request is blocked or finds no price and [ctx] is given, the page is loaded in a hidden browser
@@ -414,10 +420,7 @@ suspend fun fetchMeta(url: String, ctx: Context? = null, browser: Boolean = true
     withContext(Dispatchers.IO) {
         var first: Meta? = null
         try {
-            val res = Jsoup.connect(url).userAgent(UA)
-                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-                .header("Accept-Language", acceptLanguage())
-                .timeout(15000).followRedirects(true).ignoreHttpErrors(true).execute()
+            val res = shopRequest(url)
             first = parsePage(res.parse(), res.url().host.orEmpty(), res.statusCode())
         } catch (e: Exception) {
         }
