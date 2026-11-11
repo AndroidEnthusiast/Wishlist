@@ -545,3 +545,11 @@ What the owner has decided, and why. Follow these unless the owner changes their
   It is asked **during the welcome** for now, and always available in Profile.
 - **Remind the owner** (owner, 11 November 2026): they want to work on a better welcome screen and first-start flow
   later, visually and in its texts ("I don't see that screen because I'm always in the app").
+- **Photos move to file storage now** (S4.1; owner, 11 November 2026, after Claude recommended postponing: the
+  database was 14 MB of 500 and the photos 58 kB): profile, group and gift exchange photos become files with a long
+  random address, **a new address with every change** (the old one stops working), handed out only through the
+  server's existing checks (friends, group and exchange members), like wish photos. Not signed addresses (they would
+  need an extra function with a secret key).
+- **Clean-up and people without a profile** (owner, 11 November 2026): their lists can't be warned about, so they are
+  removed online after 12 months like the others, and **the app quietly puts them back online** under the same link
+  when it is opened again (reservations made before are gone).
