@@ -196,6 +196,22 @@ object Cloud {
         return parseList(JSONObject(t))
     }
 
+    /**
+     * Your own list as the server has it, read with its owner token: also when its link is off (2.180, Rescue.kt).
+     * Null when the list is gone or the token isn't its owner's. Before supabase-sync.sql was run again, the friends'
+     * way of reading is used (it only works while the link is on).
+     */
+    suspend fun mineGet(code: String, token: String): RemoteList? {
+        val t = try {
+            rpc("wl_mine_get", JSONObject().put("p_code", code).put("p_token", token)).trim()
+        } catch (e: Exception) {
+            if (!MineSync.missingFunction(e)) throw e
+            return fetchList(code)
+        }
+        if (t.isEmpty() || t == "null") return null
+        return parseList(JSONObject(t))
+    }
+
     internal fun parseRemote(o: JSONObject): RemoteList = parseList(o)
 
     private fun parseList(o: JSONObject): RemoteList {

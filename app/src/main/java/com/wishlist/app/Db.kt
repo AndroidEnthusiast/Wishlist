@@ -180,6 +180,7 @@ interface WishlistDao {
     @Query("SELECT * FROM friend_lists ORDER BY position") fun friendLists(): List<FriendListRow>
     @Query("SELECT * FROM notifications ORDER BY position") fun notes(): List<NoteRow>
     @Query("SELECT value FROM meta WHERE `key` = :key") fun meta(key: String): String?
+    @Query("DELETE FROM meta WHERE `key` = :key") fun deleteMeta(key: String)
     @Query("SELECT * FROM price_watch WHERE wish_id = :wishId") fun watch(wishId: Long): PriceWatchRow?
     @Query("SELECT wish_id FROM price_watch") fun watchIds(): List<Long>
     @Query("DELETE FROM price_watch WHERE wish_id = :wishId") fun deleteWatch(wishId: Long)

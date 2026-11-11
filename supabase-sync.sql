@@ -222,6 +222,15 @@ begin
   return v || jsonb_build_object('lists', v_lists, 'shared', v_shared);
 end $$;
 
+-- 4. Your own list read back with its owner token (ROADMAP R1, 2.180), also when its link is switched off ("My
+--    friends", "Only me"): the app's "Get my lists back" when the phone's own copy is damaged. Nothing for a wrong or
+--    empty token or an unknown list. Reservations are not in it (the owner never sees them).
+create or replace function wl_mine_get(p_code text, p_token text)
+returns jsonb language sql stable security definer set search_path = public as $$
+  select wl_list_json(l.code) from wl_lists l
+  where l.code = p_code and l.owner_token = p_token and coalesce(p_token, '') <> ''
+$$;
+
 revoke execute on function
   wl_live_topic(text, text),
   wl_live_send(text),
@@ -231,5 +240,6 @@ revoke execute on function
 from public, anon;
 grant execute on function
   wl_mine_put(text, text, text, jsonb, jsonb, jsonb),
-  wl_pulse(text, text, text, jsonb, jsonb)
+  wl_pulse(text, text, text, jsonb, jsonb),
+  wl_mine_get(text, text)
 to anon;

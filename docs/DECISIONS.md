@@ -502,3 +502,20 @@ What the owner has decided, and why. Follow these unless the owner changes their
   key can't use Gemini, the project has it switched off). No history rewrite, no new key. The owner restricts the key
   in Google Cloud Console (ROADMAP R2). E-mails from scanners the owner never signed up for are not acted on; GitHub's
   own alerts are.
+
+## Stage R (owner, 10–11 November 2026)
+- **2.178 "went well"** (owner, 10 November 2026). **Both key steps come later** (the signing key copy, R0, and
+  restricting the Firebase key, R2): the owner said "we'll do the key later". Keep reminding; R0 stays urgent.
+- **R1 Lists that can't be opened: a stop screen with ways out** (Get my lists back, Try again, Import a backup file);
+  not an automatic repair and not "warn but continue".
+- **R6 Update notice: a slim bar on Home**, only once a version has been out for a day, Later hides it for a week; a
+  full "Please update" screen only below the minimum version. (Claude: built as a small file next to the web pages
+  instead of a database function: fewer moving parts.)
+- **R3 Backups move to a private repository** (the owner creates it; steps to be given), and the pictures are copied too.
+- **R4 A "Price is wrong?" button** on a wish's price page that saves the shop's page to a file and opens the share
+  sheet; nothing is sent by itself.
+- **Moving wishes to and from collab wishlists** (owner, 11 November 2026): in the app only, every direction (own →
+  collab, collab → own, collab → collab), from the wish's menu. **Leaving a collab wishlist asks each time: Move or
+  Copy.** **A wish someone else reserved on a collab wishlist can't be moved away** (your own reservation just ends).
+  **Private wishes move without a question** and become visible to everyone on the collab wishlist (owner chose this
+  over a warning). Top wish, owned, price history and price alert don't exist on collab wishlists and are dropped.

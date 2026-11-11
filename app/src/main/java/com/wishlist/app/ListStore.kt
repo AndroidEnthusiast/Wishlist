@@ -1,5 +1,7 @@
 package com.wishlist.app
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import android.content.Context
 import android.content.SharedPreferences
 import org.json.JSONArray
@@ -30,7 +32,7 @@ object ListStore {
      * online, where they would wipe newer wishes and their reservations. See Sync.pushData. It stays true until an
      * Import. ROADMAP R1 replaces this silent fallback with a clear screen and a way to get the online copy back.
      */
-    @Volatile var stale = false
+    var stale by androidx.compose.runtime.mutableStateOf(false)
         private set
     /** Whether the database matched the settings store at this start (null: not read). For the checks. */
     @Volatile var matched: Boolean? = null
@@ -233,6 +235,43 @@ object ListStore {
     }
 
     /**
+     * A database that can't be read is moved aside, never deleted (wishlist.db.broken stays on the phone), so the next
+     * start makes a new one from the settings store.
+     */
+    internal fun setAside(c: Context) {
+        WishlistDb.reset()
+        val f = c.applicationContext.getDatabasePath("wishlist.db")
+        for (ext in listOf("", "-wal", "-shm", "-journal")) {
+            val from = java.io.File(f.path + ext)
+            if (!from.exists()) continue
+            val to = java.io.File(f.path + ext + ".broken")
+            to.delete()
+            if (!from.renameTo(to)) from.delete()
+        }
+    }
+
+    /**
+     * "Get my lists back" worked (Rescue.kt): the lists in memory are whole again, so the old-copy mark goes. With a
+     * database that works, that is all. With one that can't be read, the lists were written to the settings store
+     * (as always when the database can't be used): the broken file is moved aside and the app must start again
+     * (returns true), which moves the settings store into a new database.
+     */
+    fun rescued(c: Context): Boolean {
+        val wasLive = live
+        if (wasLive) {
+            flush()
+            try { io.submit { WishlistDb.get(c).dao().deleteMeta(OLD_COPY) }.get() } catch (e: Throwable) { Crash.report(e) }
+            stale = false
+            return false
+        }
+        reset()
+        setAside(c)
+        // commit: written before the app starts again, together with everything saved a moment ago.
+        prefs(c).edit().remove(DB_ONLY).commit()
+        return true
+    }
+
+    /**
      * Import (S2.4): stop saving, empty the database and forget it, so nothing is written halfway while the file's
      * data goes into the settings store, and the next start moves it in fresh (no "differed" report).
      */
@@ -245,6 +284,8 @@ object ListStore {
                 WishlistDb.get(c).let { db -> db.runInTransaction { db.dao().clearData(); db.dao().clearMeta() } }
             }.get()
         } catch (e: Throwable) {
+            // A database that can't even be emptied: aside with it, the next start makes a new one from the file's data.
+            setAside(c)
             Crash.report(e)
         }
     }

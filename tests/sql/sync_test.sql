@@ -208,4 +208,23 @@ do $$ begin perform wl_pulse_list('FRIEND01', 'x', true); raise exception 'FAIL 
 exception when others then if sqlerrm like 'FAIL%' then raise; end if; end $$;
 reset role;
 
+-- ---------- 4. wl_mine_get (2.180): your own list back with its owner token, also with the link off ----------
+set role anon;
+select wl_create_list('RESCUE01', 'rescue_rescue_rescue', 'Back');
+select wl_mine_put('RESCUE01', 'rescue_rescue_rescue', null, null, '[{"id":1,"title":"Lamp"},{"id":2,"title":"Book"}]', null);
+select pg_temp.ok(wl_reserve_item('RESCUE01', 2, 'friend-device-9') is not null, 'a friend reserves on the list to rescue');
+select pg_temp.ok(jsonb_array_length(wl_mine_get('RESCUE01', 'rescue_rescue_rescue')->'items') = 2, 'the owner reads the list back');
+select pg_temp.ok(wl_mine_get('RESCUE01', 'rescue_rescue_rescue')->>'name' = 'Back', 'with its name');
+select pg_temp.ok(wl_mine_get('RESCUE01', 'rescue_rescue_rescue')::text not like '%friend-device-9%', 'no reservations in it');
+select pg_temp.ok(wl_mine_get('RESCUE01', 'wrong_wrong_wrong_wr') is null, 'a wrong token reads nothing');
+select pg_temp.ok(wl_mine_get('RESCUE01', '') is null, 'an empty token reads nothing');
+select pg_temp.ok(wl_mine_get('RESCUE01', null) is null, 'no token reads nothing');
+select pg_temp.ok(wl_mine_get('NOPE0000', 'rescue_rescue_rescue') is null, 'an unknown list reads nothing');
+reset role;
+update wl_lists set link_off = true where code = 'RESCUE01';
+set role anon;
+select pg_temp.ok(wl_get_list('RESCUE01') is null, 'the link is off for everyone else');
+select pg_temp.ok(jsonb_array_length(wl_mine_get('RESCUE01', 'rescue_rescue_rescue')->'items') = 2, 'the owner still reads it with the link off');
+reset role;
+
 select 'ALL SYNC CHECKS OK';

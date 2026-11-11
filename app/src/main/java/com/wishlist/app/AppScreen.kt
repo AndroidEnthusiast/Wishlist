@@ -531,6 +531,8 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     LaunchedEffect(Unit) { AppInfo.load(ctx); AppInfo.refresh(ctx) }
     // A version that no longer works with the server: only the update is offered, over everything else.
     if (AppInfo.tooOld(AppInfo.installed(ctx), AppInfo.info)) TooOldScreen()
+    // The lists couldn't be opened and what is in memory is an old copy (Rescue.kt, ROADMAP R1): say so, with ways out.
+    if (ListStore.stale) RescueScreen()
     // Everyone has a name (owner, 2.135): asked once at the start when it's missing, and before sharing.
     LaunchedEffect(welcome) { if (!welcome) NameGate.askAtStart() }
     NameGate.Host()

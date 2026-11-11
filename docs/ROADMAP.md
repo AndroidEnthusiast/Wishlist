@@ -273,7 +273,7 @@ Small steps; each one protects against something that can't be undone later.
   which must be at least 16 characters). If the owner can't find the file or the long text: a one-off GitHub job
   that locks the key with `BACKUP_PASSWORD` and offers it as a download for one day, the owner saves it, the job is
   deleted. Ask before building it. Never print or commit the key.
-- [ ] **R1 When the database can't be read, say so.** Replace the silent fallback to the old copy with a clear
+- [x] **R1 When the database can't be read, say so.** *(2.180, `Rescue.kt`: the stop screen with Get my lists back / Try again / Import a backup file; `wl_mine_get` reads your own list back with its owner token. Known limits, said to the owner: a list made after the old copy can't be found again this way (only a backup file has it); private wishes, the bin and price history come from the old copy. Still open: removing the old storage code once the partner's phone has moved.)* Replace the silent fallback to the old copy with a clear
   screen ("Wishlist couldn't open your lists. Nothing is sent or deleted.") and two ways out: try again, and "Get my
   lists back from the online copy" (the server has every list that was shared). Interview the owner first (wording,
   what happens to private wishes, which never went online). Then remove the old storage code (S2.5's last part) once

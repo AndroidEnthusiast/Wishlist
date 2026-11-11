@@ -71,7 +71,13 @@ class ListStoreTest {
         ListStore.reset(); WishlistDb.reset()
         ListStore.start(c)
         assertTrue("still marked after a restart", ListStore.stale)
-        // An Import brings a newer copy: the mark goes.
+        // "Get my lists back" worked: the mark goes, and stays gone at the next start.
+        assertTrue("no restart needed with a working database", !ListStore.rescued(c))
+        assertTrue(!ListStore.stale)
+        ListStore.reset(); WishlistDb.reset()
+        ListStore.start(c)
+        assertTrue("the rescue is remembered", !ListStore.stale)
+        // An Import does the same.
         ListStore.forImport(c)
         WishlistDb.reset()
         ListStore.start(c)
