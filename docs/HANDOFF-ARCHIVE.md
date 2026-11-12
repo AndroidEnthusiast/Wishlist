@@ -1,0 +1,434 @@
+# Handoff archive: older sessions and plans
+
+Moved here word for word from `docs/HANDOFF.md` on 12 November 2026 (notes tidy-up, owner). Only searched or read
+when needed; the current plan and the last 3 sessions are in `docs/HANDOFF.md`. Its "Decisions and why" moved to
+`docs/decisions/sharing.md`. Newer sessions are added at the bottom ("Archived later").
+
+
+Written 30 October 2026 when the project moved from claude.ai chats to Claude Code in the browser. `CLAUDE.md` has the standing rules; `README.md` has one technical bullet per version. This file adds the story, the decisions and the open list, so nothing from the earlier chats is lost.
+
+## What the owner wanted from the start
+A simple wishlist app in Material Design with the Google Sans font: save product links (the app reads picture, price, title, description), add by sharing a link to the app or pasting, share the list so friends can reserve gifts, notifications when a price drops, categories, and light / dark / AMOLED themes. The owner builds everything from an Android phone (now also a Chromebook); the code was only ever compiled by GitHub Actions.
+
+## How it grew (version by version, short)
+- v1: local app, link parsing, share-to-app, categories, themes, price-drop worker. Amazon needed special handling (blocked pages, price selectors, URL cleanup, fixed signing key so updates install over the old app).
+- v2.2 to v2.5: online sharing with Supabase (friends' page `?c=CODE`, reservations the owner never sees), link reading with a hidden in-app browser as fallback (Funda and Etsy handled), views (large, two per row, images only), price alert settings.
+- v2.6 to v2.10: side menu, add/edit dialog with auto-fill and own pictures (uploaded as 600 px JPEG to the `wish-photos` bucket), price history on the phone, friends' page with the same views, share sends only the link.
+- v2.11 to v2.14: category editing, most wanted star, notes for givers and a note for the whole list, search and sort, sizes (picked from XS to XL, never typed), owner feedback (the star has an ✕, sort button moved next to the category drop-down).
+- v2.15 to v2.17: shared lists that several people edit through an invite link `?j=KEY`. Safe concurrent editing (field-level merge in the database). Invite page with "Open in the app" and "Download app" (the APK from the GitHub release `latest`; the page copies the invite to the clipboard so the app can offer to join after an install). One workflow only. Dialogs ignore taps outside.
+- v2.18: delete asks first (unless Settings > Instant delete), then 10 s Undo; "Save to" chooser when a link is shared into the app and there is more than one list.
+- v2.19: tap on the star plays a pulse and seven tiny sparkles; in the two-per-row view the owner gets a tappable star button on the picture.
+- v2.20 (web only, app unchanged at 2.19): the browser editor `web/edit.html` for people without Android. The invite page sends non-Android visitors straight to it. A Supabase edge function `fetch-page` loads shop pages for it. 170 browser checks + others in `tests/`.
+
+- v2.21 to v2.31 (claude.ai chats and the first Claude Code session): App settings vs list settings, price rises shown, Dutch, colour palettes, 14 fonts, friends' page restyled, private signing key.
+
+## Session of 30–31 October 2026 (Claude Code, one long session; details per version in README.md, choices in DECISIONS.md)
+- v2.32–2.33: the bin (Menu > Bin, 10 days, everyone on a shared list sees its bin; delete moves to the bin at once, short "Wish moved to the bin" + Undo; alert "Your reserved gift has been moved to the bin" opens the bin at that gift with a glow). Safer loading (`SafeStore`). Shared price checks split between phones (`chk`). "Download app" button in App settings (2.37).
+- v2.34: "Images only" view removed. v2.35: a shared list has one link, the invite. Web: invitation page also on iPhone/computers (only "Edit in the browser"), fits on one screen, confetti up to the top, language/theme carried to the editor, `?v=` cache-busting after a browser mixed old and new files.
+- v2.36: private wishes (switch, eye icon, never online; "Save to" option; a friend who reserved a gift that disappears is nudged to pick another, `FriendWatch` / friends' page note).
+- v2.38–2.39: "Most wanted" → "Love it" (pink heart) → undone → "Top wish" (gold star, bold words).
+- v2.40–2.44: full-screen picture viewer, tap words → shop page, wish form reordered (Name, Category drop-down, Top wish, Private wish, then "Other information" folded away), tappable private eye with 5 s Undo, new delete wording, form texts tuned with the owner, price field shows the currency symbol, "Fetch details" button removed, wallpaper colours (Monet) removed.
+- Working style settled this session: push straight to `main`; end every message about a finished build with **App available for download** on the last line.
+
+## Session of 31 October 2026: theme designs (v2.51)
+- The owner asked for at least four themes, each with at least five colour sets, based on reference pictures: Organic, Neobrutalism (a pastel dashboard with thick navy lines), Claymorphism (a soft lavender "Clay Dashboard") and Material 3 (Android 16 screens). Built straight away (the owner asked to build, not for a mock-up first).
+- App settings > Theme: the current design and colour set with a **Themer** button, then light/dark. The Themer screen: a sample wishlist at the top (its view buttons switch between two per row and large cards), then Design (four, each with a small sample card), Colours (six per design) and Light or dark, plus "Back to the original look". Choices apply at once.
+- What changes per design: wish card frames (shape, lines, hard or soft shadows, card colours in turn), picture mats, badges, the Add wish button, the category and view buttons, the background behind the list (organic blobs, clay glows, neo dot grid), dialog/menu shapes and the font of list names, headings and prices. Not yet styled per design: the side menu, the wish form's fields and the other screens' own buttons (they do take the colours and shapes).
+- Not checked: the Android code was not compiled here (no Android SDK in the sandbox); how it looks on a real phone.
+
+- v2.52, same day, after the owner's feedback: the menu button overlapped the Themer's back arrow (fixed: the Themer has only a back arrow). The owner wanted the classic themes (System/Light/Dark/AMOLED, font) kept exactly as before and the four designs as extra themes with their own colours, and much more of each style (fonts, icons, everything, the whole app). Done with `Styled.kt` (themed buttons, switches, dialogs, top bars, icons, labels) and a fuller `Design.kt` (fonts, a dark colour set per design). Not compiled here (no Android SDK); checked on GitHub.
+
+- v2.53: the owner removed the Font setting and "System default" (the first start picks Light or Dark quietly), put "Standard themes" + the Themer button under Theme, and asked for a bigger Themer preview called "Preview" with a fixed top, and the designs in a sideways row whose colour sets pop up when tapped.
+
+- v2.54: App settings tidied for the owner (name saves with the keyboard's tick and shows "Saved"; Themer text; Price alerts as a row of boxes plus a "Notifications" sub-heading; the four buttons removed).
+
+- v2.55: "Saved" feedback with a drawn tick that fades after a second, a fixed-width name field; Standard in the Themer pops up the three standard themes; fixed the jumping design tiles (different heights).
+
+- v2.56: the Themer only previews; an "Apply" button top right makes the choice the app's theme.
+
+- v2.57: wish form wording under Top wish; no flash when opening "Other information".
+
+- v2.58: the owner found Claymorphism too close to Material 3; clay now draws real inflated pillows (inner shadows, soft drop shadow) on everything. The "build failed" e-mails came from pushing to the session branch too (GitHub Pages only deploys from main): push only to main.
+
+- v2.59: colour sets in the Themer no longer jump while swiping (fixed height). Work now happens on a local branch `main`, pushed only to `main`.
+
+- v2.60: Organic no longer shows the number of wishes above the list name.
+
+- v2.61: pull to refresh no longer keeps the circle spinning while every shop is asked (Marktplaats and others are read slowly in a hidden browser); the check continues in the background.
+
+- v2.62: one-time background question (Android Unrestricted) after alerts only arrived on opening the app; Neobrutalism Midnight cards bright with dark text.
+
+- v2.63: shop photos as small rounded cards on a theme-coloured picture area (owner chose this over cropping or a blurred background).
+
+- v2.64: dashboard (start screen) with hero picture, Recently opened, My wishlists and Group wishlists; several wishlists of your own; "Group wishlists" name; no default category.
+
+- v2.65: bottom bar (Home, New list, Add wish, Prices, Friends placeholder), Prices page, hero picture editor, colour sets for the standard themes, dashboard details. Proposed to the owner and waiting for an answer: the wording of the Notifications page (price drops and rises, with a red dot in the menu): options A "€10 cheaper than when you added it. Now €79.", B "11% cheaper since you added it (€89 → €79)", C "Good news: down to €79 (was €89)"; Claude recommended A.
+- v2.66: copying wishes from your other lists (in the New wishlist form and list settings), removing an original removes its copies; "Wish added on dd/mm/yy" on every wish.
+
+- v2.67: Notifications page (the owner's own wording: picture, name, "decreased/increased in price", bold %), red dots; "Added on Thursday 01-12-26".
+
+- v2.68: "cover photo" with an editor like Marktplaats's (rotate, crop, light, text with colour and position, new photo).
+
+- v2.69: cover photo editor: move and zoom at once with the outside dimmed, colour ball, free text placement.
+
+- v2.70: cover photo editor with a movable, resizable crop frame over the whole photo; text resizable by its corners.
+
+- v2.71: editor black screen fixed, "No price change yet", readable Neobrutalism text (accent colour only for blocks), "New wishlist" gift icon.
+
+- v2.72: licences page (Material Icons, OFL fonts, Apache libraries with full texts); self-drawn "New wishlist" icon. Checked: every icon in the app is Material (Apache 2.0), self-drawn or emoji; Google Sans is the OFL release (2025). Not checked: where the web pages' pictures (icon.png, og*.png) came from (made in earlier sessions).
+
+- v2.73: the cover crop frame keeps its size; only the photo zooms.
+
+- v2.74: cover editor: the photo stands still, only the frame moves, pinch zooms around the frame; the saved cover is cut out exactly (the owner saw a different part on the dashboard in 2.73).
+
+- v2.75: cover editor rebuilt: fixed frame, move and zoom the photo; root cause of the mismatch found (the photo was drawn in a box limited to the screen size).
+
+- v2.76: "New wishlist" label in full, no "· Private wish" in Save to, private eye bottom left. The owner confirmed the cover editor of 2.75 works.
+
+- v2.77: target prices (price history), View product, both prices on the Prices tab, smooth folding of Other information, picker layout, capital letters in text fields. Ideas offered for Prices but not chosen yet: a summary at the top, a trend line per row, sorting chips, "checked … ago", a warning when a shop can't be read.
+
+- v2.78: version number in the menu, clearer texts in the New wishlist choice, no total value on Recently opened cards.
+
+- v2.79: long press a list on Home (Edit name, Delete wishlist / Leave wishlist); deleting your own list sends its wishes to the bin, restore asks where; "Price changes" on Home.
+
+- v2.80: menu items no longer scroll; target price row under "Tracking since…" (save with the keyboard's tick, ✕ removes), never gold straight away.
+
+- v2.81: target price shows as bold text once saved (frame gone, green tick), ✕ brings the field back, short line below.
+
+- v2.83: plus and minus instead of arrows for price changes, app and web.
+
+- v2.84: one highlighted item in the menu; swipe notifications away (Undo); every bottom message 5 s and swipeable.
+
+- v2.85: small long-press menu on Home lists; delete all notifications (bin icon, Yes/No, Undo).
+- v2.86: swiping a notification shows a red block with a bin icon as you slide.
+
+## Session of 1 November 2026: Friends (v2.87)
+- Talked Friends and Groups through with the owner (choices in DECISIONS.md, "Friends and Groups"), then built Friends: Profile (photo, name, friend code), friend requests with approval, the Friends tab, a friend's page and lists, "Hide my lists from …", "Unfollow", "Visible to friends" per list, notifications for requests and approvals.
+- v2.88 (same day, owner's requests): round profile photo editor (the cover editor with a circle), profile picture top right on Home/Prices/Friends, "Menu" as the menu heading, "Your name" removed from App settings, list name saves with the keyboard tick and "Saved".
+- v2.89 (same day): Home reorganised (profile summary with numbers and their pages, no cover card, newest wish as a list's picture), summary card and optional cover photo (with Preview) per list. Feedback that started it: testers didn't understand the Home cover photo.
+- v2.90–2.94: copies count once, unstar asks first, summary card on own lists only; Home blocks two per row; tapped wish scrolls and glows (several fixes after the owner's screen recording).
+- v2.96–2.97: depth, then a premium identity: three directions previewed (Keepsake, Quiet, Bold), owner chose Quiet with Neobrutalism, Neumorphism, Cyberpunk and Gen Z chaos styles (previews in DECISIONS.md). Fallback to v2.96 (commit 123322e) if the owner doesn't like it.
+- v2.95: a full app review, interviewing the owner with pop-up questions (now a standing rule in CLAUDE.md); all answers in DECISIONS.md "App review"; everything built in one update (owner's wish).
+- v2.98: Messages (end-to-end encrypted chat with friends, `supabase-chat.sql`, checked with `tests/sql/chat_test.sql`). v2.99: four chat layouts (Chat, Calm, Text, Round) in Messages ⋮ and App settings, always in the theme's colours.
+- v2.100: "Added on" removed from wish cards; Blur stage pictures (preview first, owner chose); two per row is the default for new users.
+- v2.101: flicker fix when switching views, "What you see" and "Notifications" switches in App settings (owner interviewed), any accent colour (rainbow dot), "Theme applied", chat layouts removed, Messages tabs Chats / Friends with a "Start a chat" chip.
+- v2.102: edge to edge (bar jump), photos from memory (tab flicker), neumorphism switch, chat polish, Gift lists, "Owned by", same custom colour in light/dark. Needs `supabase-friends.sql` run again for "Owned by".
+- New `supabase-friends.sql` (the owner runs it by hand); checked on a local PostgreSQL with `tests/sql/friends_test.sql` (32 checks). The Android code could not be compiled here (no Android SDK); checked by hand and by the GitHub build.
+
+## Session of 3 November 2026: owner's list (v2.105)
+- Owner interviewed with pop-up questions (answers in DECISIONS.md, "Owner's list of 3 November 2026"). Built: "My friends" by default (+ silent one-time switch), "Visible to" on Home's long press, wish menus with "Private" ticks, Share instead of the pencil, "Wish marked as owned", back to the chat from a friend's page, "Other information" scroll fix, Gift lists line, cover photo for friends (app + web), note saves with the tick, honest read ticks, Firebase push (code ready, switched off until set up).
+- v2.106 (same session): the owner created the Firebase project and gave its values; they are in `Config.kt`. The owner then did all the Firebase/Supabase steps (not yet confirmed working with two phones).
+- v2.107: Back from a friend's page (opened from a chat) goes straight to the chat, without flashing the Friends overview.
+- New: `supabase-push.sql` (owner must run it), Supabase function `push` (owner must deploy it), `Push.kt`, `Owned.kt`. Checked here: web suites, `tests/function/push_test.ts`, `tests/sql/push_test.sql` + `chat_test.sql` on a local PostgreSQL (pg_net replaced by a stand-in). The Android code could not be compiled here (no Android SDK; downloading one is blocked); bracket balance checked by hand, GitHub builds it.
+
+## Session of 3 November 2026 (evening): wishlist groups, update 1 (v2.108)
+- Owner interviewed in five rounds of pop-up questions; all answers in DECISIONS.md, "Wishlist groups". The owner also asked to remove "Hide my lists from …" and rename "Unfollow" to "Unfriend" (done).
+- Built: `supabase-groups.sql` (groups, members, invites, news, browser profiles, takeover), `Groups.kt` + `GroupsUi.kt` (Home section, menu, New group, join screen with list picker, group page, invite friends, organiser settings, leave/remove, browser-list takeover, chat invitation message, notifications), `web/group.html` + `group.js` + `group.css` + `web/group/` (link preview), helper `fetch-page` accepts a group link.
+- Checked here: `tests/sql/groups_test.sql` (real SQL on a local PostgreSQL), `tests/group/test.js` (the group page in Chromium against the real SQL: join, reserve, own list with link auto-fill, picture upload, top wish, delete/Undo, My link on another device, leave, rejoin, takeover, Dutch), all other web suites. The app compiled on GitHub at the first try; nothing of it was seen on a phone.
+
+- 4 November 2026: the owner ran `supabase-groups.sql`. Found with the owner's screenshots: both edge functions had random web addresses (`…/functions/v1/quick-servi…` and `…/functions/v1/dynamic-act…`), so link auto-fill and instant message pushes could never work. The owner deleted and remade both with the exact names `fetch-page` and `push` (new fetch-page code included). When a function is made "Via Editor", always tell the owner to replace the random name before deploying, and check the URL in the list afterwards.
+
+## Session of 4 November 2026: user-first, dead ends and safety review
+- Owner asked that every feature aims at a happy user, with a critical eye for dead ends, safety and upkeep, without a full audit each session. Added to `CLAUDE.md` and `docs/DECISIONS.md`. No app or web code changed.
+- Safety check (read only): web pages never put other people's text in as HTML and only allow http(s) links; every database table has row level security with no open policies; `fetch-page` blocks private addresses, re-checks redirects and needs a valid key; `push` sends each message only once. No hole found. Not done: no Content-Security-Policy on the web pages (extra protection, GitHub Pages can only set it as a `<meta>` tag); `web/index.html` lacks `<meta name="referrer" content="no-referrer">` (the editor has it); no rate limits on the database functions (spam, not a break-in).
+- Built after the owner chose (4 November): the Content-Security-Policy and no-referrer on the web pages (inline scripts moved to `web/theme.js` and `web/friends.js`), the invite page's count leaves out the bin (`supabase-shared.sql`, owner must run it again), and a Bin in the browser editor (restore only, `tests/e2e/t7.js`).
+- Dead ends found: losing or resetting the phone loses creator rights and chat history unless an export was made; a browser group member who clears the browser without saving "My link" loses their place; shared lists undo every change when offline.
+
+- Then, same session: **photos in messages (v2.109)**, owner's choices (preview with Send, no caption, full screen with pinch to zoom, locked end to end, 30 days online). App + `supabase-chat.sql` (owner must run it again BEFORE installing). Tested here: the SQL (`tests/sql/chat_photos_test.sql`, 24 checks) and all web suites. NOT tested: the Kotlin was not compiled here (no Android SDK; GitHub builds it), and nothing was seen on a phone.
+
+- Then (4 November, same session): **v2.110**, four owner requests after an interview: cover photo ⋮ (Change / Delete with Undo), Edit categories in the wish form (removed from List settings), Home sections ordered by last opened (no Recently opened row), back arrow on an open list. App only, no script. Not compiled here (GitHub builds it); nothing seen on a phone.
+
+- Then (4 November, same session): **v2.111**: Dutch removed (app + web, tests too), long-press menu trimmed in large cards, "Owned by you", pinned summary + filters, summary card proportions and pulse, "Saved!" with circling lines, share text with "!". No script. Web suites all pass; the Kotlin is compiled by GitHub only, nothing seen on a phone.
+
+- Then: **v2.112**: the floating Add wish button removed. The owner asked for ideas for a gift search that adds straight to a list; options given (search in the app's own browser with an Add button, shop APIs, or a gift-idea feed), nothing built yet.
+
+- Then: **v2.113**: wish menus (no long press on two per row, new ⋮ order, Private on large cards, Owned in their long press), owned wishes at the bottom and the reserver told, "Note for friends" in the new-list form. The shop page was discussed (shops shown with their own site icon, loaded live, owner's choice); the other choices are still open.
+
+- Then: **v2.114 Find a gift** (row of 20 shops on Home, shop opens in the app, Add to wishlist reads the page). GitHub Pages timed out three times this evening; the workflow now waits 30 minutes, after which it published at once.
+
+- 5 November: **v2.115** shop icons. On the owner's phone 8 shops showed no icon (Zalando white, Coolblue a letter, de Bijenkorf, Decathlon, Douglas, Blokker, H&M, Bever); now the homepage's own icon, then Google's icon service, on light grey tiles. The shops' sites can't be reached from the Claude sandbox, so this wasn't seen working.
+
+- 5 November: **v2.116**: the shop stays open while adding, Back goes back a page, the product picture is read from the page on screen, sharper icons and white icons skipped.
+
+- 5 November: **v2.117**: shop icons no longer disappear after scrolling (the accepted icon is remembered).
+
+- 5 November: **v2.118**: sharp icons (manifest icons, small ones skipped), the first product photo, the add form's tip removed. The owner was told how to switch the environment's Network access to Full, so the next session can install the Android SDK (compile before pushing), add Roborazzi screenshot tests and check the real shops before building.
+
+- 5 November: **v2.119**: fixed 2.118's icon bug (six shops lost their icon).
+
+- 5 November: the owner switched Network access to **Full** for this environment (all its sessions). Checked: dl.google.com answers; zalando.nl and bol.com answer 403 to plain requests (their own bot protection), so shop checks must use the installed Chromium. Keep secrets out of the environment (keystore and Supabase keys stay in GitHub secrets / Supabase).
+
+- 5 November (evening): **compile and screenshots here**. Android SDK installed in the sandbox; the app compiles (`gradle assembleDebug`). Added Roborazzi + Robolectric screenshot tests (`app/src/test`): Home, a list, All your wishes, Add wish, Price watch, Friends and Messages, light and dark, with sample wishes; and `ShopIconsCheck` (runs the app's own icon search on the 20 shops, draws the result). Owner's choices: tests only here (not in the GitHub build), default style only, show pictures only when the look changes and keep it cheap. No app code changed (only test libraries in `app/build.gradle.kts`, not in the installed app), so no new version number. Found: 11 of 20 shops block headless Chromium from the cloud, so product pages can't be checked reliably here.
+
+- 5 November (late): Maven Central's "429" fixed with Google's copy (`tests/android-setup.sh`); the owner keeps Full network access only if downloads stay smooth. **v2.120**: currency from the phone's country (else €) instead of $ (app + web, same list), and a floating "+ Add wish" in the shop browser. Compiled here, Kotlin and web currency checks pass, all web suites pass. Not seen: the shop browser and its button (Robolectric can't show the WebView dialog), and the currency on a real phone. The owner asked why everything took long: this session was mostly one-time setup.
+
+- 5 November (night): owner switched Network access back from Full (too slow). **2.121** shops round 2 (Shop for gifts, last-opened order, grey/coloured flat Add wish, icons learnt from the shop page, bol.com veil fixes, no duplicate shops, taller bottom bar). **2.122** removed the shop browser's ←/↻/⋮ (built for a question the owner skipped: a skipped question means none). **2.123** settings review: bell with red dot, Prices and About Wishlist sections, Currency for new wishes, fewer buzzing notifications, one summary per price check. Compiled offline here with the SDK left over from earlier in the session; nothing seen on a phone.
+
+- 5 November (late night): **2.124** occasions (app + friends' page + browser editor + `supabase-shared.sql`; owner's answers in DECISIONS) and the bol.com dark screen (cookie questions refused for you, empty dark layer removed). Tested here: web suites, the new SQL checks (`tests/sql/occasion_test.sql`) on a local PostgreSQL, the cookie script on made-up pages in Chromium. Not tested: compiling (no Android SDK here; GitHub builds it), bol.com itself (this network can't reach it), anything on a phone.
+
+- 5 November (night, later): **2.125** after the owner's bol.com recording (a grey layer came back on every page): empty layers kept away on every shop (`GUARD_JS`), permission requests answered "no"; occasions "Custom" with a pencil; "Wishlist name*", "Description" everywhere, no "Optional"; New group: Add friends, invited on creation, failures told to the organiser. New standing instruction: think through risks and ask with options (CLAUDE.md). Tested: all web suites, the shop scripts on made-up pages (20 checks). Not tested: bol.com itself, compiling (GitHub), the phone.
+
+- 5 November (night, last): **2.126** from the owner's notes: shop "+ Add wish" always coloured, bol.com's "tap once on every page" (an invisible layer over the grey one) handled by tapping it once from the page script, more room around the + in the bottom bar, the open/closed eye, the new Rows view (default, app + web) and old prices crossed out on Two per row, the notifications overhaul (one reserved-gift notification, fewer switches, own Android channels, tapped pushes read). Tested: all web suites, shop scripts (23 checks). Not tested: compiling (GitHub), bol.com itself, the phone.
+
+- 6 November: **2.127**: smaller icons in Rows, no Name A–Z, sort button always shows its order and no longer touches the category button. The owner then asked for a critical review of the whole app; the suggestions were given in chat (see the session) and the owner picks what comes next.
+
+- 6 November: the owner was interviewed on the 12 review suggestions and on missing features; every answer is in DECISIONS ("Review interview"). Nothing built yet.
+
+- 6 November (later): copy review with the owner, text by text (`docs/COPY.md`), then **2.128** built all at once: shorter texts, Home lines, "New list", chat (alignment, reactions, replies), sizes and a private friend note, quantity and exactness with reservations by number, the new wish form, the givers' reminder, "What did you get?" + Received gifts + thank-you, gift list members and a new owner. SQL: `supabase-setup.sql` again + new `supabase-features.sql`. Tested: all web suites, SQL tests (quantity, features, friends, chat, occasion, group page). Not tested: compiling (GitHub), phones, the real Supabase.
+
+- 6 November (evening): the owner asked for a cleaner side menu and new ideas; interviewed with pop-ups (answers in DECISIONS, "Side menu, Gifts I reserved and Gift exchange"). **2.129**: the menu without lists or headings, Gifts I reserved, Mark as received at any time, and **Gift exchange** (Secret Santa) in the app, the browser (`web/exchange.html`) and the database (`supabase-exchange.sql`, with the `push` function updated for anonymous messages). The draw was tested here on a local PostgreSQL (1500 random cases against a brute-force search) and the browser page in Chromium; the app was NOT compiled here (no Android SDK; Google's library server is blocked here): only a Kotlin syntax check ran. Choices made without asking (say so): rules lock at the draw (asked), browser members can't organise (handover only to app users, enforced in the database), the giftee chat opens once you opened your name, the exchange date is picked as day and month (the next time it comes). The e2e test `t4.js` ("note change keeps the occasion") fails now and then on unchanged code too: flaky, not from this change.
+
+- 6 November (night): **2.130** from the owner's feedback on 2.129 (asked with pop-ups, answers in DECISIONS): menu order, the day-then-month date picker, a calmer list top, the exchange cover through the cover editor, and no dark-layer flicker in shops (the guard at the start of every page). The flicker fix was tested on made-up pages in Chromium (every frame sampled), not on bol.com itself (it refuses this computer).
+
+- 6 November (night, later): owner: bol.com could scroll but not tap after 2.130. **2.131**: the layer is made see-through instead of hidden (tapped as in 2.129), and the guard runs only in the page, not in its frames. The exact cause wasn't reproducible here.
+
+- 6 November (late): bol.com blocked the owner ("Toegang tijdelijk geblokkeerd") and taps failed; owner: remove every fix. **2.132**: shop browser back to plain (as 2.120), icons only from Google's service.
+
+- 6 November (late): the owner started a **page-by-page review**, Home first (decisions in DECISIONS, "Home review"). **2.134** built it. Next: continue the review with the next page (ask the owner which; likely an open wishlist, then the menu's pages).
+
+- 6 November (late): review of the wishlist page (DECISIONS, "Wishlist page review"); **2.135** built it. Then the rest of the page: description, empty text, search and cover stay; **2.136** adds "Viewed 23 times" (run `supabase-features.sql` again). Next in the review: ask the owner which page comes next; review every page as rigorously (owner: "every other page should be viewed rigorously").
+
+- 6 November (night): review of the Add wish form; **2.137**. Next in the review: ask the owner; candidates in order of use: Price watch, Friends, Messages, a friend's list, App settings, list settings, Profile, Gift exchange.
+
+- 6 November (night): Price watch review; **2.138**. Not checked: the reserved prices on a phone (they fill in as friends' lists are opened; gifts reserved before 2.138 start from the first price seen after the update).
+
+- 6 November (night): Friends review; **2.139**. Not checked: the friend link on a phone (Chrome on Android should open wishlist://friend from the page; some browsers ask first).
+
+## Earlier "Next session" plans (newest first, until 12 November 2026)
+- **START HERE (12 November 2026, night, after 2.192 and 2.193: the code clean-up).** Built: the screenshot tests work
+  again (they never settled because "What's your name?" opened at the start and November's snow moved for ever; now a
+  name, animations off, a fresh database per picture; "Price watch" → "My shops"). **2.192** one way to move between
+  screens (`LocalGo`); **2.193** where you are inside a tab is `Places` (owned by the screen), and the last `*Nav`
+  objects are gone. All 14 screenshots were identical before and after. Ask the owner how 2.193 feels: Messages and
+  Friends should still open where you left them; Back from a friend's page opened from a chat goes back to the chat;
+  turning the phone on a friend's list keeps it; a new group/exchange opens with "Invite friends"; a "Reserve it
+  now?" notification opens the list on that wish; the side sheet, share card, Themer, the shop's "Added to …".
+  **2.194** (owner asked): a message now notifies unless that chat is on screen with the app in front (also gift
+  exchange chats); ask the owner to test it with a second phone (chat open, go Home or lock the phone, get a message).
+  Owner ran supabase-limits.sql again and deployed `fetch-page` (checked read-only: `wl_fetch_ok` answers, the helper
+  says `no_apikey`, its new message). **Crash review done (owner's screenshot, 12 November 2026):** 3 crashes in the
+  last 7 days, all on 8 November, all on 2.154, one user (the owner); two issues, both NullPointerExceptions inside
+  Firebase's own thread factory and Android's `IMessenger.send`, not our code; nothing since. Advised the owner to close
+  both (Crashlytics reopens them if they come back). Crashlytics' "latest release" said 2.182: check next session
+  that 2.194 shows up (it can take a day); if not, look at `Crash.kt`/`WishlistApp.kt` after the 2.191 library update. **Next (owner's order):** the app's final name, then the copy project. R7 and
+  R8: later.
+- **START HERE (12 November 2026, evening, after 2.190 and 2.191).** The tidy-up is done except the crash review:
+  ask the owner for a screenshot of Firebase > Crashlytics. Ask whether they ran
+  [supabase-limits.sql](https://github.com/AndroidEnthusiast/Wishlist/blob/main/supabase-limits.sql) again and
+  deployed the new `fetch-page` (check read-only: `wl_fetch_ok` exists). Ask how 2.191 feels on the phone (Android 16
+  target: back gesture, screen edges, pull to refresh, the keyboard). **Next, the owner's choice: the code clean-up**
+  (screens own their state instead of shared global objects; ROADMAP Stage 1 "half done"). Start by fixing the
+  screenshot tests (`-Pwl.screens`): all 14 say "Compose did not get idle" on 2.190 and 2.191 alike, so something on
+  Home never stops moving in the test (look for an endless animation, e.g. a shimmer, or a LaunchedEffect loop), then
+  use them before and after every screen that is cleaned up. After that: the app's final name, then the copy project.
+  R7 and R8: later (owner).
+- **START HERE (12 November 2026, after 2.188 and 2.189: Stage 4 B, C and D built).** Ask first whether the owner
+  ran, in this order: supabase-vault.sql, supabase-friends.sql, supabase-chat.sql, supabase-privacy.sql (check
+  read-only: `wl_signed_out` answers `false` for `{"p_tokens":[]}`; `wl_blocked_list` with a wrong token says "not
+  allowed"). Ask: does the privacy page's text need changes (the owner approves it; `web/privacy.html`)? Then the
+  two-phone test: restore on a second phone (the old one must show "Your wishlists are on your new phone" within ~10
+  minutes of using it), Block/Report from a chat, and Delete my profile and data with a test profile (not the real one).
+  **Open:** P20 (Android's own cloud backup, `allowBackup="true"`: two phones could share one identity); reports have
+  no alert yet (owner: find a better way than a failing backup); photos of a group or exchange deleted with its
+  organiser's profile stay as unreachable files; collab wishlist pictures stay in Storage when the list is deleted by
+  "Delete my data"; the restored copy may miss changes from the old phone's last hour. Reminders: two-step sign-in
+  (R8), the welcome screen redesign, the two-phone test (R7), "chip in", then Stage 6 (Google Play) when wanted.
+- **OWNER'S GOAL FOR 12 NOVEMBER 2026: finish Stage 4.** Left, in this order (owner's order A, B, C, D):
+  1. **B, 2.188 restoring** with the recovery key (see the 2.187 note below for the technical plan).
+  2. **C, S4.6 privacy page** (web page `web/privacy.html` with the same CSP lines, linked from App settings, the welcome
+     and every web page; the owner approves the text; say honestly: chat is end-to-end locked but keys are handed out by
+     the server (P21), crash reports, scrambled internet addresses kept a day for the limits, the 12-month clean-up, the
+     recovery copy the server can't read) and **S4.7 "Delete my profile and data"** (in Profile; removes profile,
+     friendships, chats, group and exchange places, reservations, own lists online, the recovery copy and people
+     photos; a page for browser-only people saying how to ask).
+  3. **D, S4.8 report and block** (think through with the owner: what a report holds when chats are locked, who reads
+     reports (the owner? an e-mail?), what "blocked" does on chats, friend requests, groups and collab lists).
+  **Ask all open questions in the first one or two rounds** (the owner wants it done in one day): the "moved to another
+  phone" screen's wording and what Start fresh keeps; the privacy page's contact address (never guess an e-mail:
+  ask); whether deleting your data also deletes collab wishlists you made (others are on them) or hands them over;
+  report and block details. Then build, test, push, and end every build with the download link (owner's rule).
+  Also remind at the start: two-step sign-in (R8), the welcome screen redesign, the two-phone test (R7), "chip in".
+- **(11 November 2026, late, 2.187)** Part A of Stage 4 done (S4.4: no indexes needed). Part B started: **2.187** the
+  recovery key and its locked copy. Ask: did the owner run [supabase-vault.sql](https://github.com/AndroidEnthusiast/Wishlist/blob/main/supabase-vault.sql)
+  and [supabase-cleanup.sql](https://github.com/AndroidEnthusiast/Wishlist/blob/main/supabase-cleanup.sql) again (in
+  that order)? Does the Home card show, and does "Save to password manager" work (Google Password Manager should then
+  list "Wishlist recovery key")? **Next: 2.188 restoring** ("I already have lists" on the welcome's first step: the
+  password manager offers the key (Credential Manager GetPasswordOption) or it is pasted; `wl_vault_get`, unlock,
+  `Backup`-style import of prefs.json + chatkeys.json + the DB snapshot, restart; then sign out the old phone: rotate
+  the profile token (new server function needed), each own list's owner token and each collab list made here, make a
+  new key and save a new copy, delete the old copy; the old phone gets "not allowed" on its next call: show a clear
+  "This profile moved to another phone" screen with Start fresh / Import. Interview the owner on that screen's
+  wording and what "Start fresh" keeps.)
+- **(11 November 2026, 2.186)** Owner ran the scripts of 2.184/2.185 (checked read-only: `wl_pf_photo_url` answers).
+  Built 2.186: clean-up (`supabase-cleanup.sql`, `Opened.kt`) and the free plan table (ROADMAP S4.9). Ask: did they run
+  [supabase-cleanup.sql](https://github.com/AndroidEnthusiast/Wishlist/blob/main/supabase-cleanup.sql)? (Supabase >
+  Integrations > Cron should list `wl-cleanup`.) Done the same evening: the owner ran it (cron job 2) and S4.4 (no indexes
+  needed, ROADMAP). Then **part B: the recovery key** (DECISIONS "Stage 4"). Standing rule
+  since today: every finished build ends with the download link.
+- **START HERE (11 November 2026, Stage 4 part A, after 2.185).** Built: **2.184** limits against abuse
+  (`supabase-limits.sql`), **2.185** photos as files (`PeoplePhotos.kt`, bucket `people-photos`). Ask first whether the
+  owner ran the scripts, in this order: supabase-friends.sql, supabase-groups.sql, supabase-exchange.sql,
+  supabase-collab.sql, supabase-photos.sql, supabase-limits.sql (check read-only: `wl_pf_photo_url` and
+  `wl_limit_hit`… the latter is locked, so check that a call to `wl_mine_get` still answers and that
+  `wl_pf_photo_url` with a wrong token says "not allowed"/"bad key"). Then on the phone: change your profile photo,
+  a friend sees it; a group photo; the next Sunday's backup shows "photos as text" going down and files in
+  `people-photos`. **Watch** for "Please try again in a moment" in normal use: if it ever shows for a real person,
+  the internet address Supabase passes may be shared (check `x-forwarded-for`), and the limits must be loosened.
+  **Next in part A:** S4.3 clean-up (12 months unused by the owner's app, a push warning a month before to profiles,
+  lists without a profile come back online by themselves; needs an "app opened" signal: decide whether `wl_pulse`
+  from a foreground start counts), S4.4 indexes (the slowest queries in Supabase > Query performance; ask the owner for
+  a screenshot), S4.9 the free plan's limits written down with today's numbers (14 MB database). Then part B: the
+  recovery key (DECISIONS "Stage 4").
+- **Remind the owner** (11 November 2026): they want to improve the welcome screen and first-start flow later
+  (visual and texts); they never see it themselves. The recovery key step goes into the welcome for now (Stage 4 B).
+- **START HERE (11 November 2026, end of Stage R).** Stage R is done (ROADMAP), apart from three things that wait for
+  the owner: **two-step sign-in** on GitHub, Supabase and Google (R8; the owner asked to be reminded later: remind at
+  the start of the next session), **the two-phone test** (R7, the 7-step list in ROADMAP), and real shop pages
+  arriving through "Price is wrong?" (R4). Also ask: does Firebase > Crashlytics still show the app after the key was
+  restricted (R2)? Has a Dependabot e-mail arrived (paste it in)? Did the owner delete the old backup artifacts and
+  the two backup secrets in the Wishlist repository (optional tidy-up)?
+  **Next: Stage 4** (ROADMAP "Stage 4" plus "Additions to Stage 4": photos to storage, limits against abuse, clean-up
+  jobs, indexes, identity with Supabase anonymous accounts (D5), privacy page, "Delete my profile and data", report
+  and block, the free plan's limits written down). **Questions first**, with the feature checklist of the second
+  review; nothing built before the owner's answers.
+- Session summary (11 November 2026, Stage R): built 2.179 (update bar, database checks on GitHub), 2.180 ("couldn't
+  open your lists" screen), 2.181 (moving to and from collab wishlists), 2.182 ("Price is wrong?"), 2.183 (screens
+  after Android closes the app, licence); backups moved to the private repository `Wishlist-backups` (first run green:
+  29 tables, 90 pictures, restore check); a flaky reactions-page check fixed; the Firebase key limited to two services
+  (a chat push still arrives; Google showed a few refused sign-up attempts by strangers around 8 November); the owner
+  saved the signing key and switched on Dependabot alerts. App checks: 163.
+- Session summary (10 November 2026, second review): re-evaluated Stages 0–3 against the code and wrote the review,
+  Stage R, the Stage 4 additions, Stage 6 (Google Play) and the feature checklist into ROADMAP; 7 pop-up answers in
+  DECISIONS. Built **2.178**: the price check believes a price only after two agreeing readings, first look quiet,
+  typed prices stay, same currency only, no price from error pages, the phone's language, copies read once, "Price
+  checked…" line (`PriceWatch.kt`, table `price_watch`, the first database migration with `DbMigrationTest`); an old
+  copy of the lists is never sent online when the database can't be read or was lost (`ListStore.stale`); GitHub runs
+  the web checks before publishing (`web-checks`). Checked the Firebase key against Google (Gemini is off for the
+  project; the key has no restrictions) and the whole git history for secrets (none). App checks 140 (were 110 + the
+  later ones), all web suites pass (the three that need PostgreSQL were skipped here: no SQL changed). Not checked:
+  anything on a phone, real shops, the migration on a real phone, the new GitHub job before the push.
+- **2.177 (8 November 2026): the real cause of the spinning Friend's list** (owner's recording): a Stage 3 foundation bug, `Live.foreground` was switched per window and ended "off" after sharing into the app (a second window). Fixed with `AppForeground` (counts started windows) + `AppForegroundTest`. Ask the owner to repeat the share test. 2.176's parallel loading of a friend's page stays (harmless), but its keep-loaded cache lives in `FriendsNav` (global UI state): move it into the data layer when Stage 4/5 touches friends' lists.
+- **2.176 (8 November 2026, small fix between stages):** a Friend's page showed no wishes for a long time after sharing a gift from their list into the app. Lists now load in parallel, show as they arrive and stay on screen when you come back. Cause not proven (likely a call hanging on an old connection after the app was in the background). Ask the owner whether it's gone; if a single list still takes ~20 s after returning from another app, look at `Cloud.rpc`'s connection reuse (retry a read-only call once on a stale connection).
+- **START HERE (written at the end of the Stage 3 session, 8 November 2026).** **Stage 3 signed off by the owner** (ran
+  supabase-sync.sql, installed 2.175 straight from 2.171, which is fine; out of credits, so not tested with two phones yet).
+  Ask first how live updates, chat and saving felt, and for App settings > About > Details numbers (S3.4); fix anything
+  noticed, then start Stage 4 (questions first). Points 1–2 below are done except the two-phone tests and the numbers.
+  1. Ask whether the owner ran [supabase-sync.sql](https://github.com/AndroidEnthusiast/Wishlist/blob/main/supabase-sync.sql)
+     (after all the other scripts) and installed 2.175. Without the script the app still works the old way (whole
+     lists, polling, every check) — so "it works" alone doesn't prove Stage 3 is on.
+  2. Owner tests for Stage 3 (ROADMAP): two phones (or a phone and the browser editor) editing the same collab
+     wishlist: a change shows on the other phone within a few seconds; a friend's list updates while open; a chat
+     message appears at once in an open chat and in Messages; your own list: edit a wish, then check the friends' page
+     shows it; airplane mode, edit a wish, airplane off, reopen the app: the friends' page catches up. Battery over a
+     normal day. Then **App settings > About > Details after a normal day**: write the real numbers into ROADMAP S3.4
+     (the table there is only Claude's estimate), especially `wl_pulse` vs the others and `live connect`.
+  3. If all is well: Stage 3 signed off; then Stage 4 (questions first, ROADMAP).
+  4. **Remind the owner about live updates for the web pages** (owner: "remind me of web pages later"): the browser
+     editor, friends' page, group and exchange pages still poll every 20 s. Would need a small WebSocket script and
+     `connect-src wss://…supabase.co` in every page's Content-Security-Policy.
+  5. Later, once the partner's phone has moved to the database: remove the old storage code (S2.5's last part).
+- Session summary (8 November 2026, Stage 3 session): Stage 2 signed off by the owner (2.171 "Yes, all works").
+  Stage 3 interview (DECISIONS "Stage 3 answers"), then built in a row: **2.172** server calls counted (App settings >
+  About), **2.173** own lists online in small saves (`MineSync.kt`, `wl_mine_put`; a failed save keeps the change and
+  is retried), **2.174** live updates (`Live.kt`, Supabase Realtime, polling fallback, nothing in the background),
+  **2.175** one background question (`Pulse.kt`, `wl_pulse`; first check of the day asks everything; reactions asked
+  once before the evening). New script `supabase-sync.sql` with `tests/sql/sync_test.sql` (run on a local PostgreSQL
+  16 here with a pretend Realtime: all checks OK, also when the script runs twice). App checks: 93 → 110 (CallLog 3,
+  MineSync 8, Live 2, Pulse 4). Checked against the real Supabase (read-only): a public Realtime channel joins with the
+  publishable key and delivers a "changed" broadcast in the shape `Live.kt` reads. Not checked here: Postgres sending
+  `realtime.send` on the real project (needs the script), how it feels on phones, battery.
+- Session summary (8 November 2026, long session): Stage 0 finished (backup after password reset), **Stage 1 done and signed off** (2.154–2.163: every screen a route, `Deep.kt` for every way in, MainActivity 142 lines, 63 checks), **Stage 2 built** (2.164–2.171: Export without Firebase files, Room database, the move tested on the owner's real Export, lists/wishes/bin/history/friends/notes read from the database, only changed rows written, Export/Import through the database, the database the only source; 93 checks). Also: a notification about one wish opens it (2.161), crash reports from the checks stopped (2.155), the build's draft-release 404 fixed.
+- **2.171 (8 November 2026): S2.5** (owner made an Export first and said continue). The database is the only source. Also fixed: the release had stayed a draft (download 404); build.yml now publishes it and fails if it doesn't. **Next:** ask whether 2.171 works (everything still there after the update; changes; close and reopen; Export once more). Then the Stage 2 sign-off (owner's tests: Stage 2's list in ROADMAP), delete `scratchpad/export/` (owner's rule: after the move is tested; it is), and Stage 3 (questions first). Later, once the partner's phone has updated: remove the old storage code (MyLists blobs, SafeStore, DbMove.snapshot stays for Import).
+- **2.170 (8 November 2026):** S2.4 done (owner: "continue"; they didn't say whether 2.169 was tried). **Next:** ask the owner to try Export, and if they like, Import of that same file (their data should come back; the app restarts). Then S2.5: ask the owner's OK, then stop writing the settings store for lists, wishes, bin, history, friends' lists and notifications (the old values stay untouched as they are, for at least two versions), with a way back written down. Then the Stage 2 sign-off and Stage 3.
+- **2.169 (8 November 2026):** owner: 2.168 "everything works"; chose the slimmer route for the rest of Stage 2 (DECISIONS). Only changed rows are written. **Next:** S2.4 Export/Import (Export also carries the database; Import fills it; old Export files still import), then S2.5 (stop writing the settings store for lists, wishes, bin, history, friends, notes; keep the old data untouched for two versions; owner's OK first), then the Stage 2 sign-off and Stage 3.
+- **2.168 (8 November 2026): Stage 2 version C2** (owner: 2.167 "everything works fine"). Bin, price history, notifications, friends' lists read from the database at start. **Next:** ask whether 2.168 works (the bin with its wishes, a price page's history, the Notifications page, a friend's list saved from a link; after closing and reopening). Then C3: ViewModels and streams (screens update by themselves from the database; replaces `mineVersion`), then per-wish writes (stop copying everything on each change), S2.4 Export/Import from the database, S2.5 remove the settings store for these parts after the owner's OK.
+- **2.167 (8 November 2026): Stage 2 version C1** (owner: "continue"). Lists and wishes are read from the database at start (checked against the settings store, which is still written). Real Export: matches. **Next:** ask whether 2.167 works (all lists and wishes there after the update; add, edit, delete, move a wish, a new list, delete a list, then close and reopen the app: all still there) and whether Crashlytics shows "database differed" or "failed" reports. Then C2: bin, price history, notifications, friends' lists from the database; then ViewModels/streams; then per-wish writes; S2.4 Export/Import; S2.5 remove the settings store after the owner's OK.
+- **2.166 (8 November 2026): Stage 2 version B** (owner installed 2.165, deleted and added a wish: fine; no time to wait for Crashlytics). The move runs as a rehearsal at every start (`DbMove.rehearse`), the app still uses the settings store. Real Export moved exactly. **Next:** ask whether Crashlytics shows "Copying the data into the database failed" from their phone (none expected). Then version C (S2.2): repositories over the database, ViewModels for the list screen and Home, the app reads and writes the database; the move becomes final (flag in `meta`, only after a successful copy; the settings store is left untouched for at least two versions, S2.5 removes it after the owner's OK). Delete `scratchpad/export/` once the move is final (owner's rule).
+- **2.165 (8 November 2026): Stage 2 version A** (owner: "continue"). Room added with all tables, empty; opened once at start to catch phones that can't create it (Crashlytics). **Next:** ask whether 2.165 runs normally and whether Crashlytics shows anything new; then version B (S2.3): move lists, wishes, bin, categories, price history, friends' lists and notifications into the database in one transaction, counts checked, old data untouched, the flag only on success, the app keeps reading the old data until version C switches the screens over (S2.2). Test the move with the real Export in `scratchpad/export/` (ask for a new one if the session was restarted).
+- **2.164 (8 November 2026):** Stage 2's ground rules answered (DECISIONS); the owner's real Export is in the session scratch folder only (`scratchpad/export/`, gone with the session: ask for a new one if needed). Export/Import fix for Firebase files. **Next:** S2.1 version A: add Room (the database) with its tables and checks, nothing moved yet; then version B: the move (one transaction, counts checked, old data untouched, flag only on success, tested with the real Export).
+- **Stage 1 signed off (8 November 2026).** Next: Stage 2 (Room database), questions first (see DECISIONS once answered).
+- **2.163 (8 November 2026): Stage 1's code work is done.** MainActivity.kt 142 lines; S1.4 done; ViewModels moved to S2.2 (they need the data layer; said to the owner). **Next:** the owner's final Stage 1 test (list in the reply of 8 November: a chat push, a group or collab invitation, a link in WhatsApp, a shop link shared into the app, closing the app in the background on a collab wishlist, rotating, Create list, New category). After their OK: Stage 2 (Room database), starting with S2.1 and the questions it needs.
+- **2.162 (8 November 2026):** owner: 2.161 "works well"; asked how sure Stage 1 is without more testing; Claude named the risks (entry points, Android closing the app, rotating) and the owner said to continue. S1.3 done with a check per entry point; found and fixed: a collab wishlist didn't come back after Android closed the app. **Next:** S1.4 (dialogs into their screens) and shrinking `MainActivity.kt` (2,171 lines: move `HomeScreen`, `WishDialog` and `App` into their own files), then the owner's final Stage 1 test (6–8 items, a few with a second phone: a chat push, an invitation, a WhatsApp link).
+- **2.161 (8 November 2026):** owner tested 2.160: all five steps work. They noticed a price change on the Notifications page opened the list without showing the wish (never built); fixed as a small fix (glow on the wish). **Next:** ask whether the glow works (tap a price change on the Notifications page; a push about a wish), then S1.3, S1.4 and shrinking `MainActivity.kt`.
+- **2.160 (8 November 2026):** owner: 2.159 "seems to work"; asked to do Home and the list at once. Done: every screen is a route (S1.2 ticked). **Next:** ask whether 2.160 works (open lists from Home, a notification and Gifts I reserved; Back from a list; ⚙ and back; Add wish inside a list picks that list), then S1.3 (notifications and links: the `OPEN_*` extras and the `*Nav` flags become routes), S1.4 (dialogs into their screens), and shrinking `MainActivity.kt` towards < 300 lines (move `App()` and its dialogs into their own files).
+- **2.159 (8 November 2026):** 2.158's GitHub build failed (checks "did not get idle"; not reproducible here), so it never reached the phone. 2.159 = the tabs (2.158) + a wishlist group and Gift exchanges as routes + steadier checks (animations off, no real server in checks). If GitHub fails again: get the `test-report` file of the run (the owner can download it from the run page) to see which check failed first. **Next:** owner tests the tabs (see 2.158) and a group / Gift exchanges (open, Back to Home, Profile from them and back); then Home and the list screen.
+- **2.158 (8 November 2026):** owner asked "what's next"; two choices for the tabs (remember where you were; Back goes Home), built. 12 of 75 switches gone, 43 app checks. **Next:** ask whether 2.158 works (switch tabs inside Friends and Messages and come back; tap a tab twice; Back on each tab; Profile/bell from a tab), then groups and gift exchanges, Home and the list screen last (S1.2), then S1.3 (notifications and links open routes), S1.4 (dialogs).
+- **2.157 (8 November 2026):** owner: 2.156 "went well". A list opened from its link is a route now (9 of 75 switches gone, 41 app checks). **Next:** ask whether 2.157 works (Friends → a saved link list → Back to Friends; 🗑 on it), then move the tabs (Messages, My shops, Friends: they become routes of a bottom-bar NavHost, with state kept per tab), then groups, exchanges, the list screen last.
+- **Stage 1, session 1 continued (2.156, 8 November 2026).** Owner tested 2.154/2.155: "everything went well". Moved Received gifts, Gifts I reserved, Price changes (no bottom bar, owner's choice) and a list's settings to routes; 40 app checks; each test class in its own process. **Next:** ask whether 2.156 works (the four screens from Home, a tab and a list, Back from each; Gifts I reserved → tap a list; a list's ⚙ → delete a test list); then continue S1.2 with a friend's link list, the tabs, groups, exchanges, the list screen last.
+- **Crashlytics works** (owner's screenshots, 8 November 2026). Its first 3 "crashes" came from 2.154's checks on the GitHub computer (device "Robolectric"), not from a phone; 2.155 stops checks from sending. The owner was asked to close those two issues in the console. At the start of each session ask for (or look at) the Crashlytics Issues list; only devices other than "Robolectric" are real.
+- **Roadmap Stage 1, session 1 done (2.154, 8 November 2026).** Owner signed off Stage 0 (S0.3 left open by choice). Built: Navigation Compose (`Nav.kt`), Profile, App settings, Bin and Notifications as routes (S1.1/S1.2 started), side menu deleted (S1.5), `NavigationTest` (5 checks, real app in Robolectric; 37 app checks in total). Backup after the password reset: green. **Next:** (1) ask whether 2.154 works (the four screens, Back from each, opened from Home, a tab and the bell); (3) continue S1.2: Received gifts and Gifts I reserved (full-screen pop-ups today), Price changes, a friend's link list, list settings, then the tabs (Messages, My shops, Friends) and the list screen last; S1.3 notifications/links open routes. Use the environment "Wishlist" (a session may start on "Default": switch first), then `bash tests/android-setup.sh`.
+- Session summary (8 November 2026, Stage 1 session 1): owner's Stage 0 sign-off and 4 answers; switched the session to the "Wishlist" environment; ran the backup once more (green); built 2.154.
+- **Roadmap Stage 0, session 1 done (2.153, 8 November 2026).** D1–D5 answered (DECISIONS). Built: S0.1 (the GitHub build runs the app's checks first), S0.2 (first 31 JUnit checks + `tests/shared/same-answers.json` for app and web, `Totals.kt`, `OccasionUi.kt`, `QuantityUi.kt`), S0.5 (Crashlytics, `Crash.kt`, `WishlistApp.kt`), S0.4 jobs (`keep-awake.yml`, `backup.yml`). **Backup works** (first run green, 29 tables). The first try printed part of the database password into the public log (a `%` in it); the log was deleted at once, the job fixed (`fdd86eb`), and the owner was asked to reset the database password and update `SUPABASE_DB_URL`. **Next:** (1) check the latest backup run after that reset is green; (2) check the Firebase console's Crashlytics page shows the app (the owner may need to press "Enable"; if the Firebase API key is restricted to messaging only, reports can't arrive); (3) S0.3 saved shop pages: the owner uploads them or allows the shop hosts; (4) then the owner's Stage 0 sign-off and Stage 1 (Navigation Compose). Use the session environment "Wishlist" and run `bash tests/android-setup.sh` first. That environment also reaches the real Supabase (read-only checks: see CLAUDE.md "Can be checked here"); on 8 November 2026 every SQL script was installed and `fetch-page` was deployed correctly.
+- Session summary (8 November 2026): Zalando price fix (2.152); the owner asked for an honest review ("a real app, not just made to work"); wrote `docs/ROADMAP.md`.
+- **2.147–2.150 built** (feedback rounds of 7 November 2026 evening; DECISIONS from "Feedback on 2.146" down to "No side menu"). Ask the owner how the app feels without the side menu (the profile sheet, back arrows on Profile/Settings/Bin/Notifications, Gift exchanges on Home). If they keep it, delete the switched-off drawer code in `MainActivity.kt` (`gesturesEnabled = false`, `if (false) Box(` menu button, `DrawerItem`s).
+- **2.147 built** (owner's feedback on 2.146; DECISIONS "Feedback on 2.146"). Ask the owner to check: reactions in all three views (own list, a Friend's list, a collab wishlist), the "+N" circle and its list, the grey picker tabs (app and browser), Reserve/Unreserve on a Friend's list (instant, only that button), the Share button, "Wishlist of …", the cover scrolling away with the categories pinned, the ⋮ on collab blocks on Home (Share opens the invitation), "+ Add shop" and the bar's button in the in-app browser. Nothing was seen on a phone; the web pages were tested here.
+- **2.146 built** (Home tiles Friends/Wishes/Total value, "Collab wishlists", people circles, two per row ⋮ + bin, Move to… and long-press selecting, a Friend's list without unused categories or refresh, notification bundles, "Search in browser" + "+ My shops"; answers in DECISIONS, "Home tiles, Collab wishlists…"). **First ask whether the owner ran `supabase-collab.sql`** (without it: no circles from the server, only browser letters and you; moving a wish that is online on both lists says "Moving needs an update in Supabase first."). Then ask them to check on the phone: Home tiles (Total value with a mix of currencies, 0, long amounts at the largest font), the circles on a collab block (photo, letters, "+2", light and dark, all five styles), two per row (⋮ next to the name's first line, bin under it, long names), long press on Rows / Two per row / Large cards (tick, untick, Move to…, Delete + Undo, Back), Move to… a list on "Only me" and to "+ New wishlist", a reserved wish moved (second phone: no "gift gone" notification, Gifts I reserved shows it under the new list; browser: the note with "Open that list"), a Friend's list with and without categories, notifications (several events within 3 minutes: one buzz, one updating notification; mixed news open Notifications), "Search in browser" (Google's cookie question the first time, the search field, "+ My shops", the offer after adding a wish). Nothing was seen on a phone; the SQL and the web pages were tested here.
+- Session summary (7 November 2026, evening): owner's list of six (Home tiles, Collab wishlists and circles, two per row, a Friend's list, notifications, web search) plus moving wishes; 4 rounds of questions; built as 2.146.
+- **2.145 built** (better product reader, re-checks in the in-app shop, read on tap, shown price, quiet first price check). Ask the owner to try Rituals and a few other shops in My shops (product pages, size choices, a page without a product), and links pasted in the wish form. Real shops can't be opened from this sandbox; the reader was tested on example pages only.
+- **2.144 built** (wish photo editor with square frame and Fit whole photo, smaller photo tile, My shops with long-press ✕ and Undo, Save to + New wishlist on every new wish). Ask the owner to check on the phone: take and choose a photo (move, pinch, turn, Fit whole photo, the result in the tile and on the cards in all three views), My shops (long press, pulse, ✕, Undo, Done, tap outside, Back), adding a wish inside a list (Save to shows that list) and "+ New wishlist" from the menu.
+- Session summary (7 November 2026, late night): photo editor for wishes, My shops removing, New wishlist from the wish form (2.144) after 9 questions.
+- **2.143 built** (style guide `docs/STYLE.md`, compact dialog buttons, views on Friends' lists, "Owned by" rule, reactions on the size row, Gift exchange icon and snow). Ask the owner to check on the phone: the gift list share screen and a few other dialogs in Neumorphism and Quiet (buttons in proportion, nothing cut off), a Friend's list in all three views (Reserve in each), the size + reactions row, the menu icon and the snow (and with animations off). Then continue the page-by-page review with STYLE.md as the yardstick.
+- Session summary (7 November 2026, night): owner's feedback on 2.142 built as 2.143 after 8 questions.
+- **2.142 built: the rest of the evening interview** (gift list invitations for Friends, reactions, stuck reservations, App Links; answers in DECISIONS, "Rest of the evening interview"). **First ask whether the owner did their part**: run `supabase-together.sql` in Supabase, redeploy the `push` function (Edge Functions → push → paste the new `index.ts` → Deploy, "Verify JWT" stays off), and add `.nojekyll` and `.well-known/assetlinks.json` (copy of `docs/app-links/assetlinks.json`) to the repository AndroidEnthusiast.github.io (then check `https://androidenthusiast.github.io/.well-known/assetlinks.json` opens in a browser). Then test with two phones and a browser: Invite Friends on a gift list's share screen (notification, chat card, the invitation screen, Join and confetti, No thanks on the inviter's Notifications page); reactions (+ react, picker, search, Recently used, one per person, long press, the owner sees them on their list, the evening summary the next day, the switch); stuck reservations (tap Reserved → Ask, the reserver's push with its two buttons, Gifts I reserved with the time left, Yes / Let someone else, "is free. Reserve it now?" opening the list, the 2-day timer: Supabase → Integrations/Cron should show the job `wl-ask-expire`); App Links (tap an invite link, a friends' link, a group link, an exchange link and a friend link in WhatsApp: the app should open; Android may need a reinstall or a few minutes to check the site; Settings → Apps → Wishlist → Open by default should list androidenthusiast.github.io as verified). Nothing was seen on a phone; the SQL, the push function and the web pages were tested here.
+- Session summary (7 November 2026, late evening): built the rest of the evening interview as 2.142 after 7 more questions (DECISIONS).
+- **Part 1 of the evening interview is built (2.141)**: photo menu + free crop, unnamed wishes (app + web). **The rest was built in 2.142 (see above)**; the original plan was (owner agreed to ship part 1 first; answers in DECISIONS, "Interview of 7 November 2026 (evening)"): (a) Friends invited to gift lists (invitation to accept, notification + chat card, "inviting and fun"; needs a server invite table like groups, the key never readable by others); (b) reactions (SQL table + security definer functions, app pill "+ react" and picker with search from the Unicode emoji list, web pages index/group/edit, web name asked once and required, bundled daily notification with a switch); (c) stuck reservations (SQL: asks table, instant pushes through the `push` function, pg_cron + pg_net every 10 minutes for the 2-day deadline; owner switches both extensions on); (d) App Links (owner creates the repository AndroidEnthusiast.github.io; Claude adds `.well-known/assetlinks.json` with the app's signing SHA-256, which the build can print, and `autoVerify` intent filters for /Wishlist/ links). Ask the owner to check 2.141 on the phone first (camera, gallery, crop corners and move, Use whole photo, saving without a name, Unnamed wish on cards and the friends' page).
+- **2.140 built: the Home redesign** (7 November 2026; interview answers in DECISIONS, "Home redesign interview" and "Home redesign built"). Ask the owner to check on the phone: Home with one list (no group/gift sections), the sideways rows and › (all lists page), Create list → choice, the collage and "3 wishes", ⋮ → Share card (a list on Only me / My friends: greyed, the button, offline → Try again; Copy; the big Share), App settings > Sharing, the bigger name and the tile invitations, Discover tab and adding from a shop, a wish's price page → All price changes and Back, a price notification, "Price alert" texts, the Secret Santa card and its ✕, the All wishes / Top wishes chips, the empty pages, Fraunces headings in Quiet and Neumorphism (light and dark). Nothing was seen on a phone; no web or Supabase changes.
+- Session summary (7 November 2026, evening): second interview (photos, unnamed wishes, gift list Friends, App Links, reactions, stuck reservations); part 1 built as 2.141.
+- Session summary (7 November 2026): the owner compared Home with GoWish and Giftful (screenshots, recordings), Claude critiqued Home, interviewed the owner in 10 rounds and built everything as 2.140.
+- **Continue the page-by-page review where it stopped** (owner, end of 6 November): done so far: Home, the wishlist page, the Add wish form, Price watch, Friends (2.134–2.139). Still to do: Messages, a friend's list, App settings, a list's settings, Profile, Gift exchange. Same approach each time: list every element, its copy and what it does; what's missing, illogical or better from a user's view; ask with pop-ups; build.
+- **Remind the owner** to run `supabase-features.sql` again (2.136 "Viewed 23 times") if not done yet.
+- **Continue the page-by-page review** (owner): Home is done (2.134). Same approach for each page: list every element, its copy and what it does; say what's missing, illogical or could be better from a user's point of view; ask with pop-ups; then build. The "Top wishes" page is no longer reached from Home's tiles (still reachable? ask whether it should get a place, e.g. a filter on All your wishes).
+- **2.132: the shop browser is plain again** (owner: remove every bol.com fix). Owner checked it the same evening: "It looks good again." Ask whether all shop icons show (Google's service only). Don't add bol.com workarounds without asking.
+- **Check 2.130 on the phone**: bol.com and other shops: any flicker left when going to a new page? Real pop-ups (size picker, menus, cookie question) still have their dark background? The date picker (Profile birthday, an occasion, a gift exchange date), the calmer list top (category, sort, view icon menu) in all five styles, the exchange cover editor, the menu order.
+- **Check 2.129 on the phone** (after running `supabase-exchange.sql` and updating the `push` function): the side menu (order, icons, Gift exchange's red dot), Gifts I reserved (friends' lists, gift lists, a group member's list, tapping), Received gifts > Mark as received, and Gift exchange end to end with at least 3 phones or 2 phones and a browser: new exchange (theme, budget, date, message, friends), invitation (notification, chat card, Home has none by choice), join with an "Only me" list (the question), rules (a both-ways rule, one refused as impossible), Draw (pending people asked first), the wrapped gift and confetti, the giftee's list (Over budget, reserve), both anonymous chats and their notifications (instant only after the `push` function update), the draw check, a late joiner (slotted in, or "Add to the draw"), leaving after the draw, hand over, settings news, the countdown and the 7-day reminder, Reveal after the date, cancel. Ask how the drawn covers look in each theme.
+- **Gift exchange ideas not built (ask first)**: browser members organising, auto-fill of wishes on the browser page (the `fetch-page` helper doesn't accept an exchange link yet), a photo for the browser page's cover, several draws a year from one exchange ("Do it again next year").
+- **Remind the owner that chip in (#3) is important** and ask whether to plan it.
+- **Check 2.128 on the phone** (after running `supabase-setup.sql` and `supabase-features.sql`): the shorter texts; Home lines and "New list"; chat reactions (long press), replies (swipe and menu), the photo/gift buttons' alignment; My sizes and a friend's page (sizes, Private note); a 2× wish (form, "How many will you buy?", labels in app and browser); the wish form's headings; set an occasion 7 days ahead on a friend's list you reserved on (reminder), and one yesterday on your own list ("Did your wishes come true?" → Received gifts → giver's "Nailed it"); leave a gift list you made (Pick a new owner / Delete for everyone).
+- **Small new texts that were not in the copy review** (ask the owner): "Received gifts" page ("No received gifts yet.", "Put back", "Received on" date line), "Replying to yourself", "Cancel reply", "React with …", "Couldn’t react. Check your connection.", "Reactions need an update in Supabase first.", "How many" and "Exactly this / Similar is fine" (browser editor labels), "You can renew the link and delete the list.", "1 day to …", the Occasions notification channel.
+- **Remind the owner that chip in (#3) is important** and ask whether to plan it.
+- **Build the review decisions** (DECISIONS, "Review interview"), in small updates, asking the remaining details first: (a) #12 texts (before/after list first) + #7 lines + #8 Create screen; (b) #10 chat alignment, reactions, replies; (c) sizes on the profile + private friend note; (d) #5 quantity / exactly-similar + the new wish form (needs SQL for reservations with a number); (e) #1 reminder + #6 received with thank-you.
+- **Check 2.126 on the phone**: bol.com and other shops scroll and tap at once on every page (if not: a new recording, and consider the "Report a problem" option); the bottom bar's spacing; the eye on large cards and Rows; Rows in all five styles, light and dark (picture size, buttons fit, long names, Reserve on gift lists); Two per row with an old price; App settings > Notifications (three switches, the warning when Android blocks reserved gifts or groups); a reserved gift taken off a friend's list and one binned on a gift list (one notification each, tapping opens the list, no red dot afterwards).
+- **Check 2.125 on the phone**: bol.com and other shops: no grey layer, menus and pop-ups still work, scrolling works; the "Custom" chip with its pencil; the forms' new texts; New group with Add friends (the friend gets the invitation, the chat message and the card on Home). If bol.com is still grey, ask for a recording and consider the "Report a problem" option (not chosen yet).
+- **Check 2.124 on the phone**: did the owner run `supabase-shared.sql` again (without it a gift list's occasion says "Occasions need an update in Supabase first")? New wishlist and New gift list forms (chips, date after picking, own name), list settings > Occasion (Add/Change/Remove), the line in the summary card (own list, gift list, summary switched off), a friend's list in the app and on the friends' page, the browser editor. **bol.com**: does the dark screen go away and can you browse? If not, ask for a new screen recording (the cookie question may sit in a frame from another site that the app can't reach).
+- **Occasions, not built (owner said no for now)**: reminders for friends, the countdown on Home cards. Wishlist groups have no occasion.
+- **Check 2.121–2.123 on the phone**: does bol.com still show the grey veil (if so, ask for a new recording); do H&M and the other small icons get sharp after opening the shop once; is "+ Add wish" grey on non-product pages and coloured on a product; the bell and its red dot; App settings > Prices and the currency choice; one summary notification when several prices drop.
+- **Check 2.120 on the phone**: the floating "+ Add wish" in a shop (does it cover anything important, does "Reading this page…" fit), and that a new wish shows € in the price field.
+- **Network access is no longer Full** (owner switched back, 5 November): don't try to install the Android SDK; GitHub compiles. The tests in `app/src/test` only run with Full access.
+- **Shop icons (ShopIconsCheck, 5 November)**: all 20 shops got an icon; six end with a small one that may look soft on the phone: Amazon 48 px, HEMA 48, H&M 32, Etsy 57, Bever 48, Intertoys 62 (the best available from their homepage and Google's icon service). Ask whether these look blurry on the phone before changing anything.
+- **Shops (2.116)**: ask whether Zalando's icon shows, whether icons are sharp, whether the picture is filled in on Add for each shop, and whether Back/✕ feel right.
+- **Check Find a gift (2.114) on the phone**: do the shop icons load (some sites may only give the letter tile), do the shops work inside the app (cookie banners, logins, Amazon), does Add to wishlist read the product (title, picture, price) on each shop? Shops that read badly need a fix in `parsePage` (and `web/parse.js`, same logic). Affiliate links: owner wants to discuss later.
+- **Check 2.111 on the phone**: the pinned top while scrolling (both views, with and without a cover photo, own list and gift list: no jump or double menu), the pulse when adding/deleting a wish, the "Saved!" lines, the long-press menu size, "Owned by you".
+- **Check 2.110 on the phone**: the ⋮ on a cover (Change, Delete, Undo), Edit categories from the + form and from sharing a link (own list and gift list; counts; warning; rename keeps the picked category), Home order after opening lists, the back arrow (and that the menu button is gone only on an open list).
+- **Photos in messages (2.109)**: did the owner run `supabase-chat.sql` again? Test with two phones: camera and gallery, the preview, sending, the photo arriving, full screen and zoom, deleting a photo message, a very large photo, and a phone that was offline. Not checked: how the preview and viewer look under the status bar on every phone.
+- **Did the owner run `supabase-shared.sql` again** (4 November, invite count without the bin)?
+- **Wishlist groups, update 1 (v2.108) is built**; the script is run and both functions are remade (4 November). Ask whether "Verify JWT" is off on both and whether link auto-fill and instant message pushes now work. Then test with two phones and one browser: New group (name, list), Invite friends (notification, chat message, card on Home), No thanks (organiser told), Join by link in the app (`wishlist://group?g=` from the web page, or paste/share the link into the app), the group page (blocks, Add friend, remove a member, settings, photo, new link, leave with a new organiser, delete), "Visible to: Only me" on a brought list (stays in the group), and a browser member: join on group.html, add wishes, top wish, reserve, My link on another device, "Move to the app". None of this was seen on a phone; the web page and the SQL were tested here.
+- **Wishlist groups, update 2: the group chat.** Owner decided: only on the group page, end-to-end encrypted, browser members included, and browser members must be able to open the group link at any time and read the saved conversation. Discuss first: then the chat key has to travel in the member's private link, so anyone holding that link can read the chat (honest trade-off). Ask how members who join later see older messages.
+- **Firebase**: the project is `wishlist-a2cd4`; its four values are in `Config.kt` since v2.106 (done in the session of 3 November 2026). Ask whether the owner finished their part: run `supabase-push.sql`, add the Supabase secret `FCM_SERVICE_ACCOUNT` (the service-account file, never pasted in chat), deploy the function `push` with "Verify JWT with legacy secret" off. Then test with two phones: notification within seconds with the app closed; ticks only turn coloured after the chat is opened. If nothing arrives: ask for the newest lines of Supabase > Edge Functions > push > Logs. Not checked: whether Firebase's auto-created API key has restrictions that block the app.
+- **Check 2.105 on the phone**: the one-time switch to "My friends" (lists show on a friend's phone), "Visible to" from Home, the menus, the Share text, the cover on a friend's phone and the friends' web page (text position on a wide screen may differ a little from the phone), the note's tick, "Other information" scrolling.
+- Older checks still open: **Check 2.102 on the phone**: edge to edge is a big change: look at every screen for content under the status bar or the navigation bar, and the keyboard on screens with text fields (search, list settings, profile). Did the owner run `supabase-friends.sql` again (Owned by)?
+- **Check 2.101 on the phone**: does switching views still flicker (the fix could not be seen here)? The colour ball, the Messages tabs, and that birthday alerts are now off by default (owner's choice; they were on before).
+- **Ask how the Blur stage pictures look on the phone** in all five styles (especially the Neumorphism dent and dark mode) and on the web pages. Not seen here: the blur on Android 11 and older (a stretched tiny copy instead of a real blur) and real shop photos.
+- **Check Messages**: did the owner run `supabase-chat.sql`? Without it, Messages says it can't reach the server. Ask how chatting feels between two phones (polling delay, ticks, delete) and how the four chat layouts look; none of that could be seen here.
+- **First: ask how the new look (v2.97) feels** in all five styles, light and dark. If the owner dislikes it, revert the look to v2.96 (commit 123322e) as promised. Could not be checked here: how the fonts download (Google Fonts via Play services), neumorphic shadows on older phones, and the chaos tilt on long lists.
+- **Check first**: did the owner run the updated `supabase-friends.sql` (birthday, "I like…", "Who can see this list")? Without it: birthday/I like don't save online and "My friends" can't switch the link off. Then ask how 2.95 tests on the phone: welcome (fresh install only), Who can see this list, categories shared by all own lists, birthday reminders, friend's page, Export/Import (try on a second phone), Notifications page.
+- Not built from the review: nothing knowingly left out. The navigation cleanup was kept small (one `closeAll()`); a full one-screen-state rewrite is still possible if odd Back behaviour shows up.
+- Later ideas: "Wishlist sharing group" (friends in a group see each other's wishlists; the name "Group" is reserved for it); recovery without a file (online backup) not needed now that Export/Import exists; a tap-to-add link for friend codes.
+- Other open points: ideas for Price watch not chosen yet (summary at the top, trend line per row, sorting chips, "checked … ago", a warning when a shop can't be read).
+
+## State on 30 October 2026 (start of the Claude Code work; see the session above for what followed)
+- Owner deployed the edge function `fetch-page` in the Supabase dashboard (editor, function named `fetch-page`) and switched OFF "Verify JWT with legacy secret" in its Settings, saved. NOT yet confirmed working with a real shop link.
+- The owner was about to upload the zip with the browser editor to GitHub (and had said they might not have done so yet). Check that `web/edit.html` exists on `main` and that the Actions run is green before anything else.
+- From now on work happens here in Claude Code; the zip upload routine is retired.
+
+## Open items, most important first
+1. Done in v2.33: the data-loss risk in `Repo.load` (a list that couldn't be read was taken as empty and then saved over). Now `SafeStore.readList` keeps the unreadable text and falls back to the last good copy. The bin was built in v2.32. Nothing yet rescues an `_unreadable` copy automatically; a later version could offer that.
+1a. Bin follow-ups (the browser bin and the invite count were done on 4 November 2026): phones with an app older than 2.32 still show wishes that are in a shared list's bin until they update.
+2. Confirm the helper function works with a real shop link; confirm browser picture upload works against the real Supabase (see `CLAUDE.md`, "Cannot be checked here"); try the editor on a real iPhone.
+3. Amazon prices: patched several times, never confirmed on the owner's phone; sometimes blocked.
+4. Ideas not built (price-drop checks for shared lists exist since 2.2x and share the work between phones since 2.33): several own lists, group gifts (split the price), backup and restore, a Dutch version (the price-word parsing already knows Dutch words), owner-only actions in the browser.
+5. Cosmetic: the browser editor and the invite page were checked only in Chromium (phone, tablet and desktop sizes, light and dark).
+
+## How the tests relate to the history
+Everything under `tests/` was written in the browser-editor session and runs without any real service. Earlier Kotlin harnesses (concurrent editing, delete/Undo, sorting, categories, invite parsing) used a local Kotlin compiler with hand-written stand-ins for Android and Compose; they were not kept. The Compose screens have only ever been compiled by GitHub.
+
+## Archived later
