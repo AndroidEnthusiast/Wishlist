@@ -5,10 +5,17 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
-- **START HERE (12 November 2026, late, after 2.195).** Ask the owner how the new screen movement feels on the phone
-  (`Motion.kt`; too fast or slow, anything that jumps, the keyboard, a chat opening, Back). Then what the owner wants
-  next: show all of `docs/TODO.md` when asked. The plan written before 2.195 is the last one in
-  `docs/HANDOFF-ARCHIVE.md`.
+- **START HERE (12 November 2026, night, after 2.197).** Ask how 2.195–2.197 feel on the phone. Then build **2.198**
+  (all decided, `docs/decisions/screens.md`, "review, part 2"); it touches stored wishes, so checks first:
+  1. **Copies stay one wish:** `Repo.replaceMine` (and every edit of an own wish) also updates the same id on every
+     other own list that has it (`copies` in `Data.kt`), all fields but `category` and `bin`. Check in `RepoStoreTest`.
+  2. **"I have it"** replaces "Owned" in the ⋮ sheet (`WishSheet.kt`): ticked → untick at once with Undo; unticked →
+     asks "Keep it on the list (marked owned)" or "Move it to Received gifts" (`Repo.receive`, givers get a
+     thank-you). "What did you get?" (`Reminders.kt`) asks the same once for all ticked wishes.
+  3. **All your wishes / Top wishes** (`Overview.kt` `WishLine`): ⋮ sheet (Edit opens the wish's first list with
+     `Repo.openMine` first; Private / I have it / star via every copy), long press selects (Move to…, Delete).
+     When a wish is on several lists: "This wish is on 2 of your wishlists: A, B. From which one?" (Delete also
+     offers "All lists" = trash the original, its copies follow). The sheet shows "On 2 lists: A, B".
 - **Everything open** (the complete to-do list, owner): `docs/TODO.md`. Owner wants a new feature built first.
 
 ## Last sessions
