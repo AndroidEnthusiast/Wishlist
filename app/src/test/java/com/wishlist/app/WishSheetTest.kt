@@ -32,4 +32,13 @@ class WishSheetTest {
         // Owned already: only Share.
         assertEquals(listOf("share"), wishSheetRows(w, WishActions(shareAsIdea = true)))
     }
+
+    @Test fun reserveButtonOnTwoPerRow() {
+        assertEquals("reserve", reserveButton(w, Reserving(null) {}))
+        assertEquals("unreserve", reserveButton(w, Reserving(true) {}))
+        assertEquals(null, reserveButton(w, Reserving(false) {}))
+        assertEquals(null, reserveButton(w.copy(got = true), Reserving(null) {}))
+        // Your own lists: no Reserve.
+        assertEquals(null, reserveButton(w, null))
+    }
 }

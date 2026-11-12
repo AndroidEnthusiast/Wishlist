@@ -80,6 +80,11 @@ fun FriendScreen(
     // changes at once and goes back if the server says no.
     var pending by remember(f.code) { mutableStateOf<Set<Long>>(emptySet()) }
     var cat by remember(f.code) { mutableStateOf("All") }
+    // Search and sort, as on your own lists (owner, 12 November 2026: the same tools on every list).
+    var searching by remember(f.code) { mutableStateOf(false) }
+    var query by remember(f.code) { mutableStateOf("") }
+    var catMenu by remember { mutableStateOf(false) }
+    androidx.activity.compose.BackHandler(enabled = searching) { searching = false; query = "" }
     var tick by remember { mutableStateOf(0) }
     var confirmRemove by remember { mutableStateOf(false) }
     // A 2× wish asks "How many will you buy?" (2.128).
@@ -197,8 +202,10 @@ fun FriendScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 actions = {
                     extraAction?.invoke()
-                    // The same views as your own lists, one choice for all lists (owner, 7 November 2026).
-                    ViewMenuButton(Repo.view) { Repo.setView(ctx, it) }
+                    // Search, as on your own lists; the view choice is in the row above the wishes (ListTools).
+                    IconButton(onClick = { if (searching) { searching = false; query = "" } else searching = true }) {
+                        Icon(AppIcons.Search, if (searching) tr("Close search") else tr("Search"))
+                    }
                     // No refresh button (owner, 7 November 2026): the list refreshes itself every 20 seconds.
                     if (onBack == null) IconButton(onClick = { confirmRemove = true }) { Icon(AppIcons.Delete, tr("Remove this list")) }
                 }
@@ -208,6 +215,7 @@ fun FriendScreen(
     ) { pad ->
         val r0 = remote
         Column(Modifier.padding(pad)) {
+            if (searching && r0 != null) SearchField(query, { query = it }) { searching = false; query = "" }
             when {
                 state == "gone" -> Box(Modifier.fillMaxSize().padding(32.dp), Alignment.Center) {
                     Text(
@@ -217,8 +225,8 @@ fun FriendScreen(
                 }
                 r0 != null -> {
                     // The list's cover photo, as its owner made it (2.105).
-                    // Only the categories that wishes on this list carry (owner, 7 November 2026); none at all: no row,
-                    // the wishes move up. A category that empties while you look at it falls back to All.
+                    // Only the categories that wishes on this list carry (owner, 7 November 2026); the row stays for the
+                    // sort and the view (12 November 2026). A category that empties while you look at it falls back to All.
                     val onList = r0.wishes.filter { it.bin == 0L }
                     val usedCats = r0.cats.filter { c -> onList.any { it.category == c } }
                     if (cat != "All" && cat !in usedCats) cat = "All"
@@ -231,35 +239,40 @@ fun FriendScreen(
                             cut = r0.cover
                         )
                     }
-                    val catRow: @Composable (PaddingValues) -> Unit = { pv ->
-                        LazyRow(contentPadding = pv, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            items(listOf("All") + usedCats) { c ->
-                                FilterChip(selected = c == cat, onClick = { cat = c }, label = { Text(catLabel(c)) })
-                            }
+                    // The same row as on your own lists (ListTools.kt, owner 12 November 2026): category, sort, view.
+                    // The view and the sort are one choice for all lists (owner, 7 November 2026).
+                    val catRow: @Composable (PaddingValues, Boolean) -> Unit = { pv, live ->
+                        Box(Modifier.padding(pv)) {
+                            ListTools(
+                                cat, usedCats, { c -> if (c == "All") onList.size else onList.count { it.category == c } }, { cat = it },
+                                catMenu && live, { catMenu = it },
+                                Repo.sort, true, { Repo.setSort(ctx, it) },
+                                Repo.view, { Repo.setView(ctx, it) }
+                            )
                         }
                     }
                     // Wishes in the owner's bin are not on the list.
                     // Owned wishes at the bottom (owner, 2.113): what's still wanted comes first.
-                    val shown = onList.filter { cat == "All" || it.category == cat }.sortedBy { it.got }
+                    val shown = sortWishes(onList.filter { (cat == "All" || it.category == cat) && matchesQuery(it, query) }, Repo.sort)
                     if (shown.isEmpty()) {
                         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                             if (hasCover) cover(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp))
-                            if (usedCats.isNotEmpty()) catRow(PaddingValues(horizontal = 16.dp))
+                            catRow(PaddingValues(horizontal = 16.dp), true)
                             Text(
-                                tr("Nothing here yet."), color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                if (query.isNotBlank()) tr("No wishes match “%s”.", query.trim()) else tr("Nothing here yet."), color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.fillMaxWidth().padding(32.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center
                             )
                         }
                     } else {
                         // Before the wishes in the grid: the cover (when there is one) and the categories (when used).
-                        val pre = (if (hasCover) 1 else 0) + (if (usedCats.isNotEmpty()) 1 else 0)
+                        val pre = (if (hasCover) 1 else 0) + 1
                         val catIndex = if (hasCover) 1 else 0
                         // A wish tapped on a friend's "Wishes" or "Top wishes" page: scroll to it if it isn't in
                         // sight and let it glow (2.95, like your own lists).
                         val gridState = rememberLazyGridState()
-                        val pinned by remember(catIndex, usedCats.isNotEmpty()) {
+                        val pinned by remember(catIndex) {
                             derivedStateOf {
-                                usedCats.isNotEmpty() && (gridState.firstVisibleItemIndex > catIndex ||
+                                (gridState.firstVisibleItemIndex > catIndex ||
                                     (gridState.firstVisibleItemIndex == catIndex && gridState.firstVisibleItemScrollOffset > 0))
                             }
                         }
@@ -267,7 +280,7 @@ fun FriendScreen(
                             val t = WishFocus.target ?: return@LaunchedEffect
                             val i = shown.indexOfFirst { it.id == t }
                             if (i < 0) {
-                                if (cat != "All") cat = "All" else WishFocus.target = null
+                                if (cat != "All" || query.isNotEmpty()) { cat = "All"; query = ""; searching = false } else WishFocus.target = null
                                 return@LaunchedEffect
                             }
                             delay(150)
@@ -289,8 +302,8 @@ fun FriendScreen(
                             verticalArrangement = Arrangement.spacedBy(if (Repo.view == "list") 16.dp else 12.dp)
                         ) {
                             if (hasCover) item(key = "cover", span = { GridItemSpan(maxLineSpan) }) { cover(Modifier) }
-                            if (usedCats.isNotEmpty()) item(key = "cats", span = { GridItemSpan(maxLineSpan) }) {
-                                catRow(PaddingValues(0.dp))
+                            item(key = "cats", span = { GridItemSpan(maxLineSpan) }) {
+                                catRow(PaddingValues(0.dp), !pinned)
                             }
                             gridItems(shown, key = { it.id }) { w ->
                                 val r = res[w.id]
@@ -303,6 +316,10 @@ fun FriendScreen(
                                         w, LocalLook.current.cardMuted(w.id), 24.dp,
                                         WishActions(reserve = if (w.got) null else Reserving(r, label) { on -> toggle(w, on) }, shareAsIdea = true)
                                     )
+                                    // Share as its own button too (owner, 12 November 2026).
+                                    IconButton(onClick = { shareItem(ctx, w, idea = true) }) {
+                                        Icon(AppIcons.Share, tr("Share"), tint = LocalLook.current.cardMuted(w.id))
+                                    }
                                     if (!w.got) {
                                         // "Unreserve" says exactly what it does (owner: "Undo" could be forgotten).
                                         if (r == null) {
@@ -327,7 +344,7 @@ fun FriendScreen(
                         }
                         // The pinned copy of the categories once the list's own row scrolls away under it.
                         if (pinned) Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).padding(vertical = 4.dp)) {
-                            catRow(PaddingValues(horizontal = 16.dp))
+                            catRow(PaddingValues(horizontal = 16.dp), true)
                         }
                         }
                     }

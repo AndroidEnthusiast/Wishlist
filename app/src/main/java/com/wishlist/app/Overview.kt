@@ -29,7 +29,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -325,23 +327,20 @@ fun OverviewScreen(
         }
         }
     }
-    // Taking a top wish off is asked first (owner, 2.90): an accidental tap on the star shouldn't do it.
+    // Taking a top wish off happens at once with Undo (owner, 12 November 2026: the same rule as deleting a wish;
+    // until then it was asked first, 2.90).
     unstarring?.let { p ->
-        AlertDialog(
-            onDismissRequest = { unstarring = null },
-            title = { Text(tr("Remove from top wishes?")) },
-            text = { Text(tr("“%s” stays on your wishlist, just no longer as a top wish.", p.w.title)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    unstarring = null
-                    // Every copy of the wish, on every list it is on.
-                    p.listIds.forEach { id ->
-                        Repo.updateMine(ctx, id) { ws -> ws.map { if (it.id == p.w.id) it.copy(star = false) else it } }
-                    }
-                }) { Text(tr("Yes")) }
-            },
-            dismissButton = { TextButton(onClick = { unstarring = null }) { Text(tr("No")) } }
-        )
+        LaunchedEffect(p) {
+            fun star(on: Boolean) = p.listIds.forEach { id ->
+                // Every copy of the wish, on every list it is on.
+                Repo.updateMine(ctx, id) { ws -> ws.map { if (it.id == p.w.id) it.copy(star = on) else it } }
+            }
+            star(false)
+            val r = snack.showToast(tr("Removed from top wishes"), actionLabel = tr("Undo"), duration = SnackbarDuration.Short)
+            if (r == SnackbarResult.ActionPerformed) star(true)
+            // Only now: clearing it earlier would end this effect before the message shows.
+            unstarring = null
+        }
     }
 }
 

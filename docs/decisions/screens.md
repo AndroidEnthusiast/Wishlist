@@ -142,3 +142,20 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here. Look and f
   - **Long press on things that aren't wishes** (lists on Home, friends, group members): left as it is for now
     (owner); listed in `docs/TODO.md` (group members' Remove is only behind a long press, groups and exchanges on
     Home have no ⋮).
+
+## The "logical experience" review, part 2 (owner, 12 November 2026, built in 2.197; 2.198 follows)
+- **Share stays a direct button** on Rows and Large cards of every list (owner: "it makes it very easy to share
+  something you have on your wishlist"), also in the ⋮ sheet; Two per row keeps it in the ⋮ (no room).
+- **Taking a Top wish off never asks**: at once, with Undo (replaces "asked first", 2.90). The rule everywhere: what
+  can be undone happens at once with Undo; only what can't be undone asks (a list, a chat message, your data).
+- **Two per row shows Reserve / Unreserve on the card** on collab and friends' lists (not only in the ⋮).
+- **Every list has the same tools in the same places**: search (🔍 in the top bar), then the row with category,
+  sort and view (`ListTools.kt`); friends' lists too. Sort and view are one choice for all lists.
+- **Next (2.198):** "All your wishes" and "Top wishes" behave like any list (the ⋮ sheet, long press selects; Move
+  to… and Delete ask "From which list?" only when the wish is on several lists, and say so: "This wish is on 2 of
+  your wishlists"; the sheet shows "On 2 lists: A, B"). **Owned and Received become one action, "I have it"**: it
+  asks once whether to keep the wish on the list (dimmed) or move it to Received gifts; the reminder after an
+  occasion uses the same action.
+- **A wish on several of your lists is one wish** (owner, 12 November 2026, for 2.198): a change from "All your
+  wishes" (Edit, Private, I have it, Top wish) goes to every copy, and edits inside a list update the other copies
+  too, so they never drift apart (until now each copy changed on its own; only deleting took the copies along).

@@ -75,6 +75,17 @@ private fun host(url: String): String = try {
 /** Reserving a wish on a shared list. [state]: true = reserved on this phone, false = by someone else, null = still free. */
 class Reserving(val state: Boolean?, val label: String? = null, val set: (Boolean) -> Unit)
 
+/**
+ * The Reserve button under a Two per row card (owner, 12 November 2026): "reserve" when it is free, "unreserve" when
+ * you reserved it, null when it is owned, reserved by someone else, or not a list you reserve on.
+ */
+fun reserveButton(w: Wish, reserve: Reserving?): String? = when {
+    reserve == null || w.got -> null
+    reserve.state == null -> "reserve"
+    reserve.state == true -> "unreserve"
+    else -> null
+}
+
 /** "2×" and "Exactly this" / "Similar is fine" (owner, 2.128), as one short line, or "". */
 fun wishTags(w: Wish): String = listOfNotNull(
     if (w.qty > 1) "${w.qty}×" else null,
@@ -223,6 +234,16 @@ fun CompactCard(
             if (!readOnly) IconButton(onClick = { if (!inert) DeleteFlow.request(ctx, w) }) {
                 Icon(AppIcons.Delete, tr("Delete"), tint = muted)
             }
+            }
+        }
+        // Reserve as a button on the card, as in the other views (owner, 12 November 2026: it was only in the ⋮ here).
+        // Reserved by someone else: nothing (the badge says so); reserved by you: Unreserve.
+        if (!inert) when (reserveButton(w, reserve)) {
+            "reserve" -> Button(onClick = { reserve?.set?.invoke(true) }, modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, bottom = 8.dp)) {
+                Text(tr("Reserve"), maxLines = 1)
+            }
+            "unreserve" -> OutlinedButton(onClick = { reserve?.set?.invoke(false) }, modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, bottom = 8.dp)) {
+                Text(tr("Unreserve"), maxLines = 1)
             }
         }
         // Reactions under the name, as wide as the card, sized for it (owner, 7 November 2026): 2 at most, then "+N",

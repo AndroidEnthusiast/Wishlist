@@ -253,50 +253,14 @@ fun HomeScreen(
             // [live]: this copy may open the category menu (the list's own copy is hidden under the pinned one while
             // that one shows, and the menu must open only once).
             val filters: @Composable (Boolean) -> Unit = { live ->
-                Row(
-                    Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 2.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Left: what you see and in which order (category, sort). Right: how it looks (view buttons).
-                    Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.weight(1f, fill = false)) {
-                            // Plain text, no filled chip (owner, 2.130: a calmer top).
-                            Row(
-                                Modifier.clip(RoundedCornerShape(20.dp)).clickable { catMenu = true }
-                                    .padding(start = 8.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    catLabel(sel), style = MaterialTheme.typography.titleMedium,
-                                    maxLines = 1, overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f, fill = false).widthIn(max = 200.dp)
-                                )
-                                Icon(AppIcons.ArrowDropDown, tr("Choose category"))
-                            }
-                            DropdownMenu(expanded = catMenu && live, onDismissRequest = { catMenu = false }) {
-                                (listOf("All") + Repo.cats).forEach { c ->
-                                    val n = if (c == "All") Repo.wishes.size else Repo.wishes.count { it.category == c }
-                                    // Editing categories is in the wish form's "Edit categories" (2.110), not a long press here.
-                                    CatMenuRow(
-                                        text = catLabel(c) + " ($n)", bold = c == sel,
-                                        onClick = { cat = c; catMenu = false }
-                                    )
-                                }
-                                DropdownMenuItem(
-                                    text = { Text(tr("New category…")) },
-                                    leadingIcon = { Icon(AppIcons.Add, null) },
-                                    onClick = { catMenu = false; catDlg = true }
-                                )
-                            }
-                        }
-                        // Room between the category and the sort button (owner, 2.127: they touched).
-                        Spacer(Modifier.width(8.dp))
-                        SortButton(sortMode, withStar = !inShared, quiet = true) { Repo.setSort(ctx, it) }
-                        Spacer(Modifier.width(8.dp))
-                    }
-                    // One icon for the view (owner, 2.130): it shows the view in use and opens Rows, Two per row, Large cards.
-                    ViewMenuButton(view) { Repo.setView(ctx, it) }
-                }
+                // The same row on every list (ListTools.kt, owner 12 November 2026).
+                ListTools(
+                    sel, Repo.cats, { c -> if (c == "All") Repo.wishes.size else Repo.wishes.count { it.category == c } }, { cat = it },
+                    catMenu && live, { catMenu = it },
+                    sortMode, !inShared, { Repo.setSort(ctx, it) },
+                    view, { Repo.setView(ctx, it) },
+                    onNewCategory = { catDlg = true }
+                )
             }
             // The top that stays in sight while scrolling (owner, 2.111): the summary card (your own lists) and the
             // category, sort and view choices. The cover photo above it scrolls away.
@@ -410,6 +374,10 @@ fun HomeScreen(
                                         onHistory = if (w.url.isBlank()) null else ({ historyId = w.id })
                                     )
                                 )
+                                // Share as its own button too (owner, 12 November 2026: sharing a wish should be one tap).
+                                IconButton(onClick = { shareItem(ctx, w, idea = inShared) }) {
+                                    Icon(AppIcons.Share, tr("Share"), tint = look.cardMuted(w.id), modifier = Modifier.size(ico))
+                                }
                                 if (inShared) {
                                     // Reserving takes the place of "got it" on a shared list.
                                     if (r == true) {

@@ -308,3 +308,19 @@ class WishPressTest : NavigationBase() {
     }
 }
 
+/** Taking a top wish off on Home's Top wishes page: at once with Undo, no question (owner, 12 November 2026). */
+class TopWishTest : NavigationBase() {
+    @Test fun noQuestionWhenUnstarring() {
+        val app = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()
+        compose.runOnUiThread { Repo.addMine(app, Wish(7, "https://example.com/t", "Headphones", "", "", 99.0, null, "EUR", "Tech", star = true)) }
+        tap("Wish") // the tile says "Wish" with one wish
+        tap("Top wishes ★")
+        compose.waitForIdle()
+        compose.onAllNodes(hasContentDescription("Remove top wish") and hasClickAction()).onFirst().performClick()
+        compose.waitForIdle()
+        compose.onAllNodes(hasText("Remove from top wishes?")).assertCountEquals(0)
+        org.junit.Assert.assertFalse(Repo.myWishes.first { it.id == 7L }.star)
+        shows("Removed from top wishes")
+    }
+}
+

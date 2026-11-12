@@ -10,6 +10,10 @@ Details of each item are in the doc named after it.
 - **Try 2.195 and 2.196 on the phone:** screens move like Signal's (opening a list, a chat, a friend's page, Profile;
   tabs; Back; with the keyboard open). Wishes: a long press selects on every list (also collab), the ⋮ opens the new
   sheet. Anything odd, too fast or slow, hard to read?
+- **2.198 (decided, not built yet):** "All your wishes" and "Top wishes" like any list (⋮ sheet, long press,
+  "From which list?" when a wish is on several lists; changes go to every copy of a wish); "I have it" replaces
+  Owned and Received
+  (`docs/decisions/screens.md`, review part 2).
 - **Continue the "logical experience" review** (owner, 12 November 2026: "help me discover those"): more places where
   similar things behave differently. Ask the owner which area next.
 
