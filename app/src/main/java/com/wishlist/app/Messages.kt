@@ -164,10 +164,12 @@ private fun dayLabel(t: Long): String {
 fun MessagesScreen(snack: SnackbarHostState, onProfile: () -> Unit) {
     val places = LocalPlaces.current
     val peer = places.chat
-    if (peer != null) {
-        BackHandler { places.chat = null }
-        ChatScreen(peer, snack)
-    } else ConversationList(snack, onProfile)
+    // Back from the chat (outside the movement, so only the chat on screen answers it).
+    if (peer != null) BackHandler { places.chat = null }
+    // The chat slides in over the list and back (Motion.kt); another chat straight from a notification fades through.
+    Moving(peer, depth = { if (it != null) 1 else 0 }) { p ->
+        if (p != null) ChatScreen(p, snack) else ConversationList(snack, onProfile)
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -11,7 +11,7 @@ The rules for every session; details are in other docs, read only the part you n
 - **Any change:** its area in `docs/MAP.md`, then its topic in `docs/decisions/` (index: `docs/DECISIONS.md`). Unsure
   what the owner decided? Search `docs/decisions/` and `docs/HANDOFF-ARCHIVE.md` first.
 - **Chat, friends, groups, gift exchanges:** MAP "Friends, chat, groups…" + `docs/decisions/people.md`.
-- **Lists, wishes, Home, anything on screen:** MAP "Your lists and wishes" + `docs/decisions/screens.md` +
+- **Lists, wishes, Home, anything on screen:** MAP "Your lists and wishes" + `docs/decisions/screens.md`, `look.md` +
   `docs/STYLE.md` (read it whole).
 - **Collab wishlists, syncing, the server, `supabase-*.sql`:** MAP + `docs/decisions/sharing.md`.
 - **Prices and shops:** MAP "Prices and shops" + Rules 2 and 8. **Web pages:** MAP "Web pages" and "Checks".

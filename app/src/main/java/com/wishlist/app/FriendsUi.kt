@@ -183,27 +183,41 @@ fun FriendsScreen(snack: SnackbarHostState, onProfile: () -> Unit, onOpenLink: (
         // No longer friends (unfriended, here or by them).
         LaunchedEffect(Unit) { places.resetFriends() }
     }
-    if (person != null && list != null) {
-        BackHandler { places.friendList = null }
-        // Coming back from the list returns to where you were: their page or their wishes page.
-        FriendScreen(
-            Friend(list.code, list.name), snack, onRemoved = {},
-            fetch = { Friends.fetchList(ctx, person.id, list.code) }, ownerName = person.name,
-            onBack = { places.friendList = null }
-        )
-        return
+    // Back goes one step up: from a list or their wishes to their page, from their page to Friends (or the chat it
+    // came from). Outside the movement, so only the screen on screen answers it.
+    when {
+        person != null && list != null -> BackHandler { places.friendList = null }
+        person != null && places.friendPage != null -> BackHandler { places.friendPage = null }
+        person != null -> BackHandler { places.leavePerson(go) }
     }
-    if (person != null && places.friendPage != null) {
-        BackHandler { places.friendPage = null }
-        FriendWishesPage(person, places.friendPage!!, snack)
-        return
+    // Each step slides in from the right and back (Motion.kt). The screen that leaves is drawn from where it was.
+    val at = FriendsAt(person, if (person != null) list else null, if (person != null) places.friendPage else null)
+    Moving(at, depth = { it.depth }, key = { listOf(it.person?.id, it.list?.code, it.page) }) { a ->
+        val p = a.person
+        when {
+            p != null && a.list != null -> {
+                val l = a.list
+                // Coming back from the list returns to where you were: their page or their wishes page.
+                FriendScreen(
+                    Friend(l.code, l.name), snack, onRemoved = {},
+                    fetch = { Friends.fetchList(ctx, p.id, l.code) }, ownerName = p.name,
+                    onBack = { places.friendList = null }
+                )
+            }
+            p != null && a.page != null -> FriendWishesPage(p, a.page, snack)
+            p != null -> FriendPage(p, snack)
+            else -> FriendsHome(snack, onProfile, onOpenLink)
+        }
     }
-    if (person != null) {
-        BackHandler { places.leavePerson(go) }
-        FriendPage(person, snack)
-        return
+}
+
+/** Where you are in the Friends tab, as one value for the movement between its screens. */
+private data class FriendsAt(val person: Person?, val list: FriendList?, val page: String?) {
+    val depth: Int get() = when {
+        person == null -> 0
+        list != null || page != null -> 2
+        else -> 1
     }
-    FriendsHome(snack, onProfile, onOpenLink)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

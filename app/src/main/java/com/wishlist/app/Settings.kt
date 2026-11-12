@@ -85,17 +85,21 @@ private fun SectionTitle(t: String) {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun SettingsScreen(snack: SnackbarHostState) {
+    // The Themer (App settings > Theme) covers this screen with its own back arrow and slides in like a screen
+    // (Motion.kt); kept when the phone is turned.
+    var themer by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    Moving(themer, depth = { if (it) 1 else 0 }) { open ->
+        if (open) ThemerScreen { themer = false } else SettingsBody(snack) { themer = true }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@Composable
+private fun SettingsBody(snack: SnackbarHostState, onThemer: () -> Unit) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
     var licences by remember { mutableStateOf(false) }
-    // The Themer: its own screen, opened from the Theme section. Back returns here. (The menu button hides meanwhile.)
-    // The Themer (App settings > Theme) covers this screen with its own back arrow; kept when the phone is turned.
-    var themer by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
-    if (themer) {
-        ThemerScreen { themer = false }
-        return
-    }
 
     Scaffold(
         containerColor = cs.background,
@@ -126,7 +130,7 @@ fun SettingsScreen(snack: SnackbarHostState) {
                         style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
                     )
                 }
-                Button(onClick = { themer = true }) { Text(tr("Themer")) }
+                Button(onClick = onThemer) { Text(tr("Themer")) }
             }
             // What you see (owner, 2.101): for all your lists, only on this phone. Everything on by default.
             SectionTitle(tr("What you see"))

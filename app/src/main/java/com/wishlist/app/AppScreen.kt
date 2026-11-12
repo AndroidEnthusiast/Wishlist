@@ -6,7 +6,13 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.ExitTransition
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -330,9 +336,12 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     // perhaps one screen on top. The pop-ups below show over every route.
     NavHost(
         nav, startDestination = Route.MAIN,
-        // Screens change at once, as they always have (no sliding or fading).
-        enterTransition = { EnterTransition.None }, exitTransition = { ExitTransition.None },
-        popEnterTransition = { EnterTransition.None }, popExitTransition = { ExitTransition.None }
+        // Screens move like Signal's (owner, 12 November 2026; Motion.kt): deeper slides in from the right, back slides
+        // out, the bar's tabs fade through. Instant with the phone's "Remove animations".
+        enterTransition = { Motion.enter(Motion.routeKind(initialState.destination.route, targetState.destination.route)) },
+        exitTransition = { Motion.exit(Motion.routeKind(initialState.destination.route, targetState.destination.route)) },
+        popEnterTransition = { Motion.enter(Motion.routeKind(initialState.destination.route, targetState.destination.route)) },
+        popExitTransition = { Motion.exit(Motion.routeKind(initialState.destination.route, targetState.destination.route)) }
     ) {
         // Home (Hub.kt), the start screen.
         composable(Route.MAIN) {
@@ -433,7 +442,13 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     }
 
     }
-    if (showBar) {
+    // The bar slides away under a chat or a screen on top, and comes back, with the screens (Motion.kt); for the
+    // keyboard it steps aside at once, as before.
+    AnimatedVisibility(
+        visible = showBar,
+        enter = if (imeOpen) EnterTransition.None else fadeIn(tween(Motion.MS)) + expandVertically(tween(Motion.MS)),
+        exit = if (imeOpen) ExitTransition.None else fadeOut(tween(Motion.MS / 2)) + shrinkVertically(tween(Motion.MS))
+    ) {
         AppBottomBar(
             current = when {
                 tab == Route.SHOPS -> "discover"; tab == Route.FRIENDS -> "friends"; tab == Route.MESSAGES -> "messages"

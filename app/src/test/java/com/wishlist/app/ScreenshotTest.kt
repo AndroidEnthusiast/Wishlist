@@ -131,3 +131,64 @@ abstract class ScreenshotBase(private val mode: String) {
 
 class ScreenshotLight : ScreenshotBase("light")
 class ScreenshotDark : ScreenshotBase("dark")
+
+/**
+ * A filmstrip of the movement (owner, 12 November 2026: "like Signal"): Home → the list and Home → Messages, drawn at
+ * 0, 60, 120 and 250 ms with animations on. Only run with -Pwl.screens, like the other pictures.
+ */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34], qualifiers = "w411dp-h891dp-xxhdpi")
+class ScreenshotMotion {
+    private val setup = object : TestRule {
+        override fun apply(base: Statement, d: Description) = object : Statement() {
+            override fun evaluate() {
+                val app = ApplicationProvider.getApplicationContext<android.app.Application>()
+                WorkManagerTestInitHelper.initializeTestWorkManager(app, Configuration.Builder().build())
+                Shadows.shadowOf(app).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
+                android.provider.Settings.Global.putFloat(app.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
+                app.getSharedPreferences("wishlist", Context.MODE_PRIVATE).edit()
+                    .putBoolean("welcomed", true).putBoolean("asked_background", true).putString("sh_me", "Sam").commit()
+                ListStore.reset(); WishlistDb.reset()
+                Repo.load(app)
+                Repo.setTheme(app, "light")
+                if (Repo.myWishes.isEmpty()) for (i in 1..4) Repo.addMine(app, Wish(i.toLong(), "https://example.com/$i", "Wish $i", "", "", 10.0 * i, null, "EUR", "Home"))
+                base.evaluate()
+            }
+        }
+    }
+    private val compose = createAndroidComposeRule<MainActivity>()
+    @get:Rule val rules: RuleChain = RuleChain.outerRule(setup).around(compose)
+
+    private fun film(name: String, start: () -> Unit) {
+        compose.mainClock.autoAdvance = false
+        compose.mainClock.advanceTimeBy(500)
+        start()
+        var t = 0L
+        for (at in listOf(0L, 60L, 120L, 250L)) {
+            compose.mainClock.advanceTimeBy(at - t); t = at
+            captureScreenRoboImage("build/outputs/roborazzi/motion_${name}_$at.png")
+        }
+    }
+
+    @Test fun openAList() = film("list") {
+        val n = compose.onAllNodes(hasText("My wishlist", substring = false), useUnmergedTree = true).onFirst()
+        n.performTouchInput { click(androidx.compose.ui.geometry.Offset(centerX, top - 150f)) }
+    }
+
+    @Test fun aTabTappedTwiceWhileMovingOpensOnce() {
+        compose.mainClock.autoAdvance = false
+        compose.mainClock.advanceTimeBy(500)
+        val tab = compose.onAllNodes(hasContentDescription("Messages") and hasClickAction()).onFirst()
+        tab.performClick()
+        compose.mainClock.advanceTimeBy(60) // still moving
+        tab.performClick()
+        compose.mainClock.advanceTimeBy(600)
+        compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.mainClock.advanceTimeBy(600)
+        compose.onAllNodes(hasContentDescription("Home") and androidx.compose.ui.test.isSelected()).onFirst().assertExists()
+    }
+
+    @Test fun switchToMessages() = film("tab") {
+        compose.onAllNodes(hasContentDescription("Messages") and hasClickAction()).onFirst().performClick()
+    }
+}

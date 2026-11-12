@@ -246,6 +246,15 @@ class NavigationTest : NavigationBase() {
         phoneBack()
         tabOn("Messages")
     }
+
+    @Test fun aTabTappedTwiceOpensOnce() {
+        // Tapping a tab again (also while it is still moving in, Motion.kt) must not stack it twice: one Back is Home.
+        tap("Messages")
+        tap("Messages")
+        tabOn("Messages")
+        phoneBack()
+        tabOn("Home")
+    }
 }
 
 /**

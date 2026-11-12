@@ -49,6 +49,10 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
 ## Motion
 - Animations are short and calm. When the phone's animations are switched off (Settings > Accessibility > Remove
   animations), nothing moves (see `Snow.kt`); information never depends on an animation.
+- Screens move like Signal's (owner, 12 November 2026), always through `Motion.kt`, about 0.25 s: going deeper slides
+  in a short way from the right while fading in, Back reverses it, the bottom bar's tabs fade through. A new route
+  gets this by itself; a place inside a screen that switches without being a route (an open chat, a friend's page)
+  uses `Moving(…)` with its depth. No other screen transitions.
 
 ## Before building
 - Check every new layout against this guide on the smallest phone width (360 dp), with long names and the largest font,

@@ -252,40 +252,46 @@ fun HubScreen(
     }
 
     val page = places.homePage
-    if (page != null) OverviewScreen(page, snack, { ListsSection(onHome = false) }, onOpenMine) else Scaffold(
-        containerColor = cs.background,
-        topBar = {
-            TopAppBar(
-                // The app's wordmark instead of "Home" (2.97, in the style's own way).
-                title = { Wordmark() },
-                navigationIcon = { MenuSlot(back = false) },
-                actions = { ProfileButton(onProfile) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
-            )
-        },
-        snackbarHost = { AppSnackbarHost(snack) }
-    ) { pad ->
-        Column(
-            Modifier.padding(pad).fillMaxSize().lookBackdrop(look).verticalScroll(rememberScrollState())
-                .padding(bottom = 32.dp)
-        ) {
-            // "A new version is ready" (owner, 10 November 2026; AppInfo.kt): only when there is one.
-            UpdateBar()
-            // "Keep your wishlists safe on a new phone" until the recovery key is saved (RecoveryKey.kt, 2.187).
-            RecoveryCard()
-            // Your picture and name, and the numbers (2.89: the cover photo card is gone).
-            ProfileSummary(onProfile, onFriends, onAddWish)
-
-            // (The shops moved to their own tab, Discover, owner 7 November 2026.)
-            ListsSection(onHome = true)
-
-            // Gift exchange in its season (owner, 7 November 2026).
-            SeasonCard(onNewExchange)
-            // Gift exchanges (owner, 7 November 2026: out of the menu, onto Home): yours as blocks and a small "New gift
-            // exchange" block, all year.
-            if (Config.enabled) ExchangesSection(onNewExchange)
-
-            // No "Price changes" here any more (owner, 2.95): price news is on Price watch and in Notifications.
+    // Home's pages (your lists, all your wishes) slide in over Home and back (Motion.kt); "All wishes" and "Top
+    // wishes" inside the page switch as before (the same page). The page that leaves keeps its last name.
+    var lastPage by remember { mutableStateOf(page ?: "lists") }
+    if (page != null) lastPage = page
+    Moving(page != null, depth = { if (it) 1 else 0 }) { onPage ->
+        if (onPage) OverviewScreen(places.homePage ?: lastPage, snack, { ListsSection(onHome = false) }, onOpenMine) else Scaffold(
+            containerColor = cs.background,
+            topBar = {
+                TopAppBar(
+                    // The app's wordmark instead of "Home" (2.97, in the style's own way).
+                    title = { Wordmark() },
+                    navigationIcon = { MenuSlot(back = false) },
+                    actions = { ProfileButton(onProfile) },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
+                )
+            },
+            snackbarHost = { AppSnackbarHost(snack) }
+        ) { pad ->
+            Column(
+                Modifier.padding(pad).fillMaxSize().lookBackdrop(look).verticalScroll(rememberScrollState())
+                    .padding(bottom = 32.dp)
+            ) {
+                // "A new version is ready" (owner, 10 November 2026; AppInfo.kt): only when there is one.
+                UpdateBar()
+                // "Keep your wishlists safe on a new phone" until the recovery key is saved (RecoveryKey.kt, 2.187).
+                RecoveryCard()
+                // Your picture and name, and the numbers (2.89: the cover photo card is gone).
+                ProfileSummary(onProfile, onFriends, onAddWish)
+    
+                // (The shops moved to their own tab, Discover, owner 7 November 2026.)
+                ListsSection(onHome = true)
+    
+                // Gift exchange in its season (owner, 7 November 2026).
+                SeasonCard(onNewExchange)
+                // Gift exchanges (owner, 7 November 2026: out of the menu, onto Home): yours as blocks and a small "New gift
+                // exchange" block, all year.
+                if (Config.enabled) ExchangesSection(onNewExchange)
+    
+                // No "Price changes" here any more (owner, 2.95): price news is on Price watch and in Notifications.
+            }
         }
     }
 

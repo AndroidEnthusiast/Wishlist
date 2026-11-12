@@ -155,3 +155,5 @@ Replaced by shorter lines when `docs/TODO.md` was added; the full versions are a
 - Can: the real Supabase, read-only (public key, GET calls to `/rest/v1/rpc/...`, functions with a wrong key).
 - Can't (say so, never claim it works): writing to the real Supabase, the database, real shops, iPhone/Safari, how
   screens feel on a phone, App Links, real notifications. Details: MAP.
+- **Lists, wishes, Home, anything on screen:** MAP "Your lists and wishes" + `docs/decisions/screens.md` +
+- `docs/decisions/screens.md`: Screens, look, wishes and prices (Look and feel; Private wishes; Top wish; Wishes on screen and the wish form; Prices; App review; Premium identity; Owner's list of 3 November 2026; Settings review; Home tiles, Collab wishlists, moving wishes, notifications and web search).

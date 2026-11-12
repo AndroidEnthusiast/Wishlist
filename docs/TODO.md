@@ -7,7 +7,8 @@ it**, grouped as below, with a recommendation. Add every new open item here the 
 Details of each item are in the doc named after it.
 
 ## Now
-- **The owner's new feature** (owner, 12 November 2026: a feature first, before the items below). Interview first.
+- **Try 2.195 on the phone:** screens now move like Signal's (opening a list, a chat, a friend's page, Profile;
+  switching tabs; Back). Too fast, too slow, anything that jumps or flickers? Also with the keyboard open.
 
 ## Waiting on the owner (things only the owner can do)
 - **Crashlytics:** check that version 2.194 shows up (it said "Latest release 2.182" on 12 November); if not, crash
@@ -43,5 +44,6 @@ Details of each item are in the doc named after it.
 - No automatic test on a real or pretend phone (P23).
 
 ## Ideas for later (not decided)
+- Predictive back (the peek while swiping back from the edge; owner: not now, 12 November 2026).
 - The welcome screen redesign; "chip in" (several people pay for one gift: needs P24 first, prices stored as whole
   cents and safer wish ids). More: `docs/decisions/ideas.md`.

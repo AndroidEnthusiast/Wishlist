@@ -177,16 +177,22 @@ fun Confetti(run: Int, modifier: Modifier = Modifier) {
 @Composable
 fun ExchangesScreen(snack: SnackbarHostState, onOpenMine: (String) -> Unit, onNew: () -> Unit) {
     val places = LocalPlaces.current
+    // One exchange slides in over the list and back (Motion.kt).
+    Moving(places.exchange, depth = { if (it != null) 1 else 0 }) { open ->
+        if (open != null) key(open) { ExchangeScreen(open, snack, onBack = { places.exchange = null }, onOpenMine = onOpenMine) }
+        else ExchangesList(snack, onOpenMine, onNew)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ExchangesList(snack: SnackbarHostState, onOpenMine: (String) -> Unit, onNew: () -> Unit) {
+    val places = LocalPlaces.current
     val go = LocalGo.current
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
-    val open = places.exchange
-    if (open != null) {
-        key(open) { ExchangeScreen(open, snack, onBack = { places.exchange = null }, onOpenMine = onOpenMine) }
-        return
-    }
     var state by remember { mutableStateOf(if (Exchanges.list.isEmpty() && Exchanges.invites.isEmpty()) "loading" else "ok") }
     LaunchedEffect(Unit) {
         Exchanges.load(ctx)

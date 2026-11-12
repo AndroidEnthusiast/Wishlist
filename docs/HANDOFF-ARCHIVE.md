@@ -439,3 +439,26 @@ Everything under `tests/` was written in the browser-editor session and runs wit
   copy may miss changes from the old phone's last hour; `WishFocus` still a global (moves with the list screen).
   Later (owner): two-step sign-in (R8), the welcome screen redesign, the two-phone test (R7), "chip in", Stage 6
   (Google Play) when wanted.
+- (12 November 2026, "Next session" and the session summary as written before 2.195, word for word):
+- **START HERE (12 November 2026, night, after 2.192 and 2.193: the code clean-up).** Built: the screenshot tests work
+  again (they never settled because "What's your name?" opened at the start and November's snow moved for ever; now a
+  name, animations off, a fresh database per picture; "Price watch" → "My shops"). **2.192** one way to move between
+  screens (`LocalGo`); **2.193** where you are inside a tab is `Places` (owned by the screen), and the last `*Nav`
+  objects are gone. All 14 screenshots were identical before and after. Ask the owner how 2.193 feels: Messages and
+  Friends should still open where you left them; Back from a friend's page opened from a chat goes back to the chat;
+  turning the phone on a friend's list keeps it; a new group/exchange opens with "Invite friends"; a "Reserve it
+  now?" notification opens the list on that wish; the side sheet, share card, Themer, the shop's "Added to …".
+  **2.194** (owner asked): a message now notifies unless that chat is on screen with the app in front (also gift
+  exchange chats); ask the owner to test it with a second phone (chat open, go Home or lock the phone, get a message).
+  Owner ran supabase-limits.sql again and deployed `fetch-page` (checked read-only: `wl_fetch_ok` answers, the helper
+  says `no_apikey`, its new message). **Crash review done (owner's screenshot, 12 November 2026):** 3 crashes in the
+  last 7 days, all on 8 November, all on 2.154, one user (the owner); two issues, both NullPointerExceptions inside
+  Firebase's own thread factory and Android's `IMessenger.send`, not our code; nothing since. Advised the owner to close
+  both (Crashlytics reopens them if they come back). Crashlytics' "latest release" said 2.182: check next session
+  that 2.194 shows up (it can take a day); if not, look at `Crash.kt`/`WishlistApp.kt` after the 2.191 library update. **Next (owner's order):** the app's final name, then the copy project. R7 and
+  R8: later.
+### 12 November 2026, night: the code clean-up and the notes tidy-up (2.192–2.194)
+Screenshot tests fixed (a name, animations off). Clean-up: one way between screens (`LocalGo`, 2.192), where you are
+is `Places` owned by the screen and every `*Nav` object gone (2.193), screenshots identical before and after. Bug
+fixed on request: a message now notifies unless that chat is on screen (2.194). Crash review: 3 old crashes on 2.154,
+none since. Notes tidy-up: `CLAUDE.md` slimmed, `docs/MAP.md`, decisions by topic, archives, a stop hook for limits.
