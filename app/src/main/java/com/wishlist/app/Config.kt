@@ -11,6 +11,8 @@ object Config {
 
     /** Friends open this page to see your list. It is the web page in the repo, served by GitHub Pages. */
     const val SHARE_URL = "https://androidenthusiast.github.io/Wishlist/"
+    /** The privacy page (ROADMAP S4.6): App settings > About and the welcome link to it. */
+    const val PRIVACY_URL = SHARE_URL + "privacy.html"
 
     /** The newest app, rebuilt by GitHub on every change (the release "latest"). Also linked from the invite page. */
     const val APK_URL = "https://github.com/AndroidEnthusiast/Wishlist/releases/download/latest/Wishlist.apk"

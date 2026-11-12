@@ -368,6 +368,9 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
     var text by remember(peer) { mutableStateOf("") }
     var sending by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf<ChatMessage?>(null) }
+    var chatMenu by remember { mutableStateOf(false) }
+    var reporting by remember { mutableStateOf(false) }
+    var blocking by remember { mutableStateOf(false) }
     var wishPick by remember { mutableStateOf(false) }
     // Reactions and replies (owner, 2.128): the long-press menu, the message being answered, and the emoji per message.
     var menuFor by remember { mutableStateOf<ChatMessage?>(null) }
@@ -525,11 +528,23 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
                     }
                 },
                 navigationIcon = { IconButton(onClick = { ChatNav.peer = null }) { Icon(AppIcons.ArrowBack, tr("Back")) } },
+                // Report and block (Safety.kt, ROADMAP S4.8; owner: in a chat's menu).
+                actions = {
+                    Box {
+                        IconButton(onClick = { chatMenu = true }) { Icon(AppIcons.MoreVert, tr("More")) }
+                        DropdownMenu(expanded = chatMenu, onDismissRequest = { chatMenu = false }) {
+                            DropdownMenuItem(text = { Text(tr("Report")) }, onClick = { chatMenu = false; reporting = true })
+                            DropdownMenuItem(text = { Text(tr("Block"), color = cs.error) }, onClick = { chatMenu = false; blocking = true })
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
         },
         snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
+        if (reporting) ReportDialog(peer, name, snack) { reporting = false }
+        if (blocking) BlockDialog(peer, name, snack, onDone = { blocking = false; ChatNav.peer = null }, onClose = { blocking = false })
         Column(Modifier.padding(pad).fillMaxSize().lookBackdrop(look).imePadding()) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 if (loading && msgs.isEmpty()) CircularProgressIndicator(Modifier.align(Alignment.Center))

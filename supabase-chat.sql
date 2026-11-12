@@ -40,8 +40,10 @@ end $$;
 -- Can these two chat? Friends can; after unfollowing, the history stays readable (p_send = false).
 create or replace function wl_chat_ok(p_id text, p_other text, p_send boolean)
 returns boolean language sql stable security definer set search_path = public as $$
-  select exists (select 1 from wl_friends f where f.accepted and ((f.a = p_id and f.b = p_other) or (f.a = p_other and f.b = p_id)))
-    or (not p_send and exists (select 1 from wl_messages m where (m.a = p_id and m.b = p_other) or (m.a = p_other and m.b = p_id)))
+  select (exists (select 1 from wl_friends f where f.accepted and ((f.a = p_id and f.b = p_other) or (f.a = p_other and f.b = p_id)))
+    or (not p_send and exists (select 1 from wl_messages m where (m.a = p_id and m.b = p_other) or (m.a = p_other and m.b = p_id))))
+    -- Blocked (supabase-friends.sql): the one who blocked no longer sees the chat, and nobody can send in it.
+    and not exists (select 1 from wl_blocks k where (k.who = p_id and k.whom = p_other) or (p_send and k.who = p_other and k.whom = p_id))
 $$;
 
 -- The conversations: everyone you have messages with, newest first, with their last message, the number you haven't
@@ -62,6 +64,7 @@ begin
     ) as x
     from wl_profiles p
     where p.id <> p_id and exists (select 1 from wl_messages m where (m.a = p_id and m.b = p.id) or (m.a = p.id and m.b = p_id))
+      and not exists (select 1 from wl_blocks k where k.who = p_id and k.whom = p.id)
   ) t;
   return v;
 end $$;

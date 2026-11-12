@@ -134,6 +134,8 @@ fun WelcomeFlow(onDone: () -> Unit) {
                             )
                             // A new phone: everything back with the recovery key (Restore.kt, 2.188).
                             TextButton(onClick = { restoring = true }, modifier = Modifier.padding(top = 8.dp)) { Text(tr("I already have lists")) }
+                            // The privacy page (ROADMAP S4.6).
+                            TextButton(onClick = { openPrivacy(ctx) }) { Text(tr("Privacy")) }
                         }
                         2 -> {
                             PlaceholderIcon("gift", 56.dp, LocalLook.current.accent)

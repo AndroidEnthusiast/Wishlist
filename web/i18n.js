@@ -64,6 +64,13 @@
       p.appendChild(b);
     });
     mark();
+    // The privacy page (ROADMAP S4.6), linked from every page next to the theme choice.
+    p.appendChild(document.createTextNode(" · "));
+    var pv = document.createElement("a");
+    pv.className = "link";
+    pv.href = "privacy.html";
+    pv.textContent = window.T("Privacy");
+    p.appendChild(pv);
     return p;
   };
   // "&t=dark": the light/dark choice made in this browser, for a link to another page of the site. Empty when nothing was picked.

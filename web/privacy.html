@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<!-- Only scripts, pictures and connections listed here can run or load (the same rules as the other pages). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'">
+<script src="theme.js?v=dev"></script>
+<meta name="referrer" content="no-referrer">
+<title>Wishlist: privacy</title>
+<link rel="icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&amp;display=swap">
+<link rel="stylesheet" href="wishlist.css?v=dev">
+<style>
+  .privacy { max-width: 680px; margin: 0 auto; padding: 24px 16px 48px; line-height: 1.55; }
+  .privacy h1 { font-size: 1.6rem; margin: 8px 0 4px; }
+  .privacy h2 { font-size: 1.15rem; margin: 28px 0 6px; }
+  .privacy p, .privacy li { font-size: 1rem; }
+  .privacy ul { padding-left: 20px; }
+  .privacy .muted { opacity: .75; font-size: .9rem; }
+  .privacy a { color: inherit; }
+</style>
+</head>
+<body>
+<main class="privacy">
+<h1>Privacy</h1>
+<p class="muted">Last changed 12 November 2026</p>
+
+<p>Wishlist is an Android app and these web pages. This page says, in plain words, what is kept, where, who can see it,
+for how long, and how to have it deleted.</p>
+
+<h2>On your phone</h2>
+<ul>
+  <li>Your wishlists, wishes, photos, private wishes, "Only me" lists, the bin, price history and settings are kept on your
+    phone.</li>
+  <li><strong>Private wishes and "Only me" lists never go online</strong>, except inside your locked recovery copy (below),
+    which we can't read.</li>
+  <li>Android may include the app's data in your phone's own backup to your Google account, if you have that switched on
+    in Android's settings.</li>
+</ul>
+
+<h2>Online</h2>
+<p>To share lists, the app and these pages use a database service (Supabase). What is stored there:</p>
+<ul>
+  <li><strong>Wishlists you share</strong> (their wishes and pictures) and <strong>collab wishlists</strong>. Anyone with the
+    link can see a shared list. Lists are never public or searchable.</li>
+  <li><strong>Reservations</strong>, linked to a random number for your phone or browser. The person whose list it is never
+    sees who reserved what.</li>
+  <li><strong>Your profile</strong>, if you make one: your name, photo, birthday, "I like…", sizes, friend code, friends,
+    and which of your lists friends can see. Only your friends see these.</li>
+  <li><strong>Wishlist groups and gift exchanges</strong> you join: your name and the wishlist you joined with, for the
+    other members.</li>
+  <li><strong>Reactions</strong> on wishes and "Is it still being bought?" questions.</li>
+  <li><strong>Your recovery copy</strong>: a copy of your phone's data, locked on your phone with your recovery key before it
+    is sent. We can't read it, and the key never goes online.</li>
+</ul>
+
+<h2>Chats</h2>
+<p>Messages and photos in chats are locked on the sender's phone and unlocked on the receiver's phone (end-to-end). The
+server only stores locked messages it can't read. To be honest about the limits: the server hands out the keys that
+lock messages, so this protection depends on the server being honest. Messages are deleted after a year.</p>
+
+<h2>Reports and blocking</h2>
+<p>If you report someone, we receive your reason, your note, and the last 20 messages of your chat with them (unlocked
+by your phone, so we can read those). Reports are kept for 12 months. Blocking someone is not reported to anyone, and
+they are not told.</p>
+
+<h2>Other things we keep</h2>
+<ul>
+  <li><strong>Crash reports</strong> (Firebase Crashlytics, by Google): what went wrong, your phone's model, Android
+    version and app version. No wishes or names.</li>
+  <li><strong>Notifications</strong> (Firebase Cloud Messaging, by Google): an address for your phone, so friends'
+    messages arrive at once.</li>
+  <li><strong>Limits against abuse</strong>: a scrambled form of your internet address, kept for one day.</li>
+  <li><strong>Reading a shop's page</strong>: when you paste a link in the browser editor, our server loads that page for
+    you. The shop sees our server, not you.</li>
+  <li><strong>How many times a list was opened</strong>, without saying by whom.</li>
+</ul>
+
+<h2>How long</h2>
+<ul>
+  <li>Lists and profiles that the owner's app hasn't opened for 12 months are deleted online. You get a reminder a month
+    before. The copy on your phone is never touched.</li>
+  <li>Recovery copies not updated for 13 months are deleted.</li>
+</ul>
+
+<h2>Deleting your data</h2>
+<ul>
+  <li><strong>In the app</strong>: Profile, then "Delete my profile and data" at the bottom. Your profile, friends, chats,
+    reservations and wishlists are deleted, online and on your phone. Collab wishlists, groups and gift exchanges with
+    other people on them are handed over to someone you pick. Wishes you added to someone else's collab wishlist stay
+    there, without your name.</li>
+  <li><strong>Without the app</strong> (you only used these web pages): e-mail us at the address below with the link of
+    the list or group, and we delete what is yours.</li>
+</ul>
+
+<h2>Contact</h2>
+<p>Questions, or want your data deleted? E-mail <a href="mailto:wishlist.ctf70@simplelogin.com">wishlist.ctf70@simplelogin.com</a>.</p>
+</main>
+</body>
+</html>

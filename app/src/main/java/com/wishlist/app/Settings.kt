@@ -269,6 +269,15 @@ fun SettingsScreen(snack: SnackbarHostState) {
                 )
                 TextButton(onClick = { licences = true }) { Text(tr("Licences")) }
             }
+            // The privacy page on the website (ROADMAP S4.6).
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    tr("What is kept, where, for how long, and how to delete it."),
+                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
+                    modifier = Modifier.weight(1f).padding(end = 12.dp)
+                )
+                TextButton(onClick = { openPrivacy(ctx) }) { Text(tr("Privacy")) }
+            }
             // How often this phone asks the server (ROADMAP S3.4, owner 8 November 2026).
             ServerCallsRow()
         }

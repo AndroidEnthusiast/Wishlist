@@ -269,6 +269,9 @@ private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenL
     var tick by remember { mutableIntStateOf(0) }
     var adding by remember { mutableStateOf(false) }
     var unfollow by remember { mutableStateOf<Person?>(null) }
+    // Block and report (Safety.kt, ROADMAP S4.8), next to Unfriend.
+    var blocking by remember { mutableStateOf<Person?>(null) }
+    var reporting by remember { mutableStateOf<Person?>(null) }
 
     // Load now, then every 30 seconds while the tab is open.
     LaunchedEffect(tick) {
@@ -366,7 +369,9 @@ private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenL
                     FriendRow(
                         f,
                         onOpen = { FriendsNav.person = f.id },
-                        onUnfriend = { unfollow = f }
+                        onUnfriend = { unfollow = f },
+                        onBlock = { blocking = f },
+                        onReport = { reporting = f }
                     )
                 }
             } else if (!problem) item {
@@ -399,6 +404,8 @@ private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenL
         FriendsNav.addCode = null
         if (msg != null) scope.launch { snack.showToast(msg) }
     }, prefill = FriendsNav.addCode.orEmpty(), prefillName = FriendsNav.addName)
+    blocking?.let { f -> BlockDialog(f.id, f.name, snack, onDone = { blocking = null }, onClose = { blocking = null }) }
+    reporting?.let { f -> ReportDialog(f.id, f.name, snack) { reporting = null } }
     unfollow?.let { f ->
         AlertDialog(
             onDismissRequest = { unfollow = null },
@@ -496,7 +503,7 @@ private fun PersonRow(p: Person, line: String, buttons: @Composable () -> Unit) 
 /** A friend: tap opens their wishlists; long press or ⋮ opens a small menu (Unfriend; "Hide my lists" went in 2.108). */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun FriendRow(f: Person, onOpen: () -> Unit, onUnfriend: () -> Unit) {
+private fun FriendRow(f: Person, onOpen: () -> Unit, onUnfriend: () -> Unit, onBlock: () -> Unit, onReport: () -> Unit) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
     val id = f.id.hashCode().toLong()
@@ -540,6 +547,8 @@ private fun FriendRow(f: Person, onOpen: () -> Unit, onUnfriend: () -> Unit) {
         Box(Modifier.align(Alignment.TopEnd)) {
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                 DropdownMenuItem(text = { Text(tr("Unfriend"), color = cs.error) }, onClick = { menu = false; onUnfriend() })
+                DropdownMenuItem(text = { Text(tr("Block"), color = cs.error) }, onClick = { menu = false; onBlock() })
+                DropdownMenuItem(text = { Text(tr("Report")) }, onClick = { menu = false; onReport() })
             }
         }
     }
@@ -1110,6 +1119,9 @@ fun ProfileScreen(snack: SnackbarHostState) {
                 tr("You can also make a backup file in App settings > Backup."),
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp)
             )
+            // Blocked people, when there are any (Safety.kt), and deleting everything (DeleteMe.kt), at the very bottom.
+            BlockedPeople(snack)
+            DeleteMeSection()
         }
     }
 
@@ -1240,7 +1252,7 @@ private fun DayMonthDialog(startDay: Int, startMonth: Int, onPick: (Int, Int) ->
 }
 
 @Composable
-private fun ProfileTitle(t: String) {
+internal fun ProfileTitle(t: String) {
     Text(
         t, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(top = 20.dp)

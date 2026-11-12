@@ -46,7 +46,19 @@ create table if not exists wl_profile_lists (
   primary key (profile, list_code)
 );
 
+-- Block (ROADMAP S4.8; owner, 12 November 2026): [who] blocked [whom]. They are no longer friends, [whom] can't send a
+-- friend request (it seems sent, but nothing arrives) and the chat is hidden for [who]. [whom] is not told.
+-- Made and undone with wl_block / wl_unblock (supabase-privacy.sql).
+create table if not exists wl_blocks (
+  who text not null references wl_profiles(id) on delete cascade,
+  whom text not null references wl_profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (who, whom)
+);
+create index if not exists wl_blocks_whom on wl_blocks (whom);
+
 -- Tables are locked. The app can only use the functions below.
+alter table wl_blocks enable row level security;
 alter table wl_profiles enable row level security;
 alter table wl_friends enable row level security;
 alter table wl_profile_lists enable row level security;
@@ -217,6 +229,12 @@ begin
   select * into o from wl_profiles where code = upper(regexp_replace(coalesce(p_code, ''), '[^A-Za-z0-9]', '', 'g'));
   if o.id is null then return jsonb_build_object('status', 'none'); end if;
   if o.id = p_id then return jsonb_build_object('status', 'self'); end if;
+  -- They blocked you: it seems sent, nothing arrives (they are not asked again). You blocked them: entering their
+  -- code again undoes your block.
+  if exists (select 1 from wl_blocks where who = o.id and whom = p_id) then
+    return jsonb_build_object('status', 'sent', 'name', o.name);
+  end if;
+  delete from wl_blocks where who = p_id and whom = o.id;
   select * into r from wl_friends where (a = p_id and b = o.id) or (a = o.id and b = p_id);
   if r.a is null then
     insert into wl_friends (a, b) values (p_id, o.id);
