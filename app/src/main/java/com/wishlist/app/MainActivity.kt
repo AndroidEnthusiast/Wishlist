@@ -55,6 +55,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // A restore that reached the server but not this phone is finished first (Restore.kt, 2.188).
+        if (Restore.resume(this)) { Backup.restart(this); return }
+        Moved.load(this)
         Repo.load(this)
         Show.load(this)
         Friends.load(this)

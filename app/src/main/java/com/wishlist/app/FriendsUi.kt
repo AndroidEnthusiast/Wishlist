@@ -862,6 +862,8 @@ fun ProfileScreen(snack: SnackbarHostState) {
     val ctx = LocalContext.current
     var showKey by remember { mutableStateOf(false) }
     if (showKey) RecoveryKeyDialog { showKey = false }
+    var restoring by remember { mutableStateOf(false) }
+    if (restoring) RestoreDialog(confirmFirst = true) { restoring = false }
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
@@ -1102,6 +1104,8 @@ fun ProfileScreen(snack: SnackbarHostState) {
                 style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
             )
             OutlinedButton(onClick = { showKey = true }) { Text(tr("Show and save your key")) }
+            // For someone who tapped past "I already have lists" in the welcome (owner, 12 November 2026).
+            TextButton(onClick = { restoring = true }) { Text(tr("Restore with a recovery key")) }
             Text(
                 tr("You can also make a backup file in App settings > Backup."),
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp)

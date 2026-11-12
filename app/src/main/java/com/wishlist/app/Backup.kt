@@ -122,11 +122,19 @@ object Backup {
      * backup (nothing is changed then). The caller restarts the app afterwards ([restart]).
      */
     suspend fun import(c: Context, uri: Uri) = withContext(Dispatchers.IO) {
-        // First read it all into memory and check it, so a wrong file changes nothing.
+        val input = c.contentResolver.openInputStream(uri) ?: throw IllegalStateException("no file")
+        apply(c, read(input))
+    }
+
+    /** What a backup holds, read into memory and checked before anything on the phone changes. */
+    class Parts(val manifest: JSONObject, val values: JSONObject, val files: Map<String, ByteArray>, val chatKeys: JSONObject?)
+
+    /** Reads a backup (an Export file, or the recovery key's unlocked copy). Throws when it isn't a Wishlist backup. */
+    fun read(input: java.io.InputStream): Parts {
         var manifest: JSONObject? = null
         var values: JSONObject? = null
+        var chatKeys: JSONObject? = null
         val files = LinkedHashMap<String, ByteArray>()
-        val input = c.contentResolver.openInputStream(uri) ?: throw IllegalStateException("no file")
         ZipInputStream(input.buffered()).use { z ->
             while (true) {
                 val e = z.nextEntry ?: break
@@ -134,6 +142,7 @@ object Backup {
                 when {
                     e.name == "manifest.json" -> manifest = JSONObject(String(bytes))
                     e.name == "prefs.json" -> values = JSONObject(String(bytes))
+                    e.name == "chatkeys.json" -> chatKeys = JSONObject(String(bytes))
                     e.name.startsWith("files/") && !e.isDirectory -> files[e.name.removePrefix("files/")] = bytes
                 }
             }
@@ -141,10 +150,26 @@ object Backup {
         val m = manifest ?: throw IllegalArgumentException("not a backup")
         val v = values ?: throw IllegalArgumentException("not a backup")
         if (m.optString("app") != "Wishlist") throw IllegalArgumentException("not a backup")
+        return Parts(m, v, files, chatKeys)
+    }
+
+    /**
+     * Replaces everything on this phone with [parts]. [swap] replaces secrets in every stored text (a restore gives
+     * the profile and the lists new tokens, Restore.kt); the chat keys are replaced only when the backup has them (an
+     * Export doesn't). The caller restarts the app afterwards ([restart]).
+     */
+    suspend fun apply(c: Context, parts: Parts, swap: Map<String, String> = emptyMap()) = withContext(Dispatchers.IO) {
+        val m = parts.manifest
+        val v = parts.values
+        val files = parts.files
         // Pictures are stored as addresses in this phone's folder; another phone may have another folder.
         val oldDir = m.optString("files")
         val newDir = c.filesDir.absolutePath
-        fun fix(s: String) = if (oldDir.isNotEmpty() && oldDir != newDir) s.replace(oldDir, newDir) else s
+        fun fix(s: String): String {
+            var x = if (oldDir.isNotEmpty() && oldDir != newDir) s.replace(oldDir, newDir) else s
+            for ((old, new) in swap) if (old.length >= 16 && x.contains(old)) x = x.replace(old, new)
+            return x
+        }
 
         // The database stops saving and is emptied: the next start moves the file's data in (S2.4, 2.170).
         ListStore.forImport(c)
@@ -158,6 +183,11 @@ object Backup {
             if (!f.path.startsWith(root.path + File.separator)) continue
             f.parentFile?.mkdirs()
             f.writeBytes(bytes)
+        }
+        parts.chatKeys?.let { ck ->
+            val e = c.getSharedPreferences("chatkeys", Context.MODE_PRIVATE).edit().clear()
+            for (k in ck.keys()) e.putString(k, ck.optString(k))
+            e.commit()
         }
         // Replace the settings and data (this phone's notification token stays).
         val sp = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE)

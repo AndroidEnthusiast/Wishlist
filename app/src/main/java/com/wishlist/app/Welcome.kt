@@ -76,6 +76,7 @@ fun WelcomeFlow(onDone: () -> Unit) {
     var listName by remember { mutableStateOf("") }
     var listEdited by remember { mutableStateOf(false) }
     var pending by remember { mutableStateOf<String?>(null) }
+    var restoring by remember { mutableStateOf(false) }
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) scope.launch { ImageStore.import(ctx, uri)?.let { pending = it } }
     }
@@ -131,6 +132,8 @@ fun WelcomeFlow(onDone: () -> Unit) {
                                 name, { name = it.take(30) }, singleLine = true, label = { Text(tr("Your name")) },
                                 keyboardOptions = Capitalised, modifier = Modifier.fillMaxWidth()
                             )
+                            // A new phone: everything back with the recovery key (Restore.kt, 2.188).
+                            TextButton(onClick = { restoring = true }, modifier = Modifier.padding(top = 8.dp)) { Text(tr("I already have lists")) }
                         }
                         2 -> {
                             PlaceholderIcon("gift", 56.dp, LocalLook.current.accent)
@@ -169,6 +172,7 @@ fun WelcomeFlow(onDone: () -> Unit) {
             }
         }
     }
+    if (restoring) RestoreDialog(confirmFirst = false) { restoring = false }
     // A photo goes through the round editor first, as on Profile.
     pending?.let { img ->
         HeroEditor(

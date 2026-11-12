@@ -85,6 +85,8 @@ object Cloud {
                 // A limit against abuse (supabase-limits.sql, ROADMAP S4.2), only reached far above normal use: one
                 // kind message, wherever the call came from (the screen's own "couldn't save" follows as before).
                 if (text.contains("rate_limited")) ServerNotice.limited()
+                // Refused: perhaps the person restored on another phone and this one is signed out (Restore.kt).
+                if (text.contains("not allowed")) Moved.suspect(fn)
                 throw CloudException("Server said $status: ${text.take(160)}")
             }
             text

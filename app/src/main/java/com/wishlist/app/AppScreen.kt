@@ -552,6 +552,14 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     if (AppInfo.tooOld(AppInfo.installed(ctx), AppInfo.info)) TooOldScreen()
     // The lists couldn't be opened and what is in memory is an old copy (Rescue.kt, ROADMAP R1): say so, with ways out.
     if (ListStore.stale) RescueScreen()
+    // After a restore: the new recovery key to save (Restore.kt, 2.188).
+    var newKey by remember { mutableStateOf(ctx.getSharedPreferences("wishlist", android.content.Context.MODE_PRIVATE).getBoolean("rk_new", false)) }
+    if (newKey && !welcome) NewKeyDialog {
+        ctx.getSharedPreferences("wishlist", android.content.Context.MODE_PRIVATE).edit().remove("rk_new").apply()
+        newKey = false
+    }
+    // Signed out because the person restored on another phone: only this, over everything (Restore.kt, 2.188).
+    if (Moved.away) MovedScreen()
     // Everyone has a name (owner, 2.135): asked once at the start when it's missing, and before sharing.
     LaunchedEffect(welcome) { if (!welcome) NameGate.askAtStart() }
     NameGate.Host()
