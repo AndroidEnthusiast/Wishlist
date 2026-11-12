@@ -813,9 +813,11 @@
       url.value = u;
       busy = true; setErr(""); fetchBtn.disabled = true; fetchBtn.textContent = T("Reading…");
       var m = null, failed = false;
-      try { m = P.readHelperAnswer(await loadShopPage(u)); } catch (e) { failed = true; }
+      try { m = P.readHelperAnswer(await loadShopPage(u)); } catch (e) { failed = /rate_limited/.test(String(e && e.message)) ? "limited" : true; }
       busy = false; fetchBtn.disabled = false; fetchBtn.textContent = T("Fetch details");
-      if (failed || m === null) setErr(T("Couldn’t read that page. Fill in the details yourself."));
+      // 60 pages an hour per group link (supabase-limits.sql): the same message as the other limits.
+      if (failed === "limited") setErr(T("Please try again in a moment"));
+      else if (failed || m === null) setErr(T("Couldn’t read that page. Fill in the details yourself."));
       else if (m.blocked) setErr(T("Couldn’t read this shop’s page. Fill in the name and price yourself."));
       else {
         title.value = m.title; desc.value = m.desc;

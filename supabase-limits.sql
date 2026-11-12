@@ -187,3 +187,19 @@ revoke execute on function wl_limit_ip(), wl_limit_hit(text, text, int, text),
   wl_limit_items(), wl_limit_messages(), wl_limit_gx_msgs(), wl_limit_reacts(), wl_limit_reservations(),
   wl_limit_asks(), wl_limit_friends(), wl_limit_invites(), wl_limit_new_by_ip()
 from public, anon;
+
+-- The shop-page helper (supabase/functions/fetch-page, ROADMAP S4.2; owner, 12 November 2026): it loads a shop's page
+-- for whoever holds a collab wishlist's edit key or a group link. This checks the key and counts: at most 60 pages an
+-- hour per key, then 'rate_limited' ("Please try again in a moment"). Only a fingerprint of the key is counted.
+create or replace function wl_fetch_ok(p_key text)
+returns boolean language plpgsql volatile security definer set search_path = public as $$
+begin
+  if coalesce(p_key, '') !~ '^[A-Za-z0-9]{16,64}$' then return false; end if;
+  if not exists (select 1 from wl_lists where edit_key = p_key)
+     and not exists (select 1 from wl_groups where link = upper(p_key)) then
+    return false;
+  end if;
+  perform wl_limit_hit('fetch:' || md5(p_key), 'fetch', 60, 'hour');
+  return true;
+end $$;
+grant execute on function wl_fetch_ok(text) to anon;

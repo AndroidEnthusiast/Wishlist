@@ -595,3 +595,6 @@ What the owner has decided, and why. Follow these unless the owner changes their
 - **Copy is its own project** (owner, 12 November 2026, after trying 2.188/2.189: "I don't like the copy, but it's
   fine"): one pass over every text in the app and on the web pages, so it is crystal clear and concise UX writing that
   leaves nothing to the imagination. Until then, new texts follow STYLE.md and are asked as before.
+- **Android's own backup is switched off** (owner, 12 November 2026, P20): `allowBackup="false"`; a new phone uses the
+  recovery key. **The shop-page helper (`fetch-page`) reads at most 60 pages an hour per list, group or exchange
+  link** (owner); above it: "Please try again in a moment".

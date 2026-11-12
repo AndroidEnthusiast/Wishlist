@@ -132,6 +132,8 @@ res = await handle(new Request("https://x/", { method: "GET" }), deps(async () =
 check("get 405", res.status === 405);
 res = await handle(req({ key, url: "https://shop.example/a" }), { fetch: async () => html("x"), resolve: publicDns, keyOk: async () => { throw new Error("db down"); } });
 check("key check failure 502", res.status === 502);
+res = await handle(req({ key, url: "https://shop.example/a" }), { fetch: async () => html("x"), resolve: publicDns, keyOk: async () => "limited" as const });
+check("over the hourly limit 429 rate_limited", res.status === 429 && (await res.json()).error === "rate_limited");
 res = await handle(req({ key, url: "https://shop.example/a" }), deps(async () => { throw new TypeError("x"); }));
 check("shop down 502 with cors", res.status === 502 && res.headers.get("access-control-allow-origin") === "*");
 
@@ -140,16 +142,22 @@ const real = mod.realDeps;
 (globalThis as any).Deno.env.set?.("SUPABASE_URL", "https://p.supabase.co");
 const realFetch = globalThis.fetch;
 let seenReq: any = null;
-(globalThis as any).fetch = async (u: string, i: any) => { seenReq = { u, i }; return new Response(JSON.stringify({ name: "x", count: 1 }), { status: 200 }); };
-check("realKeyOk true", (await real.keyOk(key, "sb_publishable_x")) === true && seenReq.u === "https://p.supabase.co/rest/v1/rpc/wl_sh_info" && JSON.parse(seenReq.i.body).p_key === key && seenReq.i.headers.apikey === "sb_publishable_x" && !seenReq.i.headers.Authorization);
-(globalThis as any).fetch = async () => new Response("null", { status: 200 });
-check("realKeyOk null → false", (await real.keyOk(key, "k")) === false);
+(globalThis as any).fetch = async (u: string, i: any) => { seenReq = { u, i }; return new Response("true", { status: 200 }); };
+check("realKeyOk true", (await real.keyOk(key, "sb_publishable_x")) === true && seenReq.u === "https://p.supabase.co/rest/v1/rpc/wl_fetch_ok" && JSON.parse(seenReq.i.body).p_key === key && seenReq.i.headers.apikey === "sb_publishable_x" && !seenReq.i.headers.Authorization);
+(globalThis as any).fetch = async () => new Response("false", { status: 200 });
+check("realKeyOk false → false", (await real.keyOk(key, "k")) === false);
+(globalThis as any).fetch = async () => new Response("{\"code\":\"P0001\",\"message\":\"rate_limited\"}", { status: 400 });
+check("realKeyOk over the limit → limited", (await real.keyOk(key, "k")) === "limited");
+// Before supabase-limits.sql is run again: wl_fetch_ok is missing (PGRST202), the old two checks without a count.
 const asked: string[] = [];
-(globalThis as any).fetch = async (u: string, i: any) => { asked.push(u.split("/").pop() + ":" + i.body); return new Response(u.endsWith("wl_gr_info") ? "{\"name\":\"Fam\"}" : "null", { status: 200 }); };
-check("realKeyOk group link → true", (await real.keyOk(key, "k")) === true && asked.length === 2 && asked[1] === "wl_gr_info:" + JSON.stringify({ p_link: key }));
+const missing = () => new Response("{\"code\":\"PGRST202\"}", { status: 404 });
+(globalThis as any).fetch = async (u: string, i: any) => { asked.push(u.split("/").pop() + ":" + i.body); return u.endsWith("wl_fetch_ok") ? missing() : new Response(u.endsWith("wl_gr_info") ? "{\"name\":\"Fam\"}" : "null", { status: 200 }); };
+check("old check: group link → true", (await real.keyOk(key, "k")) === true && asked.length === 3 && asked[2] === "wl_gr_info:" + JSON.stringify({ p_link: key }));
+(globalThis as any).fetch = async (u: string) => u.endsWith("wl_fetch_ok") ? missing() : new Response("null", { status: 200 });
+check("old check: unknown key → false", (await real.keyOk(key, "k")) === false);
 (globalThis as any).fetch = async () => new Response("nope", { status: 401 });
 check("realKeyOk 401 → false", (await real.keyOk(key, "k")) === false);
-(globalThis as any).fetch = async (u: string, i: any) => { seenReq = { u, i }; return new Response("{\"a\":1}", { status: 200 }); };
+(globalThis as any).fetch = async (u: string, i: any) => { seenReq = { u, i }; return new Response("true", { status: 200 }); };
 await real.keyOk(key, "eyJabc");
 check("old jwt keys also go in Authorization", seenReq.i.headers.Authorization === "Bearer eyJabc");
 (globalThis as any).fetch = realFetch;

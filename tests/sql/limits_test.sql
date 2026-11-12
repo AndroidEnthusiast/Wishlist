@@ -85,4 +85,14 @@ insert into wl_limits (actor, action, win, n) values ('old', 'wish', now() - int
 delete from wl_limits where win < now() - interval '1 day';
 select pg_temp.ok(not exists (select 1 from wl_limits where actor = 'old'), 'old counts can be removed');
 
+-- ---------- the shop-page helper: 60 pages an hour per key ----------
+insert into wl_lists (code, owner_token, name, edit_key) values ('FETCHLST', 'fetchowner-token-0001', 'Fetch', 'FETCHKEYFETCHKEY0001');
+set role anon;
+select pg_temp.ok(not wl_fetch_ok('NOSUCHKEYNOSUCHKEY01'), 'an unknown key may not use the helper');
+select pg_temp.ok(not wl_fetch_ok('bad key!'), 'a malformed key is refused');
+select pg_temp.ok(wl_fetch_ok('FETCHKEYFETCHKEY0001'), 'a collab wishlist key may') from generate_series(1, 60);
+select pg_temp.ok(pg_temp.limited($$select wl_fetch_ok('FETCHKEYFETCHKEY0001')$$), 'the 61st page in an hour waits');
+reset role;
+select pg_temp.ok(not exists (select 1 from wl_limits where actor like '%FETCHKEY%'), 'only a fingerprint of the key is counted');
+
 select 'ALL LIMIT CHECKS OK';

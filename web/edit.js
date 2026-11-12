@@ -1434,9 +1434,13 @@
         m = P.readHelperAnswer(await loadShopPage(u));
       } catch (e) {
         failed = true;
+        // 60 pages an hour per list (supabase-limits.sql): the same message as the other limits.
+        if (e && e.code === "rate_limited") failed = "limited";
       }
       busy = false; els.fetchBtn.disabled = false; els.fetchBtn.textContent = T("Fetch details");
-      if (failed || m === null) {
+      if (failed === "limited") {
+        setErr(T("Please try again in a moment"));
+      } else if (failed || m === null) {
         setErr(T("Couldn’t read that page. Fill in the details yourself."));
       } else if (m.blocked) {
         setErr(T("Couldn’t read this shop’s page. Fill in the name and price yourself."));

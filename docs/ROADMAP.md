@@ -345,9 +345,9 @@ Small steps; each one protects against something that can't be undone later.
   deletion can be asked for without the app).
 - [x] S4.8 *(2.189, `Safety.kt`; reports are read in Table editor, no alert yet)* **Report and block** (needed before Play; think it through with the owner: what a report contains when
   chats are end-to-end encrypted, who reads reports, what "blocked" does on shared lists and groups).
-- [ ] S4.2 also covers: the `fetch-page` helper per key (it loads any web page for whoever holds a list key), friend
+- [x] S4.2 also covers *(2.190: the helper, 60 pages an hour per key; friend codes were counted in 2.184; anonymous accounts don't exist)*: the `fetch-page` helper per key (it loads any web page for whoever holds a list key), friend
   codes (6 characters: guessing must be slowed down), and, with S4.5, how many anonymous accounts one device may make.
-- [ ] S4.5 also decides P20 (Android's cloud backup) and must be designed knowing that linking a Google account
+- [x] S4.5 also decides P20 *(2.190: Android's own backup and device transfer are off; owner)* (Android's cloud backup) and must be designed knowing that linking a Google account
   later needs the signing key's fingerprint registered with Google (another reason for R0).
 - [x] S4.9 *(11 November 2026, below. Check the numbers on supabase.com/pricing before relying on them: they change.)*
   | Free plan limit (as Claude knew it) | Today (11 November 2026) | What reaches it first |

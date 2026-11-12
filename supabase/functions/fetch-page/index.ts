@@ -135,7 +135,8 @@ export interface Deps {
   /** The IP addresses of a host name; null when this runtime can't look them up. */
   resolve: (host: string) => Promise<string[] | null>;
   /** Is this a valid edit key of a shared list? */
-  keyOk: (key: string, apikey: string) => Promise<boolean>;
+  /** True: may use the helper; false: not allowed; "limited": the key used its 60 pages this hour (wl_fetch_ok). */
+  keyOk: (key: string, apikey: string) => Promise<boolean | "limited">;
 }
 
 async function realResolve(host: string): Promise<string[] | null> {
@@ -162,7 +163,7 @@ async function realResolve(host: string): Promise<string[] | null> {
   return looked ? found : null;
 }
 
-async function realKeyOk(key: string, apikey: string): Promise<boolean> {
+async function realKeyOk(key: string, apikey: string): Promise<boolean | "limited"> {
   // deno-lint-ignore no-explicit-any
   const base = (globalThis as any).Deno?.env?.get("SUPABASE_URL");
   if (!base) return false;
@@ -177,6 +178,15 @@ async function realKeyOk(key: string, apikey: string): Promise<boolean> {
     const t = (await r.text()).trim();
     return t !== "" && t !== "null";
   };
+  // Since 12 November 2026 one call checks the key and counts (supabase-limits.sql, 60 pages an hour per key).
+  const r = await fetch(base.replace(/\/$/, "") + "/rest/v1/rpc/wl_fetch_ok", {
+    method: "POST", headers, body: JSON.stringify({ p_key: key }),
+  });
+  const t = (await r.text()).trim();
+  if (r.ok) return t === "true";
+  if (t.includes("rate_limited")) return "limited";
+  if (!t.includes("PGRST202")) return false;
+  // supabase-limits.sql not run again yet: the old check, without a count.
   if (await ask("wl_sh_info", { p_key: key })) return true;
   return await ask("wl_gr_info", { p_link: key });
 }
@@ -302,12 +312,13 @@ export async function handle(req: Request, deps: Deps = realDeps): Promise<Respo
     const url = typeof body.url === "string" ? body.url : "";
     if (!/^[A-Za-z0-9]{16,64}$/.test(key) || !url || url.length > 2000) throw new Fail(400, "bad_request");
     checkUrl(url); // refuse bad addresses before spending a database call
-    let ok = false;
+    let ok: boolean | "limited" = false;
     try {
       ok = await deps.keyOk(key, apikey);
     } catch {
       throw new Fail(502, "key_check_failed");
     }
+    if (ok === "limited") throw new Fail(429, "rate_limited");
     if (!ok) throw new Fail(403, "not_allowed");
     return reply(200, await loadPage(url, deps));
   } catch (e) {
