@@ -211,7 +211,7 @@ report and block (S4.8). Answers in DECISIONS "Stage 4".*
   left(regexp_replace(query, '\s+', ' ', 'g'), 90) as query from extensions.pg_stat_statements order by total_exec_time
   desc limit 15;`)*
   Indexes checked against the slowest queries (Supabase's query performance page).
-- [ ] S4.5 *(Owner, 11 November 2026: a recovery key instead of linking a Google account (DECISIONS "Stage 4"). 2.187: the key and its locked copy (`RecoveryKey.kt`, `supabase-vault.sql`). Next, 2.188: restoring on a new phone, a new key afterwards and the old phone signed out.)* Identity as decided in D5 (if anonymous accounts: a step-by-step move where every existing owner token and
+- [x] S4.5 *(Owner, 11 November 2026: a recovery key instead of linking a Google account (DECISIONS "Stage 4"). 2.187: the key and its locked copy (`RecoveryKey.kt`, `supabase-vault.sql`). 2.188: restoring (`Restore.kt`), a new key afterwards and the old phone signed out. P20 (Android's own backup, `allowBackup`) is still open: decide with the owner.)* Identity as decided in D5 (if anonymous accounts: a step-by-step move where every existing owner token and
   device keeps working).
 Owner tests: photos still show everywhere (app and web); nothing else changes.
 
@@ -336,14 +336,14 @@ Small steps; each one protects against something that can't be undone later.
   restores the app (Robolectric can), fixes where it fails, and from now on no new screen state in a global `object`.
 
 ## Additions to Stage 4 (same stage, more steps)
-- [ ] S4.6 **Privacy page** on the website (plain words: what is stored where, crash reports, how long, who can see
+- [x] S4.6 *(2.189, `web/privacy.html`; the owner still approves the text)* **Privacy page** on the website (plain words: what is stored where, crash reports, how long, who can see
   it, how to delete, the honest line about chat keys of P21), linked from App settings, the welcome and every web
   page. The owner approves the text.
-- [ ] S4.7 **"Delete my profile and data"** in the app (profile, friendships, photos, chats, group and exchange
+- [x] S4.7 *(2.189, `DeleteMe.kt`, `supabase-privacy.sql`)* **"Delete my profile and data"** in the app (profile, friendships, photos, chats, group and exchange
   places, reservations, own lists online), with a clear warning and no way to do it to someone else. For browser-only
   people: the page says how to ask. Needed for GDPR and for Google Play (which also wants a web address where
   deletion can be asked for without the app).
-- [ ] S4.8 **Report and block** (needed before Play; think it through with the owner: what a report contains when
+- [x] S4.8 *(2.189, `Safety.kt`; reports are read in Table editor, no alert yet)* **Report and block** (needed before Play; think it through with the owner: what a report contains when
   chats are end-to-end encrypted, who reads reports, what "blocked" does on shared lists and groups).
 - [ ] S4.2 also covers: the `fetch-page` helper per key (it loads any web page for whoever holds a list key), friend
   codes (6 characters: guessing must be slowed down), and, with S4.5, how many anonymous accounts one device may make.

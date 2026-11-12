@@ -190,6 +190,17 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 - 6 November (night): Friends review; **2.139**. Not checked: the friend link on a phone (Chrome on Android should open wishlist://friend from the page; some browsers ask first).
 
 ## Next session
+- **START HERE (12 November 2026, after 2.188 and 2.189: Stage 4 B, C and D built).** Ask first whether the owner
+  ran, in this order: supabase-vault.sql, supabase-friends.sql, supabase-chat.sql, supabase-privacy.sql (check
+  read-only: `wl_signed_out` answers `false` for `{"p_tokens":[]}`; `wl_blocked_list` with a wrong token says "not
+  allowed"). Ask: does the privacy page's text need changes (the owner approves it; `web/privacy.html`)? Then the
+  two-phone test: restore on a second phone (the old one must show "Your wishlists are on your new phone" within ~10
+  minutes of using it), Block/Report from a chat, and Delete my profile and data with a test profile (not the real one).
+  **Open:** P20 (Android's own cloud backup, `allowBackup="true"`: two phones could share one identity); reports have
+  no alert yet (owner: find a better way than a failing backup); photos of a group or exchange deleted with its
+  organiser's profile stay as unreachable files; collab wishlist pictures stay in Storage when the list is deleted by
+  "Delete my data"; the restored copy may miss changes from the old phone's last hour. Reminders: two-step sign-in
+  (R8), the welcome screen redesign, the two-phone test (R7), "chip in", then Stage 6 (Google Play) when wanted.
 - **OWNER'S GOAL FOR 12 NOVEMBER 2026: finish Stage 4.** Left, in this order (owner's order A, B, C, D):
   1. **B, 2.188 restoring** with the recovery key (see the 2.187 note below for the technical plan).
   2. **C, S4.6 privacy page** (web page `web/privacy.html` with the same CSP lines, linked from App settings, the welcome
