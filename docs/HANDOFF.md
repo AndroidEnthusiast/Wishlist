@@ -203,7 +203,7 @@ A simple wishlist app in Material Design with the Google Sans font: save product
   Owner ran supabase-limits.sql again and deployed `fetch-page` (checked read-only: `wl_fetch_ok` answers, the helper
   says `no_apikey`, its new message). **Crash review done (owner's screenshot, 12 November 2026):** 3 crashes in the
   last 7 days, all on 8 November, all on 2.154, one user (the owner); two issues, both NullPointerExceptions inside
-  Firebase's own thread factory and Android's `IMessenger.send`, not our code; nothing since. Owner asked to close
+  Firebase's own thread factory and Android's `IMessenger.send`, not our code; nothing since. Advised the owner to close
   both (Crashlytics reopens them if they come back). Crashlytics' "latest release" said 2.182: check next session
   that 2.194 shows up (it can take a day); if not, look at `Crash.kt`/`WishlistApp.kt` after the 2.191 library update. **Next (owner's order):** the app's final name, then the copy project. R7 and
   R8: later.
