@@ -563,3 +563,25 @@ What the owner has decided, and why. Follow these unless the owner changes their
   key"** in **Profile**; a new phone has **"I already have lists"** in the welcome. Export/Import stay as they are.
   (Claude, said to the owner: built in two versions, 2.187 the key and the locked copy, 2.188 restoring; the locked
   copy leaves out picture files, so a private wish's own photo doesn't come back.)
+
+## Stage 4, second part (owner, 12 November 2026)
+- **The old phone after restoring elsewhere**: title "Your wishlists are on your new phone", text "You used your
+  recovery key on another phone, so your wishlists, friends and chats moved there. This phone is signed out." One
+  button, **"Start fresh"** (empties the app, opens the welcome). **No Export offer** there: everything is on the new
+  phone already, so it would only confuse.
+- **Restore is also in Profile** ("Restore with a recovery key"), for someone who tapped past the welcome. When the phone
+  already has lists: title **"Delete the 2 wishlists on this phone?"**, text **"They are replaced by the wishlists saved
+  with your recovery key."**, buttons **"Delete and restore"** / Cancel. Copy must be concrete, short and exact (owner:
+  "yours" was too vague, the long version too long).
+- **Delete my profile and data**: collab wishlists, groups and gift exchanges with other people on them are **handed
+  over with the same "pick who takes over" step** the app already has (gift exchange hand-over, a group's next
+  organiser, a collab list's new owner); only when nobody else is on it, it is deleted. Owner: reuse logic from other
+  parts of the app so the experience stays the same where it is logical. **The phone is emptied too** (back to the
+  welcome); Export is offered before.
+- **Privacy page contact**: **wishlist.ctf70@simplelogin.com** for now (until the app has its final name).
+- **Block** = unfriend + no friend requests from them + their chat hidden and no messages from them (they are not
+  told). Not in groups, exchanges or reactions.
+- **Report** = a reason (Spam, Hurtful, Something else) **plus a note that is required: at least 5 characters, spaces
+  don't count**, plus the last 20 messages of that chat, unlocked by the reporter's phone (the pop-up says they are
+  sent). Saved in a locked Supabase table the owner reads in Table editor; **no alert for now** (owner: find a better
+  way later, not a failing backup). **Report and Block only in a chat's menu and on a friend's page.**
