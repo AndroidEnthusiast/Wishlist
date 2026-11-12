@@ -162,9 +162,10 @@ private fun dayLabel(t: Long): String {
 
 @Composable
 fun MessagesScreen(snack: SnackbarHostState, onProfile: () -> Unit) {
-    val peer = ChatNav.peer
+    val places = LocalPlaces.current
+    val peer = places.chat
     if (peer != null) {
-        BackHandler { ChatNav.peer = null }
+        BackHandler { places.chat = null }
         ChatScreen(peer, snack)
     } else ConversationList(snack, onProfile)
 }
@@ -172,6 +173,7 @@ fun MessagesScreen(snack: SnackbarHostState, onProfile: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
+    val places = LocalPlaces.current
     val go = LocalGo.current
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
@@ -245,7 +247,7 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
                             val id = f.id.hashCode().toLong()
                             Row(
                                 Modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true))
-                                    .clickable { ChatNav.peer = f.id }.padding(12.dp),
+                                    .clickable { places.chat = f.id }.padding(12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Avatar(Friends.photos[f.id], f.name, 44.dp)
@@ -284,7 +286,7 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
                         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        items(list, key = { it.id }) { cv -> ConversationRow(cv) { ChatNav.peer = cv.id } }
+                        items(list, key = { it.id }) { cv -> ConversationRow(cv) { places.chat = cv.id } }
                         item {
                             Text(
                                 tr("Messages are end-to-end encrypted: only you and your friend can read them."),
@@ -356,6 +358,7 @@ private fun ConversationRow(cv: Conversation, onOpen: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun ChatScreen(peer: String, snack: SnackbarHostState) {
+    val places = LocalPlaces.current
     val go = LocalGo.current
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -529,7 +532,7 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
                         )
                     }
                 },
-                navigationIcon = { IconButton(onClick = { ChatNav.peer = null }) { Icon(AppIcons.ArrowBack, tr("Back")) } },
+                navigationIcon = { IconButton(onClick = { places.chat = null }) { Icon(AppIcons.ArrowBack, tr("Back")) } },
                 // Report and block (Safety.kt, ROADMAP S4.8; owner: in a chat's menu).
                 actions = {
                     Box {
@@ -546,7 +549,7 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
         snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
         if (reporting) ReportDialog(peer, name, snack) { reporting = false }
-        if (blocking) BlockDialog(peer, name, snack, onDone = { blocking = false; ChatNav.peer = null }, onClose = { blocking = false })
+        if (blocking) BlockDialog(peer, name, snack, onDone = { blocking = false; places.chat = null }, onClose = { blocking = false })
         Column(Modifier.padding(pad).fillMaxSize().lookBackdrop(look).imePadding()) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 if (loading && msgs.isEmpty()) CircularProgressIndicator(Modifier.align(Alignment.Center))

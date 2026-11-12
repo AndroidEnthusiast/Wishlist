@@ -120,11 +120,6 @@ val Capitalised = androidx.compose.foundation.text.KeyboardOptions(
     capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Sentences
 )
 
-/** The Themer is open (App settings > Theme): the menu button is hidden, it has its own back arrow. */
-object ThemerNav {
-    var open by mutableStateOf(false)
-}
-
 /*
  * The app's buttons, switches, dialogs and top bar in the chosen style (Design.kt, 2.97). Material's own parts are
  * used underneath; outside Quiet they are see-through and the style's surface ([lookSurface]) is drawn behind them.

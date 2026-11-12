@@ -70,6 +70,7 @@ fun FriendScreen(
     // Reactions on wishes (2.142): everywhere except in a gift exchange (owner).
     reactions: Boolean = true
 ) {
+    val places = LocalPlaces.current
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var remote by remember(f.code) { mutableStateOf<RemoteList?>(null) }
@@ -341,11 +342,11 @@ fun FriendScreen(
     }
 
     // A tapped "X is free" or "Your reservation of X has ended" (2.142): this list opens on that wish.
-    LaunchedEffect(AskNav.focus, remote, res) {
-        val (code, id, reserve) = AskNav.focus ?: return@LaunchedEffect
+    LaunchedEffect(places.askFocus, remote, res) {
+        val (code, id, reserve) = places.askFocus ?: return@LaunchedEffect
         if (code != f.code) return@LaunchedEffect
         val w = remote?.wishes?.firstOrNull { it.id == id && it.bin == 0L } ?: return@LaunchedEffect
-        AskNav.focus = null
+        places.askFocus = null
         WishFocus.target = id
         if (reserve && res[id] == null && !w.got) reserveNow = w
     }

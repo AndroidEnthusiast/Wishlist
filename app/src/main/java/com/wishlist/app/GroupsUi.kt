@@ -90,10 +90,11 @@ fun groupNote(c: Context, listId: String): String {
  */
 @Composable
 fun GroupsHomeSection(onHome: Boolean, onOpen: (String) -> Unit, onNew: () -> Unit) {
+    val places = LocalPlaces.current
     val ctx = LocalContext.current
     Groups.load(ctx)
     if (Groups.groups.isEmpty() && (!onHome || Groups.invites.isEmpty())) return
-    HubTitle(tr("Wishlist groups"), onMore = if (onHome && Groups.groups.isNotEmpty()) ({ HubNav.page = "lists" }) else null)
+    HubTitle(tr("Wishlist groups"), onMore = if (onHome && Groups.groups.isNotEmpty()) ({ places.homePage = "lists" }) else null)
     if (onHome) Groups.invites.forEach { InviteCard(it) }
     if (Groups.groups.isEmpty()) return
     val items = Groups.groups.map { g ->
@@ -482,6 +483,7 @@ fun JoinGroupDialog(link: String?, gid: String?, onJoined: (String) -> Unit, onC
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun GroupScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, onOpenMine: (String) -> Unit) {
+    val places = LocalPlaces.current
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
@@ -503,8 +505,8 @@ fun GroupScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, onOpe
         }
     }
     // Made just now: the invite comes up so you can ask people in.
-    LaunchedEffect(gid, GroupNav.inviteNow) {
-        if (GroupNav.inviteNow == gid) { GroupNav.inviteNow = null; inviting = true }
+    LaunchedEffect(gid, places.inviteNow) {
+        if (places.inviteNow == gid) { places.inviteNow = null; inviting = true }
     }
 
     val m = member

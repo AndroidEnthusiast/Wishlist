@@ -39,7 +39,7 @@ object Route {
 
     /**
      * Sections reached from Home, with the bottom bar (Home lit, as before): a wishlist group (`group/<id>`) and your
-     * gift exchanges (one exchange inside it is ExchangeNav.open). Like a tab: right on top of [MAIN], Back goes Home.
+     * gift exchanges (one exchange inside it is Places.exchange). Like a tab: right on top of [MAIN], Back goes Home.
      */
     const val GROUP = "group/{id}"
     fun group(id: String) = "group/" + android.net.Uri.encode(id)
@@ -78,7 +78,7 @@ fun NavController.openOnTop(route: String) {
 
 /**
  * Opens a tab of the bottom bar over Home or the list (whatever was on top closes). Its place inside the tab (a
- * friend's page, a chat) lives in FriendsNav and ChatNav, so it opens where you left it (owner, 8 November 2026).
+ * friend's page, a chat) lives in Places (Places.kt), so it opens where you left it (owner, 8 November 2026).
  */
 fun NavController.openTab(tab: String) {
     navigate(tab) {

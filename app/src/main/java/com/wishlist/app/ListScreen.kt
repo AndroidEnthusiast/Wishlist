@@ -93,6 +93,8 @@ fun HomeScreen(
     snack: SnackbarHostState, onAdd: () -> Unit, onInvite: () -> Unit,
     onListSettings: () -> Unit, onBack: () -> Unit
 ) {
+    val go = LocalGo.current
+    val places = LocalPlaces.current
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
@@ -236,7 +238,7 @@ fun HomeScreen(
                     }
                     // The settings of this list. Refreshing is pulling down on the list.
                     IconButton(onClick = onListSettings) { Icon(AppIcons.Settings, tr("Wishlist settings")) }
-                    IconButton(onClick = { if (inShared) NameGate.ensure(onInvite) else NameGate.ensureListName { ShareNav.list = Repo.openMine } }) {
+                    IconButton(onClick = { if (inShared) NameGate.ensure(onInvite) else NameGate.ensureListName { go(Deep.ShareCard(Repo.openMine)) } }) {
                         Icon(AppIcons.Share, if (inShared) tr("Invite or share") else tr("Share wishlist"))
                     }
                 }
@@ -330,11 +332,11 @@ fun HomeScreen(
                 AskDialog(Shared.active.orEmpty(), w, Occasions.ofOpen(ctx), onClose = { askBought = null }) { m -> scope.launch { snack.showToast(m) } }
             }
             // A tapped "X is free" or "Your reservation of X has ended" on a gift list (2.142): it opens on that wish.
-            LaunchedEffect(AskNav.focus, Shared.active, res) {
-                val (code, id, reserve) = AskNav.focus ?: return@LaunchedEffect
+            LaunchedEffect(places.askFocus, Shared.active, res) {
+                val (code, id, reserve) = places.askFocus ?: return@LaunchedEffect
                 if (!inShared || code != Shared.active) return@LaunchedEffect
                 val w = Repo.wishes.firstOrNull { it.id == id && it.bin == 0L } ?: return@LaunchedEffect
-                AskNav.focus = null
+                places.askFocus = null
                 WishFocus.target = id
                 if (reserve && res[id] == null) reserveNow = w
             }

@@ -89,16 +89,6 @@ import kotlin.coroutines.resume
  *  - Plain links, no affiliate codes (owner: maybe discuss later).
  */
 
-/** A wish saved from a shop (2.116): the shop says "Added to …" and stays open. */
-object ShopNav {
-    var saves by mutableIntStateOf(0)
-        private set
-    var savedTo by mutableStateOf("")
-        private set
-
-    fun saved(listName: String) { savedTo = listName; saves++ }
-}
-
 data class Shop(val name: String, val url: String) {
     val host: String get() = try { URI(url).host?.removePrefix("www.") ?: "" } catch (e: Exception) { "" }
 }
@@ -589,6 +579,7 @@ private fun decodeJsString(r: String?): String? {
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Unit, search: String? = null) {
+    val places = LocalPlaces.current
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
@@ -609,11 +600,11 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
     var offer by remember { mutableStateOf<String?>(null) }
     var q by remember { mutableStateOf(search.orEmpty()) }
     // "Added to …" for a moment after a wish from this shop was saved.
-    val savesAtStart = remember { ShopNav.saves }
+    val savesAtStart = remember { places.shopSaves }
     var addedNote by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(ShopNav.saves) {
-        if (ShopNav.saves == savesAtStart) return@LaunchedEffect
-        addedNote = tr("Added to %s", ShopNav.savedTo)
+    LaunchedEffect(places.shopSaves) {
+        if (places.shopSaves == savesAtStart) return@LaunchedEffect
+        addedNote = tr("Added to %s", places.shopSavedTo)
         val h = host
         if (h.isNotEmpty() && !Shops.isSearch(h) && !Shops.has(ctx, h) && !Shops.offered(ctx, h)) {
             Shops.markOffered(ctx, h)

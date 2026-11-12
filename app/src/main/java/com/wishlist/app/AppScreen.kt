@@ -32,6 +32,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.getValue
@@ -65,6 +66,10 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     val snack = remember { SnackbarHostState() }
     // Every screen is a route (ROADMAP Stage 1, Nav.kt); "main" is Home.
     val nav = rememberNavController()
+    // Where you are inside the tabs (the open chat, a friend's page, an exchange, Home's page), kept with the screen.
+    val places = rememberSaveable(saver = Places.Saver) { Places() }
+    // The message check (Chat.kt) runs outside the screens and must not notify about the open chat.
+    SideEffect { ChatOnScreen.peer = places.chat }
     val route = nav.currentBackStackEntryAsState().value?.destination?.route
     val onMain = route == null || route == Route.MAIN
     var adding by remember { mutableStateOf(false) }
@@ -91,6 +96,8 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     // Pop-ups opened from anywhere through [go] (they lived in GroupNav, ExchangeNav, GiftInviteNav and HistoryNav
     // until 2.192). Kept with the screen, so they come back after Android closed the app in the background.
     var history by rememberSaveable { mutableStateOf<Long?>(null) }
+    var account by rememberSaveable { mutableStateOf(false) }
+    var shareCard by rememberSaveable { mutableStateOf<String?>(null) }
     var giftInvite by rememberSaveable { mutableStateOf<String?>(null) }
     var joinGroupLink by rememberSaveable { mutableStateOf<String?>(null) }
     var joinGroupId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -114,8 +121,8 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
 
     /** A wishlist group's page (2.108); Home puts the group you opened last first in its section (2.110). */
     fun openWishGroup(gid: String, invite: Boolean = false) {
-        if (invite) GroupNav.inviteNow = gid
-        closeAll(); HubNav.page = null
+        if (invite) places.inviteNow = gid
+        closeAll(); places.homePage = null
         nav.openTab(Route.group(gid))
         Repo.touchRecent(ctx, "g:$gid")
     }
@@ -129,9 +136,9 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
 
     /** Gift exchanges (2.129): one exchange ([gx]), or the list of them (null). */
     fun openExchange(gx: String?, invite: Boolean = false) {
-        if (invite && gx != null) ExchangeNav.inviteNow = gx
-        ExchangeNav.open = gx
-        closeAll(); HubNav.page = null
+        if (invite && gx != null) places.inviteNow = gx
+        places.exchange = gx
+        closeAll(); places.homePage = null
         nav.openTab(Route.EXCHANGES)
     }
 
@@ -151,7 +158,7 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
             return
         }
         // A list of one of your friends (Friends tab) opens there.
-        if (FriendsNav.openByCode(code)) {
+        if (places.openFriendList(code)) {
             closeAll()
             nav.openTab(Route.FRIENDS)
             return
@@ -207,8 +214,8 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
             key.startsWith("i:") -> giftInvite = key.removePrefix("i:")
             // A "Still buying …?" question (2.142): answered in Gifts I reserved.
             key == "v:" -> { closeAll(); nav.openOnTop(Route.RESERVED) }
-            key.startsWith("r:") -> { FriendsNav.reset(); nav.openTab(Route.FRIENDS) }
-            key.startsWith("p:") -> { FriendsNav.reset(); FriendsNav.person = key.removePrefix("p:"); nav.openTab(Route.FRIENDS) }
+            key.startsWith("r:") -> { places.resetFriends(); nav.openTab(Route.FRIENDS) }
+            key.startsWith("p:") -> { places.resetFriends(); places.person = key.removePrefix("p:"); nav.openTab(Route.FRIENDS) }
             key.startsWith("g:") -> groupInvite(key.removePrefix("g:"), null)
             key.startsWith("q:") -> receivedAsk = key.removePrefix("q:")
             // Gift exchange (2.129): "e:<id>", or "e:" for the list of exchanges.
@@ -232,26 +239,28 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
      */
     fun go(d: Deep) {
         when (d) {
-            is Deep.Note -> openNote(d.key)
+            is Deep.Note -> { if (d.ask != null) places.askFocus = d.ask; openNote(d.key) }
+            Deep.Account -> account = true
+            is Deep.ShareCard -> shareCard = d.listId
             Deep.Notes -> nav.openOnTop(Route.NOTES)
             Deep.Prices -> nav.openOnTop(Route.PRICES)
             // The price page is a pop-up over whatever is on screen.
             is Deep.History -> history = d.wishId
             is Deep.Chat -> {
-                ChatNav.peer = d.peer
+                places.chat = d.peer
                 closeAll(); nav.openTab(Route.MESSAGES)
-                if (FriendsNav.fromChat != null) FriendsNav.reset()
+                if (places.fromChat != null) places.resetFriends()
             }
             is Deep.Person -> {
-                FriendsNav.reset(); FriendsNav.person = d.id
-                if (d.fromChat) FriendsNav.fromChat = d.id
+                places.resetFriends(); places.person = d.id
+                if (d.fromChat) places.fromChat = d.id
                 closeAll(); nav.openTab(Route.FRIENDS)
             }
-            Deep.FriendsTab -> { FriendsNav.reset(); closeAll(); nav.openTab(Route.FRIENDS) }
+            Deep.FriendsTab -> { places.resetFriends(); closeAll(); nav.openTab(Route.FRIENDS) }
             Deep.FriendsAsLeft -> { closeAll(); nav.openTab(Route.FRIENDS) }
             // "Send … a friend request?" on Friends (owner, 2.139).
             is Deep.FriendLink -> {
-                FriendsNav.reset(); FriendsNav.addName = d.name; FriendsNav.addCode = d.code
+                places.resetFriends(); places.addName = d.name; places.addCode = d.code
                 closeAll(); nav.openTab(Route.FRIENDS)
             }
             is Deep.FriendList -> openFriend(d.code)
@@ -310,13 +319,13 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     val tab = route?.takeIf { it in Route.tabs }
     val section = route?.takeIf { it in Route.sections }
     /** Home, as the bar's Home button and Back on a tab's first page (owner, 8 November 2026). */
-    fun goHome() { HubNav.page = null; closeAll() }
+    fun goHome() { places.homePage = null; closeAll() }
     // While the keyboard is open the bottom bar steps aside and the screen above it makes room (edge to edge, 2.102).
     val imeOpen = WindowInsets.isImeVisible
     // The bar shows on Home, a list and the tabs; an open conversation has a back arrow and no bar.
-    val inChat = tab == Route.MESSAGES && ChatNav.peer != null
+    val inChat = tab == Route.MESSAGES && places.chat != null
     val showBar = (onMain || tab != null || section != null) && !inChat && !imeOpen
-    CompositionLocalProvider(LocalGo provides goStable) {
+    CompositionLocalProvider(LocalGo provides goStable, LocalPlaces provides places) {
     Column(Modifier.fillMaxSize()) {
     // With the bottom bar, the screens above it don't leave room for the phone's own navigation bar again.
     Box(Modifier.weight(1f).imePadding().then(if (showBar) Modifier.consumeWindowInsets(WindowInsets.navigationBars) else Modifier)) {
@@ -339,7 +348,7 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
                 onProfile = { nav.openOnTop(Route.PROFILE) },
                 onAddTo = { t -> addTarget = t; prefill = ""; adding = true },
                 onOpenWishGroup = { openWishGroup(it) },
-                onFriends = { FriendsNav.reset(); nav.openTab(Route.FRIENDS) },
+                onFriends = { places.resetFriends(); nav.openTab(Route.FRIENDS) },
                 onReserved = { nav.openOnTop(Route.RESERVED) },
                 onAddWish = { addTarget = Repo.lastSaveTo; prefill = ""; adding = true },
                 onNewExchange = { newExchange = true }
@@ -361,7 +370,7 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
                 )
             }
         }
-        // The tabs. Each remembers where you were (FriendsNav, ChatNav); Back on its first page goes Home (the screen's
+        // The tabs. Each remembers where you were (Places.kt); Back on its first page goes Home (the screen's
         // own Back handlers, composed after this one, go back inside the tab first).
         composable(Route.MESSAGES) {
             BackHandler { goHome() }
@@ -437,7 +446,7 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
             // "Messages" (owner, 2.98) took the place of "Wishlists"; your wishlists are on Home and its number.
             onMessages = {
                 // Tapping a tab again goes back to its first page; otherwise it opens where you left it.
-                if (tab == Route.MESSAGES) ChatNav.peer = null
+                if (tab == Route.MESSAGES) places.chat = null
                 nav.openTab(Route.MESSAGES)
             },
             onAdd = {
@@ -447,7 +456,7 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
             },
             onDiscover = { nav.openTab(Route.SHOPS) },
             onFriends = {
-                if (tab == Route.FRIENDS) FriendsNav.reset()
+                if (tab == Route.FRIENDS) places.resetFriends()
                 nav.openTab(Route.FRIENDS)
             },
             friendsDot = Friends.waiting > 0,
@@ -468,14 +477,14 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     // Joining asks for your name first when it's missing (owner, 2.135).
     val needName = (joinDlg != null || joinGroupLink != null || joinGroupId != null || joinExchangeLink != null || joinExchangeId != null) && !NameGate.hasName()
     LaunchedEffect(needName) { if (needName) NameGate.ensure {} }
-    if (AccountNav.open) AccountSheet(
-        onClose = { AccountNav.open = false },
+    if (account) AccountSheet(
+        onClose = { account = false },
         // Back from these returns to the screen the sheet was opened on (ROADMAP Stage 1).
-        onProfile = { AccountNav.open = false; nav.openOnTop(Route.PROFILE) },
-        onReserved = { AccountNav.open = false; nav.openOnTop(Route.RESERVED) },
-        onReceived = { AccountNav.open = false; nav.openOnTop(Route.RECEIVED) },
-        onBin = { AccountNav.open = false; nav.openOnTop(Route.BIN) },
-        onSettings = { AccountNav.open = false; nav.openOnTop(Route.SETTINGS) }
+        onProfile = { account = false; nav.openOnTop(Route.PROFILE) },
+        onReserved = { account = false; nav.openOnTop(Route.RESERVED) },
+        onReceived = { account = false; nav.openOnTop(Route.RECEIVED) },
+        onBin = { account = false; nav.openOnTop(Route.BIN) },
+        onSettings = { account = false; nav.openOnTop(Route.SETTINGS) }
     )
     if (newExchange) NewExchangeDialog(
         onCreated = { gx -> newExchange = false; openExchange(gx, invite = true) },
@@ -537,8 +546,6 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
         )
     }
     if (welcome) WelcomeFlow { welcome = false }
-    // Where you were inside a tab comes back after Android closed the app in the background (KeepPlaces.kt, R9).
-    KeepPlaces()
     // "Please try again in a moment" when the server's limits against abuse were hit (ServerNotice, ROADMAP S4.2).
     ServerNotice.text?.let { msg ->
         LaunchedEffect(msg) {
@@ -569,7 +576,7 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     OwnedHost(snack)
     if (askBackground) BackgroundQuestion()
     // The share card of one of your lists (owner, 7 November 2026; HomeShare.kt).
-    ShareNav.list?.let { id -> key(id) { ListShareDialog(id) { ShareNav.list = null } } }
+    shareCard?.let { id -> key(id) { ListShareDialog(id) { shareCard = null } } }
     // A "Price alert" notification (or its entry in Notifications): that wish's price history, the alert lit up.
     history?.let { id ->
         val w = remember(id, Repo.mineVersion, Repo.myWishes) { Repo.allMine(ctx).flatMap { it.wishes }.firstOrNull { it.id == id } }

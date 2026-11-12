@@ -91,7 +91,7 @@ class EntryTest : NavigationBase() {
 
     @Test fun friendLinkAsksForAFriendRequest() {
         // Read on its own (deepOf): "Send Robin a friend request?" opens with the keyboard, which never settles on the
-        // computer's pretend phone. Opening it is one line in App.go (Friends tab + FriendsNav.addCode).
+        // computer's pretend phone. Opening it is one line in App.go (Friends tab + Places.addCode).
         val i = link("wishlist://friend?f=ABC234&n=Robin")
         org.junit.Assert.assertEquals(Deep.FriendLink("ABC234", "Robin"), deepOf(i))
         // Handled once: taken off the Intent, so turning the phone doesn't open it again.
@@ -167,22 +167,30 @@ class EntryTest : NavigationBase() {
     @Test fun anOpenChatComesBack() {
         send(open(MainActivity.OPEN_CHAT, "someone"))
         noBar()
-        androidClosesTheApp { ChatNav.peer = null }
-        org.junit.Assert.assertEquals("someone", ChatNav.peer)
+        // The open chat lives in the screen's Places now (2.193): only what Android kept brings it back.
+        androidClosesTheApp { ChatOnScreen.peer = null }
+        org.junit.Assert.assertEquals("someone", ChatOnScreen.peer)
         noBar()
         phoneBack()
         tabOn("Messages")
     }
 
-    @Test fun aFriendsPageAndAnExchangeComeBack() {
-        compose.runOnUiThread { FriendsNav.person = "friend-1"; FriendsNav.page = "wishes"; ExchangeNav.open = "gx-1" }
-        androidClosesTheApp { FriendsNav.person = null; FriendsNav.page = null; ExchangeNav.open = null }
-        org.junit.Assert.assertEquals(listOf("friend-1", "wishes", "gx-1"), listOf(FriendsNav.person, FriendsNav.page, ExchangeNav.open))
-    }
-
-    @Test fun keptPlacesSurviveOddIds() {
-        val l = listOf("a\tb", null, "wishes", null, "top")
-        org.junit.Assert.assertEquals(listOf("a b", null, "wishes", null, "top"), Places.unpack(Places.pack(l)))
+    @Test fun keptPlacesComeBackWhole() {
+        // What Android keeps of Places (a friend's page, the chat it came from, an exchange, Home's page, a friend
+        // link) comes back as it was; an odd id (a tab, a line break) is kept as it is.
+        val p = Places().apply {
+            chat = "a\tb"; person = "friend-1"; friendPage = "wishes"; fromChat = "friend-1"
+            addCode = "CODE1234"; addName = "Sam"; exchange = "gx-1"; homePage = "top"
+        }
+        val kept = with(Places.Saver) { androidx.compose.runtime.saveable.SaverScope { true }.save(p) }!!
+        val back = Places.Saver.restore(kept)!!
+        org.junit.Assert.assertEquals(
+            listOf("a\tb", "friend-1", "wishes", "friend-1", "CODE1234", "Sam", "gx-1", "top"),
+            listOf(back.chat, back.person, back.friendPage, back.fromChat, back.addCode, back.addName, back.exchange, back.homePage)
+        )
+        // A friend's page without the friend is not kept on its own.
+        val lone = Places.Saver.restore(listOf(null, null, "wishes", null, null, "", null, null, null))!!
+        org.junit.Assert.assertNull(lone.friendPage)
     }
 
     @Test fun rotatingKeepsTheScreen() {

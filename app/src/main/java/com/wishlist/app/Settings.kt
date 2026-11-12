@@ -90,8 +90,10 @@ fun SettingsScreen(snack: SnackbarHostState) {
     val cs = MaterialTheme.colorScheme
     var licences by remember { mutableStateOf(false) }
     // The Themer: its own screen, opened from the Theme section. Back returns here. (The menu button hides meanwhile.)
-    if (ThemerNav.open) {
-        ThemerScreen { ThemerNav.open = false }
+    // The Themer (App settings > Theme) covers this screen with its own back arrow; kept when the phone is turned.
+    var themer by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    if (themer) {
+        ThemerScreen { themer = false }
         return
     }
 
@@ -124,7 +126,7 @@ fun SettingsScreen(snack: SnackbarHostState) {
                         style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
                     )
                 }
-                Button(onClick = { ThemerNav.open = true }) { Text(tr("Themer")) }
+                Button(onClick = { themer = true }) { Text(tr("Themer")) }
             }
             // What you see (owner, 2.101): for all your lists, only on this phone. Everything on by default.
             SectionTitle(tr("What you see"))

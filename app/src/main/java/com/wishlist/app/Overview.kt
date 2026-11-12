@@ -119,10 +119,6 @@ fun GlowBox(id: Long, small: Boolean, content: @Composable () -> Unit) {
     ) { content() }
 }
 
-/** Which page of Home is open: null (Home itself), "lists", "wishes" or "top". */
-object HubNav {
-    var page by mutableStateOf<String?>(null)
-}
 
 /**
  * A wish with the lists it is on (your own). A wish copied into other lists keeps its id, so it is one wish: counted
@@ -154,6 +150,7 @@ private fun placedWishes(): List<Placed> {
  */
 @Composable
 fun ProfileSummary(onProfile: () -> Unit, onFriends: () -> Unit = {}, onAddWish: () -> Unit = {}) {
+    val places = LocalPlaces.current
     val ctx = LocalContext.current
     Friends.load(ctx)
     val all = placedWishes()
@@ -180,7 +177,7 @@ fun ProfileSummary(onProfile: () -> Unit, onFriends: () -> Unit = {}, onAddWish:
                 val line = look.cardMuted(5L).copy(alpha = 0.3f)
                 Stat(friends.toString(), friends == 0, if (friends == 1) tr("Friend") else tr("Friends"), Modifier.weight(1f), if (Config.enabled) tr("Add friends") else null, onFriends, onFriends, plain = true)
                 Box(Modifier.width(1.dp).fillMaxHeight(0.7f).background(line))
-                Stat(all.size.toString(), all.isEmpty(), if (all.size == 1) tr("Wish") else tr("Wishes"), Modifier.weight(1f), tr("Add wish"), onAddWish, onClick = { HubNav.page = "wishes" }, plain = true)
+                Stat(all.size.toString(), all.isEmpty(), if (all.size == 1) tr("Wish") else tr("Wishes"), Modifier.weight(1f), tr("Add wish"), onAddWish, onClick = { places.homePage = "wishes" }, plain = true)
                 Box(Modifier.width(1.dp).fillMaxHeight(0.7f).background(line))
                 Stat(total, false, tr("Total value"), Modifier.weight(1.3f), onClick = null, plain = true)
             }
@@ -250,10 +247,11 @@ fun OverviewScreen(
     page: String, snack: SnackbarHostState, lists: @Composable () -> Unit,
     onOpenMine: (String) -> Unit
 ) {
+    val places = LocalPlaces.current
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
-    BackHandler { HubNav.page = null }
+    BackHandler { places.homePage = null }
     var unstarring by remember { mutableStateOf<Placed?>(null) }
     Scaffold(
         containerColor = cs.background,
@@ -265,7 +263,7 @@ fun OverviewScreen(
                         fontWeight = look.titleWeight
                     )
                 },
-                navigationIcon = { IconButton(onClick = { HubNav.page = null }) { Icon(AppIcons.ArrowBack, tr("Back")) } },
+                navigationIcon = { IconButton(onClick = { places.homePage = null }) { Icon(AppIcons.ArrowBack, tr("Back")) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
         },
@@ -284,10 +282,10 @@ fun OverviewScreen(
         // All wishes or only the top wishes (owner, 7 November 2026: the Top wishes page is reached this way).
         Row(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             androidx.compose.material3.FilterChip(
-                selected = page != "top", onClick = { HubNav.page = "wishes" }, label = { Text(tr("All wishes")) }
+                selected = page != "top", onClick = { places.homePage = "wishes" }, label = { Text(tr("All wishes")) }
             )
             androidx.compose.material3.FilterChip(
-                selected = page == "top", onClick = { HubNav.page = "top" }, label = { Text(tr("Top wishes") + " ★") }
+                selected = page == "top", onClick = { places.homePage = "top" }, label = { Text(tr("Top wishes") + " ★") }
             )
         }
         if (shown.isEmpty()) {

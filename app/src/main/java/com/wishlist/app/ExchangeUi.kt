@@ -176,14 +176,15 @@ fun Confetti(run: Int, modifier: Modifier = Modifier) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExchangesScreen(snack: SnackbarHostState, onOpenMine: (String) -> Unit, onNew: () -> Unit) {
+    val places = LocalPlaces.current
     val go = LocalGo.current
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
-    val open = ExchangeNav.open
+    val open = places.exchange
     if (open != null) {
-        key(open) { ExchangeScreen(open, snack, onBack = { ExchangeNav.open = null }, onOpenMine = onOpenMine) }
+        key(open) { ExchangeScreen(open, snack, onBack = { places.exchange = null }, onOpenMine = onOpenMine) }
         return
     }
     var state by remember { mutableStateOf(if (Exchanges.list.isEmpty() && Exchanges.invites.isEmpty()) "loading" else "ok") }
@@ -547,6 +548,7 @@ fun JoinExchangeDialog(link: String?, gx: String?, onJoined: (String) -> Unit, o
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExchangeScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, onOpenMine: (String) -> Unit) {
+    val places = LocalPlaces.current
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
@@ -575,8 +577,8 @@ fun ExchangeScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, on
             delay(30000)
         }
     }
-    LaunchedEffect(gid, ExchangeNav.inviteNow) {
-        if (ExchangeNav.inviteNow == gid) { ExchangeNav.inviteNow = null; inviting = true }
+    LaunchedEffect(gid, places.inviteNow) {
+        if (places.inviteNow == gid) { places.inviteNow = null; inviting = true }
     }
 
     val giftee = x?.me?.giftee

@@ -9,7 +9,7 @@ import android.content.Intent
  */
 sealed interface Deep {
     /** Where a notification happened, as on the Notifications page: "m:", "s:", "c:", "i:", "v:", "r:", "p:", "g:", "q:", "e:". */
-    data class Note(val key: String) : Deep
+    data class Note(val key: String, val ask: AskFocus? = null) : Deep
     /** A bundle of news that lead to different places: the Notifications page. */
     object Notes : Deep
     /** Several price changes of your own wishes: Price changes. */
@@ -48,6 +48,10 @@ sealed interface Deep {
     data class Bin(val code: String, val wishId: Long) : Deep
     /** A collab wishlist invitation (?j=): the Join screen. */
     data class Invite(val key: String) : Deep
+    /** The side sheet (your picture at the top right): Profile, Gifts I reserved, Received gifts, Bin, App settings. */
+    object Account : Deep
+    /** The share card of one of your own lists (HomeShare.kt), by its id. */
+    data class ShareCard(val listId: String) : Deep
     /** A shop link shared into the app: the Add wish form with it. */
     data class AddLink(val url: String) : Deep
 }

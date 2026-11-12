@@ -296,7 +296,7 @@ object Chat {
             if (last.mine || cv.unread == 0) continue
             val key = "chat_told_${cv.id}"
             if (last.id <= p.getLong(key, 0L)) continue
-            if (ChatNav.peer != cv.id) Alerts.notifyMessage(c, cv.id, cv.name, preview(last.content))
+            if (ChatOnScreen.peer != cv.id) Alerts.notifyMessage(c, cv.id, cv.name, preview(last.content))
             p.edit().putLong(key, last.id).apply()
         }
     }
@@ -311,7 +311,3 @@ object Chat {
     }
 }
 
-/** Which conversation is open in Messages (a request to open it goes through LocalGo, Deep.Chat). */
-object ChatNav {
-    var peer by mutableStateOf<String?>(null)
-}

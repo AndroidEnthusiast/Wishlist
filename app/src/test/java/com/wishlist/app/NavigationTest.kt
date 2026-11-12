@@ -54,9 +54,6 @@ abstract class NavigationBase {
         // A new pretend phone: its own database (the app keeps both in objects between checks in one process).
         ListStore.reset(); WishlistDb.reset()
         Repo.load(app)
-        HubNav.page = null
-        FriendsNav.reset()
-        AccountNav.open = false
     }
 
     /** The bottom bar's tab with this name is the one on screen. */

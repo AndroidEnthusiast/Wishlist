@@ -312,10 +312,10 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                             if (target) go(Deep.History(n.wishId))
                             else {
                                 // News about a wish you want or reserved (2.142): the list opens on that wish.
-                                if (n.kind in listOf("ask_sent", "ask_yes", "ask_free", "ask_ended") && n.listKey.length > 2 && n.wishId > 0L)
-                                    AskNav.focus = Triple(n.listKey.substring(2), n.wishId, n.kind == "ask_free")
+                                val ask = if (n.kind in listOf("ask_sent", "ask_yes", "ask_free", "ask_ended") && n.listKey.length > 2 && n.wishId > 0L)
+                                    AskFocus(n.listKey.substring(2), n.wishId, n.kind == "ask_free") else null
                                 WishFocus.forNote(n.listKey, n.wishId, n.kind)
-                                onOpen(n.listKey)
+                                go(Deep.Note(n.listKey, ask))
                             }
                         }.padding(10.dp),
                     verticalAlignment = Alignment.CenterVertically

@@ -100,7 +100,6 @@ fun ThemerScreen(onBack: () -> Unit) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     BackHandler(onBack = onBack)
-    DisposableEffect(Unit) { onDispose { ThemerNav.open = false } }
     val inUseMode = effectiveTheme()
     var tryStyle by remember { mutableStateOf(styleFor(Repo.design).key) }
     var tryMode by remember { mutableStateOf(inUseMode) }

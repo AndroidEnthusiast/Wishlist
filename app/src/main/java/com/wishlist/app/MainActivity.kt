@@ -128,20 +128,21 @@ class MainActivity : ComponentActivity() {
             i.removeExtra(ASK_ID)
             return
         }
+        var ask: AskFocus? = null
         if (i.hasExtra(Alerts.NOTE_KIND)) {
             val kind = i.getStringExtra(Alerts.NOTE_KIND).orEmpty()
             // "X is free. Reserve it now?" / "Your reservation of X has ended" (2.142): the list opens on that wish.
             val list = i.getStringExtra(Alerts.NOTE_LIST).orEmpty()
             val wish = i.getLongExtra(Alerts.NOTE_ID, 0L)
             if ((kind == "ask_free" || kind == "ask_ended" || kind == "ask_yes" || kind == "ask_sent") && wish > 0L && list.length > 2)
-                AskNav.focus = Triple(list.substring(2), wish, kind == "ask_free")
+                ask = AskFocus(list.substring(2), wish, kind == "ask_free")
             if (kind.isNotEmpty()) Notifications.markRead(this, kind, list, wish)
             // A push about one wish on your own list opens the list on that wish (2.161).
             if (i.hasExtra(OPEN_NOTE)) WishFocus.forNote(list, wish, kind)
             i.removeExtra(Alerts.NOTE_KIND)
         }
         // Each is handled once (removed from the Intent): turning the phone must not open it again.
-        val d = deepOf(i)
+        val d = deepOf(i)?.let { if (ask != null && it is Deep.Note) it.copy(ask = ask) else it }
         if (d != null) deep = d
     }
 

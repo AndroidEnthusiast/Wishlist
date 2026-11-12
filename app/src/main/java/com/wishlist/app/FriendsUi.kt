@@ -109,49 +109,6 @@ object FriendNews {
     }
 }
 
-/** Where you are inside the Friends tab: a friend's page, and one of their lists. */
-object FriendsNav {
-    var person by mutableStateOf<String?>(null)
-    var list by mutableStateOf<FriendList?>(null)
-    /** On a friend's page: their "wishes" or "top" page (2.95), or null. */
-    var page by mutableStateOf<String?>(null)
-    /** The lists of the friend whose page is open, as loaded (for the blocks and the numbers). */
-    var loaded by mutableStateOf<Map<String, RemoteList>>(emptyMap())
-    /** Whose lists [loaded] holds once they finished loading (so a page never says "No wishes" while loading). */
-    var loadedFor by mutableStateOf<String?>(null)
-
-    /** A friend link that was opened (owner, 2.139): their code and the name in the link. */
-    var addCode by mutableStateOf<String?>(null)
-    var addName by mutableStateOf("")
-
-    /** On a friend's page or list: the screen has a back arrow instead of the menu button. */
-    val deep: Boolean get() = person != null
-
-    /** The chat the friend's page was opened from (tap their name at the top of a chat): Back returns there (2.105). */
-    var fromChat by mutableStateOf<String?>(null)
-
-    // [loaded] is kept (owner, 8 November 2026): coming back to a friend shows their wishes at once while they refresh.
-    fun reset() { person = null; list = null; page = null; loadedFor = null; fromChat = null }
-
-    /**
-     * Back from a friend's page: to the chat it was opened from, or to Friends. Going back to the chat, their page
-     * stays until Messages is on screen and is only then cleared (MainActivity): clearing it first showed the
-     * Friends overview for a moment (owner, 2.107).
-     */
-    fun leavePerson(go: (Deep) -> Unit) {
-        val back = fromChat
-        if (back != null) go(Deep.Chat(back)) else reset()
-    }
-
-    /** Opens the list with [code] if it belongs to a friend (for example from a "gift no longer on the list" alert). */
-    fun openByCode(code: String): Boolean {
-        val f = Friends.state?.friends?.firstOrNull { p -> p.lists.any { it.code == code } } ?: return false
-        person = f.id
-        list = f.lists.first { it.code == code }
-        return true
-    }
-}
-
 /** A round picture of a person: their photo, or their first letter on the theme's colour. */
 @Composable
 fun Avatar(photo: String?, name: String, size: Dp) {
@@ -189,16 +146,10 @@ fun ProfileButton(onProfile: () -> Unit) {
     }
     // Your picture opens the profile sheet (owner, 7 November 2026: no side menu): Profile, Gifts I reserved,
     // Received gifts, Bin, App settings.
-    IconButton(onClick = { AccountNav.open = true }) {
+    IconButton(onClick = { go(Deep.Account) }) {
         Box(Modifier.semantics { contentDescription = tr("Profile and settings") }) { Avatar(Friends.myPhoto, Shared.lastName, 32.dp) }
     }
 }
-
-/** The profile sheet (owner, 7 November 2026): opened by your picture at the top right. */
-object AccountNav {
-    var open by mutableStateOf(false)
-}
-
 
 @Composable
 private fun FriendsTitle(t: String) {
@@ -222,32 +173,33 @@ private fun countText(n: Int): String = when (n) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FriendsScreen(snack: SnackbarHostState, onProfile: () -> Unit, onOpenLink: (String) -> Unit) {
+    val places = LocalPlaces.current
     val go = LocalGo.current
     val ctx = LocalContext.current
     Friends.load(ctx)
-    val person = FriendsNav.person?.let { id -> Friends.state?.friends?.firstOrNull { it.id == id } }
-    val list = FriendsNav.list
-    if (FriendsNav.person != null && person == null && Friends.state != null) {
+    val person = places.person?.let { id -> Friends.state?.friends?.firstOrNull { it.id == id } }
+    val list = places.friendList
+    if (places.person != null && person == null && Friends.state != null) {
         // No longer friends (unfriended, here or by them).
-        LaunchedEffect(Unit) { FriendsNav.reset() }
+        LaunchedEffect(Unit) { places.resetFriends() }
     }
     if (person != null && list != null) {
-        BackHandler { FriendsNav.list = null }
+        BackHandler { places.friendList = null }
         // Coming back from the list returns to where you were: their page or their wishes page.
         FriendScreen(
             Friend(list.code, list.name), snack, onRemoved = {},
             fetch = { Friends.fetchList(ctx, person.id, list.code) }, ownerName = person.name,
-            onBack = { FriendsNav.list = null }
+            onBack = { places.friendList = null }
         )
         return
     }
-    if (person != null && FriendsNav.page != null) {
-        BackHandler { FriendsNav.page = null }
-        FriendWishesPage(person, FriendsNav.page!!, snack)
+    if (person != null && places.friendPage != null) {
+        BackHandler { places.friendPage = null }
+        FriendWishesPage(person, places.friendPage!!, snack)
         return
     }
     if (person != null) {
-        BackHandler { FriendsNav.leavePerson(go) }
+        BackHandler { places.leavePerson(go) }
         FriendPage(person, snack)
         return
     }
@@ -257,6 +209,7 @@ fun FriendsScreen(snack: SnackbarHostState, onProfile: () -> Unit, onOpenLink: (
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenLink: (String) -> Unit) {
+    val places = LocalPlaces.current
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
@@ -286,7 +239,7 @@ private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenL
         Friends.state?.friends?.let { try { FriendNews.refresh(ctx, it) } catch (e: Exception) {} }
     }
     // A friend link was tapped (owner, 2.139): "Send Jorai a friend request?".
-    LaunchedEffect(FriendsNav.addCode) { if (FriendsNav.addCode != null) adding = true }
+    LaunchedEffect(places.addCode) { if (places.addCode != null) adding = true }
 
     fun act(done: String, block: suspend () -> Unit) {
         scope.launch {
@@ -363,7 +316,7 @@ private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenL
                 items(ordered, key = { "f" + it.id }) { f ->
                     FriendRow(
                         f,
-                        onOpen = { FriendsNav.person = f.id },
+                        onOpen = { places.person = f.id },
                         onUnfriend = { unfollow = f },
                         onBlock = { blocking = f },
                         onReport = { reporting = f }
@@ -396,9 +349,9 @@ private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenL
 
     if (adding) AddFriendDialog(onClose = { msg ->
         adding = false
-        FriendsNav.addCode = null
+        places.addCode = null
         if (msg != null) scope.launch { snack.showToast(msg) }
-    }, prefill = FriendsNav.addCode.orEmpty(), prefillName = FriendsNav.addName)
+    }, prefill = places.addCode.orEmpty(), prefillName = places.addName)
     blocking?.let { f -> BlockDialog(f.id, f.name, snack, onDone = { blocking = null }, onClose = { blocking = null }) }
     reporting?.let { f -> ReportDialog(f.id, f.name, snack) { reporting = null } }
     unfollow?.let { f ->
@@ -552,6 +505,7 @@ private fun FriendRow(f: Person, onOpen: () -> Unit, onUnfriend: () -> Unit, onB
 /** Loads every list friend [f] lets you see (for the blocks and the numbers on their page). */
 @Composable
 private fun LoadFriendLists(f: Person) {
+    val places = LocalPlaces.current
     val ctx = LocalContext.current
     LaunchedEffect(f.id, f.lists) {
         // All lists at once, each shown as soon as it arrives (owner, 8 November 2026: one after another, and nothing
@@ -564,22 +518,22 @@ private fun LoadFriendLists(f: Person) {
                     try {
                         Friends.fetchList(ctx, f.id, l.code)?.let { r ->
                             out[l.code] = r
-                            FriendsNav.loaded = FriendsNav.loaded + (l.code to r)
+                            FriendCache.loaded = FriendCache.loaded + (l.code to r)
                         }
                     } catch (e: Exception) {
                     }
                 }
             }
         }
-        FriendsNav.loadedFor = f.id
+        FriendCache.loadedFor = f.id
         // Opening their page counts as seeing their new wishes (owner, 2.139).
         if (out.size == f.lists.size) FriendNews.markSeen(ctx, f.id, out.values)
     }
 }
 
 /** A friend's wishes that you can see: visible lists, not in their bin. */
-private fun friendWishes(f: Person): List<Pair<Wish, FriendList>> =
-    f.lists.flatMap { l -> FriendsNav.loaded[l.code]?.wishes.orEmpty().filter { it.bin == 0L && it.id != ABOUT_ITEM_ID }.map { it to l } }
+private fun friendWishes(f: Person, loaded: Map<String, RemoteList>): List<Pair<Wish, FriendList>> =
+    f.lists.flatMap { l -> loaded[l.code]?.wishes.orEmpty().filter { it.bin == 0L && it.id != ABOUT_ITEM_ID }.map { it to l } }
         .distinctBy { it.first.id }
         .sortedByDescending { it.first.id }
 
@@ -590,18 +544,19 @@ private fun friendWishes(f: Person): List<Pair<Wish, FriendList>> =
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FriendPage(f: Person, snack: SnackbarHostState) {
+    val places = LocalPlaces.current
     val go = LocalGo.current
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
     LoadFriendLists(f)
-    val wishes = friendWishes(f)
+    val wishes = friendWishes(f, FriendCache.loaded)
     Scaffold(
         containerColor = cs.background,
         topBar = {
             TopAppBar(
                 title = { Text(f.name, fontWeight = look.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                navigationIcon = { IconButton(onClick = { FriendsNav.leavePerson(go) }) { Icon(AppIcons.ArrowBack, tr("Back")) } },
+                navigationIcon = { IconButton(onClick = { places.leavePerson(go) }) { Icon(AppIcons.ArrowBack, tr("Back")) } },
                 // Message this friend (2.98).
                 actions = {
                     IconButton(onClick = { go(Deep.Chat(f.id)) }) {
@@ -628,8 +583,8 @@ private fun FriendPage(f: Person, snack: SnackbarHostState) {
                 Row(Modifier.weight(1f).padding(start = 8.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
                     val top = wishes.count { it.first.star }
                     FriendStat(f.lists.size, if (f.lists.size == 1) tr("Wishlist") else tr("Wishlists")) {}
-                    FriendStat(wishes.size, if (wishes.size == 1) tr("Wish") else tr("Wishes")) { FriendsNav.page = "wishes" }
-                    FriendStat(top, if (top == 1) tr("Top wish") else tr("Top wishes")) { FriendsNav.page = "top" }
+                    FriendStat(wishes.size, if (wishes.size == 1) tr("Wish") else tr("Wishes")) { places.friendPage = "wishes" }
+                    FriendStat(top, if (top == 1) tr("Top wish") else tr("Top wishes")) { places.friendPage = "top" }
                 }
             }
             // Birthday and "I like…" (2.95).
@@ -672,9 +627,9 @@ private fun FriendPage(f: Person, snack: SnackbarHostState) {
                 )
             }
             val items = f.lists.map { l ->
-                val ws = FriendsNav.loaded[l.code]?.wishes.orEmpty().filter { it.bin == 0L && it.id != ABOUT_ITEM_ID }
+                val ws = FriendCache.loaded[l.code]?.wishes.orEmpty().filter { it.bin == 0L && it.id != ABOUT_ITEM_ID }
                 val pic = ws.filter { it.image.isNotBlank() }.maxByOrNull { it.id }?.image
-                HubItem("f:" + l.code, l.name, if (FriendsNav.loaded.containsKey(l.code)) ws.size else l.count, pic, false, "") { FriendsNav.list = l }
+                HubItem("f:" + l.code, l.name, if (FriendCache.loaded.containsKey(l.code)) ws.size else l.count, pic, false, "") { places.friendList = l }
             }
             BlockGrid(items, onHome = false, actionsOf = { emptyList() }, onAddTo = {})
         }
@@ -709,10 +664,11 @@ private fun FriendStat(n: Int, label: String, onClick: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FriendWishesPage(f: Person, page: String, snack: SnackbarHostState) {
+    val places = LocalPlaces.current
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
     LoadFriendLists(f)
-    val all = friendWishes(f)
+    val all = friendWishes(f, FriendCache.loaded)
     val shown = if (page == "top") all.filter { it.first.star } else all
     Scaffold(
         containerColor = cs.background,
@@ -724,7 +680,7 @@ private fun FriendWishesPage(f: Person, page: String, snack: SnackbarHostState) 
                         fontWeight = look.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis
                     )
                 },
-                navigationIcon = { IconButton(onClick = { FriendsNav.page = null }) { Icon(AppIcons.ArrowBack, tr("Back")) } },
+                navigationIcon = { IconButton(onClick = { places.friendPage = null }) { Icon(AppIcons.ArrowBack, tr("Back")) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
         },
@@ -746,7 +702,7 @@ private fun FriendWishesPage(f: Person, page: String, snack: SnackbarHostState) 
                 }
             }
             // Still loading: a spinner, never "No wishes" (owner, 7 November 2026).
-            if (shown.isEmpty() && FriendsNav.loadedFor != f.id && f.lists.isNotEmpty()) item {
+            if (shown.isEmpty() && FriendCache.loadedFor != f.id && f.lists.isNotEmpty()) item {
                 Box(Modifier.fillMaxWidth().padding(top = 32.dp), contentAlignment = Alignment.Center) {
                     androidx.compose.material3.CircularProgressIndicator()
                 }
@@ -760,7 +716,7 @@ private fun FriendWishesPage(f: Person, page: String, snack: SnackbarHostState) 
                 val id = w.id
                 Row(
                     Modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true))
-                        .clickable { WishFocus.target = w.id; FriendsNav.list = l }
+                        .clickable { WishFocus.target = w.id; places.friendList = l }
                         .padding(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -1254,7 +1210,6 @@ internal fun ProfileTitle(t: String) {
         modifier = Modifier.padding(top = 20.dp)
     )
 }
-
 
 /**
  * A friend code typed into six blocks, three, a dash, three, like the code itself (owner, 2.104). Letters become

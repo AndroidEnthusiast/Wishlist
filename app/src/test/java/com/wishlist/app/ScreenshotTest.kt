@@ -66,7 +66,6 @@ abstract class ScreenshotBase(private val mode: String) {
         ListStore.reset(); WishlistDb.reset()
         Repo.load(app)
         Repo.setTheme(app, mode)
-        HubNav.page = null // "All your wishes" from an earlier test would still be open
         if (Repo.myWishes.isEmpty()) samples(app).forEach { Repo.addMine(app, it) }
     }
 

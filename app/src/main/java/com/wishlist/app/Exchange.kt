@@ -601,13 +601,6 @@ object Exchanges {
     fun parseLink(s: String): String? = LINK.find(s.uppercase())?.groupValues?.get(1)
 }
 
-/** Which exchange is open in Gift exchanges (opening one goes through LocalGo, Deep.ExchangePage). */
-object ExchangeNav {
-    var open by mutableStateOf<String?>(null)
-    /** A new exchange was just made: its page opens with "Invite friends". */
-    var inviteNow by mutableStateOf<String?>(null)
-}
-
 /** Which anonymous chat is on screen ("<id>:santa" or "<id>:giftee"), so no notification comes for it. */
 object GxChatNav {
     @Volatile

@@ -120,11 +120,6 @@ fun wishesLabel(n: Int): String = if (n == 1) tr("1 wish") else tr("%d wishes", 
 fun newestPics(ws: List<Wish>): List<String> =
     ws.filter { it.image.isNotBlank() }.sortedByDescending { it.id }.map { it.image }.distinct().take(3)
 
-/** Opens the share card (HomeShare.kt) for one of your own lists, from Home or from the list itself. */
-object ShareNav {
-    var list by mutableStateOf<String?>(null)
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HubScreen(
@@ -146,6 +141,7 @@ fun HubScreen(
     // The gift exchange card in its season.
     onNewExchange: () -> Unit = {}
 ) {
+    val places = LocalPlaces.current
     val go = LocalGo.current
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
@@ -218,7 +214,7 @@ fun HubScreen(
         }
         val onVisible: () -> Unit = { visibleOf = item }
         // Share first on your own lists (owner, 7 November 2026): it opens the share card (HomeShare.kt).
-        val onShare: () -> Unit = { NameGate.ensure { ShareNav.list = code } }
+        val onShare: () -> Unit = { NameGate.ensure { go(Deep.ShareCard(code)) } }
         val edit = Triple(tr("Edit name"), false, onEdit)
         // A collab wishlist's Share is its invitation: the link and Invite Friends (owner, 7 November 2026). No
         // "Visible to": only people with the invitation are on it.
@@ -240,7 +236,7 @@ fun HubScreen(
     // two per row, only for opening.
     @Composable
     fun ListsSection(onHome: Boolean) {
-        val more: (() -> Unit)? = if (onHome) ({ HubNav.page = "lists" }) else null
+        val more: (() -> Unit)? = if (onHome) ({ places.homePage = "lists" }) else null
         HubTitle(tr("Your wishlists"), onMore = more)
         // In every section the list opened last comes first (owner, 2.110, instead of a "Recently opened" row).
         // "Create list" offers all three kinds: that is how people find groups and gift lists.
@@ -255,7 +251,7 @@ fun HubScreen(
         }
     }
 
-    val page = HubNav.page
+    val page = places.homePage
     if (page != null) OverviewScreen(page, snack, { ListsSection(onHome = false) }, onOpenMine) else Scaffold(
         containerColor = cs.background,
         topBar = {

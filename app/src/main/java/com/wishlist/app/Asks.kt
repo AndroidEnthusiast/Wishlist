@@ -50,11 +50,6 @@ data class AskItem(
     val gift: Boolean, val until: Long
 )
 
-/** A list to open on a wish ([reserve]: offer "Reserve it now?" when it is free). */
-object AskNav {
-    var focus by mutableStateOf<Triple<String, Long, Boolean>?>(null)
-}
-
 object Asks {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 

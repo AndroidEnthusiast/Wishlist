@@ -190,6 +190,19 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 - 6 November (night): Friends review; **2.139**. Not checked: the friend link on a phone (Chrome on Android should open wishlist://friend from the page; some browsers ask first).
 
 ## Next session
+- **START HERE (12 November 2026, night, after 2.192 and 2.193: the code clean-up).** Built: the screenshot tests work
+  again (they never settled because "What's your name?" opened at the start and November's snow moved for ever; now a
+  name, animations off, a fresh database per picture; "Price watch" → "My shops"). **2.192** one way to move between
+  screens (`LocalGo`); **2.193** where you are inside a tab is `Places` (owned by the screen), and the last `*Nav`
+  objects are gone. All 14 screenshots were identical before and after. Ask the owner how 2.193 feels: Messages and
+  Friends should still open where you left them; Back from a friend's page opened from a chat goes back to the chat;
+  turning the phone on a friend's list keeps it; a new group/exchange opens with "Invite friends"; a "Reserve it
+  now?" notification opens the list on that wish; the side sheet, share card, Themer, the shop's "Added to …".
+  **Found, not fixed (owner: ask first):** the message notifier stays quiet for the chat left open in Messages even when
+  you are on another tab or the app is in the background (`ChatOnScreen`, same as before 2.193). Ask whether a
+  notification should come then. Still to ask: Crashlytics screenshot, whether supabase-limits.sql was run again and
+  `fetch-page` deployed (`wl_fetch_ok`). **Next (owner's order):** the app's final name, then the copy project. R7 and
+  R8: later.
 - **START HERE (12 November 2026, evening, after 2.190 and 2.191).** The tidy-up is done except the crash review:
   ask the owner for a screenshot of Firebase > Crashlytics. Ask whether they ran
   [supabase-limits.sql](https://github.com/AndroidEnthusiast/Wishlist/blob/main/supabase-limits.sql) again and

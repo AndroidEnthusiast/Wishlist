@@ -504,7 +504,3 @@ object Groups {
     }
 }
 
-/** A group just made: its page opens with "Invite friends" (opening a group goes through LocalGo, Deep.GroupPage). */
-object GroupNav {
-    var inviteNow by mutableStateOf<String?>(null)
-}

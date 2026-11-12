@@ -71,6 +71,7 @@ fun WishDialog(
     fromShop: Boolean = false,
     onClose: () -> Unit
 ) {
+    val places = LocalPlaces.current
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     // Which wishlist was open when this dialog started. A wish shared in from the browser can be saved to another one.
@@ -350,7 +351,7 @@ fun WishDialog(
                             )
                         )
                         if (chooseList) Repo.setLastSaveTo(ctx, Shared.active ?: MyLists.saveKey(Repo.openMine, false))
-                        if (fromShop) ShopNav.saved(Repo.listName)
+                        if (fromShop) places.shopSaved(Repo.listName)
                     } else {
                         if (typedPrice && p != null) PriceWatch.noteTyped(ctx, edit.id, u, p)
                         Repo.replace(
