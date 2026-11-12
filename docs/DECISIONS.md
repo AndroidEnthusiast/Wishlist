@@ -591,3 +591,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
   **"Delete your profile and data?"**, text **"Your profile, friends, chats, reservations and wishlists are deleted, on
   this phone and online. This can't be undone."**, buttons **"Save a copy first"** (Export), **"Delete everything"**
   (red), Cancel. In Profile at the very bottom: **"Delete my profile and data"** in red.
+- **Later, not now** (owner, 12 November 2026): R7 (the two-phone test) and R8 (account and repository safety).
+- **Copy is its own project** (owner, 12 November 2026, after trying 2.188/2.189: "I don't like the copy, but it's
+  fine"): one pass over every text in the app and on the web pages, so it is crystal clear and concise UX writing that
+  leaves nothing to the imagination. Until then, new texts follow STYLE.md and are asked as before.
