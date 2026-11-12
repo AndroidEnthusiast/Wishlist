@@ -63,7 +63,8 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
-import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.pullToRefresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -140,15 +141,17 @@ fun HomeScreen(
     LaunchedEffect(Shared.active, Repo.openMine) {
         Repo.touchRecent(ctx, Shared.active?.let { "s:$it" } ?: ("m:" + Repo.openMine))
     }
+    // Pull down to refresh (Material 3's 2025 version, P19 2.191: the screen keeps the "refreshing" itself).
     val pull = rememberPullToRefreshState()
-    if (pull.isRefreshing) {
+    var refreshing by remember { mutableStateOf(false) }
+    if (refreshing) {
         LaunchedEffect(true) {
             // Asking every shop can take long (some are read in a hidden browser, one wish at a time), so the circle
             // shows for at most 2.5 seconds; the check goes on in the background, prices change on screen as they
             // come in, and a message says when it's done.
             val job = PriceRefresh.start(ctx, if (inShared) Shared.active else null) { msg -> snack.showToast(msg) }
             val finished = withTimeoutOrNull(2500) { job.join() } != null
-            pull.endRefresh()
+            refreshing = false
             if (!finished) snack.showToast(tr("Checking prices…"), duration = SnackbarDuration.Short)
         }
     }
@@ -302,7 +305,7 @@ fun HomeScreen(
             // "Viewed 23 times" (owner, 2.136): only your own lists that are online; read when the list opens and on
             // every pull to refresh. Offline or before supabase-features.sql: nothing is shown.
             var views by remember(Repo.openMine, Shared.active) { mutableIntStateOf(0) }
-            LaunchedEffect(Repo.openMine, Shared.active, pull.isRefreshing) {
+            LaunchedEffect(Repo.openMine, Shared.active, refreshing) {
                 if (inShared) return@LaunchedEffect
                 val d = Repo.mine(ctx, Repo.openMine)
                 val code = d.code ?: return@LaunchedEffect
@@ -349,7 +352,7 @@ fun HomeScreen(
             }
             // Pull down on the list to refresh it: the shops are asked for their prices now (and a shared list is
             // fetched again), so price changes show. This took the place of the refresh button in the top bar.
-            Box(Modifier.fillMaxSize().clipToBounds().nestedScroll(pull.nestedScrollConnection)) {
+            Box(Modifier.fillMaxSize().clipToBounds().pullToRefresh(isRefreshing = refreshing, state = pull, onRefresh = { refreshing = true })) {
             if (list.isEmpty()) {
                 Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp)) {
                     ListHeader(Repo.wishes, snack)
@@ -443,8 +446,8 @@ fun HomeScreen(
                     .onSizeChanged { stickyHeight = it.height }
             ) { stickyTop(true) }
             // Only while pulling or refreshing: at rest the circle with the arrow must not show at all.
-            if (pull.progress > 0f || pull.isRefreshing) {
-                PullToRefreshContainer(state = pull, modifier = Modifier.align(Alignment.TopCenter))
+            if (pull.distanceFraction > 0f || refreshing) {
+                PullToRefreshDefaults.Indicator(state = pull, isRefreshing = refreshing, modifier = Modifier.align(Alignment.TopCenter))
             }
             }
         }

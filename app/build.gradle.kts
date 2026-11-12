@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
 }
 
@@ -9,13 +10,13 @@ ksp { arg("room.schemaLocation", "$projectDir/schemas") }
 
 android {
     namespace = "com.wishlist.app"
-    compileSdk = 34
+    compileSdk = 36
     defaultConfig {
         applicationId = "com.wishlist.app"
         minSdk = 26
-        targetSdk = 34
-        versionCode = 191
-        versionName = "2.190"
+        targetSdk = 36
+        versionCode = 192
+        versionName = "2.191"
         // Crash reports (Crash.kt): Crashlytics wants a build id, which its Gradle plugin would normally add. The app
         // isn't shrunk or renamed (isMinifyEnabled = false), so there is no mapping file to upload; one id per version.
         resValue("string", "com.google.firebase.crashlytics.mapping_file_id", "wishlist-$versionCode")
@@ -43,7 +44,6 @@ android {
     }
     kotlinOptions { jvmTarget = "17" }
     buildFeatures { compose = true }
-    composeOptions { kotlinCompilerExtensionVersion = "1.5.14" }
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
     // A release build also runs Android's lint checks; they are advice here, not a reason to stop the build.
     lint { checkReleaseBuilds = false }
@@ -79,22 +79,22 @@ android {
 }
 
 dependencies {
-    implementation(platform("androidx.compose:compose-bom:2024.06.00"))
+    implementation(platform("androidx.compose:compose-bom:2025.06.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-text-google-fonts")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-core")
-    implementation("androidx.activity:activity-compose:1.9.0")
-    // Screens as routes with their own back stack (ROADMAP Stage 1, Nav.kt). 2.7.x fits Compose 1.6 (the BOM above).
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-    // The database on the phone (ROADMAP Stage 2, Db.kt). 2.6.x fits Kotlin 1.9.
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-    ksp("androidx.room:room-compiler:2.6.1")
-    implementation("androidx.core:core-ktx:1.13.1")
-    implementation("androidx.work:work-runtime-ktx:2.9.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    implementation("androidx.activity:activity-compose:1.10.1")
+    // Screens as routes with their own back stack (ROADMAP Stage 1, Nav.kt). 2.9.x fits Compose 1.8 (the BOM above, P19 2.191).
+    implementation("androidx.navigation:navigation-compose:2.9.0")
+    // The database on the phone (ROADMAP Stage 2, Db.kt). 2.7.x fits Kotlin 2.1 and KSP 2 (P19, 2.191).
+    implementation("androidx.room:room-runtime:2.7.2")
+    implementation("androidx.room:room-ktx:2.7.2")
+    ksp("androidx.room:room-compiler:2.7.2")
+    implementation("androidx.core:core-ktx:1.16.0")
+    implementation("androidx.work:work-runtime-ktx:2.10.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
     implementation("org.jsoup:jsoup:1.17.2")
     implementation("io.coil-kt:coil-compose:2.6.0")
     // Live updates (Live.kt, 2.174): the WebSocket to Supabase Realtime. The same OkHttp Coil already brought along.
@@ -104,18 +104,18 @@ dependencies {
     // Crash reports (owner, D2, 8 November 2026; Crash.kt). Same Firebase release as firebase-messaging 24.0.0.
     implementation("com.google.firebase:firebase-crashlytics:19.0.0")
     // The recovery key into the phone's password manager, and offered back on a new phone (RecoveryKey.kt, 2.187).
-    // 1.3.x fits compileSdk 34. The second part lets phones with Google Play services use Google Password Manager.
-    implementation("androidx.credentials:credentials:1.3.0")
-    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+    // 1.5.x fits compileSdk 36. The second part lets phones with Google Play services use Google Password Manager.
+    implementation("androidx.credentials:credentials:1.5.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
 
     // Only for the tests; none of this goes into the app.
     testImplementation("junit:junit:4.13.2")
     // The real org.json for plain JUnit (Android's own copy only works on a phone).
     testImplementation("org.json:json:20240303")
-    testImplementation("org.robolectric:robolectric:4.12.2")
-    testImplementation("io.github.takahirom.roborazzi:roborazzi:1.20.0")
-    testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.20.0")
-    testImplementation(platform("androidx.compose:compose-bom:2024.06.00"))
+    testImplementation("org.robolectric:robolectric:4.15.1")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi:1.43.0")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.43.0")
+    testImplementation(platform("androidx.compose:compose-bom:2025.06.00"))
     testImplementation("androidx.compose.ui:ui-test-junit4")
-    testImplementation("androidx.work:work-testing:2.9.0")
+    testImplementation("androidx.work:work-testing:2.10.2")
 }

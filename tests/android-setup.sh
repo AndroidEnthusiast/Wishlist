@@ -11,7 +11,7 @@ if [ ! -x "$SDK/cmdline-tools/latest/bin/sdkmanager" ]; then
   unzip -qo /tmp/clt.zip -d "$SDK/cmdline-tools"
   mv "$SDK/cmdline-tools/cmdline-tools" "$SDK/cmdline-tools/latest"
 fi
-yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$SDK" "platforms;android-34" "build-tools;34.0.0" "platform-tools" > /tmp/sdk.log 2>&1
+yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$SDK" "platforms;android-36" "build-tools;35.0.0" "platform-tools" > /tmp/sdk.log 2>&1
 echo "sdk.dir=$SDK" > "$ROOT/local.properties"
 # Maven Central (repo.maven.apache.org) answers "429 Too Many Requests" to cloud computers. Google keeps an exact copy
 # of it, so on this computer only, Gradle downloads from that copy. The GitHub build is not changed.

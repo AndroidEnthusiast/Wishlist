@@ -384,7 +384,7 @@ Decide first, build second; several of these can't be changed afterwards.
   year, can still be served by GitHub Pages; old `github.io` links must keep working).
 - [ ] S6.2 **Keep today's users**: Play can sign the app with the *existing* key ("Play App Signing" with your own
   key), so people who installed the download can update from Play without reinstalling. Needs R0.
-- [ ] S6.3 Android target and libraries brought up to date (P19), in its own version, with the screenshot checks.
+- [x] S6.3 *(2.191, 12 November 2026: target 36, Kotlin 2.1, Compose 2025.06; the screenshot checks turned out to be broken already, fixed in the code clean-up)* Android target and libraries brought up to date (P19), in its own version, with the screenshot checks.
 - [ ] S6.4 The store's forms: privacy page (S4.6), data safety form, data deletion address (S4.7), content
   rating, report/block (S4.8), what Crashlytics and Firebase collect.
 - [ ] S6.5 A test round: a new personal developer account must run a closed test with 12 testers for 14 days
