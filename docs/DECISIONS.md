@@ -585,3 +585,9 @@ What the owner has decided, and why. Follow these unless the owner changes their
   don't count**, plus the last 20 messages of that chat, unlocked by the reporter's phone (the pop-up says they are
   sent). Saved in a locked Supabase table the owner reads in Table editor; **no alert for now** (owner: find a better
   way later, not a failing backup). **Report and Block only in a chat's menu and on a friend's page.**
+- **Deleting, details** (owner, 12 November 2026): a gift exchange you organise where nobody else has the app (so
+  nobody can organise it) **is cancelled** (everyone told, as with Cancel; the list before deleting says so). Wishes you
+  added to someone else's collab wishlist **stay, but "Added by" with your name is removed**. The last warning: title
+  **"Delete your profile and data?"**, text **"Your profile, friends, chats, reservations and wishlists are deleted, on
+  this phone and online. This can't be undone."**, buttons **"Save a copy first"** (Export), **"Delete everything"**
+  (red), Cancel. In Profile at the very bottom: **"Delete my profile and data"** in red.
