@@ -149,7 +149,7 @@ class NavigationTest : NavigationBase() {
         // settings (one route on top at a time, as before).
         fromSheet("App settings")
         shows("App settings")
-        compose.runOnUiThread { NotesNav.open = true }
+        send(android.content.Intent(ApplicationProvider.getApplicationContext(), MainActivity::class.java).putExtra(MainActivity.OPEN_NOTES, true))
         shows("Notifications")
         phoneBack()
         tabOn("Home")
@@ -199,7 +199,7 @@ class NavigationTest : NavigationBase() {
     @Test fun giftExchangesKeepTheBarAndGoBackHome() {
         // Gift exchanges (Home, a link, a notification): its own screen with the bottom bar, Home lit; ← returns Home.
         tap("Friends")
-        compose.runOnUiThread { ExchangeNav.show = true }
+        send(open(MainActivity.OPEN_EXCHANGE, ""))
         shows("Gift exchange")
         tabOn("Home")
         tap("Back")
@@ -244,7 +244,7 @@ class NavigationTest : NavigationBase() {
         // "All price changes" (a wish's price page, or a notification) from the Messages tab.
         tap("Messages")
         tabOn("Messages")
-        compose.runOnUiThread { PricesNav.open = true }
+        send(android.content.Intent(ApplicationProvider.getApplicationContext(), MainActivity::class.java).putExtra(MainActivity.OPEN_PRICES, true))
         shows("Price changes"); noBar()
         phoneBack()
         tabOn("Messages")

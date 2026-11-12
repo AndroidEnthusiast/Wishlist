@@ -233,6 +233,7 @@ object Notifications {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
+    val go = LocalGo.current
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
@@ -308,7 +309,7 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                     Modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true))
                         // A reached target opens the wish's price history; a price change opens its list on that wish.
                         .clickable {
-                            if (target) HistoryNav.open = n.wishId
+                            if (target) go(Deep.History(n.wishId))
                             else {
                                 // News about a wish you want or reserved (2.142): the list opens on that wish.
                                 if (n.kind in listOf("ask_sent", "ask_yes", "ask_free", "ask_ended") && n.listKey.length > 2 && n.wishId > 0L)

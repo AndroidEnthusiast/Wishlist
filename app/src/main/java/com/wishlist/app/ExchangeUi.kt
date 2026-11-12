@@ -176,6 +176,7 @@ fun Confetti(run: Int, modifier: Modifier = Modifier) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExchangesScreen(snack: SnackbarHostState, onOpenMine: (String) -> Unit, onNew: () -> Unit) {
+    val go = LocalGo.current
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
@@ -239,7 +240,7 @@ fun ExchangesScreen(snack: SnackbarHostState, onOpenMine: (String) -> Unit, onNe
                         Row(
                             Modifier.padding(horizontal = 16.dp, vertical = 6.dp).fillMaxWidth()
                                 .lookCard(look, x.id.hashCode().toLong(), look.cardShape(x.id.hashCode().toLong(), small = true))
-                                .clickable { ExchangeNav.openExchange(x.id) }.padding(10.dp),
+                                .clickable { go(Deep.ExchangePage(x.id)) }.padding(10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             GxCover(x.theme, Exchanges.photos[x.id], Modifier.size(64.dp))
@@ -273,6 +274,7 @@ fun ExchangesScreen(snack: SnackbarHostState, onOpenMine: (String) -> Unit, onNe
 
 @Composable
 private fun GxInviteCard(v: GxInvite, snack: SnackbarHostState) {
+    val go = LocalGo.current
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val look = LocalLook.current
@@ -293,7 +295,7 @@ private fun GxInviteCard(v: GxInvite, snack: SnackbarHostState) {
         )
         Text(bits.joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = look.cardMuted(11L))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { ExchangeNav.openInvite(v.gx, null) }) { Text(tr("Join")) }
+            Button(onClick = { go(Deep.Exchange(v.gx)) }) { Text(tr("Join")) }
             OutlinedButton(onClick = {
                 scope.launch {
                     try { Exchanges.decline(ctx, v.gx) } catch (e: Exception) { snack.showToast(tr("Couldn’t do that. Check your connection.")) }

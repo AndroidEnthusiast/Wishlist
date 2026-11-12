@@ -172,6 +172,7 @@ fun MessagesScreen(snack: SnackbarHostState, onProfile: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
+    val go = LocalGo.current
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
@@ -231,7 +232,7 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
                         Text(
                             tr("Add friends"), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
                             color = look.chipContent(true),
-                            modifier = Modifier.padding(top = 16.dp).lookChip(look, on = true).clickable { FriendsNav.openTab = true }
+                            modifier = Modifier.padding(top = 16.dp).lookChip(look, on = true).clickable { go(Deep.FriendsAsLeft) }
                                 .padding(horizontal = 18.dp, vertical = 10.dp)
                         )
                     }
@@ -263,7 +264,7 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
                         Text(
                             tr("Add friends"), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
                             color = look.chipContent(true),
-                            modifier = Modifier.padding(top = 16.dp).lookChip(look, on = true).clickable { FriendsNav.openTab = true }
+                            modifier = Modifier.padding(top = 16.dp).lookChip(look, on = true).clickable { go(Deep.FriendsAsLeft) }
                                 .padding(horizontal = 18.dp, vertical = 10.dp)
                         )
                     }
@@ -355,6 +356,7 @@ private fun ConversationRow(cv: Conversation, onOpen: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun ChatScreen(peer: String, snack: SnackbarHostState) {
+    val go = LocalGo.current
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
@@ -516,7 +518,7 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.clip(RoundedCornerShape(12.dp)).then(
                             if (friend != null) Modifier.clickable(onClickLabel = tr("Open profile")) {
-                                FriendsNav.reset(); FriendsNav.person = peer; FriendsNav.fromChat = peer; FriendsNav.openTab = true
+                                go(Deep.Person(peer, fromChat = true))
                             } else Modifier
                         ).padding(end = 8.dp)
                     ) {
@@ -741,6 +743,7 @@ private fun Bubble(
     m: ChatMessage, shape: androidx.compose.ui.graphics.Shape, peerName: String, onLongPress: (() -> Unit)?, onOpenPhoto: (File) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val go = LocalGo.current
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
     val uri = LocalUriHandler.current
@@ -767,11 +770,11 @@ private fun Bubble(
                     onClick = {
                         if (m.content.kind == "wish" && m.content.url.isNotBlank()) try { uri.openUri(m.content.url) } catch (e: Exception) {}
                         // A group invitation (2.108): the join screen, or the group when you are in it already.
-                        if (m.content.kind == "group") GroupNav.openInvite(m.content.text, Groups.parseLink(m.content.url))
+                        if (m.content.kind == "group") go(Deep.Group(m.content.text, Groups.parseLink(m.content.url)))
                         // A gift exchange invitation (2.129).
-                        if (m.content.kind == "exchange") ExchangeNav.openInvite(m.content.text, Exchanges.parseLink(m.content.url))
+                        if (m.content.kind == "exchange") go(Deep.Exchange(m.content.text, Exchanges.parseLink(m.content.url)))
                         // A gift list invitation (2.142): the invitation (or the list when you are on it already).
-                        if (m.content.kind == "giftlist" && !m.mine) GiftInviteNav.open = m.content.text
+                        if (m.content.kind == "giftlist" && !m.mine) go(Deep.GiftInvite(m.content.text))
                         if (m.content.kind == "photo") {
                             if (photoState == "ok") photo?.let(onOpenPhoto)
                             else if (photoState == "offline") photoTry++

@@ -146,6 +146,7 @@ fun HubScreen(
     // The gift exchange card in its season.
     onNewExchange: () -> Unit = {}
 ) {
+    val go = LocalGo.current
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
@@ -176,7 +177,7 @@ fun HubScreen(
         onClose = { newShared = false }
     )
     if (newWishGroup) NewGroupDialog(
-        onCreated = { gid -> newWishGroup = false; GroupNav.inviteNow = gid; GroupNav.openGroup(gid) },
+        onCreated = { gid -> newWishGroup = false; go(Deep.GroupPage(gid, invite = true)) },
         onClose = { newWishGroup = false }
     )
     // Your own lists are read again whenever one changes (mineVersion) or the open one changes.
@@ -407,6 +408,7 @@ private fun ActionRow(text: String, danger: Boolean = false, onClick: () -> Unit
 /** One wish in "Price changes": a square picture, the old and the new price, and the change in percent. */
 @Composable
 private fun PriceChangeRow(w: Wish) {
+    val go = LocalGo.current
     val look = LocalLook.current
     val id = w.id
     val old = w.oldPrice ?: return
@@ -414,7 +416,7 @@ private fun PriceChangeRow(w: Wish) {
     val down = now < old
     Row(
         Modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true))
-            .clickable { HistoryNav.open = w.id }.padding(10.dp),
+            .clickable { go(Deep.History(w.id)) }.padding(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         val sq = RoundedCornerShape(14.dp)
@@ -815,11 +817,12 @@ internal fun byRecent(items: List<HubItem>): List<HubItem> = items.sortedByDesce
 /** "Gift exchanges ›" on Home: your exchanges (tap: open it) and "New gift exchange"; the › opens the exchanges page. */
 @Composable
 private fun ExchangesSection(onNew: () -> Unit) {
+    val go = LocalGo.current
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
     val list = Exchanges.list
     Spacer(Modifier.height(8.dp))
-    HubTitle(tr("Gift exchanges"), onMore = { ExchangeNav.open = null; ExchangeNav.show = true })
+    HubTitle(tr("Gift exchanges"), onMore = { go(Deep.ExchangePage(null)) })
     val w = ((LocalConfiguration.current.screenWidthDp - 16) / 2.3f).dp
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
@@ -827,7 +830,7 @@ private fun ExchangesSection(onNew: () -> Unit) {
     ) {
         items(list.size, key = { list[it].id }) { i ->
             val x = list[i]
-            Column(Modifier.width(w).clip(RoundedCornerShape(16.dp)).clickable { ExchangeNav.openExchange(x.id) }) {
+            Column(Modifier.width(w).clip(RoundedCornerShape(16.dp)).clickable { go(Deep.ExchangePage(x.id)) }) {
                 Box {
                     GxCover(x.theme, Exchanges.photos[x.id], Modifier.fillMaxWidth().aspectRatio(1f).clip(look.cardShape(x.id.hashCode().toLong(), small = true)))
                     if (x.me.unreadGiftee + x.me.unreadSanta > 0) RedDot(Modifier.align(Alignment.TopEnd).padding(8.dp))

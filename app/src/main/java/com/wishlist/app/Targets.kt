@@ -104,8 +104,3 @@ object Targets {
         NotifyPace.post(c, id, n)
     }
 }
-
-/** A "Target price reached" notification was tapped: the wish whose price history to open (with its target lit up). */
-object HistoryNav {
-    var open by mutableStateOf<Long?>(null)
-}

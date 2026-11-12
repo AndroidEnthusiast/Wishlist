@@ -110,6 +110,7 @@ fun GroupsHomeSection(onHome: Boolean, onOpen: (String) -> Unit, onNew: () -> Un
 /** An invite on Home: who invited you, the group, "No thanks" and "Join". */
 @Composable
 private fun InviteCard(v: GroupInvite) {
+    val go = LocalGo.current
     val ctx = LocalContext.current
     val look = LocalLook.current
     val scope = rememberCoroutineScope()
@@ -146,7 +147,7 @@ private fun InviteCard(v: GroupInvite) {
                     busy = false
                 }
             }) { Text(tr("No thanks")) }
-            Button(enabled = !busy, onClick = { GroupNav.openInvite(v.group, null) }) { Text(tr("Join")) }
+            Button(enabled = !busy, onClick = { go(Deep.Group(v.group)) }) { Text(tr("Join")) }
         }
     }
 }

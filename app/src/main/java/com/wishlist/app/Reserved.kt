@@ -86,6 +86,7 @@ object ReservedGifts {
 /** The "Gifts I reserved" page (profile sheet): a route (Nav.kt, 2.156), ← or Back returns to where it was opened. */
 @Composable
 fun ReservedScreen(onClose: () -> Unit, onOpen: (ReservedGroup) -> Unit) {
+    val go = LocalGo.current
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     var groups by remember { mutableStateOf(ReservedGifts.remembered(ctx)) }
@@ -121,7 +122,7 @@ fun ReservedScreen(onClose: () -> Unit, onOpen: (ReservedGroup) -> Unit) {
                         tr("Nothing reserved yet. Open a friend’s wishlist, tap Reserve on a gift you’ll buy, and it shows here. They never see who reserved it."),
                         color = cs.onSurfaceVariant, modifier = Modifier.padding(16.dp)
                     )
-                    Button(onClick = { onClose(); FriendsNav.openTab = true }, modifier = Modifier.padding(horizontal = 16.dp)) {
+                    Button(onClick = { onClose(); go(Deep.FriendsAsLeft) }, modifier = Modifier.padding(horizontal = 16.dp)) {
                         Text(tr("Go to Friends"))
                     }
                 }

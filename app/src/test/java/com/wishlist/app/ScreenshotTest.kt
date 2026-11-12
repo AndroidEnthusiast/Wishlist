@@ -55,8 +55,15 @@ abstract class ScreenshotBase(private val mode: String) {
         val app = ApplicationProvider.getApplicationContext<android.app.Application>()
         WorkManagerTestInitHelper.initializeTestWorkManager(app, Configuration.Builder().build())
         Shadows.shadowOf(app).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
+        // Animations off, as on a phone with "Remove animations": November's snow on Home (Snow.kt) never stops
+        // otherwise, so the pretend phone never settles ("Compose did not get idle", 2.190 and 2.191).
+        android.provider.Settings.Global.putFloat(app.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 0f)
+        // No welcome, no background question and a name: without a name "What's your name?" opens at the start, and
+        // its blinking cursor never lets the pretend phone settle either.
         app.getSharedPreferences("wishlist", Context.MODE_PRIVATE).edit()
-            .putBoolean("welcomed", true).putBoolean("asked_background", true).commit()
+            .putBoolean("welcomed", true).putBoolean("asked_background", true).putString("sh_me", "Sam").commit()
+        // A new pretend phone for every picture: its own database (the app keeps it in objects between checks).
+        ListStore.reset(); WishlistDb.reset()
         Repo.load(app)
         Repo.setTheme(app, mode)
         HubNav.page = null // "All your wishes" from an earlier test would still be open
@@ -117,7 +124,8 @@ abstract class ScreenshotBase(private val mode: String) {
         compose.mainClock.autoAdvance = false
         name.performTouchInput { click(androidx.compose.ui.geometry.Offset(centerX, top - px)) }
     }
-    @Test fun priceWatch() { tap("Price watch"); shot("prices") }
+    // "My shops" took the place of Price watch on the bar (7 November 2026).
+    @Test fun shops() { tap("My shops"); shot("shops") }
     @Test fun friends() { tap("Friends"); shot("friends") }
     @Test fun messages() { tap("Messages"); shot("messages") }
 }

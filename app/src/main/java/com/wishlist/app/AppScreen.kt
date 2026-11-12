@@ -30,7 +30,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -85,6 +88,15 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     var inviteDlg by remember { mutableStateOf(false) }
     // The background question comes once, after the notifications question has been answered (or wasn't needed).
     var askBackground by remember { mutableStateOf(false) }
+    // Pop-ups opened from anywhere through [go] (they lived in GroupNav, ExchangeNav, GiftInviteNav and HistoryNav
+    // until 2.192). Kept with the screen, so they come back after Android closed the app in the background.
+    var history by rememberSaveable { mutableStateOf<Long?>(null) }
+    var giftInvite by rememberSaveable { mutableStateOf<String?>(null) }
+    var joinGroupLink by rememberSaveable { mutableStateOf<String?>(null) }
+    var joinGroupId by rememberSaveable { mutableStateOf<String?>(null) }
+    var takeover by remember { mutableStateOf<Triple<String, String, String>?>(null) }
+    var joinExchangeLink by rememberSaveable { mutableStateOf<String?>(null) }
+    var joinExchangeId by rememberSaveable { mutableStateOf<String?>(null) }
     val perm = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { askBackground = true }
 
     /** Opens one of your own wishlists. */
@@ -98,6 +110,37 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     fun openGroup(code: String) {
         Shared.open(ctx, code)
         closeAll(); nav.openTab(Route.list("s:$code"))
+    }
+
+    /** A wishlist group's page (2.108); Home puts the group you opened last first in its section (2.110). */
+    fun openWishGroup(gid: String, invite: Boolean = false) {
+        if (invite) GroupNav.inviteNow = gid
+        closeAll(); HubNav.page = null
+        nav.openTab(Route.group(gid))
+        Repo.touchRecent(ctx, "g:$gid")
+    }
+
+    /** A group invitation (a link, a chat card, a notification): its page when it is on this phone, else Join. */
+    fun groupInvite(gid: String?, link: String?) {
+        if (gid != null && Groups.group(gid) != null) { openWishGroup(gid); return }
+        joinGroupId = gid?.takeIf { it.isNotEmpty() }
+        joinGroupLink = link
+    }
+
+    /** Gift exchanges (2.129): one exchange ([gx]), or the list of them (null). */
+    fun openExchange(gx: String?, invite: Boolean = false) {
+        if (invite && gx != null) ExchangeNav.inviteNow = gx
+        ExchangeNav.open = gx
+        closeAll(); HubNav.page = null
+        nav.openTab(Route.EXCHANGES)
+    }
+
+    /** An exchange invitation: the exchange when it is on this phone, otherwise Join (or the list, with neither). */
+    fun exchangeInvite(gx: String?, link: String?) {
+        if (gx != null && Exchanges.get(gx) != null) { openExchange(gx); return }
+        joinExchangeId = gx?.takeIf { it.isNotEmpty() }
+        joinExchangeLink = link
+        openExchange(null)
     }
 
     fun openFriend(code: String) {
@@ -140,8 +183,8 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
         val group = Groups.groups.firstOrNull { gr -> gr.members.any { it.list?.code == code } }
         val exchange = Exchanges.list.firstOrNull { it.me.giftee?.list?.code == code }
         when {
-            group != null -> GroupNav.openGroup(group.id)
-            exchange != null -> ExchangeNav.openExchange(exchange.id)
+            group != null -> openWishGroup(group.id)
+            exchange != null -> openExchange(exchange.id)
             else -> openFriend(code)
         }
     }
@@ -161,15 +204,15 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
             }
             key.startsWith("c:") -> openListByCode(key.removePrefix("c:"))
             // A gift list invitation (2.142).
-            key.startsWith("i:") -> GiftInviteNav.open = key.removePrefix("i:")
+            key.startsWith("i:") -> giftInvite = key.removePrefix("i:")
             // A "Still buying …?" question (2.142): answered in Gifts I reserved.
             key == "v:" -> { closeAll(); nav.openOnTop(Route.RESERVED) }
             key.startsWith("r:") -> { FriendsNav.reset(); nav.openTab(Route.FRIENDS) }
             key.startsWith("p:") -> { FriendsNav.reset(); FriendsNav.person = key.removePrefix("p:"); nav.openTab(Route.FRIENDS) }
-            key.startsWith("g:") -> GroupNav.openInvite(key.removePrefix("g:"), null)
+            key.startsWith("g:") -> groupInvite(key.removePrefix("g:"), null)
             key.startsWith("q:") -> receivedAsk = key.removePrefix("q:")
             // Gift exchange (2.129): "e:<id>", or "e:" for the list of exchanges.
-            key.startsWith("e:") -> ExchangeNav.openInvite(key.removePrefix("e:").ifEmpty { null }, null)
+            key.startsWith("e:") -> exchangeInvite(key.removePrefix("e:").ifEmpty { null }, null)
         }
     }
 
@@ -193,14 +236,19 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
             Deep.Notes -> nav.openOnTop(Route.NOTES)
             Deep.Prices -> nav.openOnTop(Route.PRICES)
             // The price page is a pop-up over whatever is on screen.
-            is Deep.History -> HistoryNav.open = d.wishId
+            is Deep.History -> history = d.wishId
             is Deep.Chat -> {
                 ChatNav.peer = d.peer
                 closeAll(); nav.openTab(Route.MESSAGES)
                 if (FriendsNav.fromChat != null) FriendsNav.reset()
             }
-            is Deep.Person -> { FriendsNav.reset(); FriendsNav.person = d.id; closeAll(); nav.openTab(Route.FRIENDS) }
+            is Deep.Person -> {
+                FriendsNav.reset(); FriendsNav.person = d.id
+                if (d.fromChat) FriendsNav.fromChat = d.id
+                closeAll(); nav.openTab(Route.FRIENDS)
+            }
             Deep.FriendsTab -> { FriendsNav.reset(); closeAll(); nav.openTab(Route.FRIENDS) }
+            Deep.FriendsAsLeft -> { closeAll(); nav.openTab(Route.FRIENDS) }
             // "Send … a friend request?" on Friends (owner, 2.139).
             is Deep.FriendLink -> {
                 FriendsNav.reset(); FriendsNav.addName = d.name; FriendsNav.addCode = d.code
@@ -208,11 +256,14 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
             }
             is Deep.FriendList -> openFriend(d.code)
             // Groups and exchanges: their own screen when it is on this phone, otherwise the Join screen.
-            is Deep.Group -> GroupNav.openInvite(d.id, null)
-            is Deep.GroupLink -> GroupNav.openInvite(null, d.link)
-            is Deep.GroupMe -> GroupNav.takeover = d.me
-            is Deep.Exchange -> ExchangeNav.openInvite(d.id, null)
-            is Deep.ExchangeLink -> ExchangeNav.openInvite(null, d.link)
+            is Deep.Group -> groupInvite(d.id, d.link)
+            is Deep.GroupLink -> groupInvite(null, d.link)
+            is Deep.GroupPage -> openWishGroup(d.id, d.invite)
+            is Deep.GroupMe -> takeover = d.me
+            is Deep.Exchange -> exchangeInvite(d.id, d.link)
+            is Deep.ExchangeLink -> exchangeInvite(null, d.link)
+            is Deep.ExchangePage -> openExchange(d.id, d.invite)
+            is Deep.GiftInvite -> giftInvite = d.code
             is Deep.Bin -> { Bin.focus = d.code to d.wishId; closeAll(); nav.openOnTop(Route.BIN) }
             is Deep.Invite -> { closeAll(); joinDlg = d.key }
             is Deep.AddLink -> { closeAll(); addTarget = null; prefill = d.url; adding = true }
@@ -223,62 +274,10 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     }
 
     // (Back from a list, a tab or a section goes Home by itself: Nav.kt and the routes below.)
-    // A new message alert, or "Message" on a friend's page: Messages, at that conversation.
-    LaunchedEffect(ChatNav.openTab) {
-        if (ChatNav.openTab) {
-            ChatNav.openTab = false
-            closeAll()
-            nav.openTab(Route.MESSAGES)
-            // Back from a friend's page opened from this chat: their page is cleared now that the chat shows.
-            if (FriendsNav.fromChat != null) FriendsNav.reset()
-        }
-    }
+    // Screens ask for another screen through LocalGo (Deep.kt): one stable function that always calls the newest [go].
+    val goNow = rememberUpdatedState<(Deep) -> Unit> { go(it) }
+    val goStable = remember { { d: Deep -> goNow.value(d) } }
 
-    // Wishlist groups (2.108): open a group, or show its join screen (a link, an invite, a notification, a chat
-    // message), or move a browser member's list into the app.
-    LaunchedEffect(GroupNav.request) {
-        val g = GroupNav.open
-        if (g != null) {
-            GroupNav.open = null
-            closeAll(); HubNav.page = null
-            nav.openTab(Route.group(g))
-            // Home puts the group you opened last first in its section (2.110).
-            Repo.touchRecent(ctx, "g:$g")
-        }
-    }
-
-    // Gift exchange (2.129): a link, an invitation, a notification or the menu asked for it.
-    LaunchedEffect(ExchangeNav.show) {
-        if (ExchangeNav.show) {
-            ExchangeNav.show = false
-            closeAll(); HubNav.page = null
-            nav.openTab(Route.EXCHANGES)
-        }
-    }
-
-    // The bell at the top right (2.122): Notifications. Back returns to the screen the bell was on.
-    LaunchedEffect(NotesNav.open) {
-        if (NotesNav.open) {
-            NotesNav.open = false
-            nav.openOnTop(Route.NOTES)
-        }
-    }
-    // "All price changes" on a wish's price page, or a notification about several prices (owner, 7 November 2026).
-    LaunchedEffect(PricesNav.open) {
-        if (PricesNav.open) {
-            PricesNav.open = false
-            // Back returns to where it was opened (a list, Home, a tab), as from the other routes.
-            nav.openOnTop(Route.PRICES)
-        }
-    }
-    // A friend request alert was tapped: the Friends tab.
-    LaunchedEffect(FriendsNav.openTab) {
-        if (FriendsNav.openTab) {
-            FriendsNav.openTab = false
-            closeAll()
-            nav.openTab(Route.FRIENDS)
-        }
-    }
     // Friend requests waiting for you show as a red dot on Friends from the start.
     LaunchedEffect(Unit) {
         Friends.load(ctx)
@@ -317,6 +316,7 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     // The bar shows on Home, a list and the tabs; an open conversation has a back arrow and no bar.
     val inChat = tab == Route.MESSAGES && ChatNav.peer != null
     val showBar = (onMain || tab != null || section != null) && !inChat && !imeOpen
+    CompositionLocalProvider(LocalGo provides goStable) {
     Column(Modifier.fillMaxSize()) {
     // With the bottom bar, the screens above it don't leave room for the phone's own navigation bar again.
     Box(Modifier.weight(1f).imePadding().then(if (showBar) Modifier.consumeWindowInsets(WindowInsets.navigationBars) else Modifier)) {
@@ -338,7 +338,7 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
                 onCollabCreated = { code -> Shared.open(ctx, code); closeAll(); inviteDlg = true },
                 onProfile = { nav.openOnTop(Route.PROFILE) },
                 onAddTo = { t -> addTarget = t; prefill = ""; adding = true },
-                onOpenWishGroup = { GroupNav.openGroup(it) },
+                onOpenWishGroup = { openWishGroup(it) },
                 onFriends = { FriendsNav.reset(); nav.openTab(Route.FRIENDS) },
                 onReserved = { nav.openOnTop(Route.RESERVED) },
                 onAddWish = { addTarget = Repo.lastSaveTo; prefill = ""; adding = true },
@@ -466,7 +466,7 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
         }
     }
     // Joining asks for your name first when it's missing (owner, 2.135).
-    val needName = (joinDlg != null || GroupNav.joinLink != null || GroupNav.joinGroup != null || ExchangeNav.joinLink != null || ExchangeNav.joinGx != null) && !NameGate.hasName()
+    val needName = (joinDlg != null || joinGroupLink != null || joinGroupId != null || joinExchangeLink != null || joinExchangeId != null) && !NameGate.hasName()
     LaunchedEffect(needName) { if (needName) NameGate.ensure {} }
     if (AccountNav.open) AccountSheet(
         onClose = { AccountNav.open = false },
@@ -478,14 +478,14 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
         onSettings = { AccountNav.open = false; nav.openOnTop(Route.SETTINGS) }
     )
     if (newExchange) NewExchangeDialog(
-        onCreated = { gx -> newExchange = false; ExchangeNav.inviteNow = gx; ExchangeNav.openExchange(gx) },
+        onCreated = { gx -> newExchange = false; openExchange(gx, invite = true) },
         onClose = { newExchange = false }
     )
-    if (!needName && (ExchangeNav.joinLink != null || ExchangeNav.joinGx != null)) key(ExchangeNav.joinLink, ExchangeNav.joinGx) {
+    if (!needName && (joinExchangeLink != null || joinExchangeId != null)) key(joinExchangeLink, joinExchangeId) {
         JoinExchangeDialog(
-            ExchangeNav.joinLink, ExchangeNav.joinGx,
-            onJoined = { gx -> ExchangeNav.joinLink = null; ExchangeNav.joinGx = null; ExchangeNav.openExchange(gx) },
-            onClose = { ExchangeNav.joinLink = null; ExchangeNav.joinGx = null }
+            joinExchangeLink, joinExchangeId,
+            onJoined = { gx -> joinExchangeLink = null; joinExchangeId = null; openExchange(gx) },
+            onClose = { joinExchangeLink = null; joinExchangeId = null }
         )
     }
     receivedAsk?.let { id -> ReceivedDialog(id) { receivedAsk = null } }
@@ -510,30 +510,30 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     }
     if (inviteDlg) SharedShareDialog { inviteDlg = false }
     // A gift list invitation from a Friend (2.142): a tapped notification or chat card.
-    GiftInviteNav.open?.let { code ->
+    giftInvite?.let { code ->
         key(code) {
             GiftInviteDialog(
                 code,
-                onJoined = { c -> GiftInviteNav.open = null; Notifications.markRead(ctx, "gl_invite", "i:$c", 0L); openGroup(c) },
-                onClose = { GiftInviteNav.open = null }
+                onJoined = { c -> giftInvite = null; Notifications.markRead(ctx, "gl_invite", "i:$c", 0L); openGroup(c) },
+                onClose = { giftInvite = null }
             )
         }
     }
-    if (!needName && (GroupNav.joinLink != null || GroupNav.joinGroup != null)) key(GroupNav.joinLink, GroupNav.joinGroup) {
+    if (!needName && (joinGroupLink != null || joinGroupId != null)) key(joinGroupLink, joinGroupId) {
         JoinGroupDialog(
-            GroupNav.joinLink, GroupNav.joinGroup,
-            onJoined = { gid -> GroupNav.joinLink = null; GroupNav.joinGroup = null; GroupNav.openGroup(gid) },
-            onClose = { GroupNav.joinLink = null; GroupNav.joinGroup = null }
+            joinGroupLink, joinGroupId,
+            onJoined = { gid -> joinGroupLink = null; joinGroupId = null; openWishGroup(gid) },
+            onClose = { joinGroupLink = null; joinGroupId = null }
         )
     }
-    GroupNav.takeover?.let { me ->
+    takeover?.let { me ->
         TakeoverDialog(
             me, snack,
             onDone = { id ->
-                GroupNav.takeover = null
+                takeover = null
                 if (id != null) openMine(id)
             },
-            onClose = { GroupNav.takeover = null }
+            onClose = { takeover = null }
         )
     }
     if (welcome) WelcomeFlow { welcome = false }
@@ -571,9 +571,10 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     // The share card of one of your lists (owner, 7 November 2026; HomeShare.kt).
     ShareNav.list?.let { id -> key(id) { ListShareDialog(id) { ShareNav.list = null } } }
     // A "Price alert" notification (or its entry in Notifications): that wish's price history, the alert lit up.
-    HistoryNav.open?.let { id ->
+    history?.let { id ->
         val w = remember(id, Repo.mineVersion, Repo.myWishes) { Repo.allMine(ctx).flatMap { it.wishes }.firstOrNull { it.id == id } }
-        if (w != null) PriceHistoryDialog(w, highlight = true) { HistoryNav.open = null }
-        else LaunchedEffect(id) { HistoryNav.open = null }
+        if (w != null) PriceHistoryDialog(w, highlight = true) { history = null }
+        else LaunchedEffect(id) { history = null }
+    }
     }
 }

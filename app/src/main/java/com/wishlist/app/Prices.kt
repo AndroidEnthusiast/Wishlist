@@ -42,11 +42,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 
-/** Opens "Price changes" (MainActivity): "All price changes" on a wish's price page, or a notification. */
-object PricesNav {
-    var open by mutableStateOf(false)
-}
-
 /**
  * Price changes (until 7 November 2026 the "Price watch" tab; now opened from a wish's price page, owner): every wish with a price on your own wishlists, its price now and how much higher or lower
  * that is than when you added it (the first point of its price history). The biggest drops come first. Tapping a

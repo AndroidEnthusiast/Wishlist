@@ -124,9 +124,6 @@ object FriendsNav {
     var addCode by mutableStateOf<String?>(null)
     var addName by mutableStateOf("")
 
-    /** Set when a friend request alert is tapped: MainActivity opens the Friends tab. */
-    var openTab by mutableStateOf(false)
-
     /** On a friend's page or list: the screen has a back arrow instead of the menu button. */
     val deep: Boolean get() = person != null
 
@@ -141,9 +138,9 @@ object FriendsNav {
      * stays until Messages is on screen and is only then cleared (MainActivity): clearing it first showed the
      * Friends overview for a moment (owner, 2.107).
      */
-    fun leavePerson() {
+    fun leavePerson(go: (Deep) -> Unit) {
         val back = fromChat
-        if (back != null) { ChatNav.peer = back; ChatNav.openTab = true } else reset()
+        if (back != null) go(Deep.Chat(back)) else reset()
     }
 
     /** Opens the list with [code] if it belongs to a friend (for example from a "gift no longer on the list" alert). */
@@ -181,9 +178,10 @@ fun Avatar(photo: String?, name: String, size: Dp) {
  */
 @Composable
 fun ProfileButton(onProfile: () -> Unit) {
+    val go = LocalGo.current
     val ctx = LocalContext.current
     Friends.load(ctx)
-    IconButton(onClick = { NotesNav.open = true }) {
+    IconButton(onClick = { go(Deep.Notes) }) {
         Box {
             Icon(AppIcons.Notifications, tr("Notifications"))
             if (Notifications.unread) RedDot(Modifier.align(Alignment.TopEnd).offset(2.dp, (-2).dp))
@@ -201,10 +199,6 @@ object AccountNav {
     var open by mutableStateOf(false)
 }
 
-/** The bell at the top asks the app to show Notifications (see [ProfileButton]). */
-object NotesNav {
-    var open by mutableStateOf(false)
-}
 
 @Composable
 private fun FriendsTitle(t: String) {
@@ -228,6 +222,7 @@ private fun countText(n: Int): String = when (n) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FriendsScreen(snack: SnackbarHostState, onProfile: () -> Unit, onOpenLink: (String) -> Unit) {
+    val go = LocalGo.current
     val ctx = LocalContext.current
     Friends.load(ctx)
     val person = FriendsNav.person?.let { id -> Friends.state?.friends?.firstOrNull { it.id == id } }
@@ -252,7 +247,7 @@ fun FriendsScreen(snack: SnackbarHostState, onProfile: () -> Unit, onOpenLink: (
         return
     }
     if (person != null) {
-        BackHandler { FriendsNav.leavePerson() }
+        BackHandler { FriendsNav.leavePerson(go) }
         FriendPage(person, snack)
         return
     }
@@ -595,6 +590,7 @@ private fun friendWishes(f: Person): List<Pair<Wish, FriendList>> =
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FriendPage(f: Person, snack: SnackbarHostState) {
+    val go = LocalGo.current
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
@@ -605,10 +601,10 @@ private fun FriendPage(f: Person, snack: SnackbarHostState) {
         topBar = {
             TopAppBar(
                 title = { Text(f.name, fontWeight = look.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                navigationIcon = { IconButton(onClick = { FriendsNav.leavePerson() }) { Icon(AppIcons.ArrowBack, tr("Back")) } },
+                navigationIcon = { IconButton(onClick = { FriendsNav.leavePerson(go) }) { Icon(AppIcons.ArrowBack, tr("Back")) } },
                 // Message this friend (2.98).
                 actions = {
-                    IconButton(onClick = { ChatNav.peer = f.id; ChatNav.openTab = true }) {
+                    IconButton(onClick = { go(Deep.Chat(f.id)) }) {
                         ChatIcon(MaterialTheme.colorScheme.onSurface)
                     }
                 },

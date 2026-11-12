@@ -70,11 +70,6 @@ data class GiftInviteInfo(
     val images: List<String>, val occ: Occasion?
 )
 
-/** Which invitation to show (a tapped notification or chat card). */
-object GiftInviteNav {
-    var open by mutableStateOf<String?>(null)
-}
-
 object GiftInvites {
     private fun str(t: String) = t.trim().removeSurrounding("\"")
 

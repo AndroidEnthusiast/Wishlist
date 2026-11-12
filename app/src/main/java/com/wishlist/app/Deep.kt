@@ -18,22 +18,30 @@ sealed interface Deep {
     data class History(val wishId: Long) : Deep
     /** A new message: Messages, at that conversation. */
     data class Chat(val peer: String) : Deep
-    /** A birthday: that friend's page on Friends. */
-    data class Person(val id: String) : Deep
-    /** A friend request or an approval: the Friends tab. */
+    /** A birthday: that friend's page on Friends ([fromChat]: their name at the top of your chat with them, so Back returns there). */
+    data class Person(val id: String, val fromChat: Boolean = false) : Deep
+    /** A friend request or an approval: the Friends tab, at its first page. */
     object FriendsTab : Deep
+    /** The Friends tab where you left it ("Find friends" in Messages, Gifts I reserved). */
+    object FriendsAsLeft : Deep
     /** A friend link (wishlist://friend, …/friend/?f=): Friends, with "Send … a friend request?". */
     data class FriendLink(val code: String, val name: String) : Deep
     /** A list from its friends' link or code (?c=), or "a gift you reserved is no longer on the list". */
     data class FriendList(val code: String) : Deep
     /** A wishlist group notification (the group or its invitation). */
-    data class Group(val id: String) : Deep
+    data class Group(val id: String, val link: String? = null) : Deep
     /** A group link (?g=), from a link or shared into the app. */
     data class GroupLink(val link: String) : Deep
     /** A browser member's "My link" of a group: move their list into the app. */
     data class GroupMe(val me: Triple<String, String, String>) : Deep
+    /** A group on this phone, from inside the app: its page ([invite]: just made, "Invite friends" opens). */
+    data class GroupPage(val id: String, val invite: Boolean = false) : Deep
     /** A gift exchange notification: that exchange, or (null) the list of exchanges. */
-    data class Exchange(val id: String?) : Deep
+    data class Exchange(val id: String?, val link: String? = null) : Deep
+    /** An exchange on this phone, from inside the app ([invite]: just made); null: the list of exchanges. */
+    data class ExchangePage(val id: String?, val invite: Boolean = false) : Deep
+    /** A collab wishlist invitation from a Friend (a chat card or its notification). */
+    data class GiftInvite(val code: String) : Deep
     /** A gift exchange link (?x=). */
     data class ExchangeLink(val link: String) : Deep
     /** "Your reserved gift has been moved to the bin": the bin, at that wish. */
@@ -43,6 +51,13 @@ sealed interface Deep {
     /** A shop link shared into the app: the Add wish form with it. */
     data class AddLink(val url: String) : Deep
 }
+
+/**
+ * Opens a place from anywhere inside the app (a button, a chat card, a pop-up): the same [App] `go` that notifications
+ * and links use. Before 2.192 each screen set a flag in its own small object (ChatNav.openTab, GroupNav.request, …)
+ * and the app watched those flags; now there is one way to move between screens (ROADMAP Stage 1, the clean-up).
+ */
+val LocalGo = androidx.compose.runtime.staticCompositionLocalOf<(Deep) -> Unit> { {} }
 
 /**
  * A web link of ours (App Links, owner 7 November 2026): an invite (?j=), a friends' link (?c=), a group (?g=, or a

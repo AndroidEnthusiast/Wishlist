@@ -311,8 +311,7 @@ object Chat {
     }
 }
 
-/** Which conversation is open in Messages, and a request to open the Messages tab (from a friend's page or an alert). */
+/** Which conversation is open in Messages (a request to open it goes through LocalGo, Deep.Chat). */
 object ChatNav {
     var peer by mutableStateOf<String?>(null)
-    var openTab by mutableStateOf(false)
 }

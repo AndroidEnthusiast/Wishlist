@@ -504,27 +504,7 @@ object Groups {
     }
 }
 
-/** Which group is open, and requests to open one or to join (from a link, a chat message or a notification). */
+/** A group just made: its page opens with "Invite friends" (opening a group goes through LocalGo, Deep.GroupPage). */
 object GroupNav {
-    /** The group on screen (its id), or null. */
-    var open by mutableStateOf<String?>(null)
-    /** A request to show the join screen: a group link key, or an invite's group id. */
-    var joinLink by mutableStateOf<String?>(null)
-    var joinGroup by mutableStateOf<String?>(null)
-    /** A browser member's "My link" to take over. */
-    var takeover by mutableStateOf<Triple<String, String, String>?>(null)
-    /** A group just made: its page opens with "Invite friends". */
     var inviteNow by mutableStateOf<String?>(null)
-    /** Set when something asked for a group screen, so the app switches to it. */
-    var request by mutableStateOf(0)
-
-    /** A group invitation was tapped (chat message or notification). */
-    fun openInvite(gid: String?, link: String?) {
-        if (gid != null && Groups.group(gid) != null) { open = gid; request++; return }
-        joinGroup = gid?.takeIf { it.isNotEmpty() }
-        joinLink = link
-        request++
-    }
-
-    fun openGroup(gid: String) { open = gid; request++ }
 }

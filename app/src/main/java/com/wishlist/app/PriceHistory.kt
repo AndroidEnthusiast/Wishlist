@@ -167,6 +167,7 @@ fun targetGold(dark: Boolean): Color = if (dark) Color(0xFFFFC94D) else Color(0x
  */
 @Composable
 fun PriceHistoryDialog(w: Wish, highlight: Boolean = false, showAll: Boolean = true, onClose: () -> Unit) {
+    val go = LocalGo.current
     val ctx = LocalContext.current
     val ui = LocalUriHandler.current
     val cs = MaterialTheme.colorScheme
@@ -232,7 +233,7 @@ fun PriceHistoryDialog(w: Wish, highlight: Boolean = false, showAll: Boolean = t
                 if (showAll) Text(
                     tr("All price changes") + " ›", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
                     color = cs.primary,
-                    modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { onClose(); PricesNav.open = true }
+                    modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { onClose(); go(Deep.Prices) }
                         .padding(vertical = 8.dp, horizontal = 2.dp)
                 )
             }
