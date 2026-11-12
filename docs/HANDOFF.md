@@ -198,10 +198,10 @@ A simple wishlist app in Material Design with the Google Sans font: save product
   Friends should still open where you left them; Back from a friend's page opened from a chat goes back to the chat;
   turning the phone on a friend's list keeps it; a new group/exchange opens with "Invite friends"; a "Reserve it
   now?" notification opens the list on that wish; the side sheet, share card, Themer, the shop's "Added to …".
-  **Found, not fixed (owner: ask first):** the message notifier stays quiet for the chat left open in Messages even when
-  you are on another tab or the app is in the background (`ChatOnScreen`, same as before 2.193). Ask whether a
-  notification should come then. Still to ask: Crashlytics screenshot, whether supabase-limits.sql was run again and
-  `fetch-page` deployed (`wl_fetch_ok`). **Next (owner's order):** the app's final name, then the copy project. R7 and
+  **2.194** (owner asked): a message now notifies unless that chat is on screen with the app in front (also gift
+  exchange chats); ask the owner to test it with a second phone (chat open, go Home or lock the phone, get a message).
+  Owner ran supabase-limits.sql again and deployed `fetch-page` (checked read-only: `wl_fetch_ok` answers, the helper
+  says `no_apikey`, its new message). Still to ask: Crashlytics screenshot. **Next (owner's order):** the app's final name, then the copy project. R7 and
   R8: later.
 - **START HERE (12 November 2026, evening, after 2.190 and 2.191).** The tidy-up is done except the crash review:
   ask the owner for a screenshot of Firebase > Crashlytics. Ask whether they ran

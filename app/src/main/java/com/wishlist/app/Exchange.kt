@@ -293,9 +293,9 @@ object Exchanges {
         if (onScreen) return
         for (x in now) {
             val old = before.firstOrNull { it.id == x.id }?.me
-            if (x.me.unreadSanta > (old?.unreadSanta ?: 0) && GxChatNav.open != x.id + ":santa")
+            if (x.me.unreadSanta > (old?.unreadSanta ?: 0) && !ChatOnScreen.quiet(x.id + ":santa", GxChatNav.open, Live.inFront))
                 Alerts.notifyExchange(c, x.id, tr("Your Secret Santa wrote"), tr("In “%s”. Open to read and answer.", x.name), "gx_msg", "e:${x.id}", msg = true)
-            if (x.me.unreadGiftee > (old?.unreadGiftee ?: 0) && GxChatNav.open != x.id + ":giftee")
+            if (x.me.unreadGiftee > (old?.unreadGiftee ?: 0) && !ChatOnScreen.quiet(x.id + ":giftee", GxChatNav.open, Live.inFront))
                 Alerts.notifyExchange(c, x.id, tr("%s answered", x.me.giftee?.name ?: tr("Your giftee")), tr("In “%s”. Open to read.", x.name), "gx_msg", "e:${x.id}", msg = true)
         }
     }

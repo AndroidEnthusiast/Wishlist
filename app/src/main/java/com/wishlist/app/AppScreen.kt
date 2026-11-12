@@ -32,7 +32,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.getValue
@@ -68,8 +67,6 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     val nav = rememberNavController()
     // Where you are inside the tabs (the open chat, a friend's page, an exchange, Home's page), kept with the screen.
     val places = rememberSaveable(saver = Places.Saver) { Places() }
-    // The message check (Chat.kt) runs outside the screens and must not notify about the open chat.
-    SideEffect { ChatOnScreen.peer = places.chat }
     val route = nav.currentBackStackEntryAsState().value?.destination?.route
     val onMain = route == null || route == Route.MAIN
     var adding by remember { mutableStateOf(false) }

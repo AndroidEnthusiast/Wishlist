@@ -29,3 +29,15 @@ class AppForegroundTest {
         assertEquals(listOf(true), told)
     }
 }
+
+/** When a new message stays quiet (ChatOnScreen.quiet, 2.194). */
+class ChatQuietTest {
+    @org.junit.Test fun onlyTheChatOnScreenWithTheAppInFrontStaysQuiet() {
+        org.junit.Assert.assertTrue(ChatOnScreen.quiet("sam", "sam", inFront = true))
+        // The app in the background, the chat still open underneath: a notification comes.
+        org.junit.Assert.assertFalse(ChatOnScreen.quiet("sam", "sam", inFront = false))
+        // Another chat, or none, on screen.
+        org.junit.Assert.assertFalse(ChatOnScreen.quiet("sam", "alex", inFront = true))
+        org.junit.Assert.assertFalse(ChatOnScreen.quiet("sam", null, inFront = true))
+    }
+}

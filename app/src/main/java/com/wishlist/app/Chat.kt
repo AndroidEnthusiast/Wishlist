@@ -296,7 +296,7 @@ object Chat {
             if (last.mine || cv.unread == 0) continue
             val key = "chat_told_${cv.id}"
             if (last.id <= p.getLong(key, 0L)) continue
-            if (ChatOnScreen.peer != cv.id) Alerts.notifyMessage(c, cv.id, cv.name, preview(last.content))
+            if (!ChatOnScreen.quiet(cv.id, ChatOnScreen.peer, Live.inFront)) Alerts.notifyMessage(c, cv.id, cv.name, preview(last.content))
             p.edit().putLong(key, last.id).apply()
         }
     }

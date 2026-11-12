@@ -359,6 +359,11 @@ private fun ConversationRow(cv: Conversation, onOpen: () -> Unit) {
 @Composable
 private fun ChatScreen(peer: String, snack: SnackbarHostState) {
     val places = LocalPlaces.current
+    // On screen: no notification for this chat while the app is in front (ChatOnScreen, 2.194).
+    DisposableEffect(peer) {
+        ChatOnScreen.peer = peer
+        onDispose { if (ChatOnScreen.peer == peer) ChatOnScreen.peer = null }
+    }
     val go = LocalGo.current
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()

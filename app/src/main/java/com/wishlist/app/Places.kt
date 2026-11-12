@@ -112,10 +112,19 @@ data class AskFocus(val code: String, val id: Long, val reserve: Boolean)
 val LocalPlaces = staticCompositionLocalOf { Places() }
 
 /**
- * The conversation open in Messages, for the message check (Chat.kt), which runs outside the screens and must not
- * notify about the chat you are reading. Set by [App] from [Places.chat]; the same as ChatNav.peer was until 2.192.
+ * The conversation on screen, for the message check (Chat.kt), which runs outside the screens and must not notify
+ * about the chat you are reading. Set by the chat itself while it is on screen (2.194): until then it was the chat
+ * left open in Messages, so no notification came for that friend while you were on another tab or the app was in the
+ * background (found in the clean-up, owner asked for the fix, 12 November 2026).
  */
 object ChatOnScreen {
     @Volatile
     var peer: String? = null
+
+    /**
+     * No notification only when [id] is the chat on screen ([onScreen]: ChatOnScreen.peer, or GxChatNav.open for a
+     * gift exchange chat) and the app is in front ([inFront]: Live.inFront). The screen stays put when the app goes to
+     * the background, so both are needed.
+     */
+    fun quiet(id: String, onScreen: String?, inFront: Boolean): Boolean = inFront && onScreen == id
 }
