@@ -148,3 +148,10 @@ The notes were tidied on 12 November 2026 (owner): `CLAUDE.md` slimmed, details 
 from before the tidy-up": `git checkout ef02546 -- CLAUDE.md docs/`, remove the files the tidy-up added
 (`docs/MAP.md`, `docs/HANDOFF-ARCHIVE.md`, `docs/ROADMAP-ARCHIVE.md`, `docs/decisions/`), commit and push to `main`.
 The stop hook's limits would then block, so also remove the Stop hook from `.claude/settings.json` (or ask the owner).
+
+## Earlier short wording in CLAUDE.md (kept word for word, 12 November 2026)
+Replaced by shorter lines when `docs/TODO.md` was added; the full versions are above in this file.
+- Before every push that touches `web/` or the helper: `bash tests/run-all.sh` (setup in MAP "Testing, in full");
+- Can: the real Supabase, read-only (public key, GET calls to `/rest/v1/rpc/...`, functions with a wrong key).
+- Can't (say so, never claim it works): writing to the real Supabase, the database, real shops, iPhone/Safari, how
+  screens feel on a phone, App Links, real notifications. Details: MAP.

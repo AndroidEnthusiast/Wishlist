@@ -22,12 +22,7 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
   both (Crashlytics reopens them if they come back). Crashlytics' "latest release" said 2.182: check next session
   that 2.194 shows up (it can take a day); if not, look at `Crash.kt`/`WishlistApp.kt` after the 2.191 library update. **Next (owner's order):** the app's final name, then the copy project. R7 and
   R8: later.
-- **Open to-do list** (copied from the plans now in the archive): reports of abuse have no alert yet (owner: find a
-  better way than a failing backup); photos of a group or exchange deleted with its organiser's profile stay as
-  unreachable files; collab wishlist pictures stay in Storage when the list is deleted by "Delete my data"; a restored
-  copy may miss changes from the old phone's last hour; `WishFocus` still a global (moves with the list screen).
-  Later (owner): two-step sign-in (R8), the welcome screen redesign, the two-phone test (R7), "chip in", Stage 6
-  (Google Play) when wanted.
+- **Everything open** (the complete to-do list, owner): `docs/TODO.md`. Owner wants a new feature built first.
 
 ## Last sessions
 

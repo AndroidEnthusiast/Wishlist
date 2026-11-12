@@ -5,6 +5,7 @@ The rules for every session; details are in other docs, read only the part you n
   (its "Second review" Stage R comes before Stage 4; its checklist goes with every feature). Add each new owner
   decision to its topic in `docs/decisions/`. Before ending: a concrete summary of what improved for the owner, a
   summary in the handoff's "Last sessions" and an updated "Next session".
+- **"What's on my to-do list / what's next?":** show all of `docs/TODO.md`; keep it complete (owner).
 
 ## Which doc for which task
 - **Any change:** its area in `docs/MAP.md`, then its topic in `docs/decisions/` (index: `docs/DECISIONS.md`). Unsure
@@ -63,14 +64,13 @@ The rules for every session; details are in other docs, read only the part you n
 - Before every push that changes app code: `bash tests/android-setup.sh` once, then `gradle testReleaseUnitTest` (also
   compiles); `gradle assembleDebug` when resources or libraries change. Screenshots (`-Pwl.screens`) before and after
   changing a screen.
-- Before every push that touches `web/` or the helper: `bash tests/run-all.sh` (setup in MAP "Testing, in full");
+- Before every push that touches `web/` or the helper: `bash tests/run-all.sh` (setup: MAP);
   a changed `supabase-*.sql`: `bash tests/sql/run.sh` with a local PostgreSQL. All must pass.
 - After pushing, check the GitHub build yourself. Details: MAP "Testing, in full".
 
 ## What can and can't be checked here
-- Can: the real Supabase, read-only (public key, GET calls to `/rest/v1/rpc/...`, functions with a wrong key).
-- Can't (say so, never claim it works): writing to the real Supabase, the database, real shops, iPhone/Safari, how
-  screens feel on a phone, App Links, real notifications. Details: MAP.
+- Can: the real Supabase, read-only. Can't (say so, never claim it works): writing to it, the database, real shops,
+  iPhone/Safari, how screens feel on a phone, App Links, real notifications. Full lists: MAP.
 
 ## Keeping the notes small (owner, 12 November 2026; checked by the stop hook, `tests/notes/limits.sh`)
 - `CLAUDE.md` stays under 150 lines and 12,000 characters: move details into `docs/MAP.md` or another doc, never

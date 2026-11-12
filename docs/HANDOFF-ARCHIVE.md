@@ -432,3 +432,10 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 Everything under `tests/` was written in the browser-editor session and runs without any real service. Earlier Kotlin harnesses (concurrent editing, delete/Undo, sorting, categories, invite parsing) used a local Kotlin compiler with hand-written stand-ins for Android and Compose; they were not kept. The Compose screens have only ever been compiled by GitHub.
 
 ## Archived later
+- (12 November 2026, the open to-do list of "Next session", replaced by `docs/TODO.md`):
+- **Open to-do list** (copied from the plans now in the archive): reports of abuse have no alert yet (owner: find a
+  better way than a failing backup); photos of a group or exchange deleted with its organiser's profile stay as
+  unreachable files; collab wishlist pictures stay in Storage when the list is deleted by "Delete my data"; a restored
+  copy may miss changes from the old phone's last hour; `WishFocus` still a global (moves with the list screen).
+  Later (owner): two-step sign-in (R8), the welcome screen redesign, the two-phone test (R7), "chip in", Stage 6
+  (Google Play) when wanted.

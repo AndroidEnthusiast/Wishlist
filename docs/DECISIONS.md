@@ -21,6 +21,9 @@ decided something. Every decision was moved word for word, nothing was dropped.
   The session's stop hook (`.claude/settings.json` → `tests/notes/limits.sh`) blocks finishing while a limit is passed
   or the notes are not pushed. Owner chose: limits on lines and characters, decisions by topic, archives exempt,
   "Next session" only the current plan.
+- **One complete to-do list** (owner, 12 November 2026): `docs/TODO.md` holds every open item (the app name, the
+  file split, Google Play, tests waiting on the owner, known gaps, ideas); asked what is open or next, show all of it.
+  Owner also chose: a new feature first; split the big files and move data out of shared objects later (remind them).
 - **Every finished feature and every fixed bug gets an automatic check**; before changing a feature, read its checks
   and its decisions first.
 
