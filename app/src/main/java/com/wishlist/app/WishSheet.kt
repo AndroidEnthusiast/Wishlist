@@ -19,6 +19,8 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,8 +49,16 @@ class WishActions(
     /** Your own lists: the wish's price history. */
     val onHistory: (() -> Unit)? = null,
     /** Share as a gift idea (someone else's list or a collab wishlist) instead of as your wish. */
-    val shareAsIdea: Boolean = false
+    val shareAsIdea: Boolean = false,
+    /**
+     * "All your wishes" (owner, 12 November 2026): the wish may be on several of your lists, so Private, I have it and
+     * the move to Received gifts go to every copy; null: the wish of the list that is open.
+     */
+    val everywhere: Everywhere? = null
 )
+
+/** What the sheet does to every copy of a wish (All your wishes). */
+class Everywhere(val lists: List<String>, val setPrivate: (Boolean) -> Unit, val setOwned: (Boolean) -> Unit, val received: () -> Unit)
 
 /** The rows of the sheet for [w], in order, as (key, label): the checks read this to keep the order fixed. */
 fun wishSheetRows(w: Wish, a: WishActions): List<String> = buildList {
@@ -60,7 +70,7 @@ fun wishSheetRows(w: Wish, a: WishActions): List<String> = buildList {
     if (a.onEdit != null) add("edit")
     add("share")
     if (a.onMove != null) add("move")
-    if (a.own) { add("private"); add("owned") }
+    if (a.own) { add("private"); add("have") }
     if (a.own && a.onHistory != null) add("history")
 }
 
@@ -71,6 +81,17 @@ fun WishSheet(w: Wish, a: WishActions, onClose: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     // Every row closes the sheet first, then does its thing.
     fun then(f: () -> Unit): () -> Unit = { onClose(); f() }
+    // "I have it" on a wish you don't have yet asks where it goes; the sheet steps aside for the question.
+    var asking by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
+    if (asking) {
+        HaveItDialog(
+            1,
+            onKeep = { onClose(); a.everywhere?.setOwned?.invoke(true) ?: OwnedFlow.toggle(ctx, w) },
+            onReceived = { onClose(); a.everywhere?.received?.invoke() ?: ReceivedFlow.receive(ctx, w) },
+            onClose = onClose
+        )
+        return
+    }
     ModalBottomSheet(
         onDismissRequest = onClose,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -91,6 +112,13 @@ fun WishSheet(w: Wish, a: WishActions, onClose: () -> Unit) {
                     w.price?.let { p ->
                         Text(money(p, w.currency), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                     }
+                    // On several of your lists: say so (owner: otherwise "From which list?" makes no sense).
+                    a.everywhere?.lists?.takeIf { it.size > 1 }?.let { ls ->
+                        Text(
+                            tr("On %1\$d lists: %2\$s", ls.size, ls.joinToString(", ") { Repo.mineName(it) }),
+                            style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
             HorizontalDivider(Modifier.padding(vertical = 8.dp), color = cs.outlineVariant)
@@ -101,11 +129,15 @@ fun WishSheet(w: Wish, a: WishActions, onClose: () -> Unit) {
                 "share" -> SheetRow({ Icon(AppIcons.Share, null, tint = cs.onSurfaceVariant) }, tr("Share"), then { shareItem(ctx, w, idea = a.shareAsIdea) })
                 "move" -> SheetRow({ Icon(AppIcons.Swap, null, tint = cs.onSurfaceVariant) }, tr("Move to…"), then { a.onMove?.invoke() })
                 "private" -> SheetRow(
-                    { Icon(PrivateIcon, null, tint = cs.onSurfaceVariant) }, tr("Private"), then { togglePrivate(ctx, w) },
+                    { Icon(PrivateIcon, null, tint = cs.onSurfaceVariant) }, tr("Private"),
+                    then { a.everywhere?.setPrivate?.invoke(!w.priv) ?: togglePrivate(ctx, w) },
                     checked = w.priv
                 )
-                "owned" -> SheetRow(
-                    { Icon(AppIcons.Check, null, tint = cs.onSurfaceVariant) }, tr("Owned"), then { OwnedFlow.toggle(ctx, w) },
+                // One action for "I have it" (owner, 12 November 2026; it replaces "Owned" and "Received"): ticked, a
+                // tap takes it back (with Undo); not ticked, it asks where the wish goes.
+                "have" -> SheetRow(
+                    { Icon(AppIcons.Check, null, tint = cs.onSurfaceVariant) }, tr("I have it"),
+                    if (w.got) then { a.everywhere?.setOwned?.invoke(false) ?: OwnedFlow.toggle(ctx, w) } else ({ asking = true }),
                     checked = w.got
                 )
                 "history" -> SheetRow({ HistoryIcon(cs.onSurfaceVariant) }, tr("Price history"), then { a.onHistory?.invoke() })
@@ -126,4 +158,30 @@ fun SheetRow(icon: @Composable () -> Unit, label: String, onClick: () -> Unit, c
         Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 16.dp).weight(1f))
         if (checked != null) Checkbox(checked = checked, onCheckedChange = null)
     }
+}
+
+/**
+ * "I have it" (owner, 12 November 2026): keep the wish on the list, marked "Owned", or move it to Received gifts
+ * (it leaves the list; people who gave it get a thank-you). [count] wishes at once ("What did you get?").
+ */
+@Composable
+fun HaveItDialog(count: Int, onKeep: () -> Unit, onReceived: () -> Unit, onClose: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text(if (count == 1) tr("You have it!") else tr("You have %d of them!", count)) },
+        text = {
+            Column {
+                Text(tr("Where should it go?"), style = MaterialTheme.typography.bodyMedium)
+                SheetRow({ Icon(AppIcons.Check, null, tint = cs.onSurfaceVariant) }, tr("Keep it on my list, marked “Owned”"), onKeep)
+                SheetRow({ Icon(AppIcons.Gift, null, tint = cs.onSurfaceVariant) }, tr("Move it to Received gifts"), onReceived)
+                Text(
+                    tr("Received gifts leave your wishlist. Whoever gave it gets a thank-you."),
+                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+        },
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
+    )
 }

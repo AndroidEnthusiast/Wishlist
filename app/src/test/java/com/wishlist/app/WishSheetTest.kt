@@ -10,11 +10,11 @@ class WishSheetTest {
 
     @Test fun yourOwnList() {
         assertEquals(
-            listOf("edit", "share", "move", "private", "owned", "history"),
+            listOf("edit", "share", "move", "private", "have", "history"),
             wishSheetRows(w, WishActions(onEdit = none, onMove = none, own = true, onHistory = none))
         )
         // No link, no price history.
-        assertEquals(listOf("edit", "share", "move", "private", "owned"), wishSheetRows(w, WishActions(onEdit = none, onMove = none, own = true)))
+        assertEquals(listOf("edit", "share", "move", "private", "have"), wishSheetRows(w, WishActions(onEdit = none, onMove = none, own = true)))
     }
 
     @Test fun aCollabListHasReserveFirst() {

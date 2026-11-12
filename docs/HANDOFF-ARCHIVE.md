@@ -462,3 +462,17 @@ Screenshot tests fixed (a name, animations off). Clean-up: one way between scree
 is `Places` owned by the screen and every `*Nav` object gone (2.193), screenshots identical before and after. Bug
 fixed on request: a message now notifies unless that chat is on screen (2.194). Crash review: 3 old crashes on 2.154,
 none since. Notes tidy-up: `CLAUDE.md` slimmed, `docs/MAP.md`, decisions by topic, archives, a stop hook for limits.
+- (12 November 2026, the plan for 2.198 and the summary before it, word for word; built the same night):
+- **START HERE (12 November 2026, night, after 2.197).** Ask how 2.195–2.197 feel on the phone. Then build **2.198**
+  (all decided, `docs/decisions/screens.md`, "review, part 2"); it touches stored wishes, so checks first:
+  1. **Copies stay one wish:** `Repo.replaceMine` (and every edit of an own wish) also updates the same id on every
+     other own list that has it (`copies` in `Data.kt`), all fields but `category` and `bin`. Check in `RepoStoreTest`.
+  2. **"I have it"** replaces "Owned" in the ⋮ sheet (`WishSheet.kt`): ticked → untick at once with Undo; unticked →
+     asks "Keep it on the list (marked owned)" or "Move it to Received gifts" (`Repo.receive`, givers get a
+     thank-you). "What did you get?" (`Reminders.kt`) asks the same once for all ticked wishes.
+  3. **All your wishes / Top wishes** (`Overview.kt` `WishLine`): ⋮ sheet (Edit opens the wish's first list with
+     `Repo.openMine` first; Private / I have it / star via every copy), long press selects (Move to…, Delete).
+     When a wish is on several lists: "This wish is on 2 of your wishlists: A, B. From which one?" (Delete also
+     offers "All lists" = trash the original, its copies follow). The sheet shows "On 2 lists: A, B".
+### 12 November 2026, night: clean-up, notes tidy-up, screens that move (2.192–2.195)
+`docs/MAP.md`, `docs/TODO.md`, decisions by topic, archives, a stop hook. 2.195: screens move like Signal's (`Motion.kt`).

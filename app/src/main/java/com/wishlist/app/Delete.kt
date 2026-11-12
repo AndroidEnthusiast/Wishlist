@@ -30,6 +30,18 @@ object DeleteFlow {
         undoableMany = done
     }
 
+    /**
+     * Several wishes from All your wishes (owner, 12 November 2026): each from the list named for it, with one Undo.
+     * Deleting a wish from the list that has its original takes its copies along (as always).
+     */
+    fun requestFrom(c: Context, byList: Map<String, Set<Long>>) {
+        Shared.close()
+        val done = byList.flatMap { (l, ids) -> Repo.openMine(c, l); ids.mapNotNull { Repo.trash(c, it) } }
+        if (done.isEmpty()) return
+        undoable = null
+        undoableMany = done
+    }
+
     /** Puts the wishes deleted together back where they stood (the last one deleted first). */
     fun undoMany(c: Context) {
         val l = undoableMany ?: return

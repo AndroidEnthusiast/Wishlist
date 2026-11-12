@@ -304,7 +304,7 @@ class WishPressTest : NavigationBase() {
         // ⋮ opens the sheet: the wish's name at the top, then its actions.
         compose.onAllNodes(hasContentDescription("More") and hasClickAction()).onFirst().performClick()
         compose.waitForIdle()
-        for (t in listOf("Edit", "Share", "Move to…", "Private", "Owned", "Price history")) shows(t)
+        for (t in listOf("Edit", "Share", "Move to…", "Private", "I have it", "Price history")) shows(t)
     }
 }
 
@@ -321,6 +321,65 @@ class TopWishTest : NavigationBase() {
         compose.onAllNodes(hasText("Remove from top wishes?")).assertCountEquals(0)
         org.junit.Assert.assertFalse(Repo.myWishes.first { it.id == 7L }.star)
         shows("Removed from top wishes")
+    }
+}
+
+/** All your wishes behaves like a list; a wish on two lists asks "From which list?" (owner, 12 November 2026). */
+class AllWishesTest : NavigationBase() {
+    private val app get() = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()
+    private val lamp = Wish(31, "https://example.com/l", "Desk lamp", "", "", 40.0, null, "EUR", "Home")
+
+    /** A lamp on two lists and a mug on one; then All your wishes. */
+    private fun twoLists() {
+        compose.runOnUiThread {
+            Repo.addMine(app, lamp)
+            Repo.addMine(app, lamp.copy(id = 32, title = "Mug"))
+            val other = Repo.createMine(app, "Birthday", "")
+            Repo.copyInto(app, other, listOf(lamp))
+        }
+        tap("Wishes")
+        compose.waitForIdle()
+    }
+
+    @Test fun theSheetSaysItIsOnTwoLists() {
+        twoLists()
+        // The lamp is second (newest first).
+        compose.onAllNodes(hasContentDescription("More") and hasClickAction())[1].performClick()
+        compose.waitForIdle()
+        compose.onAllNodes(hasText("On 2 lists", substring = true)).onFirst().assertExists()
+    }
+
+    @Test fun deleteAsksFromWhichListAndSaysWhy() {
+        twoLists()
+        compose.onAllNodes(hasText("Desk lamp", substring = true)).onFirst().performTouchInput { longClick() }
+        shows("1 selected")
+        tap("Delete selected")
+        shows("Delete from which list?")
+        compose.onAllNodes(hasText("This wish is on 2 of your wishlists", substring = true)).onFirst().assertExists()
+        tap("All lists")
+        compose.waitForIdle()
+        org.junit.Assert.assertEquals(emptyList<String>(), Repo.listsWith(app, 31))
+        // The other wish is still there.
+        org.junit.Assert.assertEquals(1, Repo.listsWith(app, 32).size)
+    }
+}
+
+/** "I have it" asks once where the wish goes (owner, 12 November 2026: it replaces Owned and Received). */
+class HaveItTest : NavigationBase() {
+    @Test fun movesToReceivedGifts() {
+        val app = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()
+        compose.runOnUiThread { Repo.addMine(app, Wish(41, "https://example.com/v", "Vase", "", "", 25.0, null, "EUR", "Home")) }
+        send(open(MainActivity.OPEN_NOTE, "m:" + Repo.mineIds.first()))
+        compose.waitForIdle()
+        compose.onAllNodes(hasContentDescription("More") and hasClickAction()).onFirst().performClick()
+        compose.waitForIdle()
+        tap("I have it")
+        shows("You have it!")
+        tap("Move it to Received gifts")
+        compose.waitForIdle()
+        org.junit.Assert.assertFalse(Repo.myWishes.any { it.id == 41L })
+        org.junit.Assert.assertTrue(Repo.myBin.any { it.id == 41L && it.recv > 0L })
+        shows("Moved to Received gifts")
     }
 }
 

@@ -43,6 +43,39 @@ object OwnedFlow {
     }
 }
 
+/**
+ * "I have it" → "Move it to Received gifts" (owner, 12 November 2026): the wish (every copy of it) leaves your lists
+ * for Received gifts; the main screen says "Moved to Received gifts" with Undo ([OwnedHost]).
+ */
+object ReceivedFlow {
+    /** The wish that just moved, for Undo. */
+    var moved by mutableStateOf<Long?>(null)
+        private set
+
+    /** A wish of the list that is open. */
+    fun receive(c: Context, w: Wish) {
+        if (Repo.hasCopies(w.id)) Repo.receiveEverywhere(c, w.id) else Repo.receive(c, Repo.openMine, setOf(w.id))
+        moved = w.id
+    }
+
+    /** A wish from All your wishes (on one or more lists). */
+    fun everywhere(c: Context, id: Long) {
+        Repo.receiveEverywhere(c, id)
+        moved = id
+    }
+
+    /** Back on its list (the original's list; copies don't come back). */
+    fun undo(c: Context) {
+        val id = moved ?: return
+        moved = null
+        Repo.unreceive(c, id)
+    }
+
+    fun done() {
+        moved = null
+    }
+}
+
 /** The message with Undo after a wish was marked as owned or not. Placed once, in the main screen, like PrivateHost. */
 @Composable
 fun OwnedHost(snack: SnackbarHostState) {
@@ -59,5 +92,12 @@ fun OwnedHost(snack: SnackbarHostState) {
         )
         timer.cancel()
         if (r == SnackbarResult.ActionPerformed) OwnedFlow.undo(ctx) else if (OwnedFlow.changed === ch) OwnedFlow.done()
+    }
+    val rc = ReceivedFlow.moved
+    LaunchedEffect(rc) {
+        if (rc == null) return@LaunchedEffect
+        snack.currentSnackbarData?.dismiss()
+        val r = snack.showToast(tr("Moved to Received gifts"), actionLabel = tr("Undo"), duration = SnackbarDuration.Short)
+        if (r == SnackbarResult.ActionPerformed) ReceivedFlow.undo(ctx) else ReceivedFlow.done()
     }
 }

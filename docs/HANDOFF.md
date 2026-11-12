@@ -5,25 +5,18 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
-- **START HERE (12 November 2026, night, after 2.197).** Ask how 2.195–2.197 feel on the phone. Then build **2.198**
-  (all decided, `docs/decisions/screens.md`, "review, part 2"); it touches stored wishes, so checks first:
-  1. **Copies stay one wish:** `Repo.replaceMine` (and every edit of an own wish) also updates the same id on every
-     other own list that has it (`copies` in `Data.kt`), all fields but `category` and `bin`. Check in `RepoStoreTest`.
-  2. **"I have it"** replaces "Owned" in the ⋮ sheet (`WishSheet.kt`): ticked → untick at once with Undo; unticked →
-     asks "Keep it on the list (marked owned)" or "Move it to Received gifts" (`Repo.receive`, givers get a
-     thank-you). "What did you get?" (`Reminders.kt`) asks the same once for all ticked wishes.
-  3. **All your wishes / Top wishes** (`Overview.kt` `WishLine`): ⋮ sheet (Edit opens the wish's first list with
-     `Repo.openMine` first; Private / I have it / star via every copy), long press selects (Move to…, Delete).
-     When a wish is on several lists: "This wish is on 2 of your wishlists: A, B. From which one?" (Delete also
-     offers "All lists" = trash the original, its copies follow). The sheet shows "On 2 lists: A, B".
+- **START HERE (12 November 2026, late night, after 2.198).** The review's part 2 is built (2.197, 2.198). Ask how
+  2.195–2.198 feel on the phone, then continue the "logical experience" review (owner: "help me discover those")
+  or what the owner wants next: show all of `docs/TODO.md` when asked. Known limit: Undo of "Moved to Received gifts"
+  brings the wish back to its original list only (its copies on other lists don't come back).
 - **Everything open** (the complete to-do list, owner): `docs/TODO.md`. Owner wants a new feature built first.
 
 ## Last sessions
 
-### 12 November 2026, night: clean-up, notes tidy-up, screens that move (2.192–2.195)
+### 12 November 2026, night: clean-up, notes, motion, the wish review (2.192–2.198)
 Screenshot tests fixed. Clean-up: `LocalGo` (2.192), `Places` and no `*Nav` objects (2.193); a message notifies unless
 that chat is on screen (2.194). Crash review: 3 old crashes on 2.154, none since. Notes tidy-up: slim `CLAUDE.md`,
-`docs/MAP.md`, `docs/TODO.md`, decisions by topic, archives, a stop hook. 2.195: screens move like Signal's (`Motion.kt`).
+`docs/MAP.md`, `docs/TODO.md`, archives, a stop hook. 2.195 screens move (`Motion.kt`); 2.196–2.198 wishes act alike.
 
 ### 12 November 2026, day: Stage 4 finished and Android 16 (2.188–2.191)
 Restoring on a new phone with the recovery key and signing the old one out (2.188); privacy page, delete my profile

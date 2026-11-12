@@ -452,6 +452,8 @@ object Repo {
         val before = myWishes.firstOrNull { it.id == w.id }
         myWishes = myWishes.map { if (it.id == w.id) w else it }
         commit(c)
+        // A wish on several of your lists is one wish (owner, 12 November 2026): its copies change along.
+        if (before != null) syncCopies(c, w, openMine)
         // A changed price (found by a check, or typed in by you) becomes a point in the history.
         val np = w.price
         if (np != null && np != before?.price) History.record(c, w.id, np)
@@ -647,6 +649,51 @@ object Repo {
         e.apply()
         mineVersion++
         if (nd.code != null) Sync.pushStored(c, nd, myBin.filter { ownerOf(it.id) == id })
+    }
+
+    /** Whether wish [id] has copies on your other lists (or is a copy itself). */
+    fun hasCopies(id: Long): Boolean = copies.values.any { id in it }
+
+    /** Your lists that hold wish [id] (the original and its copies), in the order of your lists. */
+    @Synchronized
+    fun listsWith(c: Context, id: Long): List<String> =
+        mineIds.filter { l -> (if (l == openMine) myWishes else MyLists.read(prefs(c), l).wishes).any { it.id == id } }
+
+    /** The list that holds the original of wish [id] (not a copy), or the first one that has it. */
+    @Synchronized
+    fun originalOf(c: Context, id: Long): String? = listsWith(c, id).let { ls -> ls.firstOrNull { copies[it]?.contains(id) != true } ?: ls.firstOrNull() }
+
+    /**
+     * The copies of [w] on your other lists take its changes (owner, 12 November 2026: "every copy, everywhere"), all
+     * but what belongs to each list: its category and its bin state.
+     */
+    private fun syncCopies(c: Context, w: Wish, from: String) {
+        if (!hasCopies(w.id)) return
+        for (l in mineIds) if (l != from) {
+            val has = (if (l == openMine) myWishes else MyLists.read(prefs(c), l).wishes).any { it.id == w.id }
+            if (has) updateMine(c, l) { ws -> ws.map { if (it.id == w.id) w.copy(category = it.category, bin = it.bin, binBy = it.binBy) else it } }
+        }
+    }
+
+    /** Changes wish [id] on every list of yours that has it (All your wishes: Private, I have it, Top wish). */
+    @Synchronized
+    fun changeEverywhere(c: Context, id: Long, change: (Wish) -> Wish) {
+        for (l in listsWith(c, id)) updateMine(c, l) { ws -> ws.map { if (it.id == id) change(it) else it } }
+    }
+
+    /**
+     * "I have it" → Received gifts for a wish on one or more of your lists: the copies leave their lists, the original
+     * goes to Received gifts (one entry), givers get their thank-you as with "What did you get?".
+     */
+    @Synchronized
+    fun receiveEverywhere(c: Context, id: Long) {
+        val orig = originalOf(c, id) ?: return
+        for (l in listsWith(c, id)) if (l != orig) {
+            updateMine(c, l) { ws -> ws.filter { it.id != id } }
+            copies = dropCopy(copies, l, id)
+        }
+        persist(c)
+        receive(c, orig, setOf(id))
     }
 
     private fun dropCopy(m: Map<String, Set<Long>>, list: String, id: Long): Map<String, Set<Long>> {

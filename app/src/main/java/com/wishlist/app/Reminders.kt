@@ -101,12 +101,28 @@ fun ReceivedDialog(listId: String, onClose: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val wishes = remember(listId) { if (listId in Repo.mineIds) Repo.mine(ctx, listId).wishes else emptyList() }
     var picked by remember { mutableStateOf(setOf<Long>()) }
+    // Then the same question as "I have it" (owner, 12 November 2026), once for all ticked wishes.
+    var asking by remember { mutableStateOf(false) }
+    if (asking) {
+        HaveItDialog(
+            picked.size,
+            onKeep = { picked.forEach { id -> Repo.changeEverywhere(ctx, id) { it.copy(got = true) } }; onClose() },
+            onReceived = {
+                val (withCopies, single) = picked.partition { Repo.hasCopies(it) }
+                withCopies.forEach { Repo.receiveEverywhere(ctx, it) }
+                Repo.receive(ctx, listId, single.toSet())
+                onClose()
+            },
+            onClose = onClose
+        )
+        return
+    }
     AlertDialog(
         onDismissRequest = onClose,
         title = { Text(tr("What did you get?")) },
         text = {
             Column(Modifier.heightIn(max = 460.dp).verticalScroll(rememberScrollState())) {
-                Text(tr("Ticked wishes leave your list. Givers get a thank-you."), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                Text(tr("Tick the wishes you have. Next you choose: keep them on the list, or move them to Received gifts."), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
                 if (wishes.isEmpty()) Text(tr("This wishlist has no wishes."), modifier = Modifier.padding(top = 12.dp))
                 wishes.forEach { w ->
                     Row(
@@ -121,10 +137,7 @@ fun ReceivedDialog(listId: String, onClose: () -> Unit) {
             }
         },
         confirmButton = {
-            TextButton(onClick = {
-                Repo.receive(ctx, listId, picked)
-                onClose()
-            }) { Text(tr("Done")) }
+            TextButton(onClick = { if (picked.isEmpty()) onClose() else asking = true }) { Text(tr("Done")) }
         },
         dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
     )

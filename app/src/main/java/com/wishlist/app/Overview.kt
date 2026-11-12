@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -255,10 +256,47 @@ fun OverviewScreen(
     val look = LocalLook.current
     BackHandler { places.homePage = null }
     var unstarring by remember { mutableStateOf<Placed?>(null) }
+    // Like any list (owner, 12 November 2026): a long press selects, the ⋮ opens the wish's sheet.
+    var picked by remember(page) { mutableStateOf(setOf<Long>()) }
+    val selecting = picked.isNotEmpty()
+    BackHandler(enabled = selecting) { picked = emptySet() }
+    var editing by remember { mutableStateOf<Wish?>(null) }
+    var history by remember { mutableStateOf<Wish?>(null) }
+    // "From which list?" for Move to… or Delete, when the wishes are on more than one of your lists.
+    var fromAsk by remember { mutableStateOf<Pair<String, Set<Long>>?>(null) }
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    val all = placedWishes()
+    /** Makes [list] the open one, so the usual actions (and their Undo) work on the wish there. */
+    fun focus(list: String) { Shared.close(); Repo.openMine(ctx, list) }
+    /** Moves or deletes [ids] from [list], or (null, Delete only) from every list they are on. */
+    fun act(action: String, ids: Set<Long>, list: String?) {
+        if (action == "move" && list != null) {
+            focus(list)
+            MoveFlow.ask(ids.filter { id -> Repo.myWishes.any { it.id == id } }.toSet())
+        } else if (action == "delete") {
+            val byList = if (list != null) mapOf(list to ids)
+            else ids.groupBy { Repo.originalOf(ctx, it) ?: Repo.openMine }.mapValues { it.value.toSet() }
+            DeleteFlow.requestFrom(ctx, byList)
+        }
+    }
+    /** Move to… or Delete: asks "From which list?" only when the wishes are on more than one list. */
+    fun start(action: String, ids: Set<Long>) {
+        val lists = all.filter { it.w.id in ids }.flatMap { it.listIds }.distinct()
+        if (lists.size <= 1) act(action, ids, lists.firstOrNull()) else fromAsk = action to ids
+    }
     Scaffold(
         containerColor = cs.background,
         topBar = {
-            TopAppBar(
+            if (selecting) TopAppBar(
+                title = { Text(if (picked.size == 1) tr("1 selected") else tr("%d selected", picked.size), fontWeight = look.titleWeight) },
+                navigationIcon = { IconButton(onClick = { picked = emptySet() }) { Icon(AppIcons.Close, tr("Stop selecting")) } },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
+                actions = {
+                    MoveBusy(Modifier.padding(end = 8.dp))
+                    Button(onClick = { start("move", picked); picked = emptySet() }) { Text(tr("Move to…")) }
+                    IconButton(onClick = { start("delete", picked); picked = emptySet() }) { Icon(AppIcons.Delete, tr("Delete selected")) }
+                }
+            ) else TopAppBar(
                 title = {
                     Text(
                         when (page) { "lists" -> tr("Wishlists"); "top" -> tr("Top wishes"); else -> tr("All your wishes") },
@@ -278,7 +316,6 @@ fun OverviewScreen(
             ) { lists() }
             return@Scaffold
         }
-        val all = placedWishes()
         val shown = if (page == "top") all.filter { it.starred } else all
         Column(Modifier.padding(pad).fillMaxSize()) {
         // All wishes or only the top wishes (owner, 7 November 2026: the Top wishes page is reached this way).
@@ -317,12 +354,29 @@ fun OverviewScreen(
                 }
             }
             items(shown, key = { it.w.id }) { p ->
-                WishLine(
-                    p,
-                    // Opens the list, scrolls to the wish and lets it glow (WishFocus).
-                    onOpen = { WishFocus.target = p.w.id; onOpenMine(p.listIds.first()) },
-                    onUnstar = if (page == "top") ({ unstarring = p }) else null
-                )
+                Selectable(selecting, p.w.id in picked, { picked = if (p.w.id in picked) picked - p.w.id else picked + p.w.id }) {
+                    WishLine(
+                        p,
+                        // Opens the list, scrolls to the wish and lets it glow (WishFocus).
+                        onOpen = { WishFocus.target = p.w.id; onOpenMine(p.listIds.first()) },
+                        onUnstar = if (page == "top") ({ unstarring = p }) else null,
+                        onLongPress = { haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress); picked = setOf(p.w.id) },
+                        // The same sheet as on every list; its actions work on the list that has the original (its
+                        // copies follow, owner: "every copy, everywhere").
+                        actions = WishActions(
+                            onEdit = { focus(Repo.originalOf(ctx, p.w.id) ?: p.listIds.first()); editing = Repo.myWishes.firstOrNull { it.id == p.w.id } },
+                            onMove = { start("move", setOf(p.w.id)) },
+                            own = true,
+                            onHistory = if (p.w.url.isBlank()) null else ({ history = p.w }),
+                            everywhere = Everywhere(
+                                p.listIds,
+                                setPrivate = { on -> focus(Repo.originalOf(ctx, p.w.id) ?: p.listIds.first()); Repo.myWishes.firstOrNull { it.id == p.w.id }?.let { PrivateFlow.set(ctx, it, on) } },
+                                setOwned = { on -> focus(Repo.originalOf(ctx, p.w.id) ?: p.listIds.first()); Repo.myWishes.firstOrNull { it.id == p.w.id }?.takeIf { it.got != on }?.let { OwnedFlow.toggle(ctx, it) } },
+                                received = { ReceivedFlow.everywhere(ctx, p.w.id) }
+                            )
+                        )
+                    )
+                }
             }
         }
         }
@@ -342,17 +396,58 @@ fun OverviewScreen(
             unstarring = null
         }
     }
+    editing?.let { w -> androidx.compose.runtime.key(w.id) { WishDialog(w, "") { editing = null } } }
+    history?.let { w -> PriceHistoryDialog(w) { history = null } }
+    fromAsk?.let { (action, ids) -> FromWhichListDialog(action, ids, all, onPick = { l -> fromAsk = null; act(action, ids, l) }) { fromAsk = null } }
 }
 
-/** One wish: a small picture, its name with "Added to …" under it, the price, and (top wishes) the star. */
+/**
+ * "From which list?" (owner, 12 November 2026): the wishes are on more than one of your lists, and it says so, so
+ * the question makes sense. Delete also offers "All lists" (the originals go, their copies follow).
+ */
 @Composable
-private fun WishLine(p: Placed, onOpen: () -> Unit, onUnstar: (() -> Unit)?) {
+private fun FromWhichListDialog(action: String, ids: Set<Long>, all: List<Placed>, onPick: (String?) -> Unit, onClose: () -> Unit) {
+    val ctx = LocalContext.current
+    val cs = MaterialTheme.colorScheme
+    val chosen = all.filter { it.w.id in ids }
+    val lists = chosen.flatMap { it.listIds }.distinct()
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text(if (action == "move") tr("Move from which list?") else tr("Delete from which list?")) },
+        text = {
+            Column {
+                Text(
+                    if (chosen.size == 1) tr("This wish is on %1\$d of your wishlists: %2\$s.", lists.size, lists.joinToString(", ") { Repo.mineName(it) })
+                    else tr("These wishes are on %d of your wishlists.", lists.size),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                lists.forEach { l ->
+                    SheetRow({ Icon(AppIcons.Gift, null, tint = cs.onSurfaceVariant) }, Repo.mineName(l), { onPick(l) })
+                }
+                if (action == "delete") SheetRow({ Icon(AppIcons.Delete, null, tint = cs.error) }, tr("All lists"), { onPick(null) })
+            }
+        },
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
+    )
+}
+
+/**
+ * One wish: a small picture, its name with "Added to …" under it, the price, (top wishes) the star and the ⋮ with the
+ * wish's sheet. A tap opens its list; a long press starts selecting (owner, 12 November 2026).
+ */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@Composable
+private fun WishLine(p: Placed, onOpen: () -> Unit, onUnstar: (() -> Unit)?, onLongPress: () -> Unit, actions: WishActions) {
     val look = LocalLook.current
     val w = p.w
     val id = w.id
+    var sheet by remember { mutableStateOf(false) }
+    if (sheet) WishSheet(w, actions) { sheet = false }
     Row(
-        Modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true)).clickable(onClick = onOpen)
-            .padding(start = 10.dp, top = 10.dp, bottom = 10.dp, end = if (onUnstar != null) 4.dp else 14.dp),
+        Modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true))
+            .combinedClickable(onClick = onOpen, onLongClick = onLongPress)
+            .padding(start = 10.dp, top = 10.dp, bottom = 10.dp, end = 0.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
@@ -375,5 +470,6 @@ private fun WishLine(p: Placed, onOpen: () -> Unit, onUnstar: (() -> Unit)?) {
         if (onUnstar != null) {
             StarToggle(true, onUnstar, Modifier.padding(horizontal = 8.dp))
         }
+        IconButton(onClick = { sheet = true }) { Icon(AppIcons.MoreVert, tr("More"), tint = look.cardMuted(id)) }
     }
 }
