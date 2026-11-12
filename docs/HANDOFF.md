@@ -190,6 +190,16 @@ A simple wishlist app in Material Design with the Google Sans font: save product
 - 6 November (night): Friends review; **2.139**. Not checked: the friend link on a phone (Chrome on Android should open wishlist://friend from the page; some browsers ask first).
 
 ## Next session
+- **START HERE (12 November 2026, evening, after 2.190 and 2.191).** The tidy-up is done except the crash review:
+  ask the owner for a screenshot of Firebase > Crashlytics. Ask whether they ran
+  [supabase-limits.sql](https://github.com/AndroidEnthusiast/Wishlist/blob/main/supabase-limits.sql) again and
+  deployed the new `fetch-page` (check read-only: `wl_fetch_ok` exists). Ask how 2.191 feels on the phone (Android 16
+  target: back gesture, screen edges, pull to refresh, the keyboard). **Next, the owner's choice: the code clean-up**
+  (screens own their state instead of shared global objects; ROADMAP Stage 1 "half done"). Start by fixing the
+  screenshot tests (`-Pwl.screens`): all 14 say "Compose did not get idle" on 2.190 and 2.191 alike, so something on
+  Home never stops moving in the test (look for an endless animation, e.g. a shimmer, or a LaunchedEffect loop), then
+  use them before and after every screen that is cleaned up. After that: the app's final name, then the copy project.
+  R7 and R8: later (owner).
 - **START HERE (12 November 2026, after 2.188 and 2.189: Stage 4 B, C and D built).** Ask first whether the owner
   ran, in this order: supabase-vault.sql, supabase-friends.sql, supabase-chat.sql, supabase-privacy.sql (check
   read-only: `wl_signed_out` answers `false` for `{"p_tokens":[]}`; `wl_blocked_list` with a wrong token says "not
