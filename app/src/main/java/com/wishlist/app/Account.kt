@@ -61,28 +61,15 @@ fun AccountSheet(
                 )
             }
             HorizontalDivider(Modifier.padding(vertical = 8.dp), color = cs.outlineVariant)
-            SheetRow(AppIcons.Person, tr("Profile"), onProfile)
-            SheetRow(AppIcons.Bag, tr("Gifts I reserved"), onReserved)
-            SheetRow(AppIcons.Gift, tr("Received gifts"), onReceived)
-            SheetRow(AppIcons.Delete, tr("Bin"), onBin)
-            SheetRow(AppIcons.Settings, tr("App settings"), onSettings)
+            SheetRow({ Icon(AppIcons.Person, null, tint = cs.onSurfaceVariant) }, tr("Profile"), onProfile)
+            SheetRow({ Icon(AppIcons.Bag, null, tint = cs.onSurfaceVariant) }, tr("Gifts I reserved"), onReserved)
+            SheetRow({ Icon(AppIcons.Gift, null, tint = cs.onSurfaceVariant) }, tr("Received gifts"), onReceived)
+            SheetRow({ Icon(AppIcons.Delete, null, tint = cs.onSurfaceVariant) }, tr("Bin"), onBin)
+            SheetRow({ Icon(AppIcons.Settings, null, tint = cs.onSurfaceVariant) }, tr("App settings"), onSettings)
             if (version.isNotEmpty()) Text(
                 tr("Version %s", version), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant,
                 modifier = Modifier.padding(start = 24.dp, top = 12.dp)
             )
         }
-    }
-}
-
-@Composable
-private fun SheetRow(icon: ImageVector, label: String, onClick: () -> Unit) {
-    val cs = MaterialTheme.colorScheme
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = 12.dp).heightIn(min = 52.dp).clip(RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick).padding(horizontal = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(icon, null, tint = cs.onSurfaceVariant)
-        Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 16.dp))
     }
 }

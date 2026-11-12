@@ -7,6 +7,8 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.isSelected
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onFirst
@@ -277,3 +279,32 @@ class ListNavigationTest : NavigationBase() {
         tabOn("Home")
     }
 }
+
+/** A long press on a wish starts selecting; ⋮ opens the wish's sheet (owner, 12 November 2026). */
+class WishPressTest : NavigationBase() {
+    @Test fun longPressSelectsAndMoreOpensTheSheet() {
+        val app = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()
+        compose.runOnUiThread {
+            Repo.addMine(app, Wish(1, "https://example.com/a", "Ceramic teapot", "", "", 20.0, null, "EUR", "Home"))
+            Repo.addMine(app, Wish(2, "https://example.com/b", "Rain jacket", "", "", 80.0, null, "EUR", "Home"))
+        }
+        send(open(MainActivity.OPEN_NOTE, "m:" + Repo.mineIds.first()))
+        compose.waitForIdle()
+        compose.onAllNodes(hasText("Ceramic teapot", substring = true)).onFirst()
+            .performTouchInput { longClick() }
+        shows("1 selected")
+        compose.onAllNodes(hasText("Move to…") and hasClickAction()).onFirst().assertExists()
+        // A tap ticks another one.
+        compose.onAllNodes(hasText("Rain jacket", substring = true)).onFirst().performClick()
+        shows("2 selected")
+        // Back stops selecting.
+        phoneBack()
+        compose.waitForIdle()
+        compose.onAllNodes(hasText("2 selected")).assertCountEquals(0)
+        // ⋮ opens the sheet: the wish's name at the top, then its actions.
+        compose.onAllNodes(hasContentDescription("More") and hasClickAction()).onFirst().performClick()
+        compose.waitForIdle()
+        for (t in listOf("Edit", "Share", "Move to…", "Private", "Owned", "Price history")) shows(t)
+    }
+}
+

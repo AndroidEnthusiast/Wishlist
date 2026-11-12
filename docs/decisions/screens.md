@@ -128,3 +128,17 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here. Look and f
 - **No side menu** (owner, 7 November 2026; 2.150, the owner is trying it out): the profile picture at the top right opens a **sheet from the bottom** with Profile, **Gifts I reserved**, **Received gifts**, Bin and App settings (Claude pushed back on dropping Gifts I reserved; the owner agreed to keep both in the sheet). **Gift exchanges on Home** under the Santa card, all year (your exchanges + "New gift exchange"). The drawer code is only switched off, so it can come back quickly.
 - **Profile card on Home** (owner, 7 November 2026; 2.151): photo, name and the three numbers sit in one soft card in the style's look, set apart from the lists; the numbers lose their own tiles inside it (no cards in a card) and get thin dividers.
 - **Prices of other products never count** (owner, 8 November 2026, after Zalando's sponsored tile gave a wish its price): sponsored, related and "you might also like" blocks and links to other pages are skipped, for every shop, app and browser editor alike. The correction of wrong prices is **quiet** (owner's choice). Not changed: which price a page's size list gives (owner: no evidence that it was the cause).
+
+## One way to act on wishes (owner, 12 November 2026, built in 2.196)
+- **Replaces the earlier per-view notes** (the long-press menus of 2.105/2.111, "Two per row ⋮", "Large cards: Share
+  instead of the pencil", 4 November 2026; collab wishlists keeping their long-press menu, 7 November 2026). Owner:
+  "I don't want long pressing on a wish to differ between lists"; asked with pop-up questions:
+  - **Long press on a wish starts selecting**, on every list you can change (your own and collab wishlists), in all
+    three views. Selected: **Move to…** (a filled button: the text button was hard to read in dark mode) and Delete.
+  - **The ⋮ on a wish opens a sheet from the bottom** (not a drop-down), the same everywhere: the wish's photo, name
+    and price at the top, then big rows with icons. Order: **Reserve first** on collab wishlists and friends' lists;
+    then Edit, Share, Move to…; on your own lists Private, Owned and Price history. The bin stays on the card.
+  - A page per wish was considered and not chosen (it would change what a tap does).
+  - **Long press on things that aren't wishes** (lists on Home, friends, group members): left as it is for now
+    (owner); listed in `docs/TODO.md` (group members' Remove is only behind a long press, groups and exchanges on
+    Home have no ⋮).

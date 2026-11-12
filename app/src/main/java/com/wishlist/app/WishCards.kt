@@ -102,6 +102,8 @@ fun CompactCard(
     readOnly: Boolean = false,
     // "Move to…" in the ⋮ menu (your own lists, owner 7 November 2026).
     onMove: (() -> Unit)? = null,
+    // "Price history" in the ⋮ sheet (your own lists).
+    onHistory: (() -> Unit)? = null,
     onEdit: () -> Unit
 ) {
     val ctx = LocalContext.current
@@ -208,27 +210,15 @@ fun CompactCard(
                 IconButton(onClick = { if (!inert) menu = true }) {
                     Icon(AppIcons.MoreVert, tr("More"), tint = muted)
                 }
-                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                    // ⋮ (owner, 2.113): Share, Edit, Private (with a tick), Mark as owned, Move to…; on a collab wishlist
-                    // Reserve takes the place of Private/owned. No Top wish here: the star on the picture does that.
-                    // Delete is the bin under the ⋮ (owner, 7 November 2026).
-                    DropdownMenuItem(text = { Text(tr("Share")) }, onClick = { menu = false; shareItem(ctx, w, idea = readOnly || reserve != null) })
-                    if (!readOnly) DropdownMenuItem(text = { Text(tr("Edit")) }, onClick = { menu = false; onEdit() })
-                    if (reserve == null && !readOnly) PrivateMenuItem(w.priv) { menu = false; togglePrivate(ctx, w) }
-                    if (reserve != null) {
-                        when (reserve.state) {
-                            true -> DropdownMenuItem(text = { Text(tr("Unreserve")) }, onClick = { menu = false; reserve.set(false) })
-                            null -> DropdownMenuItem(text = { Text(tr("Reserve")) }, onClick = { menu = false; reserve.set(true) })
-                            else -> {}
-                        }
-                    } else if (!readOnly) {
-                        DropdownMenuItem(
-                            text = { Text(if (w.got) tr("Mark as not owned") else tr("Mark as owned")) },
-                            onClick = { menu = false; OwnedFlow.toggle(ctx, w) }
-                        )
-                    }
-                    if (onMove != null) DropdownMenuItem(text = { Text(tr("Move to…")) }, onClick = { menu = false; onMove() })
-                }
+                // ⋮ opens the wish's sheet (WishSheet.kt, owner 12 November 2026): the same everywhere. Delete is the bin
+                // under the ⋮ (owner, 7 November 2026); Top wish is the star on the picture.
+                if (menu) WishSheet(
+                    w, WishActions(
+                        reserve = reserve, onEdit = if (readOnly) null else onEdit, onMove = onMove,
+                        own = reserve == null && !readOnly, onHistory = onHistory,
+                        shareAsIdea = readOnly || reserve != null
+                    )
+                ) { menu = false }
             }
             if (!readOnly) IconButton(onClick = { if (!inert) DeleteFlow.request(ctx, w) }) {
                 Icon(AppIcons.Delete, tr("Delete"), tint = muted)

@@ -297,10 +297,12 @@ fun FriendScreen(
                                 val label = if (w.got) tr("Owned") else reserveLabel(f.code, w, r)
                                     ?: if (overBudget?.invoke(w) == true) tr("Over budget") else null
                                 val actions: @Composable RowScope.() -> Unit = {
-                                    // Share this gift idea: its shop link (owner, 7 November 2026).
-                                    IconButton(onClick = { shareItem(ctx, w, idea = true) }) {
-                                        Icon(AppIcons.Share, tr("Share"), tint = LocalLook.current.cardMuted(w.id))
-                                    }
+                                    // The wish's ⋮ sheet, as on every list (WishSheet.kt, 12 November 2026): Reserve and
+                                    // Share this gift idea (its shop link, owner 7 November 2026).
+                                    WishMoreButton(
+                                        w, LocalLook.current.cardMuted(w.id), 24.dp,
+                                        WishActions(reserve = if (w.got) null else Reserving(r, label) { on -> toggle(w, on) }, shareAsIdea = true)
+                                    )
                                     if (!w.got) {
                                         // "Unreserve" says exactly what it does (owner: "Undo" could be forgotten).
                                         if (r == null) {

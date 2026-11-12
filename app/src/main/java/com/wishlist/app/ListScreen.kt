@@ -107,21 +107,17 @@ fun HomeScreen(
     var query by remember { mutableStateOf("") }
     BackHandler(enabled = searching) { searching = false; query = "" }
     var editing by remember { mutableStateOf<Wish?>(null) }
-    var menuId by remember { mutableStateOf<Long?>(null) }
     var historyId by remember { mutableStateOf<Long?>(null) }
     val haptic = LocalHapticFeedback.current
-    val openMenu: (Wish) -> Unit = { w ->
-        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-        menuId = w.id
-    }
-    // Selecting several wishes (owner, 7 November 2026): a long press on your own list ticks that wish; then taps tick
-    // more, and the top bar offers Move to… and Delete. Back or ✕ stops. Collab wishlists keep their long-press menu.
+    // Selecting several wishes (owner, 7 November 2026; on every list you can change since 12 November 2026): a long
+    // press ticks that wish, in every view; then taps tick more, and the top bar offers Move to… and Delete. Back or ✕
+    // stops. (Collab wishlists had a long-press menu until then; its Edit and Move to… are in the ⋮ sheet now.)
     var picked by remember(Repo.openMine, Shared.active) { mutableStateOf(setOf<Long>()) }
     val startSelect: (Wish) -> Unit = { w ->
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         picked = setOf(w.id)
     }
-    val selecting = picked.isNotEmpty() && Shared.active == null
+    val selecting = picked.isNotEmpty()
     BackHandler(enabled = selecting) { picked = emptySet() }
     fun toggle(w: Wish) { picked = if (w.id in picked) picked - w.id else picked + w.id }
     // A collab wishlist updates live while it is open (ROADMAP S3.2, Live.kt): someone else's change shows within a
@@ -216,7 +212,8 @@ fun HomeScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
                 actions = {
                     MoveBusy(Modifier.padding(end = 8.dp))
-                    TextButton(onClick = { MoveFlow.ask(picked); picked = emptySet() }) { Text(tr("Move to…")) }
+                    // A filled button (owner: the text button's accent colour was hard to read in dark mode).
+                    Button(onClick = { MoveFlow.ask(picked); picked = emptySet() }) { Text(tr("Move to…")) }
                     IconButton(onClick = {
                         val ws = Repo.wishes.filter { it.id in picked }
                         picked = emptySet()
@@ -387,12 +384,13 @@ fun HomeScreen(
                         Selectable(selecting, w.id in picked, { toggle(w) }) {
                         when (view) {
                             "grid" -> CompactCard(
-                                // Two per row: the ⋮ holds everything; a long press on your own list starts selecting.
-                                w, onLongPress = if (inShared) null else ({ startSelect(w) }),
+                                // Two per row: the ⋮ holds everything; a long press starts selecting (every list).
+                                w, onLongPress = { startSelect(w) },
                                 onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
                                 reserve = if (inShared) Reserving(r, reserveLabel(Shared.active.orEmpty(), w, r)) { on -> Shared.reserve(w, on) } else null,
                                 onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) }),
-                                onMove = { MoveFlow.ask(setOf(w.id)) }
+                                onMove = { MoveFlow.ask(setOf(w.id)) },
+                                onHistory = if (inShared || w.url.isBlank()) null else ({ historyId = w.id })
                             ) { editing = w }
                             // The buttons of Rows and Large cards: Share, the eye (or Reserve on a gift list), Delete.
                             else -> {
@@ -400,11 +398,18 @@ fun HomeScreen(
                             // smaller than before); the tap area stays the same.
                             val ico = if (view == "rows") 20.dp else 24.dp
                             val actions: @Composable RowScope.() -> Unit = {
-                                // The bin stays, the rest is in one ⋮ (owner, 2.135: calmer rows).
-                                if (!inShared) WishMoreButton(w, look.cardMuted(w.id), ico) { editing = w }
-                                else IconButton(onClick = { shareItem(ctx, w) }) {
-                                    Icon(AppIcons.Share, tr("Share"), tint = look.cardMuted(w.id), modifier = Modifier.size(ico))
-                                }
+                                // The bin stays, the rest is in one ⋮ (owner, 2.135: calmer rows), the same sheet as Two
+                                // per row on every list (12 November 2026; a collab wishlist had only Share here).
+                                WishMoreButton(
+                                    w, look.cardMuted(w.id), ico,
+                                    if (inShared) WishActions(
+                                        reserve = Reserving(r, reserveLabel(Shared.active.orEmpty(), w, r)) { on -> Shared.reserve(w, on) },
+                                        onEdit = { editing = w }, onMove = { MoveFlow.ask(setOf(w.id)) }, shareAsIdea = true
+                                    ) else WishActions(
+                                        onEdit = { editing = w }, onMove = { MoveFlow.ask(setOf(w.id)) }, own = true,
+                                        onHistory = if (w.url.isBlank()) null else ({ historyId = w.id })
+                                    )
+                                )
                                 if (inShared) {
                                     // Reserving takes the place of "got it" on a shared list.
                                     if (r == true) {
@@ -421,7 +426,7 @@ fun HomeScreen(
                                 w,
                                 badge = if (inShared) reserveLabel(Shared.active.orEmpty(), w, r) else if (w.got) tr("Owned") else null,
                                 dim = if (inShared) r == false else w.got,
-                                onLongPress = { if (inShared) openMenu(w) else startSelect(w) },
+                                onLongPress = { startSelect(w) },
                                 onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
                                 onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) }),
                                 actions = actions
@@ -429,7 +434,7 @@ fun HomeScreen(
                                 w,
                                 badge = if (inShared) reserveLabel(Shared.active.orEmpty(), w, r) else if (w.got) tr("Owned") else null,
                                 dim = if (inShared) r == false else w.got,
-                                onLongPress = { if (inShared) openMenu(w) else startSelect(w) },
+                                onLongPress = { startSelect(w) },
                                 onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
                                 onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) }),
                                 actions = actions
@@ -456,20 +461,6 @@ fun HomeScreen(
     }
 
     editing?.let { w -> key(w.id) { WishDialog(w, "") { editing = null } } }
-    menuId?.let { id -> source.firstOrNull { it.id == id } }?.let { w ->
-        ItemMenuDialog(
-            w,
-            onEdit = { menuId = null; editing = w },
-            // Only collab wishlists still have this long-press menu (Edit); on your own lists a long press selects
-            // (owner, 7 November 2026). Share and Private are on the card, Price history is on Price watch.
-            onHistory = null,
-            onShare = null,
-            onOwned = if (inShared) null else ({ menuId = null; OwnedFlow.toggle(ctx, w) }),
-            // To one of your own lists or another collab wishlist (owner, 11 November 2026; MoveAcross.kt).
-            onMove = if (inShared) ({ menuId = null; MoveFlow.ask(setOf(w.id)) }) else null,
-            onClose = { menuId = null }
-        )
-    }
     historyId?.let { id -> Repo.wishes.firstOrNull { it.id == id } }?.let { w ->
         PriceHistoryDialog(w) { historyId = null }
     }
@@ -492,25 +483,15 @@ fun ViewButton(kind: String, label: String, selected: Boolean, onClick: () -> Un
     }
 }
 
-/** ⋮ on a wish of your own list (owner, 2.135): Edit, Share, Private (with its tick), Mark as owned. The bin stays next to it. */
+/**
+ * ⋮ on a wish in Rows and Large cards (owner, 2.135; a sheet since 12 November 2026, WishSheet.kt): the same sheet as
+ * in Two per row. The bin stays next to it.
+ */
 @Composable
-fun WishMoreButton(w: Wish, tint: Color, ico: androidx.compose.ui.unit.Dp, onEdit: () -> Unit) {
-    val ctx = LocalContext.current
+fun WishMoreButton(w: Wish, tint: Color, ico: androidx.compose.ui.unit.Dp, actions: WishActions) {
     var menu by remember { mutableStateOf(false) }
-    Box {
-        IconButton(onClick = { menu = true }) { Icon(AppIcons.MoreVert, tr("More"), tint = tint, modifier = Modifier.size(ico)) }
-        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-            DropdownMenuItem(text = { Text(tr("Edit")) }, onClick = { menu = false; onEdit() })
-            DropdownMenuItem(text = { Text(tr("Share")) }, onClick = { menu = false; shareItem(ctx, w) })
-            PrivateMenuItem(w.priv) { menu = false; togglePrivate(ctx, w) }
-            DropdownMenuItem(
-                text = { Text(if (w.got) tr("Mark as not owned") else tr("Mark as owned")) },
-                onClick = { menu = false; OwnedFlow.toggle(ctx, w) }
-            )
-            // Owner, 7 November 2026: to another of your wishlists.
-            DropdownMenuItem(text = { Text(tr("Move to…")) }, onClick = { menu = false; MoveFlow.ask(setOf(w.id)) })
-        }
-    }
+    IconButton(onClick = { menu = true }) { Icon(AppIcons.MoreVert, tr("More"), tint = tint, modifier = Modifier.size(ico)) }
+    if (menu) WishSheet(w, actions) { menu = false }
 }
 
 /** The view in use as one icon; tapping it opens the three views with their names (owner, 2.130). */

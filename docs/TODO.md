@@ -7,8 +7,11 @@ it**, grouped as below, with a recommendation. Add every new open item here the 
 Details of each item are in the doc named after it.
 
 ## Now
-- **Try 2.195 on the phone:** screens now move like Signal's (opening a list, a chat, a friend's page, Profile;
-  switching tabs; Back). Too fast, too slow, anything that jumps or flickers? Also with the keyboard open.
+- **Try 2.195 and 2.196 on the phone:** screens move like Signal's (opening a list, a chat, a friend's page, Profile;
+  tabs; Back; with the keyboard open). Wishes: a long press selects on every list (also collab), the ⋮ opens the new
+  sheet. Anything odd, too fast or slow, hard to read?
+- **Continue the "logical experience" review** (owner, 12 November 2026: "help me discover those"): more places where
+  similar things behave differently. Ask the owner which area next.
 
 ## Waiting on the owner (things only the owner can do)
 - **Crashlytics:** check that version 2.194 shows up (it said "Latest release 2.182" on 12 November); if not, crash
@@ -20,6 +23,10 @@ Details of each item are in the doc named after it.
 - **R8, account safety:** two-step sign-in for GitHub, Supabase and Google. `docs/ROADMAP.md`, Stage R.
 - **S2.5:** confirm both phones run a new version, then the old storage code can be removed. `docs/ROADMAP.md`.
 - **R4, real shop pages:** whenever a price reads wrong, tap "Price is wrong?" and send the file (ongoing).
+
+## Later (owner said "leave it for now")
+- **Long press on things that aren't wishes:** lists on Home and friends open a menu (same as their ⋮), a group
+  member's Remove is only behind a long press (no ⋮), groups and exchanges on Home have no ⋮ at all.
 
 ## Clean-up (owner: later, after the feature)
 - **Split the very large files** (gift exchange 1,400 lines, Friends 1,270, groups 1,070, chat 1,020): no change

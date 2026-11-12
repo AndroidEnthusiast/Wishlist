@@ -14,6 +14,7 @@ import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.longClick
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.Configuration
 import androidx.work.testing.WorkManagerTestInitHelper
@@ -125,6 +126,19 @@ abstract class ScreenshotBase(private val mode: String) {
     }
     // "My shops" took the place of Price watch on the bar (7 November 2026).
     @Test fun shops() { tap("My shops"); shot("shops") }
+    // The wish's ⋮ sheet and selecting several wishes (owner, 12 November 2026).
+    @Test fun wishSheet() {
+        tapAbove("My wishlist", 150f); compose.mainClock.advanceTimeBy(1000)
+        compose.onAllNodes(hasContentDescription("More") and hasClickAction()).onFirst().performClick()
+        shot("sheet")
+    }
+    @Test fun selecting() {
+        tapAbove("My wishlist", 150f); compose.mainClock.advanceTimeBy(1000)
+        compose.onAllNodes(hasText("Ceramic teapot", substring = true)).onFirst().performTouchInput { longClick() }
+        compose.mainClock.advanceTimeBy(500)
+        compose.onAllNodes(hasText("Rain jacket", substring = true)).onFirst().performClick()
+        shot("selecting")
+    }
     @Test fun friends() { tap("Friends"); shot("friends") }
     @Test fun messages() { tap("Messages"); shot("messages") }
 }

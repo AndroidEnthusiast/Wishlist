@@ -42,6 +42,11 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
 - The small chips on a card (size label, reactions, "+ react") are all 28 dp tall (`CHIP_HEIGHT`) and sit on one row,
   vertically centred, 8 dp apart.
 
+## Wishes: tap, ⋮ and long press (owner, 12 November 2026)
+- On every wish card, on every list: a tap shows the photo or opens the shop; the ⋮ opens the wish's sheet
+  (`WishSheet.kt`, same rows in the same order, only what applies); a long press starts selecting wherever you may
+  change wishes. Never put an action only behind a long press.
+
 ## Dialogs
 - Title, then `bodyMedium` text, then the content, then the actions at the bottom right. A long dialog scrolls in its
   text slot. Taps outside close it unless something would be lost (then `dismissOnClickOutside = false`).
