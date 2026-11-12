@@ -13,7 +13,21 @@ order, one stage at a time**; tick off steps here (`[x]`) in the same commit tha
   can't hurt others, and new features can be added without breaking old ones.
 - **Every future session:** the code is easy to understand and checked automatically, so changes stop causing surprises.
 
-## Honest state on 8 November 2026 (version 2.152)
+## Honest state on 12 November 2026 (version 2.190)
+Stages 0–4 and Stage R are done, except what waits on the owner or on time (R4 real shop pages as they come, R7 the
+two-phone test and R8 account safety: "later", S2.5 removing the old storage code once the partner's phone updated).
+- **Solid now:** a real database on the phone (Room, migrations checked); small saves and live updates; every screen a
+  route; the app’s own checks (179) and the web and database checks (about 1,300) run on every push before anything is
+  published; crash reports; weekly backups that are test-restored; limits against abuse; clean-up after 12 months; a
+  recovery key that brings everything back on a new phone and signs the old one out; a privacy page; delete my data;
+  block and report; old apps are told to update.
+- **Still "made to work":** screens keep much of their state in shared global objects instead of owning it (the slim
+  route was chosen: fixed screen by screen when a screen changes anyway); the web pages ask for news every 20 s instead
+  of being told; Android target and libraries are from mid-2024 (needed for Google Play: P19, its own session); no
+  automatic test on a real or pretend phone (P23); wish ids are times and prices decimals (P24, before money features).
+- **Owner's next projects:** the app's final name, then all texts rewritten (the copy project), then Google Play.
+
+## Honest state on 8 November 2026 (version 2.152, kept for history)
 
 ### What is solid (keep it)
 - **Server security:** 173 Supabase functions, every table locked (row level security, no open policies), every
