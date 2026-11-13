@@ -16,7 +16,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.graphics.graphicsLayer
@@ -55,12 +54,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -213,7 +210,7 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
     ) { pad ->
         val list = Chat.conversations
         val friends = Friends.state?.friends.orEmpty()
-        Column(Modifier.padding(pad).fillMaxSize().lookBackdrop(look)) {
+        Column(Modifier.padding(pad).fillMaxSize()) {
             Row(
                 Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -257,7 +254,7 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
                                     f.name.ifBlank { tr("Someone") }, style = MaterialTheme.typography.titleMedium, color = look.cardInk(id),
                                     maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).padding(start = 12.dp)
                                 )
-                                ChatIcon(look.accent, 22.dp)
+                                ChatIcon(look.textAccent, 22.dp)
                             }
                         }
                     }
@@ -306,7 +303,7 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
 @Composable
 private fun Empty(text: String, extra: @Composable () -> Unit = {}) {
     Column(Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        ChatIcon(LocalLook.current.accent, 56.dp)
+        ChatIcon(LocalLook.current.textAccent, 56.dp)
         Text(
             text, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 16.dp)
@@ -342,7 +339,7 @@ private fun ConversationRow(cv: Conversation, onOpen: () -> Unit) {
             cv.last?.let {
                 Text(
                     shortTime(it.at), style = MaterialTheme.typography.labelSmall,
-                    color = if (unread) look.accent else look.cardMuted(id)
+                    color = if (unread) look.textAccent else look.cardMuted(id)
                 )
             }
             if (unread) Box(
@@ -557,7 +554,7 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
     ) { pad ->
         if (reporting) ReportDialog(peer, name, snack) { reporting = false }
         if (blocking) BlockDialog(peer, name, snack, onDone = { blocking = false; places.chat = null }, onClose = { blocking = false })
-        Column(Modifier.padding(pad).fillMaxSize().lookBackdrop(look).imePadding()) {
+        Column(Modifier.padding(pad).fillMaxSize().imePadding()) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 if (loading && msgs.isEmpty()) CircularProgressIndicator(Modifier.align(Alignment.Center))
                 else if (msgs.isEmpty()) Text(
@@ -581,14 +578,14 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
             // "Replying to Sam" with the quoted words and ✕, above the text box (owner, 2.128).
             replying?.let { r ->
                 Row(
-                    Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 6.dp).background(cs.surfaceVariant, RoundedCornerShape(12.dp))
+                    Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 6.dp).lookSurface(look, MaterialTheme.shapes.small, cs.surfaceVariant, raised = false)
                         .padding(start = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(Modifier.weight(1f).padding(vertical = 6.dp)) {
                         Text(
                             if (r.mine) tr("Replying to yourself") else tr("Replying to %s", name),
-                            style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = look.accent
+                            style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = look.textAccent
                         )
                         Text(Chat.preview(r.content), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
@@ -705,8 +702,10 @@ private fun ChatRow(
     val newDay = prev == null || dayLabel(prev.at) != dayLabel(m.at)
     if (newDay) DayChip(dayLabel(m.at))
     // A small "tail": the corner nearest the sender is sharp on the first bubble of a group.
-    val r = if (LocalLook.current.design == "neo" || LocalLook.current.design == "cyber") 10.dp else 16.dp
-    val shape = if (m.mine) RoundedCornerShape(r, if (first) 2.dp else r, r, r) else RoundedCornerShape(if (first) 2.dp else r, r, r, r)
+    // Each style's own corners: square Bauhaus, small Retro and Flat, round Y2K and Pop futurism.
+    val r = when (LocalLook.current.design) { "bauhaus" -> 0.dp; "retro", "flat", "grunge" -> 10.dp; "y2k", "pop" -> 20.dp; else -> 16.dp }
+    val tail = if (r == 0.dp) 0.dp else 2.dp
+    val shape = if (m.mine) RoundedCornerShape(r, if (first) tail else r, r, r) else RoundedCornerShape(if (first) tail else r, r, r, r)
     // Swipe a message to the right to reply to it (owner, 2.128); it springs back.
     val density = androidx.compose.ui.platform.LocalDensity.current
     val limit = with(density) { 72.dp.toPx() }
@@ -775,7 +774,7 @@ private fun Bubble(
     Row(modifier.fillMaxWidth(), horizontalArrangement = if (m.mine) Arrangement.End else Arrangement.Start) {
         if (m.mine) Spacer(Modifier.widthIn(min = 48.dp))
         Column(
-            Modifier.widthIn(max = 300.dp).lookSurface(look, shape, fill, raised = look.design != "neu" || m.mine, depth = 3.dp)
+            Modifier.widthIn(max = 300.dp).lookSurface(look, shape, fill, depth = 3.dp, brush = if (m.mine) look.accentBrush else null)
                 .combinedClickable(
                     onClick = {
                         if (m.content.kind == "wish" && m.content.url.isNotBlank()) try { uri.openUri(m.content.url) } catch (e: Exception) {}
@@ -914,7 +913,7 @@ private fun InputBar(
                 focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent
             ),
-            modifier = Modifier.weight(1f).lookSurface(look, if (look.design == "cyber") look.chipShape else shape, cs.surfaceVariant, raised = false)
+            modifier = Modifier.weight(1f).lookSurface(look, shape, cs.surfaceVariant, raised = false)
         )
         Box(
             Modifier.padding(start = 8.dp, bottom = 4.dp).size(48.dp).lookSurface(look, look.fabShape, if (text.isBlank() || sending) cs.outline else look.accent)

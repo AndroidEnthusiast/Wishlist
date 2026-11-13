@@ -38,7 +38,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -82,7 +81,7 @@ fun AddWishButton(onClick: () -> Unit) {
     } else {
         ExtendedFloatingActionButton(
             text = text, icon = icon, onClick = onClick,
-            modifier = Modifier.lookSurface(look, shape, look.accent, depth = 8.dp),
+            modifier = Modifier.lookSurface(look, shape, look.accent, depth = 8.dp, brush = look.accentBrush),
             shape = shape, containerColor = Color.Transparent, contentColor = look.onAccent, elevation = flat
         )
     }
@@ -90,8 +89,8 @@ fun AddWishButton(onClick: () -> Unit) {
 
 /**
  * The Themer (App settings > Theme): a big sample wishlist in the look being tried, and under it the choices: the
- * style (Quiet and the four styles, side by side with a small sample each), Light or Dark, and the accent colour
- * (2.97). Nothing changes in the app until "Apply" (top right, shown once the choice differs from the look in use).
+ * style (Quiet and the seven styles, side by side with a small sample each), Light or Dark, and the accent colour
+ * (2.97; only Quiet and Gen Z chaos take one since 13 November 2026). Nothing changes in the app until "Apply" (top right, shown once the choice differs from the look in use).
  * Back without Apply keeps the look in use.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -153,7 +152,7 @@ fun ThemerScreen(onBack: () -> Unit) {
             }
             // Light or dark, then the accent colours with the rainbow dot (any colour, owner 2.101) as the last one.
             Row(
-                Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 10.dp),
+                Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = if (usesAccent(tryStyle)) 10.dp else 16.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 listOf("light" to tr("Light"), "dark" to tr("Dark")).forEach { (k, n) ->
@@ -165,7 +164,9 @@ fun ThemerScreen(onBack: () -> Unit) {
                     )
                 }
             }
-            Row(
+            // The accent colours: only for the styles that take one (Quiet and Gen Z chaos); the others have their own
+            // colours (owner, 13 November 2026), so the row would change nothing there.
+            if (usesAccent(tryStyle)) Row(
                 Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween
             ) {

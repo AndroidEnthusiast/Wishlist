@@ -32,7 +32,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.minimumInteractiveComponentSize
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -289,7 +288,7 @@ fun ReactionBar(
             Row(
                 Modifier.minimumInteractiveComponentSize().heightIn(min = CHIP_HEIGHT).clip(CircleShape)
                     .background(if (mine) look.accent.copy(alpha = 0.18f) else ink.copy(alpha = 0.07f))
-                    .border(1.dp, if (mine) look.accent else ink.copy(alpha = 0.12f), CircleShape)
+                    .border(1.dp, if (mine) look.textAccent else ink.copy(alpha = 0.12f), CircleShape)
                     .combinedClickable(
                         onClick = { if (deco.canReact) react(if (mine) "" else e) else who = e },
                         onLongClick = { who = e }

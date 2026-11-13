@@ -154,7 +154,7 @@ fun Button(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean 
     } else {
         M3Button(
             onClick, modifier.padding(vertical = z.room).heightIn(min = z.height)
-                .then(if (enabled) Modifier.lookSurface(look, shape, look.accent, depth = z.depth) else Modifier),
+                .then(if (enabled) Modifier.lookSurface(look, shape, look.accent, depth = z.depth, brush = look.accentBrush) else Modifier),
             enabled, shape = shape, elevation = null,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = look.onAccent),
             contentPadding = z.pad, content = content
@@ -194,8 +194,9 @@ fun FilledTonalButton(onClick: () -> Unit, modifier: Modifier = Modifier, enable
 fun TextButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
-    // Neobrutalism and chaos: ink text (their accents are for blocks); the others: the accent.
-    val col = if (look.design == "neo" || look.design == "chaos") cs.onSurface else look.accent
+    // Chaos: ink text (its accent is for blocks); the others: the style's readable text colour (its primary; in Quiet
+    // that is the accent).
+    val col = if (look.design == "chaos") cs.onSurface else cs.primary
     M3TextButton(
         onClick, modifier, enabled, shape = look.buttonShape,
         colors = ButtonDefaults.textButtonColors(contentColor = col), content = content
@@ -207,45 +208,14 @@ fun Switch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifier: Mo
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
     when (look.design) {
-        "neo", "chaos" -> M3Switch(
+        "chaos" -> M3Switch(
             checked, onCheckedChange, modifier, enabled = enabled,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = look.onAccent, checkedTrackColor = look.accent, checkedBorderColor = look.line,
                 uncheckedThumbColor = look.line, uncheckedTrackColor = cs.surfaceVariant, uncheckedBorderColor = look.line
             )
         )
-        // Neumorphism: its own switch (2.102). Material's pill sat inside a round dent, so on looked like a different
-        // shape than off. Now one pill pressed into the page (filled with the accent when on) and a raised round knob.
-        "neu" -> {
-            val t by animateFloatAsState(if (checked) 1f else 0f, label = "switch")
-            Box(
-                modifier.size(width = 64.dp, height = 48.dp).then(
-                    if (onCheckedChange != null) Modifier.toggleable(checked, enabled = enabled, role = Role.Switch) { onCheckedChange(it) }
-                    else Modifier
-                ),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    Modifier.size(width = 56.dp, height = 32.dp)
-                        .neu(look, RoundedCornerShape(50), lerp(cs.background, look.accent, t), 3.dp, pressed = true),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Box(
-                        Modifier.offset(x = 4.dp + 24.dp * t).size(24.dp)
-                            .neu(look, CircleShape, lerp(cs.background, Color.White, t), 2.dp)
-                    )
-                }
-            }
-        }
-        "cyber" -> M3Switch(
-            checked, onCheckedChange, modifier, enabled = enabled,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = look.onAccent, checkedTrackColor = look.accent, checkedBorderColor = look.accent,
-                uncheckedThumbColor = look.line, uncheckedTrackColor = Color.Transparent, uncheckedBorderColor = look.line
-            )
-        )
-        // Quiet: the accent when on, a soft grey when off, no outline (like iOS).
-        else -> M3Switch(
+        "quiet" -> M3Switch(
             checked, onCheckedChange, modifier, enabled = enabled,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White, checkedTrackColor = look.accent, checkedBorderColor = Color.Transparent,
@@ -253,9 +223,20 @@ fun Switch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifier: Mo
                 uncheckedBorderColor = Color.Transparent
             )
         )
+        // The other styles: on in the style's block colour, off with the style's line (Flat: a darker tint, no line).
+        else -> {
+            val edge = if (look.design == "flat") cs.outline else look.line
+            M3Switch(
+                checked, onCheckedChange, modifier, enabled = enabled,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = look.onAccent, checkedTrackColor = look.accent,
+                    checkedBorderColor = if (look.edge > 0.dp) look.line else look.accent,
+                    uncheckedThumbColor = edge, uncheckedTrackColor = cs.surfaceVariant, uncheckedBorderColor = edge
+                )
+            )
+        }
     }
 }
-
 /** [t] with LocalInDialog on, so its buttons are the compact size. */
 private fun inDialog(t: @Composable () -> Unit): @Composable () -> Unit = {
     CompositionLocalProvider(LocalInDialog provides true) { t() }
@@ -273,7 +254,7 @@ fun AlertDialog(
 ) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
-    val shape = MaterialTheme.shapes.extraLarge
+    val shape = look.dialogShape
     // Buttons inside the dialog's text are the compact size (LocalInDialog, docs/STYLE.md).
     val body: (@Composable () -> Unit)? = if (text == null) null else inDialog(text)
     if (look.design == "quiet") {
@@ -299,13 +280,40 @@ fun TopAppBar(
     colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors()
 ) {
     val look = LocalLook.current
-    // A line under the top bar: thick ink (Neobrutalism, chaos) or thin neon (Cyberpunk).
-    val h = when (look.design) { "neo" -> 2.dp; "chaos" -> 3.dp; "cyber" -> 1.dp; else -> 0.dp }
-    val line = if (h > 0.dp) Modifier.drawWithContent {
-        drawContent()
-        val px = h.toPx()
-        drawRect(look.line, Offset(0f, size.height - px), Size(size.width, px))
-    } else Modifier
+    // A line under the top bar in the style's own way: thick ink (chaos), a holographic line (Y2K), a printed double
+    // line (Retro), three racing stripes (Pop futurism), a rough ink line (Grunge), red, yellow and blue blocks
+    // (Bauhaus). Quiet and Flat: none.
+    val line = when (look.design) {
+        "quiet", "flat" -> Modifier
+        else -> Modifier.drawWithContent {
+            drawContent()
+            val u = 1.dp.toPx()
+            val w = size.width; val b = size.height
+            when (look.design) {
+                "y2k" -> drawRect(look.accentBrush!!, Offset(0f, b - 2 * u), Size(w, 2 * u))
+                "retro" -> {
+                    drawRect(look.line, Offset(0f, b - 2 * u), Size(w, 2 * u))
+                    drawRect(look.line, Offset(0f, b - 5 * u), Size(w, 1 * u))
+                }
+                "pop" -> listOf(look.art[3], look.art[1], look.art[0]).forEachIndexed { i, col ->
+                    drawRect(col, Offset(0f, b - (3 - i) * 2 * u), Size(w, 2 * u))
+                }
+                "grunge" -> {
+                    var x = 0f; var k = 0
+                    while (x < w) {
+                        val t = (2 + (k * 7 % 5) * 0.35f) * u
+                        drawRect(look.line, Offset(x, b - t), Size(9 * u, t)); x += 8 * u; k++
+                    }
+                }
+                "bauhaus" -> {
+                    drawRect(look.art[0], Offset(0f, b - 4 * u), Size(w * 0.5f, 4 * u))
+                    drawRect(look.art[2], Offset(w * 0.5f, b - 4 * u), Size(w * 0.25f, 4 * u))
+                    drawRect(look.art[1], Offset(w * 0.75f, b - 4 * u), Size(w * 0.25f, 4 * u))
+                }
+                else -> drawRect(look.line, Offset(0f, b - 3 * u), Size(w, 3 * u))
+            }
+        }
+    }
     M3TopAppBar(title, modifier.then(line), navigationIcon, actions, colors = colors)
 }
 
@@ -324,11 +332,11 @@ fun PriceBadge(text: String, rise: Boolean, small: Boolean) {
     val bg: Color
     val fg: Color
     when (look.design) {
-        "neo", "chaos" -> { bg = if (rise) Color(0xFFFFB3B3) else Color(0xFFB8F5C8); fg = Color(0xFF111111) }
-        "cyber" -> { bg = look.scheme.surfaceVariant; fg = col }
+        // Chaos and Bauhaus: bold pastel blocks with ink text.
+        "chaos", "bauhaus" -> { bg = if (rise) Color(0xFFFFB3B3) else Color(0xFFB8F5C8); fg = Color(0xFF111111) }
         else -> { bg = lerp(col, look.scheme.surfaceVariant, if (look.dark) 0.78f else 0.88f); fg = col }
     }
-    StyleBadge(text, bg, fg, small, if (look.design == "cyber") col else null)
+    StyleBadge(text, bg, fg, small, null)
 }
 
 /** A status on a wish ("Owned", "Reserved"). */
@@ -338,8 +346,8 @@ fun StatusBadge(text: String, small: Boolean, modifier: Modifier = Modifier) {
     val cs = MaterialTheme.colorScheme
     val bg = when (look.design) {
         "quiet" -> if (look.dark) Color(0xFF2C2C2E) else Color(0xFFF2F2F7)
-        "neo", "chaos", "cyber" -> cs.surfaceVariant
-        else -> cs.primaryContainer
+        "flat", "pop" -> cs.primaryContainer
+        else -> cs.surfaceVariant
     }
     StyleBadge(text, bg, cs.onSurface, small, null, modifier)
 }
@@ -348,12 +356,7 @@ fun StatusBadge(text: String, small: Boolean, modifier: Modifier = Modifier) {
 private fun StyleBadge(text: String, bg: Color, fg: Color, small: Boolean, lineColor: Color?, modifier: Modifier = Modifier) {
     val look = LocalLook.current
     val shape = look.badgeShape(small)
-    val border = when (look.design) {
-        "neo" -> BorderStroke(1.5.dp, look.line)
-        "chaos" -> BorderStroke(2.dp, look.line)
-        "cyber" -> BorderStroke(1.dp, lineColor ?: look.line)
-        else -> null
-    }
+    val border = if (look.edge > 0.dp) BorderStroke(minOf(look.edge, 2.dp), lineColor ?: look.line) else null
     Surface(color = bg, shape = shape, modifier = modifier, border = border) {
         Text(
             text, color = fg,
@@ -627,25 +630,30 @@ fun PhotoCard(url: String, description: String, small: Boolean, modifier: Modifi
             // Still loading (or it failed): nothing to frame yet. The painter needs to be drawn to load.
             Image(painter, description, Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
         } else {
+            // The photo on a calm frame that fits the style (owner, 13 November 2026): its corners, its line and its
+            // shadow; Retro gives it the white border of an old print, Grunge a rough edge, Bauhaus square corners.
             val shape = when (look.design) {
-                "neo", "chaos" -> RoundedCornerShape(8.dp)
-                "cyber" -> androidx.compose.foundation.shape.CutCornerShape(topEnd = 8.dp, bottomStart = 8.dp)
+                "chaos" -> RoundedCornerShape(8.dp)
+                "y2k", "pop" -> RoundedCornerShape(if (small) 12.dp else 16.dp)
+                "retro" -> RoundedCornerShape(3.dp)
+                "grunge" -> RoughShape(61, 1.4.dp, 6.dp)
+                "flat" -> RoundedCornerShape(8.dp)
+                "bauhaus" -> androidx.compose.ui.graphics.RectangleShape
                 else -> RoundedCornerShape(if (small) 10.dp else 14.dp)
             }
-            val hard = look.design == "neo" || look.design == "chaos"
-            val frame = if (hard) Modifier.hardShadow(look.line, shape, 3.dp)
-            else Modifier.shadow(if (small) 3.dp else 5.dp, shape, clip = false)
+            val frame = when (look.design) {
+                "chaos" -> Modifier.hardShadow(look.line, shape, 3.dp)
+                "quiet" -> Modifier.shadow(if (small) 3.dp else 5.dp, shape, clip = false)
+                "flat" -> Modifier
+                "pop" -> Modifier.hardShadow(look.shadows[1], shape, 5.dp).hardShadow(look.shadows[0], shape, 2.5.dp)
+                else -> Modifier.hardShadow(look.shadows[0], shape, 3.dp, look.shadowBrush)
+            }
             Image(
                 painter, description, contentScale = ContentScale.Crop,
                 modifier = Modifier.aspectRatio(ratio, matchHeightConstraintsFirst = true)
                     .then(frame).clip(shape).background(Color.White)
-                    .then(
-                        when {
-                            hard -> Modifier.border(2.dp, look.line, shape)
-                            look.design == "cyber" -> Modifier.border(1.dp, look.line, shape)
-                            else -> Modifier
-                        }
-                    )
+                    .then(if (look.design == "retro") Modifier.border(if (small) 3.dp else 5.dp, Color(0xFFFBF6EA), shape) else Modifier)
+                    .then(if (look.edge > 0.dp) Modifier.border(minOf(look.edge, 2.dp), look.line, shape) else Modifier)
             )
         }
     }
@@ -674,7 +682,7 @@ fun AppSnackbarHost(state: SnackbarHostState, modifier: Modifier = Modifier) {
             delay(5000)
             data.dismiss()
         }
-        SwipeAway(data, onGone = { data.dismiss() }) { Snackbar(data) }
+        SwipeAway(data, onGone = { data.dismiss() }) { ThemedSnackbar(data) }
     }
 }
 

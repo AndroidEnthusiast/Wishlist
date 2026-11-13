@@ -7,8 +7,14 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
 ## Use the app's own parts
 - Buttons, dialogs, switches, top bars and icons come from `Styled.kt` (`Button`, `OutlinedButton`, `TextButton`,
   `AlertDialog`, `Switch`, `TopAppBar`, `AppIcons`). Never import Material's own `Button`/`AlertDialog` in a screen:
-  ours carry the chosen style (Quiet, Neumorphism, Neobrutalism, Cyberpunk, Gen Z chaos) and the sizes below.
-- Cards, mats and surfaces use `lookCard`, `lookMat`, `lookSurface` (`Design.kt`). Colours come from the theme
+  ours carry the chosen style (Quiet, Gen Z chaos, Y2K, Retro vintage, Pop futurism, Grunge, Flat, Bauhaus) and the
+  sizes below. The same for text fields, menus, tick boxes, choice circles, chips, spinners, progress bars, dividers,
+  sliders, bottom panels and `Scaffold` (`Themed.kt`, since 2.199): never import Material's own in a screen (the
+  photo editor's dark field is the one exception). Owner, 13 November 2026: "a theme must change absolutely every
+  element of the app"; a new part gets its style in every theme, light and dark.
+- Cards, mats and surfaces use `lookCard`, `lookMat`, `lookSurface` (`Design.kt`); a box with its own background uses
+  `lookSurface` too, never `clip(RoundedCornerShape(…)).background(…)`. Coloured text and icons use `look.textAccent`
+  (in most styles `look.accent` is a fill colour too light for text). Colours come from the theme
   (`MaterialTheme.colorScheme`, `LocalLook`), never fixed colours, except drawn illustrations.
 
 ## Text
@@ -35,7 +41,7 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
   `minimumInteractiveComponentSize()`). Icons alone get a `contentDescription` (or a click label).
 - Spacing comes in steps of 4 dp: 4, 8, 12, 16, 24. Screen edges 16 dp; space between items in a dialog 8 dp; between
   sections 16–24 dp.
-- Raised surfaces (Neumorphism, Neobrutalism shadows) need room around them: in a scrolling column, keep at least 8 dp
+- Raised surfaces (hard shadows of chaos, Y2K, Retro, Pop futurism, Grunge, Bauhaus) need room around them: in a scrolling column, keep at least 8 dp
   between a raised element and the column's edge.
 
 ## Chips and badges
@@ -61,5 +67,7 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
 
 ## Before building
 - Check every new layout against this guide on the smallest phone width (360 dp), with long names and the largest font,
-  in all five styles, light and dark. The Compose screens can't be seen in this sandbox (no Android SDK): say so,
+  in all eight styles, light and dark (`-Pwl.screens -Pwl.style=…` and `PartsScreenshotTest`). Drawings behind
+  screens stay faint behind text (`LookTest` checks 4.5 : 1 over them) or stay in the outer 12 dp. The screenshots
+  are a close copy, not the phone (fonts don't download there): say so,
   build only what follows these rules, and ask the owner to check the screen on the phone.

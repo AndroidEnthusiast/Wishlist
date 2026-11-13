@@ -132,8 +132,8 @@ fun UpdateBar() {
     val cs = MaterialTheme.colorScheme
     if (!AppInfo.showBar(AppInfo.installed(ctx), AppInfo.info, System.currentTimeMillis(), AppInfo.laterUntil)) return
     Column(
-        Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp).fillMaxWidth().clip(RoundedCornerShape(16.dp))
-            .background(cs.secondaryContainer).padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = 4.dp)
+        Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp).fillMaxWidth()
+            .lookSurface(LocalLook.current, MaterialTheme.shapes.medium, cs.secondaryContainer, depth = 4.dp).padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = 4.dp)
     ) {
         Text(tr("A new version of Wishlist is ready."), style = MaterialTheme.typography.bodyMedium, color = cs.onSecondaryContainer)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {

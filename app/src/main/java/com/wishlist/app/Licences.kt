@@ -24,8 +24,10 @@ import androidx.compose.ui.unit.sp
  * licence; those licences ask that their text comes with the app, so here it is.
  *  - Icons: Google's Material Icons (Apache License 2.0). The other icons (menu, view buttons, prices, wishlist,
  *    gift, crop, light, new photo, colour ball) are drawn in this app's own code.
- *  - Fonts (2.97): Google Sans (built in) and Figtree, Fraunces (7 November 2026), Rajdhani, Share Tech Mono, Bungee, Bricolage Grotesque, Caveat
- *    (downloaded from Google Fonts): SIL Open Font License 1.1.
+ *  - Fonts (2.97): Google Sans (built in) and Figtree, Fraunces (7 November 2026), Bungee, Bricolage Grotesque, Caveat, and for
+ *    the styles of 2.199: Unbounded, Space Grotesk, Space Mono, Lobster, Bitter, Oswald, Righteous, Exo 2, Rubik Dirt, Barlow,
+ *    Courier Prime, Poppins, Inter, Jost (downloaded from Google Fonts): SIL Open Font License 1.1. (Rajdhani and Share Tech
+ *    Mono went with Cyberpunk.)
  *  - Libraries: AndroidX / Jetpack Compose, Kotlin, Coil, OkHttp, Firebase Cloud Messaging, Firebase Crashlytics (Apache License 2.0; it uses
  *    Google Play services on the phone, which come with Android).
  *  - jsoup (reads product pages): MIT License; it was missing here until 2.183.
@@ -52,7 +54,8 @@ fun LicencesDialog(onClose: () -> Unit) {
                 Credit(tr("Icons"), "Material Icons, Google — Apache License 2.0")
                 Credit(
                     tr("Fonts"),
-                    "Google Sans, Figtree, Fraunces, Rajdhani, Share Tech Mono, Bungee, Bricolage Grotesque, Caveat — SIL Open Font License 1.1"
+                    "Google Sans, Figtree, Fraunces, Bungee, Bricolage Grotesque, Caveat, Unbounded, Space Grotesk, Space Mono, Lobster, " +
+                        "Bitter, Oswald, Righteous, Exo 2, Rubik Dirt, Barlow, Courier Prime, Poppins, Inter, Jost — SIL Open Font License 1.1"
                 )
                 Credit(tr("Building blocks"), "AndroidX, Jetpack Compose, Kotlin, Coil, OkHttp, Credential Manager, Firebase Cloud Messaging, Firebase Crashlytics — Apache License 2.0")
                 // jsoup reads product pages (Fetch.kt); MIT License, its notice is in license_unicode.txt (2.183).

@@ -110,7 +110,8 @@ object Repo {
     var palette by mutableStateOf("indigo")
         private set
     /**
-     * The style (2.97): one of STYLES in Design.kt ("quiet", "neo", "neu", "cyber", "chaos"), with light or dark in
+     * The style (2.97): one of STYLES in Design.kt ("quiet", "chaos", "y2k", "retro", "pop", "grunge", "flat",
+     * "bauhaus"; until 2.198 also "neo", "neu" and "cyber"), with light or dark in
      * [theme] and the accent in [palette]. ([colours] is the old designs' colour set, only read to move people over.)
      */
     var design by mutableStateOf("quiet")
@@ -244,7 +245,8 @@ object Repo {
         val oldStyle = p.getString("style", "classic") ?: "classic"
         colours = p.getString("style_colours", "") ?: ""
         if (!p.getBoolean("look_v2", false)) {
-            design = if (oldStyle == "neo") "neo" else "quiet"
+            // (Neobrutalism stayed here until 13 November 2026; it was removed then, so it becomes Quiet too.)
+            design = "quiet"
             if (oldStyle != "classic") {
                 // The old designs had their own dark sets (light or dark came from the set, not from "theme").
                 theme = if (colours in setOf("midnight", "plum", "night", "dusk")) "dark" else "light"
@@ -259,7 +261,10 @@ object Repo {
             }
             p.edit().putBoolean("look_v2", true).apply()
         } else {
+            // A style that was removed (Cyberpunk, Neobrutalism, Neumorphism, owner 13 November 2026) becomes Quiet
+            // (styleFor), light or dark and the accent stay; saved at once so it is settled.
             design = styleFor(oldStyle).key
+            if (design != oldStyle) p.edit().putString("style", design).apply()
             if (ACCENTS.none { it.key == palette } && customAccent(palette) == null) palette = "blue"
         }
         font = p.getString("font", "google_sans") ?: "google_sans"

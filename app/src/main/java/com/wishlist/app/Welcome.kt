@@ -21,7 +21,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -99,7 +98,7 @@ fun WelcomeFlow(onDone: () -> Unit) {
     }
 
     Dialog(onDismissRequest = {}, properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnBackPress = false)) {
-        Surface(Modifier.fillMaxSize(), color = cs.background) {
+        Surface(Modifier.fillMaxSize().lookPage(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onBackground) {
             Column(Modifier.statusBarsPadding().navigationBarsPadding().padding(24.dp)) {
                 // Top: the step and Skip (skips the whole welcome).
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -113,7 +112,7 @@ fun WelcomeFlow(onDone: () -> Unit) {
                 ) {
                     when (step) {
                         1 -> {
-                            PlaceholderIcon("hello", 56.dp, LocalLook.current.accent)
+                            PlaceholderIcon("hello", 56.dp, LocalLook.current.textAccent)
                             Text(tr("Welcome to Wishlist"), style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 12.dp))
                             Text(
                                 tr("What’s your name? Friends see it, and it’s shown on the wishes you add to a collab wishlist."),
@@ -138,7 +137,7 @@ fun WelcomeFlow(onDone: () -> Unit) {
                             TextButton(onClick = { openPrivacy(ctx) }) { Text(tr("Privacy")) }
                         }
                         2 -> {
-                            PlaceholderIcon("gift", 56.dp, LocalLook.current.accent)
+                            PlaceholderIcon("gift", 56.dp, LocalLook.current.textAccent)
                             Text(tr("Your first wishlist"), style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 12.dp))
                             Text(
                                 tr("Give it a name, like “Birthday”. You can change it later."),
@@ -152,12 +151,12 @@ fun WelcomeFlow(onDone: () -> Unit) {
                         }
                         4 -> {
                             // The recovery key (owner, 11 November 2026: asked during the welcome; RecoveryKey.kt).
-                            PlaceholderIcon("secret", 56.dp, LocalLook.current.accent)
+                            PlaceholderIcon("secret", 56.dp, LocalLook.current.textAccent)
                             Text(tr("Keep your wishlists safe"), style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 12.dp, bottom = 8.dp))
                             RecoveryKeyBody(null)
                         }
                         else -> {
-                            PlaceholderIcon("secret", 56.dp, LocalLook.current.accent)
+                            PlaceholderIcon("secret", 56.dp, LocalLook.current.textAccent)
                             Text(tr("Gifts stay a surprise"), style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 12.dp))
                             Text(
                                 tr("Friends reserve what they’ll buy, so nobody gives the same gift twice. You never see what’s reserved."),

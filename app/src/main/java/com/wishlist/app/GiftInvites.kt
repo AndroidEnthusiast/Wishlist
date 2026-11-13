@@ -20,8 +20,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -302,7 +300,7 @@ fun GiftInviteDialog(code: String, onJoined: (String) -> Unit, onClose: () -> Un
     Dialog(onDismissRequest = { if (!busy) onClose() }, properties = DialogProperties(dismissOnClickOutside = false, usePlatformDefaultWidth = false)) {
         Box(Modifier.padding(20.dp).fillMaxWidth()) {
             Column(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(cs.surface)
+                Modifier.fillMaxWidth().lookSurface(look, MaterialTheme.shapes.extraLarge, cs.surface, depth = 10.dp)
                     .verticalScroll(rememberScrollState())
             ) {
                 // The colourful top: the accent fading into a warm pink, with confetti dots drawn here.
@@ -334,7 +332,7 @@ fun GiftInviteDialog(code: String, onJoined: (String) -> Unit, onClose: () -> Un
                         Box(
                             Modifier.size(104.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.95f)),
                             contentAlignment = Alignment.Center
-                        ) { GiftIcon(look.accent, 60.dp) }
+                        ) { GiftIcon(look.textAccent, 60.dp) }
                     }
                 }
                 Column(
@@ -370,7 +368,7 @@ fun GiftInviteDialog(code: String, onJoined: (String) -> Unit, onClose: () -> Un
                                 textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis
                             )
                             Occasions.line(i.occ)?.let { o ->
-                                Text(o, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = look.accent)
+                                Text(o, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = look.textAccent)
                             }
                             val bits = listOfNotNull(
                                 if (i.count == 1) tr("1 gift idea") else tr("%d gift ideas", i.count),

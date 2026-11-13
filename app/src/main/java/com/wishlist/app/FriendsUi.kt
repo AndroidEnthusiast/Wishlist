@@ -34,15 +34,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -583,7 +579,7 @@ private fun FriendPage(f: Person, snack: SnackbarHostState) {
         snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
         Column(
-            Modifier.padding(pad).fillMaxSize().lookBackdrop(look).verticalScroll(rememberScrollState()).padding(bottom = 32.dp)
+            Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 32.dp)
         ) {
             // Picture and name on the left, the numbers next to them, as on your Home.
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -701,7 +697,7 @@ private fun FriendWishesPage(f: Person, page: String, snack: SnackbarHostState) 
         snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
         LazyColumn(
-            Modifier.padding(pad).fillMaxSize().lookBackdrop(look),
+            Modifier.padding(pad).fillMaxSize(),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
@@ -718,7 +714,7 @@ private fun FriendWishesPage(f: Person, page: String, snack: SnackbarHostState) 
             // Still loading: a spinner, never "No wishes" (owner, 7 November 2026).
             if (shown.isEmpty() && FriendCache.loadedFor != f.id && f.lists.isNotEmpty()) item {
                 Box(Modifier.fillMaxWidth().padding(top = 32.dp), contentAlignment = Alignment.Center) {
-                    androidx.compose.material3.CircularProgressIndicator()
+                    CircularProgressIndicator()
                 }
             } else if (shown.isEmpty()) item {
                 Text(
@@ -1259,13 +1255,13 @@ fun CodeBoxes(code: String, onChange: (String) -> Unit, isError: Boolean, onDone
                             modifier = Modifier.padding(horizontal = 4.dp)
                         )
                         val active = focused && i == code.length.coerceAtMost(5)
-                        val shape = if (look.design == "cyber") look.chipShape else RoundedCornerShape(12.dp)
+                        val shape = MaterialTheme.shapes.small
                         Box(
                             Modifier.weight(1f).padding(horizontal = 3.dp).height(54.dp)
                                 .lookSurface(look, shape, cs.surfaceVariant, raised = false)
                                 .border(
                                     if (active || isError) 2.dp else 0.dp,
-                                    when { isError -> cs.error; active -> look.accent; else -> Color.Transparent }, shape
+                                    when { isError -> cs.error; active -> look.textAccent; else -> Color.Transparent }, shape
                                 ),
                             contentAlignment = Alignment.Center
                         ) {

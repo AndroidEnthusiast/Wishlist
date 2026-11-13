@@ -480,3 +480,10 @@ none since. Notes tidy-up: `CLAUDE.md` slimmed, `docs/MAP.md`, decisions by topi
 Second review of the roadmap; price checks believe two agreeing readings (2.178). Stage R repairs: "new version is
 ready" (2.179) up to "Price is wrong?" (2.182) and screens that come back after Android closed the app (2.183). Stage 4
 part A: limits against abuse (2.184), photos as files (2.185), clean-up after 12 months (2.186), the recovery key (2.187).
+### 13 November 2026: Gen Z chaos saved for good (no app change)
+Owner wants to work on the themes ("something fun"). First: the partner loves Gen Z chaos, so it is saved as it was
+in 2.198 in `themes/gen-z-chaos/` (the 7 files it lives in + README on putting it back), guarded by
+`tests/themes/check.sh` (in `tests/run-all.sh`). Decision in `docs/decisions/look.md`.
+Its "Next session" line then (replaced by the 2.199 one):
+- **Newest (13 November 2026), read first.** The owner is working on the app's themes (for fun); Gen Z chaos is saved in
+  `themes/gen-z-chaos/`: ask before changing or removing it. Ask what they want to change in the themes next.

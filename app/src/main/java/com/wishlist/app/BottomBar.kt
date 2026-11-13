@@ -74,9 +74,12 @@ fun AppBottomBar(
     // A floating bar (2.97, the preview the owner chose): rounded, a little above the bottom edge, in the style's
     // surface. Quiet: nearly opaque with a hairline and a soft shadow, like frosted glass.
     val shape = when (look.design) {
-        "neo" -> RoundedCornerShape(16.dp)
-        "cyber" -> androidx.compose.foundation.shape.CutCornerShape(topEnd = 16.dp, bottomStart = 16.dp)
         "chaos" -> RoundedCornerShape(20.dp)
+        "y2k", "pop" -> RoundedCornerShape(32.dp)
+        "retro" -> RoundedCornerShape(16.dp)
+        "flat" -> RoundedCornerShape(18.dp)
+        "grunge" -> RoughShape(101, 2.dp, 9.dp)
+        "bauhaus" -> androidx.compose.ui.graphics.RectangleShape
         else -> RoundedCornerShape(26.dp)
     }
     val frame = if (look.design == "quiet") Modifier
@@ -86,7 +89,13 @@ fun AppBottomBar(
     Box(
         Modifier.fillMaxWidth().background(cs.background).windowInsetsPadding(WindowInsets.navigationBars)
             .padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 10.dp)
-            .then(if (look.design == "chaos") Modifier.rotate(-0.8f) else Modifier)
+            .then(
+                when (look.design) {
+                    "chaos" -> Modifier.rotate(-0.8f)
+                    "grunge" -> Modifier.rotate(-0.4f)
+                    else -> Modifier
+                }
+            )
     ) {
         Row(
             frame.fillMaxWidth().height(64.dp).padding(horizontal = 4.dp), // 72 with the words (2.121–2.148)
@@ -102,7 +111,7 @@ fun AppBottomBar(
                 Modifier.size(50.dp).then(
                     if (look.design == "quiet") Modifier.shadow(6.dp, CircleShape, clip = false, ambientColor = look.accent, spotColor = look.accent)
                         .clip(CircleShape).background(look.accent)
-                    else Modifier.lookSurface(look, look.fabShape, look.accent, depth = 5.dp)
+                    else Modifier.lookSurface(look, look.fabShape, look.accent, depth = 5.dp, brush = look.accentBrush)
                 ).clickable(onClickLabel = tr("Add wish"), onClick = onAdd),
                 contentAlignment = Alignment.Center
             ) {

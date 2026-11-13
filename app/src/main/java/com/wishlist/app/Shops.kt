@@ -29,13 +29,10 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -249,7 +246,7 @@ fun DiscoverScreen(snack: androidx.compose.material3.SnackbarHostState, onProfil
             if (r == androidx.compose.material3.SnackbarResult.ActionPerformed) Shops.putBack(ctx, s, at)
         }
     }
-    androidx.compose.material3.Scaffold(
+    Scaffold(
         containerColor = cs.background,
         topBar = {
             TopAppBar(
@@ -265,7 +262,7 @@ fun DiscoverScreen(snack: androidx.compose.material3.SnackbarHostState, onProfil
         snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
         Column(
-            Modifier.padding(pad).fillMaxSize().lookBackdrop(look)
+            Modifier.padding(pad).fillMaxSize()
                 // A tap on empty space ends removing.
                 .then(
                     if (editing) Modifier.clickable(
@@ -709,7 +706,7 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
     ) {
         // Back (button or swipe) goes to the shop's previous page; only on the first page it closes (owner, 2.116).
         BackHandler { back() }
-        Surface(Modifier.fillMaxSize(), color = cs.background) {
+        Surface(Modifier.fillMaxSize().lookPage(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onBackground) {
             Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
                 Row(Modifier.fillMaxWidth().height(56.dp).padding(start = 4.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onClose) { Icon(AppIcons.Close, if (search != null) tr("Close browser") else tr("Close shop")) }
@@ -726,8 +723,8 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                             keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = {
                                 if (q.isNotBlank()) { focus.clearFocus(); web?.loadUrl(Shops.searchUrl(q)) }
                             }),
-                            modifier = Modifier.weight(1f).padding(start = 8.dp).height(44.dp).clip(RoundedCornerShape(22.dp))
-                                .background(cs.surfaceVariant),
+                            modifier = Modifier.weight(1f).padding(start = 8.dp).height(44.dp)
+                                .lookSurface(LocalLook.current, LocalLook.current.chipShape, cs.surfaceVariant, raised = false),
                             decorationBox = { inner ->
                                 Box(Modifier.fillMaxSize().padding(horizontal = 14.dp), contentAlignment = Alignment.CenterStart) {
                                     if (q.isEmpty()) Text(tr("Search in browser"), style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant, maxLines = 1)

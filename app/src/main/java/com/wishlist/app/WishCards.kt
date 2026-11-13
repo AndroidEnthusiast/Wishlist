@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.aspectRatio
@@ -340,12 +339,7 @@ fun WishCard(
                 )
             ) {
                 if (label.isNotEmpty()) {
-                    // Cyberpunk shows it as a small spaced-out line in capitals.
-                    Text(
-                        if (look.design == "cyber") label.uppercase() else label,
-                        style = MaterialTheme.typography.labelMedium, color = muted,
-                        letterSpacing = if (look.design == "cyber") 1.2.sp else TextUnit.Unspecified
-                    )
+                    Text(label, style = MaterialTheme.typography.labelMedium, color = muted)
                 }
                 Text(
                     w.label, style = MaterialTheme.typography.titleMedium,
@@ -469,7 +463,7 @@ fun RowCard(
                     )
                 ) {
                     if (label.isNotEmpty()) Text(
-                        if (look.design == "cyber") label.uppercase() else label,
+                        label,
                         style = MaterialTheme.typography.labelSmall, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis
                     )
                     Text(w.label, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis, color = if (w.title.isBlank()) ink.copy(alpha = 0.55f) else ink)

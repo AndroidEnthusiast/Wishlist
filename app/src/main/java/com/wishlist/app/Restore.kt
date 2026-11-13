@@ -12,7 +12,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -230,12 +229,12 @@ fun MovedScreen() {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     Dialog(onDismissRequest = {}, properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnBackPress = false, dismissOnClickOutside = false)) {
-        Surface(Modifier.fillMaxSize(), color = cs.background) {
+        Surface(Modifier.fillMaxSize().lookPage(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onBackground) {
             Column(
                 Modifier.statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically)
             ) {
-                PlaceholderIcon("gift", 56.dp, LocalLook.current.accent)
+                PlaceholderIcon("gift", 56.dp, LocalLook.current.textAccent)
                 Text(tr("Your wishlists are on your new phone"), style = MaterialTheme.typography.headlineSmall, color = cs.onBackground, textAlign = TextAlign.Center)
                 Text(
                     tr("You used your recovery key on another phone, so your wishlists, friends and chats moved there. This phone is signed out."),

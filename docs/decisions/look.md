@@ -76,3 +76,23 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   make sure I can always recover it"). The theme as it was in 2.198 is kept in `themes/gen-z-chaos/` (whole files +
   how to put it back); `tests/themes/check.sh` fails if that copy changes or disappears. Ask the owner before changing
   or removing Gen Z chaos in the app.
+
+## The new themes (owner, 13 November 2026)
+- **Removed: Cyberpunk, Neobrutalism, Neumorphism** ("poorly implemented: poppy in one area, bland in another").
+  People who had one move to **Quiet** (their light/dark stays). Gen Z chaos is the benchmark: a theme must change
+  absolutely every element of the app (buttons, fonts, text boxes, menus, tick boxes, sheets, message bars, spinners,
+  everything) without hurting accessibility, readability or good UI.
+- **Added, from https://www.magier.com/blog/graphic-design-styles** (numbers on that page): 5 Y2K Evolution, 6 Retro
+  Vintage, 9 Pop Futurism, 13 Grunge, 18 Flat design, 20 Bauhaus. Final list: Quiet (default for new installs, also
+  fully themed) + Gen Z chaos + those six.
+- **Colours:** each new theme has its own fixed palette; the 5 accents stay for Quiet and Gen Z chaos only (the accent
+  row is hidden for the others).
+- **Light and dark:** every theme gets both, designed per theme; "make absolutely sure each theme looks as good in
+  light mode as it does in dark mode and vice versa".
+- **Fonts:** Claude picks, "truly fitting the theme"; headings in the style's character, longer text in a clean font
+  that fits; picks listed in the changelog. Offline: a close fallback until the download finishes (no bundled fonts).
+- **Decoration:** full (backgrounds, empty pages, spinners, the wordmark), all drawn in our own code, never behind
+  text: text always sits on a calm, solid surface. **No moving effects.** Photos sit on a calm frame that fits the theme.
+- **Gen Z chaos:** finish it (the parts that were plain Android get chaos styling); nothing that was chaos changes.
+  The saved copy in `themes/gen-z-chaos/` stays the backup of the 2.198 version.
+- **App only:** the friends' web pages don't follow the themes. **One update** with everything, no previews.

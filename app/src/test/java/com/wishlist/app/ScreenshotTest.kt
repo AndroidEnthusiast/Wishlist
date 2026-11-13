@@ -67,6 +67,8 @@ abstract class ScreenshotBase(private val mode: String) {
         ListStore.reset(); WishlistDb.reset()
         Repo.load(app)
         Repo.setTheme(app, mode)
+        // -Pwl.style=… (owner, 13 November 2026: every style is checked, light and dark).
+        System.getProperty("wl.style").orEmpty().takeIf { it.isNotEmpty() }?.let { Repo.setLook(app, it, mode, Repo.palette) }
         if (Repo.myWishes.isEmpty()) samples(app).forEach { Repo.addMine(app, it) }
     }
 
@@ -96,7 +98,8 @@ abstract class ScreenshotBase(private val mode: String) {
     /** The whole screen, pop-ups included. The clock is moved on by hand: some screens animate for ever. */
     private fun shot(name: String) {
         compose.mainClock.advanceTimeBy(2000)
-        captureScreenRoboImage("build/outputs/roborazzi/${name}_$mode.png")
+        val st = System.getProperty("wl.style").orEmpty().ifEmpty { "quiet" }
+        captureScreenRoboImage("build/outputs/roborazzi/${st}_${name}_$mode.png")
     }
 
     /** Taps the button or card that holds this text (or has it as its label). */

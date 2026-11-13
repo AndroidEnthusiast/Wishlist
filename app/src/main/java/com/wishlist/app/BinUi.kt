@@ -20,12 +20,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -288,7 +284,7 @@ fun BinScreen(snack: SnackbarHostState) {
 private fun BinRow(e: BinEntry, enabled: Boolean, glow: Int, onRestore: () -> Unit, onDelete: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val w = e.wish
-    val shape = RoundedCornerShape(20.dp)
+    val shape = LocalLook.current.cardShape(w.id, small = false)
     val g = remember { Animatable(0f) }
     LaunchedEffect(glow) {
         if (glow == 0) return@LaunchedEffect
@@ -300,11 +296,11 @@ private fun BinRow(e: BinEntry, enabled: Boolean, glow: Int, onRestore: () -> Un
         g.animateTo(0f, tween(1500))
     }
     val lit = g.value
-    Card(
-        colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant),
-        shape = shape,
-        modifier = Modifier.fillMaxWidth()
+    // A card in the style (its shape, line and shadow); a just-restored wish glows for a moment.
+    Column(
+        Modifier.fillMaxWidth()
             .shadow((14 * lit).dp, shape, clip = false, ambientColor = cs.primary, spotColor = cs.primary)
+            .lookSurface(LocalLook.current, shape, cs.surfaceVariant, depth = 6.dp)
             .then(if (lit > 0.01f) Modifier.border(2.dp, cs.primary.copy(alpha = 0.75f * lit), shape) else Modifier)
     ) {
         Column(Modifier.padding(12.dp)) {

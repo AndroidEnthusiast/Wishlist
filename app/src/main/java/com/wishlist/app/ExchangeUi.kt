@@ -38,18 +38,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -216,7 +209,7 @@ private fun ExchangesList(snack: SnackbarHostState, onOpenMine: (String) -> Unit
         },
         snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
-        Column(Modifier.padding(pad).fillMaxSize().lookBackdrop(look).verticalScroll(rememberScrollState()).padding(bottom = 32.dp)) {
+        Column(Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 32.dp)) {
             when (state) {
                 "loading" -> Box(Modifier.fillMaxWidth().padding(48.dp), Alignment.Center) { CircularProgressIndicator() }
                 "missing" -> Text(
@@ -665,7 +658,7 @@ fun ExchangeScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, on
         }
         val me = Exchanges.myId(ctx)
         val org = Exchanges.isOrganiser(ctx, x)
-        Column(Modifier.padding(pad).fillMaxSize().lookBackdrop(look).verticalScroll(rememberScrollState()).padding(bottom = 40.dp)) {
+        Column(Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 40.dp)) {
             GxCover(x.theme, Exchanges.photos[x.id], Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp).fillMaxWidth().height(150.dp))
             Text(
                 listOfNotNull(
@@ -1362,7 +1355,7 @@ fun GxChatScreen(x: Exchange, side: String, onClose: () -> Unit) {
     val hint = if (side == "giftee") tr("They don’t see your name. Ask about sizes, colours, anything.")
     else tr("You don’t know who this is. They’re buying your gift.")
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
-        Surface(Modifier.fillMaxSize(), color = cs.background) {
+        Surface(Modifier.fillMaxSize().lookPage(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onBackground) {
             Column(Modifier.statusBarsPadding().navigationBarsPadding().imePadding()) {
                 Row(Modifier.fillMaxWidth().padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onClose) { Icon(AppIcons.ArrowBack, tr("Back")) }

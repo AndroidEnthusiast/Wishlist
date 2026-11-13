@@ -16,7 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -182,7 +181,7 @@ private fun ShareButtons(link: String?, copied: Boolean, onShare: () -> Unit, on
             Text(tr("Share"), fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 8.dp))
         }
         Row(
-            Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(cs.surfaceVariant)
+            Modifier.fillMaxWidth().lookSurface(LocalLook.current, MaterialTheme.shapes.small, cs.surfaceVariant, raised = false)
                 .padding(start = 12.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {

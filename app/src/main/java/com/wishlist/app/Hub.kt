@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -32,11 +33,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -76,26 +74,69 @@ import java.io.File
  */
 
 /**
- * "Wishlist" at the top of Home, in the style's own way (2.97): Quiet bold and tight; Cyberpunk in capitals with a
- * glitch (the word twice more, shifted, in the accent and neon); chaos tilted with a hard pink shadow.
+ * "Wishlist" at the top of Home, in the style's own way: Quiet bold and tight; chaos tilted with a hard pink shadow;
+ * Y2K with a holographic shadow and a sparkle; Retro in script, tilted, misprinted in teal; Pop futurism with stacked
+ * racing-stripe shadows; Grunge rough and a little crooked with a red shadow; Flat with a flat colour bar under it;
+ * Bauhaus after a red circle, a yellow triangle and a blue square.
  */
 @Composable
 fun Wordmark() {
     val look = LocalLook.current
+    val ink = MaterialTheme.colorScheme.onBackground
     val style = MaterialTheme.typography.headlineSmall.copy(fontWeight = look.titleWeight)
+    fun shadow(col: Color, d: Float) = style.copy(shadow = androidx.compose.ui.graphics.Shadow(col, Offset(d, d), 0f))
     when (look.design) {
-        "cyber" -> Box {
-            val st = style.copy(letterSpacing = 3.sp)
-            Text("WISHLIST", style = st, color = look.accent, modifier = Modifier.offset(x = 2.dp))
-            Text("WISHLIST", style = st, color = look.blobs[0], modifier = Modifier.offset(x = (-2).dp))
-            Text("WISHLIST", style = st, color = MaterialTheme.colorScheme.onBackground)
-        }
         "chaos" -> Text(
-            "Wishlist", color = MaterialTheme.colorScheme.onBackground,
+            "Wishlist", color = ink,
             style = style.copy(shadow = androidx.compose.ui.graphics.Shadow(look.blobs[0], Offset(6f, 6f), 0f)),
             modifier = Modifier.rotate(-3f)
         )
-        else -> Text("Wishlist", style = style, color = MaterialTheme.colorScheme.onBackground)
+        "y2k" -> Row(verticalAlignment = Alignment.CenterVertically) {
+            Box {
+                // The holographic shadow: the word again, filled with the gradient, a little lower and to the right.
+                Text("Wishlist", style = style.copy(brush = look.accentBrush), modifier = Modifier.offset(2.dp, 2.dp))
+                Text("Wishlist", style = style, color = ink)
+            }
+            Canvas(Modifier.padding(start = 6.dp).size(18.dp)) {
+                val r = size.minDimension / 2
+                val t = r * 0.18f
+                val c = center
+                val p = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(c.x, c.y - r)
+                    quadraticTo(c.x + t, c.y - t, c.x + r, c.y); quadraticTo(c.x + t, c.y + t, c.x, c.y + r)
+                    quadraticTo(c.x - t, c.y + t, c.x - r, c.y); quadraticTo(c.x - t, c.y - t, c.x, c.y - r); close()
+                }
+                drawPath(p, ink)
+            }
+        }
+        "retro" -> Text("Wishlist", color = ink, style = shadow(look.shadows[0], 5f), modifier = Modifier.rotate(-4f))
+        "pop" -> Box {
+            Text("Wishlist", style = style, color = look.art[1], modifier = Modifier.offset(3.dp, 3.dp))
+            Text("Wishlist", style = style, color = look.art[3], modifier = Modifier.offset(1.5.dp, 1.5.dp))
+            Text("Wishlist", style = style, color = ink)
+        }
+        "grunge" -> Text("Wishlist", color = ink, style = shadow(look.accent, 4f), modifier = Modifier.rotate(-1.5f))
+        "flat" -> Column {
+            Text("Wishlist", style = style, color = ink)
+            Row(Modifier.padding(top = 2.dp)) {
+                listOf(look.art[0], look.art[1], look.art[2]).forEachIndexed { i, col ->
+                    Box(Modifier.size(width = if (i == 0) 28.dp else 12.dp, height = 4.dp).clip(RoundedCornerShape(2.dp)).background(col))
+                    Spacer(Modifier.width(3.dp))
+                }
+            }
+        }
+        "bauhaus" -> Row(verticalAlignment = Alignment.CenterVertically) {
+            Canvas(Modifier.size(width = 48.dp, height = 16.dp)) {
+                val s = size.height
+                drawCircle(look.art[0], s / 2, Offset(s / 2, s / 2))
+                drawPath(androidx.compose.ui.graphics.Path().apply {
+                    moveTo(s * 1.2f, s); lineTo(s * 1.7f, 0f); lineTo(s * 2.2f, s); close()
+                }, look.art[2])
+                drawRect(look.art[1], Offset(s * 2.4f, 0f), androidx.compose.ui.geometry.Size(s, s))
+            }
+            Text("Wishlist", style = style, color = ink, modifier = Modifier.padding(start = 8.dp))
+        }
+        else -> Text("Wishlist", style = style, color = ink)
     }
 }
 
@@ -271,7 +312,7 @@ fun HubScreen(
             snackbarHost = { AppSnackbarHost(snack) }
         ) { pad ->
             Column(
-                Modifier.padding(pad).fillMaxSize().lookBackdrop(look).verticalScroll(rememberScrollState())
+                Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState())
                     .padding(bottom = 32.dp)
             ) {
                 // "A new version is ready" (owner, 10 November 2026; AppInfo.kt): only when there is one.

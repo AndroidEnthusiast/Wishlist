@@ -29,7 +29,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -197,15 +196,14 @@ fun ProfileSummary(onProfile: () -> Unit, onFriends: () -> Unit = {}, onAddWish:
 fun Modifier.statTile(): Modifier {
     val look = LocalLook.current
     return when (look.design) {
-        "neo" -> lookSurface(look, RoundedCornerShape(10.dp), look.cardFill(5L), depth = 3.dp)
         "chaos" -> lookSurface(look, RoundedCornerShape(14.dp), look.cardFill(5L), depth = 3.dp)
-        "neu" -> lookSurface(look, RoundedCornerShape(14.dp), look.cardFill(5L), depth = 4.dp)
-        "cyber" -> lookSurface(look, androidx.compose.foundation.shape.CutCornerShape(topEnd = 10.dp, bottomStart = 10.dp), look.cardFill(5L))
-        else -> {
+        "quiet" -> {
             val shape = RoundedCornerShape(12.dp)
             clip(shape).background(look.cardFill(5L).copy(alpha = 0.75f))
                 .then(if (look.dark) Modifier.border(1.dp, Color.White.copy(alpha = 0.06f), shape) else Modifier)
         }
+        // The other styles: a small version of their own card (its shape, line and shadow).
+        else -> lookSurface(look, MaterialTheme.shapes.medium, look.cardFill(5L), depth = 3.dp)
     }
 }
 
@@ -311,7 +309,7 @@ fun OverviewScreen(
     ) { pad ->
         if (page == "lists") {
             Column(
-                Modifier.padding(pad).fillMaxSize().lookBackdrop(look)
+                Modifier.padding(pad).fillMaxSize()
                     .verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(bottom = 32.dp)
             ) { lists() }
             return@Scaffold
@@ -320,10 +318,10 @@ fun OverviewScreen(
         Column(Modifier.padding(pad).fillMaxSize()) {
         // All wishes or only the top wishes (owner, 7 November 2026: the Top wishes page is reached this way).
         Row(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            androidx.compose.material3.FilterChip(
+            FilterChip(
                 selected = page != "top", onClick = { places.homePage = "wishes" }, label = { Text(tr("All wishes")) }
             )
-            androidx.compose.material3.FilterChip(
+            FilterChip(
                 selected = page == "top", onClick = { places.homePage = "top" }, label = { Text(tr("Top wishes") + " ★") }
             )
         }
@@ -338,7 +336,7 @@ fun OverviewScreen(
             return@Column
         }
         LazyColumn(
-            Modifier.fillMaxSize().lookBackdrop(look),
+            Modifier.fillMaxSize(),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {

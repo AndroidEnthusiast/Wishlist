@@ -194,7 +194,7 @@ fun RecoveryKeyBody(snack: SnackbarHostState?) {
         Text(
             key, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium,
             textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(cs.surfaceVariant).padding(16.dp)
+            modifier = Modifier.fillMaxWidth().lookSurface(LocalLook.current, MaterialTheme.shapes.small, cs.surfaceVariant, raised = false).padding(16.dp)
         )
         Text(
             tr("Keep your wishes safe: never share this key with anyone."),
@@ -241,8 +241,8 @@ fun RecoveryCard() {
     var open by remember { mutableStateOf(false) }
     if (!RecoveryKey.showCard(ctx)) return
     Column(
-        Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp).fillMaxWidth().clip(RoundedCornerShape(16.dp))
-            .background(cs.secondaryContainer).padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = 4.dp)
+        Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp).fillMaxWidth()
+            .lookSurface(LocalLook.current, MaterialTheme.shapes.medium, cs.secondaryContainer, depth = 4.dp).padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = 4.dp)
     ) {
         Text(tr("Keep your wishlists safe on a new phone"), style = MaterialTheme.typography.titleSmall, color = cs.onSecondaryContainer)
         Text(

@@ -3,7 +3,6 @@ package com.wishlist.app
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.clickable
-import androidx.compose.material3.CircularProgressIndicator
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +14,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -436,7 +434,7 @@ private fun CreatorLeaveDialog(l: SharedList, onClose: () -> Unit, onGone: () ->
                             Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { picked = m.id }.padding(vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            androidx.compose.material3.RadioButton(selected = picked == m.id, onClick = { picked = m.id })
+                            RadioButton(selected = picked == m.id, onClick = { picked = m.id })
                             Text(m.name.ifBlank { tr("Someone") })
                         }
                     }

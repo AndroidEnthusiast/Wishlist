@@ -15,7 +15,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.foundation.layout.width
@@ -55,7 +54,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.Text
@@ -245,7 +243,7 @@ fun HomeScreen(
         snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
         // Behind the list: the blobs, glows or dots of the design (nothing in Material 3).
-        Column(Modifier.padding(pad).lookBackdrop(look)) {
+        Column(Modifier.padding(pad)) {
             if (inShared && Shared.gone) SharedGoneNotice()
             if (searching) SearchField(query, { query = it }) { searching = false; query = "" }
             // The category and sort choices and the view buttons. Since 2.89 they scroll with the list, under the

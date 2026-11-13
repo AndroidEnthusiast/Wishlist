@@ -37,9 +37,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -617,7 +615,8 @@ private fun TextTool(edit: HeroEdit, onDark: Color, onChange: (HeroEdit) -> Unit
     var wheel by remember { mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         val w = Color.White
-        OutlinedTextField(
+        // Material's own field: the photo editor is always dark, whatever the style.
+        androidx.compose.material3.OutlinedTextField(
             edit.text, { onChange(edit.copy(text = it.take(40))) },
             label = { Text(tr("Text on the photo")) }, singleLine = true, modifier = Modifier.fillMaxWidth(),
             // Light on the dark editor, whatever the theme.

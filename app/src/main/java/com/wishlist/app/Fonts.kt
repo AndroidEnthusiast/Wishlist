@@ -19,9 +19,21 @@ private val provider = GoogleFont.Provider(
     certificates = R.array.com_google_android_gms_fonts_certs
 )
 
-internal fun google(name: String): FontFamily = FontFamily(
-    listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold, FontWeight.ExtraBold).map {
-        Font(googleFont = GoogleFont(name), fontProvider = provider, weight = it)
+private val ALL_WEIGHTS = listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold, FontWeight.ExtraBold)
+
+/**
+ * A Google Font. [fallback] (the themes, owner 13 November 2026: "a close fallback until the download finishes"):
+ * one of the phone's own font families ("serif", "cursive", "monospace", "sans-serif-condensed"…) shown while the font
+ * is still downloading or when it can't be downloaded; without it the phone's standard font shows. [weights]: only
+ * these weights are asked for (fonts that come in one weight, such as Lobster or Righteous).
+ */
+internal fun google(name: String, fallback: String? = null, weights: List<FontWeight> = ALL_WEIGHTS): FontFamily = FontFamily(
+    // Each weight: the Google Font first, then the phone's font of the same weight (used until the first has arrived).
+    weights.flatMap { w ->
+        listOfNotNull(
+            Font(googleFont = GoogleFont(name), fontProvider = provider, weight = w),
+            fallback?.let { androidx.compose.ui.text.font.Font(androidx.compose.ui.text.font.DeviceFontFamilyName(it), weight = w) }
+        )
     }
 )
 
