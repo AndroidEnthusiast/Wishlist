@@ -32,7 +32,12 @@ class LookTest {
         for (st in STYLES) for (m in modes) {
             if (usesAccent(st.key)) for (ac in ACCENTS.map { it.key }) check(st.key, "$m/$ac", lookFor(st.key, ac, m))
             // Every colour set of the other styles (owner, 13 November 2026).
-            else for (set in COLOUR_SETS.getValue(st.key)) check(st.key, "$m/${set.key}", lookFor(st.key, "blue", m, set.key))
+            else for (set in COLOUR_SETS.getValue(st.key)) {
+                check(st.key, "$m/${set.key}", lookFor(st.key, "blue", m, set.key))
+                // Every card style and decoration amount of styles with options (Doodle, 2.202).
+                for (cards in CARD_STYLES[st.key].orEmpty()) for (deco in DECO_LEVELS)
+                    check(st.key, "$m/${set.key}/${cards.key}/${deco.key}", lookFor(st.key, "blue", m, set.key, deco.key, cards.key))
+            }
         }
     }
 
@@ -103,6 +108,11 @@ class LookTest {
             need("grey text on card", cs.onSurfaceVariant, cs.surfaceVariant)
             need("message bar", cs.inverseOnSurface, cs.inverseSurface)
             need("error on card", cs.error, cs.surfaceVariant)
+            // Every card colour (sticky notes, filled cards).
+            for (f in look.fills) {
+                need("text on a card colour", look.cardInk(0), f)
+                need("grey text on a card colour", look.cardMuted(0), f)
+            }
             if (!usesAccent(st)) {
                 // Quiet's and chaos's accent is whatever you pick (a warning shows in the Themer when it is hard to
                 // read; chaos kept its 2.198 look, owner).
@@ -209,6 +219,12 @@ class LookTest {
         fresh(); Repo.load(c)
         assertEquals("punk", Repo.design); assertEquals("safety", Repo.colourSet)
         assertEquals("klein", Repo.colourSets["swiss"])
+        // The options are kept per style.
+        Repo.setLook(c, "doodle", "light", "blue", "sticky", "wild", "sticker")
+        fresh(); Repo.load(c)
+        assertEquals("wild", Repo.decoOption); assertEquals("sticker", Repo.cardsOption)
+        val l = lookFor("doodle", "blue", "light", Repo.colourSet, Repo.decoOption, Repo.cardsOption)
+        assertEquals(2, l.deco); assertEquals("sticker", l.cardStyle); assertEquals("sticky", l.set)
         // A new style is kept as it is.
         prefs.edit().clear().putBoolean("look_v2", true).putString("style", "bauhaus").putString("theme", "light").commit()
         fresh(); Repo.load(c)

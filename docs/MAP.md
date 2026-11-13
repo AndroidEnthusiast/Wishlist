@@ -96,6 +96,7 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `Fonts.kt` (font choice)
 - `Settings.kt`
 - `Theme.kt` + `Design.kt` + `Styled.kt` + `Themer.kt` (themes and the themed buttons, dialogs, icons)
+- `Doodle.kt` (2.202): Doodle's sub-themes, hand-drawn parts and icons (`DoodleIcons`), options (`DECO_LEVELS`, `CARD_STYLES` in `Design.kt`); speed rules: `PerformanceRulesTest`
 - `Themed.kt` (2.199): the themed text fields, menus, tick boxes, choice circles, chips, spinners, progress bars, dividers, sliders, bottom panels, message bar and `Scaffold` (the style's drawing behind every screen); `Placeholders.kt` draws each style's emblem and Anthropomorphic's gift box with a face (`giftBuddy`, `lookPeek`); checks `LookTest`, `PartsScreenshotTest`
 - `themes/`: frozen copies of themes the owner wants to be able to bring back (Gen Z chaos, 13 November 2026), each with a README on putting it back; checked by `tests/themes/check.sh`
 

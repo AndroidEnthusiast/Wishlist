@@ -106,14 +106,18 @@ fun ThemerScreen(onBack: () -> Unit) {
     // The colour set of each style being tried (owner, 13 November 2026: at least three per style).
     var trySets by remember { mutableStateOf(Repo.colourSets) }
     val trySet = setFor(tryStyle, trySets[tryStyle].orEmpty()).key
+    // The options of each style being tried (decoration amount, card style), "decoration/cards".
+    var tryOptions by remember { mutableStateOf(Repo.themeOptions) }
+    val tryDeco = tryOptions[tryStyle].orEmpty().substringBefore('/')
+    val tryCards = tryOptions[tryStyle].orEmpty().substringAfter('/', "")
     val changed = tryStyle != styleFor(Repo.design).key || tryMode != inUseMode || tryAccent != accentFor(Repo.palette).key ||
-        trySet != setFor(Repo.design, Repo.colourSet).key
+        trySet != setFor(Repo.design, Repo.colourSet).key || tryOptions[tryStyle].orEmpty() != Repo.themeOptions[tryStyle].orEmpty()
     var picker by remember { mutableStateOf(false) }
     val snack = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     // Apply, then "Theme applied" (owner, 2.101).
     val apply = {
-        Repo.setLook(ctx, tryStyle, tryMode, tryAccent, trySet)
+        Repo.setLook(ctx, tryStyle, tryMode, tryAccent, trySet, tryDeco.takeIf { hasOptions(tryStyle) }, tryCards.takeIf { hasOptions(tryStyle) })
         scope.launch { snack.showToast(tr("Theme applied")) }
         Unit
     }
@@ -135,7 +139,7 @@ fun ThemerScreen(onBack: () -> Unit) {
         Column(Modifier.padding(pad).fillMaxSize()) {
             Spacer(Modifier.height(8.dp))
             // The preview is drawn in the look being tried out; the rest of the screen keeps the look in use.
-            LookTheme(lookFor(tryStyle, tryAccent, tryMode, trySet)) {
+            LookTheme(lookFor(tryStyle, tryAccent, tryMode, trySet, tryDeco, tryCards)) {
                 ThemePreview(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp))
             }
             Text(
@@ -177,7 +181,7 @@ fun ThemerScreen(onBack: () -> Unit) {
                     items(sets.size) { i ->
                         val set = sets[i]
                         val on = set.key == trySet
-                        val sample = lookFor(tryStyle, tryAccent, tryMode, set.key)
+                        val sample = lookFor(tryStyle, tryAccent, tryMode, set.key, tryDeco, tryCards)
                         Row(
                             Modifier.lookChip(LocalLook.current, on).clickable(onClickLabel = tr(set.name)) { trySets = trySets + (tryStyle to set.key) }
                                 .padding(start = 8.dp, end = 14.dp, top = 8.dp, bottom = 8.dp),
@@ -195,6 +199,14 @@ fun ThemerScreen(onBack: () -> Unit) {
                         }
                     }
                 }
+            }
+            // The style's options (owner, 13 November 2026): how much decoration, and the card style.
+            if (hasOptions(tryStyle)) {
+                val cardChoices = CARD_STYLES.getValue(tryStyle)
+                val decoNow = DECO_LEVELS.firstOrNull { it.key == tryDeco }?.key ?: "normal"
+                val cardsNow = cardStyleFor(tryStyle, trySet, tryCards)
+                OptionRow(tr("Decoration"), DECO_LEVELS, decoNow) { tryOptions = tryOptions + (tryStyle to "$it/$tryCards") }
+                OptionRow(tr("Cards"), cardChoices, cardsNow) { tryOptions = tryOptions + (tryStyle to "$tryDeco/$it") }
             }
             // The accent colours: only for the styles that take one (Quiet and Gen Z chaos); the others have their own
             // colours (owner, 13 November 2026), so the row would change nothing there.
@@ -230,6 +242,26 @@ fun ThemerScreen(onBack: () -> Unit) {
         }
     }
     if (picker) ColourPickerDialog(tryAccent, onPick = { tryAccent = it; picker = false }, onClose = { picker = false })
+}
+
+/** A row of choices for one option of a style: its name, then a chip per choice (the chosen one filled). */
+@Composable
+private fun OptionRow(name: String, choices: List<ThemeOption>, chosen: String, onPick: (String) -> Unit) {
+    val look = LocalLook.current
+    Row(
+        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(name, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(88.dp))
+        choices.forEach { ch ->
+            val on = ch.key == chosen
+            Text(
+                tr(ch.name), style = MaterialTheme.typography.labelLarge, color = look.chipContent(on),
+                modifier = Modifier.lookChip(look, on).clickable(onClickLabel = tr(ch.name)) { onPick(ch.key) }
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+            )
+        }
+    }
 }
 
 /** One style in the row under the preview: a small sample and its name. */

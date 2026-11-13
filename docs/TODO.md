@@ -7,6 +7,9 @@ it**, grouped as below, with a recommendation. Add every new open item here the 
 Details of each item are in the doc named after it.
 
 ## Now
+- **Try Doodle (2.202) on the phone**: does scrolling feel smooth now (also in the other styles)? Its three
+  sub-themes (Notebook, Sticky notes, Board), the options Decoration and Cards, light and dark. Then pick which style
+  to rebuild next to the same standard (one or two per update).
 - **Try 2.199's and 2.200's styles on the phone** (Y2K, Retro vintage, Pop futurism, Grunge, Flat, Bauhaus, Doodle,
   Cottage-core, Japandi, Risograph, Synthwave, Anthropomorphic, Swiss, British Punk; Gen Z chaos and Quiet), light and
   dark, each colour set (the gift box peeking over cards, the crooked Punk cards too): do the fonts arrive, do fields, menus, tick boxes, the bottom panels and the drawings look

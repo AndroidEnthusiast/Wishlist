@@ -124,6 +124,15 @@ object Repo {
         private set
     /** The colour set of the style in use. */
     val colourSet: String get() = colourSets[design].orEmpty()
+    /**
+     * The options chosen for each style (owner, 13 November 2026: decoration amount and card style), style key →
+     * "decoration/cards" (e.g. "wild/sticker"); none: the style's own defaults.
+     */
+    var themeOptions by mutableStateOf<Map<String, String>>(emptyMap())
+        private set
+    /** The decoration amount and card style of the style in use ("" for its defaults). */
+    val decoOption: String get() = themeOptions[design].orEmpty().substringBefore('/')
+    val cardsOption: String get() = themeOptions[design].orEmpty().substringAfter('/', "")
     var colours by mutableStateOf("")
         private set
     /** The font of the app: one of FONTS in Fonts.kt. Google Sans is the original. */
@@ -279,6 +288,10 @@ object Repo {
             val o = JSONObject(p.getString("colour_sets", "{}") ?: "{}")
             o.keys().asSequence().associateWith { o.optString(it) }
         } catch (e: Exception) { emptyMap() }
+        themeOptions = try {
+            val o = JSONObject(p.getString("theme_options", "{}") ?: "{}")
+            o.keys().asSequence().associateWith { o.optString(it) }
+        } catch (e: Exception) { emptyMap() }
         font = p.getString("font", "google_sans") ?: "google_sans"
         instantDelete = p.getBoolean("instant_delete", false)
         notifyDrops = p.getBoolean("notify_drops", true)
@@ -408,6 +421,7 @@ object Repo {
             .putString("palette", palette)
             .putString("style", design)
             .putString("colour_sets", JSONObject(colourSets as Map<*, *>).toString())
+            .putString("theme_options", JSONObject(themeOptions as Map<*, *>).toString())
             .putString("style_colours", colours)
             .putString("font", font)
             .putString("view", view)
@@ -1034,9 +1048,10 @@ object Repo {
     /** The accent colour: one of ACCENTS (Design.kt). Kept as "palette" (it held the old colour sets). */
     fun setPalette(c: Context, p: String) { palette = p; persist(c) }
     /** The look (2.97): a style of STYLES, "light" or "dark", and an accent of ACCENTS. */
-    fun setLook(c: Context, style: String, mode: String, accent: String, set: String? = null) {
+    fun setLook(c: Context, style: String, mode: String, accent: String, set: String? = null, deco: String? = null, cards: String? = null) {
         design = styleFor(style).key; theme = mode; palette = accentFor(accent).key
         if (set != null) colourSets = colourSets + (design to setFor(design, set).key)
+        if (deco != null || cards != null) themeOptions = themeOptions + (design to "${deco.orEmpty()}/${cards.orEmpty()}")
         persist(c)
     }
     fun setFont(c: Context, f: String) { font = f; persist(c) }

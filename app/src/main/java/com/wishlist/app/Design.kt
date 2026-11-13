@@ -109,7 +109,7 @@ val COLOUR_SETS: Map<String, List<ColourSet>> = mapOf(
     "grunge" to listOf(ColourSet("blood", "Blood red"), ColourSet("toxic", "Toxic green"), ColourSet("bruise", "Bruise purple")),
     "flat" to listOf(ColourSet("lagoon", "Lagoon"), ColourSet("forest", "Forest"), ColourSet("sunset", "Sunset")),
     "bauhaus" to listOf(ColourSet("primary", "Primary"), ColourSet("earth", "Earth"), ColourSet("night", "Night blue")),
-    "doodle" to listOf(ColourSet("orange", "Orange marker"), ColourSet("bluepen", "Blue pen"), ColourSet("highlighter", "Highlighter")),
+    "doodle" to listOf(ColourSet("notebook", "Notebook"), ColourSet("sticky", "Sticky notes"), ColourSet("board", "Board")),
     "cottage" to listOf(ColourSet("garden", "Garden"), ColourSet("lavender", "Lavender"), ColourSet("berry", "Berry")),
     "japandi" to listOf(ColourSet("oat", "Oat"), ColourSet("matcha", "Matcha"), ColourSet("clay", "Clay")),
     "riso" to listOf(ColourSet("pinkblue", "Pink and blue"), ColourSet("orangeteal", "Orange and teal"), ColourSet("greenpurple", "Green and purple")),
@@ -194,7 +194,13 @@ class Look(
     /** A gradient for filled blocks instead of [accent] (Y2K's holographic shine, Pop futurism's sunset). */
     val accentBrush: Brush? = null,
     /** A gradient for the hard shadow instead of [shadows] (Y2K). */
-    val shadowBrush: Brush? = null
+    val shadowBrush: Brush? = null,
+    /** The colour set in use ([COLOUR_SETS]); "" for Quiet and chaos. */
+    val set: String = "",
+    /** How much decoration (owner, 13 November 2026): 0 calm, 1 normal, 2 wild ([DECO_LEVELS]). */
+    val deco: Int = 1,
+    /** The card style ([CARD_STYLES]), "" when the style has none. */
+    val cardStyle: String = ""
 ) {
     /** The signature look. (Kept under the old name: "classic" meant the plain standard look.) */
     val classic: Boolean get() = design == "quiet"
@@ -264,6 +270,15 @@ private val sedgwick by lazy { google("Sedgwick Ave Display", "casual", one) }
 private val archivoNarrow by lazy { google("Archivo Narrow", "sans-serif-condensed", listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold)) }
 private val plexMono by lazy { google("IBM Plex Mono", "monospace", listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold)) }
 
+/** Doodle's heading font (Doodle.kt). */
+internal val doodleDisplay: FontFamily get() = caveatBrush
+
+/** [scheme] for the styles built in their own file (Doodle.kt). */
+internal fun lookScheme(
+    dark: Boolean, primary: Color, onPrimary: Color, container: Color, onContainer: Color,
+    bg: Color, surface: Color, text: Color, muted: Color, outline: Color, outlineVariant: Color
+): ColorScheme = scheme(dark, primary, onPrimary, container, onContainer, bg, surface, text, muted, outline, outlineVariant)
+
 /** All the colours of a scheme from a few, plus the surface steps that menus and dialogs use. */
 private fun scheme(
     dark: Boolean, primary: Color, onPrimary: Color, container: Color, onContainer: Color,
@@ -302,9 +317,33 @@ private fun sweep(cols: List<Color>): Brush = Brush.linearGradient(cols, Offset.
  * The look for a style ([style], one of [STYLES]), an accent ([accentKey], one of [ACCENTS]; only Quiet and chaos use
  * it) and a mode ("light" or "dark"; anything else counts as dark).
  */
-fun lookFor(style: String, accentKey: String, mode: String, set: String = ""): Look {
+fun lookFor(style: String, accentKey: String, mode: String, set: String = "", deco: String = "", cards: String = ""): Look {
+    val key = styleFor(style).key
+    val setKey = setFor(key, set).key
+    val level = DECO_LEVELS.indexOfFirst { it.key == deco }.takeIf { it >= 0 } ?: 1
+    if (key == "doodle") return doodleLook(mode != "light", setKey, level, cardStyleFor(key, setKey, cards))
     val base = baseLook(style, accentKey, mode)
-    return if (usesAccent(base.design)) base else base.withSet(setFor(base.design, set).key)
+    return if (usesAccent(base.design)) base else base.withSet(setKey)
+}
+
+/** One choice of a theme's options (owner, 13 November 2026: options to personalise a theme). */
+class ThemeOption(val key: String, val name: String)
+
+/** How much decoration: drawings behind the screens and how much cards tilt. */
+val DECO_LEVELS = listOf(ThemeOption("calm", "Calm"), ThemeOption("normal", "Normal"), ThemeOption("wild", "Wild"))
+
+/** The card styles of the styles that have them (Doodle first; the others follow when they are rebuilt). */
+val CARD_STYLES: Map<String, List<ThemeOption>> = mapOf(
+    "doodle" to listOf(ThemeOption("outlined", "Outlined"), ThemeOption("filled", "Filled"), ThemeOption("sticker", "Sticker"))
+)
+
+/** Whether the style has options (decoration amount, card style) in the Themer. */
+fun hasOptions(style: String): Boolean = CARD_STYLES.containsKey(styleFor(style).key)
+
+/** The card style: the one chosen, or the colour set's own (Doodle's sticky notes are filled). */
+fun cardStyleFor(style: String, set: String, chosen: String): String {
+    val styles = CARD_STYLES[style] ?: return ""
+    return styles.firstOrNull { it.key == chosen }?.key ?: if (style == "doodle" && set == "sticky") "filled" else styles.first().key
 }
 
 /** The style's own look in its first colour set. */
@@ -478,26 +517,6 @@ private fun baseLook(style: String, accentKey: String, mode: String): Look {
                 else listOf(red.copy(alpha = 0.25f), blue.copy(alpha = 0.18f), yellow.copy(alpha = 0.35f), ink.copy(alpha = 0.12f)),
                 jost, drop, rise, accent = fill, onAccent = onFill,
                 art = listOf(red, blue, yellow, c(0xFF14161F), green, c(0xFFF0E7D4))
-            )
-        }
-        "doodle" -> {
-            // Black marker on white paper (light); white marker on black paper (dark); one orange label colour.
-            val bg = if (dark) c(0xFF161616) else c(0xFFFAFAF6)
-            val surface = if (dark) c(0xFF222222) else white
-            val ink = if (dark) c(0xFFF5F5EF) else c(0xFF141414)
-            val muted = if (dark) c(0xFFBDBDB5) else c(0xFF474747)
-            val orange = c(0xFFFF8A3D)
-            Look(
-                "doodle", dark,
-                scheme(dark, if (dark) c(0xFFFFA26B) else c(0xFFB4400C), if (dark) c(0xFF141414) else white, if (dark) c(0xFF3A2A20) else c(0xFFFFE6D6), ink,
-                    bg, surface, ink, muted, ink, if (dark) c(0xFF3A3A3A) else c(0xFFD6D6D0)),
-                listOf(surface),
-                if (dark) listOf(c(0xFF2C2C2C), c(0xFF3A2A20), c(0xFF26262A)) else listOf(c(0xFFF2F2EE), c(0xFFFFEBDD), c(0xFFF0F0F4)),
-                ink,
-                listOf(ink),
-                if (dark) listOf(ink.copy(alpha = 0.12f), orange.copy(alpha = 0.25f)) else listOf(ink.copy(alpha = 0.10f), orange.copy(alpha = 0.25f)),
-                caveatBrush, drop, rise, accent = orange, onAccent = c(0xFF141414),
-                art = listOf(orange, ink, if (dark) c(0xFF161616) else white)
             )
         }
         "cottage" -> {
@@ -929,7 +948,11 @@ fun Look.cardShape(id: Long, small: Boolean): Shape = when (design) {
     "grunge" -> RoughShape(pick(id, 97) + 11, if (small) 1.8.dp else 2.2.dp)
     "flat" -> RoundedCornerShape(if (small) 10.dp else 12.dp)
     "bauhaus" -> RectangleShape
-    "doodle" -> WobblyShape(pick(id, 89) + 3, if (small) 14.dp else 18.dp)
+    "doodle" -> when (set) {
+        "sticky" -> DogEarShape(2.dp, 16.dp)
+        "board" -> WobblyShape(pick(id, 89) + 3, 5.dp, 1.4.dp)
+        else -> WobblyShape(pick(id, 89) + 3, if (small) 14.dp else 18.dp)
+    }
     "cottage" -> RoundedCornerShape(if (small) 12.dp else 14.dp)
     "japandi" -> RoundedCornerShape(4.dp)
     "riso" -> RoundedCornerShape(if (small) 6.dp else 8.dp)
@@ -1012,7 +1035,7 @@ val Look.buttonShape: Shape
         "retro", "flat", "riso", "synth" -> RoundedCornerShape(8.dp)
         "japandi" -> RoundedCornerShape(4.dp)
         "grunge" -> RoughShape(51, 1.4.dp, 7.dp)
-        "doodle" -> WobblyShape(53, 22.dp, 1.4.dp)
+        "doodle" -> if (set == "notebook" || set.isEmpty()) WobblyShape(53, 22.dp, 1.4.dp) else WobblyShape(53, 8.dp, 1.4.dp)
         "bauhaus", "swiss" -> RectangleShape
         "punk" -> RoughShape(55, 1.6.dp, 7.dp)
         else -> CircleShape
@@ -1025,34 +1048,55 @@ fun Look.tilt(id: Long): Float = when (design) {
     // crooked paper; Doodle loose sketches. (Risograph doesn't turn: its layers slide sideways, [nudge].)
     "punk" -> listOf(-1.8f, 1.3f, -0.7f, 2.0f, -1.4f, 0.9f, -2.2f)[pick(id, 7)]
     "grunge" -> listOf(-1.1f, 0.8f, -0.4f, 1.2f, -0.9f)[pick(id, 5)]
-    "doodle" -> listOf(-0.9f, 0.7f, -0.4f, 0.8f)[pick(id, 4)]
+    // Doodle: by the amount of decoration (Calm straight, Normal loose, Wild all over the place).
+    "doodle" -> listOf(-0.9f, 0.7f, -0.4f, 0.8f)[pick(id, 4)] * listOf(0f, 1f, 2.2f)[deco]
     else -> 0f
+}
+
+/** A strip of sticky tape across [at], turned [angle] degrees (Punk, Doodle). */
+fun androidx.compose.ui.graphics.drawscope.DrawScope.tape(at: Offset, angle: Float, colour: Color = Color(0xFFF2E6B8).copy(alpha = 0.75f)) {
+    val t = Size(46.dp.toPx(), 14.dp.toPx())
+    rotate(angle, at) { drawRect(colour, Offset(at.x - t.width / 2, at.y - t.height / 2), t) }
 }
 
 /** Cards slid out of line (wild placement): Punk's pasted-up cut-outs, Risograph's layers printed a little off. */
 fun Look.nudge(id: Long): Dp = when (design) {
     "punk" -> listOf(-6f, 4f, 0f, 7f, -3f, 5f, -7f)[pick(id, 7)].dp
     "riso" -> listOf(-5f, 3f, 6f, -2f, 4f)[pick(id, 5)].dp
+    "doodle" -> if (deco == 2) listOf(-4f, 3f, 0f, 5f, -2f)[pick(id, 5)].dp else 0.dp
     else -> 0.dp
 }
 
 /** A hard shadow: the shape again, moved down and to the right, in one flat colour (or a gradient). */
-fun Modifier.hardShadow(color: Color, shape: Shape, offset: Dp = 4.dp, brush: Brush? = null): Modifier = drawBehind {
+fun Modifier.hardShadow(color: Color, shape: Shape, offset: Dp = 4.dp, brush: Brush? = null): Modifier = drawWithCache {
+    // The outline is made once per size, not on every frame (2.202: scrolling lagged).
     val o = offset.toPx()
     val outline = shape.createOutline(size, layoutDirection, this)
-    translate(o, o) { if (brush != null) drawOutline(outline, brush) else drawOutline(outline, color) }
+    onDrawBehind { translate(o, o) { if (brush != null) drawOutline(outline, brush) else drawOutline(outline, color) } }
+}
+
+/**
+ * A line along the inside of [shape]'s edge, like Modifier.border, but drawn from an outline made once per size.
+ * (Modifier.border paints every card with an irregular shape, torn, wobbly or ticket, into a picture of its own first;
+ * with a list of cards that made scrolling lag, 2.202. PerformanceRulesTest keeps Modifier.border out of the styles.)
+ */
+fun Modifier.edgeLine(width: Dp, color: Color, shape: Shape): Modifier = if (width <= 0.dp || color.alpha == 0f) this else drawWithCache {
+    val w = width.toPx()
+    val outline = shape.createOutline(Size(size.width - w, size.height - w), layoutDirection, this)
+    val stroke = Stroke(w)
+    onDrawWithContent { drawContent(); translate(w / 2, w / 2) { drawOutline(outline, color, style = stroke) } }
 }
 
 /** Retro's printed label: a thin second line just inside the edge (only on bigger things, not on chips). */
-private fun Modifier.keyline(look: Look, shape: Shape, stitched: Boolean = false, min: Dp = 56.dp): Modifier = drawBehind {
-    if (size.minDimension < min.toPx()) return@drawBehind
+private fun Modifier.keyline(look: Look, shape: Shape, stitched: Boolean = false, min: Dp = 56.dp): Modifier = drawWithCache {
     val i = 4.dp.toPx()
-    val inner = Size(size.width - 2 * i, size.height - 2 * i)
-    val outline = shape.createOutline(inner, layoutDirection, this)
+    val show = size.minDimension >= min.toPx()
+    val outline = shape.createOutline(Size(size.width - 2 * i, size.height - 2 * i), layoutDirection, this)
     // Cottage-core: running stitches, like a quilt; Retro: a printed fine line.
     val st = if (stitched) Stroke(1.3.dp.toPx(), pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(), 3.5.dp.toPx())))
         else Stroke(1.dp.toPx())
-    translate(i, i) { drawOutline(outline, look.line.copy(alpha = if (stitched) 0.7f else 0.55f), style = st) }
+    val col = look.line.copy(alpha = if (stitched) 0.7f else 0.55f)
+    onDrawBehind { if (show) translate(i, i) { drawOutline(outline, col, style = st) } }
 }
 
 /**
@@ -1060,11 +1104,14 @@ private fun Modifier.keyline(look: Look, shape: Shape, stitched: Boolean = false
  * a gradient); [raised] false = without the shadow (fields, pressed-in things). [depth] how big the shadow is. The
  * content is clipped to [shape].
  */
-fun Modifier.lookSurface(look: Look, shape: Shape, fill: Color, raised: Boolean = true, depth: Dp = 6.dp, brush: Brush? = null, shadow: Color? = null): Modifier {
+fun Modifier.lookSurface(
+    look: Look, shape: Shape, fill: Color, raised: Boolean = true, depth: Dp = 6.dp, brush: Brush? = null, shadow: Color? = null,
+    card: Boolean = false
+): Modifier {
     fun Modifier.paint() = clip(shape).then(if (brush != null) Modifier.background(brush) else Modifier.background(fill))
     val d = depth.value
     return when (look.design) {
-        "chaos" -> (if (raised) hardShadow(look.shadows[0], shape, 5.dp) else this).paint().border(3.dp, look.line, shape)
+        "chaos" -> (if (raised) hardShadow(look.shadows[0], shape, 5.dp) else this).paint().edgeLine(3.dp, look.line, shape)
         // Y2K: a holographic shadow; buttons and chips get a glossy bubble shine on their top half.
         "y2k" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.6f).coerceIn(2f, 5f).dp, look.shadowBrush) else this)
             .paint().drawBehind {
@@ -1072,76 +1119,60 @@ fun Modifier.lookSurface(look: Look, shape: Shape, fill: Color, raised: Boolean 
                     Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.55f), Color.White.copy(alpha = 0f)), 0f, size.height * 0.55f),
                     Offset(size.width * 0.06f, size.height * 0.08f), Size(size.width * 0.88f, size.height * 0.4f)
                 )
-            }.border(look.edge, look.line, shape)
+            }.edgeLine(look.edge, look.line, shape)
         // Retro: a misprinted shadow and a fine printed line inside the edge (buttons too).
         "retro" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.5f).coerceIn(2f, 4f).dp) else this)
-            .paint().keyline(look, shape, min = 36.dp).border(look.edge, look.line, shape)
+            .paint().keyline(look, shape, min = 36.dp).edgeLine(look.edge, look.line, shape)
         "pop" -> (if (raised) hardShadow(look.shadows[1], shape, (d * 0.9f).coerceIn(3f, 8f).dp)
             .hardShadow(look.shadows[0], shape, (d * 0.45f).coerceIn(1.5f, 4f).dp) else this).paint()
         "grunge" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.5f).coerceIn(2f, 4f).dp) else this)
-            .paint().border(look.edge, look.line, shape)
+            .paint().edgeLine(look.edge, look.line, shape)
         // Flat: the "long shadow" of flat design on buttons: a darker band running off to the bottom right.
-        "flat" -> (if (raised) drawBehind {
-            if (size.height >= 64.dp.toPx()) return@drawBehind
+        "flat" -> (if (raised) drawWithCache {
+            val show = size.height < 64.dp.toPx()
             val outline = shape.createOutline(size, layoutDirection, this)
-            val col = lerp(brush?.let { fill } ?: fill, Color.Black, 0.28f).copy(alpha = 0.55f)
+            val col = lerp(fill, Color.Black, 0.28f).copy(alpha = 0.55f)
             val n = 10.dp.toPx()
-            var k = 1f
-            while (k <= n) { translate(k, k) { drawOutline(outline, col) }; k += 1f }
+            onDrawBehind { if (show) { var k = 1f; while (k <= n) { translate(k, k) { drawOutline(outline, col) }; k += 1.5f } } }
         } else this).paint()
-        // Doodle: a hatched pencil shadow and a marker line drawn twice, the second a little off, like a quick sketch.
-        "doodle" -> (if (raised) drawBehind {
-            val o = (d * 0.6f).coerceIn(3f, 6f).dp.toPx()
-            val outline = shape.createOutline(size, layoutDirection, this)
-            val clip = Path().apply { addOutline(outline); translate(Offset(o, o)) }
-            clipPath(clip) {
-                var x = -size.height
-                val step = 5.dp.toPx()
-                while (x < size.width + o) { drawLine(look.line.copy(alpha = 0.55f), Offset(x, size.height + o), Offset(x + size.height + o, 0f), 1.2.dp.toPx()); x += step }
-            }
-        } else this).paint().border(look.edge, look.line, shape).drawWithContent {
-            drawContent()
-            val outline = shape.createOutline(size, layoutDirection, this)
-            translate(1.2.dp.toPx(), -1.dp.toPx()) { drawOutline(outline, look.line.copy(alpha = 0.45f), style = Stroke(1.dp.toPx())) }
-        }
+        // Doodle: a sketchy marker line drawn twice (the second a little off) and, raised, a hatched pencil shadow; the
+        // "Sticker" card style: a thick line and a solid shadow instead (Doodle's options, 2.202).
+        "doodle" -> doodleSurface(look, shape, raised, d, card).paint().then(Modifier.doodleLine(look, shape, card))
         // Cottage-core: a soft printed shadow, a fine line and an inner keyline like a seed packet.
         "cottage" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.4f).coerceIn(2f, 3f).dp) else this)
-            .paint().keyline(look, shape, stitched = true, min = 36.dp).border(look.edge, look.line, shape)
+            .paint().keyline(look, shape, stitched = true, min = 36.dp).edgeLine(look.edge, look.line, shape)
         // Japandi: a hairline, nothing else.
-        "japandi" -> paint().border(look.edge, look.line.copy(alpha = 0.6f), shape)
+        "japandi" -> paint().edgeLine(look.edge, look.line.copy(alpha = 0.6f), shape)
         // Risograph: the pink layer printed a little off, under the blue outline.
         // …and the blue outline printed once more, a little off (overprint).
         "riso" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.6f).coerceIn(2.5f, 5f).dp) else this)
-            .paint().border(look.edge, look.line, shape).drawWithContent {
-                drawContent()
+            .paint().edgeLine(look.edge, look.line, shape).drawWithCache {
                 val outline = shape.createOutline(size, layoutDirection, this)
-                translate(-2.dp.toPx(), 1.5.dp.toPx()) { drawOutline(outline, look.shadows.getOrElse(1) { look.line }.copy(alpha = 0.6f), style = Stroke(1.5.dp.toPx())) }
+                val col = look.shadows.getOrElse(1) { look.line }.copy(alpha = 0.6f)
+                val st = Stroke(1.5.dp.toPx())
+                val dx = -2.dp.toPx(); val dy = 1.5.dp.toPx()
+                onDrawWithContent { drawContent(); translate(dx, dy) { drawOutline(outline, col, style = st) } }
             }
         // Swiss: no frame and no shadow; a thick rule along the top of each card, like a column on a grid.
         "swiss" -> paint().drawBehind {
             if (size.height >= 64.dp.toPx()) drawRect(look.line, Offset.Zero, Size(size.width, 4.dp.toPx()))
-        }.then(if (size0(look, raised)) Modifier.border(2.dp, look.line, shape) else Modifier)
+        }.then(if (size0(look, raised)) Modifier.edgeLine(2.dp, look.line, shape) else Modifier)
         // Punk: a torn-out cut-out with a hard shadow, taped down with a strip of tape across its top edge.
         "punk" -> (if (raised) hardShadow(shadow ?: look.shadows[0], shape, (d * 0.6f).coerceIn(2.5f, 5f).dp) else this)
-            .paint().border(look.edge, look.line, shape).drawWithContent {
+            .paint().edgeLine(look.edge, look.line, shape).drawWithContent {
                 drawContent()
-                if (size.height >= 56.dp.toPx() && size.width >= 120.dp.toPx()) {
-                    val t = Size(46.dp.toPx(), 14.dp.toPx())
-                    rotate(-4f, Offset(size.width * 0.5f, 0f)) {
-                        drawRect(Color(0xFFF2E6B8).copy(alpha = 0.75f), Offset(size.width * 0.5f - t.width / 2, -t.height / 2), t)
-                    }
-                }
+                if (size.height >= 56.dp.toPx() && size.width >= 120.dp.toPx()) tape(Offset(size.width * 0.5f, 0f), -4f)
             }
         // Synthwave: a neon outline with a soft glow in the same colour.
         "synth" -> (if (raised) shadow((d * 1.6f).coerceIn(4f, 14f).dp, shape, clip = false, ambientColor = look.line, spotColor = look.line) else this)
-            .paint().border(look.edge, look.line, shape)
+            .paint().edgeLine(look.edge, look.line, shape)
         // Anthropomorphic: a cartoon outline and a hard ink shadow.
         "anthro" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.6f).coerceIn(2.5f, 5f).dp) else this)
-            .paint().border(look.edge, look.line, shape)
+            .paint().edgeLine(look.edge, look.line, shape)
         "bauhaus" -> (if (raised) hardShadow(shadow ?: look.shadows[0], shape, (d * 0.7f).coerceIn(3f, 6f).dp) else this)
-            .paint().border(look.edge, look.line, shape)
+            .paint().edgeLine(look.edge, look.line, shape)
         // Quiet: just the card colour; in light a hairline so white cards don't melt into each other.
-        else -> paint().then(if (!look.dark) Modifier.border(1.dp, Color.Black.copy(alpha = 0.04f), shape) else Modifier)
+        else -> paint().then(if (!look.dark) Modifier.edgeLine(1.dp, Color.Black.copy(alpha = 0.04f), shape) else Modifier)
     }
 }
 
@@ -1152,7 +1183,9 @@ fun Modifier.lookCard(look: Look, id: Long, shape: Shape): Modifier {
     // Bauhaus: each card's block behind it in its own primary colour.
     val block = if (look.design == "bauhaus") listOf(look.art[0], look.art[1], look.art[2])[pick(id, 3)] else null
     return (if (n != 0.dp) offset(x = n) else this).then(if (t != 0f) Modifier.rotate(t) else Modifier)
-        .lookSurface(look, shape, look.cardFill(id), depth = 8.dp, shadow = block)
+        .lookSurface(look, shape, look.cardFill(id), depth = 8.dp, shadow = block, card = true)
+        .then(if (look.design == "doodle" && look.set == "sticky") Modifier.doodleFold(look, if (shape is DogEarShape) 16.dp else 0.dp) else Modifier)
+        .then(if (look.design == "doodle") Modifier.doodlePin(look, id) else Modifier)
 }
 
 /** Swiss buttons (filled ones excepted) are framed in black; whether this surface is one. */
@@ -1169,7 +1202,7 @@ fun Modifier.lookChip(look: Look, on: Boolean = false): Modifier {
     val off = if (look.design == "flat") lerp(cs.surfaceVariant, look.scheme.outline, 0.18f) else cs.surfaceVariant
     return when (look.design) {
         "chaos" -> (if (on) hardShadow(look.shadows[0], shape, 3.dp) else this)
-            .clip(shape).background(if (on) look.tints[0] else cs.surfaceVariant).border(2.dp, look.line, shape)
+            .clip(shape).background(if (on) look.tints[0] else cs.surfaceVariant).edgeLine(2.dp, look.line, shape)
         "quiet" -> clip(shape).background(if (on) cs.onSurface else cs.surfaceVariant)
         else -> {
             // The other styles: the chosen one filled like a button (gradient included), the others plain, with the
@@ -1178,7 +1211,7 @@ fun Modifier.lookChip(look: Look, on: Boolean = false): Modifier {
             val base = if (on && look.design == "bauhaus") hardShadow(look.shadows[0], shape, 3.dp) else this
             base.clip(shape)
                 .then(if (on && look.accentBrush != null) Modifier.background(look.accentBrush) else Modifier.background(if (on) look.accent else off))
-                .then(if (line > 0.dp) Modifier.border(line, look.line, shape) else Modifier)
+                .then(if (line > 0.dp) Modifier.edgeLine(line, look.line, shape) else Modifier)
         }
     }
 }
@@ -1360,42 +1393,7 @@ fun Modifier.lookBackdrop(look: Look): Modifier = when (look.design) {
             }
         }
     }
-    "doodle" -> drawWithCache {
-        val w = size.width; val h = size.height
-        val u = 1.dp.toPx()
-        val pen = Stroke(2.2f * u, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round)
-        // Little marker doodles: a star, a spiral, a flower, a smiley, a heart, squiggles.
-        fun star(c: Offset, r: Float) = Path().apply {
-            for (i in 0 until 10) {
-                val a = Math.toRadians(-90.0 + i * 36.0); val rr = if (i % 2 == 0) r else r * 0.45f
-                val p = Offset(c.x + (kotlin.math.cos(a) * rr).toFloat(), c.y + (kotlin.math.sin(a) * rr).toFloat())
-                if (i == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y)
-            }
-            close()
-        }
-        fun spiral(c: Offset, r: Float) = Path().apply {
-            moveTo(c.x, c.y)
-            for (i in 1..60) { val a = i * 0.33; val rr = r * i / 60f; lineTo(c.x + (kotlin.math.cos(a) * rr).toFloat(), c.y + (kotlin.math.sin(a) * rr).toFloat()) }
-        }
-        fun squiggle(x: Float, y: Float, len: Float) = Path().apply {
-            moveTo(x, y); var k = 0f
-            while (k < len) { quadraticTo(x + k + 6 * u, y - 6 * u, x + k + 12 * u, y); quadraticTo(x + k + 18 * u, y + 6 * u, x + k + 24 * u, y); k += 24 * u }
-        }
-        val star1 = star(Offset(w * 0.88f, 90 * u), 14 * u); val star2 = star(Offset(w * 0.12f, h * 0.7f), 10 * u)
-        val sp = spiral(Offset(w * 0.08f, 220 * u), 18 * u); val sq1 = squiggle(w * 0.55f, 30 * u, 70 * u); val sq2 = squiggle(w * 0.6f, h * 0.9f, 90 * u)
-        onDrawBehind {
-            drawPath(star1, look.blobs[0], style = pen); drawPath(star2, look.blobs[1]); drawPath(sp, look.blobs[0], style = pen)
-            drawPath(sq1, look.blobs[0], style = pen); drawPath(sq2, look.blobs[0], style = pen)
-            // A smiley and a flower.
-            val sm = Offset(w * 0.9f, h * 0.48f)
-            drawCircle(look.blobs[0], 16 * u, sm, style = pen)
-            drawCircle(look.blobs[0], 1.8f * u, Offset(sm.x - 5 * u, sm.y - 4 * u)); drawCircle(look.blobs[0], 1.8f * u, Offset(sm.x + 5 * u, sm.y - 4 * u))
-            drawArc(look.blobs[0], 20f, 140f, false, Offset(sm.x - 8 * u, sm.y - 6 * u), Size(16 * u, 14 * u), style = pen)
-            val fl = Offset(w * 0.2f, h * 0.38f)
-            for (i in 0 until 6) rotate(i * 60f, fl) { drawOval(look.blobs[0], Offset(fl.x - 5 * u, fl.y - 18 * u), Size(10 * u, 14 * u), style = pen) }
-            drawCircle(look.blobs[1], 5 * u, fl)
-        }
-    }
+    "doodle" -> doodleBackdrop(look)
     "cottage" -> drawWithCache {
         val w = size.width; val h = size.height
         val u = 1.dp.toPx()
@@ -1656,14 +1654,6 @@ private fun Look.withSet(set: String): Look {
             c2(0xFF1F3FBF, 0xFF9DB0FF), c2(0xFFFFFFFF, 0xFF14161F), c2(0xFFDCE2FA, 0xFF262E5A), c2(0xFF1F3FBF, 0xFF6F8BFF), c2(0xFFFFFFFF, 0xFF14161F),
             listOf(Color(0xFFFF6B35), Color(0xFF1F3FBF), Color(0xFFF2C14E), Color(0xFF14161F), Color(0xFF2E8B57), art[5]),
             listOf(Color(0xFFFF6B35), Color(0xFF1F3FBF), Color(0xFFF2C14E), blobs[3]), listOf(Color(0xFFFF6B35))
-        )
-        "doodle/bluepen" -> recolour(
-            c2(0xFF1F45C9, 0xFF8FB0FF), c2(0xFFFFFFFF, 0xFF141414), c2(0xFFDDE6FF, 0xFF22304F), Color(0xFF5B8CFF), Color(0xFF141414),
-            listOf(Color(0xFF5B8CFF), art[1], art[2]), listOf(blobs[0], Color(0xFF5B8CFF))
-        )
-        "doodle/highlighter" -> recolour(
-            c2(0xFF7A6000, 0xFFF7E25B), c2(0xFFFFFFFF, 0xFF141414), c2(0xFFFFF6BF, 0xFF3F3A1A), Color(0xFFF7E25B), Color(0xFF141414),
-            listOf(Color(0xFFF7E25B), art[1], art[2]), listOf(blobs[0], Color(0xFFFF7FBF))
         )
         "cottage/lavender" -> recolour(
             c2(0xFF6B3E7A, 0xFFD9C2EE), c2(0xFFFFFBF2, 0xFF1A2117), c2(0xFFE9DFF2, 0xFF33293F), c2(0xFF6B4E8A, 0xFFC9B2E3), c2(0xFFFFFBF2, 0xFF1A2117),

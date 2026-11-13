@@ -155,13 +155,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.emblem(look: Look) 
                 drawCircle(a[4], s * 0.45f, Offset(c.x + s * 0.35f, c.y + s * 0.66f))
             }
         }
-        "doodle" -> {
-            // A wobbly marker circle with rays, like a doodled sun.
-            val pen = Stroke(s * 0.045f, cap = StrokeCap.Round)
-            drawCircle(a[0].copy(alpha = 0.35f), s * 0.3f, c)
-            drawCircle(look.line, s * 0.3f, c, style = pen)
-            for (i in 0 until 8) rotate(i * 45f + 10f, c) { drawLine(look.line, Offset(c.x, c.y - s * 0.38f), Offset(c.x, c.y - s * 0.48f), s * 0.045f, StrokeCap.Round) }
-        }
+        "doodle" -> doodleEmblem(look)
         "cottage" -> {
             // A little wreath: a sage ring of leaves around a cream middle, two terracotta berries.
             drawCircle(a[0], s * 0.42f, c, style = Stroke(s * 0.05f))

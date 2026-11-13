@@ -215,6 +215,16 @@ fun Switch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifier: Mo
                 uncheckedThumbColor = look.line, uncheckedTrackColor = cs.surfaceVariant, uncheckedBorderColor = look.line
             )
         )
+        // Doodle: a hand-drawn switch (Doodle.kt), the same size and touch area as Material's.
+        "doodle" -> {
+            val t by animateFloatAsState(if (checked) 1f else 0f, label = "switch")
+            Box(
+                modifier.size(width = 60.dp, height = 48.dp).then(
+                    if (onCheckedChange != null) Modifier.toggleable(checked, enabled = enabled, role = Role.Switch) { onCheckedChange(it) } else Modifier
+                ),
+                contentAlignment = Alignment.Center
+            ) { Canvas(Modifier.size(width = 54.dp, height = 30.dp)) { doodleSwitch(look, t) } }
+        }
         "quiet" -> M3Switch(
             checked, onCheckedChange, modifier, enabled = enabled,
             colors = SwitchDefaults.colors(
@@ -405,8 +415,8 @@ fun StatusBadge(text: String, small: Boolean, modifier: Modifier = Modifier) {
 private fun StyleBadge(text: String, bg: Color, fg: Color, small: Boolean, lineColor: Color?, modifier: Modifier = Modifier) {
     val look = LocalLook.current
     val shape = look.badgeShape(small)
-    val border = if (look.edge > 0.dp) BorderStroke(minOf(look.edge, 2.dp), lineColor ?: look.line) else null
-    Surface(color = bg, shape = shape, modifier = modifier, border = border) {
+    // The line drawn with edgeLine (2.202: Modifier.border was slow on irregular shapes in lists).
+    Surface(color = bg, shape = shape, modifier = modifier.edgeLine(if (look.edge > 0.dp) minOf(look.edge, 2.dp) else 0.dp, lineColor ?: look.line, shape)) {
         Text(
             text, color = fg,
             style = if (small) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
@@ -422,56 +432,56 @@ private fun StyleBadge(text: String, bg: Color, fg: Color, small: Boolean, lineC
  */
 object AppIcons {
     @Composable
-    private fun v(f: ImageVector, o: ImageVector, r: ImageVector, s: ImageVector): ImageVector =
-        when (LocalLook.current.iconStyle) {
+    private fun v(f: ImageVector, o: ImageVector, r: ImageVector, s: ImageVector, d: ImageVector? = null): ImageVector =
+        if (d != null && LocalLook.current.design == "doodle") d else when (LocalLook.current.iconStyle) {
             "outlined" -> o
             "rounded" -> r
             "sharp" -> s
             else -> f
         }
 
-    val Add: ImageVector @Composable get() = v(Icons.Filled.Add, Icons.Outlined.Add, Icons.Rounded.Add, Icons.Sharp.Add)
+    val Add: ImageVector @Composable get() = v(Icons.Filled.Add, Icons.Outlined.Add, Icons.Rounded.Add, Icons.Sharp.Add, DoodleIcons.Add)
     val ArrowBack: ImageVector @Composable get() = v(
         Icons.AutoMirrored.Filled.ArrowBack, Icons.AutoMirrored.Outlined.ArrowBack,
         Icons.AutoMirrored.Rounded.ArrowBack, Icons.AutoMirrored.Sharp.ArrowBack
-    )
+    , DoodleIcons.ArrowBack)
     val ArrowDropDown: ImageVector @Composable get() =
-        v(Icons.Filled.ArrowDropDown, Icons.Outlined.ArrowDropDown, Icons.Rounded.ArrowDropDown, Icons.Sharp.ArrowDropDown)
-    val Check: ImageVector @Composable get() = v(Icons.Filled.Check, Icons.Outlined.Check, Icons.Rounded.Check, Icons.Sharp.Check)
-    val Close: ImageVector @Composable get() = v(Icons.Filled.Close, Icons.Outlined.Close, Icons.Rounded.Close, Icons.Sharp.Close)
-    val Delete: ImageVector @Composable get() = v(Icons.Filled.Delete, Icons.Outlined.Delete, Icons.Rounded.Delete, Icons.Sharp.Delete)
-    val Edit: ImageVector @Composable get() = v(Icons.Filled.Edit, Icons.Outlined.Edit, Icons.Rounded.Edit, Icons.Sharp.Edit)
+        v(Icons.Filled.ArrowDropDown, Icons.Outlined.ArrowDropDown, Icons.Rounded.ArrowDropDown, Icons.Sharp.ArrowDropDown, DoodleIcons.ArrowDropDown)
+    val Check: ImageVector @Composable get() = v(Icons.Filled.Check, Icons.Outlined.Check, Icons.Rounded.Check, Icons.Sharp.Check, DoodleIcons.Check)
+    val Close: ImageVector @Composable get() = v(Icons.Filled.Close, Icons.Outlined.Close, Icons.Rounded.Close, Icons.Sharp.Close, DoodleIcons.Close)
+    val Delete: ImageVector @Composable get() = v(Icons.Filled.Delete, Icons.Outlined.Delete, Icons.Rounded.Delete, Icons.Sharp.Delete, DoodleIcons.Delete)
+    val Edit: ImageVector @Composable get() = v(Icons.Filled.Edit, Icons.Outlined.Edit, Icons.Rounded.Edit, Icons.Sharp.Edit, DoodleIcons.Edit)
     val Favorite: ImageVector @Composable get() =
-        v(Icons.Filled.Favorite, Icons.Outlined.FavoriteBorder, Icons.Rounded.Favorite, Icons.Sharp.Favorite)
-    val Home: ImageVector @Composable get() = v(Icons.Filled.Home, Icons.Outlined.Home, Icons.Rounded.Home, Icons.Sharp.Home)
-    val Lock: ImageVector @Composable get() = v(Icons.Filled.Lock, Icons.Outlined.Lock, Icons.Rounded.Lock, Icons.Sharp.Lock)
+        v(Icons.Filled.Favorite, Icons.Outlined.FavoriteBorder, Icons.Rounded.Favorite, Icons.Sharp.Favorite, DoodleIcons.Favorite)
+    val Home: ImageVector @Composable get() = v(Icons.Filled.Home, Icons.Outlined.Home, Icons.Rounded.Home, Icons.Sharp.Home, DoodleIcons.Home)
+    val Lock: ImageVector @Composable get() = v(Icons.Filled.Lock, Icons.Outlined.Lock, Icons.Rounded.Lock, Icons.Sharp.Lock, DoodleIcons.Lock)
     val ListIcon: ImageVector @Composable get() = v(
         Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List,
         Icons.AutoMirrored.Rounded.List, Icons.AutoMirrored.Sharp.List
-    )
+    , DoodleIcons.ListIcon)
     val Notifications: ImageVector @Composable get() =
-        v(Icons.Filled.Notifications, Icons.Outlined.Notifications, Icons.Rounded.Notifications, Icons.Sharp.Notifications)
-    val MoreVert: ImageVector @Composable get() = v(Icons.Filled.MoreVert, Icons.Outlined.MoreVert, Icons.Rounded.MoreVert, Icons.Sharp.MoreVert)
-    val Person: ImageVector @Composable get() = v(Icons.Filled.Person, Icons.Outlined.Person, Icons.Rounded.Person, Icons.Sharp.Person)
-    val Refresh: ImageVector @Composable get() = v(Icons.Filled.Refresh, Icons.Outlined.Refresh, Icons.Rounded.Refresh, Icons.Sharp.Refresh)
-    val Search: ImageVector @Composable get() = v(Icons.Filled.Search, Icons.Outlined.Search, Icons.Rounded.Search, Icons.Sharp.Search)
-    val Settings: ImageVector @Composable get() = v(Icons.Filled.Settings, Icons.Outlined.Settings, Icons.Rounded.Settings, Icons.Sharp.Settings)
-    val Share: ImageVector @Composable get() = v(Icons.Filled.Share, Icons.Outlined.Share, Icons.Rounded.Share, Icons.Sharp.Share)
+        v(Icons.Filled.Notifications, Icons.Outlined.Notifications, Icons.Rounded.Notifications, Icons.Sharp.Notifications, DoodleIcons.Notifications)
+    val MoreVert: ImageVector @Composable get() = v(Icons.Filled.MoreVert, Icons.Outlined.MoreVert, Icons.Rounded.MoreVert, Icons.Sharp.MoreVert, DoodleIcons.MoreVert)
+    val Person: ImageVector @Composable get() = v(Icons.Filled.Person, Icons.Outlined.Person, Icons.Rounded.Person, Icons.Sharp.Person, DoodleIcons.Person)
+    val Refresh: ImageVector @Composable get() = v(Icons.Filled.Refresh, Icons.Outlined.Refresh, Icons.Rounded.Refresh, Icons.Sharp.Refresh, DoodleIcons.Refresh)
+    val Search: ImageVector @Composable get() = v(Icons.Filled.Search, Icons.Outlined.Search, Icons.Rounded.Search, Icons.Sharp.Search, DoodleIcons.Search)
+    val Settings: ImageVector @Composable get() = v(Icons.Filled.Settings, Icons.Outlined.Settings, Icons.Rounded.Settings, Icons.Sharp.Settings, DoodleIcons.Settings)
+    val Share: ImageVector @Composable get() = v(Icons.Filled.Share, Icons.Outlined.Share, Icons.Rounded.Share, Icons.Sharp.Share, DoodleIcons.Share)
     /** Wishlist groups (2.108): Google's Material "group" icon (Apache 2.0), drawn from its path here because the app
      *  only includes the core icon set. One shape in every style. */
-    val Group: ImageVector get() = groupIcon
+    val Group: ImageVector @Composable get() = if (LocalLook.current.design == "doodle") DoodleIcons.Group else groupIcon
     /** Received gifts and gift lists (2.129): Google's Material "redeem" gift-box icon, drawn from its path. */
-    val Gift: ImageVector get() = giftIcon
+    val Gift: ImageVector @Composable get() = if (LocalLook.current.design == "doodle") DoodleIcons.Gift else giftIcon
     /** Gifts I reserved (2.129): Google's Material "shopping bag" icon (outlined), drawn from its path. */
-    val Bag: ImageVector get() = bagIcon
+    val Bag: ImageVector @Composable get() = if (LocalLook.current.design == "doodle") DoodleIcons.Bag else bagIcon
     /** Gift exchange (2.129): Google's Material "swap horiz" icon, drawn from its path. */
-    val Swap: ImageVector get() = swapIcon
+    val Swap: ImageVector @Composable get() = if (LocalLook.current.design == "doodle") DoodleIcons.Swap else swapIcon
     /** Gift exchange in the side menu (owner, 7 November 2026): two gifts with an arrow from each to the other, our own drawing. */
     val Exchange: ImageVector get() = exchangeIcon
     /** Discover, the shops (owner, 7 November 2026): Google's Material "store" icon, drawn from its path. */
-    val Store: ImageVector get() = storeIcon
+    val Store: ImageVector @Composable get() = if (LocalLook.current.design == "doodle") DoodleIcons.Bag else storeIcon
     /** "Your wishlists ›" (owner, 7 November 2026): Google's Material "chevron right" icon, drawn from its path. */
-    val Chevron: ImageVector get() = chevronIcon
+    val Chevron: ImageVector @Composable get() = if (LocalLook.current.design == "doodle") DoodleIcons.Chevron else chevronIcon
 }
 
 private val exchangeIcon: ImageVector by lazy {
@@ -709,8 +719,8 @@ fun PhotoCard(url: String, description: String, small: Boolean, modifier: Modifi
                 painter, description, contentScale = ContentScale.Crop,
                 modifier = Modifier.aspectRatio(ratio, matchHeightConstraintsFirst = true)
                     .then(frame).clip(shape).background(Color.White)
-                    .then(if (look.design == "retro") Modifier.border(if (small) 3.dp else 5.dp, Color(0xFFFBF6EA), shape) else Modifier)
-                    .then(if (look.edge > 0.dp) Modifier.border(minOf(look.edge, 2.dp), look.line, shape) else Modifier)
+                    .then(if (look.design == "retro") Modifier.edgeLine(if (small) 3.dp else 5.dp, Color(0xFFFBF6EA), shape) else Modifier)
+                    .then(if (look.edge > 0.dp) Modifier.edgeLine(minOf(look.edge, 2.dp), look.line, shape) else Modifier)
             )
         }
     }

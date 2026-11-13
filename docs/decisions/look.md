@@ -123,3 +123,18 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   The owner's answer on skewing was "like Gen Z" (cards turn; no slanted text).
 - **Recheck every style** so its buttons, cards and other parts have something only that style has, not just colours
   (owner: "whether the buttons, cards etc could be more themed or designed in a way that is unique to that style").
+
+## Deep themes, one at a time (owner, 13 November 2026, after 2.201)
+- Owner: the colour sets "only change a few accent colours"; expected "a theme within a theme"; themes felt like "the
+  bare minimum" instead of "proper heavy feature-rich themes with options to personalise"; Doodle "isn't doodly
+  enough"; **scrolling lags in Doodle** ("worryingly slow"). Claude agreed: 16 themes got a thin layer each.
+- **Plan (owner's choice): Doodle first, then the others one or two per update** in the order the owner picks, each
+  rebuilt to the Doodle standard once the owner is happy with Doodle.
+- **A colour set is a theme within the theme**: it changes the page, cards and colours throughout, the shapes of cards
+  and buttons, and the drawings and textures (not the fonts).
+- **Options inside a theme** (Themer, under the sets): **amount of decoration** (Calm, Normal, Wild: drawings behind
+  the screens and how much cards tilt) and **card style** (e.g. Outlined, Filled, Sticker).
+- **Doodle**: **everything hand-drawn** (icons, tick boxes, switches, buttons, the bottom bar, dividers as marker
+  scribbles) and **sketchbook paper** (lined or graph paper, margins, tape and paper clips). Handwriting on all text
+  and doodles around content were not chosen.
+- **Speed first**: fix the lag in every style, and a check that keeps it fixed.

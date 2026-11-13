@@ -106,6 +106,8 @@ import java.util.Locale
 /** A speech bubble: the Messages icon (drawn here; the core Material icons have none). */
 @Composable
 fun ChatIcon(tint: Color, size: Dp = 24.dp) {
+    // Doodle: its hand-drawn speech bubble.
+    if (LocalLook.current.design == "doodle") { androidx.compose.material3.Icon(DoodleIcons.Chat, null, tint = tint, modifier = Modifier.size(size)); return }
     Canvas(Modifier.size(size)) {
         val u = this.size.width / 24f
         val p = Path().apply {

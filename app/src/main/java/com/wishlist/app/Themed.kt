@@ -190,7 +190,7 @@ fun OutlinedTextField(
     shape: Shape? = null
 ) {
     val look = LocalLook.current
-    val sh = shape ?: MaterialTheme.shapes.small
+    val sh = shape ?: fieldShape(look)
     if (look.design == "quiet") {
         M3OutlinedTextField(
             value, onValueChange, modifier, enabled, readOnly, textStyle, label, placeholder, leadingIcon, trailingIcon,
@@ -247,7 +247,7 @@ fun OutlinedTextField(
     shape: Shape? = null
 ) {
     val look = LocalLook.current
-    val sh = shape ?: MaterialTheme.shapes.small
+    val sh = shape ?: fieldShape(look)
     if (look.design == "quiet") {
         M3OutlinedTextField(
             value, onValueChange, modifier, enabled, readOnly, textStyle, label, placeholder, leadingIcon, trailingIcon,
@@ -373,6 +373,11 @@ fun Checkbox(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifier: 
     val w = maxOf(look.edge, 2.dp)
     val tap = if (onCheckedChange != null) Modifier.minimumInteractiveComponentSize()
         .toggleable(checked, enabled = enabled, role = Role.Checkbox) { onCheckedChange(it) } else Modifier
+    // Doodle: drawn by hand (Doodle.kt).
+    if (look.design == "doodle") {
+        Box(modifier.then(tap).alphaIf(!enabled), contentAlignment = Alignment.Center) { Canvas(Modifier.size(22.dp)) { doodleCheckbox(look, checked) } }
+        return
+    }
     Box(modifier.then(tap).alphaIf(!enabled), contentAlignment = Alignment.Center) {
         Box(
             Modifier.size(20.dp)
@@ -386,7 +391,7 @@ fun Checkbox(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifier: 
                         else -> Modifier.background(look.accent)
                     }
                 )
-                .then(if (!checked || look.edge > 0.dp) Modifier.border(w, if (checked && look.edge == 0.dp) Color.Transparent else edge, shape) else Modifier)
+                .then(if (!checked || look.edge > 0.dp) Modifier.edgeLine(w, if (checked && look.edge == 0.dp) Color.Transparent else edge, shape) else Modifier)
                 .drawBehind {
                     if (checked) tick(
                         when (look.design) { "quiet" -> cs.onPrimary; "chaos" -> Color(0xFF0D0D0D); else -> look.onAccent },
@@ -407,9 +412,13 @@ fun RadioButton(selected: Boolean, onClick: (() -> Unit)?, modifier: Modifier = 
     val dot = when (look.design) { "chaos" -> look.line; "quiet", "flat" -> cs.primary; else -> cs.primary }
     val tap = if (onClick != null) Modifier.minimumInteractiveComponentSize()
         .selectable(selected, enabled = enabled, role = Role.RadioButton, onClick = onClick) else Modifier
+    if (look.design == "doodle") {
+        Box(modifier.then(tap).alphaIf(!enabled), contentAlignment = Alignment.Center) { Canvas(Modifier.size(22.dp)) { doodleRadio(look, selected) } }
+        return
+    }
     Box(modifier.then(tap).alphaIf(!enabled), contentAlignment = Alignment.Center) {
         Box(
-            Modifier.size(20.dp).clip(CircleShape).background(cs.surfaceVariant).border(w, edge, CircleShape)
+            Modifier.size(20.dp).clip(CircleShape).background(cs.surfaceVariant).edgeLine(w, edge, CircleShape)
                 .drawBehind {
                     if (selected) {
                         if (look.accentBrush != null) drawCircle(look.accentBrush, size.minDimension * 0.28f)
@@ -519,6 +528,7 @@ fun CircularProgressIndicator(modifier: Modifier = Modifier, color: Color = Colo
                     Brush.sweepGradient(listOf(look.art[0], look.art[2], look.art[1], look.art[0]), center),
                     0f, 300f, false, tl, arcSize, style = Stroke(sw, cap = cap)
                 )
+                look.design == "doodle" -> doodleSpinner(look, sw)
                 look.design == "riso" -> {
                     drawArc(look.art[1], 12f, 110f, false, Offset(tl.x + 2f, tl.y + 2f), arcSize, style = Stroke(sw, cap = cap))
                     drawArc(look.art[0], 0f, 110f, false, tl, arcSize, style = Stroke(sw, cap = cap))
@@ -571,11 +581,19 @@ fun LinearProgressIndicator(progress: () -> Float, modifier: Modifier = Modifier
     )
 }
 
-/** A divider line in the style: thicker in the styles with ink lines. */
+/** The shape of text fields: the style's small shape; Doodle's hand-drawn box. */
+@Composable
+private fun fieldShape(look: Look): Shape = if (look.design == "doodle") WobblyShape(91, 10.dp, 1.4.dp) else MaterialTheme.shapes.small
+
+/** A divider line in the style: thicker in the styles with ink lines; Doodle a wavy marker line. */
 @Composable
 fun HorizontalDivider(modifier: Modifier = Modifier, color: Color = Color.Unspecified) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
+    if (look.design == "doodle") {
+        Canvas(modifier.fillMaxWidth().height(6.dp)) { doodleDivider(look, look.line.copy(alpha = 0.6f)) }
+        return
+    }
     M3HorizontalDivider(
         modifier,
         thickness = when (look.design) { "chaos", "bauhaus", "doodle", "anthro", "swiss", "punk" -> 2.dp; "retro", "grunge", "riso", "cottage" -> 1.5.dp; else -> 1.dp },
@@ -647,7 +665,7 @@ private fun SheetHandle(look: Look) {
             "pop" -> Row {
                 listOf(look.art[3], look.art[0], look.art[1]).forEach { Box(Modifier.padding(horizontal = 2.dp).size(width = 12.dp, height = 5.dp).clip(CircleShape).background(it)) }
             }
-            "y2k" -> Box(Modifier.size(width = 40.dp, height = 5.dp).clip(CircleShape).background(look.accentBrush!!).border(1.dp, look.line, CircleShape))
+            "y2k" -> Box(Modifier.size(width = 40.dp, height = 5.dp).clip(CircleShape).background(look.accentBrush!!).edgeLine(1.dp, look.line, CircleShape))
             "chaos" -> Box(Modifier.size(width = 44.dp, height = 6.dp).clip(CircleShape).background(look.line))
             "grunge" -> Box(Modifier.size(width = 40.dp, height = 5.dp).clip(RoughShape(91, 1.dp, 4.dp)).background(look.line))
             "retro" -> Box(Modifier.size(width = 40.dp, height = 4.dp).clip(CircleShape).background(look.art[0]))
