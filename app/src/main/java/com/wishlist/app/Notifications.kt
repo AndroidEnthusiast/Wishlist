@@ -263,7 +263,7 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
         containerColor = cs.background,
         topBar = {
             TopAppBar(
-                title = { Text(tr("Notifications"), fontWeight = look.titleWeight) },
+                title = { ScreenTitle(tr("Notifications")) },
                 navigationIcon = { MenuSlot() },
                 // Top right: delete them all (after a yes).
                 actions = {

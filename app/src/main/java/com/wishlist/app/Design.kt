@@ -116,7 +116,7 @@ val COLOUR_SETS: Map<String, List<ColourSet>> = mapOf(
     "synth" to listOf(ColourSet("sunset", "Sunset"), ColourSet("outrun", "Outrun"), ColourSet("miami", "Miami")),
     "anthro" to listOf(ColourSet("royal", "Royal blue"), ColourSet("mint", "Mint"), ColourSet("tangerine", "Tangerine")),
     "swiss" to listOf(ColourSet("red", "Swiss red"), ColourSet("klein", "Klein blue"), ColourSet("signal", "Signal yellow")),
-    "punk" to listOf(ColourSet("riot", "Riot red"), ColourSet("safety", "Safety-pin yellow"), ColourSet("electric", "Electric blue"))
+    "punk" to listOf(ColourSet("zine", "Photocopy zine"), ColourSet("gig", "Gig poster"), ColourSet("tartan", "Safety pin & tartan"))
 )
 
 /** The colour set [key] of [style], or its first set. */
@@ -270,6 +270,9 @@ private val sedgwick by lazy { google("Sedgwick Ave Display", "casual", one) }
 private val archivoNarrow by lazy { google("Archivo Narrow", "sans-serif-condensed", listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold)) }
 private val plexMono by lazy { google("IBM Plex Mono", "monospace", listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold)) }
 
+/** Punk's text font (Punk.kt). */
+internal val punkDisplay: FontFamily get() = archivoNarrow
+
 /** Y2K's heading font (Y2k.kt). */
 internal val y2kDisplay: FontFamily get() = unbounded
 
@@ -326,6 +329,7 @@ fun lookFor(style: String, accentKey: String, mode: String, set: String = "", de
     val level = DECO_LEVELS.indexOfFirst { it.key == deco }.takeIf { it >= 0 } ?: 1
     if (key == "doodle") return doodleLook(mode != "light", setKey, level, cardStyleFor(key, setKey, cards))
     if (key == "y2k") return y2kLook(mode != "light", setKey, level, cardStyleFor(key, setKey, cards))
+    if (key == "punk") return punkLook(mode != "light", setKey, level, cardStyleFor(key, setKey, cards))
     val base = baseLook(style, accentKey, mode)
     return if (usesAccent(base.design)) base else base.withSet(setKey)
 }
@@ -339,7 +343,8 @@ val DECO_LEVELS = listOf(ThemeOption("calm", "Calm"), ThemeOption("normal", "Nor
 /** The card styles of the styles that have them (Doodle first; the others follow when they are rebuilt). */
 val CARD_STYLES: Map<String, List<ThemeOption>> = mapOf(
     "doodle" to listOf(ThemeOption("outlined", "Outlined"), ThemeOption("filled", "Filled"), ThemeOption("sticker", "Sticker")),
-    "y2k" to listOf(ThemeOption("glass", "Glass"), ThemeOption("glossy", "Glossy"), ThemeOption("sticker", "Sticker"))
+    "y2k" to listOf(ThemeOption("glass", "Glass"), ThemeOption("glossy", "Glossy"), ThemeOption("sticker", "Sticker")),
+    "punk" to listOf(ThemeOption("cutout", "Cut-out"), ThemeOption("taped", "Taped flyer"), ThemeOption("badge", "Badge"))
 )
 
 /** Whether the style has options (decoration amount, card style) in the Themer. */
@@ -351,6 +356,7 @@ fun cardStyleFor(style: String, set: String, chosen: String): String {
     return styles.firstOrNull { it.key == chosen }?.key ?: when {
         style == "doodle" && set == "sticky" -> "filled"
         style == "y2k" -> if (set == "aero") "glass" else "glossy"
+        style == "punk" -> when (set) { "gig" -> "taped"; "tartan" -> "badge"; else -> "cutout" }
         else -> styles.first().key
     }
 }
@@ -643,26 +649,6 @@ private fun baseLook(style: String, accentKey: String, mode: String): Look {
                 art = listOf(red, ink, if (dark) c(0xFF0E0E0E) else white, c(0xFF8A8A8A))
             )
         }
-        "punk" -> {
-            // A black-and-white photocopy with red (and in its other sets yellow or blue).
-            val bg = if (dark) c(0xFF121212) else c(0xFFECEAE4)
-            val surface = if (dark) c(0xFF1E1E1E) else c(0xFFFAFAF7)
-            val ink = if (dark) c(0xFFF2F0EA) else c(0xFF111111)
-            val muted = if (dark) c(0xFFBDBAB2) else c(0xFF3D3D3D)
-            val red = c(0xFFD7141A)
-            Look(
-                "punk", dark,
-                scheme(dark, if (dark) c(0xFFFF6B6B) else c(0xFFB5101A), if (dark) c(0xFF121212) else white, if (dark) c(0xFF3A1A1C) else c(0xFFF3D3D3), ink,
-                    bg, surface, ink, muted, ink, if (dark) c(0xFF333333) else c(0xFFD5D2CA)),
-                listOf(surface),
-                if (dark) listOf(c(0xFF2A2A2A), c(0xFF3A1E20), c(0xFF33301E), c(0xFF22263A)) else listOf(c(0xFFE2E0DA), c(0xFFF1D9D6), c(0xFFE7E4D3), c(0xFFDADDE8)),
-                ink,
-                listOf(if (dark) red.copy(alpha = 0.85f) else c(0xFF111111).copy(alpha = 0.85f)),
-                listOf(ink.copy(alpha = 0.10f), red.copy(alpha = if (dark) 0.25f else 0.16f), c(0xFF1B4DFF).copy(alpha = if (dark) 0.25f else 0.10f)),
-                archivoNarrow, drop, rise, accent = red, onAccent = white,
-                art = listOf(red, ink, c(0xFFFFD60A), c(0xFF1B4DFF), if (dark) c(0xFF1E1E1E) else c(0xFFFAFAF7))
-            )
-        }
         else -> {
             // Quiet.
             val bg = if (dark) Color.Black else c(0xFFF2F2F7)
@@ -942,7 +928,7 @@ fun Look.cardShape(id: Long, small: Boolean): Shape = when (design) {
     "anthro" -> RoundedCornerShape(if (small) 20.dp else 24.dp)
     "swiss" -> RectangleShape
     // Punk: paper torn out of a magazine, each piece its own way.
-    "punk" -> RoughShape(pick(id, 97) + 71, if (small) 2.6.dp else 3.dp, 6.dp)
+    "punk" -> punkCardShape(id, small)
     // Retro: a ticket with a round notch on each side.
     "retro" -> TicketShape(if (small) 12.dp else 14.dp, if (small) 7.dp else 8.dp)
     else -> RoundedCornerShape(if (small) 16.dp else 20.dp)
@@ -1028,7 +1014,7 @@ fun Look.tilt(id: Long): Float = when (design) {
     "chaos" -> listOf(-1.6f, 1.2f, -0.8f, 1.8f, -1.2f, 0.9f)[pick(id, 6)]
     // Wild placement (owner, 13 November 2026), each its own way: Punk the most, cut-outs pasted down crooked; Grunge
     // crooked paper; Doodle loose sketches. (Risograph doesn't turn: its layers slide sideways, [nudge].)
-    "punk" -> listOf(-1.8f, 1.3f, -0.7f, 2.0f, -1.4f, 0.9f, -2.2f)[pick(id, 7)]
+    "punk" -> listOf(-1.8f, 1.3f, -0.7f, 2.0f, -1.4f, 0.9f, -2.2f)[pick(id, 7)] * listOf(0.3f, 1f, 1.5f)[deco]
     "grunge" -> listOf(-1.1f, 0.8f, -0.4f, 1.2f, -0.9f)[pick(id, 5)]
     // Doodle: by the amount of decoration (Calm straight, Normal loose, Wild all over the place).
     "doodle" -> listOf(-0.9f, 0.7f, -0.4f, 0.8f)[pick(id, 4)] * listOf(0f, 1f, 2.2f)[deco]
@@ -1036,14 +1022,16 @@ fun Look.tilt(id: Long): Float = when (design) {
 }
 
 /** A strip of sticky tape across [at], turned [angle] degrees (Punk, Doodle). */
-fun androidx.compose.ui.graphics.drawscope.DrawScope.tape(at: Offset, angle: Float, colour: Color = Color(0xFFF2E6B8).copy(alpha = 0.75f)) {
-    val t = Size(46.dp.toPx(), 14.dp.toPx())
+fun androidx.compose.ui.graphics.drawscope.DrawScope.tape(
+    at: Offset, angle: Float, colour: Color = Color(0xFFF2E6B8).copy(alpha = 0.75f), width: Dp = 46.dp, height: Dp = 14.dp
+) {
+    val t = Size(width.toPx(), height.toPx())
     rotate(angle, at) { drawRect(colour, Offset(at.x - t.width / 2, at.y - t.height / 2), t) }
 }
 
 /** Cards slid out of line (wild placement): Punk's pasted-up cut-outs, Risograph's layers printed a little off. */
 fun Look.nudge(id: Long): Dp = when (design) {
-    "punk" -> listOf(-6f, 4f, 0f, 7f, -3f, 5f, -7f)[pick(id, 7)].dp
+    "punk" -> (listOf(-6f, 4f, 0f, 7f, -3f, 5f, -7f)[pick(id, 7)] * listOf(0f, 1f, 1.4f)[deco]).dp
     "riso" -> listOf(-5f, 3f, 6f, -2f, 4f)[pick(id, 5)].dp
     "doodle" -> if (deco == 2) listOf(-4f, 3f, 0f, 5f, -2f)[pick(id, 5)].dp else 0.dp
     else -> 0.dp
@@ -1133,15 +1121,8 @@ fun Modifier.lookSurface(
         "swiss" -> paint().drawBehind {
             if (size.height >= 64.dp.toPx()) drawRect(look.line, Offset.Zero, Size(size.width, 4.dp.toPx()))
         }.then(if (size0(look, raised)) Modifier.edgeLine(2.dp, look.line, shape) else Modifier)
-        // Punk: a torn-out cut-out with a hard shadow, taped down with a strip of tape across its top edge.
-        "punk" -> (if (raised) hardShadow(shadow ?: look.shadows[0], shape, (d * 0.6f).coerceIn(2.5f, 5f).dp) else this)
-            .paint().edgeLine(look.edge, look.line, shape).drawWithContent {
-                drawContent()
-                if (size.height >= 56.dp.toPx() && size.width >= 120.dp.toPx()) tape(Offset(size.width * 0.5f, 0f), -4f)
-            }
-        // Synthwave: a neon outline with a soft glow in the same colour.
-        "synth" -> (if (raised) shadow((d * 1.6f).coerceIn(4f, 14f).dp, shape, clip = false, ambientColor = look.line, spotColor = look.line) else this)
-            .paint().edgeLine(look.edge, look.line, shape)
+        // Punk (Punk.kt): a hard shadow (a taped flyer curls instead), the ink line, a badge's stud; buttons taped down.
+        "punk" -> punkShadow(look, shape, raised, d, card).paint().then(Modifier.punkFinish(look, shape, card))
         // Anthropomorphic: a cartoon outline and a hard ink shadow.
         "anthro" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.6f).coerceIn(2.5f, 5f).dp) else this)
             .paint().edgeLine(look.edge, look.line, shape)
@@ -1163,6 +1144,7 @@ fun Modifier.lookCard(look: Look, id: Long, shape: Shape): Modifier {
         .then(if (look.design == "doodle" && look.set == "sticky") Modifier.doodleFold(look, if (shape is DogEarShape) 16.dp else 0.dp) else Modifier)
         .then(if (look.design == "doodle") Modifier.doodlePin(look, id) else Modifier)
         .then(if (look.design == "y2k") Modifier.y2kStickers(look, id) else Modifier)
+        .then(if (look.design == "punk") Modifier.punkFasteners(look, id) else Modifier)
 }
 
 /** Swiss buttons (filled ones excepted) are framed in black; whether this surface is one. */
@@ -1185,7 +1167,9 @@ fun Modifier.lookChip(look: Look, on: Boolean = false): Modifier {
             // The other styles: the chosen one filled like a button (gradient included), the others plain, with the
             // style's line (Pop futurism has no lines elsewhere, but a chip needs an edge to read as a button).
             val line = if (look.design == "pop") 1.5.dp else minOf(look.edge, 2.dp)
-            val base = if (on && look.design == "bauhaus") hardShadow(look.shadows[0], shape, 3.dp) else this
+            // Punk: the chosen chip is a stamp, turned a little.
+            val base = if (on && look.design == "bauhaus") hardShadow(look.shadows[0], shape, 3.dp)
+                else if (on && look.design == "punk") rotate(-2.5f) else this
             base.clip(shape)
                 .then(if (on && look.accentBrush != null) Modifier.background(look.accentBrush) else Modifier.background(if (on) look.accent else off))
                 .then(if (line > 0.dp) Modifier.edgeLine(line, look.line, shape) else Modifier)
@@ -1493,26 +1477,7 @@ fun Modifier.lookBackdrop(look: Look): Modifier = when (look.design) {
             drawRect(look.art[0], Offset(0f, 0f), Size(6 * u, h))
         }
     }
-    "punk" -> drawWithCache {
-        val w = size.width; val h = size.height
-        val u = 1.dp.toPx()
-        val specks = grain(w, h, 3600, 83, edge = true)
-        fun scrap(x: Float, y: Float, sw: Float, sh: Float, seed: Int): Path {
-            val o = RoughShape(seed, 4.dp, 9.dp).createOutline(Size(sw, sh), androidx.compose.ui.unit.LayoutDirection.Ltr, this)
-            return Path().apply { addOutline(o); translate(Offset(x, y)) }
-        }
-        val s1 = scrap(w * 0.62f, -20 * u, 180 * u, 90 * u, 3); val s2 = scrap(-40 * u, h * 0.46f, 150 * u, 120 * u, 5)
-        val s3 = scrap(w * 0.55f, h - 110 * u, 200 * u, 80 * u, 9)
-        onDrawBehind {
-            // Torn paper scraps pasted on, photocopy specks, and a strip of tape down the right edge.
-            rotate(6f, Offset(w * 0.7f, 20 * u)) { drawPath(s1, look.blobs[1]) }
-            rotate(-8f, Offset(0f, h * 0.5f)) { drawPath(s2, look.blobs[2]) }
-            rotate(-3f, Offset(w * 0.6f, h)) { drawPath(s3, look.blobs[0]) }
-            drawPoints(specks, PointMode.Points, look.blobs[0], strokeWidth = 2.4f * u)
-            drawRect(look.art[0], Offset(w - 7 * u, 0f), Size(4 * u, h))
-            drawRect(look.art[1], Offset(w - 12 * u, 0f), Size(2 * u, h))
-        }
-    }
+    "punk" -> punkBackdrop(look)
     else -> this
 }
 
@@ -1661,14 +1626,6 @@ private fun Look.withSet(set: String): Look {
         "swiss/signal" -> recolour(
             c2(0xFF7A6200, 0xFFFFD400), c2(0xFFFFFFFF, 0xFF0E0E0E), c2(0xFFFFF3B8, 0xFF3A3412), Color(0xFFFFD400), Color(0xFF111111),
             listOf(Color(0xFFFFD400), art[1], art[2], art[3]), listOf(blobs[0], Color(0xFFFFD400))
-        )
-        "punk/safety" -> recolour(
-            c2(0xFF6E5A00, 0xFFFFD60A), c2(0xFFFFFFFF, 0xFF121212), c2(0xFFFFF1B3, 0xFF3A3412), Color(0xFFFFD60A), Color(0xFF111111),
-            listOf(Color(0xFFFFD60A), art[1], Color(0xFFD7141A), art[3], art[4]), listOf(blobs[0], Color(0xFFFFD60A), blobs[2])
-        )
-        "punk/electric" -> recolour(
-            c2(0xFF1B3FCC, 0xFF8FA8FF), c2(0xFFFFFFFF, 0xFF121212), c2(0xFFDCE2FA, 0xFF1E2550), Color(0xFF1B3FCC), Color(0xFFFFFFFF),
-            listOf(Color(0xFF1B3FCC), art[1], Color(0xFFFF2E88), Color(0xFFFF2E88), art[4]), listOf(blobs[0], Color(0xFF1B3FCC), Color(0xFFFF2E88))
         )
         else -> this
     }

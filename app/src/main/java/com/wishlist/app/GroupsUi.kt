@@ -519,7 +519,7 @@ fun GroupScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, onOpe
         containerColor = cs.background,
         topBar = {
             TopAppBar(
-                title = { Text(g?.name ?: tr("Wishlist group"), fontWeight = look.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                title = { ScreenTitle(g?.name ?: tr("Wishlist group")) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(AppIcons.ArrowBack, tr("Back")) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
                 actions = {

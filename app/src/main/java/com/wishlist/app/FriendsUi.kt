@@ -267,7 +267,7 @@ private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenL
         containerColor = cs.background,
         topBar = {
             TopAppBar(
-                title = { Text(tr("Friends"), fontWeight = LocalLook.current.titleWeight) },
+                title = { ScreenTitle(tr("Friends")) },
                 navigationIcon = { MenuSlot(back = false) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
                 actions = { ProfileButton(onProfile) }
@@ -565,7 +565,7 @@ private fun FriendPage(f: Person, snack: SnackbarHostState) {
         containerColor = cs.background,
         topBar = {
             TopAppBar(
-                title = { Text(f.name, fontWeight = look.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                title = { ScreenTitle(f.name) },
                 navigationIcon = { IconButton(onClick = { places.leavePerson(go) }) { Icon(AppIcons.ArrowBack, tr("Back")) } },
                 // Message this friend (2.98).
                 actions = {
@@ -685,10 +685,7 @@ private fun FriendWishesPage(f: Person, page: String, snack: SnackbarHostState) 
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        if (page == "top") tr("%s’s top wishes", f.name) else tr("%s’s wishes", f.name),
-                        fontWeight = look.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis
-                    )
+                    ScreenTitle(if (page == "top") tr("%s’s top wishes", f.name) else tr("%s’s wishes", f.name))
                 },
                 navigationIcon = { IconButton(onClick = { places.friendPage = null }) { Icon(AppIcons.ArrowBack, tr("Back")) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
@@ -890,7 +887,7 @@ fun ProfileScreen(snack: SnackbarHostState) {
         containerColor = cs.background,
         topBar = {
             TopAppBar(
-                title = { Text(tr("Profile"), fontWeight = look.titleWeight) },
+                title = { ScreenTitle(tr("Profile")) },
                 navigationIcon = { MenuSlot() },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )

@@ -219,9 +219,9 @@ class LookTest {
         }
         // The colour set is kept per style.
         Repo.setLook(c, "swiss", "light", "blue", "klein")
-        Repo.setLook(c, "punk", "dark", "blue", "safety")
+        Repo.setLook(c, "punk", "dark", "blue", "gig")
         fresh(); Repo.load(c)
-        assertEquals("punk", Repo.design); assertEquals("safety", Repo.colourSet)
+        assertEquals("punk", Repo.design); assertEquals("gig", Repo.colourSet)
         assertEquals("klein", Repo.colourSets["swiss"])
         // The options are kept per style.
         Repo.setLook(c, "doodle", "light", "blue", "sticky", "wild", "sticker")

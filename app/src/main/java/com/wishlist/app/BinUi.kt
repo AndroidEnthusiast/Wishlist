@@ -134,7 +134,7 @@ fun BinScreen(snack: SnackbarHostState) {
         containerColor = cs.background,
         topBar = {
             TopAppBar(
-                title = { Text(tr("Bin"), fontWeight = LocalLook.current.titleWeight) },
+                title = { ScreenTitle(tr("Bin")) },
                 navigationIcon = { MenuSlot() },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
                 actions = {

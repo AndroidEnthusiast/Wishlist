@@ -144,3 +144,8 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   **star and sparkle icons**, **stickers on cards** (stars, hearts, planets; more at Wild). Card styles: **Glass**
   (see-through frosted panels), **Glossy** (solid with a shine), **Sticker** (white, thick outline, holo shadow).
   Not chosen: chrome lettering on titles, an early-web sub-theme.
+- **British Punk is the third deep theme** (owner: "next"; Claude picked Punk: the owner's own "wild" example).
+  Sub-themes: **Photocopy zine**, **Gig poster**, **Safety pin & tartan**. Own parts: **cut-out buttons** (paper strips
+  taped down, a little crooked) and **stamped chips**; **safety pins, staples and tape** holding cards (per sub-theme,
+  more at Wild); **ransom-note screen titles** (not only the Wishlist title). Card styles: **Cut-out**, **Taped flyer**,
+  **Badge**. Not chosen: punk icons (the icons stay), a spray-paint sub-theme.

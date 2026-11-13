@@ -126,7 +126,7 @@ fun ThemerScreen(onBack: () -> Unit) {
         containerColor = cs.background,
         topBar = {
             TopAppBar(
-                title = { Text(tr("Themer"), fontWeight = LocalLook.current.titleWeight) },
+                title = { ScreenTitle(tr("Themer")) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(AppIcons.ArrowBack, tr("Back")) } },
                 actions = {
                     if (changed) Button(onClick = apply, modifier = Modifier.padding(end = 8.dp)) { Text(tr("Apply")) }

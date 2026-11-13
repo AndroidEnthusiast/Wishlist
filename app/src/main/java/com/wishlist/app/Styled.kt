@@ -90,6 +90,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -154,6 +155,8 @@ fun Button(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean 
     } else {
         M3Button(
             onClick, modifier.padding(vertical = z.room).heightIn(min = z.height)
+                // Punk: cut-out buttons, taped down a little crooked.
+                .then(if (look.design == "punk") Modifier.rotate(-1.5f) else Modifier)
                 .then(if (enabled) Modifier.lookSurface(look, shape, look.accent, depth = z.depth, brush = look.accentBrush) else Modifier),
             enabled, shape = shape, elevation = null,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = look.onAccent),
@@ -178,6 +181,7 @@ fun OutlinedButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: 
     } else {
         M3Button(
             onClick, modifier.padding(vertical = z.room).heightIn(min = z.height)
+                .then(if (look.design == "punk") Modifier.rotate(1.2f) else Modifier)
                 .then(if (enabled) Modifier.lookSurface(look, shape, cs.surfaceVariant, depth = z.depth) else Modifier),
             enabled, shape = shape, elevation = null,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = cs.onSurface),
@@ -390,7 +394,7 @@ fun TopAppBar(
  * Organic's "7 WISHES" line in 2.60.) */
 @Composable
 fun ListTitle(name: String, @Suppress("UNUSED_PARAMETER") count: Int) {
-    Text(name, fontWeight = LocalLook.current.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    ScreenTitle(name)
 }
 
 /** The price change on a wish ("−20%", "+5%"; plus and minus, not arrows: it isn't a stock trade). */

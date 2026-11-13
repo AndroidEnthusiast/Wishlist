@@ -177,7 +177,7 @@ fun FriendScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(f.name, fontWeight = LocalLook.current.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        ScreenTitle(f.name)
                         val owner = ownerName?.takeIf { it.isNotBlank() } ?: remote?.owner
                         // "Owned by …" only when the list's name doesn't say whose it is (owner, 7 November 2026).
                         if (!owner.isNullOrBlank() && !nameSaysOwner(f.name, owner)) Text(

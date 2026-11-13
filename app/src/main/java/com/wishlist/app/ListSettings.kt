@@ -92,7 +92,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
             TopAppBar(
                 title = {
                     Column {
-                        Text(Repo.listName, fontWeight = LocalLook.current.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        ScreenTitle(Repo.listName)
                         Text(
                             if (shared != null) tr("Collab wishlist") else tr("Wishlist settings"),
                             style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant

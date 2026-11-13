@@ -202,7 +202,7 @@ private fun ExchangesList(snack: SnackbarHostState, onOpenMine: (String) -> Unit
         containerColor = cs.background,
         topBar = {
             TopAppBar(
-                title = { Text(tr("Gift exchange"), fontWeight = look.titleWeight) },
+                title = { ScreenTitle(tr("Gift exchange")) },
                 navigationIcon = { MenuSlot() },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
@@ -625,7 +625,7 @@ fun ExchangeScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, on
         containerColor = cs.background,
         topBar = {
             TopAppBar(
-                title = { Text(x?.name ?: tr("Gift exchange"), fontWeight = look.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                title = { ScreenTitle(x?.name ?: tr("Gift exchange")) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(AppIcons.ArrowBack, tr("Back")) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
                 actions = {

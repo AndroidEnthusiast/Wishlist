@@ -70,7 +70,7 @@ fun PricesScreen(snack: SnackbarHostState, onBack: () -> Unit) {
         containerColor = cs.background,
         topBar = {
             TopAppBar(
-                title = { Text(tr("Price changes"), fontWeight = look.titleWeight) },
+                title = { ScreenTitle(tr("Price changes")) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(AppIcons.ArrowBack, tr("Back")) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )

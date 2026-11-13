@@ -286,7 +286,7 @@ fun OverviewScreen(
         containerColor = cs.background,
         topBar = {
             if (selecting) TopAppBar(
-                title = { Text(if (picked.size == 1) tr("1 selected") else tr("%d selected", picked.size), fontWeight = look.titleWeight) },
+                title = { ScreenTitle(if (picked.size == 1) tr("1 selected") else tr("%d selected", picked.size)) },
                 navigationIcon = { IconButton(onClick = { picked = emptySet() }) { Icon(AppIcons.Close, tr("Stop selecting")) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
                 actions = {
@@ -296,10 +296,7 @@ fun OverviewScreen(
                 }
             ) else TopAppBar(
                 title = {
-                    Text(
-                        when (page) { "lists" -> tr("Wishlists"); "top" -> tr("Top wishes"); else -> tr("All your wishes") },
-                        fontWeight = look.titleWeight
-                    )
+                    ScreenTitle(when (page) { "lists" -> tr("Wishlists"); "top" -> tr("Top wishes"); else -> tr("All your wishes") })
                 },
                 navigationIcon = { IconButton(onClick = { places.homePage = null }) { Icon(AppIcons.ArrowBack, tr("Back")) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)

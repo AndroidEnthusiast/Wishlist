@@ -11,7 +11,7 @@ import java.io.File
  */
 class PerformanceRulesTest {
     private fun src(name: String) = File("src/main/java/com/wishlist/app/$name").readText()
-    private val styleFiles = listOf("Design.kt", "Styled.kt", "Themed.kt", "Doodle.kt", "Y2k.kt", "Placeholders.kt")
+    private val styleFiles = listOf("Design.kt", "Styled.kt", "Themed.kt", "Doodle.kt", "Y2k.kt", "Punk.kt", "Placeholders.kt")
 
     @Test fun stylesDrawLinesWithEdgeLineNotBorder() {
         for (f in styleFiles) assertTrue("$f uses Modifier.border; use edgeLine (made once per size)", !Regex("""\.border\(""").containsMatchIn(src(f)))
@@ -30,6 +30,10 @@ class PerformanceRulesTest {
         val y2k = src("Y2k.kt")
         for (fn in listOf("fun Modifier.y2kShadow(", "fun Modifier.y2kFinish(", "fun Modifier.y2kStickers(", "fun Modifier.y2kBackdrop(")) {
             assertTrue("$fn must use drawWithCache", y2k.substringAfter(fn).substringBefore("\n}").contains("drawWithCache") || fn.contains("Shadow"))
+        }
+        val punk = src("Punk.kt")
+        for (fn in listOf("fun Modifier.punkFinish(", "fun Modifier.punkFasteners(", "fun Modifier.punkBackdrop(")) {
+            assertTrue("$fn must use drawWithCache", punk.substringAfter(fn).substringBefore("\n}").contains("drawWithCache"))
         }
         // No outline is made inside a plain drawBehind in the card surfaces (that runs on every frame).
         val surface = d.substringAfter("fun Modifier.lookSurface(").substringBefore("\n}\n")

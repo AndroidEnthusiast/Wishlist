@@ -101,7 +101,7 @@ private fun SettingsBody(snack: SnackbarHostState, onThemer: () -> Unit) {
         containerColor = cs.background,
         topBar = {
             TopAppBar(
-                title = { Text(tr("App settings"), fontWeight = LocalLook.current.titleWeight) },
+                title = { ScreenTitle(tr("App settings")) },
                 navigationIcon = { MenuSlot() },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
