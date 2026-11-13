@@ -72,3 +72,7 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   The bottom bar slides away and back with them (at once for the keyboard). Android's "Remove animations" makes it
   all instant. **Predictive back** (the peek while swiping back): not now (owner). Samsung's own back arrow is the
   phone's, not the app's.
+- **Gen Z chaos is saved for good** (owner, 13 November 2026: "my partner absolutely loves the gen z chaos theme;
+  make sure I can always recover it"). The theme as it was in 2.198 is kept in `themes/gen-z-chaos/` (whole files +
+  how to put it back); `tests/themes/check.sh` fails if that copy changes or disappears. Ask the owner before changing
+  or removing Gen Z chaos in the app.

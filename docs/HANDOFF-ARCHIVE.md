@@ -476,3 +476,7 @@ none since. Notes tidy-up: `CLAUDE.md` slimmed, `docs/MAP.md`, decisions by topi
      offers "All lists" = trash the original, its copies follow). The sheet shows "On 2 lists: A, B".
 ### 12 November 2026, night: clean-up, notes tidy-up, screens that move (2.192–2.195)
 `docs/MAP.md`, `docs/TODO.md`, decisions by topic, archives, a stop hook. 2.195: screens move like Signal's (`Motion.kt`).
+### 10–11 November 2026: the second review, Stage R and Stage 4 part A (2.178–2.187)
+Second review of the roadmap; price checks believe two agreeing readings (2.178). Stage R repairs: "new version is
+ready" (2.179) up to "Price is wrong?" (2.182) and screens that come back after Android closed the app (2.183). Stage 4
+part A: limits against abuse (2.184), photos as files (2.185), clean-up after 12 months (2.186), the recovery key (2.187).

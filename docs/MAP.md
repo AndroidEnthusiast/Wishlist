@@ -96,6 +96,7 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `Fonts.kt` (font choice)
 - `Settings.kt`
 - `Theme.kt` + `Design.kt` + `Styled.kt` + `Themer.kt` (themes and the themed buttons, dialogs, icons)
+- `themes/`: frozen copies of themes the owner wants to be able to bring back (Gen Z chaos, 13 November 2026), each with a README on putting it back; checked by `tests/themes/check.sh`
 
 ### Server, accounts, safety and app health
 - `AppInfo.kt` (the "new version is ready" bar on Home and the "Please update" screen; reads `app.json` from the site, which the `pages` job writes: `min` in `web/app.json` is the oldest versionCode that still works, raise it only when an old app would really break)

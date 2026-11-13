@@ -5,6 +5,8 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **Newest (13 November 2026), read first.** The owner is working on the app's themes (for fun); Gen Z chaos is saved in
+  `themes/gen-z-chaos/`: ask before changing or removing it. Ask what they want to change in the themes next.
 - **START HERE (12 November 2026, late night, after 2.198).** The review's part 2 is built (2.197, 2.198). Ask how
   2.195–2.198 feel on the phone, then continue the "logical experience" review (owner: "help me discover those")
   or what the owner wants next: show all of `docs/TODO.md` when asked. Known limit: Undo of "Moved to Received gifts"
@@ -12,6 +14,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 - **Everything open** (the complete to-do list, owner): `docs/TODO.md`. Owner wants a new feature built first.
 
 ## Last sessions
+
+### 13 November 2026: Gen Z chaos saved for good (no app change)
+Owner wants to work on the themes ("something fun"). First: the partner loves Gen Z chaos, so it is saved as it was
+in 2.198 in `themes/gen-z-chaos/` (the 7 files it lives in + README on putting it back), guarded by
+`tests/themes/check.sh` (in `tests/run-all.sh`). Decision in `docs/decisions/look.md`.
 
 ### 12 November 2026, night: clean-up, notes, motion, the wish review (2.192–2.198)
 Screenshot tests fixed. Clean-up: `LocalGo` (2.192), `Places` and no `*Nav` objects (2.193); a message notifies unless
@@ -22,8 +29,3 @@ that chat is on screen (2.194). Crash review: 3 old crashes on 2.154, none since
 Restoring on a new phone with the recovery key and signing the old one out (2.188); privacy page, delete my profile
 and data, block and report (2.189); Android's own backup off and the shop-page helper limited to 60 pages an hour per
 key (2.190); building blocks up to date: Android 16 target, Kotlin 2.1, Compose 2025.06, Room 2.7 (2.191).
-
-### 10–11 November 2026: the second review, Stage R and Stage 4 part A (2.178–2.187)
-Second review of the roadmap; price checks believe two agreeing readings (2.178). Stage R repairs: "new version is
-ready" (2.179) up to "Price is wrong?" (2.182) and screens that come back after Android closed the app (2.183). Stage 4
-part A: limits against abuse (2.184), photos as files (2.185), clean-up after 12 months (2.186), the recovery key (2.187).

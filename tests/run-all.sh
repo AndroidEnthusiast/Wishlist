@@ -17,6 +17,7 @@ run "friend link page (web/friend/)" node friend/test.js
 run "group page against the real SQL (web/group.html)" node group/test.js
 run "gift exchange page against the real SQL (web/exchange.html)" node exchange/test.js
 run "reactions and still-being-bought against the real SQL (together.js)" node together/test.js
+run "saved themes (themes/, never changed)" bash ../tests/themes/check.sh
 run "database scripts against a real PostgreSQL (tests/sql)" bash sql/run.sh
 for t in e2e/t1.js e2e/t2.js e2e/t3.js e2e/t4.js e2e/t5.js e2e/t6.js e2e/t7.js; do run "browser editor $t" node "$t"; done
 [ "$fail" -eq 0 ] && echo "ALL SUITES OK" || echo "SOMETHING FAILED"
