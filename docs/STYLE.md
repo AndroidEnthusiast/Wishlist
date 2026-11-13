@@ -8,7 +8,7 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
 - Buttons, dialogs, switches, top bars and icons come from `Styled.kt` (`Button`, `OutlinedButton`, `TextButton`,
   `AlertDialog`, `Switch`, `TopAppBar`, `AppIcons`). Never import Material's own `Button`/`AlertDialog` in a screen:
   ours carry the chosen style (Quiet, Gen Z chaos, Y2K, Retro vintage, Pop futurism, Grunge, Flat, Bauhaus, Doodle,
-  Cottage-core, Japandi, Risograph, Synthwave, Anthropomorphic) and the sizes below. The same for text fields, menus, tick boxes, choice circles, chips, spinners, progress bars, dividers,
+  Cottage-core, Japandi, Risograph, Synthwave, Anthropomorphic, Swiss, British Punk) and the sizes below. The same for text fields, menus, tick boxes, choice circles, chips, spinners, progress bars, dividers,
   sliders, bottom panels and `Scaffold` (`Themed.kt`, since 2.199): never import Material's own in a screen (the
   photo editor's dark field is the one exception). Owner, 13 November 2026: "a theme must change absolutely every
   element of the app"; a new part gets its style in every theme, light and dark.
@@ -68,7 +68,7 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
 
 ## Before building
 - Check every new layout against this guide on the smallest phone width (360 dp), with long names and the largest font,
-  in all fourteen styles, light and dark (`-Pwl.screens -Pwl.style=…` and `PartsScreenshotTest`). Drawings behind
+  in all sixteen styles and their colour sets, light and dark (`-Pwl.screens -Pwl.style=…` and `PartsScreenshotTest`). Drawings behind
   screens stay faint behind text (`LookTest` checks 4.5 : 1 over them) or stay in the outer 12 dp. The screenshots
   are a close copy, not the phone (fonts don't download there): say so,
   build only what follows these rules, and ask the owner to check the screen on the phone.

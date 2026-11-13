@@ -301,7 +301,7 @@ private fun FieldContainer(
     shape: Shape, thin: Dp, thick: Dp
 ) {
     val focused by source.collectIsFocusedAsState()
-    val lift = focused && look.design in setOf("chaos", "retro", "grunge", "bauhaus", "y2k", "pop", "riso", "anthro", "cottage")
+    val lift = focused && look.design in setOf("chaos", "retro", "grunge", "bauhaus", "y2k", "pop", "riso", "anthro", "cottage", "punk")
     val shadow = when {
         !lift -> Modifier
         look.design == "pop" -> Modifier.hardShadow(look.shadows[0], shape, 3.dp)
@@ -345,6 +345,8 @@ private fun Look.boxShape(): Shape = when (design) {
     "grunge" -> RoughShape(71, 1.dp, 4.dp)
     "y2k", "pop", "anthro" -> RoundedCornerShape(7.dp)
     "doodle" -> WobblyShape(73, 6.dp, 1.dp)
+    "swiss" -> RectangleShape
+    "punk" -> RoughShape(75, 1.dp, 4.dp)
     "japandi" -> RoundedCornerShape(2.dp)
     "chaos" -> RoundedCornerShape(6.dp)
     else -> RoundedCornerShape(4.dp)
@@ -525,6 +527,13 @@ fun CircularProgressIndicator(modifier: Modifier = Modifier, color: Color = Colo
                     Brush.sweepGradient(listOf(look.art[3], look.art[2], look.art[1], look.art[0], look.art[3]), center),
                     0f, 300f, false, tl, arcSize, style = Stroke(sw, cap = cap)
                 )
+                look.design == "swiss" -> {
+                    drawArc(look.scheme.outlineVariant, 0f, 360f, false, tl, arcSize, style = Stroke(sw, cap = StrokeCap.Butt))
+                    drawArc(look.art[0], 0f, 90f, true, Offset.Zero, size, style = androidx.compose.ui.graphics.drawscope.Fill)
+                }
+                look.design == "punk" -> for (i in 0 until 4) {
+                    drawArc(if (i % 2 == 0) look.accent else look.line, i * 90f, 55f, false, tl, arcSize, style = Stroke(sw, cap = StrokeCap.Butt))
+                }
                 look.design == "japandi" -> {
                     drawArc(cs.outlineVariant, 0f, 360f, false, tl, arcSize, style = Stroke(1.dp.toPx()))
                     drawArc(look.scheme.onSurface, 0f, 90f, false, tl, arcSize, style = Stroke(sw * 0.6f, cap = cap))
@@ -569,9 +578,10 @@ fun HorizontalDivider(modifier: Modifier = Modifier, color: Color = Color.Unspec
     val cs = MaterialTheme.colorScheme
     M3HorizontalDivider(
         modifier,
-        thickness = when (look.design) { "chaos", "bauhaus", "doodle", "anthro" -> 2.dp; "retro", "grunge", "riso", "cottage" -> 1.5.dp; else -> 1.dp },
+        thickness = when (look.design) { "chaos", "bauhaus", "doodle", "anthro", "swiss", "punk" -> 2.dp; "retro", "grunge", "riso", "cottage" -> 1.5.dp; else -> 1.dp },
         color = if (color.isSpecified && look.design == "quiet") color else when (look.design) {
-            "chaos", "bauhaus", "retro", "grunge", "doodle", "anthro", "riso", "cottage", "synth" -> look.line.copy(alpha = 0.7f)
+            "chaos", "bauhaus", "retro", "grunge", "doodle", "anthro", "riso", "cottage", "synth", "punk" -> look.line.copy(alpha = 0.7f)
+            "swiss" -> look.line
             else -> if (color.isSpecified) color else cs.outlineVariant
         }
     )
@@ -612,6 +622,8 @@ fun ModalBottomSheet(
         "grunge" -> RoughShape(81, 2.dp)
         "pop" -> RoundedCornerShape(topStart = 30.dp, topEnd = 8.dp)
         "doodle" -> WobblyShape(83, 28.dp, 2.dp)
+        "swiss" -> RectangleShape
+        "punk" -> RoughShape(85, 2.6.dp, 8.dp)
         else -> (corner as? RoundedCornerShape)?.let { RoundedCornerShape(topStart = it.topStart, topEnd = it.topEnd, bottomEnd = androidx.compose.foundation.shape.CornerSize(0.dp), bottomStart = androidx.compose.foundation.shape.CornerSize(0.dp)) }
             ?: RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
     }
@@ -644,6 +656,8 @@ private fun SheetHandle(look: Look) {
                 Box(Modifier.size(width = 40.dp, height = 5.dp).background(look.art[0]))
             }
             "synth" -> Box(Modifier.size(width = 44.dp, height = 4.dp).clip(CircleShape).background(look.accentBrush!!))
+            "swiss" -> Row { Box(Modifier.size(width = 28.dp, height = 4.dp).background(look.line)); Box(Modifier.size(width = 12.dp, height = 4.dp).background(look.art[0])) }
+            "punk" -> Box(Modifier.size(width = 46.dp, height = 12.dp).clip(RoughShape(95, 1.dp, 4.dp)).background(Color(0xFFF2E6B8).copy(alpha = 0.85f)))
             "anthro" -> Row { listOf(look.art[0], look.art[3], look.art[1]).forEach { Box(Modifier.padding(horizontal = 3.dp).size(9.dp).clip(CircleShape).background(it)) } }
             "cottage" -> Row { listOf(look.art[0], look.art[1], look.art[0]).forEach { Box(Modifier.padding(horizontal = 2.dp).size(width = 12.dp, height = 4.dp).clip(CircleShape).background(it)) } }
             else -> Box(Modifier.size(width = 32.dp, height = 4.dp).clip(CircleShape).background(cs.onSurfaceVariant.copy(alpha = 0.4f)))

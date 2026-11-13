@@ -29,14 +29,16 @@ class LookTest {
     private val modes = listOf("light", "dark")
 
     private fun every(check: (String, String, Look) -> Unit) {
-        for (st in STYLES) for (m in modes) for (ac in if (usesAccent(st.key)) ACCENTS.map { it.key } else listOf("blue")) {
-            check(st.key, "$m/$ac", lookFor(st.key, ac, m))
+        for (st in STYLES) for (m in modes) {
+            if (usesAccent(st.key)) for (ac in ACCENTS.map { it.key }) check(st.key, "$m/$ac", lookFor(st.key, ac, m))
+            // Every colour set of the other styles (owner, 13 November 2026).
+            else for (set in COLOUR_SETS.getValue(st.key)) check(st.key, "$m/${set.key}", lookFor(st.key, "blue", m, set.key))
         }
     }
 
     @Test fun theStylesAreTheOwnersChoice() {
         assertEquals(
-            listOf("quiet", "chaos", "y2k", "retro", "pop", "grunge", "flat", "bauhaus", "doodle", "cottage", "japandi", "riso", "synth", "anthro"),
+            listOf("quiet", "chaos", "y2k", "retro", "pop", "grunge", "flat", "bauhaus", "doodle", "cottage", "japandi", "riso", "synth", "anthro", "swiss", "punk"),
             STYLES.map { it.key }
         )
         assertEquals("quiet", STYLES.first().key)
@@ -59,6 +61,30 @@ class LookTest {
             assertEquals(st.key, l.tints.size, d.tints.size)
             assertEquals(st.key, l.art.size, d.art.size)
             assertEquals(st.key, l.accentBrush == null, d.accentBrush == null)
+        }
+    }
+
+    /**
+     * Every style with its own colours has at least three colour sets (owner, 13 November 2026), each really
+     * different (its own button colour), each with the same drawings in light and dark; the choice is kept per style.
+     */
+    @Test fun everyStyleHasThreeColourSets() {
+        for (st in STYLES.filter { !usesAccent(it.key) }) {
+            val sets = COLOUR_SETS.getValue(st.key)
+            assertTrue(st.key, sets.size >= 3)
+            assertEquals(st.key, sets.size, sets.map { it.key }.toSet().size)
+            for (m in modes) {
+                val looks = sets.map { lookFor(st.key, "blue", m, it.key) }
+                assertEquals("${st.key} $m: each set its own button colour", sets.size, looks.map { it.accent }.toSet().size)
+                val base = lookFor(st.key, "blue", m)
+                for (l in looks) {
+                    assertEquals(st.key, base.art.size, l.art.size)
+                    assertEquals(st.key, base.blobs.size, l.blobs.size)
+                    assertEquals(st.key, base.accentBrush == null, l.accentBrush == null)
+                }
+            }
+            // An unknown set is the first one.
+            assertEquals(lookFor(st.key, "blue", "light").accent, lookFor(st.key, "blue", "light", "nonsense").accent)
         }
     }
 
@@ -177,6 +203,12 @@ class LookTest {
             assertEquals("green", Repo.palette)
             assertEquals("quiet", prefs.getString("style", null))
         }
+        // The colour set is kept per style.
+        Repo.setLook(c, "swiss", "light", "blue", "klein")
+        Repo.setLook(c, "punk", "dark", "blue", "safety")
+        fresh(); Repo.load(c)
+        assertEquals("punk", Repo.design); assertEquals("safety", Repo.colourSet)
+        assertEquals("klein", Repo.colourSets["swiss"])
         // A new style is kept as it is.
         prefs.edit().clear().putBoolean("look_v2", true).putString("style", "bauhaus").putString("theme", "light").commit()
         fresh(); Repo.load(c)

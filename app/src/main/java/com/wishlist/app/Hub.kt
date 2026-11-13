@@ -6,6 +6,9 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -163,6 +166,24 @@ fun Wordmark() {
         "japandi" -> Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Wishlist", style = style, color = ink)
             Box(Modifier.padding(start = 10.dp).size(14.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFFB0412E)))
+        }
+        // Swiss: the word, then a square in the strong colour, on the baseline.
+        "swiss" -> Row(verticalAlignment = Alignment.Bottom) {
+            Text("Wishlist", style = style, color = ink)
+            Box(Modifier.padding(start = 3.dp, bottom = 6.dp).size(8.dp).background(look.art[0]))
+        }
+        // British Punk: a ransom note, every letter cut from a different page (big titles only, owner).
+        "punk" -> Row(Modifier.semantics(mergeDescendants = true) { contentDescription = "Wishlist" }, verticalAlignment = Alignment.CenterVertically) {
+            val papers = listOf(look.art[0], Color(0xFFFAFAF7), Color(0xFF111111), look.art[2], Color(0xFFFAFAF7), look.art[3], Color(0xFF111111), look.art[0])
+            "Wishlist".forEachIndexed { i, ch ->
+                val paper = papers[i % papers.size]
+                Text(
+                    ch.toString(), color = if (paper.luminance() > 0.5f) Color(0xFF111111) else Color.White,
+                    style = style.copy(fontFamily = listOf(null, androidx.compose.ui.text.font.FontFamily.Serif, androidx.compose.ui.text.font.FontFamily.Monospace)[i % 3] ?: style.fontFamily),
+                    modifier = Modifier.padding(horizontal = 1.dp).rotate(listOf(-6f, 4f, -3f, 7f, -5f, 3f, -7f, 5f)[i])
+                        .background(paper).padding(horizontal = 3.dp)
+                )
+            }
         }
         else -> Text("Wishlist", style = style, color = ink)
     }

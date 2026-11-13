@@ -335,6 +335,20 @@ fun TopAppBar(
                     drawRect(look.line, Offset(0f, b - 2.5f * u), Size(w, 2.5f * u))
                     listOf(look.art[0], look.art[3], look.art[2]).forEachIndexed { i, col -> drawCircle(col, 4 * u, Offset(w - (16 + i * 12) * u, b - 1.25f * u)) }
                 }
+                // Swiss: a heavy black rule and a short colour bar at its start.
+                "swiss" -> {
+                    drawRect(look.line, Offset(0f, b - 3 * u), Size(w, 3 * u))
+                    drawRect(look.art[0], Offset(16 * u, b - 7 * u), Size(40 * u, 4 * u))
+                }
+                // Punk: a strip of torn tape and a ragged ink line.
+                "punk" -> {
+                    var x = 0f; var k = 0
+                    while (x < w) {
+                        val t = (2 + (k * 5 % 4) * 0.5f) * u
+                        drawRect(look.line, Offset(x, b - t), Size(7 * u, t)); x += 6 * u; k++
+                    }
+                    drawRect(look.art[0], Offset(w * 0.6f, b - 6 * u), Size(w * 0.3f, 3 * u))
+                }
                 "bauhaus" -> {
                     drawRect(look.art[0], Offset(0f, b - 4 * u), Size(w * 0.5f, 4 * u))
                     drawRect(look.art[2], Offset(w * 0.5f, b - 4 * u), Size(w * 0.25f, 4 * u))
@@ -368,7 +382,7 @@ fun PriceBadge(text: String, rise: Boolean, small: Boolean) {
     val fg: Color
     when (look.design) {
         // Chaos and Bauhaus: bold pastel blocks with ink text.
-        "chaos", "bauhaus", "anthro", "doodle" -> { bg = if (rise) Color(0xFFFFB3B3) else Color(0xFFB8F5C8); fg = Color(0xFF111111) }
+        "chaos", "bauhaus", "anthro", "doodle", "punk" -> { bg = if (rise) Color(0xFFFFB3B3) else Color(0xFFB8F5C8); fg = Color(0xFF111111) }
         else -> { bg = lerp(col, look.scheme.surfaceVariant, if (look.dark) 0.78f else 0.88f); fg = col }
     }
     StyleBadge(text, bg, fg, small, null)
@@ -679,12 +693,14 @@ fun PhotoCard(url: String, description: String, small: Boolean, modifier: Modifi
                 "riso", "synth" -> RoundedCornerShape(6.dp)
                 "cottage" -> RoundedCornerShape(6.dp)
                 "anthro" -> RoundedCornerShape(if (small) 12.dp else 16.dp)
+                "swiss" -> androidx.compose.ui.graphics.RectangleShape
+                "punk" -> RoughShape(65, 1.6.dp, 6.dp)
                 else -> RoundedCornerShape(if (small) 10.dp else 14.dp)
             }
             val frame = when (look.design) {
                 "chaos" -> Modifier.hardShadow(look.line, shape, 3.dp)
                 "quiet" -> Modifier.shadow(if (small) 3.dp else 5.dp, shape, clip = false)
-                "flat", "japandi", "doodle" -> Modifier
+                "flat", "japandi", "doodle", "swiss" -> Modifier
                 "synth" -> Modifier.shadow(if (small) 4.dp else 8.dp, shape, clip = false, ambientColor = look.line, spotColor = look.line)
                 "pop" -> Modifier.hardShadow(look.shadows[1], shape, 5.dp).hardShadow(look.shadows[0], shape, 2.5.dp)
                 else -> Modifier.hardShadow(look.shadows[0], shape, 3.dp, look.shadowBrush)

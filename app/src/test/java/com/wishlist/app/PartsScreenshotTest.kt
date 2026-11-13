@@ -28,13 +28,14 @@ import org.robolectric.annotation.Config
 class PartsScreenshotTest {
     @Test fun everyPartInEveryStyle() {
         StillSpinners.on = true
-        for (st in STYLES.map { it.key }) for (m in listOf("light", "dark")) captureRoboImage("build/outputs/roborazzi/parts_${st}_$m.png") {
-            LookTheme(lookFor(st, "indigo", m)) {
+        for (st in STYLES.map { it.key }) for (m in listOf("light", "dark")) for (set in COLOUR_SETS[st]?.map { it.key } ?: listOf(""))
+        captureRoboImage("build/outputs/roborazzi/parts_${st}${if (set.isEmpty()) "" else "_$set"}_$m.png") {
+            LookTheme(lookFor(st, "indigo", m, set)) {
                 Column(
                     Modifier.fillMaxWidth().lookPage().padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text("${styleFor(st).name} · $m", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onBackground)
+                    Text("${styleFor(st).name} ${setFor(st, set).name} · $m", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onBackground)
                     OutlinedTextField("Teapot", {}, label = { Text("Name") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                     OutlinedTextField("", {}, label = { Text("Note") }, supportingText = { Text("Only you see this") }, modifier = Modifier.fillMaxWidth())
                     Row(verticalAlignment = Alignment.CenterVertically) {

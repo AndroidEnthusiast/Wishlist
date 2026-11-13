@@ -103,13 +103,17 @@ fun ThemerScreen(onBack: () -> Unit) {
     var tryStyle by remember { mutableStateOf(styleFor(Repo.design).key) }
     var tryMode by remember { mutableStateOf(inUseMode) }
     var tryAccent by remember { mutableStateOf(accentFor(Repo.palette).key) }
-    val changed = tryStyle != styleFor(Repo.design).key || tryMode != inUseMode || tryAccent != accentFor(Repo.palette).key
+    // The colour set of each style being tried (owner, 13 November 2026: at least three per style).
+    var trySets by remember { mutableStateOf(Repo.colourSets) }
+    val trySet = setFor(tryStyle, trySets[tryStyle].orEmpty()).key
+    val changed = tryStyle != styleFor(Repo.design).key || tryMode != inUseMode || tryAccent != accentFor(Repo.palette).key ||
+        trySet != setFor(Repo.design, Repo.colourSet).key
     var picker by remember { mutableStateOf(false) }
     val snack = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     // Apply, then "Theme applied" (owner, 2.101).
     val apply = {
-        Repo.setLook(ctx, tryStyle, tryMode, tryAccent)
+        Repo.setLook(ctx, tryStyle, tryMode, tryAccent, trySet)
         scope.launch { snack.showToast(tr("Theme applied")) }
         Unit
     }
@@ -131,7 +135,7 @@ fun ThemerScreen(onBack: () -> Unit) {
         Column(Modifier.padding(pad).fillMaxSize()) {
             Spacer(Modifier.height(8.dp))
             // The preview is drawn in the look being tried out; the rest of the screen keeps the look in use.
-            LookTheme(lookFor(tryStyle, tryAccent, tryMode)) {
+            LookTheme(lookFor(tryStyle, tryAccent, tryMode, trySet)) {
                 ThemePreview(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp))
             }
             Text(
@@ -147,7 +151,7 @@ fun ThemerScreen(onBack: () -> Unit) {
             ) {
                 items(STYLES.size) { i ->
                     val st = STYLES[i]
-                    DesignTile(tr(st.name), lookFor(st.key, tryAccent, tryMode), tryStyle == st.key) { tryStyle = st.key }
+                    DesignTile(tr(st.name), lookFor(st.key, tryAccent, tryMode, trySets[st.key].orEmpty()), tryStyle == st.key) { tryStyle = st.key }
                 }
             }
             // Light or dark, then the accent colours with the rainbow dot (any colour, owner 2.101) as the last one.
@@ -162,6 +166,34 @@ fun ThemerScreen(onBack: () -> Unit) {
                         modifier = Modifier.lookChip(LocalLook.current, on).clickable { tryMode = k }
                             .padding(horizontal = 14.dp, vertical = 8.dp)
                     )
+                }
+            }
+            // The colour sets of a style with its own colours, each chip with a dot of its button colour.
+            COLOUR_SETS[tryStyle]?.let { sets ->
+                LazyRow(
+                    Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(sets.size) { i ->
+                        val set = sets[i]
+                        val on = set.key == trySet
+                        val sample = lookFor(tryStyle, tryAccent, tryMode, set.key)
+                        Row(
+                            Modifier.lookChip(LocalLook.current, on).clickable(onClickLabel = tr(set.name)) { trySets = trySets + (tryStyle to set.key) }
+                                .padding(start = 8.dp, end = 14.dp, top = 8.dp, bottom = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                Modifier.size(18.dp).clip(CircleShape)
+                                    .then(if (sample.accentBrush != null) Modifier.background(sample.accentBrush) else Modifier.background(sample.accent))
+                                    .border(1.5.dp, LocalLook.current.chipContent(on), CircleShape)
+                            )
+                            Text(
+                                tr(set.name), style = MaterialTheme.typography.labelLarge, color = LocalLook.current.chipContent(on),
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
+                    }
                 }
             }
             // The accent colours: only for the styles that take one (Quiet and Gen Z chaos); the others have their own

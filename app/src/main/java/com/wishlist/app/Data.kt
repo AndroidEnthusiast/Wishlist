@@ -116,6 +116,14 @@ object Repo {
      */
     var design by mutableStateOf("quiet")
         private set
+    /**
+     * The colour set chosen for each style (owner, 13 November 2026: at least 3 per style; COLOUR_SETS in Design.kt),
+     * style key → set key. A style without an entry uses its first set. Quiet and Gen Z chaos use [palette] instead.
+     */
+    var colourSets by mutableStateOf<Map<String, String>>(emptyMap())
+        private set
+    /** The colour set of the style in use. */
+    val colourSet: String get() = colourSets[design].orEmpty()
     var colours by mutableStateOf("")
         private set
     /** The font of the app: one of FONTS in Fonts.kt. Google Sans is the original. */
@@ -267,6 +275,10 @@ object Repo {
             if (design != oldStyle) p.edit().putString("style", design).apply()
             if (ACCENTS.none { it.key == palette } && customAccent(palette) == null) palette = "blue"
         }
+        colourSets = try {
+            val o = JSONObject(p.getString("colour_sets", "{}") ?: "{}")
+            o.keys().asSequence().associateWith { o.optString(it) }
+        } catch (e: Exception) { emptyMap() }
         font = p.getString("font", "google_sans") ?: "google_sans"
         instantDelete = p.getBoolean("instant_delete", false)
         notifyDrops = p.getBoolean("notify_drops", true)
@@ -395,6 +407,7 @@ object Repo {
             .putString("theme", theme)
             .putString("palette", palette)
             .putString("style", design)
+            .putString("colour_sets", JSONObject(colourSets as Map<*, *>).toString())
             .putString("style_colours", colours)
             .putString("font", font)
             .putString("view", view)
@@ -1021,8 +1034,9 @@ object Repo {
     /** The accent colour: one of ACCENTS (Design.kt). Kept as "palette" (it held the old colour sets). */
     fun setPalette(c: Context, p: String) { palette = p; persist(c) }
     /** The look (2.97): a style of STYLES, "light" or "dark", and an accent of ACCENTS. */
-    fun setLook(c: Context, style: String, mode: String, accent: String) {
+    fun setLook(c: Context, style: String, mode: String, accent: String, set: String? = null) {
         design = styleFor(style).key; theme = mode; palette = accentFor(accent).key
+        if (set != null) colourSets = colourSets + (design to setFor(design, set).key)
         persist(c)
     }
     fun setFont(c: Context, f: String) { font = f; persist(c) }

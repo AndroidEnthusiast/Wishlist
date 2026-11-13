@@ -27,8 +27,8 @@ import androidx.compose.ui.unit.sp
  *  - Fonts (2.97): Google Sans (built in) and Figtree, Fraunces (7 November 2026), Bungee, Bricolage Grotesque, Caveat, and for
  *    the styles of 2.199: Unbounded, Space Grotesk, Space Mono, Lobster, Bitter, Oswald, Righteous, Exo 2, Rubik Dirt, Barlow,
  *    Courier Prime, Poppins, Inter, Jost, and of 2.200: Caveat Brush, Shantell Sans, DM Serif Display, Lora, Shippori Mincho,
- *    Zen Kaku Gothic New, Anton, Work Sans, Audiowide, Chakra Petch, Fredoka, Nunito (downloaded from Google Fonts): SIL Open
- *    Font License 1.1. (Rajdhani and Share Tech
+ *    Zen Kaku Gothic New, Anton, Work Sans, Audiowide, Chakra Petch, Fredoka, Nunito, and of 2.201: Archivo, Archivo Narrow,
+ *    Sedgwick Ave Display, IBM Plex Mono (downloaded from Google Fonts): SIL Open Font License 1.1. (Rajdhani and Share Tech
  *    Mono went with Cyberpunk.)
  *  - Libraries: AndroidX / Jetpack Compose, Kotlin, Coil, OkHttp, Firebase Cloud Messaging, Firebase Crashlytics (Apache License 2.0; it uses
  *    Google Play services on the phone, which come with Android).
@@ -59,7 +59,7 @@ fun LicencesDialog(onClose: () -> Unit) {
                     "Google Sans, Figtree, Fraunces, Bungee, Bricolage Grotesque, Caveat, Unbounded, Space Grotesk, Space Mono, Lobster, " +
                         "Bitter, Oswald, Righteous, Exo 2, Rubik Dirt, Barlow, Courier Prime, Poppins, Inter, Jost, Caveat Brush, Shantell Sans, " +
                         "DM Serif Display, Lora, Shippori Mincho, Zen Kaku Gothic New, Anton, Work Sans, Audiowide, Chakra Petch, Fredoka, " +
-                        "Nunito — SIL Open Font License 1.1"
+                        "Nunito, Archivo, Archivo Narrow, Sedgwick Ave Display, IBM Plex Mono — SIL Open Font License 1.1"
                 )
                 Credit(tr("Building blocks"), "AndroidX, Jetpack Compose, Kotlin, Coil, OkHttp, Credential Manager, Firebase Cloud Messaging, Firebase Crashlytics — Apache License 2.0")
                 // jsoup reads product pages (Fetch.kt); MIT License, its notice is in license_unicode.txt (2.183).

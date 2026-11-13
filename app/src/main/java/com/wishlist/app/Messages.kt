@@ -704,7 +704,7 @@ private fun ChatRow(
     // A small "tail": the corner nearest the sender is sharp on the first bubble of a group.
     // Each style's own corners: square Bauhaus, small Retro and Flat, round Y2K and Pop futurism.
     val r = when (LocalLook.current.design) {
-        "bauhaus" -> 0.dp; "japandi" -> 4.dp; "riso" -> 8.dp; "retro", "flat", "grunge" -> 10.dp; "synth" -> 12.dp
+        "bauhaus", "swiss" -> 0.dp; "japandi", "punk" -> 4.dp; "riso" -> 8.dp; "retro", "flat", "grunge" -> 10.dp; "synth" -> 12.dp
         "cottage" -> 14.dp; "doodle" -> 18.dp; "y2k", "pop", "anthro" -> 20.dp; else -> 16.dp
     }
     val tail = if (r == 0.dp) 0.dp else 2.dp

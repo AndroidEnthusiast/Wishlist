@@ -491,3 +491,4 @@ Lines of the 2.199 handoff, replaced by the 2.200 ones (13 November 2026):
 - **Newest (13 November 2026), read first.** 2.199: the new styles (Y2K, Retro vintage, Pop futurism, Grunge, Flat,
   Bauhaus) and every part themed. Ask how each feels on the phone, light and dark (fonts, fields, menus, the drawings);
 (fonts can't download there). Decisions: `docs/decisions/look.md`, "The new themes".
+  Grunge, Flat, Bauhaus; Doodle, Cottage-core, Japandi, Risograph, Synthwave, Anthropomorphic) and every part themed. Ask how each feels on the phone, light and dark (fonts, fields, menus, the drawings);

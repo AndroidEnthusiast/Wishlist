@@ -85,6 +85,8 @@ fun AppBottomBar(
         "riso" -> RoundedCornerShape(10.dp)
         "synth", "cottage" -> RoundedCornerShape(18.dp)
         "anthro" -> RoundedCornerShape(32.dp)
+        "swiss" -> androidx.compose.ui.graphics.RectangleShape
+        "punk" -> RoughShape(121, 2.6.dp, 9.dp)
         else -> RoundedCornerShape(26.dp)
     }
     val frame = if (look.design == "quiet") Modifier
@@ -99,6 +101,7 @@ fun AppBottomBar(
                     "chaos" -> Modifier.rotate(-0.8f)
                     "grunge" -> Modifier.rotate(-0.4f)
                     "doodle" -> Modifier.rotate(-0.5f)
+                    "punk" -> Modifier.rotate(-1.2f)
                     else -> Modifier
                 }
             )

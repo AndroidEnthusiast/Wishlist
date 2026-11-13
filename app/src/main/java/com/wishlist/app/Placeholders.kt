@@ -96,6 +96,8 @@ private fun emblemInk(look: Look): Color = when (look.design) {
     "flat" -> Color.White
     "doodle", "japandi", "cottage" -> look.scheme.onSurface
     "riso" -> Color(0xFF232056)
+    "swiss" -> Color.White
+    "punk" -> Color(0xFF111111)
     "synth" -> Color(0xFF1A0B33)
     else -> Color(0xFF14161F)
 }
@@ -183,6 +185,22 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.emblem(look: Look) 
             drawCircle(Brush.verticalGradient(listOf(a[0], a[1], a[2]), c.y - s * 0.4f, c.y + s * 0.4f), s * 0.4f, c)
             for (i in 0 until 4) drawRect(look.scheme.surfaceVariant, Offset(c.x - s * 0.4f, c.y + s * (0.08f + i * 0.08f)), Size(s * 0.8f, s * (0.015f + i * 0.01f)))
             drawLine(a[3], Offset(c.x - s * 0.5f, c.y + s * 0.42f), Offset(c.x + s * 0.5f, c.y + s * 0.42f), s * 0.03f)
+        }
+        "swiss" -> {
+            // A square on the grid: a black frame, a quarter in the strong colour and the icon on a colour block.
+            drawRect(look.scheme.onSurface, Offset(c.x - s * 0.42f, c.y - s * 0.42f), Size(s * 0.84f, s * 0.84f), style = Stroke(s * 0.04f))
+            drawArc(a[0].copy(alpha = 0.35f), 180f, 90f, true, Offset(c.x - s * 0.42f, c.y - s * 0.42f), Size(s * 0.84f * 2, s * 0.84f * 2))
+            drawRect(a[0], Offset(c.x - s * 0.24f, c.y - s * 0.24f), Size(s * 0.48f, s * 0.48f))
+        }
+        "punk" -> {
+            // A torn yellow scrap, taped down with a safety pin through it.
+            rotate(-8f, c) {
+                drawRect(a[2], Offset(c.x - s * 0.38f, c.y - s * 0.32f), Size(s * 0.76f, s * 0.68f))
+                drawRect(Color(0xFF111111), Offset(c.x - s * 0.38f, c.y - s * 0.32f), Size(s * 0.76f, s * 0.68f), style = Stroke(s * 0.03f))
+            }
+            val pin = Stroke(s * 0.035f, cap = StrokeCap.Round)
+            drawLine(Color(0xFF8A8A8A), Offset(c.x - s * 0.36f, c.y - s * 0.4f), Offset(c.x + s * 0.18f, c.y - s * 0.24f), s * 0.035f, StrokeCap.Round)
+            drawOval(Color(0xFF8A8A8A), Offset(c.x + s * 0.12f, c.y - s * 0.34f), Size(s * 0.2f, s * 0.12f), style = pin)
         }
         else -> {
             // Bauhaus: a red quarter circle, a blue square corner and a yellow circle in the middle.

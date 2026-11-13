@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -28,6 +29,8 @@ import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.addOutline
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
@@ -88,10 +91,39 @@ val STYLES: List<StyleInfo> = listOf(
     StyleInfo("japandi", "Japandi", "Calm Japanese and Scandinavian: warm neutrals, fine lines, wave and fan patterns."),
     StyleInfo("riso", "Risograph", "Fluorescent pink, blue and yellow ink, grainy paper and slightly misaligned layers."),
     StyleInfo("synth", "Synthwave", "Eighties neon: a striped sunset, a glowing grid, palm trees and chrome letters."),
-    StyleInfo("anthro", "Anthropomorphic", "A little gift box with a face keeps you company: bold flat colours and round shapes.")
+    StyleInfo("anthro", "Anthropomorphic", "A little gift box with a face keeps you company: bold flat colours and round shapes."),
+    StyleInfo("swiss", "Swiss", "A strict grid, bold sans-serif type, black and white with one strong colour."),
+    StyleInfo("punk", "British Punk", "Photocopied cut-outs, torn paper taped down crooked, ransom-note letters.")
 )
 
 fun styleFor(key: String): StyleInfo = STYLES.firstOrNull { it.key == key } ?: STYLES[0]
+
+/** A colour set of a style (owner, 13 November 2026: at least three per style, so a style isn't one fixed picture). */
+class ColourSet(val key: String, val name: String)
+
+/** The colour sets of each style that has its own colours (the first is the one it starts with). */
+val COLOUR_SETS: Map<String, List<ColourSet>> = mapOf(
+    "y2k" to listOf(ColourSet("holo", "Holographic"), ColourSet("chrome", "Chrome"), ColourSet("bubblegum", "Bubblegum")),
+    "retro" to listOf(ColourSet("diner", "Diner"), ColourSet("seventies", "Seventies"), ColourSet("seaside", "Seaside")),
+    "pop" to listOf(ColourSet("sunset", "Sunset"), ColourSet("lagoon", "Lagoon"), ColourSet("cosmic", "Cosmic")),
+    "grunge" to listOf(ColourSet("blood", "Blood red"), ColourSet("toxic", "Toxic green"), ColourSet("bruise", "Bruise purple")),
+    "flat" to listOf(ColourSet("lagoon", "Lagoon"), ColourSet("forest", "Forest"), ColourSet("sunset", "Sunset")),
+    "bauhaus" to listOf(ColourSet("primary", "Primary"), ColourSet("earth", "Earth"), ColourSet("night", "Night blue")),
+    "doodle" to listOf(ColourSet("orange", "Orange marker"), ColourSet("bluepen", "Blue pen"), ColourSet("highlighter", "Highlighter")),
+    "cottage" to listOf(ColourSet("garden", "Garden"), ColourSet("lavender", "Lavender"), ColourSet("berry", "Berry")),
+    "japandi" to listOf(ColourSet("oat", "Oat"), ColourSet("matcha", "Matcha"), ColourSet("clay", "Clay")),
+    "riso" to listOf(ColourSet("pinkblue", "Pink and blue"), ColourSet("orangeteal", "Orange and teal"), ColourSet("greenpurple", "Green and purple")),
+    "synth" to listOf(ColourSet("sunset", "Sunset"), ColourSet("outrun", "Outrun"), ColourSet("miami", "Miami")),
+    "anthro" to listOf(ColourSet("royal", "Royal blue"), ColourSet("mint", "Mint"), ColourSet("tangerine", "Tangerine")),
+    "swiss" to listOf(ColourSet("red", "Swiss red"), ColourSet("klein", "Klein blue"), ColourSet("signal", "Signal yellow")),
+    "punk" to listOf(ColourSet("riot", "Riot red"), ColourSet("safety", "Safety-pin yellow"), ColourSet("electric", "Electric blue"))
+)
+
+/** The colour set [key] of [style], or its first set. */
+fun setFor(style: String, key: String): ColourSet {
+    val sets = COLOUR_SETS[styleFor(style).key] ?: return ColourSet("", "")
+    return sets.firstOrNull { it.key == key } ?: sets.first()
+}
 
 /** Whether the style takes the accent colour you pick (Quiet and Gen Z chaos); the others have their own colours. */
 fun usesAccent(style: String): Boolean = styleFor(style).key == "quiet" || styleFor(style).key == "chaos"
@@ -225,6 +257,12 @@ private val chakra by lazy { google("Chakra Petch", "sans-serif", listOf(FontWei
 // Anthropomorphic: Fredoka (round and friendly) headings and labels, Nunito text.
 private val fredoka by lazy { google("Fredoka", "sans-serif", listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold)) }
 private val nunito by lazy { google("Nunito", "sans-serif") }
+// Swiss: Archivo, a grotesque in the spirit of Helvetica and Akzidenz.
+private val archivo by lazy { google("Archivo", "sans-serif") }
+// British Punk: Sedgwick Ave Display (a marker scrawl) headings, Archivo Narrow text, IBM Plex Mono (typewriter) labels.
+private val sedgwick by lazy { google("Sedgwick Ave Display", "casual", one) }
+private val archivoNarrow by lazy { google("Archivo Narrow", "sans-serif-condensed", listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold)) }
+private val plexMono by lazy { google("IBM Plex Mono", "monospace", listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold)) }
 
 /** All the colours of a scheme from a few, plus the surface steps that menus and dialogs use. */
 private fun scheme(
@@ -264,7 +302,13 @@ private fun sweep(cols: List<Color>): Brush = Brush.linearGradient(cols, Offset.
  * The look for a style ([style], one of [STYLES]), an accent ([accentKey], one of [ACCENTS]; only Quiet and chaos use
  * it) and a mode ("light" or "dark"; anything else counts as dark).
  */
-fun lookFor(style: String, accentKey: String, mode: String): Look {
+fun lookFor(style: String, accentKey: String, mode: String, set: String = ""): Look {
+    val base = baseLook(style, accentKey, mode)
+    return if (usesAccent(base.design)) base else base.withSet(setFor(base.design, set).key)
+}
+
+/** The style's own look in its first colour set. */
+private fun baseLook(style: String, accentKey: String, mode: String): Look {
     val dark = mode != "light"
     val ac = accentFor(accentKey)
     val a = c(if (dark) ac.dark else ac.light)
@@ -578,6 +622,46 @@ fun lookFor(style: String, accentKey: String, mode: String): Look {
                 art = listOf(red, blue, pink, yellow, purple, c(0xFF1A1A2E), white)
             )
         }
+        "swiss" -> {
+            // White, black and one strong colour; in dark a black page with white type and the same colour.
+            val bg = if (dark) c(0xFF0E0E0E) else c(0xFFF4F4F2)
+            val surface = if (dark) c(0xFF1A1A1A) else white
+            val ink = if (dark) c(0xFFF4F4F2) else c(0xFF111111)
+            val muted = if (dark) c(0xFFB5B5B5) else c(0xFF4A4A4A)
+            val red = c(0xFFE30613)
+            Look(
+                "swiss", dark,
+                scheme(dark, if (dark) c(0xFFFF5247) else c(0xFFC4000F), if (dark) c(0xFF0E0E0E) else white, if (dark) c(0xFF3A1A1A) else c(0xFFFADCDC), ink,
+                    bg, surface, ink, muted, ink, if (dark) c(0xFF333333) else c(0xFFDDDDDA)),
+                listOf(surface),
+                if (dark) listOf(c(0xFF262626), c(0xFF2E1E1E), c(0xFF222222)) else listOf(c(0xFFEDEDED), c(0xFFF6E3E3), c(0xFFE8E8E8)),
+                ink,
+                listOf(ink),
+                listOf(ink.copy(alpha = 0.06f), red.copy(alpha = 0.10f)),
+                archivo, drop, rise, accent = red, onAccent = white,
+                art = listOf(red, ink, if (dark) c(0xFF0E0E0E) else white, c(0xFF8A8A8A))
+            )
+        }
+        "punk" -> {
+            // A black-and-white photocopy with red (and in its other sets yellow or blue).
+            val bg = if (dark) c(0xFF121212) else c(0xFFECEAE4)
+            val surface = if (dark) c(0xFF1E1E1E) else c(0xFFFAFAF7)
+            val ink = if (dark) c(0xFFF2F0EA) else c(0xFF111111)
+            val muted = if (dark) c(0xFFBDBAB2) else c(0xFF3D3D3D)
+            val red = c(0xFFD7141A)
+            Look(
+                "punk", dark,
+                scheme(dark, if (dark) c(0xFFFF6B6B) else c(0xFFB5101A), if (dark) c(0xFF121212) else white, if (dark) c(0xFF3A1A1C) else c(0xFFF3D3D3), ink,
+                    bg, surface, ink, muted, ink, if (dark) c(0xFF333333) else c(0xFFD5D2CA)),
+                listOf(surface),
+                if (dark) listOf(c(0xFF2A2A2A), c(0xFF3A1E20), c(0xFF33301E), c(0xFF22263A)) else listOf(c(0xFFE2E0DA), c(0xFFF1D9D6), c(0xFFE7E4D3), c(0xFFDADDE8)),
+                ink,
+                listOf(if (dark) red.copy(alpha = 0.85f) else c(0xFF111111).copy(alpha = 0.85f)),
+                listOf(ink.copy(alpha = 0.10f), red.copy(alpha = if (dark) 0.25f else 0.16f), c(0xFF1B4DFF).copy(alpha = if (dark) 0.25f else 0.10f)),
+                archivoNarrow, drop, rise, accent = red, onAccent = white,
+                art = listOf(red, ink, c(0xFFFFD60A), c(0xFF1B4DFF), if (dark) c(0xFF1E1E1E) else c(0xFFFAFAF7))
+            )
+        }
         else -> {
             // Quiet.
             val bg = if (dark) Color.Black else c(0xFFF2F2F7)
@@ -646,6 +730,8 @@ fun typographyFor(design: String, @Suppress("UNUSED_PARAMETER") classic: Typogra
     "riso" -> styleType(anton, FontWeight.Normal, 0.6f, workSans, FontWeight.SemiBold, FontWeight.Normal, workSans, FontWeight.Bold, headShadow = titleShadowFor("riso"))
     "synth" -> styleType(audiowide, FontWeight.Normal, 0.4f, chakra, FontWeight.SemiBold, FontWeight.Normal, chakra, FontWeight.Bold, headShadow = titleShadowFor("synth"))
     "anthro" -> styleType(fredoka, FontWeight.SemiBold, 0f, nunito, FontWeight.Bold, FontWeight.Normal, fredoka, FontWeight.Medium)
+    "swiss" -> styleType(archivo, FontWeight.ExtraBold, -0.6f, archivo, FontWeight.Bold, FontWeight.Normal, archivo, FontWeight.SemiBold)
+    "punk" -> styleType(sedgwick, FontWeight.Normal, 0f, archivoNarrow, FontWeight.Bold, FontWeight.Normal, plexMono, FontWeight.Bold)
     else -> styleType(fraunces, FontWeight.SemiBold, -0.2f, figtree, FontWeight.SemiBold, FontWeight.Normal, figtree, FontWeight.SemiBold)
 }
 
@@ -661,8 +747,9 @@ val Look.titleShadow: androidx.compose.ui.graphics.Shadow? get() = titleShadowFo
 /** The weight of screen titles in the top bar (fonts that come in one weight: that weight). */
 val Look.titleWeight: FontWeight
     get() = when (design) {
-        "chaos", "retro", "pop", "grunge", "doodle", "cottage", "riso", "synth" -> FontWeight.Normal
+        "chaos", "retro", "pop", "grunge", "doodle", "cottage", "riso", "synth", "punk" -> FontWeight.Normal
         "bauhaus" -> FontWeight.Bold
+        "swiss" -> FontWeight.ExtraBold
         // Fraunces headings (7 November 2026) look best a little lighter.
         else -> FontWeight.SemiBold
     }
@@ -681,7 +768,7 @@ val Look.iconStyle: String
     get() = when (design) {
         "y2k", "japandi", "doodle" -> "outlined"
         "retro", "flat", "cottage", "anthro" -> "filled"
-        "grunge", "bauhaus", "riso" -> "sharp"
+        "grunge", "bauhaus", "riso", "swiss", "punk" -> "sharp"
         else -> "rounded"
     }
 
@@ -689,7 +776,7 @@ val Look.iconStyle: String
 val Look.edge: Dp
     get() = when (design) {
         "chaos" -> 3.dp
-        "bauhaus", "doodle", "anthro" -> 2.5.dp
+        "bauhaus", "doodle", "anthro", "punk" -> 2.5.dp
         "retro", "grunge", "riso" -> 2.dp
         "y2k", "cottage", "synth" -> 1.5.dp
         "japandi" -> 1.dp
@@ -750,6 +837,24 @@ class WobblyShape(private val seed: Int, private val corner: Dp = 12.dp, private
     override fun hashCode() = seed * 31 + corner.hashCode()
 }
 
+/** Retro's ticket: rounded corners and a round notch cut into the middle of each side. */
+class TicketShape(private val corner: Dp, private val notch: Dp) : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        val r = with(density) { corner.toPx() }.coerceAtMost(minOf(size.width, size.height) / 3)
+        val n = with(density) { notch.toPx() }.coerceAtMost(size.height / 4)
+        val w = size.width; val h = size.height
+        val p = Path()
+        p.moveTo(r, 0f); p.lineTo(w - r, 0f); p.quadraticTo(w, 0f, w, r)
+        p.lineTo(w, h / 2 - n); p.arcTo(androidx.compose.ui.geometry.Rect(Offset(w, h / 2), n), 270f, -180f, false)
+        p.lineTo(w, h - r); p.quadraticTo(w, h, w - r, h); p.lineTo(r, h); p.quadraticTo(0f, h, 0f, h - r)
+        p.lineTo(0f, h / 2 + n); p.arcTo(androidx.compose.ui.geometry.Rect(Offset(0f, h / 2), n), 90f, -180f, false)
+        p.lineTo(0f, r); p.quadraticTo(0f, 0f, r, 0f); p.close()
+        return Outline.Generic(p)
+    }
+    override fun equals(other: Any?) = other is TicketShape && other.corner == corner && other.notch == notch
+    override fun hashCode() = corner.hashCode() * 31 + notch.hashCode()
+}
+
 /** Pop futurism's streamlined shape: two big round corners and two small ones, like a seventies panel. */
 private fun stream(big: Dp, small: Dp) = RoundedCornerShape(topStart = big, topEnd = small, bottomEnd = big, bottomStart = small)
 private val pill = RoundedCornerShape(50)
@@ -785,6 +890,10 @@ fun shapesFor(design: String): Shapes = when (design) {
         extraSmall = RoundedCornerShape(2.dp), small = RoundedCornerShape(4.dp), medium = RoundedCornerShape(4.dp),
         large = RoundedCornerShape(6.dp), extraLarge = RoundedCornerShape(8.dp)
     )
+    "swiss", "punk" -> Shapes(
+        extraSmall = RoundedCornerShape(0.dp), small = RoundedCornerShape(0.dp), medium = RoundedCornerShape(0.dp),
+        large = RoundedCornerShape(0.dp), extraLarge = RoundedCornerShape(0.dp)
+    )
     "riso", "synth" -> Shapes(
         extraSmall = RoundedCornerShape(4.dp), small = RoundedCornerShape(6.dp), medium = RoundedCornerShape(8.dp),
         large = RoundedCornerShape(10.dp), extraLarge = RoundedCornerShape(12.dp)
@@ -808,6 +917,7 @@ val Look.dialogShape: Shape
     get() = when (design) {
         "grunge" -> RoughShape(7, 2.4.dp, 9.dp)
         "doodle" -> WobblyShape(7, 24.dp, 2.dp)
+        "punk" -> RoughShape(8, 3.dp, 8.dp)
         else -> shapesFor(design).extraLarge
     }
 
@@ -815,7 +925,6 @@ val Look.dialogShape: Shape
 fun Look.cardShape(id: Long, small: Boolean): Shape = when (design) {
     "chaos" -> RoundedCornerShape(if (small) 14.dp else 18.dp)
     "y2k" -> RoundedCornerShape(if (small) 22.dp else 26.dp)
-    "retro" -> RoundedCornerShape(if (small) 12.dp else 14.dp)
     "pop" -> if (small) stream(22.dp, 6.dp) else stream(28.dp, 8.dp)
     "grunge" -> RoughShape(pick(id, 97) + 11, if (small) 1.8.dp else 2.2.dp)
     "flat" -> RoundedCornerShape(if (small) 10.dp else 12.dp)
@@ -826,6 +935,11 @@ fun Look.cardShape(id: Long, small: Boolean): Shape = when (design) {
     "riso" -> RoundedCornerShape(if (small) 6.dp else 8.dp)
     "synth" -> RoundedCornerShape(if (small) 10.dp else 12.dp)
     "anthro" -> RoundedCornerShape(if (small) 20.dp else 24.dp)
+    "swiss" -> RectangleShape
+    // Punk: paper torn out of a magazine, each piece its own way.
+    "punk" -> RoughShape(pick(id, 97) + 71, if (small) 2.6.dp else 3.dp, 6.dp)
+    // Retro: a ticket with a round notch on each side.
+    "retro" -> TicketShape(if (small) 12.dp else 14.dp, if (small) 7.dp else 8.dp)
     else -> RoundedCornerShape(if (small) 16.dp else 20.dp)
 }
 
@@ -857,6 +971,8 @@ fun Look.badgeShape(small: Boolean): Shape = when (design) {
     "y2k", "pop", "bauhaus", "cottage", "anthro" -> pill
     "retro", "flat", "japandi", "riso", "synth" -> RoundedCornerShape(4.dp)
     "doodle" -> WobblyShape(23, 8.dp, 1.dp)
+    "swiss" -> RectangleShape
+    "punk" -> RoughShape(25, 1.4.dp, 5.dp)
     "grunge" -> RoughShape(21, 1.dp, 5.dp)
     else -> RoundedCornerShape(if (small) 6.dp else 8.dp)
 }
@@ -870,6 +986,8 @@ val Look.chipShape: Shape
         "japandi" -> RoundedCornerShape(4.dp)
         "grunge" -> RoughShape(31, 1.2.dp, 6.dp)
         "doodle" -> WobblyShape(33, 14.dp, 1.2.dp)
+        "swiss" -> RectangleShape
+        "punk" -> RoughShape(35, 1.4.dp, 6.dp)
         else -> CircleShape
     }
 
@@ -882,6 +1000,8 @@ val Look.fabShape: Shape
         "riso", "synth" -> RoundedCornerShape(10.dp)
         "grunge" -> RoughShape(41, 1.6.dp, 7.dp)
         "doodle" -> WobblyShape(43, 22.dp, 1.6.dp)
+        "swiss" -> RectangleShape
+        "punk" -> RoughShape(45, 1.8.dp, 7.dp)
         else -> CircleShape
     }
 
@@ -893,16 +1013,27 @@ val Look.buttonShape: Shape
         "japandi" -> RoundedCornerShape(4.dp)
         "grunge" -> RoughShape(51, 1.4.dp, 7.dp)
         "doodle" -> WobblyShape(53, 22.dp, 1.4.dp)
-        "bauhaus" -> RectangleShape
+        "bauhaus", "swiss" -> RectangleShape
+        "punk" -> RoughShape(55, 1.6.dp, 7.dp)
         else -> CircleShape
     }
 
 /** Gen Z chaos tilts cards a little, each its own way (by its id); Grunge only a touch, like pasted-up paper. */
 fun Look.tilt(id: Long): Float = when (design) {
     "chaos" -> listOf(-1.6f, 1.2f, -0.8f, 1.8f, -1.2f, 0.9f)[pick(id, 6)]
-    "grunge" -> listOf(-0.5f, 0.4f, -0.2f, 0.6f, -0.4f)[pick(id, 5)]
-    "doodle" -> listOf(-0.6f, 0.5f, -0.3f, 0.4f)[pick(id, 4)]
+    // Wild placement (owner, 13 November 2026), each its own way: Punk the most, cut-outs pasted down crooked; Grunge
+    // crooked paper; Doodle loose sketches. (Risograph doesn't turn: its layers slide sideways, [nudge].)
+    "punk" -> listOf(-1.8f, 1.3f, -0.7f, 2.0f, -1.4f, 0.9f, -2.2f)[pick(id, 7)]
+    "grunge" -> listOf(-1.1f, 0.8f, -0.4f, 1.2f, -0.9f)[pick(id, 5)]
+    "doodle" -> listOf(-0.9f, 0.7f, -0.4f, 0.8f)[pick(id, 4)]
     else -> 0f
+}
+
+/** Cards slid out of line (wild placement): Punk's pasted-up cut-outs, Risograph's layers printed a little off. */
+fun Look.nudge(id: Long): Dp = when (design) {
+    "punk" -> listOf(-6f, 4f, 0f, 7f, -3f, 5f, -7f)[pick(id, 7)].dp
+    "riso" -> listOf(-5f, 3f, 6f, -2f, 4f)[pick(id, 5)].dp
+    else -> 0.dp
 }
 
 /** A hard shadow: the shape again, moved down and to the right, in one flat colour (or a gradient). */
@@ -913,12 +1044,15 @@ fun Modifier.hardShadow(color: Color, shape: Shape, offset: Dp = 4.dp, brush: Br
 }
 
 /** Retro's printed label: a thin second line just inside the edge (only on bigger things, not on chips). */
-private fun Modifier.keyline(look: Look, shape: Shape): Modifier = drawBehind {
-    if (size.minDimension < 56.dp.toPx()) return@drawBehind
+private fun Modifier.keyline(look: Look, shape: Shape, stitched: Boolean = false, min: Dp = 56.dp): Modifier = drawBehind {
+    if (size.minDimension < min.toPx()) return@drawBehind
     val i = 4.dp.toPx()
     val inner = Size(size.width - 2 * i, size.height - 2 * i)
     val outline = shape.createOutline(inner, layoutDirection, this)
-    translate(i, i) { drawOutline(outline, look.line.copy(alpha = 0.55f), style = Stroke(1.dp.toPx())) }
+    // Cottage-core: running stitches, like a quilt; Retro: a printed fine line.
+    val st = if (stitched) Stroke(1.3.dp.toPx(), pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(), 3.5.dp.toPx())))
+        else Stroke(1.dp.toPx())
+    translate(i, i) { drawOutline(outline, look.line.copy(alpha = if (stitched) 0.7f else 0.55f), style = st) }
 }
 
 /**
@@ -926,41 +1060,85 @@ private fun Modifier.keyline(look: Look, shape: Shape): Modifier = drawBehind {
  * a gradient); [raised] false = without the shadow (fields, pressed-in things). [depth] how big the shadow is. The
  * content is clipped to [shape].
  */
-fun Modifier.lookSurface(look: Look, shape: Shape, fill: Color, raised: Boolean = true, depth: Dp = 6.dp, brush: Brush? = null): Modifier {
+fun Modifier.lookSurface(look: Look, shape: Shape, fill: Color, raised: Boolean = true, depth: Dp = 6.dp, brush: Brush? = null, shadow: Color? = null): Modifier {
     fun Modifier.paint() = clip(shape).then(if (brush != null) Modifier.background(brush) else Modifier.background(fill))
     val d = depth.value
     return when (look.design) {
         "chaos" -> (if (raised) hardShadow(look.shadows[0], shape, 5.dp) else this).paint().border(3.dp, look.line, shape)
+        // Y2K: a holographic shadow; buttons and chips get a glossy bubble shine on their top half.
         "y2k" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.6f).coerceIn(2f, 5f).dp, look.shadowBrush) else this)
-            .paint().border(look.edge, look.line, shape)
+            .paint().drawBehind {
+                if (size.height < 64.dp.toPx()) drawRect(
+                    Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.55f), Color.White.copy(alpha = 0f)), 0f, size.height * 0.55f),
+                    Offset(size.width * 0.06f, size.height * 0.08f), Size(size.width * 0.88f, size.height * 0.4f)
+                )
+            }.border(look.edge, look.line, shape)
+        // Retro: a misprinted shadow and a fine printed line inside the edge (buttons too).
         "retro" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.5f).coerceIn(2f, 4f).dp) else this)
-            .paint().keyline(look, shape).border(look.edge, look.line, shape)
+            .paint().keyline(look, shape, min = 36.dp).border(look.edge, look.line, shape)
         "pop" -> (if (raised) hardShadow(look.shadows[1], shape, (d * 0.9f).coerceIn(3f, 8f).dp)
             .hardShadow(look.shadows[0], shape, (d * 0.45f).coerceIn(1.5f, 4f).dp) else this).paint()
         "grunge" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.5f).coerceIn(2f, 4f).dp) else this)
             .paint().border(look.edge, look.line, shape)
-        "flat" -> paint()
-        // Doodle: a marker line drawn twice, the second a little off, like a quick sketch; no shadow.
-        "doodle" -> paint().border(look.edge, look.line, shape).drawWithContent {
+        // Flat: the "long shadow" of flat design on buttons: a darker band running off to the bottom right.
+        "flat" -> (if (raised) drawBehind {
+            if (size.height >= 64.dp.toPx()) return@drawBehind
+            val outline = shape.createOutline(size, layoutDirection, this)
+            val col = lerp(brush?.let { fill } ?: fill, Color.Black, 0.28f).copy(alpha = 0.55f)
+            val n = 10.dp.toPx()
+            var k = 1f
+            while (k <= n) { translate(k, k) { drawOutline(outline, col) }; k += 1f }
+        } else this).paint()
+        // Doodle: a hatched pencil shadow and a marker line drawn twice, the second a little off, like a quick sketch.
+        "doodle" -> (if (raised) drawBehind {
+            val o = (d * 0.6f).coerceIn(3f, 6f).dp.toPx()
+            val outline = shape.createOutline(size, layoutDirection, this)
+            val clip = Path().apply { addOutline(outline); translate(Offset(o, o)) }
+            clipPath(clip) {
+                var x = -size.height
+                val step = 5.dp.toPx()
+                while (x < size.width + o) { drawLine(look.line.copy(alpha = 0.55f), Offset(x, size.height + o), Offset(x + size.height + o, 0f), 1.2.dp.toPx()); x += step }
+            }
+        } else this).paint().border(look.edge, look.line, shape).drawWithContent {
             drawContent()
             val outline = shape.createOutline(size, layoutDirection, this)
             translate(1.2.dp.toPx(), -1.dp.toPx()) { drawOutline(outline, look.line.copy(alpha = 0.45f), style = Stroke(1.dp.toPx())) }
         }
         // Cottage-core: a soft printed shadow, a fine line and an inner keyline like a seed packet.
         "cottage" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.4f).coerceIn(2f, 3f).dp) else this)
-            .paint().keyline(look, shape).border(look.edge, look.line, shape)
+            .paint().keyline(look, shape, stitched = true, min = 36.dp).border(look.edge, look.line, shape)
         // Japandi: a hairline, nothing else.
         "japandi" -> paint().border(look.edge, look.line.copy(alpha = 0.6f), shape)
         // Risograph: the pink layer printed a little off, under the blue outline.
+        // …and the blue outline printed once more, a little off (overprint).
         "riso" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.6f).coerceIn(2.5f, 5f).dp) else this)
-            .paint().border(look.edge, look.line, shape)
+            .paint().border(look.edge, look.line, shape).drawWithContent {
+                drawContent()
+                val outline = shape.createOutline(size, layoutDirection, this)
+                translate(-2.dp.toPx(), 1.5.dp.toPx()) { drawOutline(outline, look.shadows.getOrElse(1) { look.line }.copy(alpha = 0.6f), style = Stroke(1.5.dp.toPx())) }
+            }
+        // Swiss: no frame and no shadow; a thick rule along the top of each card, like a column on a grid.
+        "swiss" -> paint().drawBehind {
+            if (size.height >= 64.dp.toPx()) drawRect(look.line, Offset.Zero, Size(size.width, 4.dp.toPx()))
+        }.then(if (size0(look, raised)) Modifier.border(2.dp, look.line, shape) else Modifier)
+        // Punk: a torn-out cut-out with a hard shadow, taped down with a strip of tape across its top edge.
+        "punk" -> (if (raised) hardShadow(shadow ?: look.shadows[0], shape, (d * 0.6f).coerceIn(2.5f, 5f).dp) else this)
+            .paint().border(look.edge, look.line, shape).drawWithContent {
+                drawContent()
+                if (size.height >= 56.dp.toPx() && size.width >= 120.dp.toPx()) {
+                    val t = Size(46.dp.toPx(), 14.dp.toPx())
+                    rotate(-4f, Offset(size.width * 0.5f, 0f)) {
+                        drawRect(Color(0xFFF2E6B8).copy(alpha = 0.75f), Offset(size.width * 0.5f - t.width / 2, -t.height / 2), t)
+                    }
+                }
+            }
         // Synthwave: a neon outline with a soft glow in the same colour.
         "synth" -> (if (raised) shadow((d * 1.6f).coerceIn(4f, 14f).dp, shape, clip = false, ambientColor = look.line, spotColor = look.line) else this)
             .paint().border(look.edge, look.line, shape)
         // Anthropomorphic: a cartoon outline and a hard ink shadow.
         "anthro" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.6f).coerceIn(2.5f, 5f).dp) else this)
             .paint().border(look.edge, look.line, shape)
-        "bauhaus" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.7f).coerceIn(3f, 6f).dp) else this)
+        "bauhaus" -> (if (raised) hardShadow(shadow ?: look.shadows[0], shape, (d * 0.7f).coerceIn(3f, 6f).dp) else this)
             .paint().border(look.edge, look.line, shape)
         // Quiet: just the card colour; in light a hairline so white cards don't melt into each other.
         else -> paint().then(if (!look.dark) Modifier.border(1.dp, Color.Black.copy(alpha = 0.04f), shape) else Modifier)
@@ -970,8 +1148,15 @@ fun Modifier.lookSurface(look: Look, shape: Shape, fill: Color, raised: Boolean 
 /** The frame of a wish card (or any card) in the chosen style: its colour, lines, shadow, shape and tilt. */
 fun Modifier.lookCard(look: Look, id: Long, shape: Shape): Modifier {
     val t = look.tilt(id)
-    return (if (t != 0f) rotate(t) else this).lookSurface(look, shape, look.cardFill(id), depth = 8.dp)
+    val n = look.nudge(id)
+    // Bauhaus: each card's block behind it in its own primary colour.
+    val block = if (look.design == "bauhaus") listOf(look.art[0], look.art[1], look.art[2])[pick(id, 3)] else null
+    return (if (n != 0.dp) offset(x = n) else this).then(if (t != 0f) Modifier.rotate(t) else Modifier)
+        .lookSurface(look, shape, look.cardFill(id), depth = 8.dp, shadow = block)
 }
+
+/** Swiss buttons (filled ones excepted) are framed in black; whether this surface is one. */
+private fun size0(look: Look, raised: Boolean): Boolean = look.design == "swiss" && !raised
 
 /** The mat a picture sits on inside a card. */
 @Suppress("UNUSED_PARAMETER")
@@ -1337,6 +1522,40 @@ fun Modifier.lookBackdrop(look: Look): Modifier = when (look.design) {
             }
         }
     }
+    "swiss" -> drawWithCache {
+        val w = size.width; val h = size.height
+        val u = 1.dp.toPx()
+        onDrawBehind {
+            // The grid: six columns and a baseline every 96 dp, faint; a colour bar down the left edge (where text
+            // never goes) and one big circle quarter low on the right.
+            val col = (w - 32 * u) / 6
+            for (i in 0..6) drawLine(look.blobs[0], Offset(16 * u + i * col, 0f), Offset(16 * u + i * col, h), 1f * u)
+            var y = 96 * u
+            while (y < h) { drawLine(look.blobs[0], Offset(0f, y), Offset(w, y), 1f * u); y += 96 * u }
+            drawArc(look.blobs[1], 180f, 90f, true, Offset(w - 120 * u, h - 120 * u), Size(240 * u, 240 * u))
+            drawRect(look.art[0], Offset(0f, 0f), Size(6 * u, h))
+        }
+    }
+    "punk" -> drawWithCache {
+        val w = size.width; val h = size.height
+        val u = 1.dp.toPx()
+        val specks = grain(w, h, 3600, 83, edge = true)
+        fun scrap(x: Float, y: Float, sw: Float, sh: Float, seed: Int): Path {
+            val o = RoughShape(seed, 4.dp, 9.dp).createOutline(Size(sw, sh), androidx.compose.ui.unit.LayoutDirection.Ltr, this)
+            return Path().apply { addOutline(o); translate(Offset(x, y)) }
+        }
+        val s1 = scrap(w * 0.62f, -20 * u, 180 * u, 90 * u, 3); val s2 = scrap(-40 * u, h * 0.46f, 150 * u, 120 * u, 5)
+        val s3 = scrap(w * 0.55f, h - 110 * u, 200 * u, 80 * u, 9)
+        onDrawBehind {
+            // Torn paper scraps pasted on, photocopy specks, and a strip of tape down the right edge.
+            rotate(6f, Offset(w * 0.7f, 20 * u)) { drawPath(s1, look.blobs[1]) }
+            rotate(-8f, Offset(0f, h * 0.5f)) { drawPath(s2, look.blobs[2]) }
+            rotate(-3f, Offset(w * 0.6f, h)) { drawPath(s3, look.blobs[0]) }
+            drawPoints(specks, PointMode.Points, look.blobs[0], strokeWidth = 2.4f * u)
+            drawRect(look.art[0], Offset(w - 7 * u, 0f), Size(4 * u, h))
+            drawRect(look.art[1], Offset(w - 12 * u, 0f), Size(2 * u, h))
+        }
+    }
     else -> this
 }
 
@@ -1346,3 +1565,174 @@ fun Modifier.lookBackdrop(look: Look): Modifier = when (look.design) {
  * Y2K's pale lilac, and would be too light for text).
  */
 val Look.textAccent: Color get() = if (design == "quiet" || design == "chaos") accent else scheme.primary
+
+/**
+ * The look in another colour set: its own button colour, text colour, drawing colours and (for gradients) its own
+ * gradient; the page, cards, text and lines stay the style's. [mix] keeps each drawing colour's strength (alpha), so
+ * what LookTest checked for readability stays true. Every set has a light and a dark version.
+ */
+private fun Look.recolour(
+    primary: Color, onPrimary: Color, container: Color, fill: Color, onFill: Color, art: List<Color>,
+    blobs: List<Color>? = null, shadows: List<Color>? = null, brush: List<Color>? = null, tints: List<Color>? = null
+): Look {
+    val sc = scheme.copy(
+        primary = primary, onPrimary = onPrimary, primaryContainer = container,
+        secondary = primary, onSecondary = onPrimary, secondaryContainer = container,
+        tertiary = primary, onTertiary = onPrimary, tertiaryContainer = container, inversePrimary = container
+    )
+    val b = blobs?.mapIndexed { i, h -> if (this.blobs.getOrNull(i)?.alpha?.let { it < 1f } == true) h.copy(alpha = this.blobs[i].alpha) else h } ?: this.blobs
+    val br = brush?.let { if (design == "synth") Brush.linearGradient(it, Offset.Zero, Offset(0f, Float.POSITIVE_INFINITY)) else Brush.linearGradient(it, Offset.Zero, Offset.Infinite) }
+    return Look(
+        design, dark, sc, fills, tints ?: this.tints, line, shadows ?: this.shadows, b, display, drop, rise,
+        accent = fill, onAccent = onFill, art = art, accentBrush = br ?: accentBrush, shadowBrush = if (design == "y2k") br ?: shadowBrush else shadowBrush
+    )
+}
+
+/** This look in colour set [set] of its style (the first set is the look itself). */
+private fun Look.withSet(set: String): Look {
+    val d = dark
+    fun c2(l: Long, dk: Long) = Color(if (d) dk else l)
+    return when ("$design/$set") {
+        "y2k/chrome" -> recolour(
+            c2(0xFF3A4A63, 0xFFB9C7DA), c2(0xFFFFFFFF, 0xFF17122B), c2(0xFFE3E8F0, 0xFF2A3142), Color(0xFFD5DDE8), Color(0xFF17122B),
+            listOf(Color(0xFFC9D3E0), Color(0xFFAEE6FF), Color(0xFFE3E8F0), Color(0xFFF0D9FF), art[4]),
+            listOf(Color(0xFFD9E2EC), Color(0xFFB9EBFF), Color(0xFFE6E0F5), blobs[3]), listOf(Color(0xFFC9D3E0)),
+            listOf(Color(0xFFF4F6FA), Color(0xFFC9D3E0), Color(0xFFAEE6FF))
+        )
+        "y2k/bubblegum" -> recolour(
+            c2(0xFFC21F7A, 0xFFFF9AD5), c2(0xFFFFFFFF, 0xFF17122B), c2(0xFFFFE0F1, 0xFF3F2240), Color(0xFFFFB3DA), Color(0xFF17122B),
+            listOf(Color(0xFFFF9AD5), Color(0xFFFFF3A3), Color(0xFFFFC6A8), Color(0xFFB8F2D0), art[4]),
+            listOf(Color(0xFFFFB3DA), Color(0xFFFFF3A3), Color(0xFFFFC6A8), blobs[3]), listOf(Color(0xFFFFB3DA)),
+            listOf(Color(0xFFFF9AD5), Color(0xFFFFC6A8), Color(0xFFFFF3A3))
+        )
+        "retro/seventies" -> recolour(
+            c2(0xFF9A4312, 0xFFF2B07A), c2(0xFFFFF6E5, 0xFF2A1C10), c2(0xFFF4DCC2, 0xFF4A3424), c2(0xFFB4531A, 0xFFE8A33D), c2(0xFFFFF6E5, 0xFF2A1C10),
+            listOf(Color(0xFFB4531A), Color(0xFFE8A33D), Color(0xFF6B7A2E), art[3], art[4]),
+            listOf(Color(0xFFE8A33D), blobs[1], Color(0xFFB4531A)), listOf(Color(0xFF6B7A2E))
+        )
+        "retro/seaside" -> recolour(
+            c2(0xFF1F4E79, 0xFF9CC7EA), c2(0xFFFFF6E5, 0xFF2A1C10), c2(0xFFD6E4F0, 0xFF2A3A4A), c2(0xFF1F4E79, 0xFFF28C7A), c2(0xFFFFF6E5, 0xFF2A1C10),
+            listOf(Color(0xFFE5654F), Color(0xFFF2C14E), Color(0xFF1F4E79), art[3], art[4]),
+            listOf(Color(0xFFF2C14E), blobs[1], Color(0xFF1F4E79)), listOf(Color(0xFFE5654F))
+        )
+        "pop/lagoon" -> recolour(
+            c2(0xFF0F6E78, 0xFF7FE3D6), c2(0xFFFFF7EA, 0xFF1B1A3A), c2(0xFFCDEFEA, 0xFF1E4A5A), Color(0xFF4DD4C6), Color(0xFF1B1A3A),
+            listOf(Color(0xFF9BF0D6), Color(0xFF4DD4C6), Color(0xFF58A6FF), Color(0xFFF26A2E), Color(0xFF1E3A8A)),
+            listOf(Color(0xFF9BF0D6), Color(0xFF4DD4C6), Color(0xFF58A6FF), Color(0xFFF26A2E)),
+            listOf(Color(0xFF3A86FF), Color(0xFF4DD4C6)), listOf(Color(0xFF9BF0D6), Color(0xFF4DD4C6), Color(0xFF58A6FF))
+        )
+        "pop/cosmic" -> recolour(
+            c2(0xFF8A1F5C, 0xFFF7A8C4), c2(0xFFFFF7EA, 0xFF1B1A3A), c2(0xFFF7DCEB, 0xFF4A2A5A), Color(0xFFF7799A), Color(0xFF1B1A3A),
+            listOf(Color(0xFFFFD166), Color(0xFFF7799A), Color(0xFFC39BF2), Color(0xFF3BC4B0), Color(0xFF5B2A86)),
+            listOf(Color(0xFFFFD166), Color(0xFFF7799A), Color(0xFFC39BF2), Color(0xFF3BC4B0)),
+            listOf(Color(0xFF3BC4B0), Color(0xFFF7799A)), listOf(Color(0xFFFFD166), Color(0xFFF7799A), Color(0xFFC39BF2))
+        )
+        "grunge/toxic" -> recolour(
+            c2(0xFF3F6B12, 0xFFA6D96A), c2(0xFFF8F6F2, 0xFF131211), c2(0xFFDDE8CF, 0xFF24331A), c2(0xFF3F6B12, 0xFF8BC34A), c2(0xFFF8F6F2, 0xFF131211),
+            listOf(c2(0xFF3F6B12, 0xFF8BC34A), art[1], art[2]), listOf(blobs[0], c2(0xFF3F6B12, 0xFF6E9E3A))
+        )
+        "grunge/bruise" -> recolour(
+            c2(0xFF5B2A86, 0xFFC9A8EE), c2(0xFFF8F6F2, 0xFF131211), c2(0xFFE4D9F0, 0xFF2E2240), c2(0xFF5B2A86, 0xFFB58CE0), c2(0xFFF8F6F2, 0xFF131211),
+            listOf(c2(0xFF5B2A86, 0xFFB58CE0), art[1], art[2]), listOf(blobs[0], c2(0xFF5B2A86, 0xFFB58CE0))
+        )
+        "flat/forest" -> recolour(
+            c2(0xFF2D6A3E, 0xFF9BD8A8), c2(0xFFFFFFFF, 0xFF0B2530), c2(0xFFD3EBD8, 0xFF1E4A33), c2(0xFF2D6A3E, 0xFF8FD19E), c2(0xFFFFFFFF, 0xFF0B2530),
+            listOf(Color(0xFF2D6A3E), Color(0xFF6BAF5E), Color(0xFFE9C46A), Color(0xFFD9774A), Color(0xFF1B4332)),
+            if (d) listOf(Color(0xFF123322), Color(0xFF17402A), Color(0xFF1C4D32), Color(0xFF0E2A1C))
+            else listOf(Color(0xFFDCEFD9), Color(0xFFB7DDB0), Color(0xFFC8E6C2), Color(0xFFF3E9C6))
+        )
+        "flat/sunset" -> recolour(
+            c2(0xFFA63A22, 0xFFF6B07A), c2(0xFFFFFFFF, 0xFF0B2530), c2(0xFFF8DCCF, 0xFF4A2E2A), c2(0xFFC2462B, 0xFFF4A261), c2(0xFFFFFFFF, 0xFF0B2530),
+            listOf(Color(0xFFE76F51), Color(0xFFF4A261), Color(0xFFE9C46A), Color(0xFF2A9D8F), Color(0xFF264653)),
+            if (d) listOf(Color(0xFF3A1F24), Color(0xFF4A262A), Color(0xFF56302E), Color(0xFF2E181C))
+            else listOf(Color(0xFFFBE3D6), Color(0xFFF6CDB6), Color(0xFFF9D9C4), Color(0xFFFFF1D0))
+        )
+        "bauhaus/earth" -> recolour(
+            c2(0xFF7A3A1E, 0xFFE6B866), c2(0xFFFFFFFF, 0xFF14161F), c2(0xFFEED9C4, 0xFF3A2E26), c2(0xFFA8472A, 0xFFD9A441), c2(0xFFFFFFFF, 0xFF14161F),
+            listOf(Color(0xFFB5532E), Color(0xFF3E5C4A), Color(0xFFD9A441), Color(0xFF2A2522), Color(0xFF6B8E5A), art[5]),
+            listOf(Color(0xFFB5532E), Color(0xFF3E5C4A), Color(0xFFD9A441), blobs[3]), listOf(c2(0xFF3E5C4A, 0xFFB5532E))
+        )
+        "bauhaus/night" -> recolour(
+            c2(0xFF1F3FBF, 0xFF9DB0FF), c2(0xFFFFFFFF, 0xFF14161F), c2(0xFFDCE2FA, 0xFF262E5A), c2(0xFF1F3FBF, 0xFF6F8BFF), c2(0xFFFFFFFF, 0xFF14161F),
+            listOf(Color(0xFFFF6B35), Color(0xFF1F3FBF), Color(0xFFF2C14E), Color(0xFF14161F), Color(0xFF2E8B57), art[5]),
+            listOf(Color(0xFFFF6B35), Color(0xFF1F3FBF), Color(0xFFF2C14E), blobs[3]), listOf(Color(0xFFFF6B35))
+        )
+        "doodle/bluepen" -> recolour(
+            c2(0xFF1F45C9, 0xFF8FB0FF), c2(0xFFFFFFFF, 0xFF141414), c2(0xFFDDE6FF, 0xFF22304F), Color(0xFF5B8CFF), Color(0xFF141414),
+            listOf(Color(0xFF5B8CFF), art[1], art[2]), listOf(blobs[0], Color(0xFF5B8CFF))
+        )
+        "doodle/highlighter" -> recolour(
+            c2(0xFF7A6000, 0xFFF7E25B), c2(0xFFFFFFFF, 0xFF141414), c2(0xFFFFF6BF, 0xFF3F3A1A), Color(0xFFF7E25B), Color(0xFF141414),
+            listOf(Color(0xFFF7E25B), art[1], art[2]), listOf(blobs[0], Color(0xFFFF7FBF))
+        )
+        "cottage/lavender" -> recolour(
+            c2(0xFF6B3E7A, 0xFFD9C2EE), c2(0xFFFFFBF2, 0xFF1A2117), c2(0xFFE9DFF2, 0xFF33293F), c2(0xFF6B4E8A, 0xFFC9B2E3), c2(0xFFFFFBF2, 0xFF1A2117),
+            listOf(Color(0xFF8C6BB1), Color(0xFFC2577A), Color(0xFFD8A945), Color(0xFF5E7D4F), art[4]),
+            listOf(Color(0xFF8C6BB1), Color(0xFFC2577A), Color(0xFFD8A945))
+        )
+        "cottage/berry" -> recolour(
+            c2(0xFF8C2F4E, 0xFFF0A7BD), c2(0xFFFFFBF2, 0xFF1A2117), c2(0xFFF3D9E1, 0xFF402531), c2(0xFF8C2F4E, 0xFFE89AB0), c2(0xFFFFFBF2, 0xFF1A2117),
+            listOf(Color(0xFF3F6B3A), Color(0xFFA8324F), Color(0xFFE0A43A), Color(0xFF6B2D5C), art[4]),
+            listOf(Color(0xFF3F6B3A), Color(0xFFA8324F), Color(0xFFE0A43A))
+        )
+        "japandi/matcha" -> recolour(
+            c2(0xFF4E6B45, 0xFFB5C9A3), c2(0xFFFBF8F2, 0xFF1E1D1B), c2(0xFFE1E8DA, 0xFF2F3A2A), c2(0xFF4E6B45, 0xFFA7BE93), c2(0xFFFBF8F2, 0xFF1E1D1B),
+            listOf(Color(0xFF7E9A6E), Color(0xFFB07A57), Color(0xFFD9CDB8), art[3], art[4]),
+            listOf(Color(0xFF7E9A6E), Color(0xFF7E9A6E), blobs[2])
+        )
+        "japandi/clay" -> recolour(
+            c2(0xFF8C4A2E, 0xFFE6AE8C), c2(0xFFFBF8F2, 0xFF1E1D1B), c2(0xFFF0DDD0, 0xFF3E2E25), c2(0xFF9A5536, 0xFFE0A07A), c2(0xFFFBF8F2, 0xFF1E1D1B),
+            listOf(Color(0xFF8A9A7B), Color(0xFFC0703F), Color(0xFFE3C9A8), art[3], art[4]),
+            listOf(Color(0xFFC0703F), Color(0xFFC0703F), blobs[2])
+        )
+        "riso/orangeteal" -> recolour(
+            c2(0xFF00726F, 0xFFFFB36B), c2(0xFFFFFFFF, 0xFF17152B), c2(0xFFFFE3D1, 0xFF3A2E2A), Color(0xFFFF7A3D), Color(0xFF232056),
+            listOf(Color(0xFFFF7A3D), Color(0xFF00A6A0), Color(0xFFFFE800), Color(0xFF765BA7), Color(0xFF3255A4)),
+            listOf(Color(0xFFFF7A3D), Color(0xFF00A6A0), Color(0xFFFFE800), blobs[3]), listOf(Color(0xFFFF7A3D), Color(0xFF00A6A0))
+        )
+        "riso/greenpurple" -> recolour(
+            c2(0xFF5B3FA6, 0xFF9BEFC0), c2(0xFFFFFFFF, 0xFF17152B), c2(0xFFE3DAF5, 0xFF2E2852), Color(0xFF3DDC84), Color(0xFF232056),
+            listOf(Color(0xFF3DDC84), Color(0xFF765BA7), Color(0xFFFFE800), Color(0xFFFF48B0), Color(0xFF3255A4)),
+            listOf(Color(0xFF3DDC84), Color(0xFF765BA7), Color(0xFFFFE800), blobs[3]), listOf(Color(0xFF3DDC84), Color(0xFF765BA7))
+        )
+        "synth/outrun" -> recolour(
+            c2(0xFF8E1066, 0xFF5CF2FF), c2(0xFFFFFFFF, 0xFF1A0B33), c2(0xFFFFDDF0, 0xFF3A1F5C), Color(0xFFFF5C8A), Color(0xFF1A0B33),
+            listOf(Color(0xFFFF5C8A), Color(0xFFFF2E63), Color(0xFFB026FF), Color(0xFF08D9D6), Color(0xFF2B0F5C)),
+            listOf(Color(0xFFFF2E63), Color(0xFF08D9D6), Color(0xFFFF5C8A), Color(0xFFB026FF)), null,
+            listOf(Color(0xFFFF5C8A), Color(0xFFFFA3C2), Color(0xFF5CF2FF))
+        )
+        "synth/miami" -> recolour(
+            c2(0xFF0F7A6B, 0xFF7FFFD4), c2(0xFFFFFFFF, 0xFF1A0B33), c2(0xFFD6F7EE, 0xFF1F3F4A), Color(0xFF7FFFD4), Color(0xFF1A0B33),
+            listOf(Color(0xFFFFD1DC), Color(0xFFFF9DE2), Color(0xFFFF77FF), Color(0xFF7FFFD4), Color(0xFF9F7BFF)),
+            listOf(Color(0xFFFF77FF), Color(0xFF7FFFD4), Color(0xFFFF9DE2), Color(0xFF9F7BFF)), null,
+            listOf(Color(0xFF7FFFD4), Color(0xFF9FE7FF), Color(0xFFFF9DE2))
+        )
+        "anthro/mint" -> recolour(
+            c2(0xFF0B6B58, 0xFF7FE8C4), c2(0xFFFFFAF0, 0xFF101A40), c2(0xFFD4EFE6, 0xFF1E4A4A), c2(0xFF0B6B58, 0xFF5EE0B5), c2(0xFFFFFAF0, 0xFF101A40),
+            listOf(Color(0xFFF2453D), Color(0xFF0E7C66), Color(0xFF5EE0B5), Color(0xFFFFC53D), Color(0xFF8E6CD8), art[5], art[6]),
+            listOf(Color(0xFF5EE0B5), blobs[1], Color(0xFFFFC53D), Color(0xFF0E7C66))
+        )
+        "anthro/tangerine" -> recolour(
+            c2(0xFFB23C0A, 0xFFFFB27A), c2(0xFFFFFAF0, 0xFF101A40), c2(0xFFFFE2CC, 0xFF4A2E1E), c2(0xFFC2410C, 0xFFFF9F45), c2(0xFFFFFAF0, 0xFF101A40),
+            listOf(Color(0xFF1D3FA8), Color(0xFFC2410C), Color(0xFFFF9F45), Color(0xFFFFE066), Color(0xFF8E6CD8), art[5], art[6]),
+            listOf(Color(0xFFFF9F45), blobs[1], Color(0xFFFFE066), Color(0xFFC2410C))
+        )
+        "swiss/klein" -> recolour(
+            c2(0xFF1F3FDB, 0xFF8FA3FF), c2(0xFFFFFFFF, 0xFF0E0E0E), c2(0xFFDCE2FA, 0xFF1E2550), Color(0xFF1F3FDB), Color(0xFFFFFFFF),
+            listOf(Color(0xFF1F3FDB), art[1], art[2], art[3]), listOf(blobs[0], Color(0xFF1F3FDB))
+        )
+        "swiss/signal" -> recolour(
+            c2(0xFF7A6200, 0xFFFFD400), c2(0xFFFFFFFF, 0xFF0E0E0E), c2(0xFFFFF3B8, 0xFF3A3412), Color(0xFFFFD400), Color(0xFF111111),
+            listOf(Color(0xFFFFD400), art[1], art[2], art[3]), listOf(blobs[0], Color(0xFFFFD400))
+        )
+        "punk/safety" -> recolour(
+            c2(0xFF6E5A00, 0xFFFFD60A), c2(0xFFFFFFFF, 0xFF121212), c2(0xFFFFF1B3, 0xFF3A3412), Color(0xFFFFD60A), Color(0xFF111111),
+            listOf(Color(0xFFFFD60A), art[1], Color(0xFFD7141A), art[3], art[4]), listOf(blobs[0], Color(0xFFFFD60A), blobs[2])
+        )
+        "punk/electric" -> recolour(
+            c2(0xFF1B3FCC, 0xFF8FA8FF), c2(0xFFFFFFFF, 0xFF121212), c2(0xFFDCE2FA, 0xFF1E2550), Color(0xFF1B3FCC), Color(0xFFFFFFFF),
+            listOf(Color(0xFF1B3FCC), art[1], Color(0xFFFF2E88), Color(0xFFFF2E88), art[4]), listOf(blobs[0], Color(0xFF1B3FCC), Color(0xFFFF2E88))
+        )
+        else -> this
+    }
+}
