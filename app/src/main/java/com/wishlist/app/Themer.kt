@@ -214,7 +214,9 @@ private fun DesignTile(name: String, sample: Look, chosen: Boolean, onClick: () 
     ) {
         ThemeSample(sample)
         Text(
-            name, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, maxLines = 1, softWrap = false,
+            // Long names ("Anthropomorphic") a size smaller so they fit the tile.
+            name, style = if (name.length > 12) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
+            textAlign = TextAlign.Center, maxLines = 1, softWrap = false,
             fontWeight = if (chosen) FontWeight.Bold else null, color = cs.onSurface,
             modifier = Modifier.padding(top = 6.dp)
         )

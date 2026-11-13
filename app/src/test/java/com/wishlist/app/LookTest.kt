@@ -35,7 +35,10 @@ class LookTest {
     }
 
     @Test fun theStylesAreTheOwnersChoice() {
-        assertEquals(listOf("quiet", "chaos", "y2k", "retro", "pop", "grunge", "flat", "bauhaus"), STYLES.map { it.key })
+        assertEquals(
+            listOf("quiet", "chaos", "y2k", "retro", "pop", "grunge", "flat", "bauhaus", "doodle", "cottage", "japandi", "riso", "synth", "anthro"),
+            STYLES.map { it.key }
+        )
         assertEquals("quiet", STYLES.first().key)
         // Cyberpunk, Neobrutalism and Neumorphism are gone: their keys mean Quiet now.
         for (old in listOf("neo", "neu", "cyber")) assertEquals("quiet", styleFor(old).key)
@@ -92,11 +95,12 @@ class LookTest {
         assertTrue(bad.joinToString("\n"), bad.isEmpty())
     }
 
-    /** Gradients on buttons (Y2K, Pop futurism): the button text is readable on every colour of the gradient. */
+    /** Gradients on buttons (Y2K, Pop futurism, Synthwave): the button text is readable on every colour of the gradient. */
     @Test fun buttonTextIsReadableOnGradients() {
         val stops = mapOf(
             "y2k" to listOf(Color(0xFFFFB8E6), Color(0xFFD3C4FF), Color(0xFFA8F0FF)),
-            "pop" to listOf(Color(0xFFFFC23D), Color(0xFFFF8A3D), Color(0xFFFF6A5B))
+            "pop" to listOf(Color(0xFFFFC23D), Color(0xFFFF8A3D), Color(0xFFFF6A5B)),
+            "synth" to listOf(Color(0xFFFFD23F), Color(0xFFFF8A3D), Color(0xFFFF4FA8))
         )
         for ((st, cols) in stops) for (m in modes) {
             val look = lookFor(st, "blue", m)
@@ -134,6 +138,24 @@ class LookTest {
             if (c < 3.0) bad += "$st $m: ${"%.2f".format(c)}"
         }
         assertTrue(bad.joinToString("\n"), bad.isEmpty())
+    }
+
+    /**
+     * Risograph's misaligned copy and Synthwave's glow are on big titles only (owner, 13 November 2026): the wordmark
+     * and headings have it, prices, numbers (titleLarge) and everything you read don't.
+     */
+    @Test fun titleEffectsStayOnTitles() {
+        for (st in listOf("riso", "synth")) {
+            val t = typographyFor(st)
+            assertTrue(st, t.headlineSmall.shadow != null)
+            assertTrue(st, lookFor(st, "blue", "light").titleShadow != null)
+            for (plain in listOf(t.titleLarge, t.titleMedium, t.titleSmall, t.bodyLarge, t.bodyMedium, t.bodySmall, t.labelLarge, t.labelMedium, t.labelSmall))
+                assertEquals(st, null, plain.shadow)
+        }
+        for (st in STYLES.map { it.key } - setOf("riso", "synth")) {
+            assertEquals(st, null, typographyFor(st).headlineSmall.shadow)
+            assertEquals(st, null, lookFor(st, "blue", "light").titleShadow)
+        }
     }
 
     /** A new start of the app (Repo loads once per start). */

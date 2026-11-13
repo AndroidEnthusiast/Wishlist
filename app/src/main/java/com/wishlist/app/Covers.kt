@@ -191,7 +191,7 @@ fun ListSummaryCard(wishes: List<Wish>, modifier: Modifier = Modifier, occasion:
     }
     if (!counts && occasion == null) return
     Column(
-        modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true))
+        modifier.fillMaxWidth().lookPeek(look).lookCard(look, id, look.cardShape(id, small = true))
             .padding(horizontal = 12.dp, vertical = 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

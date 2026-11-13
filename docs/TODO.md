@@ -7,8 +7,9 @@ it**, grouped as below, with a recommendation. Add every new open item here the 
 Details of each item are in the doc named after it.
 
 ## Now
-- **Try 2.199's styles on the phone** (Y2K, Retro vintage, Pop futurism, Grunge, Flat, Bauhaus; Gen Z chaos and
-  Quiet), light and dark: do the fonts arrive, do fields, menus, tick boxes, the bottom panels and the drawings look
+- **Try 2.199's and 2.200's styles on the phone** (Y2K, Retro vintage, Pop futurism, Grunge, Flat, Bauhaus, Doodle,
+  Cottage-core, Japandi, Risograph, Synthwave, Anthropomorphic; Gen Z chaos and Quiet), light and dark (the gift box
+  peeking over cards too): do the fonts arrive, do fields, menus, tick boxes, the bottom panels and the drawings look
   right on every screen, is anything hard to read? Not seen here: real fonts, real photos, real phone sizes.
 - **Gen Z chaos, coloured text** (found 13 November 2026, left as it was because chaos stays unchanged): with the
   Orange, Green or Pink accent in light mode, coloured text (unread chats, "Replying to") is only 2.8–3.8 : 1. Ask

@@ -5,8 +5,8 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
-- **Newest (13 November 2026), read first.** 2.199: the new styles (Y2K, Retro vintage, Pop futurism, Grunge, Flat,
-  Bauhaus) and every part themed. Ask how each feels on the phone, light and dark (fonts, fields, menus, the drawings);
+- **Newest (13 November 2026), read first.** 2.199 and 2.200: twelve new styles (Y2K, Retro vintage, Pop futurism,
+  Grunge, Flat, Bauhaus; Doodle, Cottage-core, Japandi, Risograph, Synthwave, Anthropomorphic) and every part themed. Ask how each feels on the phone, light and dark (fonts, fields, menus, the drawings);
   fix what looks wrong in every style. Gen Z chaos is saved in `themes/gen-z-chaos/`: ask before changing it.
 - **START HERE (12 November 2026, late night, after 2.198).** The review's part 2 is built (2.197, 2.198). Ask how
   2.195–2.198 feel on the phone, then continue the "logical experience" review (owner: "help me discover those")
@@ -16,11 +16,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
-### 13 November 2026: the themes (2.199)
+### 13 November 2026: the themes (2.199, 2.200)
 Gen Z chaos saved as it was in `themes/gen-z-chaos/` (`tests/themes/check.sh`). Cyberpunk, Neobrutalism, Neumorphism
 removed (→ Quiet); Y2K, Retro vintage, Pop futurism, Grunge, Flat, Bauhaus added (magier.com 5, 6, 9, 13, 18, 20).
 Every part themed (`Themed.kt`); `LookTest` checks contrast everywhere; screenshots of every style were looked at
-(fonts can't download there). Decisions: `docs/decisions/look.md`, "The new themes".
+(fonts can't download there). 2.200: six more from kittl.com, a gift box with a face. `docs/decisions/look.md`.
 
 ### 12 November 2026, night: clean-up, notes, motion, the wish review (2.192–2.198)
 Screenshot tests fixed. Clean-up: `LocalGo` (2.192), `Places` and no `*Nav` objects (2.193); a message notifies unless

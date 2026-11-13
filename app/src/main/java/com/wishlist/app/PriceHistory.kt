@@ -288,7 +288,7 @@ private fun HistoryBody(points: List<PricePoint>, currency: String, nowSec: Long
         // At or below the target (gold given): the price in gold and bold.
         val atTarget = gold != null && frac >= 0.995f
         Text(
-            money(curP, currency), style = MaterialTheme.typography.headlineSmall,
+            money(curP, currency), style = MaterialTheme.typography.headlineSmall.copy(shadow = null),
             fontWeight = if (atTarget) FontWeight.Bold else FontWeight.SemiBold,
             color = if (atTarget) gold!! else Color.Unspecified
         )

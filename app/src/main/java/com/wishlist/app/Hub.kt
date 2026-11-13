@@ -136,6 +136,34 @@ fun Wordmark() {
             }
             Text("Wishlist", style = style, color = ink, modifier = Modifier.padding(start = 8.dp))
         }
+        // Doodle: a marker underline that loops at the end.
+        "doodle" -> Column {
+            Text("Wishlist", style = style, color = ink, modifier = Modifier.rotate(-2f))
+            Canvas(Modifier.padding(top = 1.dp).size(width = 104.dp, height = 8.dp)) {
+                val u = 1.dp.toPx()
+                drawPath(androidx.compose.ui.graphics.Path().apply {
+                    moveTo(2 * u, 5 * u); quadraticTo(40 * u, 1 * u, 80 * u, 5 * u); quadraticTo(96 * u, 7 * u, 92 * u, 2 * u)
+                    quadraticTo(88 * u, -1 * u, 86 * u, 6 * u)
+                }, look.art[0], style = androidx.compose.ui.graphics.drawscope.Stroke(2.5f * u, cap = androidx.compose.ui.graphics.StrokeCap.Round))
+            }
+        }
+        // Cottage-core: a little flower before the word.
+        "cottage" -> Row(verticalAlignment = Alignment.CenterVertically) {
+            Canvas(Modifier.padding(end = 8.dp).size(20.dp)) {
+                val c = center; val r = size.minDimension * 0.22f
+                for (i in 0 until 5) {
+                    val a = Math.toRadians(i * 72.0 - 90.0)
+                    drawCircle(look.art[1], r, Offset(c.x + (kotlin.math.cos(a) * r * 1.1f).toFloat(), c.y + (kotlin.math.sin(a) * r * 1.1f).toFloat()))
+                }
+                drawCircle(look.art[2], r * 0.8f, c)
+            }
+            Text("Wishlist", style = style, color = ink)
+        }
+        // Japandi: the word and a small red seal (hanko).
+        "japandi" -> Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Wishlist", style = style, color = ink)
+            Box(Modifier.padding(start = 10.dp).size(14.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFFB0412E)))
+        }
         else -> Text("Wishlist", style = style, color = ink)
     }
 }
@@ -509,7 +537,7 @@ internal fun HubTitle(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text, style = if (small) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleLarge,
+                text, style = if (small) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleLarge.copy(shadow = look.titleShadow),
                 fontWeight = look.titleWeight, color = MaterialTheme.colorScheme.onBackground
             )
             if (onMore != null) Icon(

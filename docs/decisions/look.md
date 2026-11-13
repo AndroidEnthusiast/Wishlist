@@ -96,3 +96,16 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
 - **Gen Z chaos:** finish it (the parts that were plain Android get chaos styling); nothing that was chaos changes.
   The saved copy in `themes/gen-z-chaos/` stays the backup of the 2.198 version.
 - **App only:** the friends' web pages don't follow the themes. **One update** with everything, no previews.
+
+## Six more themes (owner, 13 November 2026, built in 2.200)
+- **Added, from https://www.kittl.com/blogs/design-styles-name-stl/**: Conceptual sketch (doodle art), Farmhouse or
+  cottage-core, Japandi, Risograph, Synthwave, Anthropomorphic. Same rules as the six before (own colours, light and
+  dark equally good, every part themed, fonts fitting the theme, no moving effects, text on calm surfaces).
+- Built right away, before the owner had tried 2.199 (owner's choice; Claude advised waiting): problems found in 2.199
+  get fixed in all styles at once.
+- **Anthropomorphic's character: a gift box with a face** (the app's gift brought to life: eyes, a smile, little arms,
+  the bow on its head), drawn in our own code. It shows on **empty pages and wishes without a photo** and **peeks over
+  the top edge of cards** (Home's profile card and the list's header card; not on every wish card, to keep lists calm).
+  Not next to the wordmark and not as the spinner (owner skipped those).
+- **Lettering effects on big titles only**: Risograph's misaligned colour copy and Synthwave's neon glow go on the
+  Wishlist title, screen titles and section headings; wish names, prices, chat and settings stay plain.

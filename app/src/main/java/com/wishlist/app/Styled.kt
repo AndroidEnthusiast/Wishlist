@@ -305,6 +305,36 @@ fun TopAppBar(
                         drawRect(look.line, Offset(x, b - t), Size(9 * u, t)); x += 8 * u; k++
                     }
                 }
+                // Doodle: a wavy marker line.
+                "doodle" -> {
+                    val p = androidx.compose.ui.graphics.Path().apply {
+                        moveTo(0f, b - 3 * u); var x = 0f
+                        while (x < w) { quadraticTo(x + 10 * u, b - 6 * u, x + 20 * u, b - 3 * u); quadraticTo(x + 30 * u, b, x + 40 * u, b - 3 * u); x += 40 * u }
+                    }
+                    drawPath(p, look.line, style = androidx.compose.ui.graphics.drawscope.Stroke(2.2f * u, cap = androidx.compose.ui.graphics.StrokeCap.Round))
+                }
+                // Cottage-core: a fine line and a row of stitches.
+                "cottage" -> {
+                    drawRect(look.line, Offset(0f, b - 1.5f * u), Size(w, 1.5f * u))
+                    var x = 4 * u
+                    while (x < w) { drawRect(look.art[1], Offset(x, b - 5 * u), Size(6 * u, 1.5f * u)); x += 12 * u }
+                }
+                "japandi" -> drawRect(look.line.copy(alpha = 0.6f), Offset(0f, b - 1 * u), Size(w, 1 * u))
+                // Risograph: a pink and a blue line printed slightly off each other.
+                "riso" -> {
+                    drawRect(look.art[0], Offset(0f, b - 4 * u), Size(w, 3 * u))
+                    drawRect(look.art[1], Offset(3 * u, b - 3 * u), Size(w, 2 * u), alpha = 0.8f)
+                }
+                // Synthwave: a neon sunset line with a soft glow.
+                "synth" -> {
+                    drawRect(look.line.copy(alpha = 0.25f), Offset(0f, b - 6 * u), Size(w, 6 * u))
+                    drawRect(look.accentBrush!!, Offset(0f, b - 2 * u), Size(w, 2 * u))
+                }
+                // Anthropomorphic: a thick ink line with coloured dots on it.
+                "anthro" -> {
+                    drawRect(look.line, Offset(0f, b - 2.5f * u), Size(w, 2.5f * u))
+                    listOf(look.art[0], look.art[3], look.art[2]).forEachIndexed { i, col -> drawCircle(col, 4 * u, Offset(w - (16 + i * 12) * u, b - 1.25f * u)) }
+                }
                 "bauhaus" -> {
                     drawRect(look.art[0], Offset(0f, b - 4 * u), Size(w * 0.5f, 4 * u))
                     drawRect(look.art[2], Offset(w * 0.5f, b - 4 * u), Size(w * 0.25f, 4 * u))
@@ -314,7 +344,12 @@ fun TopAppBar(
             }
         }
     }
-    M3TopAppBar(title, modifier.then(line), navigationIcon, actions, colors = colors)
+    // The style's effect on big titles (Risograph, Synthwave) goes on the screen's title.
+    val shadow = look.titleShadow
+    val titled: @Composable () -> Unit = if (shadow == null) title else ({
+        androidx.compose.material3.ProvideTextStyle(MaterialTheme.typography.titleLarge.copy(shadow = shadow)) { title() }
+    })
+    M3TopAppBar(titled, modifier.then(line), navigationIcon, actions, colors = colors)
 }
 
 /** The name of a list in its top bar, the same in every theme. ([count] is no longer shown: the owner removed
@@ -333,7 +368,7 @@ fun PriceBadge(text: String, rise: Boolean, small: Boolean) {
     val fg: Color
     when (look.design) {
         // Chaos and Bauhaus: bold pastel blocks with ink text.
-        "chaos", "bauhaus" -> { bg = if (rise) Color(0xFFFFB3B3) else Color(0xFFB8F5C8); fg = Color(0xFF111111) }
+        "chaos", "bauhaus", "anthro", "doodle" -> { bg = if (rise) Color(0xFFFFB3B3) else Color(0xFFB8F5C8); fg = Color(0xFF111111) }
         else -> { bg = lerp(col, look.scheme.surfaceVariant, if (look.dark) 0.78f else 0.88f); fg = col }
     }
     StyleBadge(text, bg, fg, small, null)
@@ -639,12 +674,18 @@ fun PhotoCard(url: String, description: String, small: Boolean, modifier: Modifi
                 "grunge" -> RoughShape(61, 1.4.dp, 6.dp)
                 "flat" -> RoundedCornerShape(8.dp)
                 "bauhaus" -> androidx.compose.ui.graphics.RectangleShape
+                "doodle" -> WobblyShape(63, 8.dp, 1.dp)
+                "japandi" -> RoundedCornerShape(2.dp)
+                "riso", "synth" -> RoundedCornerShape(6.dp)
+                "cottage" -> RoundedCornerShape(6.dp)
+                "anthro" -> RoundedCornerShape(if (small) 12.dp else 16.dp)
                 else -> RoundedCornerShape(if (small) 10.dp else 14.dp)
             }
             val frame = when (look.design) {
                 "chaos" -> Modifier.hardShadow(look.line, shape, 3.dp)
                 "quiet" -> Modifier.shadow(if (small) 3.dp else 5.dp, shape, clip = false)
-                "flat" -> Modifier
+                "flat", "japandi", "doodle" -> Modifier
+                "synth" -> Modifier.shadow(if (small) 4.dp else 8.dp, shape, clip = false, ambientColor = look.line, spotColor = look.line)
                 "pop" -> Modifier.hardShadow(look.shadows[1], shape, 5.dp).hardShadow(look.shadows[0], shape, 2.5.dp)
                 else -> Modifier.hardShadow(look.shadows[0], shape, 3.dp, look.shadowBrush)
             }

@@ -703,7 +703,10 @@ private fun ChatRow(
     if (newDay) DayChip(dayLabel(m.at))
     // A small "tail": the corner nearest the sender is sharp on the first bubble of a group.
     // Each style's own corners: square Bauhaus, small Retro and Flat, round Y2K and Pop futurism.
-    val r = when (LocalLook.current.design) { "bauhaus" -> 0.dp; "retro", "flat", "grunge" -> 10.dp; "y2k", "pop" -> 20.dp; else -> 16.dp }
+    val r = when (LocalLook.current.design) {
+        "bauhaus" -> 0.dp; "japandi" -> 4.dp; "riso" -> 8.dp; "retro", "flat", "grunge" -> 10.dp; "synth" -> 12.dp
+        "cottage" -> 14.dp; "doodle" -> 18.dp; "y2k", "pop", "anthro" -> 20.dp; else -> 16.dp
+    }
     val tail = if (r == 0.dp) 0.dp else 2.dp
     val shape = if (m.mine) RoundedCornerShape(r, if (first) tail else r, r, r) else RoundedCornerShape(if (first) tail else r, r, r, r)
     // Swipe a message to the right to reply to it (owner, 2.128); it springs back.

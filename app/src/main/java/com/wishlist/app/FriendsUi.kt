@@ -423,7 +423,7 @@ private fun CodeCard(code: String, offline: Boolean, onAdd: () -> Unit, onRetry:
         Text(tr("Your friend code"), style = MaterialTheme.typography.labelLarge, color = look.cardMuted(id))
         when {
             code.isNotEmpty() -> Text(
-                Friends.pretty(code), style = MaterialTheme.typography.headlineMedium,
+                Friends.pretty(code), style = MaterialTheme.typography.headlineMedium.copy(shadow = null),
                 fontWeight = FontWeight.Bold, color = look.cardInk(id), letterSpacing = 2.sp
             )
             offline -> Text(tr("Couldn’t reach the server. Check your connection."), color = look.cardMuted(id))
@@ -1039,7 +1039,7 @@ fun ProfileScreen(snack: SnackbarHostState) {
             val code = Friends.state?.code.orEmpty()
             when {
                 !Config.enabled -> Text(tr("Online sharing isn’t set up in this build yet."), color = cs.onSurfaceVariant)
-                code.isNotEmpty() -> Text(Friends.pretty(code), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                code.isNotEmpty() -> Text(Friends.pretty(code), style = MaterialTheme.typography.headlineMedium.copy(shadow = null), fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                 problem -> Text(tr("Couldn’t reach the server. Check your connection."), color = cs.onSurfaceVariant)
                 else -> CircularProgressIndicator(Modifier.size(28.dp))
             }

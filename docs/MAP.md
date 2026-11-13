@@ -96,7 +96,7 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `Fonts.kt` (font choice)
 - `Settings.kt`
 - `Theme.kt` + `Design.kt` + `Styled.kt` + `Themer.kt` (themes and the themed buttons, dialogs, icons)
-- `Themed.kt` (2.199): the themed text fields, menus, tick boxes, choice circles, chips, spinners, progress bars, dividers, sliders, bottom panels, message bar and `Scaffold` (the style's drawing behind every screen); `Placeholders.kt` draws each style's emblem; checks `LookTest`, `PartsScreenshotTest`
+- `Themed.kt` (2.199): the themed text fields, menus, tick boxes, choice circles, chips, spinners, progress bars, dividers, sliders, bottom panels, message bar and `Scaffold` (the style's drawing behind every screen); `Placeholders.kt` draws each style's emblem and Anthropomorphic's gift box with a face (`giftBuddy`, `lookPeek`); checks `LookTest`, `PartsScreenshotTest`
 - `themes/`: frozen copies of themes the owner wants to be able to bring back (Gen Z chaos, 13 November 2026), each with a README on putting it back; checked by `tests/themes/check.sh`
 
 ### Server, accounts, safety and app health

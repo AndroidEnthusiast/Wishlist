@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -55,7 +57,14 @@ import androidx.compose.ui.unit.sp
  *  - grunge:  Grunge: rough torn edges, ink speckles, deep red on black, typewriter labels.
  *  - flat:    Flat design: bold flat colour, no shadows or lines, layered teal hills.
  *  - bauhaus: Bauhaus: red, blue and yellow circles and squares, square corners, a geometric sans.
- * References the owner chose: https://www.magier.com/blog/graphic-design-styles (5, 6, 9, 13, 18, 20).
+ *  - doodle:  Conceptual sketch (doodle art): black marker on white, wobbly hand-drawn shapes, doodles.
+ *  - cottage: Farmhouse or cottage-core: cream paper, sage, terracotta and mustard, flowers and gingham, serif type.
+ *  - japandi: Japandi: warm neutrals, sage and clay, hairlines, a Japanese serif, seigaiha waves and an ensō.
+ *  - riso:    Risograph: fluorescent pink, riso blue and yellow, grain, misregistered shadows and titles.
+ *  - synth:   Synthwave: eighties neon, a striped sunset, a perspective grid, palms, glowing titles.
+ *  - anthro:  Anthropomorphic: a gift box with a face (Placeholders.kt) on bold flat colours, cartoon outlines.
+ * References the owner chose: https://www.magier.com/blog/graphic-design-styles (5, 6, 9, 13, 18, 20) and
+ * https://www.kittl.com/blogs/design-styles-name-stl/ (the last six, 13 November 2026).
  * Every style has light and dark ([Repo.theme]), each designed to look as good as the other. Quiet and Gen Z chaos
  * use the accent colour you pick ([ACCENTS], [Repo.palette]); the others have their own fixed colours ([usesAccent]).
  * Text always sits on a calm, solid colour: drawn decorations stay faint enough behind text (LookTest checks the
@@ -73,7 +82,13 @@ val STYLES: List<StyleInfo> = listOf(
     StyleInfo("pop", "Pop futurism", "A seventies space poster: sunset planets, racing stripes and bold rounded letters."),
     StyleInfo("grunge", "Grunge", "Rough edges, ink speckles and deep red on black, like a photocopied gig poster."),
     StyleInfo("flat", "Flat", "Clean flat colour and no shadows: layered teal hills and simple, clear shapes."),
-    StyleInfo("bauhaus", "Bauhaus", "Red, blue and yellow circles and squares on a strict grid: form follows function.")
+    StyleInfo("bauhaus", "Bauhaus", "Red, blue and yellow circles and squares on a strict grid: form follows function."),
+    StyleInfo("doodle", "Doodle", "Black marker doodles on white paper: wobbly hand-drawn lines, stars and squiggles."),
+    StyleInfo("cottage", "Cottage-core", "Cream paper, sage and terracotta, little flowers and gingham: the simple country life."),
+    StyleInfo("japandi", "Japandi", "Calm Japanese and Scandinavian: warm neutrals, fine lines, wave and fan patterns."),
+    StyleInfo("riso", "Risograph", "Fluorescent pink, blue and yellow ink, grainy paper and slightly misaligned layers."),
+    StyleInfo("synth", "Synthwave", "Eighties neon: a striped sunset, a glowing grid, palm trees and chrome letters."),
+    StyleInfo("anthro", "Anthropomorphic", "A little gift box with a face keeps you company: bold flat colours and round shapes.")
 )
 
 fun styleFor(key: String): StyleInfo = STYLES.firstOrNull { it.key == key } ?: STYLES[0]
@@ -192,6 +207,24 @@ private val poppins by lazy { google("Poppins", "sans-serif") }
 private val inter by lazy { google("Inter", "sans-serif") }
 // Bauhaus: Jost, a geometric sans in the spirit of Futura (1927).
 private val jost by lazy { google("Jost", "sans-serif") }
+// Doodle: Caveat Brush (a marker) headings, Shantell Sans (handwritten, made to be easy to read) text.
+private val caveatBrush by lazy { google("Caveat Brush", "casual", one) }
+private val shantell by lazy { google("Shantell Sans", "casual") }
+// Cottage-core: DM Serif Display (a farmers' market poster serif) headings, Lora (a warm book serif) text.
+private val dmSerif by lazy { google("DM Serif Display", "serif", one) }
+private val lora by lazy { google("Lora", "serif", listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold)) }
+// Japandi: Shippori Mincho (a Japanese serif) headings, Zen Kaku Gothic New (a calm Japanese sans) text.
+private val shippori by lazy { google("Shippori Mincho", "serif", listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold, FontWeight.ExtraBold)) }
+private val zenKaku by lazy { google("Zen Kaku Gothic New", "sans-serif", listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.Bold)) }
+// Risograph: Anton (a tall poster face) headings, Work Sans text.
+private val anton by lazy { google("Anton", "sans-serif-condensed", one) }
+private val workSans by lazy { google("Work Sans", "sans-serif") }
+// Synthwave: Audiowide (eighties chrome) headings, Chakra Petch (a squared techno sans) text.
+private val audiowide by lazy { google("Audiowide", "sans-serif", one) }
+private val chakra by lazy { google("Chakra Petch", "sans-serif", listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold)) }
+// Anthropomorphic: Fredoka (round and friendly) headings and labels, Nunito text.
+private val fredoka by lazy { google("Fredoka", "sans-serif", listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold)) }
+private val nunito by lazy { google("Nunito", "sans-serif") }
 
 /** All the colours of a scheme from a few, plus the surface steps that menus and dialogs use. */
 private fun scheme(
@@ -403,6 +436,148 @@ fun lookFor(style: String, accentKey: String, mode: String): Look {
                 art = listOf(red, blue, yellow, c(0xFF14161F), green, c(0xFFF0E7D4))
             )
         }
+        "doodle" -> {
+            // Black marker on white paper (light); white marker on black paper (dark); one orange label colour.
+            val bg = if (dark) c(0xFF161616) else c(0xFFFAFAF6)
+            val surface = if (dark) c(0xFF222222) else white
+            val ink = if (dark) c(0xFFF5F5EF) else c(0xFF141414)
+            val muted = if (dark) c(0xFFBDBDB5) else c(0xFF474747)
+            val orange = c(0xFFFF8A3D)
+            Look(
+                "doodle", dark,
+                scheme(dark, if (dark) c(0xFFFFA26B) else c(0xFFB4400C), if (dark) c(0xFF141414) else white, if (dark) c(0xFF3A2A20) else c(0xFFFFE6D6), ink,
+                    bg, surface, ink, muted, ink, if (dark) c(0xFF3A3A3A) else c(0xFFD6D6D0)),
+                listOf(surface),
+                if (dark) listOf(c(0xFF2C2C2C), c(0xFF3A2A20), c(0xFF26262A)) else listOf(c(0xFFF2F2EE), c(0xFFFFEBDD), c(0xFFF0F0F4)),
+                ink,
+                listOf(ink),
+                if (dark) listOf(ink.copy(alpha = 0.12f), orange.copy(alpha = 0.25f)) else listOf(ink.copy(alpha = 0.10f), orange.copy(alpha = 0.25f)),
+                caveatBrush, drop, rise, accent = orange, onAccent = c(0xFF141414),
+                art = listOf(orange, ink, if (dark) c(0xFF161616) else white)
+            )
+        }
+        "cottage" -> {
+            // Cream paper, sage, terracotta, mustard and berry (light); a cottage in the evening (dark).
+            val bg = if (dark) c(0xFF1A2117) else c(0xFFF7F1E3)
+            val surface = if (dark) c(0xFF252D21) else c(0xFFFFFBF2)
+            val ink = if (dark) c(0xFFF1EBDD) else c(0xFF24301F)
+            val muted = if (dark) c(0xFFC6BFAE) else c(0xFF566050)
+            val line = if (dark) c(0xFFCFC6B0) else c(0xFF3B4A33)
+            val sage = c(0xFF5E7D4F); val terracotta = c(0xFFB5523B); val mustard = c(0xFFD8A945); val berry = c(0xFF8C3B5E)
+            val fill = if (dark) c(0xFFE2B95A) else c(0xFF4F6E42)
+            val onFill = if (dark) c(0xFF1A2117) else c(0xFFFFFBF2)
+            Look(
+                "cottage", dark,
+                scheme(dark, if (dark) c(0xFFE8A48F) else c(0xFF9A3F2B), if (dark) c(0xFF1A2117) else c(0xFFFFFBF2), if (dark) c(0xFF34402E) else c(0xFFE4EBD8), ink,
+                    bg, surface, ink, muted, line, if (dark) c(0xFF3A4535) else c(0xFFDCD3BE)),
+                listOf(surface),
+                if (dark) listOf(c(0xFF2E3B28), c(0xFF4A2E24), c(0xFF4A3F22), c(0xFF3F2734))
+                else listOf(c(0xFFE4EBD8), c(0xFFF3D9CF), c(0xFFF5E6C2), c(0xFFEBD5DF)),
+                line,
+                listOf(line.copy(alpha = 0.3f)),
+                if (dark) listOf(c(0xFFA9C79A).copy(alpha = 0.10f), c(0xFFE2B95A).copy(alpha = 0.12f), terracotta.copy(alpha = 0.20f))
+                else listOf(sage.copy(alpha = 0.10f), terracotta.copy(alpha = 0.14f), mustard.copy(alpha = 0.25f)),
+                dmSerif, drop, rise, accent = fill, onAccent = onFill,
+                art = listOf(sage, terracotta, mustard, berry, if (dark) c(0xFFF1EBDD) else c(0xFFFFFBF2))
+            )
+        }
+        "japandi" -> {
+            // Warm neutrals, sage and clay, charcoal; calm and quiet, hairlines only.
+            val bg = if (dark) c(0xFF1E1D1B) else c(0xFFF4EFE6)
+            val surface = if (dark) c(0xFF282724) else c(0xFFFBF8F2)
+            val ink = if (dark) c(0xFFEDE7DC) else c(0xFF2B2A27)
+            val muted = if (dark) c(0xFFB9B2A6) else c(0xFF5F5B53)
+            val line = if (dark) c(0xFF8F887C) else c(0xFF8C857A)
+            val sage = c(0xFF8A9A7B); val clay = c(0xFFB07A57); val oat = c(0xFFD9CDB8); val charcoal = c(0xFF2B2A27)
+            val fill = if (dark) oat else charcoal
+            val onFill = if (dark) c(0xFF1E1D1B) else c(0xFFFBF8F2)
+            Look(
+                "japandi", dark,
+                scheme(dark, if (dark) c(0xFFD9A982) else c(0xFF8C5A3C), onFill, if (dark) c(0xFF35332F) else c(0xFFEAE3D6), ink,
+                    bg, surface, ink, muted, line, if (dark) c(0xFF3A3834) else c(0xFFE2DACC)),
+                listOf(surface),
+                if (dark) listOf(c(0xFF2F3329), c(0xFF3A2E26), c(0xFF33302B)) else listOf(c(0xFFE6E9DF), c(0xFFEFE2D7), c(0xFFEDE6D9)),
+                line,
+                emptyList(),
+                if (dark) listOf(sage.copy(alpha = 0.14f), clay.copy(alpha = 0.14f), ink.copy(alpha = 0.06f))
+                else listOf(sage.copy(alpha = 0.12f), clay.copy(alpha = 0.10f), ink.copy(alpha = 0.06f)),
+                shippori, drop, rise, accent = fill, onAccent = onFill,
+                art = listOf(sage, clay, oat, charcoal, if (dark) c(0xFF1E1D1B) else c(0xFFFBF8F2))
+            )
+        }
+        "riso" -> {
+            // Fluorescent pink, riso blue and yellow on warm paper; on dark ink-blue paper in dark.
+            val bg = if (dark) c(0xFF17152B) else c(0xFFFBF3EE)
+            val surface = if (dark) c(0xFF231F3F) else c(0xFFFFFDF9)
+            val ink = if (dark) c(0xFFFFF3F8) else c(0xFF232056)
+            val muted = if (dark) c(0xFFCEC4DD) else c(0xFF4D4A78)
+            val pink = c(0xFFFF48B0); val blue = c(0xFF3255A4); val yellow = c(0xFFFFE800); val green = c(0xFF00A95C)
+            Look(
+                "riso", dark,
+                scheme(dark, if (dark) c(0xFFFFE45C) else c(0xFF2F4FA0), if (dark) c(0xFF17152B) else white, if (dark) c(0xFF3A2E52) else c(0xFFFFE0F0), ink,
+                    bg, surface, ink, muted, ink, if (dark) c(0xFF3A3560) else c(0xFFE8D9E0)),
+                listOf(surface),
+                if (dark) listOf(c(0xFF4A2350), c(0xFF22305A), c(0xFF4A4520), c(0xFF1E4A3A))
+                else listOf(c(0xFFFFD6EC), c(0xFFD6E0F5), c(0xFFFFF6B0), c(0xFFCDEEDC)),
+                ink,
+                listOf(pink, blue),
+                if (dark) listOf(pink.copy(alpha = 0.22f), blue.copy(alpha = 0.30f), yellow.copy(alpha = 0.12f), ink.copy(alpha = 0.07f))
+                else listOf(pink.copy(alpha = 0.22f), blue.copy(alpha = 0.14f), yellow.copy(alpha = 0.40f), ink.copy(alpha = 0.07f)),
+                anton, drop, rise, accent = pink, onAccent = c(0xFF232056),
+                art = listOf(pink, blue, yellow, green, c(0xFF765BA7))
+            )
+        }
+        "synth" -> {
+            // Eighties neon: deep purple night, pink and cyan neon, a yellow-orange-pink sunset (dark); the same
+            // sunset in a pale pink sky (light).
+            val bg = if (dark) c(0xFF120A26) else c(0xFFFDEFF6)
+            val surface = if (dark) c(0xFF1E1238) else white
+            val ink = if (dark) c(0xFFFBEFFF) else c(0xFF2A0F45)
+            val muted = if (dark) c(0xFFC9B6E4) else c(0xFF5C4777)
+            val neon = if (dark) c(0xFFFF4FD8) else c(0xFFB0177A)
+            val cyan = if (dark) c(0xFF5CF2FF) else c(0xFF3CC9D6)
+            val sun = c(0xFFFFD23F); val orange = c(0xFFFF8A3D); val pink = c(0xFFFF4FA8)
+            val sunset = Brush.linearGradient(listOf(sun, orange, pink), Offset.Zero, Offset(0f, Float.POSITIVE_INFINITY))
+            val deep = c(0xFF1A0B33)
+            Look(
+                "synth", dark,
+                scheme(dark, if (dark) c(0xFF5CF2FF) else c(0xFF8E1066), if (dark) deep else white, if (dark) c(0xFF3A1F5C) else c(0xFFFFDDF0), ink,
+                    bg, surface, ink, muted, neon, if (dark) c(0xFF3A2560) else c(0xFFEBD3E3)),
+                listOf(surface),
+                if (dark) listOf(c(0xFF3A1648), c(0xFF142E4A), c(0xFF4A2A1E)) else listOf(c(0xFFFFE0F1), c(0xFFDDF6F8), c(0xFFFFE7D3)),
+                neon,
+                listOf(neon, cyan),
+                if (dark) listOf(c(0xFFFF4FD8).copy(alpha = 0.22f), c(0xFF5CF2FF).copy(alpha = 0.22f), orange.copy(alpha = 0.25f), c(0xFF7A2BFF).copy(alpha = 0.25f))
+                else listOf(c(0xFFFF4FD8).copy(alpha = 0.18f), cyan.copy(alpha = 0.20f), orange.copy(alpha = 0.22f), c(0xFFB488FF).copy(alpha = 0.20f)),
+                audiowide, drop, rise, accent = orange, onAccent = deep,
+                art = listOf(sun, orange, pink, cyan, c(0xFF7A2BFF)),
+                accentBrush = sunset
+            )
+        }
+        "anthro" -> {
+            // Bold flat poster colours: cream with royal blue (light); a deep blue night with pink (dark).
+            val bg = if (dark) c(0xFF101A40) else c(0xFFF6EEDC)
+            val surface = if (dark) c(0xFF1B2757) else c(0xFFFFFAF0)
+            val ink = if (dark) c(0xFFF6EEDC) else c(0xFF1A1A2E)
+            val muted = if (dark) c(0xFFC8C3D4) else c(0xFF4B4A5E)
+            val blue = c(0xFF1D3FA8); val pink = c(0xFFFF6FB5); val red = c(0xFFF2453D); val purple = c(0xFF8E6CD8); val yellow = c(0xFFFFC53D)
+            val fill = if (dark) pink else blue
+            val onFill = if (dark) c(0xFF101A40) else c(0xFFFFFAF0)
+            Look(
+                "anthro", dark,
+                scheme(dark, if (dark) c(0xFFFF9ACB) else blue, onFill, if (dark) c(0xFF2C3A75) else c(0xFFDCE3F7), ink,
+                    bg, surface, ink, muted, ink, if (dark) c(0xFF2C3A75) else c(0xFFE3D8C0)),
+                listOf(surface),
+                if (dark) listOf(c(0xFF2C3A75), c(0xFF4A2348), c(0xFF4A2A2A), c(0xFF3A2E66))
+                else listOf(c(0xFFDCE3F7), c(0xFFFFDCEC), c(0xFFFFE3D9), c(0xFFE8E0F7)),
+                ink,
+                listOf(ink),
+                if (dark) listOf(pink.copy(alpha = 0.18f), ink.copy(alpha = 0.08f), red.copy(alpha = 0.20f), purple.copy(alpha = 0.25f))
+                else listOf(pink.copy(alpha = 0.22f), blue.copy(alpha = 0.10f), red.copy(alpha = 0.14f), purple.copy(alpha = 0.18f)),
+                fredoka, drop, rise, accent = fill, onAccent = onFill,
+                art = listOf(red, blue, pink, yellow, purple, c(0xFF1A1A2E), white)
+            )
+        }
         else -> {
             // Quiet.
             val bg = if (dark) Color.Black else c(0xFFF2F2F7)
@@ -429,9 +604,18 @@ private fun TextStyle.styled(f: FontFamily, w: FontWeight, spacing: Float? = nul
 /** The type of a style: a heading font (display, headlines, big titles) and a text font, and the labels' font. */
 private fun styleType(
     head: FontFamily, headW: FontWeight, headSpacing: Float?, body: FontFamily, titleW: FontWeight, bodyW: FontWeight,
-    label: FontFamily, labelW: FontWeight, small: FontFamily = label, smallW: FontWeight = labelW, labelSpacing: Float? = null
+    label: FontFamily, labelW: FontWeight, small: FontFamily = label, smallW: FontWeight = labelW, labelSpacing: Float? = null,
+    headShadow: androidx.compose.ui.graphics.Shadow? = null
 ): Typography {
-    val d = Typography()
+    // Big titles only (owner, 13 November 2026): Risograph's misaligned copy, Synthwave's glow.
+    val d0 = Typography()
+    val d = if (headShadow == null) d0 else d0.copy(
+        displayLarge = d0.displayLarge.copy(shadow = headShadow), displayMedium = d0.displayMedium.copy(shadow = headShadow),
+        displaySmall = d0.displaySmall.copy(shadow = headShadow), headlineLarge = d0.headlineLarge.copy(shadow = headShadow),
+        headlineMedium = d0.headlineMedium.copy(shadow = headShadow), headlineSmall = d0.headlineSmall.copy(shadow = headShadow)
+        // titleLarge stays plain: it is also used for prices and numbers. Screen titles and section headings get the
+        // effect through Look.titleShadow (TopAppBar, HubTitle).
+    )
     return Typography(
         displayLarge = d.displayLarge.styled(head, headW, headSpacing), displayMedium = d.displayMedium.styled(head, headW, headSpacing),
         displaySmall = d.displaySmall.styled(head, headW, headSpacing), headlineLarge = d.headlineLarge.styled(head, headW, headSpacing),
@@ -456,13 +640,28 @@ fun typographyFor(design: String, @Suppress("UNUSED_PARAMETER") classic: Typogra
     "grunge" -> styleType(rubikDirt, FontWeight.Normal, 0.4f, barlow, FontWeight.SemiBold, FontWeight.Normal, courierPrime, FontWeight.Bold)
     "flat" -> styleType(poppins, FontWeight.SemiBold, -0.2f, inter, FontWeight.SemiBold, FontWeight.Normal, poppins, FontWeight.Medium)
     "bauhaus" -> styleType(jost, FontWeight.Bold, -0.3f, jost, FontWeight.SemiBold, FontWeight.Normal, jost, FontWeight.SemiBold, labelSpacing = 0.6f)
+    "doodle" -> styleType(caveatBrush, FontWeight.Normal, 0.3f, shantell, FontWeight.SemiBold, FontWeight.Normal, shantell, FontWeight.Bold)
+    "cottage" -> styleType(dmSerif, FontWeight.Normal, 0f, lora, FontWeight.SemiBold, FontWeight.Normal, lora, FontWeight.SemiBold, labelSpacing = 0.2f)
+    "japandi" -> styleType(shippori, FontWeight.SemiBold, 0.2f, zenKaku, FontWeight.Medium, FontWeight.Normal, zenKaku, FontWeight.Medium, labelSpacing = 0.6f)
+    "riso" -> styleType(anton, FontWeight.Normal, 0.6f, workSans, FontWeight.SemiBold, FontWeight.Normal, workSans, FontWeight.Bold, headShadow = titleShadowFor("riso"))
+    "synth" -> styleType(audiowide, FontWeight.Normal, 0.4f, chakra, FontWeight.SemiBold, FontWeight.Normal, chakra, FontWeight.Bold, headShadow = titleShadowFor("synth"))
+    "anthro" -> styleType(fredoka, FontWeight.SemiBold, 0f, nunito, FontWeight.Bold, FontWeight.Normal, fredoka, FontWeight.Medium)
     else -> styleType(fraunces, FontWeight.SemiBold, -0.2f, figtree, FontWeight.SemiBold, FontWeight.Normal, figtree, FontWeight.SemiBold)
 }
+
+/** The effect on big titles (owner, 13 November 2026: titles only): Risograph's misaligned pink, Synthwave's glow. */
+fun titleShadowFor(design: String): androidx.compose.ui.graphics.Shadow? = when (design) {
+    "riso" -> androidx.compose.ui.graphics.Shadow(Color(0xFFFF48B0).copy(alpha = 0.8f), Offset(7f, 5f), 0f)
+    "synth" -> androidx.compose.ui.graphics.Shadow(Color(0xFFFF4FD8).copy(alpha = 0.9f), Offset.Zero, 18f)
+    else -> null
+}
+
+val Look.titleShadow: androidx.compose.ui.graphics.Shadow? get() = titleShadowFor(design)
 
 /** The weight of screen titles in the top bar (fonts that come in one weight: that weight). */
 val Look.titleWeight: FontWeight
     get() = when (design) {
-        "chaos", "retro", "pop", "grunge" -> FontWeight.Normal
+        "chaos", "retro", "pop", "grunge", "doodle", "cottage", "riso", "synth" -> FontWeight.Normal
         "bauhaus" -> FontWeight.Bold
         // Fraunces headings (7 November 2026) look best a little lighter.
         else -> FontWeight.SemiBold
@@ -471,17 +670,18 @@ val Look.titleWeight: FontWeight
 /** The weight of prices. */
 val Look.priceWeight: FontWeight
     get() = when (design) {
-        "chaos", "pop" -> FontWeight.Normal
-        "retro" -> FontWeight.SemiBold
+        "chaos", "pop", "doodle", "cottage", "riso", "synth" -> FontWeight.Normal
+        "retro", "anthro" -> FontWeight.SemiBold
+        "japandi" -> FontWeight.Medium
         else -> FontWeight.Bold
     }
 
 /** Icon style: "outlined" (Y2K's line-art), "filled" (Retro, Flat), "sharp" (Grunge, Bauhaus) or "rounded". */
 val Look.iconStyle: String
     get() = when (design) {
-        "y2k" -> "outlined"
-        "retro", "flat" -> "filled"
-        "grunge", "bauhaus" -> "sharp"
+        "y2k", "japandi", "doodle" -> "outlined"
+        "retro", "flat", "cottage", "anthro" -> "filled"
+        "grunge", "bauhaus", "riso" -> "sharp"
         else -> "rounded"
     }
 
@@ -489,9 +689,10 @@ val Look.iconStyle: String
 val Look.edge: Dp
     get() = when (design) {
         "chaos" -> 3.dp
-        "bauhaus" -> 2.5.dp
-        "retro", "grunge" -> 2.dp
-        "y2k" -> 1.5.dp
+        "bauhaus", "doodle", "anthro" -> 2.5.dp
+        "retro", "grunge", "riso" -> 2.dp
+        "y2k", "cottage", "synth" -> 1.5.dp
+        "japandi" -> 1.dp
         else -> 0.dp
     }
 
@@ -520,6 +721,33 @@ class RoughShape(private val seed: Int, private val rough: Dp = 1.8.dp, private 
     }
     override fun equals(other: Any?) = other is RoughShape && other.seed == seed && other.rough == rough && other.step == step
     override fun hashCode() = seed * 31 + rough.hashCode()
+}
+
+/**
+ * A hand-drawn shape (Doodle): a rounded box whose sides bow in and out a little, like a marker line, always the same
+ * way for the same [seed].
+ */
+class WobblyShape(private val seed: Int, private val corner: Dp = 12.dp, private val wobble: Dp = 1.6.dp) : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        val r = with(density) { corner.toPx() }.coerceAtMost(minOf(size.width, size.height) / 2)
+        val wb = with(density) { wobble.toPx() }
+        fun f(i: Int): Float { val v = kotlin.math.sin((seed * 13 + i) * 12.9898) * 43758.5453; return ((v - kotlin.math.floor(v)).toFloat() - 0.5f) * 2 * wb }
+        val w = size.width; val h = size.height
+        val p = Path()
+        p.moveTo(r, f(0).coerceAtLeast(0f))
+        p.quadraticTo(w / 2, f(1), w - r, f(2).coerceAtLeast(0f))
+        p.quadraticTo(w, 0f, w - f(3).coerceAtLeast(0f), r)
+        p.quadraticTo(w + f(4).coerceAtMost(0f), h / 2, w - f(5).coerceAtLeast(0f), h - r)
+        p.quadraticTo(w, h, w - r, h - f(6).coerceAtLeast(0f))
+        p.quadraticTo(w / 2, h + f(7).coerceAtMost(0f), r, h - f(8).coerceAtLeast(0f))
+        p.quadraticTo(0f, h, f(9).coerceAtLeast(0f), h - r)
+        p.quadraticTo(f(10).coerceAtLeast(0f), h / 2, f(11).coerceAtLeast(0f), r)
+        p.quadraticTo(0f, 0f, r, f(0).coerceAtLeast(0f))
+        p.close()
+        return Outline.Generic(p)
+    }
+    override fun equals(other: Any?) = other is WobblyShape && other.seed == seed && other.corner == corner && other.wobble == wobble
+    override fun hashCode() = seed * 31 + corner.hashCode()
 }
 
 /** Pop futurism's streamlined shape: two big round corners and two small ones, like a seventies panel. */
@@ -553,6 +781,22 @@ fun shapesFor(design: String): Shapes = when (design) {
         extraSmall = RoundedCornerShape(0.dp), small = RoundedCornerShape(0.dp), medium = RoundedCornerShape(0.dp),
         large = RoundedCornerShape(0.dp), extraLarge = RoundedCornerShape(0.dp)
     )
+    "japandi" -> Shapes(
+        extraSmall = RoundedCornerShape(2.dp), small = RoundedCornerShape(4.dp), medium = RoundedCornerShape(4.dp),
+        large = RoundedCornerShape(6.dp), extraLarge = RoundedCornerShape(8.dp)
+    )
+    "riso", "synth" -> Shapes(
+        extraSmall = RoundedCornerShape(4.dp), small = RoundedCornerShape(6.dp), medium = RoundedCornerShape(8.dp),
+        large = RoundedCornerShape(10.dp), extraLarge = RoundedCornerShape(12.dp)
+    )
+    "doodle", "anthro" -> Shapes(
+        extraSmall = RoundedCornerShape(12.dp), small = RoundedCornerShape(14.dp), medium = RoundedCornerShape(18.dp),
+        large = RoundedCornerShape(22.dp), extraLarge = RoundedCornerShape(28.dp)
+    )
+    "cottage" -> Shapes(
+        extraSmall = RoundedCornerShape(8.dp), small = RoundedCornerShape(10.dp), medium = RoundedCornerShape(12.dp),
+        large = RoundedCornerShape(14.dp), extraLarge = RoundedCornerShape(18.dp)
+    )
     else -> Shapes(
         extraSmall = RoundedCornerShape(10.dp), small = RoundedCornerShape(12.dp), medium = RoundedCornerShape(16.dp),
         large = RoundedCornerShape(22.dp), extraLarge = RoundedCornerShape(28.dp)
@@ -561,7 +805,11 @@ fun shapesFor(design: String): Shapes = when (design) {
 
 /** The shape of dialogs: Material's largest shape, Grunge's rough edge. */
 val Look.dialogShape: Shape
-    get() = if (design == "grunge") RoughShape(7, 2.4.dp, 9.dp) else shapesFor(design).extraLarge
+    get() = when (design) {
+        "grunge" -> RoughShape(7, 2.4.dp, 9.dp)
+        "doodle" -> WobblyShape(7, 24.dp, 2.dp)
+        else -> shapesFor(design).extraLarge
+    }
 
 /** The shape of a card. */
 fun Look.cardShape(id: Long, small: Boolean): Shape = when (design) {
@@ -572,6 +820,12 @@ fun Look.cardShape(id: Long, small: Boolean): Shape = when (design) {
     "grunge" -> RoughShape(pick(id, 97) + 11, if (small) 1.8.dp else 2.2.dp)
     "flat" -> RoundedCornerShape(if (small) 10.dp else 12.dp)
     "bauhaus" -> RectangleShape
+    "doodle" -> WobblyShape(pick(id, 89) + 3, if (small) 14.dp else 18.dp)
+    "cottage" -> RoundedCornerShape(if (small) 12.dp else 14.dp)
+    "japandi" -> RoundedCornerShape(4.dp)
+    "riso" -> RoundedCornerShape(if (small) 6.dp else 8.dp)
+    "synth" -> RoundedCornerShape(if (small) 10.dp else 12.dp)
+    "anthro" -> RoundedCornerShape(if (small) 20.dp else 24.dp)
     else -> RoundedCornerShape(if (small) 16.dp else 20.dp)
 }
 
@@ -600,8 +854,9 @@ fun Look.cardMuted(@Suppress("UNUSED_PARAMETER") id: Long): Color = scheme.onSur
 /** Small labels on a card (price change, "Owned"). */
 fun Look.badgeShape(small: Boolean): Shape = when (design) {
     "chaos" -> RoundedCornerShape(10.dp)
-    "y2k", "pop", "bauhaus" -> pill
-    "retro", "flat" -> RoundedCornerShape(4.dp)
+    "y2k", "pop", "bauhaus", "cottage", "anthro" -> pill
+    "retro", "flat", "japandi", "riso", "synth" -> RoundedCornerShape(4.dp)
+    "doodle" -> WobblyShape(23, 8.dp, 1.dp)
     "grunge" -> RoughShape(21, 1.dp, 5.dp)
     else -> RoundedCornerShape(if (small) 6.dp else 8.dp)
 }
@@ -610,9 +865,11 @@ fun Look.badgeShape(small: Boolean): Shape = when (design) {
 val Look.chipShape: Shape
     get() = when (design) {
         "chaos" -> RoundedCornerShape(12.dp)
-        "retro" -> RoundedCornerShape(6.dp)
-        "flat" -> RoundedCornerShape(8.dp)
+        "retro", "riso" -> RoundedCornerShape(6.dp)
+        "flat", "synth" -> RoundedCornerShape(8.dp)
+        "japandi" -> RoundedCornerShape(4.dp)
         "grunge" -> RoughShape(31, 1.2.dp, 6.dp)
+        "doodle" -> WobblyShape(33, 14.dp, 1.2.dp)
         else -> CircleShape
     }
 
@@ -621,7 +878,10 @@ val Look.fabShape: Shape
     get() = when (design) {
         "chaos" -> RoundedCornerShape(16.dp)
         "retro", "flat" -> RoundedCornerShape(14.dp)
+        "japandi" -> RoundedCornerShape(6.dp)
+        "riso", "synth" -> RoundedCornerShape(10.dp)
         "grunge" -> RoughShape(41, 1.6.dp, 7.dp)
+        "doodle" -> WobblyShape(43, 22.dp, 1.6.dp)
         else -> CircleShape
     }
 
@@ -629,8 +889,10 @@ val Look.fabShape: Shape
 val Look.buttonShape: Shape
     get() = when (design) {
         "chaos" -> RoundedCornerShape(14.dp)
-        "retro", "flat" -> RoundedCornerShape(8.dp)
+        "retro", "flat", "riso", "synth" -> RoundedCornerShape(8.dp)
+        "japandi" -> RoundedCornerShape(4.dp)
         "grunge" -> RoughShape(51, 1.4.dp, 7.dp)
+        "doodle" -> WobblyShape(53, 22.dp, 1.4.dp)
         "bauhaus" -> RectangleShape
         else -> CircleShape
     }
@@ -639,6 +901,7 @@ val Look.buttonShape: Shape
 fun Look.tilt(id: Long): Float = when (design) {
     "chaos" -> listOf(-1.6f, 1.2f, -0.8f, 1.8f, -1.2f, 0.9f)[pick(id, 6)]
     "grunge" -> listOf(-0.5f, 0.4f, -0.2f, 0.6f, -0.4f)[pick(id, 5)]
+    "doodle" -> listOf(-0.6f, 0.5f, -0.3f, 0.4f)[pick(id, 4)]
     else -> 0f
 }
 
@@ -677,6 +940,26 @@ fun Modifier.lookSurface(look: Look, shape: Shape, fill: Color, raised: Boolean 
         "grunge" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.5f).coerceIn(2f, 4f).dp) else this)
             .paint().border(look.edge, look.line, shape)
         "flat" -> paint()
+        // Doodle: a marker line drawn twice, the second a little off, like a quick sketch; no shadow.
+        "doodle" -> paint().border(look.edge, look.line, shape).drawWithContent {
+            drawContent()
+            val outline = shape.createOutline(size, layoutDirection, this)
+            translate(1.2.dp.toPx(), -1.dp.toPx()) { drawOutline(outline, look.line.copy(alpha = 0.45f), style = Stroke(1.dp.toPx())) }
+        }
+        // Cottage-core: a soft printed shadow, a fine line and an inner keyline like a seed packet.
+        "cottage" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.4f).coerceIn(2f, 3f).dp) else this)
+            .paint().keyline(look, shape).border(look.edge, look.line, shape)
+        // Japandi: a hairline, nothing else.
+        "japandi" -> paint().border(look.edge, look.line.copy(alpha = 0.6f), shape)
+        // Risograph: the pink layer printed a little off, under the blue outline.
+        "riso" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.6f).coerceIn(2.5f, 5f).dp) else this)
+            .paint().border(look.edge, look.line, shape)
+        // Synthwave: a neon outline with a soft glow in the same colour.
+        "synth" -> (if (raised) shadow((d * 1.6f).coerceIn(4f, 14f).dp, shape, clip = false, ambientColor = look.line, spotColor = look.line) else this)
+            .paint().border(look.edge, look.line, shape)
+        // Anthropomorphic: a cartoon outline and a hard ink shadow.
+        "anthro" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.6f).coerceIn(2.5f, 5f).dp) else this)
+            .paint().border(look.edge, look.line, shape)
         "bauhaus" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.7f).coerceIn(3f, 6f).dp) else this)
             .paint().border(look.edge, look.line, shape)
         // Quiet: just the card colour; in light a hairline so white cards don't melt into each other.
@@ -889,6 +1172,168 @@ fun Modifier.lookBackdrop(look: Look): Modifier = when (look.design) {
             val seg = h / 7
             listOf(look.art[0], look.art[2], look.art[1], look.art[3], look.art[0], look.art[1], look.art[2]).forEachIndexed { i, col ->
                 drawRect(col, Offset(w - 8 * u, seg * i), Size(8 * u, seg - 3 * u))
+            }
+        }
+    }
+    "doodle" -> drawWithCache {
+        val w = size.width; val h = size.height
+        val u = 1.dp.toPx()
+        val pen = Stroke(2.2f * u, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round)
+        // Little marker doodles: a star, a spiral, a flower, a smiley, a heart, squiggles.
+        fun star(c: Offset, r: Float) = Path().apply {
+            for (i in 0 until 10) {
+                val a = Math.toRadians(-90.0 + i * 36.0); val rr = if (i % 2 == 0) r else r * 0.45f
+                val p = Offset(c.x + (kotlin.math.cos(a) * rr).toFloat(), c.y + (kotlin.math.sin(a) * rr).toFloat())
+                if (i == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y)
+            }
+            close()
+        }
+        fun spiral(c: Offset, r: Float) = Path().apply {
+            moveTo(c.x, c.y)
+            for (i in 1..60) { val a = i * 0.33; val rr = r * i / 60f; lineTo(c.x + (kotlin.math.cos(a) * rr).toFloat(), c.y + (kotlin.math.sin(a) * rr).toFloat()) }
+        }
+        fun squiggle(x: Float, y: Float, len: Float) = Path().apply {
+            moveTo(x, y); var k = 0f
+            while (k < len) { quadraticTo(x + k + 6 * u, y - 6 * u, x + k + 12 * u, y); quadraticTo(x + k + 18 * u, y + 6 * u, x + k + 24 * u, y); k += 24 * u }
+        }
+        val star1 = star(Offset(w * 0.88f, 90 * u), 14 * u); val star2 = star(Offset(w * 0.12f, h * 0.7f), 10 * u)
+        val sp = spiral(Offset(w * 0.08f, 220 * u), 18 * u); val sq1 = squiggle(w * 0.55f, 30 * u, 70 * u); val sq2 = squiggle(w * 0.6f, h * 0.9f, 90 * u)
+        onDrawBehind {
+            drawPath(star1, look.blobs[0], style = pen); drawPath(star2, look.blobs[1]); drawPath(sp, look.blobs[0], style = pen)
+            drawPath(sq1, look.blobs[0], style = pen); drawPath(sq2, look.blobs[0], style = pen)
+            // A smiley and a flower.
+            val sm = Offset(w * 0.9f, h * 0.48f)
+            drawCircle(look.blobs[0], 16 * u, sm, style = pen)
+            drawCircle(look.blobs[0], 1.8f * u, Offset(sm.x - 5 * u, sm.y - 4 * u)); drawCircle(look.blobs[0], 1.8f * u, Offset(sm.x + 5 * u, sm.y - 4 * u))
+            drawArc(look.blobs[0], 20f, 140f, false, Offset(sm.x - 8 * u, sm.y - 6 * u), Size(16 * u, 14 * u), style = pen)
+            val fl = Offset(w * 0.2f, h * 0.38f)
+            for (i in 0 until 6) rotate(i * 60f, fl) { drawOval(look.blobs[0], Offset(fl.x - 5 * u, fl.y - 18 * u), Size(10 * u, 14 * u), style = pen) }
+            drawCircle(look.blobs[1], 5 * u, fl)
+        }
+    }
+    "cottage" -> drawWithCache {
+        val w = size.width; val h = size.height
+        val u = 1.dp.toPx()
+        fun flower(c: Offset, r: Float, col: Color) = Path().apply {
+            for (i in 0 until 5) {
+                val a = Math.toRadians(i * 72.0 - 90.0)
+                addOval(androidx.compose.ui.geometry.Rect(Offset(c.x + (kotlin.math.cos(a) * r).toFloat(), c.y + (kotlin.math.sin(a) * r).toFloat()), r * 0.62f))
+            }
+        }
+        val spots = listOf(Offset(w * 0.9f, 80 * u), Offset(w * 0.08f, h * 0.32f), Offset(w * 0.86f, h * 0.6f), Offset(w * 0.14f, h * 0.88f), Offset(w * 0.6f, 24 * u))
+        onDrawBehind {
+            // A faint gingham check: each stripe half as strong, so where two cross it is never stronger than the tested
+            // colour (LookTest).
+            val step = 22 * u
+            val half = look.blobs[0].copy(alpha = look.blobs[0].alpha / 2)
+            var x = 0f
+            while (x < w) { drawRect(half, Offset(x, 0f), Size(step / 2, h)); x += step }
+            var y = 0f
+            while (y < h) { drawRect(half, Offset(0f, y), Size(w, step / 2)); y += step }
+            // Little flowers with leaves.
+            spots.forEachIndexed { i, c ->
+                val col = if (i % 2 == 0) look.blobs[1] else look.blobs[2]
+                drawOval(look.blobs[0], Offset(c.x + 4 * u, c.y + 6 * u), Size(16 * u, 7 * u))
+                drawPath(flower(c, 7 * u, col), col)
+                drawCircle(look.blobs[2], 3 * u, c)
+            }
+            // A sprig along the left edge (where text never goes).
+            for (i in 0 until 12) {
+                val cy = h * 0.15f + i * 22 * u
+                drawLine(look.art[0], Offset(5 * u, cy), Offset(5 * u, cy + 22 * u), 1.5f * u)
+                drawOval(look.art[0], Offset(5 * u, cy + 4 * u), Size(7 * u, 4 * u))
+            }
+        }
+    }
+    "japandi" -> drawWithCache {
+        val w = size.width; val h = size.height
+        val u = 1.dp.toPx()
+        val line = Stroke(1.2f * u)
+        onDrawBehind {
+            // An ensō (a brushed circle, left open) top right, and seigaiha waves along the bottom.
+            drawArc(look.blobs[1], 110f, 320f, false, Offset(w - 130 * u, 20 * u), Size(110 * u, 110 * u), style = Stroke(6 * u, cap = androidx.compose.ui.graphics.StrokeCap.Round))
+            val r = 28 * u
+            var row = 0
+            var y = h - 20 * u
+            while (row < 4) {
+                var x = if (row % 2 == 0) 0f else r
+                while (x < w + r) {
+                    for (k in 1..3) drawArc(look.blobs[0], 180f, 180f, false, Offset(x - r * k / 3, y - r * k / 3), Size(2 * r * k / 3, 2 * r * k / 3), style = line)
+                    x += 2 * r
+                }
+                y -= r * 0.6f; row++
+            }
+            drawLine(look.blobs[2], Offset(24 * u, 64 * u), Offset(w * 0.4f, 64 * u), 1f * u)
+        }
+    }
+    "riso" -> drawWithCache {
+        val w = size.width; val h = size.height
+        val u = 1.dp.toPx()
+        val pts = grain(w, h, 2600, 41)
+        fun dots(c: Offset, r: Float, step: Float): List<Offset> {
+            val out = ArrayList<Offset>()
+            var y = c.y - r
+            while (y < c.y + r) { var x = c.x - r; while (x < c.x + r) { if ((Offset(x, y) - c).getDistance() < r) out += Offset(x, y); x += step }; y += step }
+            return out
+        }
+        val pinkDots = dots(Offset(w * 0.92f, 100 * u), 80 * u, 7 * u)
+        val blueDots = dots(Offset(w * 0.06f, h * 0.62f), 70 * u, 7 * u)
+        onDrawBehind {
+            // Two halftone circles, a yellow block and a pink triangle, printed a little off each other, and grain.
+            drawPoints(pinkDots, PointMode.Points, look.blobs[0], strokeWidth = 3.5f * u, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+            drawPoints(blueDots, PointMode.Points, look.blobs[1], strokeWidth = 3.5f * u, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+            drawRect(look.blobs[2], Offset(w * 0.7f, h * 0.78f), Size(90 * u, 60 * u))
+            drawPath(Path().apply { moveTo(w * 0.08f, h * 0.18f); lineTo(w * 0.3f, h * 0.24f); lineTo(w * 0.1f, h * 0.32f); close() }, look.blobs[0])
+            drawPoints(pts, PointMode.Points, look.blobs[3], strokeWidth = 1.5f * u)
+            // Riso stripes on the right edge (where text never goes).
+            drawRect(look.art[0], Offset(w - 9 * u, 0f), Size(4 * u, h))
+            drawRect(look.art[1], Offset(w - 7.5f * u, 0f), Size(4 * u, h), alpha = 0.7f)
+        }
+    }
+    "synth" -> drawWithCache {
+        val w = size.width; val h = size.height
+        val u = 1.dp.toPx()
+        val sunC = Offset(w * 0.8f, 110 * u); val sunR = 70 * u
+        val horizon = h - 170 * u
+        onDrawBehind {
+            // A striped sunset sun.
+            drawCircle(Brush.verticalGradient(listOf(look.blobs[2], look.blobs[0]), sunC.y - sunR, sunC.y + sunR), sunR, sunC)
+            for (i in 0 until 5) drawRect(look.scheme.background, Offset(sunC.x - sunR, sunC.y + sunR * (0.15f + i * 0.17f)), Size(sunR * 2, (2 + i) * u))
+            // The neon grid: a horizon and lines running towards the middle.
+            drawLine(look.blobs[0], Offset(0f, horizon), Offset(w, horizon), 1.5f * u)
+            for (i in -8..8) drawLine(look.blobs[1], Offset(w / 2 + i * 14 * u, horizon), Offset(w / 2 + i * 90 * u, h), 1.2f * u)
+            var k = 1f
+            while (horizon + 6 * u * k * k < h) { val y = horizon + 6 * u * k * k; drawLine(look.blobs[1], Offset(0f, y), Offset(w, y), 1.2f * u); k += 1f }
+            // Palm trees at the edges.
+            fun palm(x: Float, flip: Float) {
+                val top = Offset(x + 18 * u * flip, horizon - 120 * u)
+                drawPath(Path().apply { moveTo(x, h); quadraticTo(x + 4 * u * flip, horizon - 40 * u, top.x, top.y) }, look.blobs[3], style = Stroke(5 * u))
+                for (a in listOf(-160f, -120f, -60f, -20f, 20f)) rotate(a * flip, top) {
+                    drawPath(Path().apply { moveTo(top.x, top.y); quadraticTo(top.x + 20 * u, top.y - 12 * u, top.x + 44 * u, top.y + 6 * u) }, look.blobs[3], style = Stroke(4 * u))
+                }
+            }
+            palm(6 * u, 1f); palm(w - 6 * u, -1f)
+            // A neon line down the left edge (where text never goes).
+            drawRect(look.art[2], Offset(3 * u, 0f), Size(2.5f * u, h))
+            drawRect(look.art[3], Offset(7 * u, 0f), Size(1.5f * u, h))
+        }
+    }
+    "anthro" -> drawWithCache {
+        val w = size.width; val h = size.height
+        val u = 1.dp.toPx()
+        val confetti = grain(w, h, 40, 57)
+        onDrawBehind {
+            // Big soft blobs and flat confetti: stars, dots and little squiggles.
+            drawCircle(look.blobs[0], 90 * u, Offset(w * 0.95f, 40 * u))
+            drawCircle(look.blobs[3], 70 * u, Offset(0f, h * 0.55f))
+            drawCircle(look.blobs[2], 60 * u, Offset(w * 0.9f, h * 0.85f))
+            confetti.forEachIndexed { i, p ->
+                val col = look.blobs[i % look.blobs.size]
+                when (i % 3) {
+                    0 -> drawCircle(col, 3 * u, p)
+                    1 -> rotate(i * 25f, p) { drawRect(col, Offset(p.x - 5 * u, p.y - 1.5f * u), Size(10 * u, 3 * u)) }
+                    else -> drawPath(sparkle(p, 6 * u), col)
+                }
             }
         }
     }

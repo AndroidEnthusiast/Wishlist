@@ -487,3 +487,7 @@ in 2.198 in `themes/gen-z-chaos/` (the 7 files it lives in + README on putting i
 Its "Next session" line then (replaced by the 2.199 one):
 - **Newest (13 November 2026), read first.** The owner is working on the app's themes (for fun); Gen Z chaos is saved in
   `themes/gen-z-chaos/`: ask before changing or removing it. Ask what they want to change in the themes next.
+Lines of the 2.199 handoff, replaced by the 2.200 ones (13 November 2026):
+- **Newest (13 November 2026), read first.** 2.199: the new styles (Y2K, Retro vintage, Pop futurism, Grunge, Flat,
+  Bauhaus) and every part themed. Ask how each feels on the phone, light and dark (fonts, fields, menus, the drawings);
+(fonts can't download there). Decisions: `docs/decisions/look.md`, "The new themes".
