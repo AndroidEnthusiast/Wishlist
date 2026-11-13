@@ -108,19 +108,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.emblem(look: Look) 
     val c = Offset(size.width / 2, size.height / 2)
     val a = look.art
     when (look.design) {
-        "y2k" -> {
-            // A disc with an orbit ring around it and two sparkles.
-            drawCircle(Brush.linearGradient(listOf(a[0], a[2], a[1])), s * 0.34f, c)
-            drawCircle(look.line, s * 0.34f, c, style = Stroke(s * 0.025f))
-            rotate(-22f, c) { drawOval(look.line, Offset(c.x - s * 0.5f, c.y - s * 0.13f), Size(s, s * 0.26f), style = Stroke(s * 0.03f)) }
-            listOf(Offset(c.x + s * 0.38f, c.y - s * 0.36f) to s * 0.11f, Offset(c.x - s * 0.4f, c.y + s * 0.34f) to s * 0.08f).forEach { (p, r) ->
-                val t = r * 0.18f
-                drawPath(Path().apply {
-                    moveTo(p.x, p.y - r); quadraticTo(p.x + t, p.y - t, p.x + r, p.y); quadraticTo(p.x + t, p.y + t, p.x, p.y + r)
-                    quadraticTo(p.x - t, p.y + t, p.x - r, p.y); quadraticTo(p.x - t, p.y - t, p.x, p.y - r); close()
-                }, look.line)
-            }
-        }
+        "y2k" -> y2kEmblem(look)
         "retro" -> {
             // A sunburst: mustard rays around a cream disc with a cherry ring.
             for (i in 0 until 16) rotate(i * 22.5f, c) {

@@ -103,7 +103,7 @@ class ColourSet(val key: String, val name: String)
 
 /** The colour sets of each style that has its own colours (the first is the one it starts with). */
 val COLOUR_SETS: Map<String, List<ColourSet>> = mapOf(
-    "y2k" to listOf(ColourSet("holo", "Holographic"), ColourSet("chrome", "Chrome"), ColourSet("bubblegum", "Bubblegum")),
+    "y2k" to listOf(ColourSet("holo", "Holographic"), ColourSet("chrome", "Liquid chrome"), ColourSet("aero", "Bubbly")),
     "retro" to listOf(ColourSet("diner", "Diner"), ColourSet("seventies", "Seventies"), ColourSet("seaside", "Seaside")),
     "pop" to listOf(ColourSet("sunset", "Sunset"), ColourSet("lagoon", "Lagoon"), ColourSet("cosmic", "Cosmic")),
     "grunge" to listOf(ColourSet("blood", "Blood red"), ColourSet("toxic", "Toxic green"), ColourSet("bruise", "Bruise purple")),
@@ -270,6 +270,9 @@ private val sedgwick by lazy { google("Sedgwick Ave Display", "casual", one) }
 private val archivoNarrow by lazy { google("Archivo Narrow", "sans-serif-condensed", listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold)) }
 private val plexMono by lazy { google("IBM Plex Mono", "monospace", listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold)) }
 
+/** Y2K's heading font (Y2k.kt). */
+internal val y2kDisplay: FontFamily get() = unbounded
+
 /** Doodle's heading font (Doodle.kt). */
 internal val doodleDisplay: FontFamily get() = caveatBrush
 
@@ -322,6 +325,7 @@ fun lookFor(style: String, accentKey: String, mode: String, set: String = "", de
     val setKey = setFor(key, set).key
     val level = DECO_LEVELS.indexOfFirst { it.key == deco }.takeIf { it >= 0 } ?: 1
     if (key == "doodle") return doodleLook(mode != "light", setKey, level, cardStyleFor(key, setKey, cards))
+    if (key == "y2k") return y2kLook(mode != "light", setKey, level, cardStyleFor(key, setKey, cards))
     val base = baseLook(style, accentKey, mode)
     return if (usesAccent(base.design)) base else base.withSet(setKey)
 }
@@ -334,7 +338,8 @@ val DECO_LEVELS = listOf(ThemeOption("calm", "Calm"), ThemeOption("normal", "Nor
 
 /** The card styles of the styles that have them (Doodle first; the others follow when they are rebuilt). */
 val CARD_STYLES: Map<String, List<ThemeOption>> = mapOf(
-    "doodle" to listOf(ThemeOption("outlined", "Outlined"), ThemeOption("filled", "Filled"), ThemeOption("sticker", "Sticker"))
+    "doodle" to listOf(ThemeOption("outlined", "Outlined"), ThemeOption("filled", "Filled"), ThemeOption("sticker", "Sticker")),
+    "y2k" to listOf(ThemeOption("glass", "Glass"), ThemeOption("glossy", "Glossy"), ThemeOption("sticker", "Sticker"))
 )
 
 /** Whether the style has options (decoration amount, card style) in the Themer. */
@@ -343,7 +348,11 @@ fun hasOptions(style: String): Boolean = CARD_STYLES.containsKey(styleFor(style)
 /** The card style: the one chosen, or the colour set's own (Doodle's sticky notes are filled). */
 fun cardStyleFor(style: String, set: String, chosen: String): String {
     val styles = CARD_STYLES[style] ?: return ""
-    return styles.firstOrNull { it.key == chosen }?.key ?: if (style == "doodle" && set == "sticky") "filled" else styles.first().key
+    return styles.firstOrNull { it.key == chosen }?.key ?: when {
+        style == "doodle" && set == "sticky" -> "filled"
+        style == "y2k" -> if (set == "aero") "glass" else "glossy"
+        else -> styles.first().key
+    }
 }
 
 /** The style's own look in its first colour set. */
@@ -370,33 +379,6 @@ private fun baseLook(style: String, accentKey: String, mode: String): Look {
                 listOf(surface), listOf(lime, mix(hot, white, 0.35f), sun, mix(a, white, 0.45f)), ink,
                 listOf(if (dark) hot else ink), listOf(hot, sun, lime, ink.copy(alpha = if (dark) 0.10f else 0.12f)),
                 bungee, drop, rise, accent = a, onAccent = onA, art = listOf(hot, sun, lime)
-            )
-        }
-        "y2k" -> {
-            // Ink line-art on holographic pastels (light); the same pastels glowing on deep space (dark).
-            val bg = if (dark) c(0xFF0F0C1D) else c(0xFFF5F1FF)
-            val surface = if (dark) c(0xFF1C1733) else white
-            val ink = if (dark) c(0xFFF4F0FF) else c(0xFF17122B)
-            val muted = if (dark) c(0xFFBEB5DD) else c(0xFF4E4766)
-            val line = if (dark) c(0xFFD9CCFF) else c(0xFF17122B)
-            val text = if (dark) c(0xFFC8B4FF) else c(0xFF5B2FD6)
-            val pink = c(0xFFFFB8E6); val lilac = c(0xFFD3C4FF); val aqua = c(0xFFA8F0FF); val peach = c(0xFFFFD3C2)
-            val holo = sweep(listOf(pink, lilac, aqua))
-            val deep = c(0xFF17122B)
-            Look(
-                "y2k", dark,
-                scheme(dark, text, if (dark) deep else white, if (dark) c(0xFF2E2552) else c(0xFFEDE6FF), ink, bg, surface, ink, muted, line,
-                    if (dark) c(0xFF3A3160) else c(0xFFD9D2EA), if (dark) c(0xFFFF8FA3) else c(0xFFB3261E)),
-                listOf(surface),
-                if (dark) listOf(c(0xFF3A2350), c(0xFF173A47), c(0xFF2B2457), c(0xFF45302A))
-                else listOf(c(0xFFFFE3F4), c(0xFFDDF8FF), c(0xFFEDE6FF), c(0xFFFFEBE1)),
-                line,
-                listOf(lilac),
-                if (dark) listOf(c(0xFFFF5FD2).copy(alpha = 0.22f), c(0xFF39D9FF).copy(alpha = 0.20f), c(0xFF8B6CFF).copy(alpha = 0.25f), c(0xFFE9E1FF).copy(alpha = 0.25f))
-                else listOf(c(0xFFFFC2E9).copy(alpha = 0.6f), c(0xFFB5F2FF).copy(alpha = 0.6f), c(0xFFD6C6FF).copy(alpha = 0.6f), deep.copy(alpha = 0.22f)),
-                unbounded, drop, rise, accent = lilac, onAccent = deep,
-                art = listOf(pink, aqua, lilac, peach, if (dark) c(0xFFF4F0FF) else deep),
-                accentBrush = holo, shadowBrush = holo
             )
         }
         "retro" -> {
@@ -943,7 +925,7 @@ val Look.dialogShape: Shape
 /** The shape of a card. */
 fun Look.cardShape(id: Long, small: Boolean): Shape = when (design) {
     "chaos" -> RoundedCornerShape(if (small) 14.dp else 18.dp)
-    "y2k" -> RoundedCornerShape(if (small) 22.dp else 26.dp)
+    "y2k" -> y2kCardShape(small)
     "pop" -> if (small) stream(22.dp, 6.dp) else stream(28.dp, 8.dp)
     "grunge" -> RoughShape(pick(id, 97) + 11, if (small) 1.8.dp else 2.2.dp)
     "flat" -> RoundedCornerShape(if (small) 10.dp else 12.dp)
@@ -1112,14 +1094,8 @@ fun Modifier.lookSurface(
     val d = depth.value
     return when (look.design) {
         "chaos" -> (if (raised) hardShadow(look.shadows[0], shape, 5.dp) else this).paint().edgeLine(3.dp, look.line, shape)
-        // Y2K: a holographic shadow; buttons and chips get a glossy bubble shine on their top half.
-        "y2k" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.6f).coerceIn(2f, 5f).dp, look.shadowBrush) else this)
-            .paint().drawBehind {
-                if (size.height < 64.dp.toPx()) drawRect(
-                    Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.55f), Color.White.copy(alpha = 0f)), 0f, size.height * 0.55f),
-                    Offset(size.width * 0.06f, size.height * 0.08f), Size(size.width * 0.88f, size.height * 0.4f)
-                )
-            }.edgeLine(look.edge, look.line, shape)
+        // Y2K (Y2k.kt): a holo hard shadow or a soft glow, a white rim on glass, a gloss on buttons and glossy cards.
+        "y2k" -> y2kShadow(look, shape, raised, d, card).paint().then(Modifier.y2kFinish(look, shape, card))
         // Retro: a misprinted shadow and a fine printed line inside the edge (buttons too).
         "retro" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.5f).coerceIn(2f, 4f).dp) else this)
             .paint().keyline(look, shape, min = 36.dp).edgeLine(look.edge, look.line, shape)
@@ -1186,6 +1162,7 @@ fun Modifier.lookCard(look: Look, id: Long, shape: Shape): Modifier {
         .lookSurface(look, shape, look.cardFill(id), depth = 8.dp, shadow = block, card = true)
         .then(if (look.design == "doodle" && look.set == "sticky") Modifier.doodleFold(look, if (shape is DogEarShape) 16.dp else 0.dp) else Modifier)
         .then(if (look.design == "doodle") Modifier.doodlePin(look, id) else Modifier)
+        .then(if (look.design == "y2k") Modifier.y2kStickers(look, id) else Modifier)
 }
 
 /** Swiss buttons (filled ones excepted) are framed in black; whether this surface is one. */
@@ -1271,25 +1248,7 @@ fun Modifier.lookBackdrop(look: Look): Modifier = when (look.design) {
         drawCircle(look.blobs[1].copy(alpha = 0.85f), 40.dp.toPx(), Offset(size.width * 0.06f, 340.dp.toPx()))
         drawCircle(look.blobs[2].copy(alpha = 0.85f), 56.dp.toPx(), Offset(size.width * 0.98f, 620.dp.toPx()))
     }
-    "y2k" -> drawWithCache {
-        val w = size.width; val h = size.height
-        val u = 1.dp.toPx()
-        val ring = Stroke(1.3f * u)
-        val sparks = listOf(Offset(w * 0.86f, 120 * u) to 10 * u, Offset(w * 0.1f, 260 * u) to 7 * u, Offset(w * 0.9f, h * 0.62f) to 8 * u,
-            Offset(w * 0.18f, h * 0.84f) to 6 * u, Offset(w * 0.55f, 40 * u) to 5 * u).map { sparkle(it.first, it.second) }
-        onDrawBehind {
-            // Soft holographic glows.
-            drawCircle(Brush.radialGradient(listOf(look.blobs[0], Color.Transparent), Offset(0f, 0f), w * 0.8f), w * 0.8f, Offset(0f, 0f))
-            drawCircle(Brush.radialGradient(listOf(look.blobs[1], Color.Transparent), Offset(w, h * 0.45f), w * 0.75f), w * 0.75f, Offset(w, h * 0.45f))
-            drawCircle(Brush.radialGradient(listOf(look.blobs[2], Color.Transparent), Offset(w * 0.3f, h), w * 0.85f), w * 0.85f, Offset(w * 0.3f, h))
-            // Line-art: an orbit ring and sparkles.
-            rotate(-18f, Offset(w * 0.82f, 110 * u)) {
-                drawOval(look.blobs[3], Offset(w * 0.82f - 70 * u, 110 * u - 22 * u), Size(140 * u, 44 * u), style = ring)
-            }
-            drawCircle(look.blobs[3], 34 * u, Offset(w * 0.1f, h * 0.5f), style = ring)
-            sparks.forEach { drawPath(it, look.blobs[3]) }
-        }
-    }
+    "y2k" -> y2kBackdrop(look)
     "retro" -> drawWithCache {
         val w = size.width; val h = size.height
         val pts = grain(w, h, 2600, 7)
@@ -1591,18 +1550,6 @@ private fun Look.withSet(set: String): Look {
     val d = dark
     fun c2(l: Long, dk: Long) = Color(if (d) dk else l)
     return when ("$design/$set") {
-        "y2k/chrome" -> recolour(
-            c2(0xFF3A4A63, 0xFFB9C7DA), c2(0xFFFFFFFF, 0xFF17122B), c2(0xFFE3E8F0, 0xFF2A3142), Color(0xFFD5DDE8), Color(0xFF17122B),
-            listOf(Color(0xFFC9D3E0), Color(0xFFAEE6FF), Color(0xFFE3E8F0), Color(0xFFF0D9FF), art[4]),
-            listOf(Color(0xFFD9E2EC), Color(0xFFB9EBFF), Color(0xFFE6E0F5), blobs[3]), listOf(Color(0xFFC9D3E0)),
-            listOf(Color(0xFFF4F6FA), Color(0xFFC9D3E0), Color(0xFFAEE6FF))
-        )
-        "y2k/bubblegum" -> recolour(
-            c2(0xFFC21F7A, 0xFFFF9AD5), c2(0xFFFFFFFF, 0xFF17122B), c2(0xFFFFE0F1, 0xFF3F2240), Color(0xFFFFB3DA), Color(0xFF17122B),
-            listOf(Color(0xFFFF9AD5), Color(0xFFFFF3A3), Color(0xFFFFC6A8), Color(0xFFB8F2D0), art[4]),
-            listOf(Color(0xFFFFB3DA), Color(0xFFFFF3A3), Color(0xFFFFC6A8), blobs[3]), listOf(Color(0xFFFFB3DA)),
-            listOf(Color(0xFFFF9AD5), Color(0xFFFFC6A8), Color(0xFFFFF3A3))
-        )
         "retro/seventies" -> recolour(
             c2(0xFF9A4312, 0xFFF2B07A), c2(0xFFFFF6E5, 0xFF2A1C10), c2(0xFFF4DCC2, 0xFF4A3424), c2(0xFFB4531A, 0xFFE8A33D), c2(0xFFFFF6E5, 0xFF2A1C10),
             listOf(Color(0xFFB4531A), Color(0xFFE8A33D), Color(0xFF6B7A2E), art[3], art[4]),

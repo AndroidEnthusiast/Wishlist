@@ -109,9 +109,13 @@ class LookTest {
             need("message bar", cs.inverseOnSurface, cs.inverseSurface)
             need("error on card", cs.error, cs.surfaceVariant)
             // Every card colour (sticky notes, filled cards).
-            for (f in look.fills) {
-                need("text on a card colour", look.cardInk(0), f)
-                need("grey text on a card colour", look.cardMuted(0), f)
+            for (f0 in look.fills) {
+                // A see-through card (Y2K's glass) over the page and over the page's drawings.
+                for (under in listOf(cs.background) + look.blobs.map { it.compositeOver(cs.background) }) {
+                    val f = f0.compositeOver(under)
+                    need("text on a card colour", look.cardInk(0), f)
+                    need("grey text on a card colour", look.cardMuted(0), f)
+                }
             }
             if (!usesAccent(st)) {
                 // Quiet's and chaos's accent is whatever you pick (a warning shows in the Themer when it is hard to

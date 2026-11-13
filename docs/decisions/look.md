@@ -138,3 +138,9 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   scribbles) and **sketchbook paper** (lined or graph paper, margins, tape and paper clips). Handwriting on all text
   and doodles around content were not chosen.
 - **Speed first**: fix the lag in every style, and a check that keeps it fixed.
+- **Y2K is the second deep theme** (owner, 13 November 2026: "pick a theme"; Claude picked Y2K: three really different
+  sub-worlds, one of the thinnest, and the opposite of Doodle; Gen Z chaos waits for the partner's input). Sub-themes:
+  **Holographic**, **Liquid chrome**, **Bubbly (Frutiger Aero)**. Own parts: **glossy jelly buttons and switch**,
+  **star and sparkle icons**, **stickers on cards** (stars, hearts, planets; more at Wild). Card styles: **Glass**
+  (see-through frosted panels), **Glossy** (solid with a shine), **Sticker** (white, thick outline, holo shadow).
+  Not chosen: chrome lettering on titles, an early-web sub-theme.

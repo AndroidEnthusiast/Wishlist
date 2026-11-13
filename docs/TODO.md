@@ -7,6 +7,10 @@ it**, grouped as below, with a recommendation. Add every new open item here the 
 Details of each item are in the doc named after it.
 
 ## Now
+- **Try Y2K (2.203) on the phone**: Holographic, Liquid chrome, Bubbly, light and dark; Glass/Glossy/Sticker cards;
+  Calm/Normal/Wild. Deep themes so far: Doodle, Y2K. Still to rebuild one by one: Retro vintage, Pop futurism, Grunge,
+  Flat, Bauhaus, Cottage-core, Japandi, Risograph, Synthwave, Anthropomorphic, Swiss, British Punk, Quiet, Gen Z chaos
+  (with the partner).
 - **Try Doodle (2.202) on the phone**: does scrolling feel smooth now (also in the other styles)? Its three
   sub-themes (Notebook, Sticky notes, Board), the options Decoration and Cards, light and dark. Then pick which style
   to rebuild next to the same standard (one or two per update).

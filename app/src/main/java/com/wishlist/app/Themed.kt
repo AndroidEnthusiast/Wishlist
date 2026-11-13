@@ -373,9 +373,11 @@ fun Checkbox(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifier: 
     val w = maxOf(look.edge, 2.dp)
     val tap = if (onCheckedChange != null) Modifier.minimumInteractiveComponentSize()
         .toggleable(checked, enabled = enabled, role = Role.Checkbox) { onCheckedChange(it) } else Modifier
-    // Doodle: drawn by hand (Doodle.kt).
-    if (look.design == "doodle") {
-        Box(modifier.then(tap).alphaIf(!enabled), contentAlignment = Alignment.Center) { Canvas(Modifier.size(22.dp)) { doodleCheckbox(look, checked) } }
+    // Doodle: drawn by hand (Doodle.kt); Y2K: a gel bubble (Y2k.kt).
+    if (look.design == "doodle" || look.design == "y2k") {
+        Box(modifier.then(tap).alphaIf(!enabled), contentAlignment = Alignment.Center) {
+            Canvas(Modifier.size(22.dp)) { if (look.design == "doodle") doodleCheckbox(look, checked) else y2kCheckbox(look, checked) }
+        }
         return
     }
     Box(modifier.then(tap).alphaIf(!enabled), contentAlignment = Alignment.Center) {
@@ -412,8 +414,10 @@ fun RadioButton(selected: Boolean, onClick: (() -> Unit)?, modifier: Modifier = 
     val dot = when (look.design) { "chaos" -> look.line; "quiet", "flat" -> cs.primary; else -> cs.primary }
     val tap = if (onClick != null) Modifier.minimumInteractiveComponentSize()
         .selectable(selected, enabled = enabled, role = Role.RadioButton, onClick = onClick) else Modifier
-    if (look.design == "doodle") {
-        Box(modifier.then(tap).alphaIf(!enabled), contentAlignment = Alignment.Center) { Canvas(Modifier.size(22.dp)) { doodleRadio(look, selected) } }
+    if (look.design == "doodle" || look.design == "y2k") {
+        Box(modifier.then(tap).alphaIf(!enabled), contentAlignment = Alignment.Center) {
+            Canvas(Modifier.size(22.dp)) { if (look.design == "doodle") doodleRadio(look, selected) else y2kRadio(look, selected) }
+        }
         return
     }
     Box(modifier.then(tap).alphaIf(!enabled), contentAlignment = Alignment.Center) {
@@ -592,6 +596,10 @@ fun HorizontalDivider(modifier: Modifier = Modifier, color: Color = Color.Unspec
     val cs = MaterialTheme.colorScheme
     if (look.design == "doodle") {
         Canvas(modifier.fillMaxWidth().height(6.dp)) { doodleDivider(look, look.line.copy(alpha = 0.6f)) }
+        return
+    }
+    if (look.design == "y2k") {
+        Canvas(modifier.fillMaxWidth().height(10.dp)) { y2kDivider(look) }
         return
     }
     M3HorizontalDivider(

@@ -5,7 +5,10 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
-- **Newest (13 November 2026, after 2.202), read first.** Owner found the themes thin and Doodle laggy. 2.202: speed fixed
+- **Newest (13 November 2026, after 2.203), read first.** Owner: "pick a theme", rebuild them one by one. 2.203: **Y2K
+  rebuilt** (Holographic, Liquid chrome, Bubbly; jelly parts, sparkle icons, stickers; Glass/Glossy/Sticker). Ask how
+  Doodle and Y2K feel; then pick the next (Gen Z chaos only with the partner's input).
+- **Before that (13 November 2026, after 2.202).** Owner found the themes thin and Doodle laggy. 2.202: speed fixed
   in every style (`PerformanceRulesTest`) and **Doodle rebuilt** as the model of a deep theme (3 sub-themes, everything
   hand-drawn, options Decoration and Cards). **Ask how Doodle feels and scrolls on the phone**; once the owner is happy,
   rebuild the other styles one or two per update to that standard, in the order the owner picks (`docs/decisions/look.md`).
@@ -21,7 +24,7 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
-### 13 November 2026: the themes (2.199–2.202)
+### 13 November 2026: the themes (2.199–2.203)
 Gen Z chaos saved as it was in `themes/gen-z-chaos/` (`tests/themes/check.sh`). Cyberpunk, Neobrutalism, Neumorphism
 removed (→ Quiet); Y2K, Retro vintage, Pop futurism, Grunge, Flat, Bauhaus added (magier.com 5, 6, 9, 13, 18, 20).
 Every part themed (`Themed.kt`); `LookTest` checks contrast everywhere; screenshots of every style were looked at
