@@ -1,0 +1,396 @@
+<title>Quiet, polished</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap">
+<style>
+/* Layout: a design plan for one app style: the rules first, then phone-sized mock-ups of every key screen, each
+   switchable between light and dark. The page itself is set in Quiet's own fonts. */
+:root {
+  --bg: #F2F2F7; --fg: #111114; --muted: #5E5E66; --line: #DCDCE2; --card: #FFFFFF; --accent: #4C4CD6;
+  --serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0B0B0D; --fg: #F2F2F5; --muted: #A2A2AA; --line: #2C2C30; --card: #18181B; --accent: #8F8FFF; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #0B0B0D; --fg: #F2F2F5; --muted: #A2A2AA; --line: #2C2C30; --card: #18181B; --accent: #8F8FFF; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 64px; }
+h1, h2, h3 { font-family: var(--serif); font-weight: 600; letter-spacing: -0.01em; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(30px, 6vw, 44px); line-height: 1.1; }
+h2 { font-size: 26px; line-height: 1.2; margin-top: 56px; }
+h3 { font-size: 19px; line-height: 1.25; }
+p { margin: 0; max-width: 66ch; }
+.lede { color: var(--muted); margin-top: 10px; font-size: 16px; }
+.intro { display: grid; gap: 14px; }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 20px; }
+.rule { background: var(--card); border-radius: 18px; padding: 16px 18px; display: grid; gap: 6px; }
+.rule b { font-weight: 600; }
+.rule span { color: var(--muted); font-size: 14px; }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; margin-top: 24px; padding-block: 10px;
+  background: var(--bg); display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.seg { display: inline-flex; background: var(--line); border-radius: 999px; padding: 3px; }
+.seg button { font: 600 14px var(--sans); color: var(--fg); background: transparent; border: 0; border-radius: 999px;
+  padding: 9px 18px; min-height: 40px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--card); box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+.seg button:focus-visible, .chip-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.bar small { color: var(--muted); }
+.tokens { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin-top: 16px; }
+.tok { background: var(--card); border-radius: 18px; padding: 16px 18px; min-width: 0; }
+.tok h3 { margin-bottom: 10px; }
+.sw { display: grid; grid-template-columns: 34px 1fr auto; gap: 4px 10px; align-items: center; font-size: 14px; }
+.sw i { width: 34px; height: 24px; border-radius: 8px; border: 1px solid var(--line); display: block; }
+.sw code { color: var(--muted); font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
+.scale { display: grid; gap: 8px; }
+.scale div { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; border-bottom: 1px solid var(--line); padding-bottom: 6px; min-width: 0; }
+.scale div:last-child { border-bottom: 0; }
+.scale em { font-style: normal; color: var(--muted); font-size: 12px; white-space: nowrap; }
+.screens { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr)); gap: 28px 24px; margin-top: 18px; }
+.screen { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.screen ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 14px; display: grid; gap: 4px; }
+.screen ul b { color: var(--fg); font-weight: 600; }
+
+/* ---------- The phone and Quiet's own tokens ---------- */
+.phone {
+  --page: #F2F2F7; --surface: #FFFFFF; --raised: #FFFFFF; --ink: #111114; --muted: #6C6C74; --hair: #E5E5EA;
+  --stage: #F4F4F7; --outline: #8E8E93; --acc: #4C4CD6; --on-acc: #FFFFFF; --acc-soft: #ECECFB; --acc-ink: #3A3AB8;
+  --drop: #1F8A4C; --drop-soft: #E3F4EA; --rise: #C4321F; --rise-soft: #FBE7E4; --festive: #A4161A; --festive-2: #7D0F12;
+  --float: 0 6px 24px rgba(17,17,20,.10), 0 1px 3px rgba(17,17,20,.06); --track: #E5E5EA; --scrim: rgba(17,17,20,.32);
+  width: 100%; max-width: 360px; height: 740px; border-radius: 34px; overflow: hidden; position: relative;
+  background: var(--page); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.4;
+  border: 1px solid var(--line); box-shadow: 0 10px 40px rgba(0,0,0,.08); display: flex; flex-direction: column;
+}
+.phone[data-mode="dark"] {
+  --page: #000000; --surface: #1C1C1E; --raised: #2C2C2E; --ink: #F5F5F7; --muted: #98989F; --hair: #2C2C2E;
+  --stage: #2A2A2D; --outline: #7C7C82; --acc: #8585FF; --on-acc: #0B0B1E; --acc-soft: #23234A; --acc-ink: #B4B4FF;
+  --drop: #4CD98A; --drop-soft: #12301F; --rise: #FF7B6E; --rise-soft: #3A1714; --festive: #8E1418; --festive-2: #5E0B0E;
+  --float: 0 0 0 1px #2C2C2E, 0 8px 28px rgba(0,0,0,.6); --track: #39393D; --scrim: rgba(0,0,0,.6);
+}
+.status { height: 28px; flex: none; display: flex; justify-content: space-between; align-items: center; padding: 0 22px;
+  font: 600 12px var(--sans); color: var(--ink); }
+.scroll { flex: 1; overflow: hidden; position: relative; }
+.top { display: flex; align-items: center; gap: 4px; padding: 6px 8px 6px 16px; min-height: 56px; }
+.top .t { flex: 1; min-width: 0; font: 600 20px/26px var(--serif); letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.top .big { font-size: 28px; line-height: 34px; }
+.ib { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; color: var(--ink); flex: none; }
+.ib svg, .ico { width: 24px; height: 24px; fill: currentColor; }
+.ib.m { color: var(--muted); }
+.av { width: 34px; height: 34px; border-radius: 50%; background: var(--acc); color: var(--on-acc); display: grid; place-items: center; font: 600 14px var(--sans); }
+.pad { padding: 0 16px; display: grid; gap: 12px; }
+.card { background: var(--surface); border-radius: 20px; }
+.sec { display: flex; align-items: center; gap: 2px; font: 600 20px/26px var(--serif); margin: 14px 0 0; }
+.sec svg { width: 22px; height: 22px; fill: var(--muted); }
+.meta { font-size: 13px; line-height: 18px; color: var(--muted); }
+.name { font: 500 16px/21px var(--sans); color: var(--ink); }
+.price { font: 700 17px/22px var(--sans); font-variant-numeric: tabular-nums; color: var(--ink); }
+.old { font: 400 13px var(--sans); color: var(--muted); text-decoration: line-through; margin-left: 6px; font-variant-numeric: tabular-nums; }
+.badge { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 999px; font: 600 12px var(--sans); font-variant-numeric: tabular-nums; }
+.badge.drop { background: var(--drop-soft); color: var(--drop); }
+.badge.rise { background: var(--rise-soft); color: var(--rise); }
+.badge.n { background: var(--stage); color: var(--muted); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 48px; padding: 0 22px; border-radius: 999px;
+  font: 600 15px var(--sans); background: var(--acc); color: var(--on-acc); white-space: nowrap; }
+.btn.s { height: 40px; padding: 0 16px; font-size: 14px; }
+.btn.tonal { background: var(--acc-soft); color: var(--acc-ink); }
+.btn.text { background: transparent; color: var(--acc-ink); padding: 0 12px; }
+.btn.white { background: #FFFFFF; color: var(--festive); }
+.btn.wide { width: 100%; }
+.seg2 { display: flex; background: var(--track); border-radius: 999px; padding: 3px; }
+.seg2 span { flex: 1; text-align: center; padding: 8px 0; border-radius: 999px; font: 600 14px var(--sans); color: var(--muted); }
+.seg2 span.on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.phone[data-mode="dark"] .seg2 span.on { background: #48484C; box-shadow: none; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 999px; font: 500 14px var(--sans);
+  background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1px var(--hair); white-space: nowrap; }
+.chip.on { background: var(--acc-soft); color: var(--acc-ink); box-shadow: none; font-weight: 600; }
+.chip svg { width: 18px; height: 18px; fill: currentColor; }
+.stage { background: var(--stage); display: grid; place-items: center; position: relative; overflow: hidden; }
+.stage svg.prod { width: 78%; height: 78%; }
+.star { position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--surface) 88%, transparent); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.star svg { width: 18px; height: 18px; fill: var(--muted); }
+.star.on svg { fill: var(--acc); }
+.acts { display: flex; justify-content: flex-end; margin-right: -10px; }
+.acts .ib { width: 40px; height: 40px; color: var(--muted); opacity: .8; }
+.acts .ib svg { width: 20px; height: 20px; }
+.row { display: grid; grid-template-columns: 116px 1fr; overflow: hidden; min-height: 132px; }
+.row .stage { border-radius: 0; }
+.row .txt { padding: 12px 6px 4px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.row .txt .acts { margin-top: auto; }
+.clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tile { display: flex; flex-direction: column; overflow: hidden; }
+.tile .stage { aspect-ratio: 1; }
+.tile .acts { margin-top: auto; }
+.tile .txt { padding: 10px 12px 2px; display: grid; gap: 1px; min-width: 0; }
+.tile .acts .ib { width: 36px; height: 36px; }
+.large { overflow: hidden; }
+.large .stage { aspect-ratio: 4 / 3; }
+.large .txt { padding: 14px 16px 4px; display: grid; gap: 2px; }
+.sel { box-shadow: inset 0 0 0 2px var(--acc); background: color-mix(in srgb, var(--acc-soft) 70%, var(--surface)); }
+.tick { position: absolute; top: 8px; left: 8px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--surface) 88%, transparent); box-shadow: inset 0 0 0 2px var(--outline); }
+.tick.on { background: var(--acc); box-shadow: none; }
+.tick.on svg { width: 16px; height: 16px; fill: var(--on-acc); }
+.bottom { position: absolute; left: 12px; right: 12px; bottom: 12px; height: 64px; border-radius: 32px; background: var(--raised);
+  box-shadow: var(--float); display: flex; align-items: center; justify-content: space-around; }
+.bottom .ib { color: var(--muted); }
+.bottom .ib.on { color: var(--ink); }
+.plus { width: 52px; height: 52px; border-radius: 50%; background: var(--acc); display: grid; place-items: center; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+.plus svg { width: 26px; height: 26px; fill: var(--on-acc); }
+.dot { width: 4px; height: 4px; border-radius: 50%; background: var(--ink); margin: 2px auto 0; }
+.stats { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; }
+.stats div { display: grid; gap: 0; padding: 4px 0; }
+.stats div + div { box-shadow: inset 1px 0 0 var(--hair); }
+.stats b { font: 700 17px/22px var(--sans); font-variant-numeric: tabular-nums; }
+.stats span { font-size: 12px; color: var(--muted); }
+.field { display: grid; gap: 6px; }
+.field label { font: 600 13px var(--sans); color: var(--ink); }
+.field .in { height: 50px; border-radius: 14px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--outline); display: flex; align-items: center; padding: 0 14px; color: var(--ink); gap: 8px; }
+.field .in.focus { box-shadow: inset 0 0 0 2px var(--acc); }
+.field .in.ph { color: var(--muted); }
+.field .help { font-size: 12px; color: var(--muted); }
+.field .in svg { width: 20px; height: 20px; fill: var(--muted); margin-left: auto; }
+.list { display: grid; }
+.li { display: flex; align-items: center; gap: 14px; min-height: 52px; padding: 0 16px; }
+.li + .li { box-shadow: inset 0 1px 0 var(--hair); }
+.li .ico { fill: var(--muted); width: 22px; height: 22px; flex: none; }
+.li .grow { flex: 1; min-width: 0; }
+.li .sub { font-size: 13px; color: var(--muted); }
+.sw2 { width: 50px; height: 30px; border-radius: 999px; background: var(--track); position: relative; flex: none; }
+.sw2::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+.sw2.on { background: var(--acc); }
+.sw2.on::after { left: 23px; }
+.scrim { position: absolute; inset: 0; background: var(--scrim); }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--raised); border-radius: 28px 28px 0 0; padding: 8px 0 18px; box-shadow: var(--float); }
+.handle { width: 36px; height: 5px; border-radius: 3px; background: var(--track); margin: 0 auto 8px; }
+.bubble { max-width: 76%; padding: 9px 13px; border-radius: 20px; font-size: 15px; line-height: 20px; }
+.bubble.me { margin-left: auto; background: var(--acc); color: var(--on-acc); border-bottom-right-radius: 6px; }
+.bubble.them { background: var(--surface); color: var(--ink); border-bottom-left-radius: 6px; }
+.time { font-size: 11.5px; color: var(--muted); }
+.daypill { align-self: center; font: 600 12px var(--sans); color: var(--muted); background: var(--surface); border-radius: 999px; padding: 4px 10px; }
+.empty { display: grid; justify-items: center; text-align: center; gap: 10px; padding: 0 28px; }
+.halo { width: 88px; height: 88px; border-radius: 50%; background: var(--acc-soft); display: grid; place-items: center; }
+.halo svg { width: 40px; height: 40px; fill: var(--acc-ink); }
+.festive { background: linear-gradient(var(--festive), var(--festive)); color: #FFFFFF; position: relative; overflow: hidden; }
+.snack { position: absolute; left: 16px; right: 16px; bottom: 88px; background: var(--ink); color: var(--page); border-radius: 14px; padding: 0 6px 0 16px; height: 50px; display: flex; align-items: center; justify-content: space-between; font-size: 15px; box-shadow: 0 6px 20px rgba(0,0,0,.2); }
+.snack b { color: color-mix(in srgb, var(--acc) 55%, var(--page)); font-weight: 600; padding: 0 12px; }
+.phone[data-mode="dark"] .snack b { color: #3A3AB8; }
+</style>
+
+<div class="wrap">
+  <div class="intro">
+    <h1>Quiet, polished</h1>
+    <p class="lede">The design plan for Quiet, step 3 of how design styles are made: the rules, then a mock-up of every key screen. Switch any screen between light and dark with the buttons below. Nothing is built until you approve it.</p>
+  </div>
+
+  <div class="rules">
+    <div class="rule"><b>The wish leads</b><span>Photo, name and price are the first things you see. Buttons step back: smaller, lighter, still 48 dp to tap.</span></div>
+    <div class="rule"><b>One colour, used sparingly</b><span>Your accent marks the one main action and what is chosen. Everything else is ink and greys. No more black buttons.</span></div>
+    <div class="rule"><b>Type makes the order</b><span>Fraunces for titles, Figtree for the rest, five sizes with clear steps. Nothing smaller than 12.</span></div>
+    <div class="rule"><b>Calm surfaces</b><span>White cards on a soft grey page, dark grey on black. One photo surface, no frame in a frame. Shadows only on things that float.</span></div>
+    <div class="rule"><b>Precise spacing</b><span>16 between the screen edge and cards, 12 between cards, 28 between sections. Corners: 20 cards, 14 fields, round buttons.</span></div>
+    <div class="rule"><b>Light and dark, both designed</b><span>Dark is true black with lifted greys, softer accent and its own price colours; both measured for contrast.</span></div>
+  </div>
+
+  <div class="bar" role="group" aria-label="Mock-up mode">
+    <div class="seg"><button type="button" id="m-light" aria-pressed="true">Light</button><button type="button" id="m-dark" aria-pressed="false">Dark</button></div>
+    <small>Changes every mock-up on this page. The accent is Indigo, the default.</small>
+  </div>
+
+  <h2>The rules in numbers</h2>
+  <div class="tokens">
+    <div class="tok"><h3>Colours, light</h3><div class="sw" id="sw-light"></div></div>
+    <div class="tok"><h3>Colours, dark</h3><div class="sw" id="sw-dark"></div></div>
+    <div class="tok"><h3>Type</h3>
+      <div class="scale">
+        <div><span style="font:600 28px/34px var(--serif)">Wishlist</span><em>Large title · Fraunces 28</em></div>
+        <div><span style="font:600 20px/26px var(--serif)">Your wishlists</span><em>Title · Fraunces 20</em></div>
+        <div><span style="font:700 17px var(--sans)">€199.00</span><em>Price · Figtree Bold 17</em></div>
+        <div><span style="font:500 16px var(--sans)">Wireless headphones</span><em>Name · Figtree 16</em></div>
+        <div><span style="font:400 15px var(--sans)">Text of a message or note</span><em>Text · Figtree 15</em></div>
+        <div><span style="font:400 13px var(--sans);color:var(--muted)">coolblue.nl · Tech</span><em>Detail · Figtree 13</em></div>
+      </div>
+    </div>
+  </div>
+
+  <h2>The screens</h2>
+  <div class="screens" id="screens"></div>
+</div>
+
+<script>
+(function () {
+  const I = {
+    bell: 'M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6v-5a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-1.7 1.7A1 1 0 0 0 4 19.4h16a1 1 0 0 0 .7-1.7L19 16z',
+    back: 'M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z',
+    search: 'M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16a6.47 6.47 0 0 0 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z',
+    gear: 'M19.14 12.94a7.6 7.6 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7 7 0 0 0-1.63-.94l-.36-2.54A.48.48 0 0 0 13.9 2h-3.84a.48.48 0 0 0-.48.41l-.36 2.54a7.4 7.4 0 0 0-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.68 8.47a.5.5 0 0 0 .12.64l2.03 1.58a7.6 7.6 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.12.22.37.29.6.22l2.39-.96c.5.38 1.04.7 1.63.94l.36 2.54c.05.24.25.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54a7 7 0 0 0 1.63-.94l2.39.96c.23.08.48 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z',
+    share: 'M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11A2.99 2.99 0 0 0 21 5a3 3 0 1 0-5.91.7L8.04 9.81A3 3 0 1 0 6 15c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65A2.92 2.92 0 1 0 18 16.08z',
+    more: 'M12 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm0 6a2 2 0 1 0 0 4 2 2 0 0 0 0-4z',
+    bin: 'M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z',
+    star: 'M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z',
+    staro: 'M22 9.24l-7.19-.62L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.63-7.03L22 9.24zM12 15.4l-3.76 2.27 1-4.28-3.32-2.88 4.38-.38L12 6.1l1.71 4.04 4.38.38-3.32 2.88 1 4.28L12 15.4z',
+    home: 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',
+    chat: 'M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z',
+    plus: 'M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z',
+    bag: 'M18 6h-2a4 4 0 0 0-8 0H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2zm-6-2a2 2 0 0 1 2 2h-4a2 2 0 0 1 2-2zm6 16H6V8h2v2h2V8h4v2h2V8h2v12z',
+    person: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z',
+    chev: 'M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z',
+    lock: 'M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0v2z',
+    close: 'M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z',
+    check: 'M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z',
+    edit: 'M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z',
+    swap: 'M6.99 11 3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z',
+    eye: 'M12 7a5 5 0 0 1 5 5c0 .65-.13 1.26-.36 1.83l2.92 2.92A11.8 11.8 0 0 0 22.99 12 11.83 11.83 0 0 0 12 4.5c-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46A11.8 11.8 0 0 0 1 12a11.83 11.83 0 0 0 15.38 6.78l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55A2.9 2.9 0 0 0 9 12a3 3 0 0 0 3 3c.22 0 .44-.03.65-.08l1.55 1.55A5 5 0 0 1 7.53 9.8zm4.31-.78 3.15 3.15.02-.16a3 3 0 0 0-3-3l-.17.01z',
+    owned: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z',
+    chart: 'M3.5 18.49 9.5 12.48l4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z',
+    send: 'M2.01 21 23 12 2.01 3 2 10l15 2-15 2z',
+    cam: 'M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4zM9 2 7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9zm3 15a5 5 0 1 1 0-10 5 5 0 0 1 0 10z',
+    link: 'M3.9 12A3.1 3.1 0 0 1 7 8.9h4V7H7a5 5 0 0 0 0 10h4v-1.9H7A3.1 3.1 0 0 1 3.9 12zM8 13h8v-2H8v2zm9-6h-4v1.9h4a3.1 3.1 0 0 1 0 6.2h-4V17h4a5 5 0 0 0 0-10z',
+    down: 'M7 10l5 5 5-5z',
+    sort: 'M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z',
+    view: 'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z',
+    gift: 'M20 6h-2.18A3 3 0 0 0 12 3.54 3 3 0 0 0 6.18 6H4a2 2 0 0 0-2 2v2a1 1 0 0 0 1 1h1v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-9h1a1 1 0 0 0 1-1V8a2 2 0 0 0-2-2zm-5-1a1 1 0 1 1 0 2h-2a1 1 0 0 1 1-1 1 1 0 0 1 1-1zM9 5a1 1 0 0 1 1 1 1 1 0 0 1 1 1H9a1 1 0 1 1 0-2zm-5 3h7v1H4V8zm2 3h5v9H6v-9zm12 9h-5v-9h5v9zm2-11h-7V8h7v1z',
+    friends: 'M16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05A4.22 4.22 0 0 1 17 16.5V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z'
+  };
+  const ic = (n, cls) => `<svg viewBox="0 0 24 24" ${cls ? `class="${cls}"` : ''} aria-hidden="true"><path d="${I[n]}"/></svg>`;
+  const ib = (n, label, cls = '') => `<span class="ib ${cls}" role="img" aria-label="${label}">${ic(n)}</span>`;
+
+  // Our own simple drawings stand in for shop photos (no pictures from the internet).
+  const P = {
+    headphones: `<svg class="prod" viewBox="0 0 100 100"><path d="M22 58V48a28 28 0 0 1 56 0v10" fill="none" stroke="#2B2D33" stroke-width="7" stroke-linecap="round"/><rect x="14" y="54" width="18" height="28" rx="8" fill="#3A3D45"/><rect x="68" y="54" width="18" height="28" rx="8" fill="#3A3D45"/><rect x="18" y="58" width="6" height="20" rx="3" fill="#5A5E69"/></svg>`,
+    teapot: `<svg class="prod" viewBox="0 0 100 100"><ellipse cx="50" cy="60" rx="28" ry="22" fill="#E4EEF4"/><path d="M78 56c10-2 14-12 12-18" fill="none" stroke="#C9D8E2" stroke-width="5" stroke-linecap="round"/><path d="M22 58c-8-2-10 8-6 12" fill="none" stroke="#C9D8E2" stroke-width="5" stroke-linecap="round"/><ellipse cx="50" cy="40" rx="16" ry="5" fill="#C9D8E2"/><circle cx="50" cy="33" r="4" fill="#9FB6C6"/><path d="M28 62c10 6 34 6 44 0" stroke="#7FA4BE" stroke-width="3" fill="none"/></svg>`,
+    jacket: `<svg class="prod" viewBox="0 0 100 100"><path d="M36 16h28l18 14-6 16-8-4v42H32V42l-8 4-6-16z" fill="#2F6B3F"/><path d="M50 18v66" stroke="#24532F" stroke-width="2"/><path d="M40 16a10 8 0 0 0 20 0" fill="#24532F"/><rect x="36" y="56" width="9" height="2" fill="#24532F"/><rect x="55" y="56" width="9" height="2" fill="#24532F"/></svg>`,
+    book: `<svg class="prod" viewBox="0 0 100 100"><rect x="26" y="14" width="48" height="70" rx="3" fill="#7A2E8E"/><rect x="26" y="14" width="7" height="70" fill="#5E2170"/><rect x="40" y="28" width="26" height="3" rx="1.5" fill="#F0D9F5"/><rect x="40" y="35" width="20" height="3" rx="1.5" fill="#F0D9F5"/><rect x="72" y="16" width="4" height="66" fill="#F3EFE6"/></svg>`,
+    none: `<svg class="prod" viewBox="0 0 24 24" style="width:34%;height:34%"><path d="${I.gift}" fill="var(--muted)"/></svg>`
+  };
+  const W = [
+    { n: 'Wireless headphones', m: 'coolblue.nl · Tech', p: '€199.00', o: '€249.00', b: '−20%', img: 'headphones', star: true },
+    { n: 'Ceramic teapot', m: 'example.com · Home', p: '€34.95', img: 'teapot', white: true },
+    { n: 'Rain jacket', m: 'zalando.nl · Fashion', p: '€89.00', b: '+5%', rise: true, img: 'jacket' },
+    { n: 'A very long book title that does not fit on one line at all', m: 'bol.com · Books', p: '€22.50', img: 'book' },
+    { n: 'Board game', m: 'No link · Home', p: 'No price', img: 'none', noprice: true }
+  ];
+  const stage = (w, extra = '') => `<div class="stage" style="${w.white ? 'background:#FFFFFF' : ''}">${P[w.img]}<span class="star ${w.star ? 'on' : ''}" role="img" aria-label="${w.star ? 'Most wanted' : 'Not most wanted'}">${ic(w.star ? 'star' : 'staro')}</span>${extra}</div>`;
+  const priceLine = w => `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="price" style="${w.noprice ? 'color:var(--muted);font-weight:600;font-size:15px' : ''}">${w.p}</span>${w.o ? `<span class="old">${w.o}</span>` : ''}${w.b ? `<span class="badge ${w.rise ? 'rise' : 'drop'}">${w.b}</span>` : ''}</div>`;
+  const acts = `<div class="acts">${ib('more', 'More', '')}${ib('share', 'Share', '')}${ib('bin', 'Delete', '')}</div>`;
+  const rowCard = (w, sel) => `<div class="card row ${sel === 1 ? 'sel' : ''}">${stage(w, sel ? `<span class="tick ${sel === 1 ? 'on' : ''}">${sel === 1 ? ic('check') : ''}</span>` : '')}<div class="txt"><span class="meta">${w.m}</span><span class="name clamp">${w.n}</span>${priceLine(w)}${acts}</div></div>`;
+  const tileCard = w => `<div class="card tile">${stage(w)}<div class="txt"><span class="name clamp" style="font-size:15px;line-height:20px">${w.n}</span>${priceLine(w)}</div><div class="acts" style="padding:0 12px 4px 0">${ib('more', 'More')}${ib('share', 'Share')}${ib('bin', 'Delete')}</div></div>`;
+  const largeCard = w => `<div class="card large">${stage(w)}<div class="txt"><span class="meta">${w.m}</span><span class="name">${w.n}</span>${priceLine(w)}</div><div class="acts" style="padding:0 16px 6px 0">${ib('more', 'More')}${ib('share', 'Share')}${ib('bin', 'Delete')}</div></div>`;
+  const status = `<div class="status"><span>9:41</span><span>●●● 100%</span></div>`;
+  const bottom = on => `<div class="bottom">${['home', 'chat'].map(n => `<div>${ib(n, n === 'home' ? 'Home' : 'Messages', on === n ? 'on' : '')}</div>`).join('')}<span class="plus" role="img" aria-label="Add wish">${ic('plus')}</span>${['bag', 'person'].map(n => `<div>${ib(n, n === 'bag' ? 'My shops' : 'Profile', on === n ? 'on' : '')}</div>`).join('')}</div>`;
+  const listHead = view => `<div class="top">${ib('back', 'Back')}<span class="t">My wishlist</span>${ib('search', 'Search')}${ib('gear', 'List settings')}${ib('share', 'Share list')}</div>
+    <div class="pad"><div class="card stats" style="grid-template-columns:1fr 1fr;padding:10px 0"><div><b>5</b><span>Wishes</span></div><div><b>€345.45</b><span>Total value</span></div></div>
+    <div style="display:flex;align-items:center;gap:8px"><span class="chip">All ${ic('down')}</span><span class="chip">${ic('sort')} Newest</span><span style="margin-left:auto">${ib('view', 'View: ' + view, 'm')}</span></div></div>`;
+
+  const S = [];
+  S.push({ t: 'Home', notes: ['<b>Recovery-key card</b>: a calm white card with a lock in a soft circle; one tonal button, “Later” as text.', '<b>Profile</b>: your name in Fraunces, the numbers in three even columns; “Add friends” a proper button.', '<b>Your wishlists</b>: list tiles without shadows; “Create list” the same size and height, no dashed box.', '<b>Secret Santa</b>: still festive red (your choice), one solid colour, a drawn gift instead of the emoji and snow.'], html: () => `${status}<div class="scroll">
+    <div class="top"><span class="t big">Wishlist</span>${ib('bell', 'Notifications')}<span class="ib"><span class="av">S</span></span></div>
+    <div class="pad">
+      <div class="card" style="padding:14px 16px;display:grid;grid-template-columns:40px 1fr;gap:12px">
+        <span class="halo" style="width:40px;height:40px"><svg viewBox="0 0 24 24" style="width:20px;height:20px"><path d="${I.lock}"/></svg></span>
+        <div style="display:grid;gap:4px"><b style="font-weight:600">Keep your wishlists safe</b><span class="meta" style="font-size:14px;line-height:19px">Save your recovery key once; everything comes back on a new phone.</span>
+        <div style="display:flex;gap:4px;margin-top:6px"><span class="btn s tonal">Save your key</span><span class="btn s text">Later</span></div></div>
+      </div>
+      <div class="card" style="padding:16px;display:grid;gap:14px">
+        <div style="display:flex;align-items:center;gap:14px"><span class="av" style="width:56px;height:56px;font-size:22px">S</span><div style="flex:1;min-width:0"><div style="font:600 22px/28px var(--serif)">Sam</div><div class="meta">2 friends</div></div><span class="btn s tonal">${ic('plus', 'ico')} Add friends</span></div>
+        <div class="stats"><div><b>2</b><span>Lists</span></div><div><b>5</b><span>Wishes</span></div><div><b>€345.45</b><span>Total value</span></div></div>
+      </div>
+      <div class="sec">Your wishlists ${ic('chev')}</div>
+      <div style="display:grid;grid-template-columns:140px 140px;gap:16px">
+        <div style="display:grid;gap:6px"><div style="aspect-ratio:1;border-radius:20px;overflow:hidden;display:grid;grid-template-columns:1.6fr 1fr;grid-template-rows:1fr 1fr;gap:2px;background:var(--surface)">
+          <div class="stage" style="grid-row:1/3">${P.headphones}</div><div class="stage" style="background:#FFFFFF">${P.teapot}</div><div class="stage">${P.jacket}</div></div>
+          <div style="display:flex;align-items:start"><div style="flex:1;min-width:0"><div style="font:600 15px var(--sans)">My wishlist</div><div class="meta">5 wishes</div></div>${ib('more', 'More', 'm')}</div></div>
+        <div style="display:grid;gap:6px"><div class="card" style="aspect-ratio:1;display:grid;place-items:center;border-radius:20px"><span class="halo" style="width:56px;height:56px"><svg viewBox="0 0 24 24" style="width:28px;height:28px"><path d="${I.plus}"/></svg></span></div>
+          <div style="font:600 15px var(--sans);color:var(--acc-ink)">Create list</div></div>
+      </div>
+      <div class="card festive" style="padding:16px;display:grid;grid-template-columns:44px 1fr 28px;gap:12px;align-items:start">
+        <svg viewBox="0 0 24 24" style="width:40px;height:40px;fill:#FFFFFF;opacity:.95"><path d="${I.gift}"/></svg>
+        <div style="display:grid;gap:4px"><b style="font:600 18px/23px var(--serif)">Secret Santa this year?</b><span style="font-size:14px;opacity:.9">Draw names with family or friends.</span><span class="btn s white" style="justify-self:start;margin-top:8px">Start a gift exchange</span></div>
+        <svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:#FFFFFF;opacity:.85" role="img" aria-label="Close"><path d="${I.close}"/></svg>
+      </div>
+    </div></div>${bottom('home')}` });
+  S.push({ t: 'A list, rows', notes: ['<b>One photo surface</b>: the photo fills the left of the card on a quiet grey, no tinted square with its own shadow.', '<b>Name 16, price 17 bold</b>, with the old price and a green or red badge when it changed.', '<b>⋮, share and bin stay</b> (your choice), now lighter and smaller so they don’t compete.', '<b>The star</b>: a small white disc; filled in your colour when it is a top wish.'], html: () => `${status}<div class="scroll">${listHead('Rows')}<div class="pad" style="margin-top:12px">${W.slice(0, 4).map(w => rowCard(w)).join('')}</div></div>${bottom('')}` });
+  S.push({ t: 'A list, two per row', notes: ['<b>Square photo on top</b>, name in two lines, price under it.', '<b>The same three buttons</b> in a quiet row at the bottom right.', 'A white product photo sits on white: the teapot shows how a shop photo blends in.'], html: () => `${status}<div class="scroll">${listHead('Two per row')}<div class="pad" style="margin-top:12px"><div class="grid2">${W.slice(0, 4).map(tileCard).join('')}</div></div></div>${bottom('')}` });
+  S.push({ t: 'A list, large cards', notes: ['<b>A wide photo</b> with room to breathe, then shop and category, the name in full and the price.', 'Used for lists with few, special wishes.'], html: () => `${status}<div class="scroll">${listHead('Large cards')}<div class="pad" style="margin-top:12px">${W.slice(0, 2).map(largeCard).join('')}</div></div>${bottom('')}` });
+  S.push({ t: 'Selecting', notes: ['<b>Chosen cards</b> get a line and a light wash in your colour, and a filled tick.', '<b>The others</b> show an empty circle, so it is clear you can tap more.', 'The top bar says how many and offers Move to… and Delete.'], html: () => `${status}<div class="scroll"><div class="top">${ib('close', 'Stop selecting')}<span class="t">2 selected</span><span class="btn s" style="margin-right:4px">Move to…</span>${ib('bin', 'Delete')}</div>
+    <div class="pad" style="margin-top:4px">${W.slice(0, 4).map((w, i) => rowCard(w, i === 0 || i === 2 ? 1 : 2)).join('')}</div></div>${bottom('')}` });
+  S.push({ t: 'A wish’s sheet', notes: ['<b>A header with the photo</b>, name and price, so you know which wish you are acting on.', '<b>Switches</b> for Private and I have it (on or off), the same as in App settings, instead of tick boxes.', 'Icons quiet grey, words in ink; Delete at the end in red.'], html: () => `${status}<div class="scroll">${listHead('Rows')}<div class="pad" style="margin-top:12px">${W.slice(0, 2).map(w => rowCard(w)).join('')}</div>
+    <div class="scrim"></div><div class="sheet"><div class="handle"></div>
+      <div style="display:flex;gap:14px;align-items:center;padding:6px 16px 12px"><div class="stage" style="width:56px;height:56px;border-radius:14px">${P.headphones}</div><div style="min-width:0"><div class="name">Wireless headphones</div><div style="display:flex;gap:8px;align-items:center"><span class="price" style="font-size:15px">€199.00</span><span class="badge drop">−20%</span></div></div></div>
+      <div class="list" style="box-shadow:inset 0 1px 0 var(--hair)">
+        ${[['edit', 'Edit'], ['share', 'Share'], ['swap', 'Move to…'], ['chart', 'Price history']].map(([i, t]) => `<div class="li">${ic(i, 'ico')}<span class="grow">${t}</span></div>`).join('')}
+        <div class="li">${ic('eye', 'ico')}<span class="grow">Private<div class="sub">Only on this phone</div></span><span class="sw2"></span></div>
+        <div class="li">${ic('owned', 'ico')}<span class="grow">I have it</span><span class="sw2"></span></div>
+        <div class="li" style="color:var(--rise)"><svg viewBox="0 0 24 24" class="ico" style="fill:var(--rise)"><path d="${I.bin}"/></svg><span class="grow">Delete</span></div>
+      </div></div></div>` });
+  S.push({ t: 'Add a wish', notes: ['<b>Labels above the fields</b>, in ink: calmer than labels floating inside the line.', '<b>Exactly this / Similar is fine</b> becomes two clear chips; today you can’t see which one is chosen.', '<b>Save</b> a full-width button at the bottom; Cancel is the ✕ at the top.', 'Section titles in Fraunces instead of small coloured words.'], html: () => `${status}<div class="scroll"><div class="top">${ib('close', 'Cancel')}<span class="t">Add a wish</span></div>
+    <div class="pad" style="gap:16px;padding-top:4px">
+      <div class="field"><label>Product link</label><div class="in focus ph">Paste a link from a shop ${ic('link')}</div><span class="help">Or share from a shop’s app straight to Wishlist.</span></div>
+      <div style="display:grid;grid-template-columns:96px 1fr;gap:12px"><div class="card" style="aspect-ratio:1;display:grid;place-items:center;border-radius:14px;box-shadow:inset 0 0 0 1px var(--hair)"><div style="display:grid;justify-items:center;gap:2px;color:var(--acc-ink);font:600 13px var(--sans)">${ic('cam')}<span>Photo</span></div></div>
+        <div style="display:grid;gap:10px"><div class="field"><label>Name</label><div class="in">Wireless headphones</div></div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="field"><label>Price</label><div class="in">€199.00</div></div><div class="field"><label>Save to</label><div class="in">My wishlist ${ic('down')}</div></div></div>
+      <div class="sec" style="margin:4px 0 -4px;font-size:18px">Details</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><span class="chip on">${ic('check')} Exactly this</span><span class="chip">Similar is fine</span></div>
+      <div class="field"><label>Category</label><div class="in">Tech ${ic('down')}</div></div>
+    </div>
+    <div style="position:absolute;left:0;right:0;bottom:0;padding:12px 16px 18px;background:var(--page)"><span class="btn wide">Save wish</span></div></div>` });
+  S.push({ t: 'A chat', notes: ['<b>Your messages</b> in your colour, theirs in white (dark: grey), round with one smaller corner.', '<b>The day</b> as a small pill; times small and grey under a group of messages.', '<b>The message field</b> a round white field; the send button fills with your colour when there is text.'], html: () => `${status}<div class="scroll" style="display:flex;flex-direction:column"><div class="top">${ib('back', 'Back')}<span class="av" style="width:36px;height:36px;margin-right:8px;background:#E07A5F;color:#FFFFFF">M</span><span class="t" style="font-size:18px">Mila</span>${ib('more', 'More')}</div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:8px 14px">
+      <span class="daypill">Today</span>
+      <div class="bubble them" style="margin-top:8px">Have you seen my new list? I added the headphones 🎧</div>
+      <span class="time" style="margin:2px 0 8px 6px">10:12</span>
+      <div class="bubble me">Yes! They just dropped 20%</div>
+      <div class="bubble me">Shall I reserve them for your birthday?</div>
+      <span class="time" style="margin:2px 6px 8px auto">10:14 · Read</span>
+      <div class="bubble them">Only if you promise not to tell me 😄</div>
+      <span class="time" style="margin:2px 0 0 6px">10:15</span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;padding:8px 12px 16px">${ib('cam', 'Send a photo', 'm')}<div style="flex:1;height:44px;border-radius:22px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--hair);display:flex;align-items:center;padding:0 16px;color:var(--ink)">Deal 🤝</div><span class="plus" style="width:44px;height:44px;box-shadow:none" role="img" aria-label="Send"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--on-acc)"><path d="${I.send}"/></svg></span></div></div>` });
+  S.push({ t: 'Messages, empty', notes: ['<b>Chats / Friends</b> becomes a calm switch (grey track, white choice) instead of a black button.', '<b>Empty pages</b>: a drawn icon in a soft circle, a title, one line and one button in your colour.'], html: () => `${status}<div class="scroll"><div class="top"><span class="t big">Messages</span>${ib('bell', 'Notifications')}<span class="ib"><span class="av">S</span></span></div>
+    <div class="pad"><div class="seg2"><span class="on">Chats</span><span>Friends</span></div></div>
+    <div class="empty" style="margin-top:110px"><span class="halo">${ic('chat')}</span><div style="font:600 20px/26px var(--serif);margin-top:6px">No chats yet</div><p class="meta" style="font-size:15px;line-height:21px">Add a friend and you can talk about gifts here, without the surprise getting out.</p><span class="btn" style="margin-top:8px">Add friends</span></div></div>${bottom('chat')}` });
+  S.push({ t: 'App settings', notes: ['<b>Grouped white blocks</b> with a small title above each, rows of the same height, hairlines between rows.', '<b>Switches</b> in your colour when on; the chosen colour and font shown on the right.', 'The message bar (Undo) in ink with its action in your colour.'], html: () => `${status}<div class="scroll"><div class="top">${ib('back', 'Back')}<span class="t">App settings</span></div>
+    <div class="pad" style="gap:8px">
+      <div class="meta" style="font-weight:600;padding:6px 4px 0">Look</div>
+      <div class="card list"><div class="li"><span class="grow">Design style</span><span class="meta" style="font-size:15px">Quiet</span>${ic('chev', 'ico')}</div><div class="li"><span class="grow">Colour</span><span style="width:20px;height:20px;border-radius:50%;background:var(--acc)"></span>${ic('chev', 'ico')}</div><div class="li"><span class="grow">Dark mode</span><span class="sw2 on"></span></div></div>
+      <div class="meta" style="font-weight:600;padding:10px 4px 0">Prices</div>
+      <div class="card list"><div class="li"><span class="grow">Price drops<div class="sub">A notification when a wish gets cheaper</div></span><span class="sw2 on"></span></div><div class="li"><span class="grow">Price rises</span><span class="sw2"></span></div><div class="li"><span class="grow">Check every</span><span class="meta" style="font-size:15px">6 hours</span>${ic('chev', 'ico')}</div></div>
+      <div class="meta" style="font-weight:600;padding:10px 4px 0">About</div>
+      <div class="card list"><div class="li"><span class="grow">Licences</span>${ic('chev', 'ico')}</div></div>
+    </div>
+    <div class="snack"><span>Wish deleted</span><b>Undo</b></div></div>` });
+  S.push({ t: 'Parts', notes: ['<b>Buttons</b>: filled (the one main action), tonal (second), text (third). Round, 48 tall.', '<b>Chips</b>, <b>switches</b>, <b>tick boxes</b>, <b>fields</b> (with help and error), <b>badges</b>: all from the same few colours.', 'A dialog: Fraunces title, short text, buttons on the right.'], html: () => `${status}<div class="scroll"><div class="pad" style="gap:14px;padding-top:10px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><span class="btn">Save</span><span class="btn tonal">Later</span><span class="btn text">Undo</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><span class="chip on">${ic('check')} Birthday</span><span class="chip">Christmas</span><span class="chip">Wedding</span></div>
+      <div style="display:flex;gap:14px;align-items:center"><span class="sw2 on"></span><span class="sw2"></span>
+        <span style="width:22px;height:22px;border-radius:7px;background:var(--acc);display:grid;place-items:center"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--on-acc)"><path d="${I.check}"/></svg></span>
+        <span style="width:22px;height:22px;border-radius:7px;box-shadow:inset 0 0 0 2px var(--outline)"></span>
+        <span style="width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--acc);display:grid;place-items:center"><span style="width:10px;height:10px;border-radius:50%;background:var(--acc)"></span></span>
+        <span style="width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--outline)"></span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><span class="badge drop">−20%</span><span class="badge rise">+5%</span><span class="badge n">Reserved</span><span class="badge n">Owned</span><span class="badge n">${'Private'}</span></div>
+      <div class="field"><label>Note</label><div class="in">The blue one please</div><span class="help">Only you see this</span></div>
+      <div class="field"><label>Price</label><div class="in" style="box-shadow:inset 0 0 0 2px var(--rise)">€abc</div><span class="help" style="color:var(--rise)">Use numbers, for example 24.99</span></div>
+      <div style="height:4px;border-radius:2px;background:var(--track)"><div style="width:60%;height:4px;border-radius:2px;background:var(--acc)"></div></div>
+      <div class="card" style="padding:20px;display:grid;gap:10px;background:var(--raised);box-shadow:var(--float);border-radius:28px"><div style="font:600 20px/26px var(--serif)">Leave this group?</div><p class="meta" style="font-size:15px;line-height:21px">You won’t see its wishlist any more. Your reservations stay.</p><div style="display:flex;justify-content:flex-end;gap:4px"><span class="btn s text">Cancel</span><span class="btn s">Leave</span></div></div>
+    </div></div>` });
+
+  const root = document.getElementById('screens');
+  root.innerHTML = S.map((s, i) => `<section class="screen"><h3>${s.t}</h3><div class="phone" data-mode="light" aria-label="${s.t} mock-up">${s.html()}</div><ul>${s.notes.map(n => `<li>${n}</li>`).join('')}</ul></section>`).join('');
+
+  const swatch = (rows, id) => { document.getElementById(id).innerHTML = rows.map(([n, c, u]) => `<i style="background:${c}"></i><span>${n}<br><code>${u}</code></span><code>${c}</code>`).join(''); };
+  swatch([['Page', '#F2F2F7', 'background'], ['Card', '#FFFFFF', 'cards, bars'], ['Photo surface', '#F4F4F7', 'behind photos'], ['Ink', '#111114', 'names, titles'], ['Grey text', '#6C6C74', 'details · 4.9 : 1'], ['Line', '#E5E5EA', 'hairlines'], ['Accent', '#4C4CD6', 'your colour'], ['Cheaper / dearer', '#1F8A4C', 'red #C4321F']], 'sw-light');
+  swatch([['Page', '#000000', 'true black'], ['Card', '#1C1C1E', 'cards'], ['Raised', '#2C2C2E', 'bars, panels'], ['Photo surface', '#2A2A2D', 'behind photos'], ['Ink', '#F5F5F7', 'names, titles'], ['Grey text', '#98989F', 'details · 6.6 : 1'], ['Accent', '#8585FF', 'softer for dark'], ['Cheaper / dearer', '#4CD98A', 'red #FF7B6E']], 'sw-dark');
+
+  const set = mode => {
+    document.querySelectorAll('.phone').forEach(p => p.dataset.mode = mode);
+    document.getElementById('m-light').setAttribute('aria-pressed', mode === 'light');
+    document.getElementById('m-dark').setAttribute('aria-pressed', mode === 'dark');
+    try { localStorage.setItem('quiet-mode', mode); } catch (e) {}
+  };
+  document.getElementById('m-light').onclick = () => set('light');
+  document.getElementById('m-dark').onclick = () => set('dark');
+  let saved = null; try { saved = localStorage.getItem('quiet-mode'); } catch (e) {}
+  if (saved === 'dark') set('dark');
+})();
+</script>
