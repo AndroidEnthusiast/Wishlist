@@ -52,7 +52,7 @@ button in one place, dashed boxes, badges everywhere, banners that shout, frames
   drawing, not effects).
 - Personalisation: the accent colour (5 and your own) and light or dark; nothing more.
 
-## The design plan (step 3, 14 November 2026, waiting for the owner's approval)
+## The design plan (step 3, approved by the owner on 14 November 2026)
 Mock-ups of every key screen, light and dark: `docs/styles/quiet-mockups.html`, published at
 https://claude.ai/artifact/QUmdTreBKMernTMXcRffGh (fonts show there; the app's screenshots can't download them).
 Correction to verdict point 5: Home's numbers are all lists together and a list's header only that list; they only
@@ -91,5 +91,8 @@ match when there is one list, so both stay (Home gets a third number, Lists).
 - **Empty pages**: a drawn icon in a soft accent circle, a Fraunces title, one line, one filled button.
 - **Message bar**: ink, with its action in the accent.
 
+- **Owner's choices with the approval**: in dark mode photos sit on a light photo surface too (#E9E9EC, the card
+  stays dark), labels above the fields, Private and I have it as switches.
+
 ## Next
-The owner approves or changes the plan (step 3 ✋), then it is built as one unit (step 4) and checked (step 5).
+Build it as one unit (step 4), check every screen light and dark (step 5), then the owner tries it (step 6).
