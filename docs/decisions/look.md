@@ -165,3 +165,10 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   shoehorned in; best practices that matter for this app taken into account; "not a quick one-off implementation";
   "the highest standards"; **personalisation features well thought out**. Owner: "help me to help you". The process
   and the bar are in `docs/DESIGN-STYLES.md` (written for this); follow it for every new design style.
+
+## Polishing Quiet, then Gen Z chaos (owner, 14 November 2026)
+- "Let's polish both": **Quiet first**, Gen Z chaos after it (with the partner's input), each through every step of
+  `docs/DESIGN-STYLES.md`. Claude challenged doing both at once (the breadth mistake); the owner agreed.
+- Quiet's three words: **calm, precise, premium**. Every screen gets the same care ("my whole app should get the most
+  care, not specific pages"). Weak spots: "You judge and tell me". Claude's verdict and the style brief:
+  `docs/styles/quiet.md`.

@@ -5,7 +5,10 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
-- **Newest (14 November 2026, after 2.206), read first.** The owner was disappointed by the design styles of
+- **Polishing Quiet (14 November 2026), read first.** Owner: polish Quiet, then Gen Z chaos. Step 2 of
+  `docs/DESIGN-STYLES.md` is written: verdict and style brief in `docs/styles/quiet.md`, shown to the owner for
+  approval. Next: the design plan with mock-ups (step 3); nothing is built before the owner approves it.
+- **Before that (14 November 2026, after 2.206).** The owner was disappointed by the design styles of
   2.199–2.205: 2.206 keeps only **Quiet** and **Gen Z chaos** (others → Quiet; code in git history, `057fe42`). The
   next design style is made **one at a time, to a professional standard**: follow `docs/DESIGN-STYLES.md` step by step,
   with its owner checkpoints (brief, style brief, specification and mock-ups before any code). Don't start without the
