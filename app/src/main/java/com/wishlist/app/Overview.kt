@@ -163,7 +163,7 @@ fun ProfileSummary(onProfile: () -> Unit, onFriends: () -> Unit = {}, onAddWish:
     // lists below; inside it the numbers are plain, with thin lines between them (no cards in a card).
     Row(
         Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp).fillMaxWidth()
-            .lookPeek(look).lookCard(look, 5L, look.cardShape(5L, small = true)).padding(horizontal = 14.dp, vertical = 14.dp),
+            .lookCard(look, 5L, look.cardShape(5L, small = true)).padding(horizontal = 14.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(Modifier.clip(androidx.compose.foundation.shape.CircleShape).clickable(onClickLabel = tr("Profile"), onClick = onProfile)) {

@@ -106,10 +106,6 @@ import java.util.Locale
 /** A speech bubble: the Messages icon (drawn here; the core Material icons have none). */
 @Composable
 fun ChatIcon(tint: Color, size: Dp = 24.dp) {
-    // Doodle: its hand-drawn speech bubble.
-    if (LocalLook.current.design == "doodle") { androidx.compose.material3.Icon(DoodleIcons.Chat, null, tint = tint, modifier = Modifier.size(size)); return }
-    if (LocalLook.current.design == "y2k") { androidx.compose.material3.Icon(Y2kIcons.Chat, null, tint = tint, modifier = Modifier.size(size)); return }
-    if (LocalLook.current.design == "retro") { androidx.compose.material3.Icon(RetroIcons.Chat, null, tint = tint, modifier = Modifier.size(size)); return }
     Canvas(Modifier.size(size)) {
         val u = this.size.width / 24f
         val p = Path().apply {
@@ -706,12 +702,8 @@ private fun ChatRow(
     val newDay = prev == null || dayLabel(prev.at) != dayLabel(m.at)
     if (newDay) DayChip(dayLabel(m.at))
     // A small "tail": the corner nearest the sender is sharp on the first bubble of a group.
-    // Each style's own corners: square Bauhaus, small Retro and Flat, round Y2K and Pop futurism.
-    val r = when (LocalLook.current.design) {
-        "bauhaus", "swiss" -> 0.dp; "japandi", "punk" -> 4.dp; "riso" -> 8.dp; "retro", "flat", "grunge" -> 10.dp; "synth" -> 12.dp
-        "cottage" -> 14.dp; "doodle" -> 18.dp; "y2k", "pop", "anthro" -> 20.dp; else -> 16.dp
-    }
-    val tail = if (r == 0.dp) 0.dp else 2.dp
+    val r = 16.dp
+    val tail = 2.dp
     val shape = if (m.mine) RoundedCornerShape(r, if (first) tail else r, r, r) else RoundedCornerShape(if (first) tail else r, r, r, r)
     // Swipe a message to the right to reply to it (owner, 2.128); it springs back.
     val density = androidx.compose.ui.platform.LocalDensity.current
@@ -781,7 +773,7 @@ private fun Bubble(
     Row(modifier.fillMaxWidth(), horizontalArrangement = if (m.mine) Arrangement.End else Arrangement.Start) {
         if (m.mine) Spacer(Modifier.widthIn(min = 48.dp))
         Column(
-            Modifier.widthIn(max = 300.dp).lookSurface(look, shape, fill, depth = 3.dp, brush = if (m.mine) look.accentBrush else null)
+            Modifier.widthIn(max = 300.dp).lookSurface(look, shape, fill, depth = 3.dp)
                 .combinedClickable(
                     onClick = {
                         if (m.content.kind == "wish" && m.content.url.isNotBlank()) try { uri.openUri(m.content.url) } catch (e: Exception) {}

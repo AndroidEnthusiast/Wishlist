@@ -15,8 +15,8 @@ android {
         applicationId = "com.wishlist.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 206
-        versionName = "2.205"
+        versionCode = 207
+        versionName = "2.206"
         // Crash reports (Crash.kt): Crashlytics wants a build id, which its Gradle plugin would normally add. The app
         // isn't shrunk or renamed (isMinifyEnabled = false), so there is no mapping file to upload; one id per version.
         resValue("string", "com.google.firebase.crashlytics.mapping_file_id", "wishlist-$versionCode")
@@ -66,9 +66,8 @@ android {
             it.forkEvery = 1
             // The shop checks need the internet; they only run with -Pwl.shops (tests/README.md).
             it.systemProperty("wl.shops", if (project.hasProperty("wl.shops")) "1" else "")
-            // The screenshots in one style (Design.kt STYLES), e.g. -Pwl.style=bauhaus; Quiet when left out.
+            // The screenshots in one style (Design.kt STYLES), e.g. -Pwl.style=chaos; Quiet when left out.
             it.systemProperty("wl.style", (project.findProperty("wl.style") as String?).orEmpty())
-            for (k in listOf("wl.set", "wl.deco", "wl.cards")) it.systemProperty(k, (project.findProperty(k) as String?).orEmpty())
             // The data move checked on an owner's real Export (DbMoveTest): -Pwl.export=/path/to/prefs.json, here only.
             it.systemProperty("wl.export", (project.findProperty("wl.export") as String?).orEmpty())
             it.testLogging.showStandardStreams = project.hasProperty("wl.shops")

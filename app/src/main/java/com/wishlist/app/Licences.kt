@@ -24,12 +24,11 @@ import androidx.compose.ui.unit.sp
  * licence; those licences ask that their text comes with the app, so here it is.
  *  - Icons: Google's Material Icons (Apache License 2.0). The other icons (menu, view buttons, prices, wishlist,
  *    gift, crop, light, new photo, colour ball) are drawn in this app's own code.
- *  - Fonts (2.97): Google Sans (built in) and Figtree, Fraunces (7 November 2026), Bungee, Bricolage Grotesque, Caveat, and for
- *    the styles of 2.199: Unbounded, Space Grotesk, Space Mono, Lobster, Bitter, Oswald, Righteous, Exo 2, Rubik Dirt, Barlow,
- *    Courier Prime, Poppins, Inter, Jost, and of 2.200: Caveat Brush, Shantell Sans, DM Serif Display, Lora, Shippori Mincho,
- *    Zen Kaku Gothic New, Anton, Work Sans, Audiowide, Chakra Petch, Fredoka, Nunito, and of 2.201: Archivo, Archivo Narrow,
- *    Sedgwick Ave Display, IBM Plex Mono (downloaded from Google Fonts): SIL Open Font License 1.1. (Rajdhani and Share Tech
- *    Mono went with Cyberpunk.)
+ *  - Fonts (2.97): Google Sans (built in) and Figtree, Fraunces (7 November 2026), Bungee, Bricolage Grotesque, Caveat, and
+ *    the fonts to pick in App settings (Fonts.kt: Roboto, Inter, Nunito, Poppins, Montserrat, Lato, Open Sans, DM Sans,
+ *    Manrope, Quicksand, Merriweather, Playfair Display; credited from 2.206), all downloaded from Google Fonts: SIL Open
+ *    Font License 1.1. (Rajdhani and Share Tech Mono went with Cyberpunk; the fonts of the styles of 2.199–2.205 went
+ *    with those styles in 2.206.)
  *  - Libraries: AndroidX / Jetpack Compose, Kotlin, Coil, OkHttp, Firebase Cloud Messaging, Firebase Crashlytics (Apache License 2.0; it uses
  *    Google Play services on the phone, which come with Android).
  *  - jsoup (reads product pages): MIT License; it was missing here until 2.183.
@@ -56,10 +55,8 @@ fun LicencesDialog(onClose: () -> Unit) {
                 Credit(tr("Icons"), "Material Icons, Google — Apache License 2.0")
                 Credit(
                     tr("Fonts"),
-                    "Google Sans, Figtree, Fraunces, Bungee, Bricolage Grotesque, Caveat, Unbounded, Space Grotesk, Space Mono, Lobster, " +
-                        "Bitter, Oswald, Righteous, Exo 2, Rubik Dirt, Barlow, Courier Prime, Poppins, Inter, Jost, Caveat Brush, Shantell Sans, " +
-                        "DM Serif Display, Lora, Shippori Mincho, Zen Kaku Gothic New, Anton, Work Sans, Audiowide, Chakra Petch, Fredoka, " +
-                        "Nunito, Archivo, Archivo Narrow, Sedgwick Ave Display, IBM Plex Mono — SIL Open Font License 1.1"
+                    "Google Sans, Figtree, Fraunces, Bungee, Bricolage Grotesque, Caveat, Roboto, Inter, Nunito, Poppins, Montserrat, Lato, " +
+                        "Open Sans, DM Sans, Manrope, Quicksand, Merriweather, Playfair Display — SIL Open Font License 1.1"
                 )
                 Credit(tr("Building blocks"), "AndroidX, Jetpack Compose, Kotlin, Coil, OkHttp, Credential Manager, Firebase Cloud Messaging, Firebase Crashlytics — Apache License 2.0")
                 // jsoup reads product pages (Fetch.kt); MIT License, its notice is in license_unicode.txt (2.183).

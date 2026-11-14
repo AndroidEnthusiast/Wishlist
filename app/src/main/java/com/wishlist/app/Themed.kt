@@ -133,7 +133,7 @@ fun Scaffold(
 
 /** How thick a field's line is when it is not and when it is being typed in. */
 private fun Look.fieldLines(): Pair<Dp, Dp> = when (design) {
-    "quiet", "flat" -> 1.dp to 2.dp
+    "quiet" -> 1.dp to 2.dp
     "chaos" -> 3.dp to 3.5.dp
     else -> maxOf(edge, 1.5.dp) to maxOf(edge, 1.5.dp) + 1.dp
 }
@@ -144,7 +144,6 @@ private fun fieldColors(look: Look): TextFieldColors {
     val cs = look.scheme
     val edge = when (look.design) {
         "quiet" -> cs.outline
-        "flat" -> cs.outline
         else -> look.line
     }
     val focus = if (look.design == "chaos") cs.onSurface else cs.primary
@@ -301,11 +300,10 @@ private fun FieldContainer(
     shape: Shape, thin: Dp, thick: Dp
 ) {
     val focused by source.collectIsFocusedAsState()
-    val lift = focused && look.design in setOf("chaos", "retro", "grunge", "bauhaus", "y2k", "pop", "riso", "anthro", "cottage", "punk")
+    val lift = focused && look.design in setOf("chaos")
     val shadow = when {
         !lift -> Modifier
-        look.design == "pop" -> Modifier.hardShadow(look.shadows[0], shape, 3.dp)
-        else -> Modifier.hardShadow(look.shadows[0], shape, 3.dp, look.shadowBrush)
+        else -> Modifier.hardShadow(look.shadows[0], shape, 3.dp)
     }
     OutlinedTextFieldDefaults.Container(
         enabled = enabled, isError = isError, interactionSource = source, modifier = shadow, colors = colors,
@@ -333,7 +331,7 @@ fun DropdownMenu(
         tonalElevation = 0.dp,
         // A soft shadow only where the style has soft shadows (Quiet, Y2K); the others are framed by their line, Flat
         // by a slightly deeper colour.
-        shadowElevation = if (look.design in setOf("quiet", "y2k", "flat", "japandi", "synth")) 6.dp else 0.dp,
+        shadowElevation = if (look.design in setOf("quiet")) 6.dp else 0.dp,
         border = line,
         content = content
     )
@@ -341,13 +339,6 @@ fun DropdownMenu(
 
 /** The size and shape of a tick box in the style. */
 private fun Look.boxShape(): Shape = when (design) {
-    "bauhaus" -> RectangleShape
-    "grunge" -> RoughShape(71, 1.dp, 4.dp)
-    "y2k", "pop", "anthro" -> RoundedCornerShape(7.dp)
-    "doodle" -> WobblyShape(73, 6.dp, 1.dp)
-    "swiss" -> RectangleShape
-    "punk" -> RoughShape(75, 1.dp, 4.dp)
-    "japandi" -> RoundedCornerShape(2.dp)
     "chaos" -> RoundedCornerShape(6.dp)
     else -> RoundedCornerShape(4.dp)
 }
@@ -369,34 +360,25 @@ fun Checkbox(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifier: 
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
     val shape = look.boxShape()
-    val edge = when (look.design) { "quiet", "flat" -> cs.outline; else -> look.line }
+    val edge = when (look.design) { "quiet" -> cs.outline; else -> look.line }
     val w = maxOf(look.edge, 2.dp)
     val tap = if (onCheckedChange != null) Modifier.minimumInteractiveComponentSize()
         .toggleable(checked, enabled = enabled, role = Role.Checkbox) { onCheckedChange(it) } else Modifier
-    // Doodle: drawn by hand (Doodle.kt); Y2K: a gel bubble (Y2k.kt).
-    if (look.design == "doodle" || look.design == "y2k") {
-        Box(modifier.then(tap).alphaIf(!enabled), contentAlignment = Alignment.Center) {
-            Canvas(Modifier.size(22.dp)) { if (look.design == "doodle") doodleCheckbox(look, checked) else y2kCheckbox(look, checked) }
-        }
-        return
-    }
     Box(modifier.then(tap).alphaIf(!enabled), contentAlignment = Alignment.Center) {
         Box(
             Modifier.size(20.dp)
-                .then(if (checked && look.design in setOf("chaos", "bauhaus")) Modifier.hardShadow(look.shadows[0], shape, 2.dp) else Modifier)
+                .then(if (checked && look.design in setOf("chaos")) Modifier.hardShadow(look.shadows[0], shape, 2.dp) else Modifier)
                 .clip(shape)
                 .then(
                     when {
                         !checked -> Modifier.background(cs.surfaceVariant)
-                        look.accentBrush != null -> Modifier.background(look.accentBrush)
-                        look.design == "quiet" || look.design == "chaos" -> Modifier.background(if (look.design == "chaos") look.tints[0] else cs.primary)
-                        else -> Modifier.background(look.accent)
+                        else -> Modifier.background(if (look.design == "chaos") look.tints[0] else cs.primary)
                     }
                 )
                 .then(if (!checked || look.edge > 0.dp) Modifier.edgeLine(w, if (checked && look.edge == 0.dp) Color.Transparent else edge, shape) else Modifier)
                 .drawBehind {
                     if (checked) tick(
-                        when (look.design) { "quiet" -> cs.onPrimary; "chaos" -> Color(0xFF0D0D0D); else -> look.onAccent },
+                        if (look.design == "chaos") Color(0xFF0D0D0D) else cs.onPrimary,
                         2.dp.toPx(), 2.2.dp.toPx()
                     )
                 }
@@ -409,26 +391,16 @@ fun Checkbox(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifier: 
 fun RadioButton(selected: Boolean, onClick: (() -> Unit)?, modifier: Modifier = Modifier, enabled: Boolean = true) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
-    val edge = when (look.design) { "quiet", "flat" -> if (selected) cs.primary else cs.outline; "chaos" -> look.line; else -> look.line }
+    val edge = if (look.design == "chaos") look.line else if (selected) cs.primary else cs.outline
     val w = maxOf(look.edge, 2.dp)
-    val dot = when (look.design) { "chaos" -> look.line; "quiet", "flat" -> cs.primary; else -> cs.primary }
+    val dot = if (look.design == "chaos") look.line else cs.primary
     val tap = if (onClick != null) Modifier.minimumInteractiveComponentSize()
         .selectable(selected, enabled = enabled, role = Role.RadioButton, onClick = onClick) else Modifier
-    if (look.design == "doodle" || look.design == "y2k") {
-        Box(modifier.then(tap).alphaIf(!enabled), contentAlignment = Alignment.Center) {
-            Canvas(Modifier.size(22.dp)) { if (look.design == "doodle") doodleRadio(look, selected) else y2kRadio(look, selected) }
-        }
-        return
-    }
     Box(modifier.then(tap).alphaIf(!enabled), contentAlignment = Alignment.Center) {
         Box(
             Modifier.size(20.dp).clip(CircleShape).background(cs.surfaceVariant).edgeLine(w, edge, CircleShape)
                 .drawBehind {
-                    if (selected) {
-                        if (look.accentBrush != null) drawCircle(look.accentBrush, size.minDimension * 0.28f)
-                        else drawCircle(if (look.design == "bauhaus") look.art[0] else dot, size.minDimension * 0.25f)
-                        if (look.accentBrush != null) drawCircle(look.line, size.minDimension * 0.28f, style = Stroke(1.dp.toPx()))
-                    }
+                    if (selected) drawCircle(dot, size.minDimension * 0.25f)
                 }
         )
     }
@@ -456,8 +428,7 @@ fun FilterChip(
     ) {
         Row(
             Modifier.heightIn(min = 32.dp).padding(vertical = 2.dp).lookChip(look, selected)
-                // Retro's tag chips keep room at their pointed end for the hole.
-                .padding(start = (if (leadingIcon != null || selected) 8.dp else 14.dp) + (if (look.design == "retro") 8.dp else 0.dp), end = if (trailingIcon != null) 8.dp else 14.dp),
+                .padding(start = if (leadingIcon != null || selected) 8.dp else 14.dp, end = if (trailingIcon != null) 8.dp else 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             androidx.compose.runtime.CompositionLocalProvider(
@@ -500,70 +471,17 @@ fun CircularProgressIndicator(modifier: Modifier = Modifier, color: Color = Colo
     val turn = if (StillSpinners.on) 30f else rememberInfiniteTransition(label = "spin").animateFloat(
         0f, 360f, infiniteRepeatable(tween(1100, easing = LinearEasing), RepeatMode.Restart), label = "turn"
     ).value
-    val w = if (strokeWidth != Dp.Unspecified) strokeWidth else when (look.design) { "chaos", "bauhaus", "pop" -> 5.dp; else -> 4.dp }
+    val w = if (strokeWidth != Dp.Unspecified) strokeWidth else when (look.design) { "chaos" -> 5.dp; else -> 4.dp }
     Canvas(modifier.progressSemantics().size(40.dp)) {
         val sw = w.toPx()
         val inset = sw / 2 + 1f
         val arcSize = Size(size.width - 2 * inset, size.height - 2 * inset)
         val tl = Offset(inset, inset)
-        val square = look.design == "bauhaus" || look.design == "grunge"
-        val cap = if (square) StrokeCap.Butt else StrokeCap.Round
+        val cap = StrokeCap.Round
         val one = color.isSpecified
         rotate(turn) {
             when {
                 one -> drawArc(color, 0f, 110f, false, tl, arcSize, style = Stroke(sw, cap = cap))
-                look.design == "bauhaus" -> listOf(look.art[0], look.art[2], look.art[1]).forEachIndexed { i, col ->
-                    drawArc(col, i * 120f, 80f, false, tl, arcSize, style = Stroke(sw, cap = cap))
-                }
-                look.design == "pop" -> {
-                    val third = sw / 3
-                    listOf(look.art[3], look.art[0], look.art[1]).forEachIndexed { i, col ->
-                        val k = inset - third + i * third
-                        drawArc(col, 0f, 140f, false, Offset(k, k), Size(size.width - 2 * k, size.height - 2 * k), style = Stroke(third, cap = StrokeCap.Butt))
-                    }
-                }
-                look.design == "grunge" -> for (i in 0 until 5) {
-                    drawArc(if (i == 0) look.accent else look.line, i * 34f, 22f, false, tl, arcSize, style = Stroke(sw, cap = cap))
-                }
-                look.design == "retro" -> {
-                    drawArc(look.art[1], 0f, 360f, false, tl, arcSize, style = Stroke(sw * 0.5f))
-                    drawArc(look.art[0], 0f, 110f, false, tl, arcSize, style = Stroke(sw, cap = cap))
-                }
-                look.design == "y2k" -> drawArc(
-                    Brush.sweepGradient(listOf(look.art[0], look.art[2], look.art[1], look.art[0]), center),
-                    0f, 300f, false, tl, arcSize, style = Stroke(sw, cap = cap)
-                )
-                look.design == "doodle" -> doodleSpinner(look, sw)
-                look.design == "riso" -> {
-                    drawArc(look.art[1], 12f, 110f, false, Offset(tl.x + 2f, tl.y + 2f), arcSize, style = Stroke(sw, cap = cap))
-                    drawArc(look.art[0], 0f, 110f, false, tl, arcSize, style = Stroke(sw, cap = cap))
-                }
-                look.design == "synth" -> drawArc(
-                    Brush.sweepGradient(listOf(look.art[3], look.art[2], look.art[1], look.art[0], look.art[3]), center),
-                    0f, 300f, false, tl, arcSize, style = Stroke(sw, cap = cap)
-                )
-                look.design == "swiss" -> {
-                    drawArc(look.scheme.outlineVariant, 0f, 360f, false, tl, arcSize, style = Stroke(sw, cap = StrokeCap.Butt))
-                    drawArc(look.art[0], 0f, 90f, true, Offset.Zero, size, style = androidx.compose.ui.graphics.drawscope.Fill)
-                }
-                look.design == "punk" -> for (i in 0 until 4) {
-                    drawArc(if (i % 2 == 0) look.accent else look.line, i * 90f, 55f, false, tl, arcSize, style = Stroke(sw, cap = StrokeCap.Butt))
-                }
-                look.design == "japandi" -> {
-                    drawArc(cs.outlineVariant, 0f, 360f, false, tl, arcSize, style = Stroke(1.dp.toPx()))
-                    drawArc(look.scheme.onSurface, 0f, 90f, false, tl, arcSize, style = Stroke(sw * 0.6f, cap = cap))
-                }
-                look.design == "cottage" -> {
-                    drawArc(look.art[0], 0f, 110f, false, tl, arcSize, style = Stroke(sw, cap = cap))
-                    drawArc(look.art[1], 180f, 110f, false, tl, arcSize, style = Stroke(sw, cap = cap))
-                }
-                look.design == "anthro" -> listOf(look.art[0], look.art[1], look.art[2], look.art[3]).forEachIndexed { i, col ->
-                    drawArc(col, i * 90f, 60f, false, tl, arcSize, style = Stroke(sw, cap = cap))
-                }
-                look.design == "flat" -> {
-                    drawArc(cs.primaryContainer, 0f, 360f, false, tl, arcSize, style = Stroke(sw))
-                    drawArc(cs.primary, 0f, 110f, false, tl, arcSize, style = Stroke(sw, cap = cap))
-                }
                 else -> drawArc(look.line, 0f, 110f, false, tl, arcSize, style = Stroke(sw, cap = cap))
             }
         }
@@ -578,37 +496,27 @@ object StillSpinners { @Volatile var on = false }
 fun LinearProgressIndicator(progress: () -> Float, modifier: Modifier = Modifier) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
-    val square = look.design == "bauhaus" || look.design == "grunge"
     M3LinearProgressIndicator(
         progress = progress, modifier = modifier.height(if (look.edge > 2.dp) 5.dp else 4.dp),
         color = if (look.design == "chaos") look.line else cs.primary, trackColor = cs.primaryContainer,
-        strokeCap = if (square) StrokeCap.Butt else StrokeCap.Round, gapSize = 0.dp, drawStopIndicator = {}
+        strokeCap = StrokeCap.Round, gapSize = 0.dp, drawStopIndicator = {}
     )
 }
 
-/** The shape of text fields: the style's small shape; Doodle's hand-drawn box. */
+/** The shape of text fields: the style's small shape. */
 @Composable
-private fun fieldShape(look: Look): Shape = if (look.design == "doodle") WobblyShape(91, 10.dp, 1.4.dp) else MaterialTheme.shapes.small
+private fun fieldShape(@Suppress("UNUSED_PARAMETER") look: Look): Shape = MaterialTheme.shapes.small
 
 /** A divider line in the style: thicker in the styles with ink lines; Doodle a wavy marker line. */
 @Composable
 fun HorizontalDivider(modifier: Modifier = Modifier, color: Color = Color.Unspecified) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
-    if (look.design == "doodle") {
-        Canvas(modifier.fillMaxWidth().height(6.dp)) { doodleDivider(look, look.line.copy(alpha = 0.6f)) }
-        return
-    }
-    if (look.design == "y2k") {
-        Canvas(modifier.fillMaxWidth().height(10.dp)) { y2kDivider(look) }
-        return
-    }
     M3HorizontalDivider(
         modifier,
-        thickness = when (look.design) { "chaos", "bauhaus", "doodle", "anthro", "swiss", "punk" -> 2.dp; "retro", "grunge", "riso", "cottage" -> 1.5.dp; else -> 1.dp },
+        thickness = when (look.design) { "chaos" -> 2.dp; else -> 1.dp },
         color = if (color.isSpecified && look.design == "quiet") color else when (look.design) {
-            "chaos", "bauhaus", "retro", "grunge", "doodle", "anthro", "riso", "cottage", "synth", "punk" -> look.line.copy(alpha = 0.7f)
-            "swiss" -> look.line
+            "chaos" -> look.line.copy(alpha = 0.7f)
             else -> if (color.isSpecified) color else cs.outlineVariant
         }
     )
@@ -645,12 +553,6 @@ fun ModalBottomSheet(
     val look = LocalLook.current
     val corner = MaterialTheme.shapes.extraLarge
     val shape = when (look.design) {
-        "bauhaus" -> RectangleShape
-        "grunge" -> RoughShape(81, 2.dp)
-        "pop" -> RoundedCornerShape(topStart = 30.dp, topEnd = 8.dp)
-        "doodle" -> WobblyShape(83, 28.dp, 2.dp)
-        "swiss" -> RectangleShape
-        "punk" -> RoughShape(85, 2.6.dp, 8.dp)
         else -> (corner as? RoundedCornerShape)?.let { RoundedCornerShape(topStart = it.topStart, topEnd = it.topEnd, bottomEnd = androidx.compose.foundation.shape.CornerSize(0.dp), bottomStart = androidx.compose.foundation.shape.CornerSize(0.dp)) }
             ?: RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
     }
@@ -668,25 +570,7 @@ private fun SheetHandle(look: Look) {
     val cs = MaterialTheme.colorScheme
     Box(Modifier.padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
         when (look.design) {
-            "bauhaus" -> Row {
-                listOf(look.art[0], look.art[2], look.art[1]).forEach { Box(Modifier.size(width = 14.dp, height = 5.dp).background(it)) }
-            }
-            "pop" -> Row {
-                listOf(look.art[3], look.art[0], look.art[1]).forEach { Box(Modifier.padding(horizontal = 2.dp).size(width = 12.dp, height = 5.dp).clip(CircleShape).background(it)) }
-            }
-            "y2k" -> Box(Modifier.size(width = 40.dp, height = 5.dp).clip(CircleShape).background(look.accentBrush!!).edgeLine(1.dp, look.line, CircleShape))
             "chaos" -> Box(Modifier.size(width = 44.dp, height = 6.dp).clip(CircleShape).background(look.line))
-            "grunge" -> Box(Modifier.size(width = 40.dp, height = 5.dp).clip(RoughShape(91, 1.dp, 4.dp)).background(look.line))
-            "retro" -> Box(Modifier.size(width = 40.dp, height = 4.dp).clip(CircleShape).background(look.art[0]))
-            "riso" -> Box {
-                Box(Modifier.offset(2.dp, 1.dp).size(width = 40.dp, height = 5.dp).background(look.art[1]))
-                Box(Modifier.size(width = 40.dp, height = 5.dp).background(look.art[0]))
-            }
-            "synth" -> Box(Modifier.size(width = 44.dp, height = 4.dp).clip(CircleShape).background(look.accentBrush!!))
-            "swiss" -> Row { Box(Modifier.size(width = 28.dp, height = 4.dp).background(look.line)); Box(Modifier.size(width = 12.dp, height = 4.dp).background(look.art[0])) }
-            "punk" -> Box(Modifier.size(width = 46.dp, height = 12.dp).clip(RoughShape(95, 1.dp, 4.dp)).background(Color(0xFFF2E6B8).copy(alpha = 0.85f)))
-            "anthro" -> Row { listOf(look.art[0], look.art[3], look.art[1]).forEach { Box(Modifier.padding(horizontal = 3.dp).size(9.dp).clip(CircleShape).background(it)) } }
-            "cottage" -> Row { listOf(look.art[0], look.art[1], look.art[0]).forEach { Box(Modifier.padding(horizontal = 2.dp).size(width = 12.dp, height = 4.dp).clip(CircleShape).background(it)) } }
             else -> Box(Modifier.size(width = 32.dp, height = 4.dp).clip(CircleShape).background(cs.onSurfaceVariant.copy(alpha = 0.4f)))
         }
     }

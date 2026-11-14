@@ -5,23 +5,11 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
-- **Newest (14 November 2026, after 2.205), read first.** 2.205: **Retro vintage rebuilt** (50s diner, 70s groovy,
-  travel poster; ticket buttons, tag chips, stamps, sign-painter icons; Ticket/Postcard/Enamel sign). Deep so far:
-  Doodle, Y2K, Punk, Retro. On "next", pick the next style and ask its sub-themes, parts and card styles first.
-- **Before that (13 November 2026, after 2.204).** 2.204: **British Punk rebuilt** (zine, gig poster, tartan;
-  cut-out buttons, stamped chips, pins/staples/tape, ransom-note screen titles; Cut-out/Taped flyer/Badge). Deep so
-  far: Doodle, Y2K, Punk. On "next", pick the next style and ask its sub-themes, parts and card styles first.
-- **Before that (13 November 2026, after 2.203).** Owner: "pick a theme", rebuild them one by one. 2.203: **Y2K
-  rebuilt** (Holographic, Liquid chrome, Bubbly; jelly parts, sparkle icons, stickers; Glass/Glossy/Sticker). Ask how
-  Doodle and Y2K feel; then pick the next (Gen Z chaos only with the partner's input).
-- **Before that (13 November 2026, after 2.202).** Owner found the themes thin and Doodle laggy. 2.202: speed fixed
-  in every style (`PerformanceRulesTest`) and **Doodle rebuilt** as the model of a deep theme (3 sub-themes, everything
-  hand-drawn, options Decoration and Cards). **Ask how Doodle feels and scrolls on the phone**; once the owner is happy,
-  rebuild the other styles one or two per update to that standard, in the order the owner picks (`docs/decisions/look.md`).
-- **Before that (13 November 2026).** 2.199 and 2.200: twelve new styles (Y2K, Retro vintage, Pop futurism,
-  Grunge, Flat, Bauhaus; Doodle, Cottage-core, Japandi, Risograph, Synthwave, Anthropomorphic) and every part themed;
-  2.201: Swiss, British Punk, 3 colour sets per style, wild cards and a detail of its own for every style. Ask how each feels on the phone, light and dark (fonts, fields, menus, the drawings);
-  fix what looks wrong in every style. Gen Z chaos is saved in `themes/gen-z-chaos/`: ask before changing it.
+- **Newest (14 November 2026, after 2.206), read first.** The owner was disappointed by the design styles of
+  2.199–2.205: 2.206 keeps only **Quiet** and **Gen Z chaos** (others → Quiet; code in git history, `057fe42`). The
+  next design style is made **one at a time, to a professional standard**: follow `docs/DESIGN-STYLES.md` step by step,
+  with its owner checkpoints (brief, style brief, specification and mock-ups before any code). Don't start without the
+  owner's choice of style. Gen Z chaos is saved in `themes/gen-z-chaos/`: ask before changing it.
 - **START HERE (12 November 2026, late night, after 2.198).** The review's part 2 is built (2.197, 2.198). Ask how
   2.195–2.198 feel on the phone, then continue the "logical experience" review (owner: "help me discover those")
   or what the owner wants next: show all of `docs/TODO.md` when asked. Known limit: Undo of "Moved to Received gifts"
@@ -29,6 +17,12 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 - **Everything open** (the complete to-do list, owner): `docs/TODO.md`. Owner wants a new feature built first.
 
 ## Last sessions
+
+### 14 November 2026: back to Quiet and Gen Z chaos (2.206)
+Owner: the design styles "disappointed me"; keep Quiet and Gen Z chaos, remove the rest, and next time one design style
+at a time "as though a professional would have done it". 2.206 removes the twelve styles, their colour sets and
+options; removed keys become Quiet. New `docs/DESIGN-STYLES.md` (process, best practices for this app, inventory,
+definition of done); decision in `docs/decisions/look.md`. Checks and screenshots of Quiet and chaos pass.
 
 ### 13–14 November 2026: the themes (2.199–2.205)
 Gen Z chaos saved as it was in `themes/gen-z-chaos/` (`tests/themes/check.sh`). Cyberpunk, Neobrutalism, Neumorphism
@@ -40,8 +34,3 @@ Every part themed (`Themed.kt`); `LookTest` checks contrast everywhere; screensh
 Screenshot tests fixed. Clean-up: `LocalGo` (2.192), `Places` and no `*Nav` objects (2.193); a message notifies unless
 that chat is on screen (2.194). Crash review: 3 old crashes on 2.154, none since. Notes tidy-up: slim `CLAUDE.md`,
 `docs/MAP.md`, `docs/TODO.md`, archives, a stop hook. 2.195 screens move (`Motion.kt`); 2.196–2.198 wishes act alike.
-
-### 12 November 2026, day: Stage 4 finished and Android 16 (2.188–2.191)
-Restoring on a new phone with the recovery key and signing the old one out (2.188); privacy page, delete my profile
-and data, block and report (2.189); Android's own backup off and the shop-page helper limited to 60 pages an hour per
-key (2.190); building blocks up to date: Android 16 target, Kotlin 2.1, Compose 2025.06, Room 2.7 (2.191).

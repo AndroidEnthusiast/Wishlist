@@ -155,9 +155,7 @@ fun Button(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean 
     } else {
         M3Button(
             onClick, modifier.padding(vertical = z.room).heightIn(min = z.height)
-                // Punk: cut-out buttons, taped down a little crooked.
-                .then(if (look.design == "punk") Modifier.rotate(-1.5f) else Modifier)
-                .then(if (enabled) Modifier.lookSurface(look, shape, look.accent, depth = z.depth, brush = look.accentBrush) else Modifier),
+                .then(if (enabled) Modifier.lookSurface(look, shape, look.accent, depth = z.depth) else Modifier),
             enabled, shape = shape, elevation = null,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = look.onAccent),
             contentPadding = z.pad, content = content
@@ -181,7 +179,6 @@ fun OutlinedButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: 
     } else {
         M3Button(
             onClick, modifier.padding(vertical = z.room).heightIn(min = z.height)
-                .then(if (look.design == "punk") Modifier.rotate(1.2f) else Modifier)
                 .then(if (enabled) Modifier.lookSurface(look, shape, cs.surfaceVariant, depth = z.depth) else Modifier),
             enabled, shape = shape, elevation = null,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = cs.onSurface),
@@ -219,26 +216,6 @@ fun Switch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifier: Mo
                 uncheckedThumbColor = look.line, uncheckedTrackColor = cs.surfaceVariant, uncheckedBorderColor = look.line
             )
         )
-        // Doodle: a hand-drawn switch (Doodle.kt), the same size and touch area as Material's.
-        "doodle" -> {
-            val t by animateFloatAsState(if (checked) 1f else 0f, label = "switch")
-            Box(
-                modifier.size(width = 60.dp, height = 48.dp).then(
-                    if (onCheckedChange != null) Modifier.toggleable(checked, enabled = enabled, role = Role.Switch) { onCheckedChange(it) } else Modifier
-                ),
-                contentAlignment = Alignment.Center
-            ) { Canvas(Modifier.size(width = 54.dp, height = 30.dp)) { doodleSwitch(look, t) } }
-        }
-        // Y2K: a glossy capsule with a pearl knob (Y2k.kt).
-        "y2k" -> {
-            val t by animateFloatAsState(if (checked) 1f else 0f, label = "switch")
-            Box(
-                modifier.size(width = 60.dp, height = 48.dp).then(
-                    if (onCheckedChange != null) Modifier.toggleable(checked, enabled = enabled, role = Role.Switch) { onCheckedChange(it) } else Modifier
-                ),
-                contentAlignment = Alignment.Center
-            ) { Canvas(Modifier.size(width = 52.dp, height = 30.dp)) { y2kSwitch(look, t) } }
-        }
         "quiet" -> M3Switch(
             checked, onCheckedChange, modifier, enabled = enabled,
             colors = SwitchDefaults.colors(
@@ -247,9 +224,9 @@ fun Switch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifier: Mo
                 uncheckedBorderColor = Color.Transparent
             )
         )
-        // The other styles: on in the style's block colour, off with the style's line (Flat: a darker tint, no line).
+        // Gen Z chaos: on in the style's block colour, off with its black line.
         else -> {
-            val edge = if (look.design == "flat") cs.outline else look.line
+            val edge = look.line
             M3Switch(
                 checked, onCheckedChange, modifier, enabled = enabled,
                 colors = SwitchDefaults.colors(
@@ -308,86 +285,17 @@ fun TopAppBar(
     // line (Retro), three racing stripes (Pop futurism), a rough ink line (Grunge), red, yellow and blue blocks
     // (Bauhaus). Quiet and Flat: none.
     val line = when (look.design) {
-        "quiet", "flat" -> Modifier
+        "quiet" -> Modifier
         else -> Modifier.drawWithContent {
             drawContent()
             val u = 1.dp.toPx()
             val w = size.width; val b = size.height
             when (look.design) {
-                "y2k" -> drawRect(look.accentBrush!!, Offset(0f, b - 2 * u), Size(w, 2 * u))
-                "retro" -> {
-                    drawRect(look.line, Offset(0f, b - 2 * u), Size(w, 2 * u))
-                    drawRect(look.line, Offset(0f, b - 5 * u), Size(w, 1 * u))
-                }
-                "pop" -> listOf(look.art[3], look.art[1], look.art[0]).forEachIndexed { i, col ->
-                    drawRect(col, Offset(0f, b - (3 - i) * 2 * u), Size(w, 2 * u))
-                }
-                "grunge" -> {
-                    var x = 0f; var k = 0
-                    while (x < w) {
-                        val t = (2 + (k * 7 % 5) * 0.35f) * u
-                        drawRect(look.line, Offset(x, b - t), Size(9 * u, t)); x += 8 * u; k++
-                    }
-                }
-                // Doodle: a wavy marker line.
-                "doodle" -> {
-                    val p = androidx.compose.ui.graphics.Path().apply {
-                        moveTo(0f, b - 3 * u); var x = 0f
-                        while (x < w) { quadraticTo(x + 10 * u, b - 6 * u, x + 20 * u, b - 3 * u); quadraticTo(x + 30 * u, b, x + 40 * u, b - 3 * u); x += 40 * u }
-                    }
-                    drawPath(p, look.line, style = androidx.compose.ui.graphics.drawscope.Stroke(2.2f * u, cap = androidx.compose.ui.graphics.StrokeCap.Round))
-                }
-                // Cottage-core: a fine line and a row of stitches.
-                "cottage" -> {
-                    drawRect(look.line, Offset(0f, b - 1.5f * u), Size(w, 1.5f * u))
-                    var x = 4 * u
-                    while (x < w) { drawRect(look.art[1], Offset(x, b - 5 * u), Size(6 * u, 1.5f * u)); x += 12 * u }
-                }
-                "japandi" -> drawRect(look.line.copy(alpha = 0.6f), Offset(0f, b - 1 * u), Size(w, 1 * u))
-                // Risograph: a pink and a blue line printed slightly off each other.
-                "riso" -> {
-                    drawRect(look.art[0], Offset(0f, b - 4 * u), Size(w, 3 * u))
-                    drawRect(look.art[1], Offset(3 * u, b - 3 * u), Size(w, 2 * u), alpha = 0.8f)
-                }
-                // Synthwave: a neon sunset line with a soft glow.
-                "synth" -> {
-                    drawRect(look.line.copy(alpha = 0.25f), Offset(0f, b - 6 * u), Size(w, 6 * u))
-                    drawRect(look.accentBrush!!, Offset(0f, b - 2 * u), Size(w, 2 * u))
-                }
-                // Anthropomorphic: a thick ink line with coloured dots on it.
-                "anthro" -> {
-                    drawRect(look.line, Offset(0f, b - 2.5f * u), Size(w, 2.5f * u))
-                    listOf(look.art[0], look.art[3], look.art[2]).forEachIndexed { i, col -> drawCircle(col, 4 * u, Offset(w - (16 + i * 12) * u, b - 1.25f * u)) }
-                }
-                // Swiss: a heavy black rule and a short colour bar at its start.
-                "swiss" -> {
-                    drawRect(look.line, Offset(0f, b - 3 * u), Size(w, 3 * u))
-                    drawRect(look.art[0], Offset(16 * u, b - 7 * u), Size(40 * u, 4 * u))
-                }
-                // Punk: a strip of torn tape and a ragged ink line.
-                "punk" -> {
-                    var x = 0f; var k = 0
-                    while (x < w) {
-                        val t = (2 + (k * 5 % 4) * 0.5f) * u
-                        drawRect(look.line, Offset(x, b - t), Size(7 * u, t)); x += 6 * u; k++
-                    }
-                    drawRect(look.art[0], Offset(w * 0.6f, b - 6 * u), Size(w * 0.3f, 3 * u))
-                }
-                "bauhaus" -> {
-                    drawRect(look.art[0], Offset(0f, b - 4 * u), Size(w * 0.5f, 4 * u))
-                    drawRect(look.art[2], Offset(w * 0.5f, b - 4 * u), Size(w * 0.25f, 4 * u))
-                    drawRect(look.art[1], Offset(w * 0.75f, b - 4 * u), Size(w * 0.25f, 4 * u))
-                }
                 else -> drawRect(look.line, Offset(0f, b - 3 * u), Size(w, 3 * u))
             }
         }
     }
-    // The style's effect on big titles (Risograph, Synthwave) goes on the screen's title.
-    val shadow = look.titleShadow
-    val titled: @Composable () -> Unit = if (shadow == null) title else ({
-        androidx.compose.material3.ProvideTextStyle(MaterialTheme.typography.titleLarge.copy(shadow = shadow)) { title() }
-    })
-    M3TopAppBar(titled, modifier.then(line), navigationIcon, actions, colors = colors)
+    M3TopAppBar(title, modifier.then(line), navigationIcon, actions, colors = colors)
 }
 
 /** The name of a list in its top bar, the same in every theme. ([count] is no longer shown: the owner removed
@@ -395,6 +303,12 @@ fun TopAppBar(
 @Composable
 fun ListTitle(name: String, @Suppress("UNUSED_PARAMETER") count: Int) {
     ScreenTitle(name)
+}
+
+/** A screen's title in the top bar: one line, the style's title weight, cut off with … when too long. */
+@Composable
+fun ScreenTitle(text: String) {
+    Text(text, fontWeight = LocalLook.current.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis)
 }
 
 /** The price change on a wish ("−20%", "+5%"; plus and minus, not arrows: it isn't a stock trade). */
@@ -406,7 +320,7 @@ fun PriceBadge(text: String, rise: Boolean, small: Boolean) {
     val fg: Color
     when (look.design) {
         // Chaos and Bauhaus: bold pastel blocks with ink text.
-        "chaos", "bauhaus", "anthro", "doodle", "punk" -> { bg = if (rise) Color(0xFFFFB3B3) else Color(0xFFB8F5C8); fg = Color(0xFF111111) }
+        "chaos" -> { bg = if (rise) Color(0xFFFFB3B3) else Color(0xFFB8F5C8); fg = Color(0xFF111111) }
         else -> { bg = lerp(col, look.scheme.surfaceVariant, if (look.dark) 0.78f else 0.88f); fg = col }
     }
     StyleBadge(text, bg, fg, small, null)
@@ -419,7 +333,6 @@ fun StatusBadge(text: String, small: Boolean, modifier: Modifier = Modifier) {
     val cs = MaterialTheme.colorScheme
     val bg = when (look.design) {
         "quiet" -> if (look.dark) Color(0xFF2C2C2E) else Color(0xFFF2F2F7)
-        "flat", "pop" -> cs.primaryContainer
         else -> cs.surfaceVariant
     }
     StyleBadge(text, bg, cs.onSurface, small, null, modifier)
@@ -446,61 +359,56 @@ private fun StyleBadge(text: String, bg: Color, fg: Color, small: Boolean, lineC
  */
 object AppIcons {
     @Composable
-    private fun v(
-        f: ImageVector, o: ImageVector, r: ImageVector, s: ImageVector, d: ImageVector? = null, y: ImageVector? = null, rv: ImageVector? = null
-    ): ImageVector =
-        if (d != null && LocalLook.current.design == "doodle") d
-        else if (y != null && LocalLook.current.design == "y2k") y
-        else if (rv != null && LocalLook.current.design == "retro") rv
-        else when (LocalLook.current.iconStyle) {
+    private fun v(f: ImageVector, o: ImageVector, r: ImageVector, s: ImageVector): ImageVector =
+        when (LocalLook.current.iconStyle) {
             "outlined" -> o
             "rounded" -> r
             "sharp" -> s
             else -> f
         }
 
-    val Add: ImageVector @Composable get() = v(Icons.Filled.Add, Icons.Outlined.Add, Icons.Rounded.Add, Icons.Sharp.Add, DoodleIcons.Add, Y2kIcons.Add, rv = RetroIcons.Add)
+    val Add: ImageVector @Composable get() = v(Icons.Filled.Add, Icons.Outlined.Add, Icons.Rounded.Add, Icons.Sharp.Add)
     val ArrowBack: ImageVector @Composable get() = v(
         Icons.AutoMirrored.Filled.ArrowBack, Icons.AutoMirrored.Outlined.ArrowBack,
         Icons.AutoMirrored.Rounded.ArrowBack, Icons.AutoMirrored.Sharp.ArrowBack
-    , DoodleIcons.ArrowBack, y = null, rv = RetroIcons.ArrowBack)
+    )
     val ArrowDropDown: ImageVector @Composable get() =
-        v(Icons.Filled.ArrowDropDown, Icons.Outlined.ArrowDropDown, Icons.Rounded.ArrowDropDown, Icons.Sharp.ArrowDropDown, DoodleIcons.ArrowDropDown)
-    val Check: ImageVector @Composable get() = v(Icons.Filled.Check, Icons.Outlined.Check, Icons.Rounded.Check, Icons.Sharp.Check, DoodleIcons.Check, y = null, rv = RetroIcons.Check)
-    val Close: ImageVector @Composable get() = v(Icons.Filled.Close, Icons.Outlined.Close, Icons.Rounded.Close, Icons.Sharp.Close, DoodleIcons.Close, y = null, rv = RetroIcons.Close)
-    val Delete: ImageVector @Composable get() = v(Icons.Filled.Delete, Icons.Outlined.Delete, Icons.Rounded.Delete, Icons.Sharp.Delete, DoodleIcons.Delete, Y2kIcons.Delete, rv = RetroIcons.Delete)
-    val Edit: ImageVector @Composable get() = v(Icons.Filled.Edit, Icons.Outlined.Edit, Icons.Rounded.Edit, Icons.Sharp.Edit, DoodleIcons.Edit, y = null, rv = RetroIcons.Edit)
+        v(Icons.Filled.ArrowDropDown, Icons.Outlined.ArrowDropDown, Icons.Rounded.ArrowDropDown, Icons.Sharp.ArrowDropDown)
+    val Check: ImageVector @Composable get() = v(Icons.Filled.Check, Icons.Outlined.Check, Icons.Rounded.Check, Icons.Sharp.Check)
+    val Close: ImageVector @Composable get() = v(Icons.Filled.Close, Icons.Outlined.Close, Icons.Rounded.Close, Icons.Sharp.Close)
+    val Delete: ImageVector @Composable get() = v(Icons.Filled.Delete, Icons.Outlined.Delete, Icons.Rounded.Delete, Icons.Sharp.Delete)
+    val Edit: ImageVector @Composable get() = v(Icons.Filled.Edit, Icons.Outlined.Edit, Icons.Rounded.Edit, Icons.Sharp.Edit)
     val Favorite: ImageVector @Composable get() =
-        v(Icons.Filled.Favorite, Icons.Outlined.FavoriteBorder, Icons.Rounded.Favorite, Icons.Sharp.Favorite, DoodleIcons.Favorite, Y2kIcons.Favorite, rv = RetroIcons.Favorite)
-    val Home: ImageVector @Composable get() = v(Icons.Filled.Home, Icons.Outlined.Home, Icons.Rounded.Home, Icons.Sharp.Home, DoodleIcons.Home, Y2kIcons.Home, rv = RetroIcons.Home)
-    val Lock: ImageVector @Composable get() = v(Icons.Filled.Lock, Icons.Outlined.Lock, Icons.Rounded.Lock, Icons.Sharp.Lock, DoodleIcons.Lock)
+        v(Icons.Filled.Favorite, Icons.Outlined.FavoriteBorder, Icons.Rounded.Favorite, Icons.Sharp.Favorite)
+    val Home: ImageVector @Composable get() = v(Icons.Filled.Home, Icons.Outlined.Home, Icons.Rounded.Home, Icons.Sharp.Home)
+    val Lock: ImageVector @Composable get() = v(Icons.Filled.Lock, Icons.Outlined.Lock, Icons.Rounded.Lock, Icons.Sharp.Lock)
     val ListIcon: ImageVector @Composable get() = v(
         Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List,
         Icons.AutoMirrored.Rounded.List, Icons.AutoMirrored.Sharp.List
-    , DoodleIcons.ListIcon)
+    )
     val Notifications: ImageVector @Composable get() =
-        v(Icons.Filled.Notifications, Icons.Outlined.Notifications, Icons.Rounded.Notifications, Icons.Sharp.Notifications, DoodleIcons.Notifications, Y2kIcons.Notifications, rv = RetroIcons.Notifications)
-    val MoreVert: ImageVector @Composable get() = v(Icons.Filled.MoreVert, Icons.Outlined.MoreVert, Icons.Rounded.MoreVert, Icons.Sharp.MoreVert, DoodleIcons.MoreVert, Y2kIcons.MoreVert, rv = RetroIcons.MoreVert)
-    val Person: ImageVector @Composable get() = v(Icons.Filled.Person, Icons.Outlined.Person, Icons.Rounded.Person, Icons.Sharp.Person, DoodleIcons.Person, Y2kIcons.Person, rv = RetroIcons.Person)
-    val Refresh: ImageVector @Composable get() = v(Icons.Filled.Refresh, Icons.Outlined.Refresh, Icons.Rounded.Refresh, Icons.Sharp.Refresh, DoodleIcons.Refresh)
-    val Search: ImageVector @Composable get() = v(Icons.Filled.Search, Icons.Outlined.Search, Icons.Rounded.Search, Icons.Sharp.Search, DoodleIcons.Search, Y2kIcons.Search, rv = RetroIcons.Search)
-    val Settings: ImageVector @Composable get() = v(Icons.Filled.Settings, Icons.Outlined.Settings, Icons.Rounded.Settings, Icons.Sharp.Settings, DoodleIcons.Settings, Y2kIcons.Settings, rv = RetroIcons.Settings)
-    val Share: ImageVector @Composable get() = v(Icons.Filled.Share, Icons.Outlined.Share, Icons.Rounded.Share, Icons.Sharp.Share, DoodleIcons.Share, Y2kIcons.Share, rv = RetroIcons.Share)
+        v(Icons.Filled.Notifications, Icons.Outlined.Notifications, Icons.Rounded.Notifications, Icons.Sharp.Notifications)
+    val MoreVert: ImageVector @Composable get() = v(Icons.Filled.MoreVert, Icons.Outlined.MoreVert, Icons.Rounded.MoreVert, Icons.Sharp.MoreVert)
+    val Person: ImageVector @Composable get() = v(Icons.Filled.Person, Icons.Outlined.Person, Icons.Rounded.Person, Icons.Sharp.Person)
+    val Refresh: ImageVector @Composable get() = v(Icons.Filled.Refresh, Icons.Outlined.Refresh, Icons.Rounded.Refresh, Icons.Sharp.Refresh)
+    val Search: ImageVector @Composable get() = v(Icons.Filled.Search, Icons.Outlined.Search, Icons.Rounded.Search, Icons.Sharp.Search)
+    val Settings: ImageVector @Composable get() = v(Icons.Filled.Settings, Icons.Outlined.Settings, Icons.Rounded.Settings, Icons.Sharp.Settings)
+    val Share: ImageVector @Composable get() = v(Icons.Filled.Share, Icons.Outlined.Share, Icons.Rounded.Share, Icons.Sharp.Share)
     /** Wishlist groups (2.108): Google's Material "group" icon (Apache 2.0), drawn from its path here because the app
      *  only includes the core icon set. One shape in every style. */
-    val Group: ImageVector @Composable get() = if (LocalLook.current.design == "doodle") DoodleIcons.Group else groupIcon
+    val Group: ImageVector get() = groupIcon
     /** Received gifts and gift lists (2.129): Google's Material "redeem" gift-box icon, drawn from its path. */
-    val Gift: ImageVector @Composable get() = if (LocalLook.current.design == "doodle") DoodleIcons.Gift else giftIcon
+    val Gift: ImageVector get() = giftIcon
     /** Gifts I reserved (2.129): Google's Material "shopping bag" icon (outlined), drawn from its path. */
-    val Bag: ImageVector @Composable get() = when (LocalLook.current.design) { "doodle" -> DoodleIcons.Bag; "y2k" -> Y2kIcons.Bag; "retro" -> RetroIcons.Bag; else -> bagIcon }
+    val Bag: ImageVector get() = bagIcon
     /** Gift exchange (2.129): Google's Material "swap horiz" icon, drawn from its path. */
-    val Swap: ImageVector @Composable get() = if (LocalLook.current.design == "doodle") DoodleIcons.Swap else swapIcon
+    val Swap: ImageVector get() = swapIcon
     /** Gift exchange in the side menu (owner, 7 November 2026): two gifts with an arrow from each to the other, our own drawing. */
     val Exchange: ImageVector get() = exchangeIcon
     /** Discover, the shops (owner, 7 November 2026): Google's Material "store" icon, drawn from its path. */
-    val Store: ImageVector @Composable get() = when (LocalLook.current.design) { "doodle" -> DoodleIcons.Bag; "y2k" -> Y2kIcons.Bag; "retro" -> RetroIcons.Bag; else -> storeIcon }
+    val Store: ImageVector get() = storeIcon
     /** "Your wishlists ›" (owner, 7 November 2026): Google's Material "chevron right" icon, drawn from its path. */
-    val Chevron: ImageVector @Composable get() = if (LocalLook.current.design == "doodle") DoodleIcons.Chevron else chevronIcon
+    val Chevron: ImageVector get() = chevronIcon
 }
 
 private val exchangeIcon: ImageVector by lazy {
@@ -712,33 +620,16 @@ fun PhotoCard(url: String, description: String, small: Boolean, modifier: Modifi
             // shadow; Retro gives it the white border of an old print, Grunge a rough edge, Bauhaus square corners.
             val shape = when (look.design) {
                 "chaos" -> RoundedCornerShape(8.dp)
-                "y2k", "pop" -> RoundedCornerShape(if (small) 12.dp else 16.dp)
-                "retro" -> RoundedCornerShape(3.dp)
-                "grunge" -> RoughShape(61, 1.4.dp, 6.dp)
-                "flat" -> RoundedCornerShape(8.dp)
-                "bauhaus" -> androidx.compose.ui.graphics.RectangleShape
-                "doodle" -> WobblyShape(63, 8.dp, 1.dp)
-                "japandi" -> RoundedCornerShape(2.dp)
-                "riso", "synth" -> RoundedCornerShape(6.dp)
-                "cottage" -> RoundedCornerShape(6.dp)
-                "anthro" -> RoundedCornerShape(if (small) 12.dp else 16.dp)
-                "swiss" -> androidx.compose.ui.graphics.RectangleShape
-                "punk" -> RoughShape(65, 1.6.dp, 6.dp)
                 else -> RoundedCornerShape(if (small) 10.dp else 14.dp)
             }
             val frame = when (look.design) {
                 "chaos" -> Modifier.hardShadow(look.line, shape, 3.dp)
-                "quiet" -> Modifier.shadow(if (small) 3.dp else 5.dp, shape, clip = false)
-                "flat", "japandi", "doodle", "swiss" -> Modifier
-                "synth" -> Modifier.shadow(if (small) 4.dp else 8.dp, shape, clip = false, ambientColor = look.line, spotColor = look.line)
-                "pop" -> Modifier.hardShadow(look.shadows[1], shape, 5.dp).hardShadow(look.shadows[0], shape, 2.5.dp)
-                else -> Modifier.hardShadow(look.shadows[0], shape, 3.dp, look.shadowBrush)
+                else -> Modifier.shadow(if (small) 3.dp else 5.dp, shape, clip = false)
             }
             Image(
                 painter, description, contentScale = ContentScale.Crop,
                 modifier = Modifier.aspectRatio(ratio, matchHeightConstraintsFirst = true)
                     .then(frame).clip(shape).background(Color.White)
-                    .then(if (look.design == "retro") Modifier.edgeLine(if (small) 3.dp else 5.dp, Color(0xFFFBF6EA), shape) else Modifier)
                     .then(if (look.edge > 0.dp) Modifier.edgeLine(minOf(look.edge, 2.dp), look.line, shape) else Modifier)
             )
         }

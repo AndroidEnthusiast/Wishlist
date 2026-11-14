@@ -496,3 +496,41 @@ Lines of the 2.199 handoff, replaced by the 2.200 ones (13 November 2026):
 - **Newest (13 November 2026, after 2.202), read first.** Owner found the themes thin and Doodle laggy. 2.202: speed fixed
 - **Newest (13 November 2026, after 2.203), read first.** Owner: "pick a theme", rebuild them one by one. 2.203: **Y2K
 - **Newest (13 November 2026, after 2.204), read first.** 2.204: **British Punk rebuilt** (zine, gig poster, tartan;
+
+## Moved from the handoff on 14 November 2026 (2.206)
+
+- **Newest (14 November 2026, after 2.205), read first.** 2.205: **Retro vintage rebuilt** (50s diner, 70s groovy,
+  travel poster; ticket buttons, tag chips, stamps, sign-painter icons; Ticket/Postcard/Enamel sign). Deep so far:
+  Doodle, Y2K, Punk, Retro. On "next", pick the next style and ask its sub-themes, parts and card styles first.
+- **Before that (13 November 2026, after 2.204).** 2.204: **British Punk rebuilt** (zine, gig poster, tartan;
+  cut-out buttons, stamped chips, pins/staples/tape, ransom-note screen titles; Cut-out/Taped flyer/Badge). Deep so
+  far: Doodle, Y2K, Punk. On "next", pick the next style and ask its sub-themes, parts and card styles first.
+- **Before that (13 November 2026, after 2.203).** Owner: "pick a theme", rebuild them one by one. 2.203: **Y2K
+  rebuilt** (Holographic, Liquid chrome, Bubbly; jelly parts, sparkle icons, stickers; Glass/Glossy/Sticker). Ask how
+  Doodle and Y2K feel; then pick the next (Gen Z chaos only with the partner's input).
+- **Before that (13 November 2026, after 2.202).** Owner found the themes thin and Doodle laggy. 2.202: speed fixed
+  in every style (`PerformanceRulesTest`) and **Doodle rebuilt** as the model of a deep theme (3 sub-themes, everything
+  hand-drawn, options Decoration and Cards). **Ask how Doodle feels and scrolls on the phone**; once the owner is happy,
+  rebuild the other styles one or two per update to that standard, in the order the owner picks (`docs/decisions/look.md`).
+- **Before that (13 November 2026).** 2.199 and 2.200: twelve new styles (Y2K, Retro vintage, Pop futurism,
+  Grunge, Flat, Bauhaus; Doodle, Cottage-core, Japandi, Risograph, Synthwave, Anthropomorphic) and every part themed;
+  2.201: Swiss, British Punk, 3 colour sets per style, wild cards and a detail of its own for every style. Ask how each feels on the phone, light and dark (fonts, fields, menus, the drawings);
+  fix what looks wrong in every style. Gen Z chaos is saved in `themes/gen-z-chaos/`: ask before changing it.
+
+### 12 November 2026, day: Stage 4 finished and Android 16 (2.188–2.191)
+Restoring on a new phone with the recovery key and signing the old one out (2.188); privacy page, delete my profile
+and data, block and report (2.189); Android's own backup off and the shop-page helper limited to 60 pages an hour per
+key (2.190); building blocks up to date: Android 16 target, Kotlin 2.1, Compose 2025.06, Room 2.7 (2.191).
+
+### From the to-do list (no longer open: those styles were removed in 2.206)
+- **Try Y2K (2.203), British Punk (2.204) and Retro vintage (2.205) on the phone**: each sub-theme light and dark, the
+  card styles and Calm/Normal/Wild; Punk's ransom-note titles. Deep themes so far: Doodle, Y2K, British Punk, Retro.
+  Still to rebuild one by one: Pop futurism, Grunge, Flat, Bauhaus, Cottage-core, Japandi, Risograph, Synthwave,
+  Anthropomorphic, Swiss, Quiet, Gen Z chaos (with the partner).
+- **Try Doodle (2.202) on the phone**: does scrolling feel smooth now (also in the other styles)? Its three
+  sub-themes (Notebook, Sticky notes, Board), the options Decoration and Cards, light and dark. Then pick which style
+  to rebuild next to the same standard (one or two per update).
+- **Try 2.199's and 2.200's styles on the phone** (Y2K, Retro vintage, Pop futurism, Grunge, Flat, Bauhaus, Doodle,
+  Cottage-core, Japandi, Risograph, Synthwave, Anthropomorphic, Swiss, British Punk; Gen Z chaos and Quiet), light and
+  dark, each colour set (the gift box peeking over cards, the crooked Punk cards too): do the fonts arrive, do fields, menus, tick boxes, the bottom panels and the drawings look
+  right on every screen, is anything hard to read? Not seen here: real fonts, real photos, real phone sizes.

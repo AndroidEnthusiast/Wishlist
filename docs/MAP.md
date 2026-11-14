@@ -96,11 +96,10 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `Fonts.kt` (font choice)
 - `Settings.kt`
 - `Theme.kt` + `Design.kt` + `Styled.kt` + `Themer.kt` (themes and the themed buttons, dialogs, icons)
-- `Retro.kt` (2.205): Retro vintage's sub-themes, card styles, stamps, `TagShape`, `RetroIcons`
-- `Punk.kt` (2.204): British Punk's sub-themes, fasteners, ransom-note `ScreenTitle` (used by every top bar)
-- `Y2k.kt` (2.203): Y2K's sub-themes, glossy parts, sparkle icons (`Y2kIcons`), stickers
-- `Doodle.kt` (2.202): Doodle's sub-themes, hand-drawn parts and icons (`DoodleIcons`), options (`DECO_LEVELS`, `CARD_STYLES` in `Design.kt`); speed rules: `PerformanceRulesTest`
-- `Themed.kt` (2.199): the themed text fields, menus, tick boxes, choice circles, chips, spinners, progress bars, dividers, sliders, bottom panels, message bar and `Scaffold` (the style's drawing behind every screen); `Placeholders.kt` draws each style's emblem and Anthropomorphic's gift box with a face (`giftBuddy`, `lookPeek`); checks `LookTest`, `PartsScreenshotTest`
+- Design styles: Quiet and Gen Z chaos only since 2.206 (the others are in git history, commit `057fe42`); how a new
+  one is made: `docs/DESIGN-STYLES.md` (one style at a time, to a professional standard); speed rules:
+  `PerformanceRulesTest`; every top bar's title is `ScreenTitle` (`Styled.kt`)
+- `Themed.kt` (2.199): the themed text fields, menus, tick boxes, choice circles, chips, spinners, progress bars, dividers, sliders, bottom panels, message bar and `Scaffold` (the style's drawing behind every screen); checks `LookTest`, `PartsScreenshotTest`
 - `themes/`: frozen copies of themes the owner wants to be able to bring back (Gen Z chaos, 13 November 2026), each with a README on putting it back; checked by `tests/themes/check.sh`
 
 ### Server, accounts, safety and app health

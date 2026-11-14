@@ -153,3 +153,15 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   groovy**, **Vintage travel poster**. Own parts: **ticket and label buttons** (notched ends; chosen chips like a luggage
   tag), **stamps and badges on cards** (per sub-theme, more at Wild), **retro icons** (thick, rounded sign-painter
   style). Card styles: **Ticket**, **Postcard**, **Enamel sign**. Not chosen: neon-sign titles, an old-cinema sub-theme.
+
+## Back to Quiet and Gen Z chaos; design styles to a professional standard (owner, 14 November 2026)
+- Owner, after 2.205: "your implementation of the design styles has disappointed me". The Calm/Normal/Wild steps were
+  "incredibly minimal" in difference. **Keep Gen Z chaos and Quiet; remove all the other styles** (Y2K, Retro vintage,
+  Pop futurism, Grunge, Flat, Bauhaus, Doodle, Cottage-core, Japandi, Risograph, Synthwave, Anthropomorphic, Swiss,
+  British Punk). People who had one get Quiet (their light or dark and accent stay). The code is in the git history
+  (commit 057fe42, version 2.205) but is not the model for new work.
+- **From now on: one design style at a time**, called **design styles** (not themes). Each is implemented "as though a
+  professional would have done it": everything styled, a true integration that feels native to the app and not
+  shoehorned in; best practices that matter for this app taken into account; "not a quick one-off implementation";
+  "the highest standards"; **personalisation features well thought out**. Owner: "help me to help you". The process
+  and the bar are in `docs/DESIGN-STYLES.md` (written for this); follow it for every new design style.

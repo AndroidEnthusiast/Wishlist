@@ -75,18 +75,6 @@ fun AppBottomBar(
     // surface. Quiet: nearly opaque with a hairline and a soft shadow, like frosted glass.
     val shape = when (look.design) {
         "chaos" -> RoundedCornerShape(20.dp)
-        "y2k", "pop" -> RoundedCornerShape(32.dp)
-        "retro" -> RoundedCornerShape(16.dp)
-        "flat" -> RoundedCornerShape(18.dp)
-        "grunge" -> RoughShape(101, 2.dp, 9.dp)
-        "bauhaus" -> androidx.compose.ui.graphics.RectangleShape
-        "doodle" -> WobblyShape(111, 26.dp, 2.dp)
-        "japandi" -> RoundedCornerShape(8.dp)
-        "riso" -> RoundedCornerShape(10.dp)
-        "synth", "cottage" -> RoundedCornerShape(18.dp)
-        "anthro" -> RoundedCornerShape(32.dp)
-        "swiss" -> androidx.compose.ui.graphics.RectangleShape
-        "punk" -> RoughShape(121, 2.6.dp, 9.dp)
         else -> RoundedCornerShape(26.dp)
     }
     val frame = if (look.design == "quiet") Modifier
@@ -99,9 +87,6 @@ fun AppBottomBar(
             .then(
                 when (look.design) {
                     "chaos" -> Modifier.rotate(-0.8f)
-                    "grunge" -> Modifier.rotate(-0.4f)
-                    "doodle" -> Modifier.rotate(-0.5f)
-                    "punk" -> Modifier.rotate(-1.2f)
                     else -> Modifier
                 }
             )
@@ -120,7 +105,7 @@ fun AppBottomBar(
                 Modifier.size(50.dp).then(
                     if (look.design == "quiet") Modifier.shadow(6.dp, CircleShape, clip = false, ambientColor = look.accent, spotColor = look.accent)
                         .clip(CircleShape).background(look.accent)
-                    else Modifier.lookSurface(look, look.fabShape, look.accent, depth = 5.dp, brush = look.accentBrush)
+                    else Modifier.lookSurface(look, look.fabShape, look.accent, depth = 5.dp)
                 ).clickable(onClickLabel = tr("Add wish"), onClick = onAdd),
                 contentAlignment = Alignment.Center
             ) {

@@ -38,7 +38,7 @@ fun effectiveTheme(): String {
 @Composable
 fun WishTheme(content: @Composable () -> Unit) {
     // The style (Quiet or one of the four), its accent colour and light or dark (Design.kt, picked in the Themer).
-    val look = lookFor(Repo.design, Repo.palette, effectiveTheme(), Repo.colourSet, Repo.decoOption, Repo.cardsOption)
+    val look = lookFor(Repo.design, Repo.palette, effectiveTheme())
     val scheme = look.scheme
     val view = LocalView.current
     SideEffect {

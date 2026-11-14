@@ -7,17 +7,11 @@ it**, grouped as below, with a recommendation. Add every new open item here the 
 Details of each item are in the doc named after it.
 
 ## Now
-- **Try Y2K (2.203), British Punk (2.204) and Retro vintage (2.205) on the phone**: each sub-theme light and dark, the
-  card styles and Calm/Normal/Wild; Punk's ransom-note titles. Deep themes so far: Doodle, Y2K, British Punk, Retro.
-  Still to rebuild one by one: Pop futurism, Grunge, Flat, Bauhaus, Cottage-core, Japandi, Risograph, Synthwave,
-  Anthropomorphic, Swiss, Quiet, Gen Z chaos (with the partner).
-- **Try Doodle (2.202) on the phone**: does scrolling feel smooth now (also in the other styles)? Its three
-  sub-themes (Notebook, Sticky notes, Board), the options Decoration and Cards, light and dark. Then pick which style
-  to rebuild next to the same standard (one or two per update).
-- **Try 2.199's and 2.200's styles on the phone** (Y2K, Retro vintage, Pop futurism, Grunge, Flat, Bauhaus, Doodle,
-  Cottage-core, Japandi, Risograph, Synthwave, Anthropomorphic, Swiss, British Punk; Gen Z chaos and Quiet), light and
-  dark, each colour set (the gift box peeking over cards, the crooked Punk cards too): do the fonts arrive, do fields, menus, tick boxes, the bottom panels and the drawings look
-  right on every screen, is anything hard to read? Not seen here: real fonts, real photos, real phone sizes.
+- **Choose the next design style** (owner, 14 November 2026), when you want one: it is made one at a time, to a
+  professional standard, following `docs/DESIGN-STYLES.md` (your references and three words for the feeling first;
+  a style brief and a specification with mock-ups for you to approve before anything is built).
+- **Try 2.206 on the phone:** Quiet and Gen Z chaos, light and dark, look as before; someone who had another style
+  now has Quiet with their colour and light/dark kept.
 - **Gen Z chaos, coloured text** (found 13 November 2026, left as it was because chaos stays unchanged): with the
   Orange, Green or Pink accent in light mode, coloured text (unread chats, "Replying to") is only 2.8–3.8 : 1. Ask
   the owner whether to make it ink in chaos.

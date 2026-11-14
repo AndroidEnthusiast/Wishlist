@@ -5,10 +5,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.Canvas
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -77,114 +73,19 @@ import java.io.File
  */
 
 /**
- * "Wishlist" at the top of Home, in the style's own way: Quiet bold and tight; chaos tilted with a hard pink shadow;
- * Y2K with a holographic shadow and a sparkle; Retro in script, tilted, misprinted in teal; Pop futurism with stacked
- * racing-stripe shadows; Grunge rough and a little crooked with a red shadow; Flat with a flat colour bar under it;
- * Bauhaus after a red circle, a yellow triangle and a blue square.
+ * "Wishlist" at the top of Home, in the style's own way: Quiet bold and tight; chaos tilted with a hard pink shadow.
  */
 @Composable
 fun Wordmark() {
     val look = LocalLook.current
     val ink = MaterialTheme.colorScheme.onBackground
     val style = MaterialTheme.typography.headlineSmall.copy(fontWeight = look.titleWeight)
-    fun shadow(col: Color, d: Float) = style.copy(shadow = androidx.compose.ui.graphics.Shadow(col, Offset(d, d), 0f))
     when (look.design) {
         "chaos" -> Text(
             "Wishlist", color = ink,
             style = style.copy(shadow = androidx.compose.ui.graphics.Shadow(look.blobs[0], Offset(6f, 6f), 0f)),
             modifier = Modifier.rotate(-3f)
         )
-        "y2k" -> Row(verticalAlignment = Alignment.CenterVertically) {
-            Box {
-                // The holographic shadow: the word again, filled with the gradient, a little lower and to the right.
-                Text("Wishlist", style = style.copy(brush = look.accentBrush), modifier = Modifier.offset(2.dp, 2.dp))
-                Text("Wishlist", style = style, color = ink)
-            }
-            Canvas(Modifier.padding(start = 6.dp).size(18.dp)) {
-                val r = size.minDimension / 2
-                val t = r * 0.18f
-                val c = center
-                val p = androidx.compose.ui.graphics.Path().apply {
-                    moveTo(c.x, c.y - r)
-                    quadraticTo(c.x + t, c.y - t, c.x + r, c.y); quadraticTo(c.x + t, c.y + t, c.x, c.y + r)
-                    quadraticTo(c.x - t, c.y + t, c.x - r, c.y); quadraticTo(c.x - t, c.y - t, c.x, c.y - r); close()
-                }
-                drawPath(p, ink)
-            }
-        }
-        "retro" -> Text("Wishlist", color = ink, style = shadow(look.shadows[0], 5f), modifier = Modifier.rotate(-4f))
-        "pop" -> Box {
-            Text("Wishlist", style = style, color = look.art[1], modifier = Modifier.offset(3.dp, 3.dp))
-            Text("Wishlist", style = style, color = look.art[3], modifier = Modifier.offset(1.5.dp, 1.5.dp))
-            Text("Wishlist", style = style, color = ink)
-        }
-        "grunge" -> Text("Wishlist", color = ink, style = shadow(look.accent, 4f), modifier = Modifier.rotate(-1.5f))
-        "flat" -> Column {
-            Text("Wishlist", style = style, color = ink)
-            Row(Modifier.padding(top = 2.dp)) {
-                listOf(look.art[0], look.art[1], look.art[2]).forEachIndexed { i, col ->
-                    Box(Modifier.size(width = if (i == 0) 28.dp else 12.dp, height = 4.dp).clip(RoundedCornerShape(2.dp)).background(col))
-                    Spacer(Modifier.width(3.dp))
-                }
-            }
-        }
-        "bauhaus" -> Row(verticalAlignment = Alignment.CenterVertically) {
-            Canvas(Modifier.size(width = 48.dp, height = 16.dp)) {
-                val s = size.height
-                drawCircle(look.art[0], s / 2, Offset(s / 2, s / 2))
-                drawPath(androidx.compose.ui.graphics.Path().apply {
-                    moveTo(s * 1.2f, s); lineTo(s * 1.7f, 0f); lineTo(s * 2.2f, s); close()
-                }, look.art[2])
-                drawRect(look.art[1], Offset(s * 2.4f, 0f), androidx.compose.ui.geometry.Size(s, s))
-            }
-            Text("Wishlist", style = style, color = ink, modifier = Modifier.padding(start = 8.dp))
-        }
-        // Doodle: a marker underline that loops at the end.
-        "doodle" -> Column {
-            Text("Wishlist", style = style, color = ink, modifier = Modifier.rotate(-2f))
-            Canvas(Modifier.padding(top = 1.dp).size(width = 104.dp, height = 8.dp)) {
-                val u = 1.dp.toPx()
-                drawPath(androidx.compose.ui.graphics.Path().apply {
-                    moveTo(2 * u, 5 * u); quadraticTo(40 * u, 1 * u, 80 * u, 5 * u); quadraticTo(96 * u, 7 * u, 92 * u, 2 * u)
-                    quadraticTo(88 * u, -1 * u, 86 * u, 6 * u)
-                }, look.art[0], style = androidx.compose.ui.graphics.drawscope.Stroke(2.5f * u, cap = androidx.compose.ui.graphics.StrokeCap.Round))
-            }
-        }
-        // Cottage-core: a little flower before the word.
-        "cottage" -> Row(verticalAlignment = Alignment.CenterVertically) {
-            Canvas(Modifier.padding(end = 8.dp).size(20.dp)) {
-                val c = center; val r = size.minDimension * 0.22f
-                for (i in 0 until 5) {
-                    val a = Math.toRadians(i * 72.0 - 90.0)
-                    drawCircle(look.art[1], r, Offset(c.x + (kotlin.math.cos(a) * r * 1.1f).toFloat(), c.y + (kotlin.math.sin(a) * r * 1.1f).toFloat()))
-                }
-                drawCircle(look.art[2], r * 0.8f, c)
-            }
-            Text("Wishlist", style = style, color = ink)
-        }
-        // Japandi: the word and a small red seal (hanko).
-        "japandi" -> Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Wishlist", style = style, color = ink)
-            Box(Modifier.padding(start = 10.dp).size(14.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFFB0412E)))
-        }
-        // Swiss: the word, then a square in the strong colour, on the baseline.
-        "swiss" -> Row(verticalAlignment = Alignment.Bottom) {
-            Text("Wishlist", style = style, color = ink)
-            Box(Modifier.padding(start = 3.dp, bottom = 6.dp).size(8.dp).background(look.art[0]))
-        }
-        // British Punk: a ransom note, every letter cut from a different page (big titles only, owner).
-        "punk" -> Row(Modifier.semantics(mergeDescendants = true) { contentDescription = "Wishlist" }, verticalAlignment = Alignment.CenterVertically) {
-            val papers = listOf(look.art[0], Color(0xFFFAFAF7), Color(0xFF111111), look.art[2], Color(0xFFFAFAF7), look.art[3], Color(0xFF111111), look.art[0])
-            "Wishlist".forEachIndexed { i, ch ->
-                val paper = papers[i % papers.size]
-                Text(
-                    ch.toString(), color = if (paper.luminance() > 0.5f) Color(0xFF111111) else Color.White,
-                    style = style.copy(fontFamily = listOf(null, androidx.compose.ui.text.font.FontFamily.Serif, androidx.compose.ui.text.font.FontFamily.Monospace)[i % 3] ?: style.fontFamily),
-                    modifier = Modifier.padding(horizontal = 1.dp).rotate(listOf(-6f, 4f, -3f, 7f, -5f, 3f, -7f, 5f)[i])
-                        .background(paper).padding(horizontal = 3.dp)
-                )
-            }
-        }
         else -> Text("Wishlist", style = style, color = ink)
     }
 }
@@ -558,7 +459,7 @@ internal fun HubTitle(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text, style = if (small) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleLarge.copy(shadow = look.titleShadow),
+                text, style = if (small) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleLarge,
                 fontWeight = look.titleWeight, color = MaterialTheme.colorScheme.onBackground
             )
             if (onMore != null) Icon(

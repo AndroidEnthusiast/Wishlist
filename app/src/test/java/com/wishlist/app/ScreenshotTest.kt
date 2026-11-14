@@ -69,8 +69,7 @@ abstract class ScreenshotBase(private val mode: String) {
         Repo.setTheme(app, mode)
         // -Pwl.style=… (owner, 13 November 2026: every style is checked, light and dark).
         System.getProperty("wl.style").orEmpty().takeIf { it.isNotEmpty() }?.let {
-            fun prop(k: String) = System.getProperty(k).orEmpty().ifEmpty { null }
-            Repo.setLook(app, it, mode, Repo.palette, prop("wl.set"), prop("wl.deco"), prop("wl.cards"))
+            Repo.setLook(app, it, mode, Repo.palette)
         }
         if (Repo.myWishes.isEmpty()) samples(app).forEach { Repo.addMine(app, it) }
     }
@@ -101,8 +100,7 @@ abstract class ScreenshotBase(private val mode: String) {
     /** The whole screen, pop-ups included. The clock is moved on by hand: some screens animate for ever. */
     private fun shot(name: String) {
         compose.mainClock.advanceTimeBy(2000)
-        val st = listOf("wl.style", "wl.set", "wl.deco", "wl.cards").map { System.getProperty(it).orEmpty() }.filter { it.isNotEmpty() }
-            .joinToString("-").ifEmpty { "quiet" }
+        val st = System.getProperty("wl.style").orEmpty().ifEmpty { "quiet" }
         captureScreenRoboImage("build/outputs/roborazzi/${st}_${name}_$mode.png")
     }
 
