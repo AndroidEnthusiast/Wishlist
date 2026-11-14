@@ -121,6 +121,8 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `tests/`: automated checks for everything under `web/` and the helper (see below); `tests/shared/same-answers.json` is answered by both the app and the web pages. `app/src/test/`: the app's own checks (JUnit).
 
 ## The notes themselves
+- Moved from CLAUDE.md "Which doc for which task" (14 November 2026, to make room for the challenge rule):
+- **Texts:** `docs/COPY.md`. **Backups:** `docs/BACKUPS.md`.
 - `tests/notes/limits.sh`: the notes' size limits (`CLAUDE.md` "Keeping the notes small"); `.claude/settings.json` runs it as the session's stop hook (`--hook`: exit 2 keeps the session from finishing while a limit is passed or the notes are not pushed to `main`).
 - `tests/notes/moved.py <commit>`: proves a tidy-up lost nothing (every removed line exists word for word elsewhere).
 
@@ -155,6 +157,8 @@ from before the tidy-up": `git checkout ef02546 -- CLAUDE.md docs/`, remove the 
 The stop hook's limits would then block, so also remove the Stop hook from `.claude/settings.json` (or ask the owner).
 
 ## Earlier short wording in CLAUDE.md (kept word for word, 12 November 2026)
+- Before 14 November 2026 ("(big builds above all)" was added, owner):
+- **Interview the owner before building** (owner's standing instruction, 1 November 2026): for every design or implementation choice that isn't already decided in `docs/DECISIONS.md`, ask first with pop-up questions (the AskUserQuestion tool, a recommended option first), and push back when an idea has a weak spot. Don't just agree, and don't fill gaps with your own choices: things built on guesses had to be redone. A skipped question means "none of these": build nothing from it (owner, 5 November 2026). Re-read the owner's earlier messages and check every point was built; say plainly if something was left out.
 Replaced by shorter lines when `docs/TODO.md` was added; the full versions are above in this file.
 - Before every push that touches `web/` or the helper: `bash tests/run-all.sh` (setup in MAP "Testing, in full");
 - Can: the real Supabase, read-only (public key, GET calls to `/rest/v1/rpc/...`, functions with a wrong key).

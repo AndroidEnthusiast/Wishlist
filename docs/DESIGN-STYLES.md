@@ -20,6 +20,9 @@ doc before starting one; the decisions behind it are in `docs/decisions/look.md`
 - **Speed as an afterthought.** Scrolling lagged until it was measured by the owner on the phone.
 
 ## The process (owner checkpoints marked ✋)
+0. **Challenge first** (owner, 14 November 2026): before starting, say plainly whether a new style is the best use of
+   the next updates, what it costs to build and keep up, and push back on a style that clashes with the app (wishes are
+   the content) or on doing more than one at a time. The owner decides.
 1. **Choose and brief.** The owner picks the style. Ask (pop-up questions) for references (links, pictures, apps they
    like), three words for the feeling, and which screens matter most to them. ✋
 2. **Study the style.** Its history, its principles and its real examples: structure and grid, type, colour, shape,

@@ -14,14 +14,13 @@ The rules for every session; details are in other docs, read only the part you n
 - **Lists, wishes, Home, anything on screen:** MAP "Your lists and wishes" + `docs/decisions/screens.md`, `look.md` +
   `docs/STYLE.md` (read it whole).
 - **Collab wishlists, syncing, the server, `supabase-*.sql`:** MAP + `docs/decisions/sharing.md`.
-- **Prices and shops:** MAP "Prices and shops" + Rules 2 and 8. **Web pages:** MAP "Web pages" and "Checks".
+- **Prices and shops:** MAP "Prices and shops" + Rules 2 and 8. **Web pages:** MAP "Web pages" and "Checks". **Texts, backups:** MAP.
 - **Roadmap work:** that stage in `docs/ROADMAP.md` (done ones: `docs/ROADMAP-ARCHIVE.md`) + `docs/decisions/roadmap.md`.
-- **Texts:** `docs/COPY.md`. **Backups:** `docs/BACKUPS.md`.
 
 ## Who you are working with
 - The owner is a beginner. They work from an Android phone and a Chromebook (browser only), with no terminal or IDE. They write in plain English.
 - Explain in short, exact, tap-by-tap steps. Name the real buttons ("Settings", "Secrets and variables", "Actions"). One thing at a time. No jargon unless you explain it in a few words.
-- **Interview the owner before building** (owner's standing instruction, 1 November 2026): for every design or implementation choice that isn't already decided in `docs/DECISIONS.md`, ask first with pop-up questions (the AskUserQuestion tool, a recommended option first), and push back when an idea has a weak spot. Don't just agree, and don't fill gaps with your own choices: things built on guesses had to be redone. A skipped question means "none of these": build nothing from it (owner, 5 November 2026). Re-read the owner's earlier messages and check every point was built; say plainly if something was left out.
+- **Interview the owner before building** (owner's standing instruction, 1 November 2026): for every design or implementation choice that isn't already decided in `docs/DECISIONS.md`, ask first with pop-up questions (the AskUserQuestion tool, a recommended option first), and push back (big builds above all) when an idea has a weak spot. Don't just agree, and don't fill gaps with your own choices: things built on guesses had to be redone. A skipped question means "none of these": build nothing from it (owner, 5 November 2026). Re-read the owner's earlier messages and check every point was built; say plainly if something was left out.
 - **Think through the risks of every feature and ask** (owner, 5 November 2026, after bol.com stayed grey): before building, list what could spoil the experience (a page or shop that misbehaves, offline, slow or failed saves, empty states, other people's data, old app versions) and ask the owner with pop-up options to mitigate each, a recommended one first. Fix things for every case (every shop, every list), not only the one example the owner reported.
 - **Nothing is built that is known to look wrong** (owner, 7 November 2026, after a cut-off button): follow `docs/STYLE.md` (the app's own buttons and dialogs, one type scale, 48 dp touch areas, room for shadows), check every layout against it before pushing, and say plainly that Compose screens can't be seen here.
 - Be honest about testing: always say what you ran and what you could NOT check (see "Cannot be checked here" below).
