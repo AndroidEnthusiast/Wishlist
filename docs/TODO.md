@@ -53,8 +53,6 @@ Details of each item are in the doc named after it.
    closed test with 12 testers for 14 days, a test channel, maybe a robot test on real phones.
 
 ## Known gaps (small, no date)
-- The screenshot "all" (All your wishes) shows Home: its tap never reaches the page in the picture-taker (since before
-  12 November). `AllWishesTest` checks the page itself; fix the picture when screens are next compared.
 - Reports of abuse have no alert yet (owner: find a better way than a failing backup).
 - Photos of a group or exchange deleted with its organiser's profile stay as unreachable files.
 - Collab wishlist pictures stay in Storage when the list is deleted by "Delete my data".

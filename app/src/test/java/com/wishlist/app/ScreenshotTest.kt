@@ -99,7 +99,8 @@ abstract class ScreenshotBase(private val mode: String) {
 
     /** The whole screen, pop-ups included. The clock is moved on by hand: some screens animate for ever. */
     private fun shot(name: String) {
-        compose.mainClock.advanceTimeBy(2000)
+        // In steps, letting Android's own main thread run in between (a tap's screen change is posted there).
+        repeat(10) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
         val st = System.getProperty("wl.style").orEmpty().ifEmpty { "quiet" }
         captureScreenRoboImage("build/outputs/roborazzi/${st}_${name}_$mode.png")
     }
@@ -111,7 +112,7 @@ abstract class ScreenshotBase(private val mode: String) {
         val node = compose.onAllNodes(m).onFirst()
         node.assertExists()
         compose.mainClock.autoAdvance = false
-        node.performClick()
+        node.performTouchInput { click() }
     }
 
     @Test fun home() { compose.waitForIdle(); compose.mainClock.autoAdvance = false; shot("home") }
@@ -134,14 +135,14 @@ abstract class ScreenshotBase(private val mode: String) {
     // The wish's ⋮ sheet and selecting several wishes (owner, 12 November 2026).
     @Test fun wishSheet() {
         tapAbove("My wishlist", 150f); compose.mainClock.advanceTimeBy(1000)
-        compose.onAllNodes(hasContentDescription("More") and hasClickAction()).onFirst().performClick()
+        compose.onAllNodes(hasContentDescription("More") and hasClickAction()).onFirst().performTouchInput { click() }
         shot("sheet")
     }
     @Test fun selecting() {
         tapAbove("My wishlist", 150f); compose.mainClock.advanceTimeBy(1000)
         compose.onAllNodes(hasText("Ceramic teapot", substring = true)).onFirst().performTouchInput { longClick() }
         compose.mainClock.advanceTimeBy(500)
-        compose.onAllNodes(hasText("Rain jacket", substring = true)).onFirst().performClick()
+        compose.onAllNodes(hasText("Rain jacket", substring = true)).onFirst().performTouchInput { click() }
         shot("selecting")
     }
     @Test fun friends() { tap("Friends"); shot("friends") }

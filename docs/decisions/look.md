@@ -172,3 +172,6 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
 - Quiet's three words: **calm, precise, premium**. Every screen gets the same care ("my whole app should get the most
   care, not specific pages"). Weak spots: "You judge and tell me". Claude's verdict and the style brief:
   `docs/styles/quiet.md`.
+- Brief approved (owner, 14 November 2026): "Yes, go on to the plan". **Wish cards keep all three buttons (⋮, share,
+  bin), but quieter** (Claude suggested only ⋮; the owner kept them). **The Secret Santa card stays festive, "but make
+  it fit the style"**. **Quiet's personalisation: colour and light/dark only** (no density or extra dark options).

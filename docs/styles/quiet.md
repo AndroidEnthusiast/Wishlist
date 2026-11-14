@@ -45,7 +45,14 @@ Revolut / Monzo; `docs/decisions/look.md`, "Premium identity").
 Gradients, coloured or glowing shadows, emoji as decoration, black buttons beside accent buttons, more than one filled
 button in one place, dashed boxes, badges everywhere, banners that shout, frames inside frames, tiny grey labels.
 
-## Next: the design plan (step 3, after the owner approves this brief)
+## The owner's answers (14 November 2026)
+- The brief is approved: go on to the design plan.
+- Wish cards keep ⋮, share and bin, made quieter (smaller, lighter, less weight than the wish).
+- The Secret Santa card stays festive, fitted to the style (no shouting: festive through colour and a careful
+  drawing, not effects).
+- Personalisation: the accent colour (5 and your own) and light or dark; nothing more.
+
+## Next: the design plan (step 3)
 Tokens (colours light and dark, type scale, corners, lines, depth, spacing, motion), every component of the inventory
 in `docs/DESIGN-STYLES.md` with its states, every screen, personalisation, and mock-ups of the key screens in light
 and dark for the owner to approve before anything is built.

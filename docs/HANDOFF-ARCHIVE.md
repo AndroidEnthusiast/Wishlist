@@ -534,3 +534,9 @@ key (2.190); building blocks up to date: Android 16 target, Kotlin 2.1, Compose 
   Cottage-core, Japandi, Risograph, Synthwave, Anthropomorphic, Swiss, British Punk; Gen Z chaos and Quiet), light and
   dark, each colour set (the gift box peeking over cards, the crooked Punk cards too): do the fonts arrive, do fields, menus, tick boxes, the bottom panels and the drawings look
   right on every screen, is anything hard to read? Not seen here: real fonts, real photos, real phone sizes.
+
+### Done on 14 November 2026 (was a known gap on the to-do list)
+- The screenshot "all" (All your wishes) shows Home: its tap never reaches the page in the picture-taker (since before
+  12 November). `AllWishesTest` checks the page itself; fix the picture when screens are next compared.
+  Fixed: the picture-taker now lets Android's main thread run between steps (`ScreenshotTest.shot`), so Add wish, All
+  your wishes, the wish's sheet and selecting two wishes show the right screen.
