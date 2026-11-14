@@ -13,6 +13,8 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -143,7 +145,7 @@ fun CompactCard(
         CompositionLocalProvider(LocalContentColor provides ink) {
         Box(
             Modifier.padding(look.inset(small = true)).fillMaxWidth().aspectRatio(1f)
-                .lookMat(look, look.pictureShape(w.id, small = true), look.pictureBg(w.id, w.image.isNotEmpty()), over = true)
+                .lookMat(look, look.pictureShape(w.id, small = true), look.photoSurface(w.id), over = true)
                 .combinedClickable(
                     enabled = w.image.isNotEmpty() || w.url.isNotBlank() || onLongPress != null,
                     onClickLabel = if (w.image.isNotEmpty()) tr("View picture") else null,
@@ -157,7 +159,7 @@ fun CompactCard(
         ) {
             if (w.image.isNotEmpty()) {
                 PhotoStage(w.image, w.label, small = true)
-            } else PlaceholderIcon("gift", 36.dp)
+            } else PlaceholderIcon("gift", 36.dp, look.photoInk)
             // Top left: the price change.
             Row(
                 Modifier.align(Alignment.TopStart).padding(8.dp),
@@ -218,7 +220,7 @@ fun CompactCard(
             ) {
             Box {
                 IconButton(onClick = { if (!inert) menu = true }) {
-                    Icon(AppIcons.MoreVert, tr("More"), tint = muted)
+                    Icon(AppIcons.MoreVert, tr("More"), tint = muted, modifier = Modifier.size(if (look.design == "quiet") 20.dp else 24.dp))
                 }
                 // ⋮ opens the wish's sheet (WishSheet.kt, owner 12 November 2026): the same everywhere. Delete is the bin
                 // under the ⋮ (owner, 7 November 2026); Top wish is the star on the picture.
@@ -231,7 +233,7 @@ fun CompactCard(
                 ) { menu = false }
             }
             if (!readOnly) IconButton(onClick = { if (!inert) DeleteFlow.request(ctx, w) }) {
-                Icon(AppIcons.Delete, tr("Delete"), tint = muted)
+                Icon(AppIcons.CardDelete, tr("Delete"), tint = muted, modifier = Modifier.size(if (look.design == "quiet") 20.dp else 24.dp))
             }
             }
         }
@@ -286,7 +288,7 @@ fun WishCard(
         CompositionLocalProvider(LocalContentColor provides ink) {
         Box(
             Modifier.padding(look.inset(small = false)).fillMaxWidth().aspectRatio(4f / 3f)
-                .lookMat(look, look.pictureShape(w.id, small = false), look.pictureBg(w.id, w.image.isNotEmpty()), over = true)
+                .lookMat(look, look.pictureShape(w.id, small = false), look.photoSurface(w.id), over = true)
                 .combinedClickable(
                     enabled = w.image.isNotEmpty() || w.url.isNotBlank() || onLongPress != null,
                     onClickLabel = if (w.image.isNotEmpty()) tr("View picture") else null,
@@ -300,7 +302,7 @@ fun WishCard(
         ) {
             if (w.image.isNotEmpty()) {
                 PhotoStage(w.image, w.label, small = false)
-            } else PlaceholderIcon("gift", 48.dp)
+            } else PlaceholderIcon("gift", 48.dp, look.photoInk)
             // Top left: the price change.
             Row(
                 Modifier.align(Alignment.TopStart).padding(12.dp),
@@ -416,17 +418,15 @@ fun RowCard(
     val rise = priceRose(w)
     val label = listOf(host(w.url), w.category.takeIf { it.isNotBlank() && it != "All" })
         .filter { !it.isNullOrBlank() }.joinToString(" · ")
-    Row(
-        Modifier.fillMaxWidth().alpha(if (dim) 0.6f else 1f).then(
-            if (onLongPress != null) Modifier.pointerInput(w.id) { detectTapGestures(onLongPress = { onLongPress() }) }
-            else Modifier
-        ).lookCard(look, w.id, look.cardShape(w.id, small = true)),
-        verticalAlignment = Alignment.Top
-    ) {
-        CompositionLocalProvider(LocalContentColor provides ink) {
+    val card = Modifier.fillMaxWidth().alpha(if (dim) 0.6f else 1f).then(
+        if (onLongPress != null) Modifier.pointerInput(w.id) { detectTapGestures(onLongPress = { onLongPress() }) }
+        else Modifier
+    ).lookCard(look, w.id, look.cardShape(w.id, small = true))
+    // The picture, in [box]: the photo surface with the star, the status and the private eye.
+    val picture: @Composable (Modifier) -> Unit = { box ->
             Box(
-                Modifier.padding(look.inset(small = true)).fillMaxWidth(0.36f).aspectRatio(1f)
-                    .lookMat(look, look.pictureShape(w.id, small = true), look.pictureBg(w.id, w.image.isNotEmpty()), over = true)
+                box
+                    .lookMat(look, look.pictureShape(w.id, small = true), look.photoSurface(w.id), over = true)
                     .combinedClickable(
                         enabled = w.image.isNotEmpty() || w.url.isNotBlank() || onLongPress != null,
                         onClickLabel = if (w.image.isNotEmpty()) tr("View picture") else null,
@@ -438,7 +438,7 @@ fun RowCard(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                if (w.image.isNotEmpty()) PhotoStage(w.image, w.label, small = true) else PlaceholderIcon("gift", 32.dp)
+                if (w.image.isNotEmpty()) PhotoStage(w.image, w.label, small = true) else PlaceholderIcon("gift", 32.dp, look.photoInk)
                 if (w.priv) PrivateBadge(Modifier.align(Alignment.BottomStart).padding(6.dp), size = 12.dp, onClick = onPrivate)
                 Column(
                     Modifier.align(Alignment.TopEnd).padding(6.dp),
@@ -451,9 +451,14 @@ fun RowCard(
                     if (badge != null) TappableBadge(w, badge, small = true)
                 }
             }
+    }
+    // The words and buttons next to the picture.
+    val words: @Composable RowScope.(Modifier) -> Unit = { extra ->
             // Room under the buttons, so Reserve never touches the card's edge (owner, 7 November 2026).
             // 16 dp from the picture (owner, 7 November 2026: the words almost touched it).
-            Column(Modifier.weight(1f).padding(start = 16.dp, top = 10.dp, end = 8.dp, bottom = 10.dp)) {
+            Column(Modifier.weight(1f).then(extra).padding(start = if (look.design == "quiet") 14.dp else 16.dp, top = if (look.design == "quiet") 12.dp else 10.dp, end = 8.dp, bottom = if (look.design == "quiet") 4.dp else 10.dp),
+                // Quiet: the buttons at the bottom of the card, level with the bottom of the photo.
+                verticalArrangement = if (look.design == "quiet") Arrangement.SpaceBetween else Arrangement.Top) {
                 Column(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).combinedClickable(
                         enabled = w.url.isNotBlank() || onLongPress != null,
@@ -464,7 +469,9 @@ fun RowCard(
                 ) {
                     if (label.isNotEmpty()) Text(
                         label,
-                        style = MaterialTheme.typography.labelSmall, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis
+                        // Quiet: details at 13 (its smallest size for something you read, 2.207).
+                        style = if (look.design == "quiet") MaterialTheme.typography.bodySmall else MaterialTheme.typography.labelSmall,
+                        color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis
                     )
                     Text(w.label, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis, color = if (w.title.isBlank()) ink.copy(alpha = 0.55f) else ink)
                         // "2×" and "Exactly this" / "Similar is fine" (owner, 2.128).
@@ -489,6 +496,28 @@ fun RowCard(
                     }
                 }
             }
+    }
+    if (look.design == "quiet") {
+        // Quiet (2.207): the picture fills the left of the card from top to bottom (a square at least), so a long name
+        // never leaves a strip of empty card under the photo.
+        androidx.compose.foundation.layout.BoxWithConstraints(card) {
+            val pw = maxWidth * 0.34f
+            Row(verticalAlignment = Alignment.Top) {
+                CompositionLocalProvider(LocalContentColor provides ink) {
+                    androidx.compose.foundation.layout.Spacer(Modifier.width(pw))
+                    words(Modifier.heightIn(min = pw))
+                }
+            }
+            Box(Modifier.matchParentSize()) {
+                CompositionLocalProvider(LocalContentColor provides ink) {
+                    picture(Modifier.width(pw).fillMaxHeight())
+                }
+            }
+        }
+    } else Row(card, verticalAlignment = Alignment.Top) {
+        CompositionLocalProvider(LocalContentColor provides ink) {
+            picture(Modifier.padding(look.inset(small = true)).fillMaxWidth(0.36f).aspectRatio(1f))
+            words(Modifier)
         }
     }
 }

@@ -75,11 +75,12 @@ fun AppBottomBar(
     // surface. Quiet: nearly opaque with a hairline and a soft shadow, like frosted glass.
     val shape = when (look.design) {
         "chaos" -> RoundedCornerShape(20.dp)
-        else -> RoundedCornerShape(26.dp)
+        else -> RoundedCornerShape(32.dp)
     }
     val frame = if (look.design == "quiet") Modifier
         .shadow(12.dp, shape, clip = false, ambientColor = Color.Black.copy(alpha = 0.25f), spotColor = Color.Black.copy(alpha = 0.18f))
-        .clip(shape).background(cs.surfaceVariant.copy(alpha = 0.94f)).border(1.dp, look.line, shape)
+        // Quiet 2.207: white (dark: the lifted grey of what floats), a round pill.
+        .clip(shape).background(if (look.dark) Color(0xFF2C2C2E).copy(alpha = 0.96f) else Color.White.copy(alpha = 0.96f)).border(1.dp, look.line, shape)
     else Modifier.lookSurface(look, shape, cs.surfaceVariant, depth = 7.dp)
     Box(
         Modifier.fillMaxWidth().background(cs.background).windowInsetsPadding(WindowInsets.navigationBars)
@@ -102,8 +103,9 @@ fun AppBottomBar(
             // "Price watch" seemed closer to the + than "Messages"): the same room on both sides.
             Box(Modifier.width(78.dp), contentAlignment = Alignment.Center) {
             Box(
-                Modifier.size(50.dp).then(
-                    if (look.design == "quiet") Modifier.shadow(6.dp, CircleShape, clip = false, ambientColor = look.accent, spotColor = look.accent)
+                Modifier.size(if (look.design == "quiet") 52.dp else 50.dp).then(
+                    // Quiet 2.207: a small neutral shadow, no coloured glow.
+                    if (look.design == "quiet") Modifier.shadow(4.dp, CircleShape, clip = false)
                         .clip(CircleShape).background(look.accent)
                     else Modifier.lookSurface(look, look.fabShape, look.accent, depth = 5.dp)
                 ).clickable(onClickLabel = tr("Add wish"), onClick = onAdd),

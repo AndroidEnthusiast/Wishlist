@@ -32,6 +32,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.semantics.selected
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -191,11 +195,13 @@ fun OutlinedTextField(
     val look = LocalLook.current
     val sh = shape ?: fieldShape(look)
     if (look.design == "quiet") {
-        M3OutlinedTextField(
-            value, onValueChange, modifier, enabled, readOnly, textStyle, label, placeholder, leadingIcon, trailingIcon,
-            prefix, suffix, supportingText, isError, visualTransformation, keyboardOptions, keyboardActions, singleLine,
-            maxLines, minLines, shape = sh
-        )
+        QuietLabelled(modifier, label) {
+            M3OutlinedTextField(
+                value, onValueChange, Modifier.fillMaxWidth(), enabled, readOnly, textStyle, null, placeholder, leadingIcon, trailingIcon,
+                prefix, suffix, supportingText, isError, visualTransformation, keyboardOptions, keyboardActions, singleLine,
+                maxLines, minLines, shape = shape ?: QuietFieldShape, colors = quietFieldColors(look)
+            )
+        }
         return
     }
     val source = remember { MutableInteractionSource() }
@@ -248,11 +254,13 @@ fun OutlinedTextField(
     val look = LocalLook.current
     val sh = shape ?: fieldShape(look)
     if (look.design == "quiet") {
-        M3OutlinedTextField(
-            value, onValueChange, modifier, enabled, readOnly, textStyle, label, placeholder, leadingIcon, trailingIcon,
-            prefix, suffix, supportingText, isError, visualTransformation, keyboardOptions, keyboardActions, singleLine,
-            maxLines, minLines, shape = sh
-        )
+        QuietLabelled(modifier, label) {
+            M3OutlinedTextField(
+                value, onValueChange, Modifier.fillMaxWidth(), enabled, readOnly, textStyle, null, placeholder, leadingIcon, trailingIcon,
+                prefix, suffix, supportingText, isError, visualTransformation, keyboardOptions, keyboardActions, singleLine,
+                maxLines, minLines, shape = shape ?: QuietFieldShape, colors = quietFieldColors(look)
+            )
+        }
         return
     }
     val source = remember { MutableInteractionSource() }
@@ -272,6 +280,41 @@ fun OutlinedTextField(
             }
         )
     }
+}
+
+/**
+ * Quiet's fields (2.207, owner: labels above the fields): the label sits above the field in ink, never inside its
+ * line, so it doesn't move when you type. The caller's [modifier] (width, weight, focus) goes on the whole.
+ */
+@Composable
+private fun QuietLabelled(modifier: Modifier, label: (@Composable () -> Unit)?, field: @Composable () -> Unit) {
+    if (label == null) { Box(modifier) { field() }; return }
+    val ink = MaterialTheme.colorScheme.onSurface
+    androidx.compose.foundation.layout.Column(modifier) {
+        androidx.compose.runtime.CompositionLocalProvider(
+            androidx.compose.material3.LocalContentColor provides ink,
+            LocalTextStyle provides MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold, color = ink)
+        ) { Box(Modifier.padding(start = 4.dp, bottom = 6.dp)) { label() } }
+        field()
+    }
+}
+
+private val QuietFieldShape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp)
+
+/** Quiet's field colours: filled with the card colour, a grey line (3 : 1), 2 dp in your colour while typing. */
+@Composable
+private fun quietFieldColors(look: Look): TextFieldColors {
+    val cs = look.scheme
+    return OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = cs.surfaceVariant, unfocusedContainerColor = cs.surfaceVariant, disabledContainerColor = cs.surfaceVariant,
+        errorContainerColor = cs.surfaceVariant,
+        focusedBorderColor = cs.primary, unfocusedBorderColor = cs.outline, errorBorderColor = cs.error,
+        cursorColor = cs.primary, focusedTextColor = cs.onSurface, unfocusedTextColor = cs.onSurface,
+        focusedPlaceholderColor = cs.onSurfaceVariant, unfocusedPlaceholderColor = cs.onSurfaceVariant,
+        focusedSupportingTextColor = cs.onSurfaceVariant, unfocusedSupportingTextColor = cs.onSurfaceVariant,
+        focusedLeadingIconColor = cs.onSurfaceVariant, unfocusedLeadingIconColor = cs.onSurfaceVariant,
+        focusedTrailingIconColor = cs.onSurfaceVariant, unfocusedTrailingIconColor = cs.onSurfaceVariant
+    )
 }
 
 /** What both text fields share: the room for the label, the minimum size and the text's colour. */
@@ -448,6 +491,48 @@ fun FilterChip(
 }
 
 /**
+ * Two or three tabs side by side (Chats / Friends, All wishes / Top wishes). Quiet (2.207): a segmented switch, a grey
+ * track with the chosen one on a white (dark: lifted grey) pill, in ink; never a black button. Chaos: its chips, as
+ * before.
+ */
+@Composable
+fun SegmentedTabs(labels: List<String>, selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
+    val look = LocalLook.current
+    if (look.design == "quiet") {
+        val track = if (look.dark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)
+        val chosen = if (look.dark) Color(0xFF4A4A4E) else Color.White
+        Row(modifier.fillMaxWidth().clip(CircleShape).background(track).padding(3.dp)) {
+            labels.forEachIndexed { i, label ->
+                val on = i == selected
+                Box(
+                    Modifier.weight(1f).heightIn(min = 40.dp)
+                        .then(if (on) Modifier.shadow(if (look.dark) 0.dp else 1.dp, CircleShape) else Modifier)
+                        .clip(CircleShape).background(if (on) chosen else Color.Transparent)
+                        .selectable(on, role = Role.Tab, onClick = { onSelect(i) }),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        label, style = MaterialTheme.typography.labelLarge, maxLines = 1,
+                        color = if (on) look.scheme.onSurface else look.scheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    } else Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        labels.forEachIndexed { i, label ->
+            val on = i == selected
+            Box(
+                Modifier.weight(1f).lookChip(look, on).clickable { onSelect(i) }
+                    .semantics { this.selected = on }.padding(vertical = 9.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = look.chipContent(on))
+            }
+        }
+    }
+}
+
+/**
  * "Loading", in the style: Quiet uses Material's spinner; the others draw their own turning ring (a holographic
  * sweep in Y2K, red and mustard in Retro, three racing stripes in Pop futurism, a broken ink ring in Grunge, a
  * calm teal arc in Flat, red, yellow and blue quarters in Bauhaus, thick ink in chaos). [color] given: one colour
@@ -557,11 +642,21 @@ fun ModalBottomSheet(
             ?: RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
     }
     M3ModalBottomSheet(
-        onDismissRequest, modifier, sheetState, shape = shape, containerColor = if (look.design == "quiet") containerColor else look.scheme.surfaceVariant,
+        onDismissRequest, modifier, sheetState, shape = shape, containerColor = if (look.design == "quiet") quietRaised(look, containerColor) else look.scheme.surfaceVariant,
         tonalElevation = 0.dp,
         dragHandle = { SheetHandle(look) },
         content = content
     )
+}
+
+/**
+ * Quiet (2.207): what floats (panels, dialogs, menus) is white in light and a lifted grey in dark, where the page's
+ * own colour would be black. A colour a screen asked for on purpose stays.
+ */
+internal fun quietRaised(look: Look, asked: Color): Color = when {
+    asked != look.scheme.surface && asked != look.scheme.background -> asked
+    look.dark -> Color(0xFF2C2C2E)
+    else -> Color.White
 }
 
 /** The handle at the top of a bottom panel. */

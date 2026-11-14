@@ -1,5 +1,7 @@
 package com.wishlist.app
 
+import androidx.compose.material3.LocalTextStyle
+
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarResult
@@ -138,7 +140,8 @@ private class ButtonSize(val height: androidx.compose.ui.unit.Dp, val pad: Paddi
 @Composable
 private fun buttonSize(): ButtonSize = if (LocalInDialog.current)
     ButtonSize(40.dp, PaddingValues(horizontal = 18.dp, vertical = 8.dp), 3.dp, 6.dp)
-else ButtonSize(46.dp, PaddingValues(horizontal = 22.dp, vertical = 10.dp), 5.dp, 0.dp)
+// Quiet (2.207): 48 dp, the height of everything you tap.
+else ButtonSize(if (LocalLook.current.design == "quiet") 48.dp else 46.dp, PaddingValues(horizontal = 22.dp, vertical = 10.dp), 5.dp, 0.dp)
 
 @Composable
 fun Button(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) {
@@ -259,9 +262,11 @@ fun AlertDialog(
     // Buttons inside the dialog's text are the compact size (LocalInDialog, docs/STYLE.md).
     val body: (@Composable () -> Unit)? = if (text == null) null else inDialog(text)
     if (look.design == "quiet") {
+        // Quiet (2.207): the title in Fraunces 20 (not the 28 of screen titles), on white or a lifted grey in dark.
+        val head: (@Composable () -> Unit)? = title?.let { t -> { androidx.compose.material3.ProvideTextStyle(MaterialTheme.typography.titleLarge) { t() } } }
         M3AlertDialog(
-            onDismissRequest, confirmButton, modifier, dismissButton, title = title, text = body,
-            shape = shape, containerColor = cs.surfaceContainerHigh, tonalElevation = 0.dp, properties = properties
+            onDismissRequest, confirmButton, modifier, dismissButton, title = head, text = body,
+            shape = shape, containerColor = quietRaised(look, cs.surface), tonalElevation = 0.dp, properties = properties
         )
     } else {
         M3AlertDialog(
@@ -307,8 +312,13 @@ fun ListTitle(name: String, @Suppress("UNUSED_PARAMETER") count: Int) {
 
 /** A screen's title in the top bar: one line, the style's title weight, cut off with … when too long. */
 @Composable
-fun ScreenTitle(text: String) {
-    Text(text, fontWeight = LocalLook.current.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis)
+fun ScreenTitle(text: String, big: Boolean = false) {
+    // [big]: the main tabs (Messages, Friends, My shops), as large as Home's wordmark in Quiet (2.207: 28).
+    val look = LocalLook.current
+    Text(
+        text, fontWeight = look.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis,
+        style = if (big && look.design == "quiet") MaterialTheme.typography.headlineSmall else LocalTextStyle.current
+    )
 }
 
 /** The price change on a wish ("−20%", "+5%"; plus and minus, not arrows: it isn't a stock trade). */
@@ -394,6 +404,10 @@ object AppIcons {
     val Search: ImageVector @Composable get() = v(Icons.Filled.Search, Icons.Outlined.Search, Icons.Rounded.Search, Icons.Sharp.Search)
     val Settings: ImageVector @Composable get() = v(Icons.Filled.Settings, Icons.Outlined.Settings, Icons.Rounded.Settings, Icons.Sharp.Settings)
     val Share: ImageVector @Composable get() = v(Icons.Filled.Share, Icons.Outlined.Share, Icons.Rounded.Share, Icons.Sharp.Share)
+    /** The buttons on a wish card (⋮, share, bin): in Quiet the lighter outlined icons (2.207: the owner kept all three
+     *  "but quieter"), elsewhere the style's own. */
+    val CardShare: ImageVector @Composable get() = if (LocalLook.current.design == "quiet") Icons.Outlined.Share else Share
+    val CardDelete: ImageVector @Composable get() = if (LocalLook.current.design == "quiet") Icons.Outlined.Delete else Delete
     /** Wishlist groups (2.108): Google's Material "group" icon (Apache 2.0), drawn from its path here because the app
      *  only includes the core icon set. One shape in every style. */
     val Group: ImageVector get() = groupIcon
@@ -587,6 +601,7 @@ fun rememberWishPhoto(url: String, px: Int = PHOTO_PX, exact: Boolean = false): 
 @Composable
 fun PhotoStage(url: String, description: String, small: Boolean, modifier: Modifier = Modifier) {
     val look = LocalLook.current
+    if (look.design == "quiet") { QuietPhoto(url, description, small, modifier); return }
     val tiny = rememberWishPhoto(url, 24, exact = true).first
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Image(
@@ -598,6 +613,26 @@ fun PhotoStage(url: String, description: String, small: Boolean, modifier: Modif
         )
         Box(Modifier.fillMaxSize().background(if (look.dark) Color.Black.copy(alpha = 0.28f) else Color.White.copy(alpha = 0.18f)))
         PhotoCard(url, description, small)
+    }
+}
+
+/**
+ * Quiet's photo (2.207, docs/styles/quiet.md): the shop photo whole, on the card's one light photo surface, with small
+ * rounded corners and no frame or shadow of its own. It is laid over the surface with "multiply" (a colour filter), so the white
+ * background most shop photos have takes the surface's colour and the product seems to stand on the card itself
+ * (owner: one photo surface, no frame in a frame).
+ */
+@Composable
+private fun QuietPhoto(url: String, description: String, small: Boolean, modifier: Modifier = Modifier) {
+    val (painter, ratio) = rememberWishPhoto(url)
+    Box(modifier.fillMaxSize().padding(if (small) 10.dp else 16.dp), contentAlignment = Alignment.Center) {
+        Image(
+            painter, description, contentScale = ContentScale.Fit,
+            // Multiplying by the surface's colour is the same as laying the photo over it with "multiply".
+            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(LocalLook.current.photoSurface(0), androidx.compose.ui.graphics.BlendMode.Multiply),
+            modifier = (if (ratio == null) Modifier.fillMaxSize() else Modifier.aspectRatio(ratio, matchHeightConstraintsFirst = true))
+                .clip(RoundedCornerShape(if (small) 8.dp else 12.dp))
+        )
     }
 }
 

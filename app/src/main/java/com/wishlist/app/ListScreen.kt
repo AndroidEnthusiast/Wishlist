@@ -358,7 +358,8 @@ fun HomeScreen(
                             else -> {
                             // Rows has smaller icons than the large cards (owner, 2.127: bigger than the private badge,
                             // smaller than before); the tap area stays the same.
-                            val ico = if (view == "rows") 20.dp else 24.dp
+                            // Quiet (2.207): 20 dp in every view, so the buttons stay quieter than the wish.
+                            val ico = if (view == "rows" || look.design == "quiet") 20.dp else 24.dp
                             val actions: @Composable RowScope.() -> Unit = {
                                 // The bin stays, the rest is in one ⋮ (owner, 2.135: calmer rows), the same sheet as Two
                                 // per row on every list (12 November 2026; a collab wishlist had only Share here).
@@ -374,7 +375,7 @@ fun HomeScreen(
                                 )
                                 // Share as its own button too (owner, 12 November 2026: sharing a wish should be one tap).
                                 IconButton(onClick = { shareItem(ctx, w, idea = inShared) }) {
-                                    Icon(AppIcons.Share, tr("Share"), tint = look.cardMuted(w.id), modifier = Modifier.size(ico))
+                                    Icon(AppIcons.CardShare, tr("Share"), tint = look.cardMuted(w.id), modifier = Modifier.size(ico))
                                 }
                                 if (inShared) {
                                     // Reserving takes the place of "got it" on a shared list.
@@ -385,7 +386,7 @@ fun HomeScreen(
                                     }
                                 }
                                 IconButton(onClick = { DeleteFlow.request(ctx, w) }) {
-                                    Icon(AppIcons.Delete, tr("Delete"), tint = look.cardMuted(w.id), modifier = Modifier.size(ico))
+                                    Icon(AppIcons.CardDelete, tr("Delete"), tint = look.cardMuted(w.id), modifier = Modifier.size(ico))
                                 }
                             }
                             if (view == "rows") RowCard(

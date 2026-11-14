@@ -94,5 +94,17 @@ match when there is one list, so both stay (Home gets a third number, Lists).
 - **Owner's choices with the approval**: in dark mode photos sit on a light photo surface too (#E9E9EC, the card
   stays dark), labels above the fields, Private and I have it as switches.
 
+## Built (2.207) and checked (step 5)
+- Built in 2.207; the details per part are in `README.md` and the decision in `docs/decisions/look.md`.
+- Differences from the mock-ups: Home keeps Friends, Wishes, Total value (not Lists); the photo on the cards is the
+  whole shop photo laid on the surface with "multiply" (white backgrounds take the surface's colour); green, orange
+  and pink buttons have dark text (readability).
+- Checked here: `LookTest` (contrast for every colour, light and dark, incl. `quietPartsAreReadable`),
+  `PerformanceRulesTest`, `PartsScreenshotTest`, screenshots of Home, a list, selecting, a wish's sheet, Add a wish,
+  All your wishes, App settings, Friends, Messages and My shops in light and dark, and at 360 dp with text at 130 %
+  (the list screens are skipped there by the test); Gen Z chaos compared pixel for pixel: unchanged.
+- Not checked here: the real fonts (Fraunces and Figtree download on the phone; the pictures show a stand-in font),
+  real shop photos, a chat with messages (needs the server), how it feels and scrolls on a phone, TalkBack.
+
 ## Next
-Build it as one unit (step 4), check every screen light and dark (step 5), then the owner tries it (step 6).
+The owner tries it on the phone (step 6 ✋) and sends anything that feels off; then Gen Z chaos, with the partner.

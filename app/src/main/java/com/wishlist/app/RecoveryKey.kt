@@ -1,5 +1,9 @@
 package com.wishlist.app
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
@@ -240,6 +244,31 @@ fun RecoveryCard() {
     val cs = MaterialTheme.colorScheme
     var open by remember { mutableStateOf(false) }
     if (!RecoveryKey.showCard(ctx)) return
+    val look = LocalLook.current
+    if (look.design == "quiet") {
+        // Quiet (2.207): a calm white card, a lock in a soft circle of your colour, one tonal button and Later as text.
+        Row(
+            Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp).fillMaxWidth()
+                .lookCard(look, 1L, look.cardShape(1L, small = true)).padding(start = 16.dp, end = 12.dp, top = 14.dp, bottom = 10.dp)
+        ) {
+            Box(Modifier.size(40.dp).clip(CircleShape).background(cs.primaryContainer), contentAlignment = Alignment.Center) {
+                Icon(AppIcons.Lock, null, tint = cs.onPrimaryContainer, modifier = Modifier.size(20.dp))
+            }
+            Column(Modifier.padding(start = 12.dp).weight(1f)) {
+                Text(tr("Keep your wishlists safe on a new phone"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Text(
+                    tr("Save your recovery key once. With it, everything comes back on a new phone."),
+                    style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 2.dp)
+                )
+                Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    FilledTonalButton(onClick = { open = true }) { Text(tr("Save your key")) }
+                    TextButton(onClick = { RecoveryKey.later(ctx) }) { Text(tr("Later")) }
+                }
+            }
+        }
+        if (open) RecoveryKeyDialog { open = false }
+        return
+    }
     Column(
         Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp).fillMaxWidth()
             .lookSurface(LocalLook.current, MaterialTheme.shapes.medium, cs.secondaryContainer, depth = 4.dp).padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = 4.dp)

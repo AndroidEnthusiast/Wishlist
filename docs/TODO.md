@@ -10,6 +10,9 @@ Details of each item are in the doc named after it.
 - **Choose the next design style** (owner, 14 November 2026), when you want one: it is made one at a time, to a
   professional standard, following `docs/DESIGN-STYLES.md` (your references and three words for the feeling first;
   a style brief and a specification with mock-ups for you to approve before anything is built).
+- **Try Quiet (2.207) on the phone**, light and dark: lists in every view, a wish's sheet, Add a wish, Home, chat,
+  App settings. Does it feel calm, precise and premium? Send a screenshot of anything that feels off. Then: polish
+  Gen Z chaos the same way, with your partner (`docs/DESIGN-STYLES.md`).
 - **Try 2.206 on the phone:** Quiet and Gen Z chaos, light and dark, look as before; someone who had another style
   now has Quiet with their colour and light/dark kept.
 - **Gen Z chaos, coloured text** (found 13 November 2026, left as it was because chaos stays unchanged): with the

@@ -36,6 +36,10 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
 - Labels are short verbs in sentence case ("Send invite", "Invite Friends"), never all capitals.
 
 ## Touch and spacing
+- Quiet's own rules (2.207, `docs/styles/quiet.md`): labels sit above text fields (the field wrappers do it, pass
+  `label` as usual); two or three tabs are `SegmentedTabs`; a wish photo goes on `photoSurface` through
+  `PhotoStage`; your colour as text is `MaterialTheme.colorScheme.primary` (already darkened to read), filled blocks
+  use `look.accent`.
 - Everything you tap has a touch area of at least 48 × 48 dp, even when it looks smaller (chips use
   `minimumInteractiveComponentSize()`). Icons alone get a `contentDescription` (or a click label).
 - Spacing comes in steps of 4 dp: 4, 8, 12, 16, 24. Screen edges 16 dp; space between items in a dialog 8 dp; between

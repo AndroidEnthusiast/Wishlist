@@ -97,7 +97,8 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `Settings.kt`
 - `Theme.kt` + `Design.kt` + `Styled.kt` + `Themer.kt` (themes and the themed buttons, dialogs, icons)
 - Design styles: Quiet and Gen Z chaos only since 2.206 (the others are in git history, commit `057fe42`); how a new
-  one is made: `docs/DESIGN-STYLES.md` (one style at a time, to a professional standard); speed rules:
+  one is made: `docs/DESIGN-STYLES.md` (one style at a time, to a professional standard); Quiet's specification:
+  `docs/styles/quiet.md` (polished in 2.207: `quietType`, `photoSurface`, `QuietPhoto`, `SegmentedTabs`); speed rules:
   `PerformanceRulesTest`; every top bar's title is `ScreenTitle` (`Styled.kt`)
 - `Themed.kt` (2.199): the themed text fields, menus, tick boxes, choice circles, chips, spinners, progress bars, dividers, sliders, bottom panels, message bar and `Scaffold` (the style's drawing behind every screen); checks `LookTest`, `PartsScreenshotTest`
 - `themes/`: frozen copies of themes the owner wants to be able to bring back (Gen Z chaos, 13 November 2026), each with a README on putting it back; checked by `tests/themes/check.sh`

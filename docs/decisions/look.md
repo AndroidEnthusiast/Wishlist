@@ -179,3 +179,10 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   https://claude.ai/artifact/QUmdTreBKMernTMXcRffGh). Also chosen: **photos sit on a light photo surface in dark mode
   too** (white shop photos blend in, dark products stay visible); **labels above the fields** (forms a little
   taller); **Private and I have it as switches** in a wish's sheet.
+- **Quiet polished, built in 2.207** (14 November 2026) to the approved plan. It replaces, for Quiet only, three
+  older choices (chaos keeps them): photos as small cards with a shadow on a coloured area (2.63) → the photo whole on
+  one light photo surface; the "+ New …" block smaller than a list (7 November 2026) → a tile of the same size; tiny
+  "+ Add friends" in the numbers → a tonal button beside your name. Kept on purpose: Home's numbers stay Friends,
+  Wishes, Total value (the mock-up showed Lists; Friends is the existing decision). New for readability: in light,
+  your colour used as text is darkened just enough for 4.5 : 1, and the text on filled buttons is white or ink,
+  whichever reads better (so green, orange and pink buttons get dark text).

@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.padding
 
 // "How many will you buy?" and the wish form's How many / Exactly this (screens). The rules are in Quantity.kt.
@@ -41,11 +42,14 @@ fun ReserveCountDialog(max: Int, current: Int, onPick: (Int) -> Unit, onClose: (
 /** A small heading in the wish form ("Wish", "Details", "Visibility"; owner, 2.128). */
 @Composable
 fun FormHeading(text: String) {
+    // Quiet (2.207): a Fraunces section title in ink, not small coloured words.
+    val quiet = LocalLook.current.design == "quiet"
     Text(
-        text, style = androidx.compose.material3.MaterialTheme.typography.titleSmall,
-        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-        color = androidx.compose.material3.MaterialTheme.colorScheme.primary,
-        modifier = androidx.compose.ui.Modifier.padding(top = 8.dp)
+        text, style = if (quiet) androidx.compose.material3.MaterialTheme.typography.titleLarge.copy(fontSize = 18.sp, lineHeight = 24.sp)
+            else androidx.compose.material3.MaterialTheme.typography.titleSmall,
+        fontWeight = if (quiet) null else androidx.compose.ui.text.font.FontWeight.Bold,
+        color = if (quiet) androidx.compose.material3.MaterialTheme.colorScheme.onSurface else androidx.compose.material3.MaterialTheme.colorScheme.primary,
+        modifier = androidx.compose.ui.Modifier.padding(top = if (quiet) 12.dp else 8.dp)
     )
 }
 

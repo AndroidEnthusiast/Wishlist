@@ -1,5 +1,6 @@
 package com.wishlist.app
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -97,9 +98,13 @@ fun WishSheet(w: Wish, a: WishActions, onClose: () -> Unit) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp)) {
             // The wish itself.
             Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(56.dp).clip(RoundedCornerShape(12.dp))) {
-                    if (w.image.isNotBlank()) WishImage(w.image, Modifier.size(56.dp), ContentScale.Crop)
-                    else Box(Modifier.size(56.dp), contentAlignment = Alignment.Center) { PlaceholderIcon("gift", 28.dp) }
+                val look = LocalLook.current
+                Box(Modifier.size(56.dp).clip(RoundedCornerShape(if (look.design == "quiet") 14.dp else 12.dp)).then(if (look.design == "quiet") Modifier.background(look.photoSurface(w.id)) else Modifier)) {
+                    if (w.image.isNotBlank()) {
+                        // Quiet (2.207): the whole photo on the light photo surface, as on the cards.
+                        if (look.design == "quiet") PhotoStage(w.image, w.label, small = true)
+                        else WishImage(w.image, Modifier.size(56.dp), ContentScale.Crop)
+                    } else Box(Modifier.size(56.dp), contentAlignment = Alignment.Center) { PlaceholderIcon("gift", 28.dp, if (look.design == "quiet") look.photoInk else MaterialTheme.colorScheme.onSurfaceVariant) }
                 }
                 Column(Modifier.padding(start = 16.dp).weight(1f)) {
                     Text(
@@ -107,7 +112,9 @@ fun WishSheet(w: Wish, a: WishActions, onClose: () -> Unit) {
                         maxLines = 2, overflow = TextOverflow.Ellipsis
                     )
                     w.price?.let { p ->
-                        Text(money(p, w.currency), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                        // Quiet (2.207): the price as on the card, with its change.
+                        if (LocalLook.current.design == "quiet") PriceLine(w, MaterialTheme.typography.titleMedium)
+                        else Text(money(p, w.currency), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                     }
                     // On several of your lists: say so (owner: otherwise "From which list?" makes no sense).
                     a.everywhere?.lists?.takeIf { it.size > 1 }?.let { ls ->
@@ -153,7 +160,11 @@ fun SheetRow(icon: @Composable () -> Unit, label: String, onClick: () -> Unit, c
     ) {
         icon()
         Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 16.dp).weight(1f))
-        if (checked != null) Checkbox(checked = checked, onCheckedChange = null)
+        // On or off: a switch in Quiet (owner, 14 November 2026: like App settings), a tick box elsewhere.
+        if (checked != null) {
+            if (LocalLook.current.design == "quiet") Switch(checked = checked, onCheckedChange = null)
+            else Checkbox(checked = checked, onCheckedChange = null)
+        }
     }
 }
 

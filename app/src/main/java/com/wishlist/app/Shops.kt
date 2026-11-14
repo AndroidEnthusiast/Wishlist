@@ -250,7 +250,7 @@ fun DiscoverScreen(snack: androidx.compose.material3.SnackbarHostState, onProfil
         containerColor = cs.background,
         topBar = {
             TopAppBar(
-                title = { ScreenTitle(tr("My shops")) },
+                title = { ScreenTitle(tr("My shops"), big = true) },
                 navigationIcon = { MenuSlot(back = false) },
                 actions = {
                     if (editing) TextButton(onClick = { editing = false }) { Text(tr("Done")) }

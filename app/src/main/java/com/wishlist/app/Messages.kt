@@ -200,7 +200,7 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
         containerColor = cs.background,
         topBar = {
             TopAppBar(
-                title = { ScreenTitle(tr("Messages")) },
+                title = { ScreenTitle(tr("Messages"), big = true) },
                 navigationIcon = { MenuSlot(back = false) },
                 actions = { ProfileButton(onProfile) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
@@ -211,31 +211,15 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
         val list = Chat.conversations
         val friends = Friends.state?.friends.orEmpty()
         Column(Modifier.padding(pad).fillMaxSize()) {
-            Row(
-                Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                listOf(tr("Chats"), tr("Friends")).forEachIndexed { i, label ->
-                    val on = tab == i
-                    Box(
-                        Modifier.weight(1f).lookChip(look, on).clickable { tab = i }
-                            .semantics { selected = on }.padding(vertical = 9.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = look.chipContent(on))
-                    }
-                }
-            }
+            SegmentedTabs(
+                listOf(tr("Chats"), tr("Friends")), tab, { tab = it },
+                Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 10.dp)
+            )
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 if (tab == 1) {
                     // Every empty page says what to do next (owner, 7 November 2026): here a way to Friends.
                     if (friends.isEmpty()) Empty(tr("Add friends to start chatting.")) {
-                        Text(
-                            tr("Add friends"), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
-                            color = look.chipContent(true),
-                            modifier = Modifier.padding(top = 16.dp).lookChip(look, on = true).clickable { go(Deep.FriendsAsLeft) }
-                                .padding(horizontal = 18.dp, vertical = 10.dp)
-                        )
+                        EmptyAction(tr("Add friends")) { go(Deep.FriendsAsLeft) }
                     }
                     else LazyColumn(
                         Modifier.fillMaxSize(),
@@ -262,23 +246,13 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
                     !Config.enabled || !Friends.hasProfile(ctx) && list.isEmpty() -> Empty(
                         tr("Add friends to start chatting.")
                     ) {
-                        Text(
-                            tr("Add friends"), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
-                            color = look.chipContent(true),
-                            modifier = Modifier.padding(top = 16.dp).lookChip(look, on = true).clickable { go(Deep.FriendsAsLeft) }
-                                .padding(horizontal = 18.dp, vertical = 10.dp)
-                        )
+                        EmptyAction(tr("Add friends")) { go(Deep.FriendsAsLeft) }
                     }
                     list.isEmpty() && !loaded -> CircularProgressIndicator(Modifier.align(Alignment.Center))
                     list.isEmpty() && problem -> Empty(tr("Couldn’t reach the server. Check your connection."))
                     // No conversations yet: a "Start a chat" chip that shows your friends (it goes once there is a chat).
                     list.isEmpty() -> Empty(tr("No messages yet.")) {
-                        Text(
-                            tr("Start a chat"), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
-                            color = look.chipContent(true),
-                            modifier = Modifier.padding(top = 16.dp).lookChip(look, on = true).clickable { tab = 1 }
-                                .padding(horizontal = 18.dp, vertical = 10.dp)
-                        )
+                        EmptyAction(tr("Start a chat")) { tab = 1 }
                     }
                     else -> LazyColumn(
                         Modifier.fillMaxSize(),
@@ -302,14 +276,32 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
 
 @Composable
 private fun Empty(text: String, extra: @Composable () -> Unit = {}) {
+    val look = LocalLook.current
     Column(Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        ChatIcon(LocalLook.current.textAccent, 56.dp)
+        // Quiet (2.207): the icon in a soft circle of your colour, like every empty page.
+        if (look.design == "quiet") Box(
+            Modifier.size(88.dp).clip(CircleShape).background(look.scheme.primaryContainer), contentAlignment = Alignment.Center
+        ) { ChatIcon(look.scheme.onPrimaryContainer, 40.dp) }
+        else ChatIcon(look.textAccent, 56.dp)
         Text(
             text, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 16.dp)
         )
         extra()
     }
+}
+
+/** The one thing to do on an empty page: a filled button in Quiet (2.207), the style's chip elsewhere. */
+@Composable
+private fun EmptyAction(label: String, onClick: () -> Unit) {
+    val look = LocalLook.current
+    if (look.design == "quiet") Button(onClick = onClick, modifier = Modifier.padding(top = 16.dp)) { Text(label) }
+    else Text(
+        label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
+        color = look.chipContent(true),
+        modifier = Modifier.padding(top = 16.dp).lookChip(look, on = true).clickable(onClick = onClick)
+            .padding(horizontal = 18.dp, vertical = 10.dp)
+    )
 }
 
 /** One conversation: picture, name, last message, time and the unread bubble. */
@@ -702,8 +694,10 @@ private fun ChatRow(
     val newDay = prev == null || dayLabel(prev.at) != dayLabel(m.at)
     if (newDay) DayChip(dayLabel(m.at))
     // A small "tail": the corner nearest the sender is sharp on the first bubble of a group.
-    val r = 16.dp
-    val tail = 2.dp
+    // Quiet (2.207): rounder bubbles (20) with a softer tail corner (6); chaos as before.
+    val quietChat = LocalLook.current.design == "quiet"
+    val r = if (quietChat) 20.dp else 16.dp
+    val tail = if (quietChat) 6.dp else 2.dp
     val shape = if (m.mine) RoundedCornerShape(r, if (first) tail else r, r, r) else RoundedCornerShape(if (first) tail else r, r, r, r)
     // Swipe a message to the right to reply to it (owner, 2.128); it springs back.
     val density = androidx.compose.ui.platform.LocalDensity.current

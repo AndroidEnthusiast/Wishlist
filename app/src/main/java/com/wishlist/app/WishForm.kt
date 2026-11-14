@@ -1,5 +1,7 @@
 package com.wishlist.app
 
+import androidx.compose.material3.IconButton
+import androidx.compose.foundation.layout.offset
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -195,10 +197,60 @@ fun WishDialog(
         }
     }
 
+    // Saving the wish (the Save button).
+    fun save() {
+                    if (title.isBlank() && (url.isNotBlank() || image.isBlank())) { nameErr = true; return }
+                    val p = price.replace(',', '.').toDoubleOrNull()
+                    val u = cleanUrl(url) ?: url.trim()
+                    // A picture that was replaced or removed in this dialog is no longer needed.
+                    if (edit != null && edit.image != image) ImageStore.delete(ctx, edit.image)
+                    picked = ""
+                    // Your own wishlists only: collab wishlists share one price between everyone's phones.
+                    val typedPrice = p != null && Shared.active == null && u.isNotBlank() && price != readPrice &&
+                        (edit == null || !PriceWatch.same(p, edit.price))
+                    if (edit == null) {
+                        val newId = System.currentTimeMillis()
+                        if (typedPrice && p != null) PriceWatch.noteTyped(ctx, newId, u, p)
+                        Repo.add(
+                            ctx,
+                            Wish(
+                                newId, u, title.trim(), desc, image, p, null, cur, cat,
+                                star = star && Shared.active == null, note = note.trim(), size = sizeSel, by = Repo.authorName,
+                                priv = priv && Shared.active == null, qty = qty, exact = exact
+                            )
+                        )
+                        if (chooseList) Repo.setLastSaveTo(ctx, Shared.active ?: MyLists.saveKey(Repo.openMine, false))
+                        if (fromShop) places.shopSaved(Repo.listName)
+                    } else {
+                        if (typedPrice && p != null) PriceWatch.noteTyped(ctx, edit.id, u, p)
+                        Repo.replace(
+                            ctx,
+                            edit.copy(
+                                url = u, title = title.trim(), desc = desc, image = image, price = p,
+                                oldPrice = if (p == edit.price) edit.oldPrice else null,
+                                currency = cur, category = cat, star = star && Shared.active == null, note = note.trim(), size = sizeSel,
+                                priv = priv && Shared.active == null, qty = qty, exact = exact
+                            ),
+                            base = edit
+                        )
+                    }
+                    onClose()
+    }
+    // Quiet (2.207, docs/styles/quiet.md): ✕ at the top to cancel and Save as a full-width button at the bottom.
+    val quiet = LocalLook.current.design == "quiet"
+
     AlertDialog(
         onDismissRequest = { close() },
         properties = DialogProperties(dismissOnClickOutside = false),
-        title = { Text(if (edit == null) tr("Add a wish") else tr("Edit wish")) },
+        title = {
+            val heading = if (edit == null) tr("Add a wish") else tr("Edit wish")
+            if (quiet) Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = { close() }, modifier = Modifier.padding(end = 4.dp).offset(x = (-12).dp)) {
+                    Icon(AppIcons.Close, tr("Cancel"))
+                }
+                Text(heading, modifier = Modifier.offset(x = (-12).dp))
+            } else Text(heading)
+        },
         text = {
             // One scrolling page with three headings (owner, 2.128): Wish, Details, Visibility. Nothing folded away.
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -325,48 +377,10 @@ fun WishDialog(
             }
         },
         confirmButton = {
-            TextButton(
-                onClick = {
-                    if (title.isBlank() && (url.isNotBlank() || image.isBlank())) { nameErr = true; return@TextButton }
-                    val p = price.replace(',', '.').toDoubleOrNull()
-                    val u = cleanUrl(url) ?: url.trim()
-                    // A picture that was replaced or removed in this dialog is no longer needed.
-                    if (edit != null && edit.image != image) ImageStore.delete(ctx, edit.image)
-                    picked = ""
-                    // Your own wishlists only: collab wishlists share one price between everyone's phones.
-                    val typedPrice = p != null && Shared.active == null && u.isNotBlank() && price != readPrice &&
-                        (edit == null || !PriceWatch.same(p, edit.price))
-                    if (edit == null) {
-                        val newId = System.currentTimeMillis()
-                        if (typedPrice && p != null) PriceWatch.noteTyped(ctx, newId, u, p)
-                        Repo.add(
-                            ctx,
-                            Wish(
-                                newId, u, title.trim(), desc, image, p, null, cur, cat,
-                                star = star && Shared.active == null, note = note.trim(), size = sizeSel, by = Repo.authorName,
-                                priv = priv && Shared.active == null, qty = qty, exact = exact
-                            )
-                        )
-                        if (chooseList) Repo.setLastSaveTo(ctx, Shared.active ?: MyLists.saveKey(Repo.openMine, false))
-                        if (fromShop) places.shopSaved(Repo.listName)
-                    } else {
-                        if (typedPrice && p != null) PriceWatch.noteTyped(ctx, edit.id, u, p)
-                        Repo.replace(
-                            ctx,
-                            edit.copy(
-                                url = u, title = title.trim(), desc = desc, image = image, price = p,
-                                oldPrice = if (p == edit.price) edit.oldPrice else null,
-                                currency = cur, category = cat, star = star && Shared.active == null, note = note.trim(), size = sizeSel,
-                                priv = priv && Shared.active == null, qty = qty, exact = exact
-                            ),
-                            base = edit
-                        )
-                    }
-                    onClose()
-                }
-            ) { Text(tr("Save")) }
+            if (quiet) Button(onClick = { save() }, modifier = Modifier.fillMaxWidth()) { Text(tr("Save wish")) }
+            else TextButton(onClick = { save() }) { Text(tr("Save")) }
         },
-        dismissButton = { TextButton(onClick = { close() }) { Text(tr("Cancel")) } }
+        dismissButton = if (quiet) null else ({ TextButton(onClick = { close() }) { Text(tr("Cancel")) } })
     )
 
     // A category made here is chosen for this wish straight away.
@@ -409,7 +423,19 @@ fun ImageBlock(image: String, onPick: () -> Unit, onRemove: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val line = cs.outline
     val tile = Modifier.size(128.dp).clip(RoundedCornerShape(16.dp))
-    if (image.isEmpty()) {
+    val look = LocalLook.current
+    if (image.isEmpty() && look.design == "quiet") {
+        // Quiet (2.207): the light photo surface with a camera in a soft circle of your colour; no dashed box.
+        Column(
+            tile.background(look.photoSurface(0)).semantics { contentDescription = tr("Add photo") }.clickable(onClick = onPick),
+            horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
+        ) {
+            Box(Modifier.size(44.dp).clip(CircleShape).background(cs.primaryContainer), contentAlignment = Alignment.Center) {
+                PhotoIcon(cs.onPrimaryContainer, 24.dp)
+            }
+            Text(tr("Add photo"), style = MaterialTheme.typography.labelLarge, color = look.photoInk, modifier = Modifier.padding(top = 6.dp))
+        }
+    } else if (image.isEmpty()) {
         Column(
             tile.background(cs.surfaceVariant)
                 .drawBehind {

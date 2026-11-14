@@ -540,3 +540,20 @@ key (2.190); building blocks up to date: Android 16 target, Kotlin 2.1, Compose 
   12 November). `AllWishesTest` checks the page itself; fix the picture when screens are next compared.
   Fixed: the picture-taker now lets Android's main thread run between steps (`ScreenshotTest.shot`), so Add wish, All
   your wishes, the wish's sheet and selecting two wishes show the right screen.
+
+## Moved from the handoff on 14 November 2026 (2.207)
+
+- **Polishing Quiet (14 November 2026), read first.** Owner: polish Quiet, then Gen Z chaos. Step 2 of
+  `docs/DESIGN-STYLES.md` is written: verdict and style brief in `docs/styles/quiet.md`, shown to the owner for
+  approval. Next: the design plan with mock-ups (step 3); nothing is built before the owner approves it.
+
+### 13–14 November 2026: the themes (2.199–2.205)
+Gen Z chaos saved as it was in `themes/gen-z-chaos/` (`tests/themes/check.sh`). Cyberpunk, Neobrutalism, Neumorphism
+removed (→ Quiet); Y2K, Retro vintage, Pop futurism, Grunge, Flat, Bauhaus added (magier.com 5, 6, 9, 13, 18, 20).
+Every part themed (`Themed.kt`); `LookTest` checks contrast everywhere; screenshots of every style were looked at
+(fonts can't download there). 2.200: six more from kittl.com, a gift box with a face. `docs/decisions/look.md`.
+
+### 12 November 2026, night: clean-up, notes, motion, the wish review (2.192–2.198)
+Screenshot tests fixed. Clean-up: `LocalGo` (2.192), `Places` and no `*Nav` objects (2.193); a message notifies unless
+that chat is on screen (2.194). Crash review: 3 old crashes on 2.154, none since. Notes tidy-up: slim `CLAUDE.md`,
+`docs/MAP.md`, `docs/TODO.md`, archives, a stop hook. 2.195 screens move (`Motion.kt`); 2.196–2.198 wishes act alike.

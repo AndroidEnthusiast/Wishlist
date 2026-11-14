@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -207,13 +208,15 @@ fun MostWantedBadge(showLabel: Boolean, modifier: Modifier = Modifier, onClick: 
 /** A round outlined star on the picture: tap it to mark the wish as most wanted. */
 @Composable
 fun MarkMostWantedButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val quiet = LocalLook.current.design == "quiet"
     Box(
-        modifier.size(34.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.45f))
+        modifier.size(34.dp).then(if (quiet) Modifier.shadow(2.dp, CircleShape) else Modifier).clip(CircleShape)
+            .background(if (quiet) Color.White.copy(alpha = 0.92f) else Color.Black.copy(alpha = 0.45f))
             .semantics { contentDescription = tr("Make it a top wish") }
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        StarIcon(false, Color.White, 20.dp)
+        StarIcon(false, if (quiet) Color(0xFF6C6C74) else Color.White, 20.dp)
     }
 }
 
@@ -246,15 +249,17 @@ fun StarCorner(w: Wish, onToggle: (() -> Unit)?) {
 @Composable
 fun StarToggle(starred: Boolean, onToggle: () -> Unit, modifier: Modifier = Modifier, size: Dp = 34.dp) {
     val fx = rememberStarFx()
+    // Quiet (2.207): a small white disc on the light photo surface instead of a dark one; a top wish stays gold.
+    val quiet = LocalLook.current.design == "quiet"
     Box(modifier.size(size).starSparkles(fx), contentAlignment = Alignment.Center) {
         Box(
-            Modifier.fillMaxSize().starPulse(fx).clip(CircleShape)
-                .background(if (starred) StarGold else Color.Black.copy(alpha = 0.45f))
+            Modifier.fillMaxSize().starPulse(fx).then(if (quiet) Modifier.padding(2.dp).shadow(2.dp, CircleShape) else Modifier).clip(CircleShape)
+                .background(if (starred) StarGold else if (quiet) Color.White.copy(alpha = 0.92f) else Color.Black.copy(alpha = 0.45f))
                 .semantics { contentDescription = if (starred) tr("Remove top wish") else tr("Make it a top wish") }
                 .clickable(role = Role.Button) { if (!starred) fx.play(); onToggle() },
             contentAlignment = Alignment.Center
         ) {
-            StarIcon(starred, if (starred) StarInk else Color.White, size * 0.59f)
+            StarIcon(starred, if (starred) StarInk else if (quiet) Color(0xFF6C6C74) else Color.White, size * 0.59f)
         }
     }
 }

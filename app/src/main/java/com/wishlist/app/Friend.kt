@@ -315,7 +315,7 @@ fun FriendScreen(
                                     )
                                     // Share as its own button too (owner, 12 November 2026).
                                     IconButton(onClick = { shareItem(ctx, w, idea = true) }) {
-                                        Icon(AppIcons.Share, tr("Share"), tint = LocalLook.current.cardMuted(w.id))
+                                        Icon(AppIcons.CardShare, tr("Share"), tint = LocalLook.current.cardMuted(w.id))
                                     }
                                     if (!w.got) {
                                         // "Unreserve" says exactly what it does (owner: "Undo" could be forgotten).

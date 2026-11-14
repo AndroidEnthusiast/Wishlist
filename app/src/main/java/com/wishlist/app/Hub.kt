@@ -538,6 +538,26 @@ internal fun BlockGrid(
 @Composable
 private fun NewBlock(label: String, onClick: () -> Unit, modifier: Modifier) {
     val cs = MaterialTheme.colorScheme
+    val look = LocalLook.current
+    if (look.design == "quiet") {
+        // Quiet (2.207, the approved plan): a tile as big as a list's, a + in a soft circle of your colour, the label
+        // under it where a list's name sits. No dashed box.
+        Column(modifier.clip(RoundedCornerShape(20.dp)).clickable(onClickLabel = label, onClick = onClick)) {
+            Box(
+                Modifier.fillMaxWidth().aspectRatio(1f).lookCard(look, 9L, look.cardShape(9L, small = true)),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(Modifier.size(56.dp).clip(CircleShape).background(cs.primaryContainer), contentAlignment = Alignment.Center) {
+                    Icon(AppIcons.Add, null, tint = cs.onPrimaryContainer, modifier = Modifier.size(28.dp))
+                }
+            }
+            Text(
+                label, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = cs.onPrimaryContainer,
+                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 2.dp, top = 6.dp)
+            )
+        }
+        return
+    }
     val shape = RoundedCornerShape(18.dp)
     // Smaller than a list (owner, 7 November 2026): a dashed square with its label, centred on the lists' pictures.
     Box(modifier.aspectRatio(1f), contentAlignment = Alignment.Center) {
@@ -593,10 +613,12 @@ internal fun ListBlock(
             Modifier.fillMaxWidth().aspectRatio(1f).lookCard(look, id, shape)
                 .combinedClickable(onClick = item.open, onLongClick = if (actions.isEmpty()) null else ({ menu = true }))
         ) {
-            // The picture area: the theme's soft colour, the photos filling it.
-            val mat = RoundedCornerShape(if (small) 12.dp else 16.dp)
+            // The picture area: the theme's soft colour, the photos filling it. Quiet (2.207): the photos fill the whole
+            // block, no frame inside the frame.
+            val quiet = look.design == "quiet"
+            val mat = if (quiet) shape else RoundedCornerShape(if (small) 12.dp else 16.dp)
             Box(
-                Modifier.fillMaxSize().padding(if (small) 6.dp else 8.dp)
+                Modifier.fillMaxSize().padding(if (quiet) 0.dp else if (small) 6.dp else 8.dp)
                     .lookMat(look, mat, look.pictureBg(id, item.picture != null), over = true).clip(mat),
                 contentAlignment = Alignment.Center
             ) {
@@ -689,11 +711,16 @@ private fun SeasonCard(onStart: () -> Unit) {
     // white words and a white pill to start. A drawn illustration, so its colours are fixed in every theme.
     val red = Color(0xFFB3261E)
     val deep = Color(0xFF6E1414)
-    val shape = RoundedCornerShape(24.dp)
+    // Quiet (2.207, owner: festive, "but make it fit the style"): one solid festive red, a drawn gift instead of the
+    // emoji, no snow, the title in Fraunces. Chaos keeps the card as it was.
+    val quiet = look.design == "quiet"
+    val solid = if (look.dark) Color(0xFF8E1418) else Color(0xFFA4161A)
+    val shape = RoundedCornerShape(if (quiet) 20.dp else 24.dp)
     Box(
         Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp).fillMaxWidth().clip(shape)
-            .background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(red, deep)))
+            .background(if (quiet) androidx.compose.ui.graphics.SolidColor(solid) else androidx.compose.ui.graphics.Brush.linearGradient(listOf(red, deep)))
             .drawBehind {
+                if (quiet) return@drawBehind
                 // Snow: fixed dots, nothing moves.
                 val dots = listOf(0.08f to 0.18f, 0.22f to 0.72f, 0.35f to 0.12f, 0.5f to 0.85f, 0.62f to 0.3f,
                     0.74f to 0.68f, 0.86f to 0.15f, 0.93f to 0.55f, 0.15f to 0.45f, 0.44f to 0.5f)
@@ -704,9 +731,14 @@ private fun SeasonCard(onStart: () -> Unit) {
             .clickable(onClickLabel = tr("Start a gift exchange"), onClick = onStart)
     ) {
         Row(Modifier.padding(start = 16.dp, top = 16.dp, bottom = 16.dp, end = 40.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("🎅", fontSize = 40.sp)
+            if (quiet) Icon(AppIcons.Gift, null, tint = Color.White, modifier = Modifier.size(40.dp))
+            else Text("🎅", fontSize = 40.sp)
             Column(Modifier.weight(1f).padding(start = 14.dp)) {
-                Text(tr("Secret Santa this year?"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(
+                    tr("Secret Santa this year?"),
+                    style = if (quiet) MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp, lineHeight = 24.sp) else MaterialTheme.typography.titleMedium,
+                    fontWeight = if (quiet) null else FontWeight.Bold, color = Color.White
+                )
                 Text(
                     tr("Draw names with family or friends."), style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.9f), modifier = Modifier.padding(top = 2.dp, bottom = 12.dp)
@@ -716,7 +748,10 @@ private fun SeasonCard(onStart: () -> Unit) {
                         .clickable(onClick = onStart).padding(horizontal = 18.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("🎁 " + tr("Start a gift exchange"), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = red)
+                    Text(
+                        (if (quiet) "" else "🎁 ") + tr("Start a gift exchange"), style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold, color = if (quiet) solid else red
+                    )
                 }
             }
         }

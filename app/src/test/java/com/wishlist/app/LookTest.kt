@@ -81,6 +81,31 @@ class LookTest {
         assertTrue(bad.joinToString("\n"), bad.isEmpty())
     }
 
+    /**
+     * Quiet's polish (2.207, docs/styles/quiet.md): the text on your colour (buttons, the + and your chat bubbles), on
+     * a chosen chip or tonal button, and on the light photo surface (in dark mode too) is at least 4.5 : 1, for every
+     * colour you can pick.
+     */
+    @Test fun quietPartsAreReadable() {
+        val bad = mutableListOf<String>()
+        for (m in modes) for (ac in ACCENTS.map { it.key }) {
+            val look = lookFor("quiet", ac, m)
+            val cs = look.scheme
+            fun need(what: String, fg: Color, bg: Color) {
+                val c = contrast(fg, bg)
+                if (c < 4.5) bad += "quiet $m/$ac $what: ${"%.2f".format(c)}"
+            }
+            need("button text", look.onAccent, look.accent)
+            need("chosen chip and tonal button", cs.onPrimaryContainer, cs.primaryContainer)
+            need("chosen chip text", look.chipContent(true), cs.primaryContainer)
+            need("icon on the photo surface", look.photoInk, look.photoSurface(0))
+            need("text button on a card", cs.primary, cs.surfaceVariant)
+        }
+        assertTrue(bad.joinToString("\n"), bad.isEmpty())
+        // The photo surface is light in dark mode too (owner, 14 November 2026).
+        assertTrue(lookFor("quiet", "blue", "dark").photoSurface(0).luminance() > 0.7f)
+    }
+
     /** Lines that frame fields, tick boxes and chips stand out from the card (3 : 1 for parts you use). */
     @Test fun linesOfControlsAreVisible() {
         val bad = mutableListOf<String>()

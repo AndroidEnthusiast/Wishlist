@@ -159,6 +159,37 @@ fun ProfileSummary(onProfile: () -> Unit, onFriends: () -> Unit = {}, onAddWish:
     val friends = Friends.state?.friends?.size ?: 0
     val total = homeTotal(all.map { it.w })
     val look = LocalLook.current
+    if (look.design == "quiet") {
+        // Quiet (2.207, docs/styles/quiet.md): your picture and name in Fraunces, "Add friends" a proper button while
+        // you have none, and the three numbers in even columns across the card with hairlines between them.
+        Column(
+            Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp).fillMaxWidth()
+                .lookCard(look, 5L, look.cardShape(5L, small = true)).padding(16.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.clip(androidx.compose.foundation.shape.CircleShape).clickable(onClickLabel = tr("Profile"), onClick = onProfile)) {
+                    Avatar(Friends.myPhoto, Shared.lastName, 56.dp)
+                }
+                Text(
+                    Shared.lastName.ifBlank { tr("Add your name") }, style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp, lineHeight = 28.sp),
+                    maxLines = 1, overflow = TextOverflow.Ellipsis, color = look.cardInk(5L),
+                    modifier = Modifier.weight(1f).padding(start = 14.dp).clip(RoundedCornerShape(8.dp)).clickable(onClick = onProfile).padding(horizontal = 2.dp)
+                )
+                if (friends == 0 && Config.enabled) FilledTonalButton(onClick = onFriends) {
+                    Icon(AppIcons.Add, null, Modifier.size(18.dp)); Text(tr("Add friends"), Modifier.padding(start = 6.dp))
+                }
+            }
+            Row(Modifier.fillMaxWidth().padding(top = 14.dp).height(androidx.compose.foundation.layout.IntrinsicSize.Min), verticalAlignment = Alignment.CenterVertically) {
+                val line = look.scheme.outlineVariant
+                Stat(friends.toString(), false, if (friends == 1) tr("Friend") else tr("Friends"), Modifier.weight(1f), null, onFriends, onFriends, plain = true)
+                Box(Modifier.width(1.dp).fillMaxHeight(0.8f).background(line))
+                Stat(all.size.toString(), all.isEmpty(), if (all.size == 1) tr("Wish") else tr("Wishes"), Modifier.weight(1f), tr("Add wish"), onAddWish, onClick = { places.homePage = "wishes" }, plain = true)
+                Box(Modifier.width(1.dp).fillMaxHeight(0.8f).background(line))
+                Stat(total, false, tr("Total value"), Modifier.weight(1.3f), onClick = null, plain = true)
+            }
+        }
+        return
+    }
     // One soft card in the style's own look around you and your numbers (owner, 7 November 2026), set apart from the
     // lists below; inside it the numbers are plain, with thin lines between them (no cards in a card).
     Row(
@@ -314,7 +345,11 @@ fun OverviewScreen(
         val shown = if (page == "top") all.filter { it.starred } else all
         Column(Modifier.padding(pad).fillMaxSize()) {
         // All wishes or only the top wishes (owner, 7 November 2026: the Top wishes page is reached this way).
-        Row(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        // Quiet (2.207): a segmented switch; chaos keeps its two chips.
+        if (look.design == "quiet") SegmentedTabs(
+            listOf(tr("All wishes"), tr("Top wishes") + " ★"), if (page == "top") 1 else 0,
+            { places.homePage = if (it == 1) "top" else "wishes" }, Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+        ) else Row(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(
                 selected = page != "top", onClick = { places.homePage = "wishes" }, label = { Text(tr("All wishes")) }
             )

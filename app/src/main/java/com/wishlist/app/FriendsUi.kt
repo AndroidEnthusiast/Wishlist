@@ -1,5 +1,6 @@
 package com.wishlist.app
 
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.semantics.semantics
@@ -267,7 +268,7 @@ private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenL
         containerColor = cs.background,
         topBar = {
             TopAppBar(
-                title = { ScreenTitle(tr("Friends")) },
+                title = { ScreenTitle(tr("Friends"), big = true) },
                 navigationIcon = { MenuSlot(back = false) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
                 actions = { ProfileButton(onProfile) }
@@ -420,13 +421,18 @@ private fun CodeCard(code: String, offline: Boolean, onAdd: () -> Unit, onRetry:
         Modifier.fillMaxWidth().padding(top = 8.dp).lookCard(look, id, look.cardShape(id, small = false)).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Text(tr("Your friend code"), style = MaterialTheme.typography.labelLarge, color = look.cardMuted(id))
+        // Quiet (2.207): the label is the heading of the card, the message under it reads as text.
+        if (look.design == "quiet") Text(tr("Your friend code"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = look.cardInk(id))
+        else Text(tr("Your friend code"), style = MaterialTheme.typography.labelLarge, color = look.cardMuted(id))
         when {
             code.isNotEmpty() -> Text(
                 Friends.pretty(code), style = MaterialTheme.typography.headlineMedium.copy(shadow = null),
                 fontWeight = FontWeight.Bold, color = look.cardInk(id), letterSpacing = 2.sp
             )
-            offline -> Text(tr("Couldn’t reach the server. Check your connection."), color = look.cardMuted(id))
+            offline -> Text(
+                tr("Couldn’t reach the server. Check your connection."), color = look.cardMuted(id),
+                style = if (look.design == "quiet") MaterialTheme.typography.bodyMedium else LocalTextStyle.current
+            )
             else -> CircularProgressIndicator(Modifier.size(28.dp))
         }
         Text(
