@@ -149,3 +149,7 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   taped down, a little crooked) and **stamped chips**; **safety pins, staples and tape** holding cards (per sub-theme,
   more at Wild); **ransom-note screen titles** (not only the Wishlist title). Card styles: **Cut-out**, **Taped flyer**,
   **Badge**. Not chosen: punk icons (the icons stay), a spray-paint sub-theme.
+- **Retro vintage is the fourth deep theme** (owner: "next"; 14 November 2026). Sub-themes: **50s diner**, **70s
+  groovy**, **Vintage travel poster**. Own parts: **ticket and label buttons** (notched ends; chosen chips like a luggage
+  tag), **stamps and badges on cards** (per sub-theme, more at Wild), **retro icons** (thick, rounded sign-painter
+  style). Card styles: **Ticket**, **Postcard**, **Enamel sign**. Not chosen: neon-sign titles, an old-cinema sub-theme.

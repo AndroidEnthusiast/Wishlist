@@ -104,7 +104,7 @@ class ColourSet(val key: String, val name: String)
 /** The colour sets of each style that has its own colours (the first is the one it starts with). */
 val COLOUR_SETS: Map<String, List<ColourSet>> = mapOf(
     "y2k" to listOf(ColourSet("holo", "Holographic"), ColourSet("chrome", "Liquid chrome"), ColourSet("aero", "Bubbly")),
-    "retro" to listOf(ColourSet("diner", "Diner"), ColourSet("seventies", "Seventies"), ColourSet("seaside", "Seaside")),
+    "retro" to listOf(ColourSet("diner", "50s diner"), ColourSet("groovy", "70s groovy"), ColourSet("travel", "Travel poster")),
     "pop" to listOf(ColourSet("sunset", "Sunset"), ColourSet("lagoon", "Lagoon"), ColourSet("cosmic", "Cosmic")),
     "grunge" to listOf(ColourSet("blood", "Blood red"), ColourSet("toxic", "Toxic green"), ColourSet("bruise", "Bruise purple")),
     "flat" to listOf(ColourSet("lagoon", "Lagoon"), ColourSet("forest", "Forest"), ColourSet("sunset", "Sunset")),
@@ -270,6 +270,9 @@ private val sedgwick by lazy { google("Sedgwick Ave Display", "casual", one) }
 private val archivoNarrow by lazy { google("Archivo Narrow", "sans-serif-condensed", listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold)) }
 private val plexMono by lazy { google("IBM Plex Mono", "monospace", listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold)) }
 
+/** Retro's font for prices (Retro.kt). */
+internal val retroDisplay: FontFamily get() = oswald
+
 /** Punk's text font (Punk.kt). */
 internal val punkDisplay: FontFamily get() = archivoNarrow
 
@@ -330,6 +333,7 @@ fun lookFor(style: String, accentKey: String, mode: String, set: String = "", de
     if (key == "doodle") return doodleLook(mode != "light", setKey, level, cardStyleFor(key, setKey, cards))
     if (key == "y2k") return y2kLook(mode != "light", setKey, level, cardStyleFor(key, setKey, cards))
     if (key == "punk") return punkLook(mode != "light", setKey, level, cardStyleFor(key, setKey, cards))
+    if (key == "retro") return retroLook(mode != "light", setKey, level, cardStyleFor(key, setKey, cards))
     val base = baseLook(style, accentKey, mode)
     return if (usesAccent(base.design)) base else base.withSet(setKey)
 }
@@ -344,7 +348,8 @@ val DECO_LEVELS = listOf(ThemeOption("calm", "Calm"), ThemeOption("normal", "Nor
 val CARD_STYLES: Map<String, List<ThemeOption>> = mapOf(
     "doodle" to listOf(ThemeOption("outlined", "Outlined"), ThemeOption("filled", "Filled"), ThemeOption("sticker", "Sticker")),
     "y2k" to listOf(ThemeOption("glass", "Glass"), ThemeOption("glossy", "Glossy"), ThemeOption("sticker", "Sticker")),
-    "punk" to listOf(ThemeOption("cutout", "Cut-out"), ThemeOption("taped", "Taped flyer"), ThemeOption("badge", "Badge"))
+    "punk" to listOf(ThemeOption("cutout", "Cut-out"), ThemeOption("taped", "Taped flyer"), ThemeOption("badge", "Badge")),
+    "retro" to listOf(ThemeOption("ticket", "Ticket"), ThemeOption("postcard", "Postcard"), ThemeOption("enamel", "Enamel sign"))
 )
 
 /** Whether the style has options (decoration amount, card style) in the Themer. */
@@ -357,6 +362,7 @@ fun cardStyleFor(style: String, set: String, chosen: String): String {
         style == "doodle" && set == "sticky" -> "filled"
         style == "y2k" -> if (set == "aero") "glass" else "glossy"
         style == "punk" -> when (set) { "gig" -> "taped"; "tartan" -> "badge"; else -> "cutout" }
+        style == "retro" -> when (set) { "groovy" -> "enamel"; "travel" -> "postcard"; else -> "ticket" }
         else -> styles.first().key
     }
 }
@@ -385,31 +391,6 @@ private fun baseLook(style: String, accentKey: String, mode: String): Look {
                 listOf(surface), listOf(lime, mix(hot, white, 0.35f), sun, mix(a, white, 0.45f)), ink,
                 listOf(if (dark) hot else ink), listOf(hot, sun, lime, ink.copy(alpha = if (dark) 0.10f else 0.12f)),
                 bungee, drop, rise, accent = a, onAccent = onA, art = listOf(hot, sun, lime)
-            )
-        }
-        "retro" -> {
-            // A sun-faded diner poster (light) or the same diner at night (dark).
-            val bg = if (dark) c(0xFF1F1813) else c(0xFFF2E4C6)
-            val surface = if (dark) c(0xFF2B221B) else c(0xFFFBF4E4)
-            val ink = if (dark) c(0xFFF6EAD3) else c(0xFF2E1E14)
-            val muted = if (dark) c(0xFFD1BFA2) else c(0xFF5E4634)
-            val line = if (dark) c(0xFFE9D7B7) else c(0xFF2E1E14)
-            val cherry = c(0xFFB3301F); val mustard = c(0xFFE5B54A); val teal = c(0xFF2F8C86)
-            val fill = if (dark) mustard else cherry
-            val onFill = if (dark) c(0xFF2A1C10) else c(0xFFFFF6E5)
-            Look(
-                "retro", dark,
-                scheme(dark, if (dark) c(0xFFF2A08F) else c(0xFFA5281F), onFill, if (dark) c(0xFF4A3424) else c(0xFFF3D9C4), ink,
-                    bg, surface, ink, muted, line, if (dark) c(0xFF4A3D31) else c(0xFFD9C7A3)),
-                listOf(surface),
-                if (dark) listOf(c(0xFF4A3A22), c(0xFF22403D), c(0xFF4C2A22), c(0xFF3D3324))
-                else listOf(c(0xFFF4D9A6), c(0xFFCFE3DD), c(0xFFF2CDBE), c(0xFFEBDDB8)),
-                line,
-                listOf(if (dark) c(0xFF4FA39C) else teal),
-                if (dark) listOf(mustard.copy(alpha = 0.14f), ink.copy(alpha = 0.06f), cherry.copy(alpha = 0.18f))
-                else listOf(mustard.copy(alpha = 0.22f), ink.copy(alpha = 0.08f), cherry.copy(alpha = 0.12f)),
-                oswald, drop, rise, accent = fill, onAccent = onFill,
-                art = listOf(cherry, mustard, teal, c(0xFFF6EAD3), c(0xFF2E1E14))
             )
         }
         "pop" -> {
@@ -930,7 +911,7 @@ fun Look.cardShape(id: Long, small: Boolean): Shape = when (design) {
     // Punk: paper torn out of a magazine, each piece its own way.
     "punk" -> punkCardShape(id, small)
     // Retro: a ticket with a round notch on each side.
-    "retro" -> TicketShape(if (small) 12.dp else 14.dp, if (small) 7.dp else 8.dp)
+    "retro" -> retroCardShape(small)
     else -> RoundedCornerShape(if (small) 16.dp else 20.dp)
 }
 
@@ -972,7 +953,8 @@ fun Look.badgeShape(small: Boolean): Shape = when (design) {
 val Look.chipShape: Shape
     get() = when (design) {
         "chaos" -> RoundedCornerShape(12.dp)
-        "retro", "riso" -> RoundedCornerShape(6.dp)
+        "retro" -> TagShape(8.dp)
+        "riso" -> RoundedCornerShape(6.dp)
         "flat", "synth" -> RoundedCornerShape(8.dp)
         "japandi" -> RoundedCornerShape(4.dp)
         "grunge" -> RoughShape(31, 1.2.dp, 6.dp)
@@ -1000,7 +982,8 @@ val Look.fabShape: Shape
 val Look.buttonShape: Shape
     get() = when (design) {
         "chaos" -> RoundedCornerShape(14.dp)
-        "retro", "flat", "riso", "synth" -> RoundedCornerShape(8.dp)
+        "retro" -> TicketShape(8.dp, 5.dp)
+        "flat", "riso", "synth" -> RoundedCornerShape(8.dp)
         "japandi" -> RoundedCornerShape(4.dp)
         "grunge" -> RoughShape(51, 1.4.dp, 7.dp)
         "doodle" -> if (set == "notebook" || set.isEmpty()) WobblyShape(53, 22.dp, 1.4.dp) else WobblyShape(53, 8.dp, 1.4.dp)
@@ -1084,9 +1067,9 @@ fun Modifier.lookSurface(
         "chaos" -> (if (raised) hardShadow(look.shadows[0], shape, 5.dp) else this).paint().edgeLine(3.dp, look.line, shape)
         // Y2K (Y2k.kt): a holo hard shadow or a soft glow, a white rim on glass, a gloss on buttons and glossy cards.
         "y2k" -> y2kShadow(look, shape, raised, d, card).paint().then(Modifier.y2kFinish(look, shape, card))
-        // Retro: a misprinted shadow and a fine printed line inside the edge (buttons too).
-        "retro" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.5f).coerceIn(2f, 4f).dp) else this)
-            .paint().keyline(look, shape, min = 36.dp).edgeLine(look.edge, look.line, shape)
+        // Retro (Retro.kt): the misprinted colour shadow, the line, a ticket's keyline, a postcard's border and stamp,
+        // an enamel sign's rim and screws.
+        "retro" -> retroShadow(look, shape, raised, d).paint().then(Modifier.retroFinish(look, shape, card))
         "pop" -> (if (raised) hardShadow(look.shadows[1], shape, (d * 0.9f).coerceIn(3f, 8f).dp)
             .hardShadow(look.shadows[0], shape, (d * 0.45f).coerceIn(1.5f, 4f).dp) else this).paint()
         "grunge" -> (if (raised) hardShadow(look.shadows[0], shape, (d * 0.5f).coerceIn(2f, 4f).dp) else this)
@@ -1145,6 +1128,7 @@ fun Modifier.lookCard(look: Look, id: Long, shape: Shape): Modifier {
         .then(if (look.design == "doodle") Modifier.doodlePin(look, id) else Modifier)
         .then(if (look.design == "y2k") Modifier.y2kStickers(look, id) else Modifier)
         .then(if (look.design == "punk") Modifier.punkFasteners(look, id) else Modifier)
+        .then(if (look.design == "retro") Modifier.retroStamps(look, id) else Modifier)
 }
 
 /** Swiss buttons (filled ones excepted) are framed in black; whether this surface is one. */
@@ -1173,6 +1157,8 @@ fun Modifier.lookChip(look: Look, on: Boolean = false): Modifier {
             base.clip(shape)
                 .then(if (on && look.accentBrush != null) Modifier.background(look.accentBrush) else Modifier.background(if (on) look.accent else off))
                 .then(if (line > 0.dp) Modifier.edgeLine(line, look.line, shape) else Modifier)
+                // Retro: the chosen chip is a luggage tag with its hole.
+                .then(if (look.design == "retro" && on) Modifier.retroTagHole(look) else Modifier)
         }
     }
 }
@@ -1233,30 +1219,7 @@ fun Modifier.lookBackdrop(look: Look): Modifier = when (look.design) {
         drawCircle(look.blobs[2].copy(alpha = 0.85f), 56.dp.toPx(), Offset(size.width * 0.98f, 620.dp.toPx()))
     }
     "y2k" -> y2kBackdrop(look)
-    "retro" -> drawWithCache {
-        val w = size.width; val h = size.height
-        val pts = grain(w, h, 2600, 7)
-        val u = 1.dp.toPx()
-        onDrawBehind {
-            // A faded sunburst from the bottom right corner.
-            val c = Offset(w, h)
-            val r = maxOf(w, h) * 1.2f
-            for (i in 0 until 18) {
-                val a0 = Math.toRadians(180.0 + i * 5.0); val a1 = Math.toRadians(180.0 + i * 5.0 + 2.5)
-                val p = Path().apply {
-                    moveTo(c.x, c.y)
-                    lineTo(c.x + (kotlin.math.cos(a0) * r).toFloat(), c.y + (kotlin.math.sin(a0) * r).toFloat())
-                    lineTo(c.x + (kotlin.math.cos(a1) * r).toFloat(), c.y + (kotlin.math.sin(a1) * r).toFloat())
-                    close()
-                }
-                drawPath(p, look.blobs[0])
-            }
-            // A cherry stripe band along the left edge (where text never goes) and the film grain.
-            drawRect(look.art[0], Offset(0f, 0f), Size(4 * u, h))
-            drawRect(look.art[1], Offset(6 * u, 0f), Size(2 * u, h))
-            drawPoints(pts, PointMode.Points, look.blobs[1], strokeWidth = 1.4f * u)
-        }
-    }
+    "retro" -> retroBackdrop(look)
     "pop" -> drawWithCache {
         val w = size.width; val h = size.height
         val u = 1.dp.toPx()
@@ -1515,16 +1478,6 @@ private fun Look.withSet(set: String): Look {
     val d = dark
     fun c2(l: Long, dk: Long) = Color(if (d) dk else l)
     return when ("$design/$set") {
-        "retro/seventies" -> recolour(
-            c2(0xFF9A4312, 0xFFF2B07A), c2(0xFFFFF6E5, 0xFF2A1C10), c2(0xFFF4DCC2, 0xFF4A3424), c2(0xFFB4531A, 0xFFE8A33D), c2(0xFFFFF6E5, 0xFF2A1C10),
-            listOf(Color(0xFFB4531A), Color(0xFFE8A33D), Color(0xFF6B7A2E), art[3], art[4]),
-            listOf(Color(0xFFE8A33D), blobs[1], Color(0xFFB4531A)), listOf(Color(0xFF6B7A2E))
-        )
-        "retro/seaside" -> recolour(
-            c2(0xFF1F4E79, 0xFF9CC7EA), c2(0xFFFFF6E5, 0xFF2A1C10), c2(0xFFD6E4F0, 0xFF2A3A4A), c2(0xFF1F4E79, 0xFFF28C7A), c2(0xFFFFF6E5, 0xFF2A1C10),
-            listOf(Color(0xFFE5654F), Color(0xFFF2C14E), Color(0xFF1F4E79), art[3], art[4]),
-            listOf(Color(0xFFF2C14E), blobs[1], Color(0xFF1F4E79)), listOf(Color(0xFFE5654F))
-        )
         "pop/lagoon" -> recolour(
             c2(0xFF0F6E78, 0xFF7FE3D6), c2(0xFFFFF7EA, 0xFF1B1A3A), c2(0xFFCDEFEA, 0xFF1E4A5A), Color(0xFF4DD4C6), Color(0xFF1B1A3A),
             listOf(Color(0xFF9BF0D6), Color(0xFF4DD4C6), Color(0xFF58A6FF), Color(0xFFF26A2E), Color(0xFF1E3A8A)),

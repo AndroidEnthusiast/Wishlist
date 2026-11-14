@@ -456,7 +456,8 @@ fun FilterChip(
     ) {
         Row(
             Modifier.heightIn(min = 32.dp).padding(vertical = 2.dp).lookChip(look, selected)
-                .padding(start = if (leadingIcon != null || selected) 8.dp else 14.dp, end = if (trailingIcon != null) 8.dp else 14.dp),
+                // Retro's tag chips keep room at their pointed end for the hole.
+                .padding(start = (if (leadingIcon != null || selected) 8.dp else 14.dp) + (if (look.design == "retro") 8.dp else 0.dp), end = if (trailingIcon != null) 8.dp else 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             androidx.compose.runtime.CompositionLocalProvider(

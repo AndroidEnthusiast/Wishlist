@@ -446,9 +446,12 @@ private fun StyleBadge(text: String, bg: Color, fg: Color, small: Boolean, lineC
  */
 object AppIcons {
     @Composable
-    private fun v(f: ImageVector, o: ImageVector, r: ImageVector, s: ImageVector, d: ImageVector? = null, y: ImageVector? = null): ImageVector =
+    private fun v(
+        f: ImageVector, o: ImageVector, r: ImageVector, s: ImageVector, d: ImageVector? = null, y: ImageVector? = null, rv: ImageVector? = null
+    ): ImageVector =
         if (d != null && LocalLook.current.design == "doodle") d
         else if (y != null && LocalLook.current.design == "y2k") y
+        else if (rv != null && LocalLook.current.design == "retro") rv
         else when (LocalLook.current.iconStyle) {
             "outlined" -> o
             "rounded" -> r
@@ -456,46 +459,46 @@ object AppIcons {
             else -> f
         }
 
-    val Add: ImageVector @Composable get() = v(Icons.Filled.Add, Icons.Outlined.Add, Icons.Rounded.Add, Icons.Sharp.Add, DoodleIcons.Add, Y2kIcons.Add)
+    val Add: ImageVector @Composable get() = v(Icons.Filled.Add, Icons.Outlined.Add, Icons.Rounded.Add, Icons.Sharp.Add, DoodleIcons.Add, Y2kIcons.Add, rv = RetroIcons.Add)
     val ArrowBack: ImageVector @Composable get() = v(
         Icons.AutoMirrored.Filled.ArrowBack, Icons.AutoMirrored.Outlined.ArrowBack,
         Icons.AutoMirrored.Rounded.ArrowBack, Icons.AutoMirrored.Sharp.ArrowBack
-    , DoodleIcons.ArrowBack)
+    , DoodleIcons.ArrowBack, y = null, rv = RetroIcons.ArrowBack)
     val ArrowDropDown: ImageVector @Composable get() =
         v(Icons.Filled.ArrowDropDown, Icons.Outlined.ArrowDropDown, Icons.Rounded.ArrowDropDown, Icons.Sharp.ArrowDropDown, DoodleIcons.ArrowDropDown)
-    val Check: ImageVector @Composable get() = v(Icons.Filled.Check, Icons.Outlined.Check, Icons.Rounded.Check, Icons.Sharp.Check, DoodleIcons.Check)
-    val Close: ImageVector @Composable get() = v(Icons.Filled.Close, Icons.Outlined.Close, Icons.Rounded.Close, Icons.Sharp.Close, DoodleIcons.Close)
-    val Delete: ImageVector @Composable get() = v(Icons.Filled.Delete, Icons.Outlined.Delete, Icons.Rounded.Delete, Icons.Sharp.Delete, DoodleIcons.Delete, Y2kIcons.Delete)
-    val Edit: ImageVector @Composable get() = v(Icons.Filled.Edit, Icons.Outlined.Edit, Icons.Rounded.Edit, Icons.Sharp.Edit, DoodleIcons.Edit)
+    val Check: ImageVector @Composable get() = v(Icons.Filled.Check, Icons.Outlined.Check, Icons.Rounded.Check, Icons.Sharp.Check, DoodleIcons.Check, y = null, rv = RetroIcons.Check)
+    val Close: ImageVector @Composable get() = v(Icons.Filled.Close, Icons.Outlined.Close, Icons.Rounded.Close, Icons.Sharp.Close, DoodleIcons.Close, y = null, rv = RetroIcons.Close)
+    val Delete: ImageVector @Composable get() = v(Icons.Filled.Delete, Icons.Outlined.Delete, Icons.Rounded.Delete, Icons.Sharp.Delete, DoodleIcons.Delete, Y2kIcons.Delete, rv = RetroIcons.Delete)
+    val Edit: ImageVector @Composable get() = v(Icons.Filled.Edit, Icons.Outlined.Edit, Icons.Rounded.Edit, Icons.Sharp.Edit, DoodleIcons.Edit, y = null, rv = RetroIcons.Edit)
     val Favorite: ImageVector @Composable get() =
-        v(Icons.Filled.Favorite, Icons.Outlined.FavoriteBorder, Icons.Rounded.Favorite, Icons.Sharp.Favorite, DoodleIcons.Favorite, Y2kIcons.Favorite)
-    val Home: ImageVector @Composable get() = v(Icons.Filled.Home, Icons.Outlined.Home, Icons.Rounded.Home, Icons.Sharp.Home, DoodleIcons.Home, Y2kIcons.Home)
+        v(Icons.Filled.Favorite, Icons.Outlined.FavoriteBorder, Icons.Rounded.Favorite, Icons.Sharp.Favorite, DoodleIcons.Favorite, Y2kIcons.Favorite, rv = RetroIcons.Favorite)
+    val Home: ImageVector @Composable get() = v(Icons.Filled.Home, Icons.Outlined.Home, Icons.Rounded.Home, Icons.Sharp.Home, DoodleIcons.Home, Y2kIcons.Home, rv = RetroIcons.Home)
     val Lock: ImageVector @Composable get() = v(Icons.Filled.Lock, Icons.Outlined.Lock, Icons.Rounded.Lock, Icons.Sharp.Lock, DoodleIcons.Lock)
     val ListIcon: ImageVector @Composable get() = v(
         Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List,
         Icons.AutoMirrored.Rounded.List, Icons.AutoMirrored.Sharp.List
     , DoodleIcons.ListIcon)
     val Notifications: ImageVector @Composable get() =
-        v(Icons.Filled.Notifications, Icons.Outlined.Notifications, Icons.Rounded.Notifications, Icons.Sharp.Notifications, DoodleIcons.Notifications, Y2kIcons.Notifications)
-    val MoreVert: ImageVector @Composable get() = v(Icons.Filled.MoreVert, Icons.Outlined.MoreVert, Icons.Rounded.MoreVert, Icons.Sharp.MoreVert, DoodleIcons.MoreVert, Y2kIcons.MoreVert)
-    val Person: ImageVector @Composable get() = v(Icons.Filled.Person, Icons.Outlined.Person, Icons.Rounded.Person, Icons.Sharp.Person, DoodleIcons.Person, Y2kIcons.Person)
+        v(Icons.Filled.Notifications, Icons.Outlined.Notifications, Icons.Rounded.Notifications, Icons.Sharp.Notifications, DoodleIcons.Notifications, Y2kIcons.Notifications, rv = RetroIcons.Notifications)
+    val MoreVert: ImageVector @Composable get() = v(Icons.Filled.MoreVert, Icons.Outlined.MoreVert, Icons.Rounded.MoreVert, Icons.Sharp.MoreVert, DoodleIcons.MoreVert, Y2kIcons.MoreVert, rv = RetroIcons.MoreVert)
+    val Person: ImageVector @Composable get() = v(Icons.Filled.Person, Icons.Outlined.Person, Icons.Rounded.Person, Icons.Sharp.Person, DoodleIcons.Person, Y2kIcons.Person, rv = RetroIcons.Person)
     val Refresh: ImageVector @Composable get() = v(Icons.Filled.Refresh, Icons.Outlined.Refresh, Icons.Rounded.Refresh, Icons.Sharp.Refresh, DoodleIcons.Refresh)
-    val Search: ImageVector @Composable get() = v(Icons.Filled.Search, Icons.Outlined.Search, Icons.Rounded.Search, Icons.Sharp.Search, DoodleIcons.Search, Y2kIcons.Search)
-    val Settings: ImageVector @Composable get() = v(Icons.Filled.Settings, Icons.Outlined.Settings, Icons.Rounded.Settings, Icons.Sharp.Settings, DoodleIcons.Settings, Y2kIcons.Settings)
-    val Share: ImageVector @Composable get() = v(Icons.Filled.Share, Icons.Outlined.Share, Icons.Rounded.Share, Icons.Sharp.Share, DoodleIcons.Share, Y2kIcons.Share)
+    val Search: ImageVector @Composable get() = v(Icons.Filled.Search, Icons.Outlined.Search, Icons.Rounded.Search, Icons.Sharp.Search, DoodleIcons.Search, Y2kIcons.Search, rv = RetroIcons.Search)
+    val Settings: ImageVector @Composable get() = v(Icons.Filled.Settings, Icons.Outlined.Settings, Icons.Rounded.Settings, Icons.Sharp.Settings, DoodleIcons.Settings, Y2kIcons.Settings, rv = RetroIcons.Settings)
+    val Share: ImageVector @Composable get() = v(Icons.Filled.Share, Icons.Outlined.Share, Icons.Rounded.Share, Icons.Sharp.Share, DoodleIcons.Share, Y2kIcons.Share, rv = RetroIcons.Share)
     /** Wishlist groups (2.108): Google's Material "group" icon (Apache 2.0), drawn from its path here because the app
      *  only includes the core icon set. One shape in every style. */
     val Group: ImageVector @Composable get() = if (LocalLook.current.design == "doodle") DoodleIcons.Group else groupIcon
     /** Received gifts and gift lists (2.129): Google's Material "redeem" gift-box icon, drawn from its path. */
     val Gift: ImageVector @Composable get() = if (LocalLook.current.design == "doodle") DoodleIcons.Gift else giftIcon
     /** Gifts I reserved (2.129): Google's Material "shopping bag" icon (outlined), drawn from its path. */
-    val Bag: ImageVector @Composable get() = when (LocalLook.current.design) { "doodle" -> DoodleIcons.Bag; "y2k" -> Y2kIcons.Bag; else -> bagIcon }
+    val Bag: ImageVector @Composable get() = when (LocalLook.current.design) { "doodle" -> DoodleIcons.Bag; "y2k" -> Y2kIcons.Bag; "retro" -> RetroIcons.Bag; else -> bagIcon }
     /** Gift exchange (2.129): Google's Material "swap horiz" icon, drawn from its path. */
     val Swap: ImageVector @Composable get() = if (LocalLook.current.design == "doodle") DoodleIcons.Swap else swapIcon
     /** Gift exchange in the side menu (owner, 7 November 2026): two gifts with an arrow from each to the other, our own drawing. */
     val Exchange: ImageVector get() = exchangeIcon
     /** Discover, the shops (owner, 7 November 2026): Google's Material "store" icon, drawn from its path. */
-    val Store: ImageVector @Composable get() = when (LocalLook.current.design) { "doodle" -> DoodleIcons.Bag; "y2k" -> Y2kIcons.Bag; else -> storeIcon }
+    val Store: ImageVector @Composable get() = when (LocalLook.current.design) { "doodle" -> DoodleIcons.Bag; "y2k" -> Y2kIcons.Bag; "retro" -> RetroIcons.Bag; else -> storeIcon }
     /** "Your wishlists ›" (owner, 7 November 2026): Google's Material "chevron right" icon, drawn from its path. */
     val Chevron: ImageVector @Composable get() = if (LocalLook.current.design == "doodle") DoodleIcons.Chevron else chevronIcon
 }

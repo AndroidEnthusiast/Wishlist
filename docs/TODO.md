@@ -7,9 +7,9 @@ it**, grouped as below, with a recommendation. Add every new open item here the 
 Details of each item are in the doc named after it.
 
 ## Now
-- **Try Y2K (2.203) and British Punk (2.204) on the phone**: each sub-theme light and dark, the card styles and
-  Calm/Normal/Wild; Punk's ransom-note titles. Deep themes so far: Doodle, Y2K, British Punk. Still to rebuild one by
-  one: Retro vintage, Pop futurism, Grunge, Flat, Bauhaus, Cottage-core, Japandi, Risograph, Synthwave,
+- **Try Y2K (2.203), British Punk (2.204) and Retro vintage (2.205) on the phone**: each sub-theme light and dark, the
+  card styles and Calm/Normal/Wild; Punk's ransom-note titles. Deep themes so far: Doodle, Y2K, British Punk, Retro.
+  Still to rebuild one by one: Pop futurism, Grunge, Flat, Bauhaus, Cottage-core, Japandi, Risograph, Synthwave,
   Anthropomorphic, Swiss, Quiet, Gen Z chaos (with the partner).
 - **Try Doodle (2.202) on the phone**: does scrolling feel smooth now (also in the other styles)? Its three
   sub-themes (Notebook, Sticky notes, Board), the options Decoration and Cards, light and dark. Then pick which style

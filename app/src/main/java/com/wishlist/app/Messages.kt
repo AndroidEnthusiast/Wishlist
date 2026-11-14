@@ -109,6 +109,7 @@ fun ChatIcon(tint: Color, size: Dp = 24.dp) {
     // Doodle: its hand-drawn speech bubble.
     if (LocalLook.current.design == "doodle") { androidx.compose.material3.Icon(DoodleIcons.Chat, null, tint = tint, modifier = Modifier.size(size)); return }
     if (LocalLook.current.design == "y2k") { androidx.compose.material3.Icon(Y2kIcons.Chat, null, tint = tint, modifier = Modifier.size(size)); return }
+    if (LocalLook.current.design == "retro") { androidx.compose.material3.Icon(RetroIcons.Chat, null, tint = tint, modifier = Modifier.size(size)); return }
     Canvas(Modifier.size(size)) {
         val u = this.size.width / 24f
         val p = Path().apply {

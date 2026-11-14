@@ -96,6 +96,7 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `Fonts.kt` (font choice)
 - `Settings.kt`
 - `Theme.kt` + `Design.kt` + `Styled.kt` + `Themer.kt` (themes and the themed buttons, dialogs, icons)
+- `Retro.kt` (2.205): Retro vintage's sub-themes, card styles, stamps, `TagShape`, `RetroIcons`
 - `Punk.kt` (2.204): British Punk's sub-themes, fasteners, ransom-note `ScreenTitle` (used by every top bar)
 - `Y2k.kt` (2.203): Y2K's sub-themes, glossy parts, sparkle icons (`Y2kIcons`), stickers
 - `Doodle.kt` (2.202): Doodle's sub-themes, hand-drawn parts and icons (`DoodleIcons`), options (`DECO_LEVELS`, `CARD_STYLES` in `Design.kt`); speed rules: `PerformanceRulesTest`

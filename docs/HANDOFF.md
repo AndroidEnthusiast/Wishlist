@@ -5,7 +5,10 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
-- **Newest (13 November 2026, after 2.204), read first.** 2.204: **British Punk rebuilt** (zine, gig poster, tartan;
+- **Newest (14 November 2026, after 2.205), read first.** 2.205: **Retro vintage rebuilt** (50s diner, 70s groovy,
+  travel poster; ticket buttons, tag chips, stamps, sign-painter icons; Ticket/Postcard/Enamel sign). Deep so far:
+  Doodle, Y2K, Punk, Retro. On "next", pick the next style and ask its sub-themes, parts and card styles first.
+- **Before that (13 November 2026, after 2.204).** 2.204: **British Punk rebuilt** (zine, gig poster, tartan;
   cut-out buttons, stamped chips, pins/staples/tape, ransom-note screen titles; Cut-out/Taped flyer/Badge). Deep so
   far: Doodle, Y2K, Punk. On "next", pick the next style and ask its sub-themes, parts and card styles first.
 - **Before that (13 November 2026, after 2.203).** Owner: "pick a theme", rebuild them one by one. 2.203: **Y2K
@@ -27,7 +30,7 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
-### 13 November 2026: the themes (2.199–2.204)
+### 13–14 November 2026: the themes (2.199–2.205)
 Gen Z chaos saved as it was in `themes/gen-z-chaos/` (`tests/themes/check.sh`). Cyberpunk, Neobrutalism, Neumorphism
 removed (→ Quiet); Y2K, Retro vintage, Pop futurism, Grunge, Flat, Bauhaus added (magier.com 5, 6, 9, 13, 18, 20).
 Every part themed (`Themed.kt`); `LookTest` checks contrast everywhere; screenshots of every style were looked at

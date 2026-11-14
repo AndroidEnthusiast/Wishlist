@@ -109,16 +109,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.emblem(look: Look) 
     val a = look.art
     when (look.design) {
         "y2k" -> y2kEmblem(look)
-        "retro" -> {
-            // A sunburst: mustard rays around a cream disc with a cherry ring.
-            for (i in 0 until 16) rotate(i * 22.5f, c) {
-                drawPath(Path().apply {
-                    moveTo(c.x - s * 0.05f, c.y); lineTo(c.x, c.y - s * 0.5f); lineTo(c.x + s * 0.05f, c.y); close()
-                }, a[1])
-            }
-            drawCircle(a[0], s * 0.32f, c)
-            drawCircle(look.scheme.surfaceVariant, s * 0.27f, c)
-        }
+        "retro" -> retroEmblem(look)
         "pop" -> {
             // A sunset planet with stripes cut through its lower half and a teal ring.
             drawCircle(Brush.verticalGradient(listOf(a[0], a[1], a[2]), c.y - s * 0.4f, c.y + s * 0.4f), s * 0.4f, c)
