@@ -41,4 +41,14 @@ class WishSheetTest {
         // Your own lists: no Reserve.
         assertEquals(null, reserveButton(w, null))
     }
+
+    /** The switches keep the sheet open (owner, 15 November 2026: Private closing it was "very annoying"). */
+    @Test fun switchesKeepTheSheetOpen() {
+        assertEquals(false, sheetRowCloses("private", w))
+        assertEquals(false, sheetRowCloses("private", w.copy(priv = true)))
+        assertEquals(false, sheetRowCloses("have", w.copy(got = true)))
+        // Not had yet: it asks where the wish goes, so the sheet steps aside.
+        assertEquals(true, sheetRowCloses("have", w))
+        for (r in listOf("edit", "share", "move", "history", "reserve", "unreserve")) assertEquals(r, true, sheetRowCloses(r, w))
+    }
 }

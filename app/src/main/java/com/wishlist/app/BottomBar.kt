@@ -70,32 +70,7 @@ fun AppBottomBar(
     messagesDot: Boolean = false
 ) {
     val look = LocalLook.current
-    val cs = MaterialTheme.colorScheme
-    // A floating bar (2.97, the preview the owner chose): rounded, a little above the bottom edge, in the style's
-    // surface. Quiet: nearly opaque with a hairline and a soft shadow, like frosted glass.
-    val shape = when (look.design) {
-        "chaos" -> RoundedCornerShape(20.dp)
-        else -> RoundedCornerShape(32.dp)
-    }
-    val frame = if (look.design == "quiet") Modifier
-        .shadow(12.dp, shape, clip = false, ambientColor = Color.Black.copy(alpha = 0.25f), spotColor = Color.Black.copy(alpha = 0.18f))
-        // Quiet 2.207: white (dark: the lifted grey of what floats), a round pill.
-        .clip(shape).background(if (look.dark) Color(0xFF2C2C2E).copy(alpha = 0.96f) else Color.White.copy(alpha = 0.96f)).border(1.dp, look.line, shape)
-    else Modifier.lookSurface(look, shape, cs.surfaceVariant, depth = 7.dp)
-    Box(
-        Modifier.fillMaxWidth().background(cs.background).windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 10.dp)
-            .then(
-                when (look.design) {
-                    "chaos" -> Modifier.rotate(-0.8f)
-                    else -> Modifier
-                }
-            )
-    ) {
-        Row(
-            frame.fillMaxWidth().height(64.dp).padding(horizontal = 4.dp), // 72 with the words (2.121–2.148)
-            horizontalArrangement = Arrangement.SpaceAround, verticalAlignment = Alignment.CenterVertically
-        ) {
+    FloatingBar {
             // Icons only, a little bigger (owner, 7 November 2026); their names are read out by TalkBack.
             BarItem(tr("Home"), current == "home", onHome) { Icon(AppIcons.Home, null, tint = it, modifier = Modifier.size(30.dp)) }
             BarItem(tr("Messages"), current == "messages", onMessages, dot = messagesDot) { ChatIcon(it, 30.dp) }
@@ -116,7 +91,36 @@ fun AppBottomBar(
             }
             BarItem(tr("My shops"), current == "discover", onDiscover) { Icon(AppIcons.Store, null, tint = it, modifier = Modifier.size(30.dp)) }
             BarItem(tr("Friends"), current == "friends", onFriends, dot = friendsDot) { Icon(AppIcons.Person, null, tint = it, modifier = Modifier.size(30.dp)) }
-        }
+    }
+}
+
+/**
+ * The floating bar at the bottom (2.97, the preview the owner chose): rounded, a little above the bottom edge, in the
+ * style's surface. The app's bar and, while selecting wishes, the action bar (2.209) share it, so both look the same.
+ */
+@Composable
+fun FloatingBar(content: @Composable RowScope.() -> Unit) {
+    val look = LocalLook.current
+    val cs = MaterialTheme.colorScheme
+    // Quiet: nearly opaque with a hairline and a soft shadow, like frosted glass.
+    val shape = when (look.design) {
+        "chaos" -> RoundedCornerShape(20.dp)
+        else -> RoundedCornerShape(32.dp)
+    }
+    val frame = if (look.design == "quiet") Modifier
+        .shadow(12.dp, shape, clip = false, ambientColor = Color.Black.copy(alpha = 0.25f), spotColor = Color.Black.copy(alpha = 0.18f))
+        // Quiet 2.207: white (dark: the lifted grey of what floats), a round pill.
+        .clip(shape).background(if (look.dark) Color(0xFF2C2C2E).copy(alpha = 0.96f) else Color.White.copy(alpha = 0.96f)).border(1.dp, look.line, shape)
+    else Modifier.lookSurface(look, shape, cs.surfaceVariant, depth = 7.dp)
+    Box(
+        Modifier.fillMaxWidth().background(cs.background).windowInsetsPadding(WindowInsets.navigationBars)
+            .padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 10.dp)
+            .then(if (look.design == "chaos") Modifier.rotate(-0.8f) else Modifier)
+    ) {
+        Row(
+            frame.fillMaxWidth().height(64.dp).padding(horizontal = 4.dp), // 72 with the words (2.121–2.148)
+            horizontalArrangement = Arrangement.SpaceAround, verticalAlignment = Alignment.CenterVertically, content = content
+        )
     }
 }
 

@@ -35,7 +35,9 @@ const types = {};
 psql("select proname || '=' || prorettype::regtype from pg_proc where proname like 'wl_%'").split("\n").forEach(l => { const [n, t] = l.split("="); types[n] = t; });
 
 // What the page calls, run as anon.
+const asked = [];
 function rpc(fn, body) {
+  asked.push(fn);
   if (!/^wl_[a-z_]+$/.test(fn) || !types[fn]) throw Object.assign(new Error("unknown " + fn), { status: 404 });
   const args = Object.keys(body).map(k => k + " => " + q(body[k])).join(", ");
   const out = psql("set role anon; select " + fn + "(" + args + ")" + (types[fn] === "void" ? " is null" : "") + ";");
@@ -162,6 +164,8 @@ const A = "AAAAAAAAAAAAAAAAAAAA", AT = "tokA_tokA_tokA_tokA_", LINK = "LNKABCDEF
   await w.page.locator(".gblock").nth(1).click();
   await w.page.waitForSelector(".card");
   check("Anna's list: 2 wishes, the binned one hidden", (await w.page.locator(".card").count()) === 2);
+  // No "Viewed 23 times" any more (owner, 15 November 2026): opening a member's list counts nothing.
+  check("Anna's list: opening it counts no view", !asked.includes("wl_view"));
   await sleep(200);
   await w.page.screenshot({ path: "s_group_member.png" });
   check("Anna’s list: no Owned by, its name already says whose it is", (await w.page.locator(".owner").count()) === 0);

@@ -95,10 +95,6 @@ fun FriendScreen(
         if (!w.got && (res[w.id] == false || (w.qty > 1 && c != null && c.full && c.my == 0))) askBought = w
     })
 
-    // "Viewed 23 times" for the owner (2.136): one view each time this list is opened, never on the refresh below.
-    LaunchedEffect(f.code) {
-        try { Cloud.rpc("wl_view", org.json.JSONObject().put("p_code", f.code).put("p_device", Repo.deviceId)) } catch (e: Exception) {}
-    }
     // Load now, then again whenever the list changes (live, ROADMAP S3.2, Live.kt); without the live connection every
     // 20 seconds, as before. Nothing while the app is in the background.
     LaunchedEffect(f.code, tick) {

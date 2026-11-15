@@ -37,6 +37,9 @@ class Places {
     /** The gift exchange open in Gift exchanges, or null (the list of exchanges). */
     var exchange by mutableStateOf<String?>(null)
 
+    /** Wishes are being selected (2.209): the app's bottom bar makes way for the action bar (Selecting.kt). */
+    var selecting by mutableStateOf(false)
+
     /** Which page of Home is open: null (Home itself), "lists", "wishes" or "top". */
     var homePage by mutableStateOf<String?>(null)
 

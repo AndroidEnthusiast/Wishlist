@@ -159,3 +159,18 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here. Look and f
 - **A wish on several of your lists is one wish** (owner, 12 November 2026, for 2.198): a change from "All your
   wishes" (Edit, Private, I have it, Top wish) goes to every copy, and edits inside a list update the other copies
   too, so they never drift apart (until now each copy changed on its own; only deleting took the copies along).
+
+## Owner's review of 15 November 2026 (owner interviewed in 2 rounds; built in 2.209)
+- **Selecting wishes**: the "Move to…" pill in the top bar "feels forced in". While selecting, the bottom bar becomes an
+  action bar in the same place and look (Move to · Delete, icon with word); the top bar keeps "N selected", ✕ and
+  "Select all" (gone once all are ticked). The cards' own ⋮, share and bin are hidden while selecting (also for
+  TalkBack). Like Google Photos and Gmail. `Selecting.kt`.
+- **Switches in a wish's ⋮ sheet keep it open**: toggling Private closed the sheet, "very annoying". Private and turning
+  "I have it" off flip in place; rows that open something else still close it (`sheetRowCloses`).
+- **Card buttons stay**: offered "only ⋮" to calm the lists (33 icons on 11 wishes); the owner chose to keep ⋮, share
+  and bin on every card.
+- **Amounts are never cut off** ("unacceptable"): numbers and amounts get smaller (to 60 %) before anything is cut
+  (`FitText`); checked on a 360 dp phone with big text and €12,345.67 in both styles (`AmountFits*`).
+- **"Create list" / "New collab wishlist"**: the tile's rounded corner cut off the label's first letter; only the tile
+  is rounded now.
+

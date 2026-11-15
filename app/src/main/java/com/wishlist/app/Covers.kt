@@ -175,7 +175,7 @@ fun ListCoverPicture(cover: ListCover, modifier: Modifier = Modifier) {
  * [counts] false (gift lists, or the summary switched off) the card shows only that line.
  */
 @Composable
-fun ListSummaryCard(wishes: List<Wish>, modifier: Modifier = Modifier, occasion: String? = null, counts: Boolean = true, views: Int = 0) {
+fun ListSummaryCard(wishes: List<Wish>, modifier: Modifier = Modifier, occasion: String? = null, counts: Boolean = true) {
     val look = LocalLook.current
     val id = 11L
     val total = totalValue(wishes)
@@ -205,17 +205,10 @@ fun ListSummaryCard(wishes: List<Wish>, modifier: Modifier = Modifier, occasion:
             }
             Box(Modifier.width(1.dp).height(32.dp).background(look.cardMuted(id).copy(alpha = 0.3f)))
             Column(Modifier.weight(0.62f), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(total ?: "–", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = look.cardInk(id), maxLines = 1)
+                // Never cut off (2.209): a little smaller instead.
+                FitText(total ?: "–", MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), look.cardInk(id), Modifier.fillMaxWidth())
                 Text(tr("Total value"), style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id))
             }
-        }
-        // "Viewed 23 times" (owner, 2.136): every open by someone else; hidden while nobody has looked.
-        if (counts && views > 0) {
-            Box(Modifier.padding(vertical = 8.dp).fillMaxWidth().height(1.dp).background(look.cardMuted(id).copy(alpha = 0.3f)))
-            Text(
-                "👀 " + (if (views == 1) tr("Viewed once") else tr("Viewed %d times", views)),
-                style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = look.cardInk(id), maxLines = 1
-            )
         }
         if (occasion != null) {
             if (counts) Box(Modifier.padding(vertical = 8.dp).fillMaxWidth().height(1.dp).background(look.cardMuted(id).copy(alpha = 0.3f)))

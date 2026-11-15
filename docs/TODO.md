@@ -67,3 +67,9 @@ Details of each item are in the doc named after it.
 - Predictive back (the peek while swiping back from the edge; owner: not now, 12 November 2026).
 - The welcome screen redesign; "chip in" (several people pay for one gift: needs P24 first, prices stored as whole
   cents and safer wish ids). More: `docs/decisions/ideas.md`.
+- **Brainstorm with the owner (15 November 2026, next to plan, nothing built yet):** "chip in" together (owner wants
+  it worked out); improve "Gift ideas for others" (today: collab wishlists for someone) and "About me for givers"
+  (today: "I like…" and "My sizes" in Profile): the owner asked for suggestions, even if they change what exists.
+- Gen Z chaos: move the coloured blobs away from text (not chosen on 15 November 2026; ask again).
+- Buttons: one rule for the whole app (main = filled, secondary = tonal, minor = text, one height and shape); today
+  at least six kinds. The owner kept the three buttons on wish cards (15 November 2026).

@@ -557,3 +557,9 @@ Every part themed (`Themed.kt`); `LookTest` checks contrast everywhere; screensh
 Screenshot tests fixed. Clean-up: `LocalGo` (2.192), `Places` and no `*Nav` objects (2.193); a message notifies unless
 that chat is on screen (2.194). Crash review: 3 old crashes on 2.154, none since. Notes tidy-up: slim `CLAUDE.md`,
 `docs/MAP.md`, `docs/TODO.md`, archives, a stop hook. 2.195 screens move (`Motion.kt`); 2.196–2.198 wishes act alike.
+
+### 14 November 2026: back to Quiet and Gen Z chaos (2.206)
+Owner: the design styles "disappointed me"; keep Quiet and Gen Z chaos, remove the rest, and next time one design style
+at a time "as though a professional would have done it". 2.206 removes the twelve styles, their colour sets and
+options; removed keys become Quiet. New `docs/DESIGN-STYLES.md` (process, best practices for this app, inventory,
+definition of done); decision in `docs/decisions/look.md`. Checks and screenshots of Quiet and chaos pass.

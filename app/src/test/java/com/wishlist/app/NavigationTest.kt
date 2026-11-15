@@ -181,6 +181,14 @@ class NavigationTest : NavigationBase() {
         tabOn("Home")
     }
 
+    @Test fun messagesHasNoTabs() {
+        // Owner, 15 November 2026: only the conversations; friends are in the bottom bar, a chat starts with the round
+        // button (StartChatButton).
+        tap("Messages")
+        tabOn("Messages")
+        compose.onAllNodes(hasText("Chats", substring = false)).assertCountEquals(0)
+    }
+
     @Test fun screensOnTopOfATabReturnToIt() {
         // Profile from the Friends tab, then the bell: Back returns to Friends each time (the tab stays underneath).
         tap("Friends")
@@ -293,10 +301,17 @@ class WishPressTest : NavigationBase() {
         compose.onAllNodes(hasText("Ceramic teapot", substring = true)).onFirst()
             .performTouchInput { longClick() }
         shows("1 selected")
+        // The action bar takes the bottom bar's place (2.209): Move to… and Delete, no Home or + while selecting.
         compose.onAllNodes(hasText("Move to…") and hasClickAction()).onFirst().assertExists()
+        compose.onAllNodes(hasText("Delete") and hasClickAction()).assertCountEquals(1)
+        compose.onAllNodes(hasContentDescription("Add wish")).assertCountEquals(0)
+        // The cards' own ⋮, share and bin are gone while selecting.
+        compose.onAllNodes(hasContentDescription("More")).assertCountEquals(0)
         // A tap ticks another one.
         compose.onAllNodes(hasText("Rain jacket", substring = true)).onFirst().performClick()
         shows("2 selected")
+        // Everything ticked: "Select all" goes.
+        compose.onAllNodes(hasText("Select all")).assertCountEquals(0)
         // Back stops selecting.
         phoneBack()
         compose.waitForIdle()
@@ -353,7 +368,7 @@ class AllWishesTest : NavigationBase() {
         twoLists()
         compose.onAllNodes(hasText("Desk lamp", substring = true)).onFirst().performTouchInput { longClick() }
         shows("1 selected")
-        tap("Delete selected")
+        tap("Delete")
         shows("Delete from which list?")
         compose.onAllNodes(hasText("This wish is on 2 of your wishlists", substring = true)).onFirst().assertExists()
         tap("All lists")

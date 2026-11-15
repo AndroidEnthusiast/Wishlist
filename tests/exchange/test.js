@@ -172,7 +172,8 @@ const TOK = { [A]: AT, [B]: BT, [C]: CT };
   await w.page.waitForSelector(".card");
   const gcode = psql("select list_code from wl_gx_members where gx_id = " + q(GX) + " and profile = " + q(gives));
   await sleep(300);
-  check("opening their list counts one view for its owner (2.136)", psql("select n from wl_list_views where list_code = " + q(gcode)) === "1");
+  // No "Viewed 23 times" any more (owner, 15 November 2026): opening their list counts nothing.
+  check("opening their list counts no view (removed in 2.209)", psql("select count(*) from wl_list_views where list_code = " + q(gcode)) === "0");
   const cards = await w.page.locator(".card .title").allInnerTexts();
   check("their list: two wishes, the binned one hidden", cards.length === 2, cards);
   check("an HTML title stays text", cards.some(t => t.includes("<img")) && (await w.page.locator(".card .title img").count()) === 0);

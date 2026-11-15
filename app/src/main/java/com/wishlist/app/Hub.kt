@@ -41,6 +41,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.indication
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -542,9 +543,14 @@ private fun NewBlock(label: String, onClick: () -> Unit, modifier: Modifier) {
     if (look.design == "quiet") {
         // Quiet (2.207, the approved plan): a tile as big as a list's, a + in a soft circle of your colour, the label
         // under it where a list's name sits. No dashed box.
-        Column(modifier.clip(RoundedCornerShape(20.dp)).clickable(onClickLabel = label, onClick = onClick)) {
+        // The tile and its label are one button, but only the tile is rounded: clipping the whole column cut off the
+        // label's first letter at the bottom-left corner (owner's screenshot, 15 November 2026). The label shares the
+        // tile's ripple.
+        val press = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+        Column(modifier.clickable(press, null, onClickLabel = label, onClick = onClick)) {
             Box(
-                Modifier.fillMaxWidth().aspectRatio(1f).lookCard(look, 9L, look.cardShape(9L, small = true)),
+                Modifier.fillMaxWidth().aspectRatio(1f).lookCard(look, 9L, look.cardShape(9L, small = true))
+                    .clip(look.cardShape(9L, small = true)).indication(press, androidx.compose.material3.ripple()),
                 contentAlignment = Alignment.Center
             ) {
                 Box(Modifier.size(56.dp).clip(CircleShape).background(cs.primaryContainer), contentAlignment = Alignment.Center) {
@@ -707,12 +713,14 @@ private fun SeasonCard(onStart: () -> Unit) {
     val key = "gx_card_" + today.year
     var hidden by remember { mutableStateOf(prefs.getBoolean(key, false)) }
     if (hidden || Exchanges.list.isNotEmpty() || Exchanges.invites.isNotEmpty()) return
+    val hide = { hidden = true; prefs.edit().putBoolean(key, true).apply() }
+    if (look.design == "chaos") { ChaosSeasonCard(onStart, hide); return }
     // Secret Santa colours (owner, 7 November 2026: "now it's just a grey block"): a deep red with light snow dots,
     // white words and a white pill to start. A drawn illustration, so its colours are fixed in every theme.
     val red = Color(0xFFB3261E)
     val deep = Color(0xFF6E1414)
     // Quiet (2.207, owner: festive, "but make it fit the style"): one solid festive red, a drawn gift instead of the
-    // emoji, no snow, the title in Fraunces. Chaos keeps the card as it was.
+    // emoji, no snow, the title in Fraunces. Chaos has its own card since 2.209 (ChaosSeasonCard).
     val quiet = look.design == "quiet"
     val solid = if (look.dark) Color(0xFF8E1418) else Color(0xFFA4161A)
     val shape = RoundedCornerShape(if (quiet) 20.dp else 24.dp)
@@ -756,9 +764,50 @@ private fun SeasonCard(onStart: () -> Unit) {
             }
         }
         IconButton(
-            onClick = { hidden = true; prefs.edit().putBoolean(key, true).apply() },
+            onClick = hide,
             modifier = Modifier.align(Alignment.TopEnd)
         ) { Icon(AppIcons.Close, tr("Hide until next year"), tint = Color.White) }
+    }
+}
+
+/**
+ * The Secret Santa card in Gen Z chaos (2.209, owner 15 November 2026: the old card "doesn't fit the theme"): chaos's
+ * own parts on a festive red: the thick ink line and hard shadow of every chaos card, a slight tilt, the heading in
+ * Bungee, a drawn gift on a tilted yellow sticker (no 🎅 emoji) and a white button with the same line and shadow.
+ */
+@Composable
+private fun ChaosSeasonCard(onStart: () -> Unit, onHide: () -> Unit) {
+    val look = LocalLook.current
+    val red = Color(0xFFC62828)
+    val shape = RoundedCornerShape(18.dp)
+    Box(
+        Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp).fillMaxWidth().rotate(-1f)
+            .lookSurface(look, shape, red).clickable(onClickLabel = tr("Start a gift exchange"), onClick = onStart)
+    ) {
+        Row(Modifier.padding(start = 16.dp, top = 18.dp, bottom = 18.dp, end = 44.dp), verticalAlignment = Alignment.Top) {
+            Box(
+                Modifier.padding(top = 2.dp).size(56.dp).rotate(-8f)
+                    .lookSurface(look, RoundedCornerShape(14.dp), Color(0xFFFFE14D), depth = 3.dp),
+                contentAlignment = Alignment.Center
+            ) { Icon(AppIcons.Gift, null, tint = Color(0xFF0D0D0D), modifier = Modifier.size(32.dp)) }
+            Column(Modifier.weight(1f).padding(start = 16.dp)) {
+                Text(tr("Secret Santa this year?"), style = MaterialTheme.typography.titleLarge, color = Color.White)
+                Text(
+                    tr("Draw names with family or friends."), style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White, modifier = Modifier.padding(top = 4.dp, bottom = 14.dp)
+                )
+                Box(
+                    Modifier.heightIn(min = 48.dp).lookSurface(look, RoundedCornerShape(24.dp), Color.White, depth = 3.dp)
+                        .clickable(onClick = onStart).padding(horizontal = 20.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(tr("Start a gift exchange"), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = red)
+                }
+            }
+        }
+        IconButton(onClick = onHide, modifier = Modifier.align(Alignment.TopEnd)) {
+            Icon(AppIcons.Close, tr("Hide until next year"), tint = Color.White)
+        }
     }
 }
 

@@ -297,7 +297,7 @@ fun Selectable(selecting: Boolean, on: Boolean, onToggle: () -> Unit, content: @
     // Quiet (2.207): the card's own corners and a 2 dp line; chaos as before.
     val quiet = LocalLook.current.design == "quiet"
     Box {
-        content()
+        androidx.compose.runtime.CompositionLocalProvider(LocalSelecting provides selecting) { content() }
         if (selecting) {
             val shape = RoundedCornerShape(if (quiet) 20.dp else 18.dp)
             Box(

@@ -186,3 +186,15 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   Wishes, Total value (the mock-up showed Lists; Friends is the existing decision). New for readability: in light,
   your colour used as text is darkened just enough for 4.5 : 1, and the text on filled buttons is white or ink,
   whichever reads better (so green, orange and pink buttons get dark text).
+
+## Fixes from the owner's review of 15 November 2026 (built in 2.209)
+- **Gen Z chaos profile card**: name next to the photo, Friends · Wishes · Total value on their own row under it (like
+  Quiet), so amounts fit.
+- **Gen Z chaos Secret Santa card**: chaos's own parts on festive red (ink line, hard shadow, slight tilt, Bungee
+  heading, a drawn gift on a tilted yellow sticker instead of 🎅, a white button with line and shadow).
+- **Gen Z chaos message box** ("Theme applied" and every other message): one box in the style, 48 dp for one line;
+  Android's own box with its blurry shadow no longer shows inside it.
+- Not chosen this time (ask again later): moving chaos's coloured blobs away from text (they sit under
+  "Descriptions" and "Allow" in App settings, "Your wishlists" on Home and "Nike" in My shops).
+- Bottom panels set their text colour (2.208): Quiet's lifted grey isn't a scheme colour, so text fell back to black.
+

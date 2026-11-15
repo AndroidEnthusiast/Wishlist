@@ -5,6 +5,10 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.209 (15 November 2026), read first.** Ask how the owner's review fixes feel on the phone. Then the brainstorm the
+  owner asked for: plan "chip in" and suggestions to improve "gift ideas for others" and "about me for givers" (they
+  partly exist, `docs/TODO.md`), interviewing with pop-up questions. Before every push: screenshots of both styles
+  with worst-case data (long names, big amounts, no photo), as promised to the owner.
 - **2.208 (15 November 2026):** ask the owner whether the profile sheet now reads well in dark mode, then go on below.
 - **Quiet polished (14 November 2026, 2.207), read first.** Built to the approved plan (`docs/styles/quiet.md`).
   Ask the owner how it feels on the phone (step 6 of `docs/DESIGN-STYLES.md`) and fix what they send. Then Gen Z
@@ -22,6 +26,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 15 November 2026, later: the owner's review (2.209)
+Owner's review: selecting gets a bottom action bar; Messages without tabs, a round chat button; "Viewed" removed (app and
+web); Private keeps the ⋮ sheet open; amounts never cut off (`FitText`, the check also found Quiet cut off with big
+text); "Create list" label fixed; chaos: numbers row, own Secret Santa card, one message box. Brainstorm still to plan.
+
 ### 15 November 2026: profile sheet text fixed (2.208)
 Owner's screenshot: the profile sheet in Quiet dark showed black text on the dark grey panel (2.207's lifted grey is
 not a scheme colour, so the sheet's text fell back to black). Every bottom panel now sets its text colour
@@ -32,9 +41,3 @@ Owner: polish Quiet, then chaos; challenge big asks. Brief, plan and mock-ups ap
 dark too, labels above fields, sheet switches). 2.207 builds it; `LookTest.quietPartsAreReadable` found green, orange
 and pink too light as text (fixed). Screenshots fixed (they showed Home), plus App settings and big text; chaos
 checked pixel for pixel. Notes rule: challenge the owner on big builds.
-
-### 14 November 2026: back to Quiet and Gen Z chaos (2.206)
-Owner: the design styles "disappointed me"; keep Quiet and Gen Z chaos, remove the rest, and next time one design style
-at a time "as though a professional would have done it". 2.206 removes the twelve styles, their colour sets and
-options; removed keys become Quiet. New `docs/DESIGN-STYLES.md` (process, best practices for this app, inventory,
-definition of done); decision in `docs/decisions/look.md`. Checks and screenshots of Quiet and chaos pass.

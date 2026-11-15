@@ -211,7 +211,7 @@ fun CompactCard(
             // It is moved up 6 dp and gives back the empty half of the bin's touch area below it, so the reactions
             // follow the price closely (owner, 7 November 2026: too much space between them).
             Column(
-                Modifier.layout { m, c ->
+                Modifier.hiddenWhileSelecting().layout { m, c ->
                     val p = m.measure(c)
                     val up = 6.dp.roundToPx()
                     layout(p.width, (p.height - up - 12.dp.roundToPx()).coerceAtLeast(0)) { p.place(0, -up) }

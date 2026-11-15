@@ -117,6 +117,7 @@ fun HomeScreen(
     }
     val selecting = picked.isNotEmpty()
     BackHandler(enabled = selecting) { picked = emptySet() }
+    SelectingFlag(selecting)
     fun toggle(w: Wish) { picked = if (w.id in picked) picked - w.id else picked + w.id }
     // A collab wishlist updates live while it is open (ROADMAP S3.2, Live.kt): someone else's change shows within a
     // second or two. Without the live connection: every 20 seconds, as before. Nothing while the app is in the background.
@@ -210,13 +211,9 @@ fun HomeScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
                 actions = {
                     MoveBusy(Modifier.padding(end = 8.dp))
-                    // A filled button (owner: the text button's accent colour was hard to read in dark mode).
-                    Button(onClick = { MoveFlow.ask(picked); picked = emptySet() }) { Text(tr("Move to…")) }
-                    IconButton(onClick = {
-                        val ws = Repo.wishes.filter { it.id in picked }
-                        picked = emptySet()
-                        DeleteFlow.requestMany(ctx, ws)
-                    }) { Icon(AppIcons.Delete, tr("Delete selected")) }
+                    // Move to… and Delete are in the action bar at the bottom (2.209, Selecting.kt).
+                    val all = list.map { it.id }.toSet()
+                    if (!picked.containsAll(all)) TextButton(onClick = { picked = all }) { Text(tr("Select all")) }
                 }
             ) else TopAppBar(
                 title = {
@@ -240,6 +237,16 @@ fun HomeScreen(
             )
         },
         // No floating "Add wish" button any more (owner, 2.112): the + in the bottom bar does the same.
+        bottomBar = {
+            if (selecting) SelectionBar(
+                onMove = { MoveFlow.ask(picked); picked = emptySet() },
+                onDelete = {
+                    val ws = Repo.wishes.filter { it.id in picked }
+                    picked = emptySet()
+                    DeleteFlow.requestMany(ctx, ws)
+                }
+            )
+        },
         snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
         // Behind the list: the blobs, glows or dots of the design (nothing in Material 3).
@@ -263,18 +270,8 @@ fun HomeScreen(
             // The top that stays in sight while scrolling (owner, 2.111): the summary card (your own lists) and the
             // category, sort and view choices. The cover photo above it scrolls away.
             val hasCover = remember(ListCovers.version, Shared.active, Repo.openMine) { ListCovers.get(ctx, ListCovers.openKey()) != null }
-            // "Viewed 23 times" (owner, 2.136): only your own lists that are online; read when the list opens and on
-            // every pull to refresh. Offline or before supabase-features.sql: nothing is shown.
-            var views by remember(Repo.openMine, Shared.active) { mutableIntStateOf(0) }
-            LaunchedEffect(Repo.openMine, Shared.active, refreshing) {
-                if (inShared) return@LaunchedEffect
-                val d = Repo.mine(ctx, Repo.openMine)
-                val code = d.code ?: return@LaunchedEffect
-                val token = d.token ?: return@LaunchedEffect
-                views = try {
-                    Cloud.rpc("wl_view_count", org.json.JSONObject().put("p_code", code).put("p_token", token)).trim().toIntOrNull() ?: 0
-                } catch (e: Exception) { views }
-            }
+            // No "Viewed 23 times" any more (owner, 15 November 2026: it shouldn't be there). The server's wl_view and
+            // wl_view_count stay, unused, so old app versions keep working.
             // Reactions (2.142): your own lists show them (no reacting), gift lists let every giver react. On a gift list a
             // tapped "Reserved" label of someone else asks "Is it still being bought?" (2.142).
             var askBought by remember { mutableStateOf<Wish?>(null) }
@@ -307,7 +304,7 @@ fun HomeScreen(
                     // switched off, the card shows only the occasion.
                     val occ = Occasions.line(Occasions.ofOpen(ctx))
                     val counts = !inShared && Show["show_summary"]
-                    if (counts || occ != null) ListSummaryCard(Repo.wishes, occasion = occ, counts = counts, views = views)
+                    if (counts || occ != null) ListSummaryCard(Repo.wishes, occasion = occ, counts = counts)
                     filters(live)
                 }
             }
@@ -360,7 +357,7 @@ fun HomeScreen(
                             // smaller than before); the tap area stays the same.
                             // Quiet (2.207): 20 dp in every view, so the buttons stay quieter than the wish.
                             val ico = if (view == "rows" || look.design == "quiet") 20.dp else 24.dp
-                            val actions: @Composable RowScope.() -> Unit = {
+                            val actions: @Composable RowScope.() -> Unit = { Row(Modifier.hiddenWhileSelecting(), verticalAlignment = Alignment.CenterVertically) {
                                 // The bin stays, the rest is in one ⋮ (owner, 2.135: calmer rows), the same sheet as Two
                                 // per row on every list (12 November 2026; a collab wishlist had only Share here).
                                 WishMoreButton(
@@ -388,7 +385,7 @@ fun HomeScreen(
                                 IconButton(onClick = { DeleteFlow.request(ctx, w) }) {
                                     Icon(AppIcons.CardDelete, tr("Delete"), tint = look.cardMuted(w.id), modifier = Modifier.size(ico))
                                 }
-                            }
+                            } }
                             if (view == "rows") RowCard(
                                 w,
                                 badge = if (inShared) reserveLabel(Shared.active.orEmpty(), w, r) else if (w.got) tr("Owned") else null,

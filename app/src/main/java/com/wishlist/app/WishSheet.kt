@@ -72,13 +72,26 @@ fun wishSheetRows(w: Wish, a: WishActions): List<String> = buildList {
     if (a.own && a.onHistory != null) add("history")
 }
 
+/**
+ * Whether tapping [row] closes the sheet: the switches don't (Private; "I have it" when it is on, a tap turns it
+ * off), so you see them flip (owner, 15 November 2026). Everything else opens something else and closes it.
+ */
+fun sheetRowCloses(row: String, w: Wish): Boolean = when (row) {
+    "private" -> false
+    "have" -> !w.got
+    else -> true
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WishSheet(w: Wish, a: WishActions, onClose: () -> Unit) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
-    // Every row closes the sheet first, then does its thing.
+    // Every row that opens something else closes the sheet first, then does its thing. The switches (Private, and
+    // turning "I have it" off) don't: the sheet stays open and the switch flips (owner, 15 November 2026: closing on
+    // Private was "very annoying"); tapping it again is the undo.
     fun then(f: () -> Unit): () -> Unit = { onClose(); f() }
+    fun keep(row: String, f: () -> Unit): () -> Unit = if (sheetRowCloses(row, w)) then(f) else f
     // "I have it" on a wish you don't have yet asks where it goes; the sheet steps aside for the question.
     var asking by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
     if (asking) {
@@ -134,14 +147,14 @@ fun WishSheet(w: Wish, a: WishActions, onClose: () -> Unit) {
                 "move" -> SheetRow({ Icon(AppIcons.Swap, null, tint = cs.onSurfaceVariant) }, tr("Move to…"), then { a.onMove?.invoke() })
                 "private" -> SheetRow(
                     { Icon(PrivateIcon, null, tint = cs.onSurfaceVariant) }, tr("Private"),
-                    then { a.everywhere?.setPrivate?.invoke(!w.priv) ?: togglePrivate(ctx, w) },
+                    keep("private") { a.everywhere?.setPrivate?.invoke(!w.priv) ?: togglePrivate(ctx, w) },
                     checked = w.priv
                 )
                 // One action for "I have it" (owner, 12 November 2026; it replaces "Owned" and "Received"): ticked, a
                 // tap takes it back (with Undo); not ticked, it asks where the wish goes.
                 "have" -> SheetRow(
                     { Icon(AppIcons.Check, null, tint = cs.onSurfaceVariant) }, tr("I have it"),
-                    if (w.got) then { a.everywhere?.setOwned?.invoke(false) ?: OwnedFlow.toggle(ctx, w) } else ({ asking = true }),
+                    if (w.got) keep("have") { a.everywhere?.setOwned?.invoke(false) ?: OwnedFlow.toggle(ctx, w) } else ({ asking = true }),
                     checked = w.got
                 )
                 "history" -> SheetRow({ HistoryIcon(cs.onSurfaceVariant) }, tr("Price history"), then { a.onHistory?.invoke() })

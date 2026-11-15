@@ -86,6 +86,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -179,9 +180,9 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
     val look = LocalLook.current
     var problem by remember { mutableStateOf(false) }
     var loaded by remember { mutableStateOf(Chat.conversations.isNotEmpty()) }
-    // Two tabs (owner, 2.101): "Chats" (the conversations) and "Friends" (tap one: the chat opens). No + in the top
-    // bar: the bottom bar's + adds a wish, two pluses were confusing.
-    var tab by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(0) }
+    // No tabs any more (owner, 15 November 2026: Friends is in the bottom bar anyway): only the conversations, and a
+    // round chat button at the bottom right (no +: the bottom bar's + adds a wish) that opens your friends to pick from.
+    var picking by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     Friends.load(ctx)
     // Live (ROADMAP S3.2, Live.kt): fetched again when a message comes or goes; without the live connection every
     // 8 seconds, as before.
@@ -206,43 +207,14 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
         },
-        snackbarHost = { AppSnackbarHost(snack) }
+        snackbarHost = { AppSnackbarHost(snack) },
+        // Only once there is a chat: before that, the empty page has the same action as its one button.
+        floatingActionButton = { if (Config.enabled && Chat.conversations.isNotEmpty()) StartChatButton { picking = true } }
     ) { pad ->
         val list = Chat.conversations
-        val friends = Friends.state?.friends.orEmpty()
         Column(Modifier.padding(pad).fillMaxSize()) {
-            SegmentedTabs(
-                listOf(tr("Chats"), tr("Friends")), tab, { tab = it },
-                Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 10.dp)
-            )
             Box(Modifier.weight(1f).fillMaxWidth()) {
-                if (tab == 1) {
-                    // Every empty page says what to do next (owner, 7 November 2026): here a way to Friends.
-                    if (friends.isEmpty()) Empty(tr("Add friends to start chatting.")) {
-                        EmptyAction(tr("Add friends")) { go(Deep.FriendsAsLeft) }
-                    }
-                    else LazyColumn(
-                        Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        items(friends, key = { it.id }) { f ->
-                            val id = f.id.hashCode().toLong()
-                            Row(
-                                Modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true))
-                                    .clickable { places.chat = f.id }.padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Avatar(Friends.photos[f.id], f.name, 44.dp)
-                                Text(
-                                    f.name.ifBlank { tr("Someone") }, style = MaterialTheme.typography.titleMedium, color = look.cardInk(id),
-                                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).padding(start = 12.dp)
-                                )
-                                ChatIcon(look.textAccent, 22.dp)
-                            }
-                        }
-                    }
-                } else when {
+                when {
                     !Config.enabled || !Friends.hasProfile(ctx) && list.isEmpty() -> Empty(
                         tr("Add friends to start chatting.")
                     ) {
@@ -252,11 +224,12 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
                     list.isEmpty() && problem -> Empty(tr("Couldn’t reach the server. Check your connection."))
                     // No conversations yet: a "Start a chat" chip that shows your friends (it goes once there is a chat).
                     list.isEmpty() -> Empty(tr("No messages yet.")) {
-                        EmptyAction(tr("Start a chat")) { tab = 1 }
+                        EmptyAction(tr("Start a chat")) { picking = true }
                     }
                     else -> LazyColumn(
                         Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
+                        // Room at the bottom for the round chat button, so it never covers the last chat.
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         items(list, key = { it.id }) { cv -> ConversationRow(cv) { places.chat = cv.id } }
@@ -267,6 +240,68 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
                                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                             )
                         }
+                    }
+                }
+            }
+        }
+    }
+    if (picking) FriendPicker(onPick = { id -> picking = false; places.chat = id }, onClose = { picking = false })
+}
+
+/**
+ * Start a chat (owner, 15 November 2026): a round button at the bottom right with the chat icon, no + and no words
+ * (the bottom bar's + adds a wish). In your colour's soft wash, so it doesn't compete with that +.
+ */
+@Composable
+private fun StartChatButton(onClick: () -> Unit) {
+    val look = LocalLook.current
+    val cs = look.scheme
+    val shape = CircleShape
+    Box(
+        Modifier.size(56.dp).then(
+            if (look.design == "quiet") Modifier.shadow(6.dp, shape, clip = false).clip(shape).background(cs.primaryContainer)
+            else Modifier.lookSurface(look, look.fabShape, cs.primaryContainer, depth = 5.dp)
+        ).clickable(onClickLabel = tr("Start a chat"), onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) { ChatIcon(cs.onPrimaryContainer, 26.dp) }
+}
+
+/**
+ * Your friends to start a chat with (it replaces the Friends tab of Messages). Kept on the phone, so it also opens
+ * offline (the chat then says it sends once you're back online). No friends yet: says so, with "Add a friend".
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FriendPicker(onPick: (String) -> Unit, onClose: () -> Unit) {
+    val go = LocalGo.current
+    val look = LocalLook.current
+    val cs = MaterialTheme.colorScheme
+    val friends = Friends.state?.friends.orEmpty().sortedBy { it.name.lowercase() }
+    ModalBottomSheet(onDismissRequest = onClose, sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp)) {
+            Text(
+                tr("Start a chat"), style = MaterialTheme.typography.titleLarge, fontWeight = look.titleWeight,
+                modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 8.dp)
+            )
+            if (friends.isEmpty()) {
+                Text(
+                    tr("No friends yet. Add a friend, then chat with them here."), color = cs.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                )
+                Button(onClick = { onClose(); go(Deep.FriendsAsLeft) }, modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
+                    Text(tr("Add a friend"))
+                }
+            } else LazyColumn(Modifier.heightIn(max = 480.dp)) {
+                items(friends, key = { it.id }) { f ->
+                    Row(
+                        Modifier.fillMaxWidth().heightIn(min = 64.dp).clickable { onPick(f.id) }.padding(horizontal = 24.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Avatar(Friends.photos[f.id], f.name, 44.dp)
+                        Text(
+                            f.name.ifBlank { tr("Someone") }, style = MaterialTheme.typography.titleSmall,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).padding(start = 16.dp)
+                        )
                     }
                 }
             }

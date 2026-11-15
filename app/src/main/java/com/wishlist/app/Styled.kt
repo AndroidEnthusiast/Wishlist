@@ -748,3 +748,24 @@ fun SwipeAway(key: Any, onGone: () -> Unit, trash: Boolean = false, content: @Co
         ) { content() }
     }
 }
+
+/**
+ * One line of text that is never cut off (2.209, owner 15 November 2026: "€1,434.56" was cut off on Home in Gen Z
+ * chaos, "unacceptable"): when it doesn't fit, it gets smaller, down to 60 % of [style]'s size, before anything is
+ * cut. Used for numbers and amounts.
+ */
+@Composable
+fun FitText(text: String, style: androidx.compose.ui.text.TextStyle, color: Color, modifier: Modifier = Modifier) {
+    // Measured as it is laid out: too wide, it is laid out again a step smaller (5 %), and only drawn once it fits, so
+    // nobody sees the steps. (Not with BoxWithConstraints: it crashes inside rows that ask for their height, 2.209.)
+    var scale by remember(text, style) { mutableStateOf(1f) }
+    var ready by remember(text, style) { mutableStateOf(false) }
+    Text(
+        text, style = style.copy(fontSize = style.fontSize * scale), color = color, maxLines = 1, softWrap = false,
+        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        modifier = modifier.drawWithContent { if (ready) drawContent() },
+        onTextLayout = { r ->
+            if (r.didOverflowWidth && scale > 0.6f) scale = (scale - 0.05f).coerceAtLeast(0.6f) else ready = true
+        }
+    )
+}

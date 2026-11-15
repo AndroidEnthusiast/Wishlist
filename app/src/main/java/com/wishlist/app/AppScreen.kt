@@ -327,7 +327,7 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     val imeOpen = WindowInsets.isImeVisible
     // The bar shows on Home, a list and the tabs; an open conversation has a back arrow and no bar.
     val inChat = tab == Route.MESSAGES && places.chat != null
-    val showBar = (onMain || tab != null || section != null) && !inChat && !imeOpen
+    val showBar = (onMain || tab != null || section != null) && !inChat && !imeOpen && !places.selecting
     CompositionLocalProvider(LocalGo provides goStable, LocalPlaces provides places) {
     Column(Modifier.fillMaxSize()) {
     // With the bottom bar, the screens above it don't leave room for the phone's own navigation bar again.

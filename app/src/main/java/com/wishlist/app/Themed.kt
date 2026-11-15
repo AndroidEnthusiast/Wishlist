@@ -700,11 +700,24 @@ fun ThemedSnackbar(data: SnackbarData) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
     if (look.design == "quiet") { M3Snackbar(data); return }
+    // Gen Z chaos (2.209): one box in the style, as tall as Android's (48 dp for one line). Android's own message box
+    // inside it kept its blurry shadow, so a big white box held a grey one (owner's screenshot, 15 November 2026).
     val shape = MaterialTheme.shapes.small
-    M3Snackbar(
-        data,
-        modifier = Modifier.padding(4.dp).lookSurface(look, shape, cs.inverseSurface, depth = 5.dp),
-        shape = shape, containerColor = Color.Transparent, contentColor = cs.inverseOnSurface,
-        actionColor = cs.inverseOnSurface, actionContentColor = cs.inverseOnSurface, dismissActionContentColor = cs.inverseOnSurface
-    )
+    val ink = cs.inverseOnSurface
+    Row(
+        Modifier.padding(horizontal = 12.dp, vertical = 8.dp).fillMaxWidth()
+            .lookSurface(look, shape, cs.inverseSurface, depth = 4.dp)
+            .heightIn(min = 48.dp).padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            data.visuals.message, style = MaterialTheme.typography.bodyMedium, color = ink,
+            modifier = Modifier.weight(1f).padding(vertical = 8.dp)
+        )
+        data.visuals.actionLabel?.let { label ->
+            androidx.compose.material3.TextButton(onClick = { data.performAction() }) {
+                Text(label, color = ink, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
 }

@@ -191,29 +191,30 @@ fun ProfileSummary(onProfile: () -> Unit, onFriends: () -> Unit = {}, onAddWish:
         return
     }
     // One soft card in the style's own look around you and your numbers (owner, 7 November 2026), set apart from the
-    // lists below; inside it the numbers are plain, with thin lines between them (no cards in a card).
-    Row(
+    // lists below; inside it the numbers are plain, with thin lines between them (no cards in a card). Since 2.209 the
+    // numbers have the card's full width under your photo and name, as in Quiet: next to the photo "€1,434.56" was cut
+    // off (owner's screenshot, 15 November 2026).
+    Column(
         Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp).fillMaxWidth()
-            .lookCard(look, 5L, look.cardShape(5L, small = true)).padding(horizontal = 14.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .lookCard(look, 5L, look.cardShape(5L, small = true)).padding(horizontal = 14.dp, vertical = 14.dp)
     ) {
-        Box(Modifier.clip(androidx.compose.foundation.shape.CircleShape).clickable(onClickLabel = tr("Profile"), onClick = onProfile)) {
-            Avatar(Friends.myPhoto, Shared.lastName, 72.dp)
-        }
-        Column(Modifier.weight(1f).padding(start = 14.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.clip(androidx.compose.foundation.shape.CircleShape).clickable(onClickLabel = tr("Profile"), onClick = onProfile)) {
+                Avatar(Friends.myPhoto, Shared.lastName, 56.dp)
+            }
             Text(
                 Shared.lastName.ifBlank { tr("Add your name") }, style = MaterialTheme.typography.titleLarge,
                 fontWeight = look.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis, color = look.cardInk(5L),
-                modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onProfile).padding(horizontal = 2.dp)
+                modifier = Modifier.weight(1f).padding(start = 14.dp).clip(RoundedCornerShape(8.dp)).clickable(onClick = onProfile).padding(horizontal = 2.dp)
             )
-            Row(Modifier.fillMaxWidth().padding(top = 8.dp).height(androidx.compose.foundation.layout.IntrinsicSize.Min), verticalAlignment = Alignment.CenterVertically) {
-                val line = look.cardMuted(5L).copy(alpha = 0.3f)
-                Stat(friends.toString(), friends == 0, if (friends == 1) tr("Friend") else tr("Friends"), Modifier.weight(1f), if (Config.enabled) tr("Add friends") else null, onFriends, onFriends, plain = true)
-                Box(Modifier.width(1.dp).fillMaxHeight(0.7f).background(line))
-                Stat(all.size.toString(), all.isEmpty(), if (all.size == 1) tr("Wish") else tr("Wishes"), Modifier.weight(1f), tr("Add wish"), onAddWish, onClick = { places.homePage = "wishes" }, plain = true)
-                Box(Modifier.width(1.dp).fillMaxHeight(0.7f).background(line))
-                Stat(total, false, tr("Total value"), Modifier.weight(1.3f), onClick = null, plain = true)
-            }
+        }
+        Row(Modifier.fillMaxWidth().padding(top = 12.dp).height(androidx.compose.foundation.layout.IntrinsicSize.Min), verticalAlignment = Alignment.CenterVertically) {
+            val line = look.cardMuted(5L).copy(alpha = 0.3f)
+            Stat(friends.toString(), friends == 0, if (friends == 1) tr("Friend") else tr("Friends"), Modifier.weight(1f), if (Config.enabled) tr("Add friends") else null, onFriends, onFriends, plain = true)
+            Box(Modifier.width(1.dp).fillMaxHeight(0.7f).background(line))
+            Stat(all.size.toString(), all.isEmpty(), if (all.size == 1) tr("Wish") else tr("Wishes"), Modifier.weight(1f), tr("Add wish"), onAddWish, onClick = { places.homePage = "wishes" }, plain = true)
+            Box(Modifier.width(1.dp).fillMaxHeight(0.7f).background(line))
+            Stat(total, false, tr("Total value"), Modifier.weight(1.3f), onClick = null, plain = true)
         }
     }
 }
@@ -260,9 +261,9 @@ private fun Stat(
     ) {
         // The tile's own ink (dark on the bright cards of some styles) and the style's display font for the number.
         val ink = if (inviting) MaterialTheme.colorScheme.primary else look.cardInk(5L)
-        Text(
-            if (inviting) "+" else value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
-            fontFamily = look.display, color = ink, maxLines = 1, overflow = TextOverflow.Ellipsis
+        // A number or amount is never cut off: it gets a little smaller instead (2.209, FitText).
+        FitText(
+            if (inviting) "+" else value, MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontFamily = look.display), ink
         )
         Text(
             if (inviting) invite!! else label, style = MaterialTheme.typography.bodySmall,
@@ -289,6 +290,7 @@ fun OverviewScreen(
     var picked by remember(page) { mutableStateOf(setOf<Long>()) }
     val selecting = picked.isNotEmpty()
     BackHandler(enabled = selecting) { picked = emptySet() }
+    SelectingFlag(selecting)
     var editing by remember { mutableStateOf<Wish?>(null) }
     var history by remember { mutableStateOf<Wish?>(null) }
     // "From which list?" for Move to… or Delete, when the wishes are on more than one of your lists.
@@ -322,8 +324,9 @@ fun OverviewScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
                 actions = {
                     MoveBusy(Modifier.padding(end = 8.dp))
-                    Button(onClick = { start("move", picked); picked = emptySet() }) { Text(tr("Move to…")) }
-                    IconButton(onClick = { start("delete", picked); picked = emptySet() }) { Icon(AppIcons.Delete, tr("Delete selected")) }
+                    // Move to… and Delete are in the action bar at the bottom (2.209, Selecting.kt).
+                    val ids = (if (page == "top") all.filter { it.starred } else all).map { it.w.id }.toSet()
+                    if (!picked.containsAll(ids)) TextButton(onClick = { picked = ids }) { Text(tr("Select all")) }
                 }
             ) else TopAppBar(
                 title = {
@@ -331,6 +334,12 @@ fun OverviewScreen(
                 },
                 navigationIcon = { IconButton(onClick = { places.homePage = null }) { Icon(AppIcons.ArrowBack, tr("Back")) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
+            )
+        },
+        bottomBar = {
+            if (selecting) SelectionBar(
+                onMove = { start("move", picked); picked = emptySet() },
+                onDelete = { start("delete", picked); picked = emptySet() }
             )
         },
         snackbarHost = { AppSnackbarHost(snack) }

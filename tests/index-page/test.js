@@ -111,6 +111,8 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   doc.body.click();
   check("apikey header, no Authorization for sb_publishable", store.calls[0][2].apikey.startsWith("sb_publishable_") && !store.calls[0][2].Authorization);
   check("code uppercased", store.calls[0][1].p_code === "ABCD2345");
+  // No "Viewed 23 times" any more (owner, 15 November 2026): opening a list doesn't count a view.
+  check("no view is counted", !store.calls.some(c => c[0] === "wl_view"));
 
   cards[0].querySelector("button.act").click();
   await sleep(100);
