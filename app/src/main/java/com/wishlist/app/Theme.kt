@@ -55,14 +55,22 @@ fun WishTheme(content: @Composable () -> Unit) {
 }
 
 /** Everything inside drawn with [look]: its colours, fonts, shapes and LocalLook (the Themer's preview uses this too). */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun LookTheme(look: Look, content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalLook provides look) {
         MaterialTheme(
             colorScheme = look.scheme,
             typography = typographyFor(look.design),
-            shapes = shapesFor(look.design),
-            content = content
-        )
+            shapes = shapesFor(look.design)
+        ) {
+            // The app's own tap feel in every style (owner, 15 November 2026: no Android ripple): a soft shade while
+            // pressed (Feel.kt); cards and buttons also sink a little (pressScale).
+            CompositionLocalProvider(
+                androidx.compose.foundation.LocalIndication provides SoftPress,
+                androidx.compose.material3.LocalRippleConfiguration provides null,
+                content = content
+            )
+        }
     }
 }

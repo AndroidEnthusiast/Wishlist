@@ -79,6 +79,8 @@ class MainActivity : ComponentActivity() {
                         .windowInsetsPadding(WindowInsets.statusBars)
                 ) {
                     App(deep) { deep = null }
+                    // The small celebrations over everything (2.210, Celebrate.kt).
+                    CelebrationLayer()
                 }
             }
         }

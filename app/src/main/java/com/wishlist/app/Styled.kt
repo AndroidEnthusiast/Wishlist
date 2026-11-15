@@ -62,18 +62,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.*
-import androidx.compose.material.icons.automirrored.outlined.*
-import androidx.compose.material.icons.automirrored.rounded.*
-import androidx.compose.material.icons.automirrored.sharp.*
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material.icons.rounded.*
-import androidx.compose.material.icons.sharp.*
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -134,6 +126,12 @@ val Capitalised = androidx.compose.foundation.text.KeyboardOptions(
  */
 val LocalInDialog = compositionLocalOf { false }
 
+/**
+ * Quiet's own dialogs (2.210): which button slot a button is in, "confirm" or "dismiss" (null: not in a dialog's
+ * buttons). There the buttons are full width and stacked; the confirm one filled (the main action), the other plain.
+ */
+val LocalDialogSlot = compositionLocalOf<String?> { null }
+
 /** The two button sizes of docs/STYLE.md: regular on screens (46 dp), compact in dialogs (40 dp, a smaller shadow). */
 private class ButtonSize(val height: androidx.compose.ui.unit.Dp, val pad: PaddingValues, val depth: androidx.compose.ui.unit.Dp, val room: androidx.compose.ui.unit.Dp)
 
@@ -148,16 +146,17 @@ fun Button(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean 
     val look = LocalLook.current
     val shape = look.buttonShape
     val z = buttonSize()
+    val wide = if (LocalDialogSlot.current != null) Modifier.fillMaxWidth() else Modifier
     if (look.design == "quiet") {
         // Quiet: a calm pill in the accent colour, a little taller than Material's.
         M3Button(
-            onClick, modifier.padding(vertical = z.room).heightIn(min = z.height), enabled, shape = shape, elevation = null,
+            onClick, modifier.pressScale().then(wide).padding(vertical = z.room).heightIn(min = z.height), enabled, shape = shape, elevation = null,
             colors = ButtonDefaults.buttonColors(containerColor = look.accent, contentColor = look.onAccent),
             contentPadding = z.pad, content = content
         )
     } else {
         M3Button(
-            onClick, modifier.padding(vertical = z.room).heightIn(min = z.height)
+            onClick, modifier.pressScale().then(wide).padding(vertical = z.room).heightIn(min = z.height)
                 .then(if (enabled) Modifier.lookSurface(look, shape, look.accent, depth = z.depth) else Modifier),
             enabled, shape = shape, elevation = null,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = look.onAccent),
@@ -172,16 +171,17 @@ fun OutlinedButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: 
     val cs = MaterialTheme.colorScheme
     val shape = look.buttonShape
     val z = buttonSize()
+    val wide = if (LocalDialogSlot.current != null) Modifier.fillMaxWidth() else Modifier
     if (look.design == "quiet") {
         // Quiet: a soft tinted pill with the accent as text (the "secondary" button of iOS).
         M3Button(
-            onClick, modifier.padding(vertical = z.room).heightIn(min = z.height), enabled, shape = shape, elevation = null,
+            onClick, modifier.pressScale().then(wide).padding(vertical = z.room).heightIn(min = z.height), enabled, shape = shape, elevation = null,
             colors = ButtonDefaults.buttonColors(containerColor = cs.primaryContainer, contentColor = if (look.dark) look.accent else cs.onPrimaryContainer),
             contentPadding = z.pad, content = content
         )
     } else {
         M3Button(
-            onClick, modifier.padding(vertical = z.room).heightIn(min = z.height)
+            onClick, modifier.pressScale().then(wide).padding(vertical = z.room).heightIn(min = z.height)
                 .then(if (enabled) Modifier.lookSurface(look, shape, cs.surfaceVariant, depth = z.depth) else Modifier),
             enabled, shape = shape, elevation = null,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = cs.onSurface),
@@ -201,8 +201,20 @@ fun TextButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Bool
     // Chaos: ink text (its accent is for blocks); the others: the style's readable text colour (its primary; in Quiet
     // that is the accent).
     val col = if (look.design == "chaos") cs.onSurface else cs.primary
+    // In Quiet's own dialogs (2.210): the confirm button is the filled main action, the other a full-width plain one.
+    when (LocalDialogSlot.current.takeIf { look.design == "quiet" }) {
+        "confirm" -> { Button(onClick, modifier, enabled, content); return }
+        "only" -> { OutlinedButton(onClick, modifier, enabled, content); return }
+        "dismiss" -> {
+            M3TextButton(
+                onClick, modifier.pressScale().fillMaxWidth().heightIn(min = 48.dp), enabled, shape = look.buttonShape,
+                colors = ButtonDefaults.textButtonColors(contentColor = cs.onSurface), content = content
+            )
+            return
+        }
+    }
     M3TextButton(
-        onClick, modifier, enabled, shape = look.buttonShape,
+        onClick, modifier.pressScale(), enabled, shape = look.buttonShape,
         colors = ButtonDefaults.textButtonColors(contentColor = col), content = content
     )
 }
@@ -219,14 +231,7 @@ fun Switch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifier: Mo
                 uncheckedThumbColor = look.line, uncheckedTrackColor = cs.surfaceVariant, uncheckedBorderColor = look.line
             )
         )
-        "quiet" -> M3Switch(
-            checked, onCheckedChange, modifier, enabled = enabled,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White, checkedTrackColor = look.accent, checkedBorderColor = Color.Transparent,
-                uncheckedThumbColor = Color.White, uncheckedTrackColor = if (look.dark) Color(0xFF39393D) else Color(0xFFE5E5EA),
-                uncheckedBorderColor = Color.Transparent
-            )
-        )
+        "quiet" -> QuietSwitch(checked, onCheckedChange, modifier, enabled)
         // Gen Z chaos: on in the style's block colour, off with its black line.
         else -> {
             val edge = look.line
@@ -262,12 +267,7 @@ fun AlertDialog(
     // Buttons inside the dialog's text are the compact size (LocalInDialog, docs/STYLE.md).
     val body: (@Composable () -> Unit)? = if (text == null) null else inDialog(text)
     if (look.design == "quiet") {
-        // Quiet (2.207): the title in Fraunces 20 (not the 28 of screen titles), on white or a lifted grey in dark.
-        val head: (@Composable () -> Unit)? = title?.let { t -> { androidx.compose.material3.ProvideTextStyle(MaterialTheme.typography.titleLarge) { t() } } }
-        M3AlertDialog(
-            onDismissRequest, confirmButton, modifier, dismissButton, title = head, text = body,
-            shape = shape, containerColor = quietRaised(look, cs.surface), tonalElevation = 0.dp, properties = properties
-        )
+        QuietDialog(onDismissRequest, confirmButton, modifier, dismissButton, title, body, properties)
     } else {
         M3AlertDialog(
             onDismissRequest, confirmButton, modifier.lookSurface(look, shape, cs.surfaceContainerHigh, depth = 10.dp), dismissButton,
@@ -276,6 +276,21 @@ fun AlertDialog(
     }
 }
 
+/** True inside a top bar: Quiet's icon buttons there sit in soft round buttons (2.210). */
+val LocalInTopBar = compositionLocalOf { false }
+
+/**
+ * The collapsing title of Quiet's screens (2.210, owner 15 November 2026: Google's flat top bar was one of the "standard
+ * Android" parts): set by [Scaffold], read by [TopAppBar].
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+val LocalTopBarScroll = compositionLocalOf<androidx.compose.material3.TopAppBarScrollBehavior?> { null }
+
+/**
+ * A screen's top bar. Quiet (2.210): a large title in Fraunces that shrinks smoothly into the bar as you scroll, and the
+ * ← and icons in soft round buttons. [large] false: one line from the start (a chat's name and picture, "2 selected",
+ * a title with a second line under it, Home's wordmark).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopAppBar(
@@ -283,24 +298,45 @@ fun TopAppBar(
     modifier: Modifier = Modifier,
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
-    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors()
+    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
+    large: Boolean = true
 ) {
     val look = LocalLook.current
-    // A line under the top bar in the style's own way: thick ink (chaos), a holographic line (Y2K), a printed double
-    // line (Retro), three racing stripes (Pop futurism), a rough ink line (Grunge), red, yellow and blue blocks
-    // (Bauhaus). Quiet and Flat: none.
+    // A line under the top bar in Gen Z chaos: thick ink. Quiet: none.
     val line = when (look.design) {
         "quiet" -> Modifier
         else -> Modifier.drawWithContent {
             drawContent()
             val u = 1.dp.toPx()
-            val w = size.width; val b = size.height
-            when (look.design) {
-                else -> drawRect(look.line, Offset(0f, b - 3 * u), Size(w, 3 * u))
-            }
+            drawRect(look.line, Offset(0f, size.height - 3 * u), Size(size.width, 3 * u))
         }
     }
-    M3TopAppBar(title, modifier.then(line), navigationIcon, actions, colors = colors)
+    val nav: @Composable () -> Unit = { CompositionLocalProvider(LocalInTopBar provides true) { navigationIcon() } }
+    val acts: @Composable RowScope.() -> Unit = { CompositionLocalProvider(LocalInTopBar provides true) { actions() } }
+    val scroll = LocalTopBarScroll.current
+    if (look.design == "quiet" && large && scroll != null) {
+        androidx.compose.material3.LargeTopAppBar(
+            title, modifier, nav, acts, colors = colors.copy(scrolledContainerColor = colors.containerColor),
+            scrollBehavior = scroll
+        )
+    } else M3TopAppBar(title, modifier.then(line), nav, acts, colors = colors)
+}
+
+/**
+ * An icon button: Material's (48 dp to tap) with the app's tap feel (it sinks a little, Feel.kt). In Quiet's top bars the
+ * icon sits in a soft round button (2.210), like the app's own controls rather than Android's bare icons.
+ */
+@Composable
+fun IconButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable () -> Unit) {
+    val look = LocalLook.current
+    val round = LocalInTopBar.current && look.design == "quiet"
+    androidx.compose.material3.IconButton(onClick, modifier.pressScale(), enabled) {
+        if (round) Box(
+            Modifier.size(40.dp).clip(CircleShape).background(if (look.dark) QuietColours.raisedDark else Color.White),
+            contentAlignment = Alignment.Center
+        ) { Box(Modifier.size(22.dp), contentAlignment = Alignment.Center) { content() } }
+        else content()
+    }
 }
 
 /** The name of a list in its top bar, the same in every theme. ([count] is no longer shown: the owner removed
@@ -311,13 +347,16 @@ fun ListTitle(name: String, @Suppress("UNUSED_PARAMETER") count: Int) {
 }
 
 /** A screen's title in the top bar: one line, the style's title weight, cut off with … when too long. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScreenTitle(text: String, big: Boolean = false) {
     // [big]: the main tabs (Messages, Friends, My shops), as large as Home's wordmark in Quiet (2.207: 28).
     val look = LocalLook.current
     Text(
         text, fontWeight = look.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis,
-        style = if (big && look.design == "quiet") MaterialTheme.typography.headlineSmall else LocalTextStyle.current
+        // Quiet's large top bar (2.210) gives every screen the 28 title, shrinking to 20 as you scroll; [big] is kept
+        // for a one-line bar.
+        style = if (big && look.design == "quiet" && LocalTopBarScroll.current == null) MaterialTheme.typography.headlineSmall else LocalTextStyle.current
     )
 }
 
@@ -342,7 +381,7 @@ fun StatusBadge(text: String, small: Boolean, modifier: Modifier = Modifier) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
     val bg = when (look.design) {
-        "quiet" -> if (look.dark) Color(0xFF2C2C2E) else Color(0xFFF2F2F7)
+        "quiet" -> if (look.dark) QuietColours.raisedDark else QuietColours.pageLight
         else -> cs.surfaceVariant
     }
     StyleBadge(text, bg, cs.onSurface, small, null, modifier)
@@ -364,65 +403,48 @@ private fun StyleBadge(text: String, bg: Color, fg: Color, small: Boolean, lineC
 }
 
 /**
- * The icons of the app, in the style of the theme: filled (classic, as before), rounded (Material 3, clay),
- * thin outlined (organic) or sharp (neobrutalism). All from Google's free Material icons.
+ * The icons of the app (2.210, owner 15 November 2026, docs/styles/identity.md): our own rounded-line family
+ * ([OwnIcons]) in every style, bolder in Gen Z chaos. They replaced Google's filled Material icons, which made the app
+ * look like Android's own settings. The chosen tab uses the filled versions (HomeFilled …).
  */
 object AppIcons {
-    @Composable
-    private fun v(f: ImageVector, o: ImageVector, r: ImageVector, s: ImageVector): ImageVector =
-        when (LocalLook.current.iconStyle) {
-            "outlined" -> o
-            "rounded" -> r
-            "sharp" -> s
-            else -> f
-        }
+    private val set: OwnIcons @Composable get() = if (LocalLook.current.design == "chaos") ChaosIcons else QuietIcons
 
-    val Add: ImageVector @Composable get() = v(Icons.Filled.Add, Icons.Outlined.Add, Icons.Rounded.Add, Icons.Sharp.Add)
-    val ArrowBack: ImageVector @Composable get() = v(
-        Icons.AutoMirrored.Filled.ArrowBack, Icons.AutoMirrored.Outlined.ArrowBack,
-        Icons.AutoMirrored.Rounded.ArrowBack, Icons.AutoMirrored.Sharp.ArrowBack
-    )
-    val ArrowDropDown: ImageVector @Composable get() =
-        v(Icons.Filled.ArrowDropDown, Icons.Outlined.ArrowDropDown, Icons.Rounded.ArrowDropDown, Icons.Sharp.ArrowDropDown)
-    val Check: ImageVector @Composable get() = v(Icons.Filled.Check, Icons.Outlined.Check, Icons.Rounded.Check, Icons.Sharp.Check)
-    val Close: ImageVector @Composable get() = v(Icons.Filled.Close, Icons.Outlined.Close, Icons.Rounded.Close, Icons.Sharp.Close)
-    val Delete: ImageVector @Composable get() = v(Icons.Filled.Delete, Icons.Outlined.Delete, Icons.Rounded.Delete, Icons.Sharp.Delete)
-    val Edit: ImageVector @Composable get() = v(Icons.Filled.Edit, Icons.Outlined.Edit, Icons.Rounded.Edit, Icons.Sharp.Edit)
-    val Favorite: ImageVector @Composable get() =
-        v(Icons.Filled.Favorite, Icons.Outlined.FavoriteBorder, Icons.Rounded.Favorite, Icons.Sharp.Favorite)
-    val Home: ImageVector @Composable get() = v(Icons.Filled.Home, Icons.Outlined.Home, Icons.Rounded.Home, Icons.Sharp.Home)
-    val Lock: ImageVector @Composable get() = v(Icons.Filled.Lock, Icons.Outlined.Lock, Icons.Rounded.Lock, Icons.Sharp.Lock)
-    val ListIcon: ImageVector @Composable get() = v(
-        Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List,
-        Icons.AutoMirrored.Rounded.List, Icons.AutoMirrored.Sharp.List
-    )
-    val Notifications: ImageVector @Composable get() =
-        v(Icons.Filled.Notifications, Icons.Outlined.Notifications, Icons.Rounded.Notifications, Icons.Sharp.Notifications)
-    val MoreVert: ImageVector @Composable get() = v(Icons.Filled.MoreVert, Icons.Outlined.MoreVert, Icons.Rounded.MoreVert, Icons.Sharp.MoreVert)
-    val Person: ImageVector @Composable get() = v(Icons.Filled.Person, Icons.Outlined.Person, Icons.Rounded.Person, Icons.Sharp.Person)
-    val Refresh: ImageVector @Composable get() = v(Icons.Filled.Refresh, Icons.Outlined.Refresh, Icons.Rounded.Refresh, Icons.Sharp.Refresh)
-    val Search: ImageVector @Composable get() = v(Icons.Filled.Search, Icons.Outlined.Search, Icons.Rounded.Search, Icons.Sharp.Search)
-    val Settings: ImageVector @Composable get() = v(Icons.Filled.Settings, Icons.Outlined.Settings, Icons.Rounded.Settings, Icons.Sharp.Settings)
-    val Share: ImageVector @Composable get() = v(Icons.Filled.Share, Icons.Outlined.Share, Icons.Rounded.Share, Icons.Sharp.Share)
-    /** The buttons on a wish card (⋮, share, bin): in Quiet the lighter outlined icons (2.207: the owner kept all three
-     *  "but quieter"), elsewhere the style's own. */
-    val CardShare: ImageVector @Composable get() = if (LocalLook.current.design == "quiet") Icons.Outlined.Share else Share
-    val CardDelete: ImageVector @Composable get() = if (LocalLook.current.design == "quiet") Icons.Outlined.Delete else Delete
-    /** Wishlist groups (2.108): Google's Material "group" icon (Apache 2.0), drawn from its path here because the app
-     *  only includes the core icon set. One shape in every style. */
-    val Group: ImageVector get() = groupIcon
-    /** Received gifts and gift lists (2.129): Google's Material "redeem" gift-box icon, drawn from its path. */
-    val Gift: ImageVector get() = giftIcon
-    /** Gifts I reserved (2.129): Google's Material "shopping bag" icon (outlined), drawn from its path. */
-    val Bag: ImageVector get() = bagIcon
-    /** Gift exchange (2.129): Google's Material "swap horiz" icon, drawn from its path. */
-    val Swap: ImageVector get() = swapIcon
+    val Add: ImageVector @Composable get() = set.add
+    val ArrowBack: ImageVector @Composable get() = set.back
+    val ArrowDropDown: ImageVector @Composable get() = set.dropDown
+    val Check: ImageVector @Composable get() = set.check
+    val Close: ImageVector @Composable get() = set.close
+    val Delete: ImageVector @Composable get() = set.bin
+    val Edit: ImageVector @Composable get() = set.edit
+    val Favorite: ImageVector @Composable get() = set.heartFilled
+    val FavoriteLine: ImageVector @Composable get() = set.heart
+    val Home: ImageVector @Composable get() = set.home
+    val HomeFilled: ImageVector @Composable get() = set.homeFilled
+    val Lock: ImageVector @Composable get() = set.lock
+    val ListIcon: ImageVector @Composable get() = set.list
+    val Notifications: ImageVector @Composable get() = set.bell
+    val MoreVert: ImageVector @Composable get() = set.more
+    val Person: ImageVector @Composable get() = set.person
+    val PersonFilled: ImageVector @Composable get() = set.personFilled
+    val Refresh: ImageVector @Composable get() = set.refresh
+    val Search: ImageVector @Composable get() = set.search
+    val Settings: ImageVector @Composable get() = set.gear
+    val Share: ImageVector @Composable get() = set.share
+    /** The buttons on a wish card (⋮, share, bin): the same icons, drawn small and grey by the card (2.207). */
+    val CardShare: ImageVector @Composable get() = set.share
+    val CardDelete: ImageVector @Composable get() = set.bin
+    val Group: ImageVector @Composable get() = set.group
+    val Gift: ImageVector @Composable get() = set.gift
+    val Bag: ImageVector @Composable get() = set.bag
+    val Swap: ImageVector @Composable get() = set.swap
     /** Gift exchange in the side menu (owner, 7 November 2026): two gifts with an arrow from each to the other, our own drawing. */
     val Exchange: ImageVector get() = exchangeIcon
-    /** Discover, the shops (owner, 7 November 2026): Google's Material "store" icon, drawn from its path. */
-    val Store: ImageVector get() = storeIcon
-    /** "Your wishlists ›" (owner, 7 November 2026): Google's Material "chevron right" icon, drawn from its path. */
-    val Chevron: ImageVector get() = chevronIcon
+    val Store: ImageVector @Composable get() = set.store
+    val StoreFilled: ImageVector @Composable get() = set.storeFilled
+    val Chevron: ImageVector @Composable get() = set.chevron
+    val Chat: ImageVector @Composable get() = set.chat
+    val ChatFilled: ImageVector @Composable get() = set.chatFilled
 }
 
 private val exchangeIcon: ImageVector by lazy {
@@ -448,47 +470,12 @@ private val exchangeIcon: ImageVector by lazy {
     b.build()
 }
 
-private val chevronIcon: ImageVector by lazy {
-    pathIcon("Chevron", "M10,6L8.59,7.41 13.17,12l-4.58,4.59L10,18l6,-6z")
-}
 
-private val storeIcon: ImageVector by lazy {
-    // My shops: a shopping bag (owner, 7 November 2026; Google's Material icon, Apache 2.0).
-    pathIcon("Store", "M18,6h-2c0,-2.21 -1.79,-4 -4,-4S8,3.79 8,6H6c-1.1,0 -2,0.9 -2,2v12c0,1.1 0.9,2 2,2h12c1.1,0 2,-0.9 2,-2V8c0,-1.1 -0.9,-2 -2,-2zM12,4c1.1,0 2,0.9 2,2h-4c0,-1.1 0.9,-2 2,-2zM18,20H6V8h2v2c0,0.55 0.45,1 1,1s1,-0.45 1,-1V8h4v2c0,0.55 0.45,1 1,1s1,-0.45 1,-1V8h2v12z")
-}
 
-private fun pathIcon(name: String, d: String): ImageVector =
-    ImageVector.Builder(name, 24.dp, 24.dp, 24f, 24f).addPath(
-        androidx.compose.ui.graphics.vector.addPathNodes(d),
-        fill = androidx.compose.ui.graphics.SolidColor(Color.Black)
-    ).build()
 
-private val giftIcon: ImageVector by lazy {
-    pathIcon(
-        "Gift",
-        "M20,6h-2.18c0.11,-0.31 0.18,-0.65 0.18,-1 0,-1.66 -1.34,-3 -3,-3 -1.05,0 -1.96,0.54 -2.5,1.35l-0.5,0.67 -0.5,-0.68C10.96,2.54 10.05,2 9,2 7.34,2 6,3.34 6,5c0,0.35 0.07,0.69 0.18,1H4c-1.11,0 -1.99,0.89 -1.99,2L2,19c0,1.11 0.89,2 2,2h16c1.11,0 2,-0.89 2,-2V8c0,-1.11 -0.89,-2 -2,-2zM15,4c0.55,0 1,0.45 1,1s-0.45,1 -1,1 -1,-0.45 -1,-1 0.45,-1 1,-1zM9,4c0.55,0 1,0.45 1,1s-0.45,1 -1,1 -1,-0.45 -1,-1 0.45,-1 1,-1zM20,19H4v-2h16v2zM20,14H4V8h5.08L7,10.83 8.62,12 11,8.76l1,-1.36 1,1.36L15.38,12 17,10.83 14.92,8H20v6z"
-    )
-}
 
-private val bagIcon: ImageVector by lazy {
-    pathIcon(
-        "Bag",
-        "M18,6h-2c0,-2.21 -1.79,-4 -4,-4S8,3.79 8,6H6c-1.1,0 -2,0.9 -2,2v12c0,1.1 0.9,2 2,2h12c1.1,0 2,-0.9 2,-2V8c0,-1.1 -0.9,-2 -2,-2zM12,4c1.1,0 2,0.9 2,2h-4c0,-1.1 0.9,-2 2,-2zM18,20H6V8h2v2c0,0.55 0.45,1 1,1s1,-0.45 1,-1V8h4v2c0,0.55 0.45,1 1,1s1,-0.45 1,-1V8h2v12z"
-    )
-}
 
-private val swapIcon: ImageVector by lazy {
-    pathIcon("Swap", "M6.99,11L3,15l3.99,4v-3H14v-2H6.99v-3zM21,9l-3.99,-4v3H10v2h7.01v3L21,9z")
-}
 
-private val groupIcon: ImageVector by lazy {
-    ImageVector.Builder("Group", 24.dp, 24.dp, 24f, 24f).addPath(
-        androidx.compose.ui.graphics.vector.addPathNodes(
-            "M16,11c1.66,0 2.99,-1.34 2.99,-3S17.66,5 16,5c-1.66,0 -3,1.34 -3,3s1.34,3 3,3zM8,11c1.66,0 2.99,-1.34 2.99,-3S9.66,5 8,5C6.34,5 5,6.34 5,8s1.34,3 3,3zM8,13c-2.33,0 -7,1.17 -7,3.5L1,19h14v-2.5c0,-2.33 -4.67,-3.5 -7,-3.5zM16,13c-0.29,0 -0.62,0.02 -0.97,0.05 1.16,0.84 1.97,1.97 1.97,3.45L17,19h6v-2.5c0,-2.33 -4.67,-3.5 -7,-3.5z"
-        ),
-        fill = androidx.compose.ui.graphics.SolidColor(Color.Black)
-    ).build()
-}
 
 /**
  * A green tick with "Saved" next to a field, for about a second after each save ([saves] goes up by one each time).
@@ -631,7 +618,7 @@ private fun QuietPhoto(url: String, description: String, small: Boolean, modifie
             // Multiplying by the surface's colour is the same as laying the photo over it with "multiply".
             colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(LocalLook.current.photoSurface(0), androidx.compose.ui.graphics.BlendMode.Multiply),
             modifier = (if (ratio == null) Modifier.fillMaxSize() else Modifier.aspectRatio(ratio, matchHeightConstraintsFirst = true))
-                .clip(RoundedCornerShape(if (small) 8.dp else 12.dp))
+                .clip(Squircle(if (small) 8.dp else 12.dp))
         )
     }
 }

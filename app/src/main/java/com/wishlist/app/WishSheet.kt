@@ -1,6 +1,10 @@
 package com.wishlist.app
 
 import androidx.compose.foundation.background
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -73,6 +77,18 @@ fun wishSheetRows(w: Wish, a: WishActions): List<String> = buildList {
 }
 
 /**
+ * The rows of a wish's sheet in groups (2.210, owner 15 November 2026: grouped cards instead of Google-Settings rows):
+ * what you do with it (reserve, edit, share, move), its switches (private, I have it), and information (price history).
+ * The order inside each group stays [wishSheetRows]'s.
+ */
+fun sheetGroups(rows: List<String>): List<List<String>> {
+    val doing = setOf("reserve", "unreserve", "edit", "share", "move")
+    val switches = setOf("private", "have")
+    return listOf(rows.filter { it in doing }, rows.filter { it in switches }, rows.filter { it !in doing && it !in switches })
+        .filter { it.isNotEmpty() }
+}
+
+/**
  * Whether tapping [row] closes the sheet: the switches don't (Private; "I have it" when it is on, a tap turns it
  * off), so you see them flip (owner, 15 November 2026). Everything else opens something else and closes it.
  */
@@ -139,7 +155,9 @@ fun WishSheet(w: Wish, a: WishActions, onClose: () -> Unit) {
                 }
             }
             HorizontalDivider(Modifier.padding(vertical = 8.dp), color = cs.outlineVariant)
-            for (row in wishSheetRows(w, a)) when (row) {
+            // Quiet (2.210): the rows in grouped cards (doing, on/off, information), each icon in a tinted tile.
+            @Composable
+            fun rowContent(row: String) = when (row) {
                 "reserve" -> SheetRow({ Icon(AppIcons.Bag, null, tint = cs.primary) }, tr("Reserve"), then { a.reserve?.set?.invoke(true) })
                 "unreserve" -> SheetRow({ Icon(AppIcons.Bag, null, tint = cs.onSurfaceVariant) }, tr("Unreserve"), then { a.reserve?.set?.invoke(false) })
                 "edit" -> SheetRow({ Icon(AppIcons.Edit, null, tint = cs.onSurfaceVariant) }, tr("Edit"), then { a.onEdit?.invoke() })
@@ -158,25 +176,69 @@ fun WishSheet(w: Wish, a: WishActions, onClose: () -> Unit) {
                     checked = w.got
                 )
                 "history" -> SheetRow({ HistoryIcon(cs.onSurfaceVariant) }, tr("Price history"), then { a.onHistory?.invoke() })
+                else -> {}
             }
+            for (g in sheetGroups(wishSheetRows(w, a))) SheetGroup(g.map { r -> { rowContent(r) } })
         }
     }
 }
 
 /** One row of a sheet (the profile sheet and the wish sheet): an icon, a label, perhaps a tick box. 52 dp tall. */
 @Composable
-fun SheetRow(icon: @Composable () -> Unit, label: String, onClick: () -> Unit, checked: Boolean? = null) {
+fun SheetRow(icon: @Composable () -> Unit, label: String, onClick: () -> Unit, checked: Boolean? = null, danger: Boolean = false) {
+    val look = LocalLook.current
+    val quiet = look.design == "quiet"
+    val inGroup = LocalInSheetGroup.current && quiet
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 12.dp).heightIn(min = 52.dp).clip(RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick).padding(horizontal = 12.dp),
+        Modifier.fillMaxWidth().padding(horizontal = if (inGroup) 0.dp else 12.dp).heightIn(min = 52.dp)
+            .clip(if (inGroup) androidx.compose.ui.graphics.RectangleShape else RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick).padding(horizontal = if (inGroup) 14.dp else 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        icon()
-        Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 16.dp).weight(1f))
+        if (quiet) {
+            // Quiet (2.210): the icon in a small squircle tile with a soft tint, recoloured to the tile's ink; red for
+            // something that removes.
+            val cs = look.scheme
+            val tile = if (danger) cs.error.copy(alpha = 0.14f) else cs.primaryContainer
+            val ink = if (danger) cs.error else cs.onPrimaryContainer
+            Box(
+                Modifier.size(32.dp).clip(Squircle(9.dp)).background(tile)
+                    .graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
+                    .drawWithContent { drawContent(); drawRect(ink, blendMode = androidx.compose.ui.graphics.BlendMode.SrcAtop) },
+                contentAlignment = Alignment.Center
+            ) { Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) { icon() } }
+        } else icon()
+        Text(
+            label, style = MaterialTheme.typography.bodyLarge.copy(textAlign = androidx.compose.ui.text.style.TextAlign.Start),
+            color = if (danger && quiet) look.scheme.error else androidx.compose.ui.graphics.Color.Unspecified,
+            modifier = Modifier.padding(start = if (quiet) 14.dp else 16.dp).weight(1f)
+        )
         // On or off: a switch in Quiet (owner, 14 November 2026: like App settings), a tick box elsewhere.
         if (checked != null) {
-            if (LocalLook.current.design == "quiet") Switch(checked = checked, onCheckedChange = null)
+            if (quiet) Switch(checked = checked, onCheckedChange = null)
             else Checkbox(checked = checked, onCheckedChange = null)
+        }
+    }
+}
+
+/** True for rows inside a [SheetGroup] (Quiet draws them flush in the group's card). */
+val LocalInSheetGroup = androidx.compose.runtime.compositionLocalOf { false }
+
+/**
+ * Rows grouped in one rounded card with hairlines between them (Quiet, 2.210, owner 15 November 2026); other styles
+ * keep their rows as they were.
+ */
+@Composable
+fun SheetGroup(rows: List<@Composable () -> Unit>) {
+    val look = LocalLook.current
+    if (look.design != "quiet") { rows.forEach { it() }; return }
+    val bg = if (look.dark) Color(0xFF353038) else QuietColours.pageLight
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp).clip(Squircle(18.dp)).background(bg)) {
+        androidx.compose.runtime.CompositionLocalProvider(LocalInSheetGroup provides true) {
+            rows.forEachIndexed { i, row ->
+                if (i > 0) Box(Modifier.padding(start = 60.dp).fillMaxWidth().height(1.dp).background(look.line))
+                row()
+            }
         }
     }
 }
@@ -194,8 +256,10 @@ fun HaveItDialog(count: Int, onKeep: () -> Unit, onReceived: () -> Unit, onClose
         text = {
             Column {
                 Text(tr("Where should it go?"), style = MaterialTheme.typography.bodyMedium)
-                SheetRow({ Icon(AppIcons.Check, null, tint = cs.onSurfaceVariant) }, tr("Keep it on my list, marked “Owned”"), onKeep)
-                SheetRow({ Icon(AppIcons.Gift, null, tint = cs.onSurfaceVariant) }, tr("Move it to Received gifts"), onReceived)
+                SheetGroup(listOf(
+                    { SheetRow({ Icon(AppIcons.Check, null, tint = cs.onSurfaceVariant) }, tr("Keep it on my list, marked “Owned”"), onKeep) },
+                    { SheetRow({ Icon(AppIcons.Gift, null, tint = cs.onSurfaceVariant) }, tr("Move it to Received gifts"), onReceived) }
+                ))
                 Text(
                     tr("Received gifts leave your wishlist. Whoever gave it gets a thank-you."),
                     style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp)

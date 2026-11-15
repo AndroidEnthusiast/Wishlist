@@ -59,11 +59,16 @@ fun AccountSheet(
                 )
             }
             HorizontalDivider(Modifier.padding(vertical = 8.dp), color = cs.outlineVariant)
-            SheetRow({ Icon(AppIcons.Person, null, tint = cs.onSurfaceVariant) }, tr("Profile"), onProfile)
-            SheetRow({ Icon(AppIcons.Bag, null, tint = cs.onSurfaceVariant) }, tr("Gifts I reserved"), onReserved)
-            SheetRow({ Icon(AppIcons.Gift, null, tint = cs.onSurfaceVariant) }, tr("Received gifts"), onReceived)
-            SheetRow({ Icon(AppIcons.Delete, null, tint = cs.onSurfaceVariant) }, tr("Bin"), onBin)
-            SheetRow({ Icon(AppIcons.Settings, null, tint = cs.onSurfaceVariant) }, tr("App settings"), onSettings)
+            // Grouped (2.210, owner 15 November 2026): you; your gifts; the bin and settings.
+            SheetGroup(listOf { SheetRow({ Icon(AppIcons.Person, null, tint = cs.onSurfaceVariant) }, tr("Profile"), onProfile) })
+            SheetGroup(listOf(
+                { SheetRow({ Icon(AppIcons.Bag, null, tint = cs.onSurfaceVariant) }, tr("Gifts I reserved"), onReserved) },
+                { SheetRow({ Icon(AppIcons.Gift, null, tint = cs.onSurfaceVariant) }, tr("Received gifts"), onReceived) }
+            ))
+            SheetGroup(listOf(
+                { SheetRow({ Icon(AppIcons.Delete, null, tint = cs.onSurfaceVariant) }, tr("Bin"), onBin) },
+                { SheetRow({ Icon(AppIcons.Settings, null, tint = cs.onSurfaceVariant) }, tr("App settings"), onSettings) }
+            ))
             if (version.isNotEmpty()) Text(
                 tr("Version %s", version), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant,
                 modifier = Modifier.padding(start = 24.dp, top = 12.dp)

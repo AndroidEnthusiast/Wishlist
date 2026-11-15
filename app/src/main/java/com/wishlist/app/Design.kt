@@ -72,9 +72,12 @@ fun styleFor(key: String): StyleInfo = STYLES.firstOrNull { it.key == key } ?: S
 class Accent(val key: String, val name: String, val light: Long, val dark: Long)
 
 val ACCENTS: List<Accent> = listOf(
+    // Berry, the app's own colour (owner, 15 November 2026, docs/styles/identity.md): first, and the default for new
+    // people. Indigo's dark tone moved away from Android's default purple and green's from the Android robot's green.
+    Accent("berry", "Berry", 0xFFB0245A, 0xFFF0679A),
     Accent("blue", "Blue", 0xFF0A6CFF, 0xFF4D94FF),
-    Accent("indigo", "Indigo", 0xFF4C4CD6, 0xFF8585FF),
-    Accent("green", "Green", 0xFF1F9D55, 0xFF3DDC84),
+    Accent("indigo", "Indigo", 0xFF3F4BD0, 0xFF8E9BFF),
+    Accent("green", "Green", 0xFF1F9D55, 0xFF4CC08A),
     Accent("orange", "Orange", 0xFFF2711C, 0xFFFF9A52),
     Accent("pink", "Pink", 0xFFE5367A, 0xFFFF6FA3)
 )
@@ -101,7 +104,7 @@ fun hardToRead(key: String): Boolean {
         val la = a.luminance() + 0.05f; val lb = b.luminance() + 0.05f
         return if (la > lb) la / lb else lb / la
     }
-    return contrast(Color(ac.light), Color(0xFFF7F7F9)) < 2.5f || contrast(Color(ac.dark), Color(0xFF121214)) < 2.5f
+    return contrast(Color(ac.light), Color(0xFFF7F5F2)) < 2.5f || contrast(Color(ac.dark), Color(0xFF121014)) < 2.5f
 }
 
 
@@ -150,6 +153,8 @@ private fun bestInk(bg: Color): Color {
 }
 
 val figtree by lazy { google("Figtree") }
+/** The text font of Quiet since 2.210 (owner, 15 November 2026: Figtree sat too close to Google's own fonts). */
+val jakarta by lazy { google("Plus Jakarta Sans") }
 /** Headings of Quiet (owner, 7 November 2026: "a heading font with character"): a soft serif. */
 private val fraunces by lazy { google("Fraunces") }
 private val bungee by lazy { google("Bungee") }
@@ -220,26 +225,28 @@ fun lookFor(style: String, accentKey: String, mode: String): Look {
             // Quiet (polished in 2.207, docs/styles/quiet.md): the text on your colour is whichever of white and ink
             // reads better; photos sit on a light surface in light and dark (owner, 14 November 2026).
             val onQ = bestInk(a)
-            val bg = if (dark) Color.Black else c(0xFFF2F2F7)
+            // Warm neutrals (owner, 15 November 2026, docs/styles/identity.md): a warm off-white page and a warm
+            // charcoal instead of the phone-settings grey and pure black.
+            val bg = if (dark) QuietColours.pageDark else QuietColours.pageLight
             // Your colour as text and lines (text buttons, links, chosen tabs): in light the same colour, darkened just
             // enough to read at 4.5 : 1 on the grey page (green, orange and pink were too light, found 14 November
             // 2026). Filled buttons keep the colour itself ([Look.accent]).
-            val inkText = if (dark) c(0xFFF5F5F7) else c(0xFF111114)
+            val inkText = if (dark) c(0xFFF6F3F0) else c(0xFF17141A)
             val readable = (0..20).map { mix(a, inkText, it / 20f) }.first { col ->
                 (maxOf(col.luminance(), bg.luminance()) + 0.05f) / (minOf(col.luminance(), bg.luminance()) + 0.05f) >= 4.6f
             }
-            val surface = if (dark) c(0xFF1C1C1E) else white
-            val text = if (dark) c(0xFFF5F5F7) else c(0xFF111114)
-            val muted = if (dark) c(0xFF98989F) else c(0xFF6C6C74)
-            val hair = if (dark) c(0xFF2C2C2E) else c(0xFFE5E5EA)
+            val surface = if (dark) QuietColours.cardDark else white
+            val text = if (dark) c(0xFFF6F3F0) else c(0xFF17141A)
+            val muted = if (dark) c(0xFFA7A1A9) else c(0xFF6B6570)
+            val hair = if (dark) QuietColours.raisedDark else c(0xFFE9E4DE)
             Look(
                 "quiet", dark,
                 // The outline (fields, tick boxes) at least 3 : 1 on the cards, so they can be found (13 November 2026).
                 scheme(dark, readable, bestInk(readable), mix(a, surface, if (dark) 0.78f else 0.88f), mix(a, text, if (dark) 0.25f else 0.35f), bg, surface, text, muted,
-                    if (dark) c(0xFF7C7C82) else c(0xFF8E8E93), hair),
-                listOf(surface), listOf(if (dark) c(0xFFE9E9EC) else c(0xFFF4F4F7)), hair,
+                    if (dark) c(0xFF847D88) else c(0xFF8C8590), hair),
+                listOf(surface), listOf(if (dark) c(0xFFECE8E4) else c(0xFFF4F1ED)), hair,
                 listOf(Color.Black.copy(alpha = if (dark) 0.5f else 0.06f)), emptyList(),
-                figtree, drop, rise, accent = a, onAccent = onQ
+                jakarta, drop, rise, accent = a, onAccent = onQ
             )
         }
     }
@@ -290,12 +297,12 @@ private fun quietType(): Typography {
         displaySmall = f(d.displaySmall, fraunces, head, 34, 40, -0.3f), headlineLarge = f(d.headlineLarge, fraunces, head, 30, 36, -0.3f),
         headlineMedium = f(d.headlineMedium, fraunces, head, 28, 34, -0.3f), headlineSmall = f(d.headlineSmall, fraunces, head, 28, 34, -0.3f),
         titleLarge = f(d.titleLarge, fraunces, head, 20, 26, -0.2f),
-        titleMedium = f(d.titleMedium, figtree, FontWeight.SemiBold, 17, 22).copy(fontFeatureSettings = "tnum"),
-        titleSmall = f(d.titleSmall, figtree, FontWeight.Medium, 16, 21),
-        bodyLarge = f(d.bodyLarge, figtree, FontWeight.Normal, 16, 22), bodyMedium = f(d.bodyMedium, figtree, FontWeight.Normal, 15, 21),
-        bodySmall = f(d.bodySmall, figtree, FontWeight.Normal, 13, 18),
-        labelLarge = f(d.labelLarge, figtree, FontWeight.SemiBold, 15, 20), labelMedium = f(d.labelMedium, figtree, FontWeight.Medium, 13, 18),
-        labelSmall = f(d.labelSmall, figtree, FontWeight.Medium, 12, 16, 0.1f)
+        titleMedium = f(d.titleMedium, jakarta, FontWeight.SemiBold, 17, 22).copy(fontFeatureSettings = "tnum"),
+        titleSmall = f(d.titleSmall, jakarta, FontWeight.Medium, 16, 21),
+        bodyLarge = f(d.bodyLarge, jakarta, FontWeight.Normal, 16, 22), bodyMedium = f(d.bodyMedium, jakarta, FontWeight.Normal, 15, 21),
+        bodySmall = f(d.bodySmall, jakarta, FontWeight.Normal, 13, 18),
+        labelLarge = f(d.labelLarge, jakarta, FontWeight.SemiBold, 15, 20), labelMedium = f(d.labelMedium, jakarta, FontWeight.Medium, 13, 18),
+        labelSmall = f(d.labelSmall, jakarta, FontWeight.Medium, 12, 16, 0.1f)
     )
 }
 
@@ -320,9 +327,10 @@ fun shapesFor(design: String): Shapes = when (design) {
         extraSmall = RoundedCornerShape(10.dp), small = RoundedCornerShape(12.dp), medium = RoundedCornerShape(16.dp),
         large = RoundedCornerShape(20.dp), extraLarge = RoundedCornerShape(24.dp)
     )
+    // Quiet (2.210): smooth squircle corners everywhere (owner, 15 November 2026, docs/styles/identity.md).
     else -> Shapes(
-        extraSmall = RoundedCornerShape(10.dp), small = RoundedCornerShape(12.dp), medium = RoundedCornerShape(16.dp),
-        large = RoundedCornerShape(22.dp), extraLarge = RoundedCornerShape(28.dp)
+        extraSmall = Squircle(10.dp), small = Squircle(12.dp), medium = Squircle(16.dp),
+        large = Squircle(22.dp), extraLarge = Squircle(28.dp)
     )
 }
 
@@ -332,7 +340,7 @@ val Look.dialogShape: Shape get() = shapesFor(design).extraLarge
 /** The shape of a card. */
 @Suppress("UNUSED_PARAMETER")
 fun Look.cardShape(id: Long, small: Boolean): Shape =
-    if (design == "chaos") RoundedCornerShape(if (small) 14.dp else 18.dp) else RoundedCornerShape(20.dp)
+    if (design == "chaos") RoundedCornerShape(if (small) 14.dp else 18.dp) else Squircle(20.dp)
 
 /** Space around the picture inside a card (none since the neumorphic style went). */
 @Suppress("UNUSED_PARAMETER")
@@ -344,7 +352,7 @@ fun Look.pictureShape(id: Long, small: Boolean): Shape = RectangleShape
 /** Behind a picture without a photo: a soft colour of the look (a photo gets its own Blur stage, PhotoStage). */
 fun Look.pictureBg(id: Long, hasImage: Boolean): Color =
     // Quiet dark: a small icon without a photo (Notifications, Prices) keeps a dark mat; photos get the light surface.
-    if (design == "quiet" && dark && !hasImage) c(0xFF2A2A2D) else tints[pick(id, tints.size)]
+    if (design == "quiet" && dark && !hasImage) QuietColours.raisedDark else tints[pick(id, tints.size)]
 
 /**
  * The surface every wish photo sits on (Quiet 2.207: one calm light surface in light and dark, the owner's choice, so
@@ -459,3 +467,13 @@ fun Modifier.lookBackdrop(look: Look): Modifier = when (look.design) {
 
 /** The accent as a colour for text, icons and focus rings (your accent in both styles). */
 val Look.textAccent: Color get() = accent
+
+/** Quiet's warm neutrals (2.210, docs/styles/identity.md), in one place for the parts that draw them directly. */
+object QuietColours {
+    val pageLight = Color(0xFFF7F5F2)
+    val pageDark = Color(0xFF121014)
+    /** Cards in dark: a step lighter than the page. */
+    val cardDark = Color(0xFF1E1A20)
+    /** What floats in dark (bottom bar, panels, menus, dialogs): a step lighter again. */
+    val raisedDark = Color(0xFF2B262D)
+}

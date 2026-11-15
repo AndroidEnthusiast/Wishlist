@@ -20,13 +20,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -126,6 +121,7 @@ fun FriendScreen(
             var msg: String? = null
             try {
                 if (!Cloud.reserveCount(f.code, w.id, Repo.deviceId, n)) msg = tr("Someone else just reserved that one.")
+                else if (n > 0) Celebrate.reserved()
                 else if (n > 0) FriendWatch.reserved(ctx, f.code, w) else FriendWatch.unreserved(ctx, f.code, w.id)
             } catch (e: Exception) {
                 msg = tr("No connection. Try again.")
@@ -151,7 +147,7 @@ fun FriendScreen(
             try {
                 if (reserve) {
                     if (!Cloud.reserve(f.code, w.id, Repo.deviceId)) { msg = tr("Someone else just reserved that one."); failed = true }
-                    else FriendWatch.reserved(ctx, f.code, w)
+                    else { FriendWatch.reserved(ctx, f.code, w); Celebrate.reserved() }
                 } else {
                     Cloud.unreserve(f.code, w.id, Repo.deviceId)
                     FriendWatch.unreserved(ctx, f.code, w.id)
@@ -171,6 +167,7 @@ fun FriendScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
+                large = false,
                 title = {
                     Column {
                         ScreenTitle(f.name)

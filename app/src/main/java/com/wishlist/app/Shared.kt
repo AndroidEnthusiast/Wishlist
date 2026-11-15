@@ -253,6 +253,7 @@ object Shared {
         scope.launch {
             try {
                 if (!Cloud.reserveCount(l.code, w.id, Repo.deviceId, n)) notice = tr("Someone else just reserved that one.")
+                else if (n > 0) Celebrate.reserved()
             } catch (e: Exception) {
                 if (active == l.code) reserved = before
                 notice = tr("Couldn’t save that. Check your connection and try again.")
@@ -276,6 +277,7 @@ object Shared {
             try {
                 if (on) {
                     if (!Cloud.reserve(l.code, w.id, Repo.deviceId)) notice = tr("Someone else just reserved that one.")
+                    else Celebrate.reserved()
                 } else {
                     Cloud.unreserve(l.code, w.id, Repo.deviceId)
                 }

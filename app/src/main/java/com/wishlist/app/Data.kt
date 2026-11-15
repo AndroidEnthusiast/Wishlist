@@ -107,7 +107,7 @@ object Repo {
     var theme by mutableStateOf("light")
         private set
     /** The accent colour (2.97): one of ACCENTS in Design.kt. (Before: the colour set of the standard themes.) */
-    var palette by mutableStateOf("indigo")
+    var palette by mutableStateOf("berry")
         private set
     /**
      * The style (2.97): one of STYLES in Design.kt ("quiet" or "chaos"; until 2.198 also "neo", "neu" and "cyber",
@@ -237,7 +237,10 @@ object Repo {
         theme = p.getString("theme", null)?.takeIf { it == "light" || it == "dark" || it == "amoled" }
             ?: if ((c.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
                 android.content.res.Configuration.UI_MODE_NIGHT_YES) "dark" else "light"
-        palette = p.getString("palette", "indigo") ?: "indigo"
+        // A new phone with nothing saved yet starts in Berry, the app's own colour (owner, 15 November 2026); everyone
+        // who already has a colour keeps it (also the "indigo" default of before when it was never saved).
+        val fresh = !p.contains("palette") && !p.contains("look_v2")
+        palette = startPalette(p.contains("palette"), p.contains("look_v2"), p.getString("palette", null))
         // Stored as "style" since 2.52. Since 2.97 (owner) it is one of STYLES (Design.kt), with an accent in
         // "palette" and light or dark in "theme". The first time, the old choice moves over: Neobrutalism stays
         // (Midnight becomes dark), the other old designs and the standard themes become Quiet; AMOLED black becomes
@@ -252,7 +255,7 @@ object Repo {
                 theme = if (colours in setOf("midnight", "plum", "night", "dusk")) "dark" else "light"
             }
             if (theme == "amoled") theme = "dark"
-            palette = when (if (oldStyle == "classic") palette else colours) {
+            if (!fresh) palette = when (if (oldStyle == "classic") palette else colours) {
                 "indigo", "lavender", "lilac", "plum", "dusk" -> "indigo"
                 "sage", "forest", "night", "mint", "seaglass" -> "green"
                 "rose", "berry", "bubblegum", "coral" -> "pink"
@@ -1085,3 +1088,10 @@ fun money(p: Double, cur: String): String = try {
 } catch (e: Exception) {
     "%.2f".format(p)
 }
+
+/**
+ * The accent colour at start (2.210): Berry, the app's own colour, on a new phone with nothing saved (no colour and no
+ * look saved); otherwise the saved colour, or "indigo", the old default, for a phone that never saved one.
+ */
+internal fun startPalette(hasPalette: Boolean, hasLook: Boolean, saved: String?): String =
+    if (!hasPalette && !hasLook) "berry" else saved ?: "indigo"

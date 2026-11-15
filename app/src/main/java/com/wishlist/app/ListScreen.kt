@@ -8,15 +8,12 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.layout.offset
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.Canvas
@@ -42,17 +39,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarDuration
@@ -206,7 +195,7 @@ fun HomeScreen(
         containerColor = cs.background,
         topBar = {
             if (selecting) TopAppBar(
-                title = { ScreenTitle(if (picked.size == 1) tr("1 selected") else tr("%d selected", picked.size)) },
+                title = { ScreenTitle(if (picked.size == 1) tr("1 selected") else tr("%d selected", picked.size)) }, large = false,
                 navigationIcon = { IconButton(onClick = { picked = emptySet() }) { Icon(AppIcons.Close, tr("Stop selecting")) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
                 actions = {
@@ -320,7 +309,7 @@ fun HomeScreen(
                         if (query.isNotBlank()) {
                             if (sel != "All") tr("No wishes match “%1\$s” in %2\$s.", query.trim(), catLabel(sel))
                             else tr("No wishes match “%s”.", query.trim())
-                        } else tr("Nothing here yet. Tap +, or share a product from any shop to Wishlist."),
+                        } else tr("Nothing here yet. Tap +, or share something you love from any shop to Wishlist."),
                         color = cs.onSurfaceVariant, modifier = Modifier.padding(16.dp)
                     )
                 }

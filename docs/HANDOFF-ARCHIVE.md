@@ -563,3 +563,9 @@ Owner: the design styles "disappointed me"; keep Quiet and Gen Z chaos, remove t
 at a time "as though a professional would have done it". 2.206 removes the twelve styles, their colour sets and
 options; removed keys become Quiet. New `docs/DESIGN-STYLES.md` (process, best practices for this app, inventory,
 definition of done); decision in `docs/decisions/look.md`. Checks and screenshots of Quiet and chaos pass.
+
+### 14 November 2026, later: Quiet polished (2.207)
+Owner: polish Quiet, then chaos; challenge big asks. Brief, plan and mock-ups approved (photos on a light surface in
+dark too, labels above fields, sheet switches). 2.207 builds it; `LookTest.quietPartsAreReadable` found green, orange
+and pink too light as text (fixed). Screenshots fixed (they showed Home), plus App settings and big text; chaos
+checked pixel for pixel. Notes rule: challenge the owner on big builds.

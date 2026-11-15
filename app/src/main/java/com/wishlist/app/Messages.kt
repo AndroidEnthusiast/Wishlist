@@ -56,7 +56,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -104,30 +103,10 @@ import java.util.Locale
  * end to end (Chat.kt, ChatCrypto.kt).
  */
 
-/** A speech bubble: the Messages icon (drawn here; the core Material icons have none). */
+/** A speech bubble: the Messages icon, from the app's own icons (2.210); [filled] for the chosen tab. */
 @Composable
-fun ChatIcon(tint: Color, size: Dp = 24.dp) {
-    Canvas(Modifier.size(size)) {
-        val u = this.size.width / 24f
-        val p = Path().apply {
-            moveTo(5f * u, 4f * u)
-            lineTo(19f * u, 4f * u)
-            quadraticBezierTo(21f * u, 4f * u, 21f * u, 6f * u)
-            lineTo(21f * u, 15f * u)
-            quadraticBezierTo(21f * u, 17f * u, 19f * u, 17f * u)
-            lineTo(10f * u, 17f * u)
-            lineTo(5.5f * u, 20.5f * u)
-            lineTo(6f * u, 17f * u)
-            lineTo(5f * u, 17f * u)
-            quadraticBezierTo(3f * u, 17f * u, 3f * u, 15f * u)
-            lineTo(3f * u, 6f * u)
-            quadraticBezierTo(3f * u, 4f * u, 5f * u, 4f * u)
-            close()
-        }
-        drawPath(p, tint, style = Stroke(1.9f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
-        drawLine(tint, Offset(7.5f * u, 9f * u), Offset(16.5f * u, 9f * u), 1.8f * u, StrokeCap.Round)
-        drawLine(tint, Offset(7.5f * u, 12.5f * u), Offset(13f * u, 12.5f * u), 1.8f * u, StrokeCap.Round)
-    }
+fun ChatIcon(tint: Color, size: Dp = 24.dp, filled: Boolean = false) {
+    Icon(if (filled) AppIcons.ChatFilled else AppIcons.Chat, null, tint = tint, modifier = Modifier.size(size))
 }
 
 /** A paper plane: send. */
@@ -216,14 +195,14 @@ private fun ConversationList(snack: SnackbarHostState, onProfile: () -> Unit) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 when {
                     !Config.enabled || !Friends.hasProfile(ctx) && list.isEmpty() -> Empty(
-                        tr("Add friends to start chatting.")
+                        tr("Your chats with friends show up here. Add a friend to start.")
                     ) {
                         EmptyAction(tr("Add friends")) { go(Deep.FriendsAsLeft) }
                     }
                     list.isEmpty() && !loaded -> CircularProgressIndicator(Modifier.align(Alignment.Center))
                     list.isEmpty() && problem -> Empty(tr("Couldn’t reach the server. Check your connection."))
                     // No conversations yet: a "Start a chat" chip that shows your friends (it goes once there is a chat).
-                    list.isEmpty() -> Empty(tr("No messages yet.")) {
+                    list.isEmpty() -> Empty(tr("No chats yet. Say hello to a friend.")) {
                         EmptyAction(tr("Start a chat")) { picking = true }
                     }
                     else -> LazyColumn(
@@ -546,6 +525,7 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
         containerColor = cs.background,
         topBar = {
             TopAppBar(
+                large = false,
                 title = {
                     // Tap the picture or name: their page (owner, 2.102), only while you are friends.
                     Row(

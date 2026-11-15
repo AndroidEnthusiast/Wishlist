@@ -72,8 +72,8 @@ fun AppBottomBar(
     val look = LocalLook.current
     FloatingBar {
             // Icons only, a little bigger (owner, 7 November 2026); their names are read out by TalkBack.
-            BarItem(tr("Home"), current == "home", onHome) { Icon(AppIcons.Home, null, tint = it, modifier = Modifier.size(30.dp)) }
-            BarItem(tr("Messages"), current == "messages", onMessages, dot = messagesDot) { ChatIcon(it, 30.dp) }
+            BarItem(tr("Home"), current == "home", onHome) { Icon(if (current == "home") AppIcons.HomeFilled else AppIcons.Home, null, tint = it, modifier = Modifier.size(30.dp)) }
+            BarItem(tr("Messages"), current == "messages", onMessages, dot = messagesDot) { ChatIcon(it, 30.dp, filled = current == "messages") }
             // Add wish: only a + in the accent colour, no words. Its own wider slot (owner, 2.126: more breathing space,
             // "Price watch" seemed closer to the + than "Messages"): the same room on both sides.
             Box(Modifier.width(78.dp), contentAlignment = Alignment.Center) {
@@ -89,8 +89,8 @@ fun AppBottomBar(
                 Icon(AppIcons.Add, tr("Add wish"), tint = look.onAccent, modifier = Modifier.size(30.dp))
             }
             }
-            BarItem(tr("My shops"), current == "discover", onDiscover) { Icon(AppIcons.Store, null, tint = it, modifier = Modifier.size(30.dp)) }
-            BarItem(tr("Friends"), current == "friends", onFriends, dot = friendsDot) { Icon(AppIcons.Person, null, tint = it, modifier = Modifier.size(30.dp)) }
+            BarItem(tr("My shops"), current == "discover", onDiscover) { Icon(if (current == "discover") AppIcons.StoreFilled else AppIcons.Store, null, tint = it, modifier = Modifier.size(30.dp)) }
+            BarItem(tr("Friends"), current == "friends", onFriends, dot = friendsDot) { Icon(if (current == "friends") AppIcons.PersonFilled else AppIcons.Person, null, tint = it, modifier = Modifier.size(30.dp)) }
     }
 }
 
@@ -110,7 +110,7 @@ fun FloatingBar(content: @Composable RowScope.() -> Unit) {
     val frame = if (look.design == "quiet") Modifier
         .shadow(12.dp, shape, clip = false, ambientColor = Color.Black.copy(alpha = 0.25f), spotColor = Color.Black.copy(alpha = 0.18f))
         // Quiet 2.207: white (dark: the lifted grey of what floats), a round pill.
-        .clip(shape).background(if (look.dark) Color(0xFF2C2C2E).copy(alpha = 0.96f) else Color.White.copy(alpha = 0.96f)).border(1.dp, look.line, shape)
+        .clip(shape).background(if (look.dark) QuietColours.raisedDark.copy(alpha = 0.96f) else Color.White.copy(alpha = 0.96f)).border(1.dp, look.line, shape)
     else Modifier.lookSurface(look, shape, cs.surfaceVariant, depth = 7.dp)
     Box(
         Modifier.fillMaxWidth().background(cs.background).windowInsetsPadding(WindowInsets.navigationBars)

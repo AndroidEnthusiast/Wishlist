@@ -198,3 +198,10 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   "Descriptions" and "Allow" in App settings, "Your wishlists" on Home and "Nike" in My shops).
 - Bottom panels set their text colour (2.208): Quiet's lifted grey isn't a scheme colour, so text fell back to black.
 
+
+## The app's own character (owner, 15 November 2026, interviewed in 5 rounds)
+- "It should feel like its own app, not a copy cat": all answers, the diagnosis and the safe point (2.209, commit
+  `f5a6fc1`) are in `docs/styles/identity.md`. In short: Apple-calm base, Berry #B0245A as the app's own colour,
+  squircles, Plus Jakarta Sans, own rounded-line icons, grouped menus with icon tiles, own switch / dialogs / top bars,
+  a soft press instead of the ripple, warm neutral surfaces, a warm voice, vibration only at a few moments,
+  celebrations on reserving and on price drops. Every style gets the shared feel; wordmark and app icon later.

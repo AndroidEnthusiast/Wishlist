@@ -32,7 +32,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -254,7 +253,7 @@ fun HubScreen(
             topBar = {
                 TopAppBar(
                     // The app's wordmark instead of "Home" (2.97, in the style's own way).
-                    title = { Wordmark() },
+                    title = { Wordmark() }, large = false,
                     navigationIcon = { MenuSlot(back = false) },
                     actions = { ProfileButton(onProfile) },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
@@ -723,7 +722,7 @@ private fun SeasonCard(onStart: () -> Unit) {
     // emoji, no snow, the title in Fraunces. Chaos has its own card since 2.209 (ChaosSeasonCard).
     val quiet = look.design == "quiet"
     val solid = if (look.dark) Color(0xFF8E1418) else Color(0xFFA4161A)
-    val shape = RoundedCornerShape(if (quiet) 20.dp else 24.dp)
+    val shape = if (quiet) Squircle(20.dp) else RoundedCornerShape(24.dp)
     Box(
         Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp).fillMaxWidth().clip(shape)
             .background(if (quiet) androidx.compose.ui.graphics.SolidColor(solid) else androidx.compose.ui.graphics.Brush.linearGradient(listOf(red, deep)))

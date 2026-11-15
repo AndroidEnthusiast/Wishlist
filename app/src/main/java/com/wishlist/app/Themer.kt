@@ -35,7 +35,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
@@ -110,7 +109,7 @@ fun ThemerScreen(onBack: () -> Unit) {
     // Apply, then "Theme applied" (owner, 2.101).
     val apply = {
         Repo.setLook(ctx, tryStyle, tryMode, tryAccent)
-        scope.launch { snack.showToast(tr("Theme applied")) }
+        scope.launch { snack.showToast(tr("Looking good. Your new look is on.")) }
         Unit
     }
 

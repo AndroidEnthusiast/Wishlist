@@ -27,7 +27,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
@@ -319,7 +318,7 @@ fun OverviewScreen(
         containerColor = cs.background,
         topBar = {
             if (selecting) TopAppBar(
-                title = { ScreenTitle(if (picked.size == 1) tr("1 selected") else tr("%d selected", picked.size)) },
+                title = { ScreenTitle(if (picked.size == 1) tr("1 selected") else tr("%d selected", picked.size)) }, large = false,
                 navigationIcon = { IconButton(onClick = { picked = emptySet() }) { Icon(AppIcons.Close, tr("Stop selecting")) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
                 actions = {
@@ -369,8 +368,8 @@ fun OverviewScreen(
         if (shown.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(32.dp), Alignment.Center) {
                 Text(
-                    if (page == "top") tr("No top wishes yet. Tap the star on a wish to make it a top wish.")
-                    else tr("No wishes yet. Tap + at the bottom to add your first wish."),
+                    if (page == "top") tr("No top wishes yet. Tap the star on the wishes you’d love most.")
+                    else tr("Nothing here yet. Tap + to add the first thing you’d love."),
                     color = cs.onSurfaceVariant, textAlign = TextAlign.Center
                 )
             }
@@ -460,10 +459,8 @@ private fun FromWhichListDialog(action: String, ids: Set<Long>, all: List<Placed
                     else tr("These wishes are on %d of your wishlists.", lists.size),
                     style = MaterialTheme.typography.bodyMedium
                 )
-                lists.forEach { l ->
-                    SheetRow({ Icon(AppIcons.Gift, null, tint = cs.onSurfaceVariant) }, Repo.mineName(l), { onPick(l) })
-                }
-                if (action == "delete") SheetRow({ Icon(AppIcons.Delete, null, tint = cs.error) }, tr("All lists"), { onPick(null) })
+                SheetGroup(lists.map { l -> { SheetRow({ Icon(AppIcons.Gift, null, tint = cs.onSurfaceVariant) }, Repo.mineName(l), { onPick(l) }) } })
+                if (action == "delete") SheetGroup(listOf { SheetRow({ Icon(AppIcons.Delete, null, tint = cs.error) }, tr("All lists"), { onPick(null) }, danger = true) })
             }
         },
         confirmButton = {},

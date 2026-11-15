@@ -1,7 +1,6 @@
 package com.wishlist.app
 
 import android.content.Context
-import androidx.compose.material3.IconButton
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
@@ -30,8 +29,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
@@ -161,6 +158,8 @@ fun PriceHistoryDialog(w: Wish, highlight: Boolean = false, showAll: Boolean = t
                     w.label, style = MaterialTheme.typography.titleSmall, color = cs.onSurfaceVariant,
                     maxLines = 2, overflow = TextOverflow.Ellipsis
                 )
+                // Cheaper than before: the price counts down to the new one (2.210, Celebrate.kt).
+                PriceCountDown(w)
                 if (points.isEmpty()) {
                     Text(tr("No price recorded yet. Add a price to this wish and the history starts from there."))
                 } else {

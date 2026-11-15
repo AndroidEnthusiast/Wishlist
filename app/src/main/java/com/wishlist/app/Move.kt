@@ -299,7 +299,7 @@ fun Selectable(selecting: Boolean, on: Boolean, onToggle: () -> Unit, content: @
     Box {
         androidx.compose.runtime.CompositionLocalProvider(LocalSelecting provides selecting) { content() }
         if (selecting) {
-            val shape = RoundedCornerShape(if (quiet) 20.dp else 18.dp)
+            val shape = if (quiet) Squircle(20.dp) else RoundedCornerShape(18.dp)
             Box(
                 Modifier.matchParentSize().clip(shape)
                     .then(if (on) Modifier.background(cs.primary.copy(alpha = if (quiet) 0.10f else 0.14f)).border(if (quiet) 2.dp else 3.dp, cs.primary, shape) else Modifier)
@@ -310,7 +310,7 @@ fun Selectable(selecting: Boolean, on: Boolean, onToggle: () -> Unit, content: @
                     Modifier.align(Alignment.TopStart).padding(8.dp).size(26.dp).clip(CircleShape)
                         // Quiet: the empty circle is white on the light photo surface, in light and dark alike.
                         .background(if (on) cs.primary else if (quiet) Color.White.copy(alpha = 0.92f) else cs.surface.copy(alpha = 0.9f))
-                        .border(2.dp, if (on) cs.primary else if (quiet) Color(0xFF8E8E93) else cs.outline, CircleShape),
+                        .border(2.dp, if (on) cs.primary else if (quiet) Color(0xFF8C8590) else cs.outline, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     if (on) Icon(AppIcons.Check, null, tint = cs.onPrimary, modifier = Modifier.size(18.dp))

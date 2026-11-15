@@ -38,7 +38,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -317,7 +316,7 @@ private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenL
                 item { FriendsTitle(tr("Your friends")) }
                 if (s.friends.isEmpty()) item {
                     Text(
-                        tr("No friends yet. Share your friend code, or add a friend with theirs."),
+                        tr("No friends here yet. Share your friend code, or add someone with theirs."),
                         color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(start = 4.dp)
                     )

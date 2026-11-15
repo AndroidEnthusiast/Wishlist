@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.sp
  * licence; those licences ask that their text comes with the app, so here it is.
  *  - Icons: Google's Material Icons (Apache License 2.0). The other icons (menu, view buttons, prices, wishlist,
  *    gift, crop, light, new photo, colour ball) are drawn in this app's own code.
- *  - Fonts (2.97): Google Sans (built in) and Figtree, Fraunces (7 November 2026), Bungee, Bricolage Grotesque, Caveat, and
+ *  - Fonts (2.97): Google Sans (built in), Plus Jakarta Sans (2.210) and Figtree, Fraunces (7 November 2026), Bungee, Bricolage Grotesque, Caveat, and
  *    the fonts to pick in App settings (Fonts.kt: Roboto, Inter, Nunito, Poppins, Montserrat, Lato, Open Sans, DM Sans,
  *    Manrope, Quicksand, Merriweather, Playfair Display; credited from 2.206), all downloaded from Google Fonts: SIL Open
  *    Font License 1.1. (Rajdhani and Share Tech Mono went with Cyberpunk; the fonts of the styles of 2.199–2.205 went
@@ -55,7 +55,7 @@ fun LicencesDialog(onClose: () -> Unit) {
                 Credit(tr("Icons"), "Material Icons, Google — Apache License 2.0")
                 Credit(
                     tr("Fonts"),
-                    "Google Sans, Figtree, Fraunces, Bungee, Bricolage Grotesque, Caveat, Roboto, Inter, Nunito, Poppins, Montserrat, Lato, " +
+                    "Google Sans, Plus Jakarta Sans, Figtree, Fraunces, Bungee, Bricolage Grotesque, Caveat, Roboto, Inter, Nunito, Poppins, Montserrat, Lato, " +
                         "Open Sans, DM Sans, Manrope, Quicksand, Merriweather, Playfair Display — SIL Open Font License 1.1"
                 )
                 Credit(tr("Building blocks"), "AndroidX, Jetpack Compose, Kotlin, Coil, OkHttp, Credential Manager, Firebase Cloud Messaging, Firebase Crashlytics — Apache License 2.0")
@@ -64,7 +64,9 @@ fun LicencesDialog(onClose: () -> Unit) {
                 // The emoji picker's names (2.142): Unicode's emoji list, through the unicode-emoji-json package.
                 Credit(tr("Emoji names"), "Unicode emoji data, Unicode, Inc. — Unicode License V3; unicode-emoji-json, Mu-An Chiou — MIT License")
                 Text(
-                    tr("Our own icons: menu, view buttons, prices, wishlist, gift, crop, light, new photo and the colour ball."),
+                    // Since 2.210 (owner, 15 November 2026) every icon of the app's menus, bars and buttons is our own drawing;
+                    // a few Material shapes remain in rare places, so the Material credit above stays.
+                    tr("Our own icons: the app's icon set (bars, menus and buttons), view buttons, prices, wishlist, gift, crop, light, new photo and the colour ball."),
                     style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
                 )
                 TextButton(onClick = { full = if (full == R.raw.license_apache) null else R.raw.license_apache }) {

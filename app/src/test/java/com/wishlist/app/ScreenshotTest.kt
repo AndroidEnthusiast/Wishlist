@@ -65,6 +65,8 @@ abstract class ScreenshotBase(private val mode: String, private val tag: String 
             .putBoolean("welcomed", true).putBoolean("asked_background", true).putString("sh_me", "Sam").commit()
         // A new pretend phone for every picture: its own database (the app keeps it in objects between checks).
         ListStore.reset(); WishlistDb.reset()
+        // The "Move to…" dialog of the dialog picture stays open in this process otherwise (2.210).
+        MoveFlow.picking = null; MoveFlow.choosing = null
         Repo.load(app)
         Repo.setTheme(app, mode)
         // -Pwl.style=… (owner, 13 November 2026: every style is checked, light and dark).
@@ -150,6 +152,14 @@ abstract class ScreenshotBase(private val mode: String, private val tag: String 
     }
     @Test fun friends() { tap("Friends"); shot("friends") }
     @Test fun messages() { tap("Messages"); shot("messages") }
+    // A dialog (2.210: Quiet's own centred dialog with stacked buttons): Move to… from selecting.
+    @Test fun dialog() {
+        tapAbove("My wishlist", 150f); compose.mainClock.advanceTimeBy(1000)
+        compose.onAllNodes(hasText("Ceramic teapot", substring = true)).onFirst().performTouchInput { longClick() }
+        compose.mainClock.advanceTimeBy(500)
+        tap("Move to…")
+        shot("dialog")
+    }
     // The profile picture's sheet itself (2.208: its text was black on Quiet's dark grey).
     @Test fun profileSheet() { tap("Profile and settings"); shot("profile") }
     // App settings (Quiet 2.207: grouped blocks), from the profile picture's sheet.

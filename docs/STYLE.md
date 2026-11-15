@@ -74,3 +74,12 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
   screens stay faint behind text (`LookTest` checks 4.5 : 1 over them) or stay in the outer 12 dp. The screenshots
   are a close copy, not the phone (fonts don't download there): say so,
   build only what follows these rules, and ask the owner to check the screen on the phone.
+
+## The app's own parts (2.210, owner 15 November 2026; `docs/styles/identity.md`)
+- Icons only through `AppIcons` (our own `OwnIcons.kt`); never Google's icon set (`OwnIconsTest` fails).
+- Surfaces in Quiet use `Squircle(…)`, not `RoundedCornerShape`; buttons and chips stay fully round.
+- Dialogs: the confirm button is the main action (filled) only with a dismiss button; a lone button is tonal.
+- Menus: rows in `SheetGroup`s, icons in their tinted tiles (`SheetRow`).
+- Vibration only at a few relevant moments (now: start selecting, reserving). Celebrations only on reserving and on
+  a price drop.
+- Voice: a warm friend, short and kind, never silly or long ("Nothing here yet. Tap + to add the first thing you’d love.").

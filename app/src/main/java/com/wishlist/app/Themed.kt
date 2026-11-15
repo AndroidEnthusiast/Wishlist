@@ -41,6 +41,9 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -114,6 +117,7 @@ fun Modifier.lookPage(): Modifier {
  * Material's Scaffold with the style's page behind it ([lookPage]): every screen gets the style's background
  * drawing, not only Home. [containerColor] is the page's colour (normally the background).
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Scaffold(
     modifier: Modifier = Modifier,
@@ -128,11 +132,16 @@ fun Scaffold(
     content: @Composable (PaddingValues) -> Unit
 ) {
     val look = LocalLook.current
-    M3Scaffold(
-        modifier.background(containerColor).then(if (containerColor == look.scheme.background) Modifier.lookBackdrop(look) else Modifier),
-        topBar, bottomBar, snackbarHost, floatingActionButton, floatingActionButtonPosition,
-        containerColor = Color.Transparent, contentColor = contentColor, contentWindowInsets = contentWindowInsets, content = content
-    )
+    // Quiet (2.210): the large title of the top bar shrinks into the bar as the page scrolls (TopAppBar).
+    val scroll = if (look.design == "quiet") TopAppBarDefaults.exitUntilCollapsedScrollBehavior() else null
+    CompositionLocalProvider(LocalTopBarScroll provides scroll) {
+        M3Scaffold(
+            modifier.then(if (scroll != null) Modifier.nestedScroll(scroll.nestedScrollConnection) else Modifier)
+                .background(containerColor).then(if (containerColor == look.scheme.background) Modifier.lookBackdrop(look) else Modifier),
+            topBar, bottomBar, snackbarHost, floatingActionButton, floatingActionButtonPosition,
+            containerColor = Color.Transparent, contentColor = contentColor, contentWindowInsets = contentWindowInsets, content = content
+        )
+    }
 }
 
 /** How thick a field's line is when it is not and when it is being typed in. */
@@ -195,9 +204,11 @@ fun OutlinedTextField(
     val look = LocalLook.current
     val sh = shape ?: fieldShape(look)
     if (look.design == "quiet") {
+        // Typed text starts at the left, also inside Quiet's centred dialogs (2.210), unless the caller asked otherwise.
+        val typed = if (textStyle == LocalTextStyle.current) textStyle.copy(textAlign = androidx.compose.ui.text.style.TextAlign.Start) else textStyle
         QuietLabelled(modifier, label) {
             M3OutlinedTextField(
-                value, onValueChange, Modifier.fillMaxWidth(), enabled, readOnly, textStyle, null, placeholder, leadingIcon, trailingIcon,
+                value, onValueChange, Modifier.fillMaxWidth(), enabled, readOnly, typed, null, placeholder, leadingIcon, trailingIcon,
                 prefix, suffix, supportingText, isError, visualTransformation, keyboardOptions, keyboardActions, singleLine,
                 maxLines, minLines, shape = shape ?: QuietFieldShape, colors = quietFieldColors(look)
             )
@@ -254,9 +265,11 @@ fun OutlinedTextField(
     val look = LocalLook.current
     val sh = shape ?: fieldShape(look)
     if (look.design == "quiet") {
+        // Typed text starts at the left, also inside Quiet's centred dialogs (2.210), unless the caller asked otherwise.
+        val typed = if (textStyle == LocalTextStyle.current) textStyle.copy(textAlign = androidx.compose.ui.text.style.TextAlign.Start) else textStyle
         QuietLabelled(modifier, label) {
             M3OutlinedTextField(
-                value, onValueChange, Modifier.fillMaxWidth(), enabled, readOnly, textStyle, null, placeholder, leadingIcon, trailingIcon,
+                value, onValueChange, Modifier.fillMaxWidth(), enabled, readOnly, typed, null, placeholder, leadingIcon, trailingIcon,
                 prefix, suffix, supportingText, isError, visualTransformation, keyboardOptions, keyboardActions, singleLine,
                 maxLines, minLines, shape = shape ?: QuietFieldShape, colors = quietFieldColors(look)
             )
@@ -299,7 +312,7 @@ private fun QuietLabelled(modifier: Modifier, label: (@Composable () -> Unit)?, 
     }
 }
 
-private val QuietFieldShape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp)
+private val QuietFieldShape = Squircle(14.dp)
 
 /** Quiet's field colours: filled with the card colour, a grey line (3 : 1), 2 dp in your colour while typing. */
 @Composable
@@ -499,8 +512,8 @@ fun FilterChip(
 fun SegmentedTabs(labels: List<String>, selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
     val look = LocalLook.current
     if (look.design == "quiet") {
-        val track = if (look.dark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)
-        val chosen = if (look.dark) Color(0xFF4A4A4E) else Color.White
+        val track = if (look.dark) QuietColours.raisedDark else Color(0xFFEAE5DF)
+        val chosen = if (look.dark) Color(0xFF453F47) else Color.White
         Row(modifier.fillMaxWidth().clip(CircleShape).background(track).padding(3.dp)) {
             labels.forEachIndexed { i, label ->
                 val on = i == selected
@@ -638,6 +651,7 @@ fun ModalBottomSheet(
     val look = LocalLook.current
     val corner = MaterialTheme.shapes.extraLarge
     val shape = when (look.design) {
+        "quiet" -> SquircleTop(28.dp)
         else -> (corner as? RoundedCornerShape)?.let { RoundedCornerShape(topStart = it.topStart, topEnd = it.topEnd, bottomEnd = androidx.compose.foundation.shape.CornerSize(0.dp), bottomStart = androidx.compose.foundation.shape.CornerSize(0.dp)) }
             ?: RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
     }
@@ -659,7 +673,7 @@ fun ModalBottomSheet(
  */
 internal fun quietRaised(look: Look, asked: Color): Color = when {
     asked != look.scheme.surface && asked != look.scheme.background -> asked
-    look.dark -> Color(0xFF2C2C2E)
+    look.dark -> QuietColours.raisedDark
     else -> Color.White
 }
 

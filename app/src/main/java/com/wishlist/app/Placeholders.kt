@@ -18,9 +18,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /*
- * Pictures for empty places (2.97, owner: Material icons instead of emoji). Google's core Material icons have no
- * gift, so the gift is drawn here in the same outline style (our own drawing, allowed by the licence rule); the
- * others are Material icons from [AppIcons].
+ * Pictures for empty places (2.97, owner: drawn icons instead of emoji). The gift is drawn here in the same
+ * rounded-line style as the app's own icons (OwnIcons.kt, 2.210); the
+ * others come from [AppIcons].
  */
 
 /** A gift box with a ribbon and a bow, as a line icon in [tint]. */
