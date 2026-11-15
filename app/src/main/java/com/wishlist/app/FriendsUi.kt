@@ -1064,7 +1064,7 @@ fun ProfileScreen(snack: SnackbarHostState) {
             ProfileTitle(tr("Wishlists your friends can see"))
             val shown = Repo.mineIds.filter { Friends.isVisible(it) }.map { Repo.mineName(it) }
             Text(
-                if (shown.isEmpty()) tr("None yet. Turn on “Visible to friends” in a wishlist’s settings (⚙).")
+                if (shown.isEmpty()) tr("None yet. Set Visibility to “My friends” in a wishlist’s settings (⚙).")
                 else shown.joinToString(", "),
                 color = if (shown.isEmpty()) cs.onSurfaceVariant else cs.onSurface
             )

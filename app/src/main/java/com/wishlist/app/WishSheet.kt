@@ -185,7 +185,11 @@ fun WishSheet(w: Wish, a: WishActions, onClose: () -> Unit) {
 
 /** One row of a sheet (the profile sheet and the wish sheet): an icon, a label, perhaps a tick box. 52 dp tall. */
 @Composable
-fun SheetRow(icon: @Composable () -> Unit, label: String, onClick: () -> Unit, checked: Boolean? = null, danger: Boolean = false) {
+fun SheetRow(
+    icon: @Composable () -> Unit, label: String, onClick: () -> Unit, checked: Boolean? = null, danger: Boolean = false,
+    // A line under the label (2.212: the current Visibility, or what a choice means), and a tick on the chosen choice.
+    detail: String? = null, chosen: Boolean? = null
+) {
     val look = LocalLook.current
     val quiet = look.design == "quiet"
     val inGroup = LocalInSheetGroup.current && quiet
@@ -208,11 +212,17 @@ fun SheetRow(icon: @Composable () -> Unit, label: String, onClick: () -> Unit, c
                 contentAlignment = Alignment.Center
             ) { Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) { icon() } }
         } else icon()
-        Text(
-            label, style = MaterialTheme.typography.bodyLarge.copy(textAlign = androidx.compose.ui.text.style.TextAlign.Start),
-            color = if (danger && quiet) look.scheme.error else androidx.compose.ui.graphics.Color.Unspecified,
-            modifier = Modifier.padding(start = if (quiet) 14.dp else 16.dp).weight(1f)
-        )
+        Column(Modifier.padding(start = if (quiet) 14.dp else 16.dp, top = 6.dp, bottom = 6.dp).weight(1f)) {
+            Text(
+                label, style = MaterialTheme.typography.bodyLarge.copy(textAlign = androidx.compose.ui.text.style.TextAlign.Start),
+                color = if (danger) look.scheme.error else look.scheme.onSurface
+            )
+            if (detail != null) Text(
+                detail, style = MaterialTheme.typography.bodySmall.copy(textAlign = androidx.compose.ui.text.style.TextAlign.Start),
+                color = look.scheme.onSurfaceVariant
+            )
+        }
+        if (chosen == true) Icon(AppIcons.Check, tr("Chosen"), tint = look.scheme.primary, modifier = Modifier.size(22.dp))
         // On or off: a switch in Quiet (owner, 14 November 2026: like App settings), a tick box elsewhere.
         if (checked != null) {
             if (quiet) Switch(checked = checked, onCheckedChange = null)

@@ -125,10 +125,17 @@ class OwnIcons(private val stroke: Float) {
     val eye by lazy { icon("Eye", line(eyeShape), line("M9.2,12a2.8,2.8 0 1,0 5.6,0a2.8,2.8 0 1,0 -5.6,0z")) }
     val eyeOff by lazy { icon("EyeOff", line(eyeShape), line("M9.2,12a2.8,2.8 0 1,0 5.6,0a2.8,2.8 0 1,0 -5.6,0z"), line("M4,4l16,16")) }
 
+    val gallery by lazy {
+        icon(
+            "Gallery", line("M6,4.5h12A2,2 0 0,1 20,6.5v11a2,2 0 0,1 -2,2H6a2,2 0 0,1 -2,-2v-11A2,2 0 0,1 6,4.5z"),
+            line("M4.5,16.5l4.5,-4.5l3.5,3.5l2.5,-2.5l4.5,4.5"), line("M14.5,8.5h0.01")
+        )
+    }
+
     /** Every icon, for the checks (all drawn, none empty). */
     val all: List<ImageVector> get() = listOf(
         add, close, check, back, chevron, dropDown, bin, edit, heart, heartFilled, home, homeFilled, lock, list, bell, more,
-        person, personFilled, refresh, search, gear, share, group, gift, bag, swap, store, storeFilled, chat, chatFilled, eye, eyeOff
+        person, personFilled, refresh, search, gear, share, group, gift, bag, swap, store, storeFilled, chat, chatFilled, eye, eyeOff, gallery
     )
 }
 

@@ -42,6 +42,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.border
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -240,17 +246,40 @@ fun WishDialog(
         properties = DialogProperties(dismissOnClickOutside = false),
         title = {
             val heading = if (edit == null) tr("Add a wish") else tr("Edit wish")
-            if (quiet) Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { close() }, modifier = Modifier.padding(end = 4.dp).offset(x = (-12).dp)) {
+            // Quiet's dialogs centre their title (2.210): the ✕ sits at the left edge, the title in the middle.
+            if (quiet) Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                IconButton(onClick = { close() }, modifier = Modifier.align(Alignment.CenterStart).offset(x = (-12).dp)) {
                     Icon(AppIcons.Close, tr("Cancel"))
                 }
-                Text(heading, modifier = Modifier.offset(x = (-12).dp))
+                Text(heading, modifier = Modifier.padding(horizontal = 40.dp))
             } else Text(heading)
         },
         text = {
             // One scrolling page with three headings (owner, 2.128): Wish, Details, Visibility. Nothing folded away.
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 FormHeading(tr("Wish"))
+                // The order (owner, 15 November 2026): a large photo first, then Top wish and Private as two tiles you
+                // tap, then the link, the name and the price, and the details last.
+                Box {
+                    ImageBlock(image, onPick = { photoMenu = true }, onRemove = {
+                        if (picked.isNotEmpty() && picked == image) { ImageStore.delete(ctx, picked); picked = "" }
+                        image = ""
+                    }, big = true)
+                }
+                // No "Top wish" or "Private" on a shared list: nobody can say that for the person the gifts are for, and
+                // a shared list is for the givers (there is nothing to hide there).
+                if (Shared.active == null) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    ToggleTile(
+                        { on -> StarIcon(on, if (on) StarInk else MaterialTheme.colorScheme.onSurfaceVariant, 22.dp, Modifier.starPulse(starFx)) },
+                        tr("Top wish"), tr("Givers see it first"), star, StarGold, StarInk,
+                        Modifier.weight(1f)
+                    ) { if (!star) starFx.play(); star = !star }
+                    ToggleTile(
+                        { on -> Icon(PrivateIcon, null, tint = if (on) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(22.dp)) },
+                        tr("Private"), tr("Only you see it"), priv, MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer,
+                        Modifier.weight(1f)
+                    ) { priv = !priv }
+                }
                 if (chooseList && edit == null) {
                     SaveToField(
                         targets = targets, selected = Shared.active ?: MyLists.saveKey(Repo.openMine, false),
@@ -295,16 +324,6 @@ fun WishDialog(
                 }
                 dupOf?.let { Text(tr("This item is already on “%s”", it), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
                 // (No tip under the link any more: removed by the owner, 2.118.)
-                Box {
-                    ImageBlock(image, onPick = { photoMenu = true }, onRemove = {
-                        if (picked.isNotEmpty() && picked == image) { ImageStore.delete(ctx, picked); picked = "" }
-                        image = ""
-                    })
-                    DropdownMenu(expanded = photoMenu, onDismissRequest = { photoMenu = false }) {
-                        DropdownMenuItem(text = { Text(tr("Take photo")) }, onClick = { photoMenu = false; takePhoto() })
-                        DropdownMenuItem(text = { Text(tr("Choose photo")) }, onClick = { photoMenu = false; pickImage() })
-                    }
-                }
                 // Name and price side by side: the price only needs room for "€9999,99", the name gets the rest and
                 // stays on one line (a long name scrolls inside the field instead of taking three lines).
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
@@ -339,37 +358,6 @@ fun WishDialog(
                 OutlinedTextField(
                     desc, { desc = it }, label = { Text(tr("Description")) },
                     maxLines = 3, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
-                // No "Top wish" on a shared list: nobody can say that for the person the gifts are for.
-                if (Shared.active == null) Row(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { if (!star) starFx.play(); star = !star }.padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    StarIcon(star, if (star) StarGold else MaterialTheme.colorScheme.onSurfaceVariant, 24.dp, Modifier.starPulse(starFx))
-                    Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                        Text(tr("Top wish"), style = MaterialTheme.typography.bodyLarge)
-                        Text(
-                            italics(tr("Shows people you _really_ like this")),
-                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Switch(checked = star, onCheckedChange = { star = it })
-                }
-                // Private wish: My wishlist only (a shared list is for the givers, there is nothing to hide there).
-                if (Shared.active == null) FormHeading(tr("Visibility"))
-                if (Shared.active == null) Row(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { priv = !priv }.padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(PrivateIcon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(24.dp))
-                    Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                        Text(tr("Private wish"), style = MaterialTheme.typography.bodyLarge)
-                        Text(
-                            tr("Hides this wish from everyone you share your wishlist with"),
-                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Switch(checked = priv, onCheckedChange = { priv = it })
-                }
             }
         },
         confirmButton = {
@@ -378,6 +366,9 @@ fun WishDialog(
         },
         dismissButton = if (quiet) null else ({ TextButton(onClick = { close() }) { Text(tr("Cancel")) } })
     )
+
+    // Take photo or Choose photo (2.212): a small bottom sheet like every other menu, not a drop-down.
+    if (photoMenu) PhotoSourceSheet(onTake = { photoMenu = false; takePhoto() }, onChoose = { photoMenu = false; pickImage() }) { photoMenu = false }
 
     // A category made here is chosen for this wish straight away.
     // The free crop after taking or choosing a photo (owner, 7 November 2026). Cancel keeps the photo as it was taken.
@@ -415,10 +406,12 @@ fun WishDialog(
  * 2.144; a picture from a shop page sits whole on white), tap to change, ✕ to remove.
  */
 @Composable
-fun ImageBlock(image: String, onPick: () -> Unit, onRemove: () -> Unit) {
+fun ImageBlock(image: String, onPick: () -> Unit, onRemove: () -> Unit, big: Boolean = false) {
     val cs = MaterialTheme.colorScheme
     val line = cs.outline
-    val tile = Modifier.size(128.dp).clip(RoundedCornerShape(16.dp))
+    // [big]: the wish form's photo (2.212, owner: the photo first), the width of the form and 200 dp tall.
+    val tile = (if (big) Modifier.fillMaxWidth().height(200.dp) else Modifier.size(128.dp))
+        .clip(if (LocalLook.current.design == "quiet") Squircle(if (big) 20.dp else 16.dp) else RoundedCornerShape(16.dp))
     val look = LocalLook.current
     if (image.isEmpty() && look.design == "quiet") {
         // Quiet (2.207): the light photo surface with a camera in a soft circle of your colour; no dashed box.
@@ -470,3 +463,48 @@ fun ImageBlock(image: String, onPick: () -> Unit, onRemove: () -> Unit) {
         }
     }
 }
+
+/**
+ * A tile you tap to turn something on (2.212, owner 15 November 2026: Top wish and Private "more visible, near the
+ * top"): an icon, the name and one short line; on, it fills with [onColour] and its words take [onInk]. Read out as a
+ * switch.
+ */
+@Composable
+fun ToggleTile(
+    icon: @Composable (Boolean) -> Unit, title: String, line: String, on: Boolean, onColour: Color, onInk: Color,
+    modifier: Modifier = Modifier, onToggle: () -> Unit
+) {
+    val look = LocalLook.current
+    val cs = MaterialTheme.colorScheme
+    val shape = look.soft(16.dp)
+    val bg = if (on) onColour else cs.surfaceVariant
+    Column(
+        modifier.pressScale().then(if (look.design == "chaos") Modifier.lookSurface(look, shape, bg, raised = on) else Modifier.clip(shape).background(bg)
+            .then(if (on) Modifier else Modifier.border(1.dp, cs.outlineVariant, shape)))
+            .toggleable(on, role = androidx.compose.ui.semantics.Role.Switch, onValueChange = { onToggle() })
+            .heightIn(min = 72.dp).padding(horizontal = 14.dp, vertical = 12.dp)
+    ) {
+        icon(on)
+        Text(
+            title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold,
+            color = if (on) onInk else cs.onSurface, modifier = Modifier.padding(top = 6.dp)
+        )
+        Text(line, style = MaterialTheme.typography.bodySmall, color = if (on) onInk.copy(alpha = 0.85f) else cs.onSurfaceVariant)
+    }
+}
+
+/** Take photo or Choose photo, as a small bottom sheet (2.212). */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+fun PhotoSourceSheet(onTake: () -> Unit, onChoose: () -> Unit, onClose: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    ModalBottomSheet(onDismissRequest = onClose, sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp)) {
+            SheetGroup(listOf(
+                { SheetRow({ PhotoIcon(cs.onSurfaceVariant, 22.dp) }, tr("Take photo"), onTake) },
+                { SheetRow({ Icon(AppIcons.Gallery, null, tint = cs.onSurfaceVariant) }, tr("Choose photo"), onChoose) }
+            ))
+        }
+    }
+}
+

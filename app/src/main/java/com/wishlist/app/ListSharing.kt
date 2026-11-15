@@ -20,6 +20,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.material3.Icon
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
@@ -244,7 +245,7 @@ fun WhoCanSeeSection(snack: SnackbarHostState) {
  * the "Only you?" question. Returns the current choice.
  */
 @Composable
-fun WhoChoices(id: String, snack: SnackbarHostState): Who {
+fun WhoChoices(id: String, snack: SnackbarHostState, sheet: Boolean = false, onChosen: () -> Unit = {}): Who {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var tick by remember { mutableIntStateOf(0) }
@@ -262,15 +263,33 @@ fun WhoChoices(id: String, snack: SnackbarHostState): Who {
             }
             busy = false
             tick++
+            onChosen()
             snack.showToast(msg)
         }
     }
     fun choose(w: Who) {
-        if (w == now || busy) return
+        if (w == now) { onChosen(); return }
+        if (busy) return
         if (w == Who.ME) askPrivate = true else go(w)
     }
 
     val inGroups = remember(id, Groups.groups, Repo.mineVersion) { Groups.groupsOf(ctx, id) }
+    if (sheet) {
+        // The Visibility sheet (2.212, owner 15 November 2026): three rows with an icon; a tap chooses and closes.
+        val cs = MaterialTheme.colorScheme
+        fun row(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, detail: String, w: Who): @Composable () -> Unit = {
+            SheetRow(
+                { Icon(icon, null, tint = cs.onSurfaceVariant) }, title, { choose(w) },
+                detail = detail, chosen = now == w
+            )
+        }
+        val lock = AppIcons.Lock; val group = AppIcons.Group; val link = AppIcons.Share
+        SheetGroup(listOf(
+            row(lock, tr("Only me"), if (inGroups.isEmpty()) tr("Nobody else sees this wishlist.") else tr("Only your wishlist groups see it."), Who.ME),
+            row(group, tr("My friends"), tr("Friends you added in the app."), Who.FRIENDS),
+            row(link, tr("Friends + anyone with the link"), tr("Also people without the app, in their browser."), Who.LINK)
+        ))
+    } else {
     Choice(
         tr("Only me"),
         if (inGroups.isEmpty()) tr("Nobody else sees this wishlist.") else tr("Only your wishlist groups see it."),
@@ -281,6 +300,7 @@ fun WhoChoices(id: String, snack: SnackbarHostState): Who {
         tr("Friends + anyone with the link"), tr("Also people without the app, in their browser."),
         now == Who.LINK, !busy
     ) { choose(Who.LINK) }
+    }
 
     if (askPrivate) {
         AlertDialog(
@@ -323,7 +343,7 @@ fun NewListVisibilitySetting() {
     val cs = MaterialTheme.colorScheme
     ListVisibility.loadDefault(ctx)
     val now = ListVisibility.newDefault
-    Text(tr("New wishlists are visible to"), style = MaterialTheme.typography.bodyLarge)
+    Text(tr("Visibility of new wishlists"), style = MaterialTheme.typography.bodyLarge)
     Text(
         tr("You can still change it for each wishlist in its settings."),
         style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant

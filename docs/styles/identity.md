@@ -86,3 +86,19 @@ files from that commit (the features built after it stay).
 - **Top wish on every view** (owner): two per row shows the same "Top wish" label as the large cards (with the status
   under it); rows keep the star on the picture, gold once tapped, and "Top wish" appears at the top right of the words.
 - **Your picture fills its round button**, no ring (owner).
+
+## Sheets, the price page and the wish form (owner, 15 November 2026, built in 2.212)
+- The panel that slides up is a "bottom sheet". A wishlist's ⋮ is one now (not a drop-down): its picture and name,
+  then Share, Edit name, **Visibility** (the current choice under it), and Delete or Leave in red on their own.
+  Visibility opens a second sheet with the three choices; a tap chooses and closes (no Done).
+- **"Visible to" is "Visibility"** everywhere (owner: shorter and clearer). A whole wishlist can already be private:
+  "Only me". App settings: "Visibility of new wishlists"; Wishlist settings: "Visibility".
+- **No long press on a wishlist** (owner: a wishlist can't be moved; Claude had no objection).
+- **Price history is a tall bottom sheet** that fits one screen: the photo and name, the price big and bold with its
+  change (counting down after a drop), a compact chart, Lowest / Highest / Changes as three chips, the price alert,
+  "Price is wrong?" and "All price changes ›" as small links, then **View in shop** (filled) above a plain **Close**.
+- **The wish form** (owner's order): a large photo first, then **Top wish** and **Private** as two tiles you tap,
+  then where to save it, the link, name and price, and the details. Take photo / Choose photo is a small sheet.
+- **One structure in every style** (owner: "consistency throughout the app is key"): only the look differs.
+- The screens the owner found hard to read were from 2.210; 2.211 fixed them, now checked by screenshots
+  (Visibility, Price history, Edit wish).

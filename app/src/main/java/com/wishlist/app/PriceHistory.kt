@@ -42,6 +42,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -112,6 +114,7 @@ fun targetGold(dark: Boolean): Color = if (dark) Color(0xFFFFC94D) else Color(0x
  * price (TargetRow, see Targets.kt); a target that is reached shows in gold, bold, with a soft glow ([highlight]: opened
  * from the "Target price reached" alert). "View product" opens the shop's page.
  */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun PriceHistoryDialog(w: Wish, highlight: Boolean = false, showAll: Boolean = true, onClose: () -> Unit) {
     val go = LocalGo.current
@@ -149,49 +152,77 @@ fun PriceHistoryDialog(w: Wish, highlight: Boolean = false, showAll: Boolean = t
     LaunchedEffect(w.id, w.price) {
         checkedLine = if (w.url.isBlank()) null else PriceWatch.line(PriceWatch.get(ctx, w.id), System.currentTimeMillis())
     }
-    AlertDialog(
-        onDismissRequest = onClose,
-        title = { Text(tr("Price history")) },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(
-                    w.label, style = MaterialTheme.typography.titleSmall, color = cs.onSurfaceVariant,
-                    maxLines = 2, overflow = TextOverflow.Ellipsis
-                )
-                // Cheaper than before: the price counts down to the new one (2.210, Celebrate.kt).
-                PriceCountDown(w)
-                if (points.isEmpty()) {
-                    Text(tr("No price recorded yet. Add a price to this wish and the history starts from there."))
-                } else {
-                    HistoryBody(points, w.currency, nowSec, if (reached) gold else null)
+    // A tall bottom sheet (2.212, owner 15 November 2026: one screen with everything, a clear product photo, "View in
+    // shop" the main button above a plain "Close"). It fits a 360 dp phone; only with very big text does it scroll.
+    ModalBottomSheet(onDismissRequest = onClose, sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        Column(
+            Modifier.fillMaxWidth().navigationBarsPadding().verticalScroll(rememberScrollState())
+                .padding(start = 20.dp, end = 20.dp, bottom = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // The wish: its photo on the light photo surface, the name and the shop.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                val look = LocalLook.current
+                Box(
+                    Modifier.size(72.dp).clip(look.soft(16.dp)).background(look.photoSurface(w.id)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (w.image.isNotBlank()) PhotoStage(w.image, w.label, small = true)
+                    else PlaceholderIcon("gift", 30.dp, look.photoInk)
                 }
-                // Under "Tracking since…": the price alert, gold when the price is at or below it.
-                if (w.price != null) TargetRow(w, reached, gold, highlight)
-                // When the shop was last read, or since when it can't be (owner, 10 November 2026; PriceWatch).
-                if (checkedLine != null) Text(checkedLine!!, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
-                // "Price is wrong?" (owner, 10 November 2026; PriceReport.kt): the shop's page as this phone reads it,
-                // saved to a file to send along. Nothing is sent by itself.
+                Column(Modifier.padding(start = 14.dp).weight(1f)) {
+                    Text(
+                        w.label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
+                        maxLines = 2, overflow = TextOverflow.Ellipsis
+                    )
+                    val shop = remember(w.url) { try { java.net.URI(w.url).host?.removePrefix("www.") } catch (e: Exception) { null } }
+                    Text(
+                        listOfNotNull(tr("Price history"), shop).joinToString(" · "),
+                        style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+            if (points.isEmpty()) {
+                Text(
+                    tr("No price recorded yet. Add a price to this wish and the history starts from there."),
+                    style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
+                )
+            } else {
+                HistoryBody(points, w.currency, nowSec, if (reached) gold else null, w)
+            }
+            // The price alert, gold when the price is at or below it.
+            if (w.price != null) TargetRow(w, reached, gold, highlight)
+            // When the shop was last read (owner, 10 November 2026; PriceWatch), small.
+            if (checkedLine != null) Text(checkedLine!!, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+            // "Price is wrong?" (owner, 10 November 2026; PriceReport.kt) and "All price changes" as two small links.
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 if (w.url.isNotBlank()) Text(
                     if (reporting) tr("Saving the shop’s page…") else tr("Price is wrong?"),
                     style = MaterialTheme.typography.labelLarge, color = cs.primary,
                     modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(enabled = !reporting) { askReport = true }
                         .padding(vertical = 12.dp, horizontal = 2.dp)
                 )
-                if (reportErr.isNotEmpty()) Text(reportErr, style = MaterialTheme.typography.bodySmall, color = cs.error)
-                // "All price changes" (owner, 7 November 2026): the overview that was the Price watch tab.
+                Spacer(Modifier.weight(1f))
                 if (showAll) Text(
                     tr("All price changes") + " ›", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
                     color = cs.primary,
                     modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { onClose(); go(Deep.Prices) }
-                        .padding(vertical = 8.dp, horizontal = 2.dp)
+                        .padding(vertical = 12.dp, horizontal = 2.dp)
                 )
             }
-        },
-        confirmButton = { TextButton(onClick = onClose) { Text(tr("Close")) } },
-        dismissButton = if (w.url.isNotBlank()) ({
-            TextButton(onClick = { try { ui.openUri(w.url) } catch (e: Exception) { } }) { Text(tr("View in shop")) }
-        }) else null
-    )
+            if (reportErr.isNotEmpty()) Text(reportErr, style = MaterialTheme.typography.bodySmall, color = cs.error)
+            // "View in shop" is the main button, "Close" a plain one under it (owner).
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                if (w.url.isNotBlank()) Button(
+                    onClick = { try { ui.openUri(w.url) } catch (e: Exception) { } }, modifier = Modifier.fillMaxWidth()
+                ) { Text(tr("View in shop")) }
+                androidx.compose.material3.TextButton(
+                    onClick = onClose, modifier = Modifier.pressScale().fillMaxWidth().heightIn(min = 48.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.textButtonColors(contentColor = cs.onSurface)
+                ) { Text(tr("Close")) }
+            }
+        }
+    }
 }
 
 /**
@@ -272,8 +303,9 @@ private fun TargetRow(w: Wish, reached: Boolean, gold: Color, highlight: Boolean
 }
 
 @Composable
-private fun HistoryBody(points: List<PricePoint>, currency: String, nowSec: Long, gold: Color? = null) {
+private fun HistoryBody(points: List<PricePoint>, currency: String, nowSec: Long, gold: Color? = null, w: Wish) {
     val cs = MaterialTheme.colorScheme
+    val look = LocalLook.current
     val range = remember(points, nowSec) { chartRange(points, nowSec) }
     var frac by remember(points) { mutableStateOf(1f) }
     val span = (range.t1 - range.t0).toDouble()
@@ -281,65 +313,69 @@ private fun HistoryBody(points: List<PricePoint>, currency: String, nowSec: Long
     val curP = priceAt(points, curT)
     val fmt = remember { DateFormat.getDateInstance(DateFormat.MEDIUM) }
     fun day(t: Long): String = fmt.format(Date(t * 1000))
+    // A price drop counts down to the new price when the page opens (Celebrate.kt, owner 15 November 2026).
+    val counting = rememberCountDown(w)
+    val now = frac >= 0.995f
+    val shown = if (now && counting != null) counting else curP
 
-    // Price and date under your finger. Without touching: today's price.
-    Row(verticalAlignment = Alignment.Bottom) {
-        // At or below the target (gold given): the price in gold and bold.
-        val atTarget = gold != null && frac >= 0.995f
+    // The price under your finger, big and bold (equal-width figures); without touching: today's price and its change.
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        val atTarget = gold != null && now
         Text(
-            money(curP, currency), style = MaterialTheme.typography.headlineSmall.copy(shadow = null),
-            fontWeight = if (atTarget) FontWeight.Bold else FontWeight.SemiBold,
-            color = if (atTarget) gold!! else Color.Unspecified
+            money(shown, currency),
+            style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum"), fontWeight = FontWeight.Bold,
+            color = if (atTarget) gold!! else cs.onSurface
         )
+        val ch = changeSince(points)
+        if (now && ch != null) {
+            val down = ch.first < 0
+            val tint = if (down) look.drop else look.rise
+            Text(
+                (if (down) "−" else "+") + Math.round(abs(ch.second)) + "%",
+                style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = tint,
+                modifier = Modifier.padding(start = 10.dp).clip(look.soft(8.dp)).background(tint.copy(alpha = 0.14f))
+                    .padding(horizontal = 8.dp, vertical = 3.dp)
+            )
+        }
         Spacer(Modifier.weight(1f))
-        Text(
-            if (frac >= 0.995f) tr("Now") else day(curT),
-            style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant
+        Text(if (now) tr("Now") else day(curT), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        PriceChart(
+            points, range, frac, { frac = it },
+            line = cs.primary, grid = cs.outline.copy(alpha = 0.3f), dotInner = cs.surface,
+            modifier = Modifier.fillMaxWidth().height(140.dp)
+                .semantics { contentDescription = tr("Price history graph. Drag to see the price on a date.") }
         )
+        Row(Modifier.fillMaxWidth()) {
+            Text(day(range.t0), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
+            Spacer(Modifier.weight(1f))
+            Text(tr("Today"), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
+        }
     }
-    PriceChart(
-        points, range, frac, { frac = it },
-        line = cs.primary, grid = cs.outline.copy(alpha = 0.3f), dotInner = cs.surface,
-        modifier = Modifier.fillMaxWidth().height(180.dp)
-            .semantics { contentDescription = tr("Price history graph. Drag to see the price on a date.") }
-    )
-    Row(Modifier.fillMaxWidth()) {
-        Text(day(range.t0), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
-        Spacer(Modifier.weight(1f))
-        Text(tr("Today"), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
-    }
-
+    // Lowest, highest and the number of changes as three small chips.
     val lo = points.minOf { it.p }
     val hi = points.maxOf { it.p }
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-        Column {
-            Text(tr("Lowest"), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
-            Text(money(lo, currency), style = MaterialTheme.typography.titleSmall)
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        @Composable
+        fun chip(label: String, value: String, m: Modifier) = Column(
+            m.clip(look.soft(12.dp)).background(cs.primaryContainer.copy(alpha = 0.6f)).padding(horizontal = 10.dp, vertical = 8.dp)
+        ) {
+            Text(label, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
+            FitText(value, MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), cs.onSurface, align = androidx.compose.ui.text.style.TextAlign.Start)
         }
-        Column {
-            Text(tr("Highest"), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
-            Text(money(hi, currency), style = MaterialTheme.typography.titleSmall)
-        }
-        Column {
-            Text(tr("Changes"), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
-            Text((points.size - 1).toString(), style = MaterialTheme.typography.titleSmall)
-        }
+        chip(tr("Lowest"), money(lo, currency), Modifier.weight(1f))
+        chip(tr("Highest"), money(hi, currency), Modifier.weight(1f))
+        chip(tr("Changes"), (points.size - 1).toString(), Modifier.weight(0.8f))
     }
     val ch = changeSince(points)
-    if (ch == null) {
-        Text(
+    Text(
+        if (ch == null) {
             if (points.size < 2) tr("Tracking since %s. No price change yet.", day(range.t0))
-            else tr("Back at the first price since %s.", day(range.t0)),
-            style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
-        )
-    } else {
-        val down = ch.first < 0
-        Text(
-            (if (down) "−" else "+") + tr("%1\$s (%2\$d%%) since %3\$s", money(abs(ch.first), currency), Math.round(abs(ch.second)), day(range.t0)),
-            style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium,
-            color = if (down) DropGreen else cs.error
-        )
-    }
+            else tr("Back at the first price since %s.", day(range.t0))
+        } else (if (ch.first < 0) "−" else "+") + tr("%1\$s (%2\$d%%) since %3\$s", money(abs(ch.first), currency), Math.round(abs(ch.second)), day(range.t0)),
+        style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
+    )
 }
 
 /** A step graph: a price stays the same until the next change. Touch or drag to move the marker along it. */

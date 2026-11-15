@@ -21,6 +21,9 @@ object History {
 
     fun of(id: Long): List<PricePoint> = all[id].orEmpty()
 
+    /** For the screenshots only: a made-up history for [id] (not saved). */
+    internal fun showForPictures(id: Long, points: List<PricePoint>) { all = all + (id to points) }
+
     private fun nowSec() = System.currentTimeMillis() / 1000
 
     @Synchronized

@@ -357,6 +357,38 @@ class WishPressTest : NavigationBase() {
     }
 }
 
+/**
+ * A wishlist's ⋮ is a bottom sheet with Visibility as its own sheet; a long press on a wishlist does nothing (owner,
+ * 15 November 2026). The wish form starts with the photo, then Top wish and Private, then the link.
+ */
+class WishlistSheetTest : NavigationBase() {
+    @Test fun dotsOpenTheSheetAndVisibility() {
+        compose.waitForIdle()
+        // A long press opens nothing.
+        compose.onAllNodes(hasText("My wishlist", substring = false)).onFirst().performTouchInput { longClick() }
+        compose.waitForIdle()
+        compose.onAllNodes(hasText("Edit name")).assertCountEquals(0)
+        // The ⋮: the sheet with its rows and the current Visibility under its name.
+        compose.onAllNodes(hasContentDescription("More for", substring = true) and hasClickAction()).onFirst().performClick()
+        compose.waitForIdle()
+        for (t in listOf("Share", "Edit name", "Visibility", "Delete wishlist")) shows(t)
+        compose.onAllNodes(hasText("Visible to")).assertCountEquals(0)
+        tap("Visibility")
+        compose.waitForIdle()
+        for (t in listOf("Only me", "My friends", "Friends + anyone with the link")) shows(t)
+    }
+
+    /** The form's order (the open form's blinking cursor never lets this pretend phone settle, so it is read from the code). */
+    @Test fun formStartsWithPhotoThenTiles() {
+        val src = java.io.File("src/main/java/com/wishlist/app/WishForm.kt").readText()
+        val photo = src.indexOf("ImageBlock(image,")
+        val top = src.indexOf("tr(\"Top wish\"), tr(\"Givers see it first\")")
+        val link = src.indexOf("label = { Text(tr(\"Product link\")) }")
+        val name = src.indexOf("tr(\"Name*\")")
+        org.junit.Assert.assertTrue("photo, Top wish and Private, link, name", photo in 0 until top && top < link && link < name)
+    }
+}
+
 /** Taking a top wish off on Home's Top wishes page: at once with Undo, no question (owner, 12 November 2026). */
 class TopWishTest : NavigationBase() {
     @Test fun noQuestionWhenUnstarring() {

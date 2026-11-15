@@ -577,3 +577,11 @@ not a scheme colour, so the sheet's text fell back to black). Every bottom panel
 
 ### The "Next session" note of 2.210 as it was (moved 15 November 2026, when 2.211 became "read first")
 - **2.210 (15 November 2026), read first.** The app's own character is built (`docs/styles/identity.md`). Ask how it
+
+### 15 November 2026, later: the owner's review (2.209)
+Owner's review: selecting gets a bottom action bar; Messages without tabs, a round chat button; "Viewed" removed (app and
+web); Private keeps the ⋮ sheet open; amounts never cut off (`FitText`, the check also found Quiet cut off with big
+text); "Create list" label fixed; chaos: numbers row, own Secret Santa card, one message box. Brainstorm still to plan.
+
+### The "Next session" note of 2.211 as it was (moved 15 November 2026, when 2.212 became "read first")
+- **2.211 (15 November 2026), read first.** The owner's first look at 2.210 is fixed (`docs/styles/identity.md`, last

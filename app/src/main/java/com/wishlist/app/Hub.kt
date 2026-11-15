@@ -46,6 +46,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.draw.rotate
@@ -216,7 +218,8 @@ fun HubScreen(
         else listOfNotNull(
             Triple(tr("Share"), false, onShare),
             edit,
-            if (Config.enabled) Triple(tr("Visible to"), false, onVisible) else null,
+            // "Visibility" (owner, 15 November 2026: "Visible to" was too long and unclear).
+            if (Config.enabled) Triple(tr("Visibility"), false, onVisible) else null,
             Triple(tr("Delete wishlist"), true, onDelete)
         )
     }
@@ -287,23 +290,9 @@ fun HubScreen(
     }
 
     sharingCollab?.let { l -> androidx.compose.runtime.key(l.code) { SharedShareDialog(l) { sharingCollab = null } } }
-    // "Visible to" (2.105, owner): the same three choices as in the list's settings, with radio buttons.
-    visibleOf?.let { item ->
-        AlertDialog(
-            onDismissRequest = { visibleOf = null },
-            title = { Text(tr("Visible to")) },
-            text = {
-                Column {
-                    Text(
-                        item.name, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    WhoChoices(item.key.substringAfter(':'), snack)
-                }
-            },
-            confirmButton = { TextButton(onClick = { visibleOf = null }) { Text(tr("Done")) } }
-        )
-    }
+    // "Visibility" (2.105 as "Visible to"; a sheet since 2.212, owner 15 November 2026): the three choices as rows,
+    // a tap chooses and closes.
+    visibleOf?.let { item -> VisibilitySheet(item, snack) { visibleOf = null } }
     renaming?.let { item ->
         val group = item.key.startsWith("s:")
         val code = item.key.substringAfter(':')
@@ -616,7 +605,9 @@ internal fun ListBlock(
         val shape = look.cardShape(id, small = true)
         Box(
             Modifier.fillMaxWidth().aspectRatio(1f).lookCard(look, id, shape)
-                .combinedClickable(onClick = item.open, onLongClick = if (actions.isEmpty()) null else ({ menu = true }))
+                // No long press (owner, 15 November 2026: a wishlist can't be moved, so there is nothing to select);
+                // everything is in the ⋮.
+                .clickable(onClick = item.open)
         ) {
             // The picture area: the theme's soft colour, the photos filling it. Quiet (2.207): the photos fill the whole
             // block, no frame inside the frame.
@@ -670,14 +661,7 @@ internal fun ListBlock(
                 if (dots && actions.isNotEmpty()) IconButton(onClick = { menu = true }, modifier = Modifier.size(36.dp)) {
                     Icon(AppIcons.MoreVert, tr("More for %s", item.name), tint = cs.onSurfaceVariant)
                 }
-                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                    actions.forEach { (label, danger, act) ->
-                        DropdownMenuItem(
-                            text = { Text(label, color = if (danger) cs.error else cs.onSurface) },
-                            onClick = { menu = false; act() }
-                        )
-                    }
-                }
+                if (menu) ListMenuSheet(item, actions) { menu = false }
             }
         }
     }
@@ -925,3 +909,79 @@ private fun ExchangesSection(onNew: () -> Unit) {
         item(key = "new") { NewBlock(tr("New gift exchange"), onNew, Modifier.width(w)) }
     }
 }
+
+/**
+ * A wishlist's ⋮ (2.212, owner 15 November 2026: the drop-down menu "looks horrible"): a bottom sheet like a wish's,
+ * with the list's picture and name on top, its actions grouped (Share, Edit name, Visibility with the current choice
+ * under it) and the one that removes (Delete wishlist, Leave wishlist) in red on its own.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun ListMenuSheet(item: HubItem, actions: List<Triple<String, Boolean, () -> Unit>>, onClose: () -> Unit) {
+    val ctx = LocalContext.current
+    val cs = MaterialTheme.colorScheme
+    val look = LocalLook.current
+    val code = item.key.substringAfter(':')
+    ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp)) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    Modifier.size(56.dp).clip(if (look.design == "quiet") Squircle(14.dp) else RoundedCornerShape(12.dp))
+                        .background(look.pictureBg(item.key.hashCode().toLong(), item.picture != null)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (item.picture != null) WishImage(item.picture, Modifier.fillMaxSize(), ContentScale.Crop)
+                    else PlaceholderIcon(if (item.group) "group" else "gift", 28.dp)
+                }
+                Column(Modifier.padding(start = 16.dp).weight(1f)) {
+                    Text(item.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(item.sub ?: wishesLabel(item.count), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            val visibility = remember(code, ListVisibility.version, Repo.mineVersion) {
+                when (ListVisibility.of(ctx, code)) {
+                    Who.ME -> tr("Only me"); Who.FRIENDS -> tr("My friends"); Who.LINK -> tr("Friends + anyone with the link")
+                }
+            }
+            fun row(a: Triple<String, Boolean, () -> Unit>): @Composable () -> Unit = {
+                val (label, danger, act) = a
+                val icon = when (label) {
+                    tr("Share") -> AppIcons.Share
+                    tr("Edit name") -> AppIcons.Edit
+                    tr("Visibility") -> AppIcons.Lock
+                    tr("Leave wishlist") -> AppIcons.Close
+                    else -> AppIcons.Delete
+                }
+                SheetRow(
+                    { Icon(icon, null, tint = cs.onSurfaceVariant) }, label, { onClose(); act() }, danger = danger,
+                    detail = if (label == tr("Visibility")) visibility else null
+                )
+            }
+            val (removing, doing) = actions.partition { it.second }
+            if (doing.isNotEmpty()) SheetGroup(doing.map { row(it) })
+            if (removing.isNotEmpty()) SheetGroup(removing.map { row(it) })
+        }
+    }
+}
+
+/** The Visibility sheet of a wishlist (2.212): the list's name and the three choices; a tap chooses and closes. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun VisibilitySheet(item: HubItem, snack: SnackbarHostState, onClose: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp)) {
+            Text(
+                tr("Visibility"), style = MaterialTheme.typography.titleLarge, fontWeight = LocalLook.current.titleWeight,
+                modifier = Modifier.padding(horizontal = 24.dp)
+            )
+            Text(
+                tr("Who sees “%s”", item.name), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant,
+                modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 2.dp, bottom = 8.dp)
+            )
+            WhoChoices(item.key.substringAfter(':'), snack, sheet = true, onChosen = onClose)
+        }
+    }
+}
+

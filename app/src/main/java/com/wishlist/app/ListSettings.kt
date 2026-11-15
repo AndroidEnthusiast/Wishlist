@@ -181,7 +181,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                 SavedFeedback(noteSaved)
             }
 
-            GroupTitle(tr("Who can see it"))
+            GroupTitle(tr("Visibility"))
             if (shared != null) {
                 val title = Repo.listName
                 val invite = inviteLink(shared.key)

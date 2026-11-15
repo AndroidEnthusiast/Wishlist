@@ -153,6 +153,32 @@ abstract class ScreenshotBase(private val mode: String, private val tag: String 
     }
     @Test fun friends() { tap("Friends"); shot("friends") }
     @Test fun messages() { tap("Messages"); shot("messages") }
+    // The screens the owner found hard to read (15 November 2026): Visible to, Price history, Edit wish.
+    @Test fun visibleTo() {
+        compose.waitForIdle()
+        compose.onAllNodes(hasContentDescription("More for", substring = true) and hasClickAction()).onFirst().performTouchInput { click() }
+        repeat(10) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
+        shot("listmenu")
+        tap("Visibility"); shot("visible")
+    }
+    @Test fun priceHistory() {
+        // The first wish (the board game) with a real history: 49.95, then 44.95, now 39.95.
+        compose.runOnUiThread {
+            Repo.myWishes.firstOrNull { it.id == 5L }?.let { Repo.replace(compose.activity, it.copy(price = 39.95, oldPrice = 49.95)) }
+            val now = System.currentTimeMillis() / 1000
+            History.showForPictures(5L, listOf(PricePoint(now - 40 * 86400, 49.95), PricePoint(now - 15 * 86400, 44.95), PricePoint(now - 2 * 86400, 39.95)))
+        }
+        tapAbove("My wishlist", 150f); compose.mainClock.advanceTimeBy(1000)
+        compose.onAllNodes(hasContentDescription("More") and hasClickAction()).onFirst().performTouchInput { click() }
+        repeat(10) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
+        tap("Price history"); shot("history")
+    }
+    @Test fun editWish() {
+        tapAbove("My wishlist", 150f); compose.mainClock.advanceTimeBy(1000)
+        compose.onAllNodes(hasContentDescription("More") and hasClickAction()).onFirst().performTouchInput { click() }
+        repeat(10) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
+        tap("Edit"); shot("edit")
+    }
     // Two per row and large cards (2.210: "Top wish" on every view, next to a price change on a narrow card).
     @Test fun grid() {
         compose.runOnUiThread {

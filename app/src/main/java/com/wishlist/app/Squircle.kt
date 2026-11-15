@@ -122,3 +122,8 @@ fun Squircle(radius: Dp) = SquircleShape(radius)
 
 /** A squircle with only its top corners rounded (panels that slide up). */
 fun SquircleTop(radius: Dp) = SquircleShape(radius, radius, 0.dp, 0.dp)
+
+/** The style's rounded shape of [radius]: a squircle in Quiet, the style's own rounded corner in Gen Z chaos. */
+fun Look.soft(radius: Dp): androidx.compose.ui.graphics.Shape =
+    if (design == "quiet") Squircle(radius) else androidx.compose.foundation.shape.RoundedCornerShape(radius)
+
