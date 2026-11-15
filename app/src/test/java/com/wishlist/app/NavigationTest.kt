@@ -382,7 +382,7 @@ class WishlistSheetTest : NavigationBase() {
     @Test fun formStartsWithPhotoThenTiles() {
         val src = java.io.File("src/main/java/com/wishlist/app/WishForm.kt").readText()
         val photo = src.indexOf("ImageBlock(image,")
-        val top = src.indexOf("tr(\"Top wish\"), tr(\"Givers see it first\")")
+        val top = src.indexOf("tr(\"Love this\"), tr(\"Givers see it first\")")
         val link = src.indexOf("label = { Text(tr(\"Product link\")) }")
         val name = src.indexOf("tr(\"Name*\")")
         org.junit.Assert.assertTrue("photo, Top wish and Private, link, name", photo in 0 until top && top < link && link < name)
@@ -395,13 +395,13 @@ class TopWishTest : NavigationBase() {
         val app = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()
         compose.runOnUiThread { Repo.addMine(app, Wish(7, "https://example.com/t", "Headphones", "", "", 99.0, null, "EUR", "Tech", star = true)) }
         tap("Wish") // the tile says "Wish" with one wish
-        tap("Top wishes ★")
+        tap("Wishes you love")
         compose.waitForIdle()
-        compose.onAllNodes(hasContentDescription("Remove top wish") and hasClickAction()).onFirst().performClick()
+        compose.onAllNodes(hasContentDescription("Remove from wishes you love") and hasClickAction()).onFirst().performClick()
         compose.waitForIdle()
         compose.onAllNodes(hasText("Remove from top wishes?")).assertCountEquals(0)
         org.junit.Assert.assertFalse(Repo.myWishes.first { it.id == 7L }.star)
-        shows("Removed from top wishes")
+        shows("Removed from wishes you love")
     }
 }
 

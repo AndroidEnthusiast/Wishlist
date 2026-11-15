@@ -329,7 +329,7 @@ fun OverviewScreen(
                 }
             ) else TopAppBar(
                 title = {
-                    ScreenTitle(when (page) { "lists" -> tr("Wishlists"); "top" -> tr("Top wishes"); else -> tr("All your wishes") })
+                    ScreenTitle(when (page) { "lists" -> tr("Wishlists"); "top" -> tr("Wishes you love"); else -> tr("All your wishes") })
                 },
                 navigationIcon = { IconButton(onClick = { places.homePage = null }) { Icon(AppIcons.ArrowBack, tr("Back")) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
@@ -355,20 +355,20 @@ fun OverviewScreen(
         // All wishes or only the top wishes (owner, 7 November 2026: the Top wishes page is reached this way).
         // Quiet (2.207): a segmented switch; chaos keeps its two chips.
         if (look.design == "quiet") SegmentedTabs(
-            listOf(tr("All wishes"), tr("Top wishes") + " ★"), if (page == "top") 1 else 0,
+            listOf(tr("All wishes"), tr("Wishes you love")), if (page == "top") 1 else 0,
             { places.homePage = if (it == 1) "top" else "wishes" }, Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
         ) else Row(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(
                 selected = page != "top", onClick = { places.homePage = "wishes" }, label = { Text(tr("All wishes")) }
             )
             FilterChip(
-                selected = page == "top", onClick = { places.homePage = "top" }, label = { Text(tr("Top wishes") + " ★") }
+                selected = page == "top", onClick = { places.homePage = "top" }, label = { Text(tr("Wishes you love")) }
             )
         }
         if (shown.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(32.dp), Alignment.Center) {
                 Text(
-                    if (page == "top") tr("No top wishes yet. Tap the star on the wishes you’d love most.")
+                    if (page == "top") tr("Nothing here yet. Tap the heart on the wishes you’d love most.")
                     else tr("Nothing here yet. Tap + to add the first thing you’d love."),
                     color = cs.onSurfaceVariant, textAlign = TextAlign.Center
                 )
@@ -428,7 +428,7 @@ fun OverviewScreen(
                 Repo.updateMine(ctx, id) { ws -> ws.map { if (it.id == p.w.id) it.copy(star = on) else it } }
             }
             star(false)
-            val r = snack.showToast(tr("Removed from top wishes"), actionLabel = tr("Undo"), duration = SnackbarDuration.Short)
+            val r = snack.showToast(tr("Removed from wishes you love"), actionLabel = tr("Undo"), duration = SnackbarDuration.Short)
             if (r == SnackbarResult.ActionPerformed) star(true)
             // Only now: clearing it earlier would end this effect before the message shows.
             unstarring = null

@@ -53,31 +53,19 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
-/** The gold of the "Top wish" label, and the dark brown text on it. Same in light and dark mode. */
+/** The gold of the "Love this" label, and the dark brown text on it. Same in light and dark mode. */
 val StarGold = Color(0xFFFFC83D)
 val StarInk = Color(0xFF3B2A00)
 
-/** A five-pointed star: solid when [filled], an outline otherwise. */
+/**
+ * The heart of "Love this" (owner, 15 November 2026: it replaces the star and "Top wish", nobody says that): our own
+ * rounded-line heart, filled when [filled]. Gold on its label, never red or pink, so it doesn't look like Valentine's Day.
+ */
 @Composable
-fun StarIcon(filled: Boolean, tint: Color, iconSize: Dp = 24.dp, modifier: Modifier = Modifier) {
-    Canvas(modifier.size(iconSize)) {
-        val w = this.size.width
-        val cx = w / 2f
-        val cy = this.size.height / 2f + w * 0.03f
-        val outer = w * 0.48f
-        val inner = outer * 0.42f
-        val p = Path()
-        for (i in 0 until 10) {
-            val a = (-90.0 + i * 36.0) * PI / 180.0
-            val r = if (i % 2 == 0) outer else inner
-            val x = (cx + r * cos(a)).toFloat()
-            val y = (cy + r * sin(a)).toFloat()
-            if (i == 0) p.moveTo(x, y) else p.lineTo(x, y)
-        }
-        p.close()
-        if (filled) drawPath(p, tint)
-        else drawPath(p, tint, style = Stroke(width = w * 0.09f, join = StrokeJoin.Round))
-    }
+fun LoveIcon(filled: Boolean, tint: Color, iconSize: Dp = 24.dp, modifier: Modifier = Modifier) {
+    androidx.compose.material3.Icon(
+        if (filled) QuietIcons.heartFilled else QuietIcons.heart, null, tint = tint, modifier = modifier.size(iconSize)
+    )
 }
 
 /**
@@ -177,28 +165,32 @@ private fun DrawScope.drawSparkles(center: Offset, p: Float) {
  * With [onClick] the owner can tap it to take the star away again.
  */
 @Composable
-fun MostWantedBadge(showLabel: Boolean, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
+fun MostWantedBadge(showLabel: Boolean, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null, small: Boolean = false) {
     val shape = RoundedCornerShape(8.dp)
     var m = modifier.clip(shape).background(StarGold)
     m = if (onClick != null) {
-        m.clickable(onClickLabel = tr("Remove top wish"), role = Role.Button, onClick = onClick)
+        m.clickable(onClickLabel = tr("Remove from wishes you love"), role = Role.Button, onClick = onClick)
     } else if (!showLabel) {
-        m.semantics { contentDescription = tr("Top wish") }
+        m.semantics { contentDescription = tr("Love this") }
     } else m
     Row(
-        m.padding(horizontal = if (showLabel) 8.dp else 5.dp, vertical = 4.dp),
+        // [small]: two per row and rows (owner, 15 November 2026: "slightly smaller" there).
+        m.padding(horizontal = if (showLabel) (if (small) 6.dp else 8.dp) else 5.dp, vertical = if (small) 3.dp else 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
-        StarIcon(true, StarInk, 14.dp)
+        LoveIcon(true, StarInk, if (small) 12.dp else 14.dp)
         if (showLabel) {
-            Spacer(Modifier.width(4.dp))
-            Text(tr("Top wish"), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = StarInk)
+            Spacer(Modifier.width(if (small) 3.dp else 4.dp))
+            Text(
+                tr("Love this"), style = if (small) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold, color = StarInk
+            )
         }
         // A small cross when you can tap the label to take it away again.
         if (onClick != null) {
             Spacer(Modifier.width(6.dp))
-            Icon(AppIcons.Close, null, Modifier.size(14.dp), tint = StarInk)
+            Icon(AppIcons.Close, null, Modifier.size(if (small) 12.dp else 14.dp), tint = StarInk)
         }
     }
 }
@@ -210,11 +202,11 @@ fun MarkMostWantedButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
         modifier.size(34.dp).then(if (quiet) Modifier.shadow(2.dp, CircleShape) else Modifier).clip(CircleShape)
             .background(if (quiet) Color.White.copy(alpha = 0.92f) else Color.Black.copy(alpha = 0.45f))
-            .semantics { contentDescription = tr("Make it a top wish") }
+            .semantics { contentDescription = tr("Love this wish") }
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        StarIcon(false, if (quiet) Color(0xFF6C6C74) else Color.White, 20.dp)
+        LoveIcon(false, if (quiet) Color(0xFF6C6C74) else Color.White, 20.dp)
     }
 }
 
@@ -224,7 +216,7 @@ fun MarkMostWantedButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
  * Wishes you already got show nothing. Marking a wish plays the pulse and sparkles.
  */
 @Composable
-fun StarCorner(w: Wish, onToggle: (() -> Unit)?) {
+fun StarCorner(w: Wish, onToggle: (() -> Unit)?, small: Boolean = false) {
     if (!w.got) {
         val fx = rememberStarFx()
         val toggle: (() -> Unit)? = onToggle?.let { go -> { if (!w.star) fx.play(); go() } }
@@ -232,7 +224,7 @@ fun StarCorner(w: Wish, onToggle: (() -> Unit)?) {
         Box(Modifier.starSparkles(fx, 17.dp)) {
             if (w.star) {
                 MostWantedBadge(
-                    showLabel = true, modifier = Modifier.starPulse(fx, TransformOrigin(1f, 0.5f)), onClick = toggle
+                    showLabel = true, modifier = Modifier.starPulse(fx, TransformOrigin(1f, 0.5f)), onClick = toggle, small = small
                 )
             } else if (toggle != null) MarkMostWantedButton(toggle)
         }
@@ -253,11 +245,11 @@ fun StarToggle(starred: Boolean, onToggle: () -> Unit, modifier: Modifier = Modi
         Box(
             Modifier.fillMaxSize().starPulse(fx).then(if (quiet) Modifier.padding(2.dp).shadow(2.dp, CircleShape) else Modifier).clip(CircleShape)
                 .background(if (starred) StarGold else if (quiet) Color.White.copy(alpha = 0.92f) else Color.Black.copy(alpha = 0.45f))
-                .semantics { contentDescription = if (starred) tr("Remove top wish") else tr("Make it a top wish") }
+                .semantics { contentDescription = if (starred) tr("Remove from wishes you love") else tr("Love this wish") }
                 .clickable(role = Role.Button) { if (!starred) fx.play(); onToggle() },
             contentAlignment = Alignment.Center
         ) {
-            StarIcon(starred, if (starred) StarInk else if (quiet) Color(0xFF6C6C74) else Color.White, size * 0.59f)
+            LoveIcon(starred, if (starred) StarInk else if (quiet) Color(0xFF6C6C74) else Color.White, size * 0.59f)
         }
     }
 }

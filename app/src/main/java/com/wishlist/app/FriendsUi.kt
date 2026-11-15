@@ -601,7 +601,7 @@ private fun FriendPage(f: Person, snack: SnackbarHostState) {
                     val top = wishes.count { it.first.star }
                     FriendStat(f.lists.size, if (f.lists.size == 1) tr("Wishlist") else tr("Wishlists")) {}
                     FriendStat(wishes.size, if (wishes.size == 1) tr("Wish") else tr("Wishes")) { places.friendPage = "wishes" }
-                    FriendStat(top, if (top == 1) tr("Top wish") else tr("Top wishes")) { places.friendPage = "top" }
+                    FriendStat(top, tr("Loved")) { places.friendPage = "top" }
                 }
             }
             // Birthday and "I like…" (2.95).
@@ -692,7 +692,7 @@ private fun FriendWishesPage(f: Person, page: String, snack: SnackbarHostState) 
         topBar = {
             TopAppBar(
                 title = {
-                    ScreenTitle(if (page == "top") tr("%s’s top wishes", f.name) else tr("%s’s wishes", f.name))
+                    ScreenTitle(if (page == "top") tr("%s loves these", f.name) else tr("%s’s wishes", f.name))
                 },
                 navigationIcon = { IconButton(onClick = { places.friendPage = null }) { Icon(AppIcons.ArrowBack, tr("Back")) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
@@ -722,7 +722,7 @@ private fun FriendWishesPage(f: Person, page: String, snack: SnackbarHostState) 
                 }
             } else if (shown.isEmpty()) item {
                 Text(
-                    if (page == "top") tr("No top wishes to see yet.") else tr("No wishes to see yet."),
+                    if (page == "top") tr("No loved wishes to see yet.") else tr("No wishes to see yet."),
                     color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 16.dp)
                 )
             }

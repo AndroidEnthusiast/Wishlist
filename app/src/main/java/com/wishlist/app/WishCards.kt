@@ -178,7 +178,7 @@ fun CompactCard(
                 Modifier.align(Alignment.TopEnd).padding(8.dp),
                 horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                StarCorner(w, onStar)
+                StarCorner(w, onStar, small = true)
                 if (status != null) {
                     TappableBadge(w, status, small = true, modifier = Modifier.starPulse(mine, TransformOrigin(1f, 0.5f)))
                 }
@@ -481,7 +481,7 @@ fun RowCard(
                             style = if (look.design == "quiet") MaterialTheme.typography.bodySmall else MaterialTheme.typography.labelSmall,
                             color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)
                         )
-                        if (top) MostWantedBadge(true, Modifier.padding(start = 6.dp).starPulse(topFx, TransformOrigin(1f, 0.5f)))
+                        if (top) MostWantedBadge(true, Modifier.padding(start = 6.dp).starPulse(topFx, TransformOrigin(1f, 0.5f)), small = true)
                     }
                     Text(w.label, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis, color = if (w.title.isBlank()) ink.copy(alpha = 0.55f) else ink)
                         // "2×" and "Exactly this" / "Similar is fine" (owner, 2.128).

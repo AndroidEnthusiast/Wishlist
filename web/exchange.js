@@ -556,7 +556,7 @@
     var status = got ? T("Owned") : r === true ? T("Reserved by you") : r === false ? T("Reserved") : (!own && overBudget(w) ? T("Over budget") : "");
     if (status || (w.star && !got)) {
       var bx = el("div", "badges");
-      if (w.star && !got) { var s = el("span", "badge star"); s.appendChild(el("span", "ico", "★")); s.appendChild(el("span", "lbl", T("Top wish"))); bx.appendChild(s); }
+      if (w.star && !got) { var s = el("span", "badge star"); s.appendChild(el("span", "ico", "♥")); s.appendChild(el("span", "lbl", T("Love this"))); bx.appendChild(s); }
       if (status) bx.appendChild(el("span", "badge status", status));
       pic.appendChild(bx);
     }

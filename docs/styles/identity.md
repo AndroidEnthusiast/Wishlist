@@ -102,3 +102,11 @@ files from that commit (the features built after it stay).
 - **One structure in every style** (owner: "consistency throughout the app is key"): only the look differs.
 - The screens the owner found hard to read were from 2.210; 2.211 fixed them, now checked by screenshots
   (Visibility, Price history, Edit wish).
+
+## "Love this" instead of "Top wish" (owner, 15 November 2026, built in 2.213)
+- Owner: "Do people actually say that irl?" No: "Top wish" is app language. Chosen after two rounds: **"♥ Love this"**
+  with a heart instead of the star, in the same gold (no red or pink: not Valentine's Day). The page is "Wishes you
+  love", friends see "Sam loves these", the count on a friend's page "Loved", the sort "Wishes you love first", the
+  form's tile "Love this · Givers see it first". The label is slightly smaller on two per row and rows (owner).
+- In the app and on the web pages (friends' page, group and gift exchange pages); `LoveThisTest` fails if "Top wish"
+  comes back. The data keeps its old name (`star`), so nothing changes online and old app versions keep working.

@@ -451,14 +451,14 @@ function isRise(w) {
 }
 function changeClass(w) { return isDrop(w) ? " drop" : isRise(w) ? " rise" : ""; }
 
-// The gold T("Top wish") label. Small cards show just the star.
+// The gold T("Love this") label with a heart (owner, 15 November 2026: it was "Top wish" with a star). Small cards show just the heart.
 function starBadge() {
   var b = el("span", "badge star");
   b.setAttribute("role", "img");
-  b.setAttribute("aria-label", T("Top wish"));
-  b.title = T("Top wish");
-  b.appendChild(el("span", "ico", "★"));
-  b.appendChild(el("span", "lbl", T("Top wish")));
+  b.setAttribute("aria-label", T("Love this"));
+  b.title = T("Love this");
+  b.appendChild(el("span", "ico", "♥"));
+  b.appendChild(el("span", "lbl", T("Love this")));
   return b;
 }
 

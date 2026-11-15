@@ -592,7 +592,7 @@
     } else pic.appendChild(el("span", null, "🎁"));
     var bx = el("div", "badges");
     if (w.star && !got) {
-      var s = el("span", "badge star"); s.appendChild(el("span", "ico", "★")); s.appendChild(el("span", "lbl", T("Top wish"))); bx.appendChild(s);
+      var s = el("span", "badge star"); s.appendChild(el("span", "ico", "♥")); s.appendChild(el("span", "lbl", T("Love this"))); bx.appendChild(s);
     }
     var status = got ? T("Owned") : r === true ? T("Reserved by you") : r === false ? T("Reserved") : "";
     var lcode = own ? me.list : member.list.code;
@@ -616,8 +616,8 @@
     row.appendChild(el("div", "price", typeof w.price === "number" ? money(w.price, w.cur) : T("No price")));
     if (own) {
       var acts = el("div", "actions");
-      var st = el("button", "ibtn" + (w.star ? " on" : ""), w.star ? "★" : "☆");
-      st.type = "button"; st.title = w.star ? T("Not a top wish") : T("Top wish");
+      var st = el("button", "ibtn" + (w.star ? " on" : ""), w.star ? "♥" : "♡");
+      st.type = "button"; st.title = w.star ? T("Remove from wishes you love") : T("Love this");
       st.setAttribute("aria-label", st.title);
       st.addEventListener("click", function () { setStar(w, !w.star); });
       acts.appendChild(st);

@@ -585,3 +585,11 @@ text); "Create list" label fixed; chaos: numbers row, own Secret Santa card, one
 
 ### The "Next session" note of 2.211 as it was (moved 15 November 2026, when 2.212 became "read first")
 - **2.211 (15 November 2026), read first.** The owner's first look at 2.210 is fixed (`docs/styles/identity.md`, last
+
+### 15 November 2026, evening: the app's own character (2.210)
+Owner: it felt like "a standard Android visual experience". Diagnosed (Google icons, Settings-style menus, switch,
+dialogs, flat bars, ripple, near-Google font, Android's default colours), interviewed in 5 rounds, built: own icons,
+Berry, warm surfaces, Jakarta, squircles, soft press, own switch/dialogs/bars, grouped menus, two celebrations.
+
+### The "Next session" note of 2.212 as it was (moved 15 November 2026, when 2.213 became "read first")
+- **2.212 (15 November 2026), read first.** Sheets, price page and wish form rebuilt (`docs/styles/identity.md`, last

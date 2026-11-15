@@ -85,3 +85,14 @@ class ReservedPulseTest {
         org.junit.Assert.assertFalse(reservedByMe(null))
     }
 }
+
+/** "Love this" with a heart replaced "Top wish" with a star (owner, 15 November 2026): no old words left anywhere. */
+class LoveThisTest {
+    @Test fun noTopWishLeft() {
+        val files = java.io.File("src/main/java/com/wishlist/app").listFiles { f -> f.extension == "kt" }!! +
+            java.io.File("../web").listFiles { f -> f.extension == "js" || f.extension == "html" }!!
+        val bad = files.filter { f -> Regex("""(tr|T)\("[^"]*[Tt]op wish""").containsMatchIn(f.readText()) || f.readText().contains("Top wishes first") }
+            .map { it.name }
+        org.junit.Assert.assertTrue("still says Top wish: $bad", bad.isEmpty())
+    }
+}

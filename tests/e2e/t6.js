@@ -131,7 +131,7 @@ const IOS = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/
   await t.page.goto(t.base + "?c=" + CODE);
   await t.page.waitForSelector(".card");
   await t.page.screenshot({ path: "s_topwish.png", clip: await t.page.locator(".card").first().boundingBox() });
-  check("Top wish label: gold, bold words", await t.page.locator(".badge.star").evaluate(b => getComputedStyle(b).backgroundColor === "rgb(255, 200, 61)" && Number(getComputedStyle(b).fontWeight) >= 700) && (await t.page.locator(".badge.star .lbl").innerText()) === "Top wish");
+  check("Love this label: gold, bold words", await t.page.locator(".badge.star").evaluate(b => getComputedStyle(b).backgroundColor === "rgb(255, 200, 61)" && Number(getComputedStyle(b).fontWeight) >= 700) && (await t.page.locator(".badge.star .lbl").innerText()) === "Love this");
   check("own list's friends page keeps most wanted", (await t.page.locator(".badge.star").count()) === 1 && (await t.page.locator('#sort option[value="star"]').count()) === 1);
   await t.ctx.close();
 
