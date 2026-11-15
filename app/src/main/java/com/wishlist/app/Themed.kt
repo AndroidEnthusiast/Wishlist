@@ -641,8 +641,12 @@ fun ModalBottomSheet(
         else -> (corner as? RoundedCornerShape)?.let { RoundedCornerShape(topStart = it.topStart, topEnd = it.topEnd, bottomEnd = androidx.compose.foundation.shape.CornerSize(0.dp), bottomStart = androidx.compose.foundation.shape.CornerSize(0.dp)) }
             ?: RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
     }
+    val container = sheetColor(look, containerColor)
     M3ModalBottomSheet(
-        onDismissRequest, modifier, sheetState, shape = shape, containerColor = if (look.design == "quiet") quietRaised(look, containerColor) else look.scheme.surfaceVariant,
+        onDismissRequest, modifier, sheetState, shape = shape, containerColor = container,
+        // The text colour too (2.208): Quiet's lifted grey isn't a colour of the scheme, so without it the text in the
+        // sheet fell back to black on dark grey (owner's screenshot of the profile sheet, 15 November 2026).
+        contentColor = sheetContent(look, container),
         tonalElevation = 0.dp,
         dragHandle = { SheetHandle(look) },
         content = content
@@ -657,6 +661,25 @@ internal fun quietRaised(look: Look, asked: Color): Color = when {
     asked != look.scheme.surface && asked != look.scheme.background -> asked
     look.dark -> Color(0xFF2C2C2E)
     else -> Color.White
+}
+
+/** The colour of a bottom panel: Quiet's raised white or lifted grey, the style's card colour elsewhere. */
+internal fun sheetColor(look: Look, asked: Color): Color =
+    if (look.design == "quiet") quietRaised(look, asked) else look.scheme.surfaceVariant
+
+/**
+ * The text and icon colour in a bottom panel of colour [bg]: the scheme's own pair when [bg] is a scheme colour, and the
+ * page's text colour on Quiet's raised panel (white in light, lifted grey in dark), never Android's default black.
+ */
+internal fun sheetContent(look: Look, bg: Color): Color {
+    val cs = look.scheme
+    return when (bg) {
+        cs.primary -> cs.onPrimary
+        cs.primaryContainer -> cs.onPrimaryContainer
+        cs.secondaryContainer -> cs.onSecondaryContainer
+        cs.surfaceVariant -> cs.onSurfaceVariant
+        else -> cs.onSurface
+    }
 }
 
 /** The handle at the top of a bottom panel. */

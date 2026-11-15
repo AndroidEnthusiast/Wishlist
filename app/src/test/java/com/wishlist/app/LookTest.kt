@@ -106,6 +106,23 @@ class LookTest {
         assertTrue(lookFor("quiet", "blue", "dark").photoSurface(0).luminance() > 0.7f)
     }
 
+    /**
+     * The text in a bottom panel (your profile sheet, a wish's ⋮) reads on the panel in every style, mode and colour.
+     * 2.207 left it black on Quiet's dark grey sheet (owner's screenshot, 15 November 2026).
+     */
+    @Test fun sheetTextIsReadable() {
+        val bad = mutableListOf<String>()
+        every { st, m, look ->
+            val bg = sheetColor(look, look.scheme.surface)
+            val c = contrast(sheetContent(look, bg), bg)
+            if (c < 4.5) bad += "$st $m: ${"%.2f".format(c)}"
+        }
+        assertTrue(bad.joinToString("\n"), bad.isEmpty())
+        // The dark sheet's text is light, never Android's default black.
+        val dark = lookFor("quiet", "blue", "dark")
+        assertTrue(sheetContent(dark, sheetColor(dark, dark.scheme.surface)).luminance() > 0.7f)
+    }
+
     /** Lines that frame fields, tick boxes and chips stand out from the card (3 : 1 for parts you use). */
     @Test fun linesOfControlsAreVisible() {
         val bad = mutableListOf<String>()

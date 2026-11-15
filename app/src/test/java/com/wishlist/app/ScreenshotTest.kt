@@ -150,6 +150,8 @@ abstract class ScreenshotBase(private val mode: String, private val tag: String 
     }
     @Test fun friends() { tap("Friends"); shot("friends") }
     @Test fun messages() { tap("Messages"); shot("messages") }
+    // The profile picture's sheet itself (2.208: its text was black on Quiet's dark grey).
+    @Test fun profileSheet() { tap("Profile and settings"); shot("profile") }
     // App settings (Quiet 2.207: grouped blocks), from the profile picture's sheet.
     @Test fun settings() {
         tap("Profile and settings"); repeat(5) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }

@@ -5,6 +5,7 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.208 (15 November 2026):** ask the owner whether the profile sheet now reads well in dark mode, then go on below.
 - **Quiet polished (14 November 2026, 2.207), read first.** Built to the approved plan (`docs/styles/quiet.md`).
   Ask the owner how it feels on the phone (step 6 of `docs/DESIGN-STYLES.md`) and fix what they send. Then Gen Z
   chaos, the same way, with the partner's input (it is pixel for pixel unchanged so far).
@@ -20,6 +21,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 - **Everything open** (the complete to-do list, owner): `docs/TODO.md`. Owner wants a new feature built first.
 
 ## Last sessions
+
+### 15 November 2026: profile sheet text fixed (2.208)
+Owner's screenshot: the profile sheet in Quiet dark showed black text on the dark grey panel (2.207's lifted grey is
+not a scheme colour, so the sheet's text fell back to black). Every bottom panel now sets its text colour
+(`sheetContent` in `Themed.kt`); check `LookTest.sheetTextIsReadable`; new screenshot `profileSheet`.
 
 ### 14 November 2026, later: Quiet polished (2.207)
 Owner: polish Quiet, then chaos; challenge big asks. Brief, plan and mock-ups approved (photos on a light surface in
