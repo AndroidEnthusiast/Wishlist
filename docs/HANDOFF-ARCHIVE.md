@@ -574,3 +574,6 @@ checked pixel for pixel. Notes rule: challenge the owner on big builds.
 Owner's screenshot: the profile sheet in Quiet dark showed black text on the dark grey panel (2.207's lifted grey is
 not a scheme colour, so the sheet's text fell back to black). Every bottom panel now sets its text colour
 (`sheetContent` in `Themed.kt`); check `LookTest.sheetTextIsReadable`; new screenshot `profileSheet`.
+
+### The "Next session" note of 2.210 as it was (moved 15 November 2026, when 2.211 became "read first")
+- **2.210 (15 November 2026), read first.** The app's own character is built (`docs/styles/identity.md`). Ask how it
