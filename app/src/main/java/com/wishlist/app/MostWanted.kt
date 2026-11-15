@@ -261,3 +261,24 @@ fun StarToggle(starred: Boolean, onToggle: () -> Unit, modifier: Modifier = Modi
         }
     }
 }
+
+/**
+ * A pulse when [on] turns true while you look (not when the card first shows): a label that just arrived, such as
+ * "Top wish" on a row or "Reserved by you" (owner, 15 November 2026: "a little pulse effect like the top wish one").
+ * Use it with [starPulse].
+ */
+@Composable
+fun rememberAppearPulse(on: Boolean): StarFx {
+    val fx = rememberStarFx()
+    val was = remember { androidx.compose.runtime.mutableStateOf(on) }
+    LaunchedEffect(on) {
+        if (on && !was.value) fx.play()
+        was.value = on
+    }
+    return fx
+}
+
+/** Whether a status label says that you reserved the wish ("Reserved by you", "You reserved 2"). */
+fun reservedByMe(label: String?): Boolean =
+    label != null && (label == tr("Reserved by you") || label.startsWith(tr("You reserved %d", 0).substringBefore("0")))
+

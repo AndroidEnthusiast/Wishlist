@@ -1,10 +1,7 @@
 package com.wishlist.app
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -17,24 +14,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
-import kotlin.math.cos
-import kotlin.math.sin
 
 /**
- * Small celebrations (owner, 15 November 2026, docs/styles/identity.md: Duolingo's trait, borrowed lightly): only when
- * you reserve a gift, and when a price drops (that one is on the price page, [PriceCountDown]). Reserving gives one
- * soft vibration (owner: vibration "only for relevant and a select few moments") and a short burst of confetti in Berry,
- * your colour and gold. "Remove animations" on the phone: the vibration only.
+ * Small celebrations (owner, 15 November 2026, docs/styles/identity.md): when you reserve a gift, and when a price drops
+ * (that one is on the price page, [PriceCountDown]). Reserving gives one soft vibration (owner: vibration "only for
+ * relevant and a select few moments") and its "Reserved by you" label arrives with a pulse, like the top wish label
+ * ([rememberAppearPulse], owner: no confetti, 15 November 2026).
  */
 object Celebrate {
-    /** Counts the reservations that just succeeded; [CelebrationLayer] plays one burst for each new one. */
+    /** Counts the reservations that just succeeded; [CelebrationLayer] gives one vibration for each new one. */
     var reservations by mutableIntStateOf(0)
         private set
 
@@ -42,45 +33,17 @@ object Celebrate {
     fun reserved() { reservations++ }
 }
 
-/** The layer over the whole app that plays the burst. */
+/** Over the whole app: the soft vibration when a reservation succeeded. */
 @Composable
 fun CelebrationLayer() {
     val n = Celebrate.reservations
     val haptic = LocalHapticFeedback.current
-    val off = animationsOff(LocalContext.current)
-    val look = LocalLook.current
-    val t = remember { Animatable(1f) }
-    // The first value is where the app started: no burst for that.
+    // The first value is where the app started: nothing for that.
     val seen = remember { intArrayOf(n) }
     LaunchedEffect(n) {
         if (n == seen[0]) return@LaunchedEffect
         seen[0] = n
         haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-        if (off) return@LaunchedEffect
-        t.snapTo(0f)
-        t.animateTo(1f, tween(1100, easing = LinearEasing))
-    }
-    if (t.value >= 1f) return
-    val colours = listOf(Color(0xFFB0245A), look.accent, Color(0xFFF2B33D), Color(0xFFF0679A))
-    Canvas(Modifier.fillMaxSize()) {
-        val p = t.value
-        val origin = Offset(size.width / 2, size.height * 0.62f)
-        for (i in 0 until 22) {
-            // Each piece flies out on its own angle and speed, slows, falls a little and fades.
-            val angle = (-160f + i * (140f / 21f) + (i * 37 % 11) - 5f) * (Math.PI / 180).toFloat()
-            val speed = size.minDimension * (0.42f + (i * 53 % 17) / 60f)
-            val ease = 1 - (1 - p) * (1 - p)
-            val x = origin.x + cos(angle) * speed * ease
-            val y = origin.y + sin(angle) * speed * ease + size.height * 0.18f * p * p
-            val alpha = (1f - p).coerceIn(0f, 1f)
-            val s = 7f + (i % 3) * 3f
-            rotate(p * 540f * (if (i % 2 == 0) 1 else -1), Offset(x, y)) {
-                drawRoundRect(
-                    colours[i % colours.size].copy(alpha = alpha), Offset(x - s, y - s / 2), Size(2 * s, s),
-                    androidx.compose.ui.geometry.CornerRadius(s / 2.5f)
-                )
-            }
-        }
     }
 }
 

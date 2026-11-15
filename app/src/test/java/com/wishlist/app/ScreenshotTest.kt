@@ -67,6 +67,7 @@ abstract class ScreenshotBase(private val mode: String, private val tag: String 
         ListStore.reset(); WishlistDb.reset()
         // The "Move to…" dialog of the dialog picture stays open in this process otherwise (2.210).
         MoveFlow.picking = null; MoveFlow.choosing = null
+        Repo.setView(app, "rows")
         Repo.load(app)
         Repo.setTheme(app, mode)
         // -Pwl.style=… (owner, 13 November 2026: every style is checked, light and dark).
@@ -152,6 +153,24 @@ abstract class ScreenshotBase(private val mode: String, private val tag: String 
     }
     @Test fun friends() { tap("Friends"); shot("friends") }
     @Test fun messages() { tap("Messages"); shot("messages") }
+    // Two per row and large cards (2.210: "Top wish" on every view, next to a price change on a narrow card).
+    @Test fun grid() {
+        compose.runOnUiThread {
+            Repo.setView(compose.activity, "grid")
+            // The worst case at the top: a top wish with a price drop, on a narrow card.
+            Repo.myWishes.firstOrNull { it.id == 4L }?.let { Repo.replace(compose.activity, it.copy(star = true, oldPrice = 30.0)) }
+        }
+        tapAbove("My wishlist", 150f); compose.mainClock.advanceTimeBy(1000)
+        shot("grid")
+    }
+    @Test fun large() {
+        compose.runOnUiThread {
+            Repo.setView(compose.activity, "list")
+            Repo.myWishes.firstOrNull { it.id == 5L }?.let { Repo.replace(compose.activity, it.copy(star = true)) }
+        }
+        tapAbove("My wishlist", 150f); compose.mainClock.advanceTimeBy(1000)
+        shot("large")
+    }
     // A dialog (2.210: Quiet's own centred dialog with stacked buttons): Move to… from selecting.
     @Test fun dialog() {
         tapAbove("My wishlist", 150f); compose.mainClock.advanceTimeBy(1000)

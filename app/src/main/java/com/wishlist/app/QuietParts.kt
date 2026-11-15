@@ -95,6 +95,9 @@ fun QuietDialog(
         }
     }
     Dialog(onDismissRequest, properties) {
+        // Text and icons in the dialog take the page's ink unless they set their own: without this they were black on
+        // the dark dialog ("Household" in Move to…, owner's screenshot, 15 November 2026).
+        CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides look.scheme.onSurface) {
         Column(
             modifier.widthIn(max = 420.dp).fillMaxWidth().scale(grow.value).alpha(show.value)
                 .clip(look.dialogShape).background(quietRaised(look, look.scheme.surface)).padding(24.dp),
@@ -114,6 +117,7 @@ fun QuietDialog(
                 CompositionLocalProvider(LocalDialogSlot provides if (dismissButton != null) "confirm" else "only") { confirmButton() }
                 if (dismissButton != null) CompositionLocalProvider(LocalDialogSlot provides "dismiss") { dismissButton() }
             }
+        }
         }
     }
 }

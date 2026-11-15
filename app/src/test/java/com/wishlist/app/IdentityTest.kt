@@ -74,3 +74,14 @@ class IdentityTest {
         assertEquals(listOf(listOf("reserve", "edit", "share", "move")), sheetGroups(listOf("reserve", "edit", "share", "move")))
     }
 }
+
+/** Labels that pulse when they arrive (2.211, owner 15 November 2026: no confetti, "Reserved by you" pulses). */
+class ReservedPulseTest {
+    @Test fun knowsYourReservations() {
+        org.junit.Assert.assertTrue(reservedByMe("Reserved by you"))
+        org.junit.Assert.assertTrue(reservedByMe(tr("You reserved %d", 2)))
+        org.junit.Assert.assertFalse(reservedByMe("Reserved"))
+        org.junit.Assert.assertFalse(reservedByMe("Owned"))
+        org.junit.Assert.assertFalse(reservedByMe(null))
+    }
+}

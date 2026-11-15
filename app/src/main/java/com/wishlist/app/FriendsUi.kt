@@ -142,8 +142,10 @@ fun ProfileButton(onProfile: () -> Unit) {
     }
     // Your picture opens the profile sheet (owner, 7 November 2026: no side menu): Profile, Gifts I reserved,
     // Received gifts, Bin, App settings.
-    IconButton(onClick = { go(Deep.Account) }) {
-        Box(Modifier.semantics { contentDescription = tr("Profile and settings") }) { Avatar(Friends.myPhoto, Shared.lastName, 32.dp) }
+    // Your picture fills the whole round button (owner, 15 November 2026: no ring around it), as big as the other
+    // round buttons next to it.
+    IconButton(onClick = { go(Deep.Account) }, round = false) {
+        Box(Modifier.semantics { contentDescription = tr("Profile and settings") }) { Avatar(Friends.myPhoto, Shared.lastName, 40.dp) }
     }
 }
 
@@ -267,7 +269,7 @@ private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenL
         containerColor = cs.background,
         topBar = {
             TopAppBar(
-                title = { ScreenTitle(tr("Friends"), big = true) },
+                title = { ScreenTitle(tr("Friends"), big = true) }, large = false,
                 navigationIcon = { MenuSlot(back = false) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
                 actions = { ProfileButton(onProfile) }

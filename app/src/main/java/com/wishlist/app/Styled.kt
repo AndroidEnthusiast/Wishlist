@@ -284,7 +284,30 @@ val LocalInTopBar = compositionLocalOf { false }
  * Android" parts): set by [Scaffold], read by [TopAppBar].
  */
 @OptIn(ExperimentalMaterial3Api::class)
-val LocalTopBarScroll = compositionLocalOf<androidx.compose.material3.TopAppBarScrollBehavior?> { null }
+val LocalTopBarScroll = compositionLocalOf<TopBarScroll?> { null }
+
+/**
+ * The page's scrolling and the large title (2.210): the title only takes part in scrolling while a large title is on
+ * screen ([active]). Without that, a screen with a one-line bar (Home, Wishlist settings) could not scroll at all: the
+ * collapsing title used up every swipe (owner, 15 November 2026).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+class TopBarScroll(val behavior: androidx.compose.material3.TopAppBarScrollBehavior) {
+    var active by androidx.compose.runtime.mutableStateOf(false)
+    val connection = object : androidx.compose.ui.input.nestedscroll.NestedScrollConnection {
+        override fun onPreScroll(available: Offset, source: androidx.compose.ui.input.nestedscroll.NestedScrollSource) =
+            if (active) behavior.nestedScrollConnection.onPreScroll(available, source) else Offset.Zero
+        override fun onPostScroll(consumed: Offset, available: Offset, source: androidx.compose.ui.input.nestedscroll.NestedScrollSource) =
+            if (active) behavior.nestedScrollConnection.onPostScroll(consumed, available, source) else Offset.Zero
+        override suspend fun onPreFling(available: androidx.compose.ui.unit.Velocity) =
+            if (active) behavior.nestedScrollConnection.onPreFling(available) else androidx.compose.ui.unit.Velocity.Zero
+        override suspend fun onPostFling(consumed: androidx.compose.ui.unit.Velocity, available: androidx.compose.ui.unit.Velocity) =
+            if (active) behavior.nestedScrollConnection.onPostFling(consumed, available) else androidx.compose.ui.unit.Velocity.Zero
+    }
+}
+
+/** True inside a large (collapsing) title: [ScreenTitle] then takes the bar's own sizes. */
+val LocalInLargeBar = compositionLocalOf { false }
 
 /**
  * A screen's top bar. Quiet (2.210): a large title in Fraunces that shrinks smoothly into the bar as you scroll, and the
@@ -315,9 +338,10 @@ fun TopAppBar(
     val acts: @Composable RowScope.() -> Unit = { CompositionLocalProvider(LocalInTopBar provides true) { actions() } }
     val scroll = LocalTopBarScroll.current
     if (look.design == "quiet" && large && scroll != null) {
+        androidx.compose.runtime.DisposableEffect(scroll) { scroll.active = true; onDispose { scroll.active = false } }
         androidx.compose.material3.LargeTopAppBar(
-            title, modifier, nav, acts, colors = colors.copy(scrolledContainerColor = colors.containerColor),
-            scrollBehavior = scroll
+            { CompositionLocalProvider(LocalInLargeBar provides true) { title() } }, modifier, nav, acts,
+            colors = colors.copy(scrolledContainerColor = colors.containerColor), scrollBehavior = scroll.behavior
         )
     } else M3TopAppBar(title, modifier.then(line), nav, acts, colors = colors)
 }
@@ -327,9 +351,12 @@ fun TopAppBar(
  * icon sits in a soft round button (2.210), like the app's own controls rather than Android's bare icons.
  */
 @Composable
-fun IconButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable () -> Unit) {
+fun IconButton(
+    onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, round: Boolean = true,
+    content: @Composable () -> Unit
+) {
     val look = LocalLook.current
-    val round = LocalInTopBar.current && look.design == "quiet"
+    val round = round && LocalInTopBar.current && look.design == "quiet"
     androidx.compose.material3.IconButton(onClick, modifier.pressScale(), enabled) {
         if (round) Box(
             Modifier.size(40.dp).clip(CircleShape).background(if (look.dark) QuietColours.raisedDark else Color.White),
@@ -356,7 +383,7 @@ fun ScreenTitle(text: String, big: Boolean = false) {
         text, fontWeight = look.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis,
         // Quiet's large top bar (2.210) gives every screen the 28 title, shrinking to 20 as you scroll; [big] is kept
         // for a one-line bar.
-        style = if (big && look.design == "quiet" && LocalTopBarScroll.current == null) MaterialTheme.typography.headlineSmall else LocalTextStyle.current
+        style = if (big && look.design == "quiet" && !LocalInLargeBar.current) MaterialTheme.typography.headlineSmall else LocalTextStyle.current
     )
 }
 

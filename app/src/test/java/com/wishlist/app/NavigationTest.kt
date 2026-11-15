@@ -12,6 +12,8 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.isSelected
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.Configuration
@@ -285,6 +287,38 @@ class ListNavigationTest : NavigationBase() {
         compose.onAllNodes(hasContentDescription("Wishlist settings") and hasClickAction()).onFirst().assertExists()
         phoneBack()
         tabOn("Home")
+    }
+}
+
+/**
+ * Screens with a one-line top bar scroll (2.211, owner 15 November 2026: "nothing happens when I scroll on home",
+ * Wishlist settings "can't scroll down anymore"): the collapsing title of other screens used up every swipe.
+ */
+class ScrollTest : NavigationBase() {
+    private fun topOf(text: String) =
+        compose.onAllNodes(hasText(text, substring = true), useUnmergedTree = true).onFirst().fetchSemanticsNode().boundsInRoot.top
+
+    private fun swipeUpMoves(text: String) {
+        compose.waitForIdle()
+        val before = topOf(text)
+        compose.onRoot().performTouchInput { swipeUp(startY = bottom * 0.75f, endY = bottom * 0.25f) }
+        compose.waitForIdle()
+        org.junit.Assert.assertTrue("$text did not move: the page didn't scroll", topOf(text) < before - 20f)
+    }
+
+    @Test fun listSettingsScrolls() {
+        val id = Repo.mineIds.first()
+        send(open(MainActivity.OPEN_NOTE, "m:$id"))
+        tap("Wishlist settings")
+        shows("Wishlist settings")
+        swipeUpMoves("About this list")
+    }
+
+    @Test fun homeScrolls() {
+        // Enough on Home to scroll: a few lists.
+        val app = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()
+        compose.runOnUiThread { repeat(4) { i -> Repo.createMine(app, "List $i", "") } }
+        swipeUpMoves("Your wishlists")
     }
 }
 

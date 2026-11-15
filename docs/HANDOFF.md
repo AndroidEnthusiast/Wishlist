@@ -5,7 +5,9 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
-- **2.210 (15 November 2026), read first.** The app's own character is built (`docs/styles/identity.md`). Ask how it
+- **2.211 (15 November 2026), read first.** The owner's first look at 2.210 is fixed (`docs/styles/identity.md`, last
+  section). Ask how 2.211 feels; then the open points below.
+- **2.210 (15 November 2026).** The app's own character is built (`docs/styles/identity.md`). Ask how it
   feels on the phone, above all the fonts (can't be seen here), the press feel, the large titles and the dialogs. Open:
   the wordmark and app icon (owner: decide later), the warm voice for the remaining texts, the web pages' look.
   "Put back the look of 2.209" = commit `f5a6fc1`.
@@ -30,6 +32,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 15 November 2026, night: first look at the character (2.211)
+Owner: "much better and more like our own app". Fixed: dialog text black on dark, scrolling broken (the collapsing
+title took every swipe), fixed titles on the main tabs, no confetti but a pulsing "Reserved by you", "Top wish" on
+every view, profile picture without ring. Each fix has a check that fails without it.
+
 ### 15 November 2026, evening: the app's own character (2.210)
 Owner: it felt like "a standard Android visual experience". Diagnosed (Google icons, Settings-style menus, switch,
 dialogs, flat bars, ripple, near-Google font, Android's default colours), interviewed in 5 rounds, built: own icons,
@@ -39,8 +46,3 @@ Berry, warm surfaces, Jakarta, squircles, soft press, own switch/dialogs/bars, g
 Owner's review: selecting gets a bottom action bar; Messages without tabs, a round chat button; "Viewed" removed (app and
 web); Private keeps the ⋮ sheet open; amounts never cut off (`FitText`, the check also found Quiet cut off with big
 text); "Create list" label fixed; chaos: numbers row, own Secret Santa card, one message box. Brainstorm still to plan.
-
-### 15 November 2026: profile sheet text fixed (2.208)
-Owner's screenshot: the profile sheet in Quiet dark showed black text on the dark grey panel (2.207's lifted grey is
-not a scheme colour, so the sheet's text fell back to black). Every bottom panel now sets its text colour
-(`sheetContent` in `Themed.kt`); check `LookTest.sheetTextIsReadable`; new screenshot `profileSheet`.

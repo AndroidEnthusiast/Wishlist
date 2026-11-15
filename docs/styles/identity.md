@@ -73,3 +73,16 @@ files from that commit (the features built after it stay).
   be seen in the screenshots here (they download on the phone).
 - Checks: `IdentityTest` (squircle geometry, Berry readable and first, warm surfaces, Berry only for new phones,
   sheet groups), `OwnIconsTest`, screenshots incl. a dialog (`ScreenshotTest.dialog`).
+
+## The owner's first look on the phone (15 November 2026, built in 2.211)
+- "It looks much better and more like our own app now." Fixed what the owner sent: text in the dialog black on dark
+  (`QuietDialog` sets the ink; `DialogInkTest`); scrolling broken on Home and in Wishlist settings (the collapsing
+  title used up every swipe on screens without one; `TopBarScroll` only works while a large title is shown;
+  `ScrollTest`).
+- **Main tabs keep a fixed title** (owner): Messages, My shops and Friends have their title in the same size and spot
+  as "Wishlist" on Home; only the list under it scrolls. Other screens keep the large title that shrinks.
+- **No confetti** (owner: "not sure why"): reserving gives the soft vibration, and "Reserved by you" arrives with the
+  same pulse as the top wish label (`rememberAppearPulse`, `reservedByMe`).
+- **Top wish on every view** (owner): two per row shows the same "Top wish" label as the large cards (with the status
+  under it); rows keep the star on the picture, gold once tapped, and "Top wish" appears at the top right of the words.
+- **Your picture fills its round button**, no ring (owner).

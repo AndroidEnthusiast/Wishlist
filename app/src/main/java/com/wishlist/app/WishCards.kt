@@ -37,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -169,13 +170,18 @@ fun CompactCard(
             }
             // Bottom left: the eye of a private wish (the price change has the top left to itself).
             if (w.priv) PrivateBadge(Modifier.align(Alignment.BottomStart).padding(8.dp), size = 14.dp, onClick = onPrivate)
-            if (!w.got) {
-                if (onStar != null) StarToggle(w.star, onStar, Modifier.align(Alignment.TopEnd).padding(6.dp))
-                else if (w.star) MostWantedBadge(false, Modifier.align(Alignment.TopEnd).padding(8.dp))
-            }
+            // Top right: "Top wish" as on the large cards (owner, 15 November 2026: the star alone was hard to read), the
+            // status under it; "Reserved by you" arrives with a pulse.
             val status = if (w.got) tr("Owned") else reserve?.label ?: reservedLabel(reserve?.state)
-            if (status != null) {
-                TappableBadge(w, status, small = true, modifier = Modifier.align(Alignment.TopEnd).padding(8.dp))
+            val mine = rememberAppearPulse(reservedByMe(status))
+            Column(
+                Modifier.align(Alignment.TopEnd).padding(8.dp),
+                horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                StarCorner(w, onStar)
+                if (status != null) {
+                    TappableBadge(w, status, small = true, modifier = Modifier.starPulse(mine, TransformOrigin(1f, 0.5f)))
+                }
             }
         }
         if (look.pictureLine > 0.dp) Box(Modifier.fillMaxWidth().height(look.pictureLine).background(look.line))
@@ -319,8 +325,9 @@ fun WishCard(
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 StarCorner(w, onStar)
+                val mine = rememberAppearPulse(reservedByMe(badge))
                 if (badge != null) {
-                    TappableBadge(w, badge, small = false)
+                    TappableBadge(w, badge, small = false, modifier = Modifier.starPulse(mine, TransformOrigin(1f, 0.5f)))
                 }
             }
         }
@@ -443,7 +450,8 @@ fun RowCard(
                         if (onStar != null) StarToggle(w.star, onStar, size = 28.dp)
                         else if (w.star) MostWantedBadge(false)
                     }
-                    if (badge != null) TappableBadge(w, badge, small = true)
+                    val mine = rememberAppearPulse(reservedByMe(badge))
+                    if (badge != null) TappableBadge(w, badge, small = true, modifier = Modifier.starPulse(mine, TransformOrigin(1f, 0.5f)))
                 }
             }
     }
@@ -462,12 +470,19 @@ fun RowCard(
                         onLongClick = onLongPress
                     )
                 ) {
-                    if (label.isNotEmpty()) Text(
-                        label,
-                        // Quiet: details at 13 (its smallest size for something you read, 2.207).
-                        style = if (look.design == "quiet") MaterialTheme.typography.bodySmall else MaterialTheme.typography.labelSmall,
-                        color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis
-                    )
+                    // The shop and category, and "Top wish" at the top right of the words (owner, 15 November 2026: the
+                    // star stays on the picture; once tapped, the label appears here with a pulse).
+                    val top = w.star && !w.got
+                    val topFx = rememberAppearPulse(top)
+                    if (label.isNotEmpty() || top) Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            label,
+                            // Quiet: details at 13 (its smallest size for something you read, 2.207).
+                            style = if (look.design == "quiet") MaterialTheme.typography.bodySmall else MaterialTheme.typography.labelSmall,
+                            color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)
+                        )
+                        if (top) MostWantedBadge(true, Modifier.padding(start = 6.dp).starPulse(topFx, TransformOrigin(1f, 0.5f)))
+                    }
                     Text(w.label, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis, color = if (w.title.isBlank()) ink.copy(alpha = 0.55f) else ink)
                         // "2×" and "Exactly this" / "Similar is fine" (owner, 2.128).
                         wishTags(w).takeIf { it.isNotEmpty() }?.let { t ->

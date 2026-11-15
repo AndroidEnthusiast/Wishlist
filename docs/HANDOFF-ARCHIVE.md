@@ -569,3 +569,8 @@ Owner: polish Quiet, then chaos; challenge big asks. Brief, plan and mock-ups ap
 dark too, labels above fields, sheet switches). 2.207 builds it; `LookTest.quietPartsAreReadable` found green, orange
 and pink too light as text (fixed). Screenshots fixed (they showed Home), plus App settings and big text; chaos
 checked pixel for pixel. Notes rule: challenge the owner on big builds.
+
+### 15 November 2026: profile sheet text fixed (2.208)
+Owner's screenshot: the profile sheet in Quiet dark showed black text on the dark grey panel (2.207's lifted grey is
+not a scheme colour, so the sheet's text fell back to black). Every bottom panel now sets its text colour
+(`sheetContent` in `Themed.kt`); check `LookTest.sheetTextIsReadable`; new screenshot `profileSheet`.

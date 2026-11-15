@@ -133,10 +133,11 @@ fun Scaffold(
 ) {
     val look = LocalLook.current
     // Quiet (2.210): the large title of the top bar shrinks into the bar as the page scrolls (TopAppBar).
-    val scroll = if (look.design == "quiet") TopAppBarDefaults.exitUntilCollapsedScrollBehavior() else null
+    val behavior = if (look.design == "quiet") TopAppBarDefaults.exitUntilCollapsedScrollBehavior() else null
+    val scroll = remember(behavior) { behavior?.let { TopBarScroll(it) } }
     CompositionLocalProvider(LocalTopBarScroll provides scroll) {
         M3Scaffold(
-            modifier.then(if (scroll != null) Modifier.nestedScroll(scroll.nestedScrollConnection) else Modifier)
+            modifier.then(if (scroll != null) Modifier.nestedScroll(scroll.connection) else Modifier)
                 .background(containerColor).then(if (containerColor == look.scheme.background) Modifier.lookBackdrop(look) else Modifier),
             topBar, bottomBar, snackbarHost, floatingActionButton, floatingActionButtonPosition,
             containerColor = Color.Transparent, contentColor = contentColor, contentWindowInsets = contentWindowInsets, content = content
