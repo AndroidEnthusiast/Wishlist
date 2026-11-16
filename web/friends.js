@@ -451,14 +451,20 @@ function isRise(w) {
 }
 function changeClass(w) { return isDrop(w) ? " drop" : isRise(w) ? " rise" : ""; }
 
-// The gold T("Love this") label with a heart (owner, 15 November 2026: it was "Top wish" with a star). Small cards show just the heart.
+// The gold label with a heart (owner, 15 November 2026: it was "Top wish" with a star). Givers read whose it is
+// (owner, 16 November 2026): "Jorai loves it", or "Loves it" when the name isn't known. Small cards show just the heart.
+function loveWords(owner) {
+  var first = String(owner || "").trim().split(/\s+/)[0].slice(0, 20);
+  return first ? T("{0} loves it", first) : T("Loves it");
+}
 function starBadge() {
+  var words = loveWords(list && list.owner);
   var b = el("span", "badge star");
   b.setAttribute("role", "img");
-  b.setAttribute("aria-label", T("Love this"));
-  b.title = T("Love this");
+  b.setAttribute("aria-label", words);
+  b.title = words;
   b.appendChild(el("span", "ico", "♥"));
-  b.appendChild(el("span", "lbl", T("Love this")));
+  b.appendChild(el("span", "lbl", words));
   return b;
 }
 

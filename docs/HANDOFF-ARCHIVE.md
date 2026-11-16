@@ -593,3 +593,8 @@ Berry, warm surfaces, Jakarta, squircles, soft press, own switch/dialogs/bars, g
 
 ### The "Next session" note of 2.212 as it was (moved 15 November 2026, when 2.213 became "read first")
 - **2.212 (15 November 2026), read first.** Sheets, price page and wish form rebuilt (`docs/styles/identity.md`, last
+
+### 15 November 2026, night: first look at the character (2.211)
+Owner: "much better and more like our own app". Fixed: dialog text black on dark, scrolling broken (the collapsing
+title took every swipe), fixed titles on the main tabs, no confetti but a pulsing "Reserved by you", "Top wish" on
+every view, profile picture without ring. Each fix has a check that fails without it.

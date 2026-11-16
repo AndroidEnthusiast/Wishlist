@@ -271,7 +271,7 @@ fun WishDialog(
                 if (Shared.active == null) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     ToggleTile(
                         { on -> LoveIcon(on, if (on) StarInk else MaterialTheme.colorScheme.onSurfaceVariant, 22.dp, Modifier.starPulse(starFx)) },
-                        tr("Love this"), tr("Givers see it first"), star, StarGold, StarInk,
+                        tr("Love it"), tr("Givers see it first"), star, StarGold, StarInk,
                         Modifier.weight(1f)
                     ) { if (!star) starFx.play(); star = !star }
                     ToggleTile(

@@ -283,7 +283,11 @@ fun FriendScreen(
                             WishFocus.target = null
                         }
                         Box(Modifier.fillMaxSize()) {
-                        androidx.compose.runtime.CompositionLocalProvider(LocalWishDeco provides deco) {
+                        // Givers read "Jorai loves it" on the gold label (owner, 16 November 2026).
+                        androidx.compose.runtime.CompositionLocalProvider(
+                            LocalWishDeco provides deco,
+                            LocalLover provides (ownerName?.takeIf { it.isNotBlank() } ?: remote?.owner).orEmpty()
+                        ) {
                         LazyVerticalGrid(
                             state = gridState,
                             columns = if (Repo.view == "grid") GridCells.Fixed(2) else GridCells.Adaptive(300.dp),

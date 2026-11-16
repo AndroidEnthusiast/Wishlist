@@ -174,3 +174,24 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here. Look and f
 - **"Create list" / "New collab wishlist"**: the tile's rounded corner cut off the label's first letter; only the tile
   is rounded now.
 
+
+## Owner's review of 16 November 2026 (interviewed in 6 rounds; built in 2.214)
+- **"♥ Love it"** (not "Love this", which read like an order; "Loving this" was considered). Givers see whose it is:
+  "Jorai loves it" (first name) on large cards and the friends' page, "Loves it" on small cards or without a name;
+  in a group or exchange on the web "Sam loves it" / "Loves it". Data unchanged.
+- **Label size:** two per row and Rows the same compact label (11 sp words, 10 dp heart, less padding, smaller ×).
+  Rows shows it on the picture again (the label in the words, tried in 2.213, was not liked).
+- **Introducing the heart:** a one-time tip card above the wishes once a list has 3 wishes still wanted and none is
+  loved: "Tap ♡ on what you love most. Friends see it first." (the real heart in the words), with ✕. Never again once
+  closed or once any wish is loved. Only on your own lists. (`LoveTip.kt`)
+- **Friends tab:** two people (filled when open), only in the bottom bar; one person stays where it means one person.
+- **Drag to reorder:** hold a wish and move to drag it, hold and let go selects as before; works in any sort, the list
+  then switches to **"My order"** (a new sort). Each list remembers its own sort (a list never sorted follows your last
+  choice). New wishes go on top. Only on this phone (in Export and the recovery key's copy); friends keep their own
+  sort. Gift lists too, each person their own order. (`ListOrder.kt`, `ListScreen.kt`)
+- **"Move or copy…"** replaces "Move to…" (⋮ sheet and selection bar): pick a list, then Copy (the same wish on both,
+  like "Add wishes from your other lists") or Move; Copy has Undo.
+- **Chat:** opens at its end without scrolling through the conversation, and shows a chat opened before at once
+  (kept in memory only). Going back no longer "bounces" Messages (no size animation in `Moving`).
+- **Not now:** cheaper alternatives found automatically (needs a paid shopping search; owner: "leave it for now");
+  the target price stays inside Price history (owner: keep it there for now).

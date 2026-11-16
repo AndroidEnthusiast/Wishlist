@@ -45,7 +45,7 @@ fun SelectingFlag(selecting: Boolean) {
 @Composable
 fun SelectionBar(onMove: (() -> Unit)?, onDelete: () -> Unit) {
     FloatingBar {
-        if (onMove != null) SelectionAction(AppIcons.Swap, tr("Move to…"), onMove)
+        if (onMove != null) SelectionAction(AppIcons.Swap, tr("Move or copy…"), onMove)
         SelectionAction(AppIcons.Delete, tr("Delete"), onDelete)
     }
 }

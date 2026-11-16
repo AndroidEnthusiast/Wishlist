@@ -45,7 +45,8 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `Delete.kt` + `DeleteUi.kt` + `Trash.kt` (delete with Undo)
 - `Bin.kt` + `BinUi.kt` (the bin, 30 days, and the "reserved gift moved to the bin" alert)
 - `Private.kt` (private wishes, the eye icon)
-- `Sorting.kt` + `Browse.kt`
+- `Sorting.kt` + `Browse.kt` + `ListOrder.kt` (a sort per list and "My order": hold and move a wish to drag it, in `ListScreen.kt`)
+- `LoveTip.kt` (the one-time "Tap ♡ on what you love most" card)
 - `Totals.kt` (Total value)
 - `Categories.kt` (Edit categories, from the wish form)
 - `Sizes.kt`

@@ -142,9 +142,15 @@ object Chat {
         System.currentTimeMillis()
     }
 
+    /**
+     * The messages of each chat opened since the app started (owner, 16 November 2026: opening a chat showed a spinner
+     * and then scrolled through the whole conversation). Only in memory, never saved; a chat that is gone is dropped.
+     */
+    val opened = java.util.concurrent.ConcurrentHashMap<String, List<ChatMessage>>()
+
     /** The conversation list. Throws when offline (the last list stays on screen). */
     suspend fun refresh(c: Context) = lock.withLock {
-        if (profile(c) == null) return@withLock
+        if (profile(c) == null) { opened.clear(); return@withLock }
         ensureKey(c)
         val a = JSONArray(Cloud.rpc("wl_chat_list", base(c)))
         conversations = (0 until a.length()).map { i ->
@@ -155,6 +161,7 @@ object Chat {
                 o.optJSONObject("last")?.let { read(c, it, id) }
             )
         }
+        opened.keys.retainAll(conversations.map { it.id }.toSet())
     }
 
     /**

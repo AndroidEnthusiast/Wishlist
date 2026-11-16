@@ -592,7 +592,9 @@
     } else pic.appendChild(el("span", null, "🎁"));
     var bx = el("div", "badges");
     if (w.star && !got) {
-      var s = el("span", "badge star"); s.appendChild(el("span", "ico", "♥")); s.appendChild(el("span", "lbl", T("Love this"))); bx.appendChild(s);
+      // Your own: "Love it"; someone else's: "Sam loves it" (owner, 16 November 2026).
+      var lw = own ? T("Love it") : (member && member.name ? T("{0} loves it", String(member.name).trim().split(/\s+/)[0].slice(0, 20)) : T("Loves it"));
+      var s = el("span", "badge star"); s.appendChild(el("span", "ico", "♥")); s.appendChild(el("span", "lbl", lw)); bx.appendChild(s);
     }
     var status = got ? T("Owned") : r === true ? T("Reserved by you") : r === false ? T("Reserved") : "";
     var lcode = own ? me.list : member.list.code;
@@ -617,7 +619,7 @@
     if (own) {
       var acts = el("div", "actions");
       var st = el("button", "ibtn" + (w.star ? " on" : ""), w.star ? "♥" : "♡");
-      st.type = "button"; st.title = w.star ? T("Remove from wishes you love") : T("Love this");
+      st.type = "button"; st.title = w.star ? T("Remove from wishes you love") : T("Love it");
       st.setAttribute("aria-label", st.title);
       st.addEventListener("click", function () { setStar(w, !w.star); });
       acts.appendChild(st);

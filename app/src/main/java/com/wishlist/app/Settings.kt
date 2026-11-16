@@ -71,15 +71,45 @@ private fun SectionTitle(t: String) {
     )
 }
 
-/** The settings of one section: in Quiet (2.207) together on one white block (dark: a card grey), elsewhere as before. */
+/**
+ * The settings of one section: in Quiet (2.207) together on one white block (dark: a card grey); in Gen Z chaos on a
+ * solid card too (owner, 16 November 2026: the big coloured circles behind the text made settings hard to read).
+ */
 @Composable
-private fun SettingsGroup(content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
+private fun SettingsGroup(title: String, content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
     val look = LocalLook.current
+    // Gen Z chaos: the title goes on the card too, so no text sits on the circles.
+    if (look.design != "quiet") { ReadingCard(heading = { SectionTitle(title) }, content = content); return }
+    SectionTitle(title)
     Column(
-        if (look.design == "quiet") Modifier.fillMaxWidth().lookCard(look, 3L, look.cardShape(3L, small = true)).padding(horizontal = 16.dp, vertical = 10.dp)
-        else Modifier.fillMaxWidth(),
+        Modifier.fillMaxWidth().lookCard(look, 3L, look.cardShape(3L, small = true)).padding(horizontal = 16.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp), content = content
     )
+}
+
+/**
+ * A solid card behind settings in Gen Z chaos (owner, 16 November 2026), so the circles and dots never sit behind
+ * text; not tilted, so fields and switches stay straight. In other styles just the column. Used on every settings
+ * screen (App settings, a list's settings, Profile); `ReadingCardTest` checks they all use it.
+ */
+@Composable
+fun ReadingCard(
+    heading: (@Composable () -> Unit)? = null,
+    content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit
+) {
+    val look = LocalLook.current
+    // Other styles: the heading above, as before. Chaos: the heading on the card too, so no text sits on the circles.
+    if (look.design != "chaos") heading?.invoke()
+    Column(
+        if (look.design == "chaos") Modifier.padding(top = 8.dp, bottom = 6.dp).fillMaxWidth()
+            .lookSurface(look, look.cardShape(3L, small = true), look.cardFill(3L), depth = 6.dp)
+            .padding(start = 12.dp, end = 12.dp, top = 0.dp, bottom = 14.dp)
+        else Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        if (look.design == "chaos") heading?.invoke()
+        content()
+    }
 }
 
 /**
@@ -123,11 +153,10 @@ private fun SettingsBody(snack: SnackbarHostState, onThemer: () -> Unit) {
         ) {
             // No "Instant delete wishes" any more (owner, 2.95): deleting never asks, the bin and Undo are enough.
 
-            SectionTitle(tr("Theme"))
             // Everything about the look is in the Themer: the standard themes (Light, Dark, AMOLED black, each with
             // colour sets) and the four designs. (No "System default": the first start picks Light or Dark to match
             // the phone, see Repo.load.)
-            SettingsGroup {
+            SettingsGroup(tr("Theme")) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f).padding(end = 12.dp)) {
                     Text(
@@ -139,16 +168,14 @@ private fun SettingsBody(snack: SnackbarHostState, onThemer: () -> Unit) {
             }
             }
             // What you see (owner, 2.101): for all your lists, only on this phone. Everything on by default.
-            SectionTitle(tr("What you see"))
-            SettingsGroup {
+            SettingsGroup(tr("What you see")) {
             SettingSwitch(tr("Price change on pictures"), tr("The −20% or +5% label on a wish’s picture."), Show["show_badge"]) { Show.set(ctx, "show_badge", it) }
             SettingSwitch(tr("Descriptions"), tr("The shop’s description on the large cards."), Show["show_desc"]) { Show.set(ctx, "show_desc", it) }
             SettingSwitch(tr("List summary"), tr("The number of wishes and the total value at the top of a list."), Show["show_summary"]) { Show.set(ctx, "show_summary", it) }
 
             }
             // Everything about prices in one place (owner, 2.122): how often, the alerts, and the currency.
-            SectionTitle(tr("Prices"))
-            SettingsGroup {
+            SettingsGroup(tr("Prices")) {
             Text(
                 tr("How often prices should be checked for drops and rises."),
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
@@ -211,14 +238,12 @@ private fun SettingsBody(snack: SnackbarHostState, onThemer: () -> Unit) {
 
             // Who sees new wishlists (owner, 7 November 2026).
             if (Config.enabled) {
-                SectionTitle(tr("Sharing"))
-                SettingsGroup { NewListVisibilitySetting() }
+                SettingsGroup(tr("Sharing")) { NewListVisibilitySetting() }
             }
 
             // Only the notifications you may switch off (owner, 2.126). Reserved gifts that are gone and wishlist group
             // invitations always come; "friend request accepted" and group news only show on the Notifications page.
-            SectionTitle(tr("Notifications"))
-            SettingsGroup {
+            SettingsGroup(tr("Notifications")) {
             // Android can still block them in its own settings: then say so, with a way to switch them back on.
             var blocked by remember { mutableStateOf(Alerts.blockedImportant(ctx)) }
             val lifeN = LocalLifecycleOwner.current
@@ -243,12 +268,10 @@ private fun SettingsBody(snack: SnackbarHostState, onThemer: () -> Unit) {
             }
 
             // Export and import, to move to a new phone (owner, 2.95).
-            SectionTitle(tr("Backup"))
-            SettingsGroup { BackupSection(snack) }
+            SettingsGroup(tr("Backup")) { BackupSection(snack) }
 
             // Update, share and licences together (owner, 2.122: they were three sections).
-            SectionTitle(tr("About Wishlist"))
-            SettingsGroup {
+            SettingsGroup(tr("About Wishlist")) {
             val version = remember {
                 try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName.orEmpty() } catch (e: Exception) { "" }
             }

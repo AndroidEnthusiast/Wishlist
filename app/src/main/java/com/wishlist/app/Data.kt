@@ -715,8 +715,8 @@ object Repo {
      * id: see [copies].
      */
     @Synchronized
-    fun copyInto(c: Context, listId: String, wishes: List<Wish>) {
-        if (listId !in mineIds || wishes.isEmpty()) return
+    fun copyInto(c: Context, listId: String, wishes: List<Wish>): Set<Long> {
+        if (listId !in mineIds || wishes.isEmpty()) return emptySet()
         var added = emptySet<Long>()
         updateMine(c, listId) { ws ->
             val fresh = wishes.filter { w -> ws.none { it.id == w.id } }.distinctBy { it.id }
@@ -725,6 +725,16 @@ object Repo {
             fresh + ws
         }
         copies = copies + (listId to (copies[listId].orEmpty() + added))
+        persist(c)
+        mineVersion++
+        return added
+    }
+
+    /** Undo of "Copy" (Move or copy…, owner 16 November 2026): takes the copies [ids] off [listId] again. */
+    fun uncopy(c: Context, listId: String, ids: Set<Long>) {
+        if (listId !in mineIds || ids.isEmpty()) return
+        updateMine(c, listId) { ws -> ws.filter { it.id !in ids } }
+        copies = copies + (listId to (copies[listId].orEmpty() - ids))
         persist(c)
         mineVersion++
     }

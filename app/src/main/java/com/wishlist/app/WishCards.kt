@@ -446,10 +446,8 @@ fun RowCard(
                     Modifier.align(Alignment.TopEnd).padding(6.dp),
                     horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    if (!w.got) {
-                        if (onStar != null) StarToggle(w.star, onStar, size = 28.dp)
-                        else if (w.star) MostWantedBadge(false)
-                    }
+                    // The compact label on the picture, as on two per row (owner, 16 November 2026: not in the words).
+                    StarCorner(w, onStar, small = true, buttonSize = 28.dp)
                     val mine = rememberAppearPulse(reservedByMe(badge))
                     if (badge != null) TappableBadge(w, badge, small = true, modifier = Modifier.starPulse(mine, TransformOrigin(1f, 0.5f)))
                 }
@@ -470,19 +468,13 @@ fun RowCard(
                         onLongClick = onLongPress
                     )
                 ) {
-                    // The shop and category, and "Top wish" at the top right of the words (owner, 15 November 2026: the
-                    // star stays on the picture; once tapped, the label appears here with a pulse).
-                    val top = w.star && !w.got
-                    val topFx = rememberAppearPulse(top)
-                    if (label.isNotEmpty() || top) Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            label,
-                            // Quiet: details at 13 (its smallest size for something you read, 2.207).
-                            style = if (look.design == "quiet") MaterialTheme.typography.bodySmall else MaterialTheme.typography.labelSmall,
-                            color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)
-                        )
-                        if (top) MostWantedBadge(true, Modifier.padding(start = 6.dp).starPulse(topFx, TransformOrigin(1f, 0.5f)), small = true)
-                    }
+                    // The shop and category ("Love it" sits on the picture, owner 16 November 2026).
+                    if (label.isNotEmpty()) Text(
+                        label,
+                        // Quiet: details at 13 (its smallest size for something you read, 2.207).
+                        style = if (look.design == "quiet") MaterialTheme.typography.bodySmall else MaterialTheme.typography.labelSmall,
+                        color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis
+                    )
                     Text(w.label, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis, color = if (w.title.isBlank()) ink.copy(alpha = 0.55f) else ink)
                         // "2×" and "Exactly this" / "Similar is fine" (owner, 2.128).
                         wishTags(w).takeIf { it.isNotEmpty() }?.let { t ->

@@ -336,7 +336,7 @@ class WishPressTest : NavigationBase() {
             .performTouchInput { longClick() }
         shows("1 selected")
         // The action bar takes the bottom bar's place (2.209): Move to… and Delete, no Home or + while selecting.
-        compose.onAllNodes(hasText("Move to…") and hasClickAction()).onFirst().assertExists()
+        compose.onAllNodes(hasText("Move or copy…") and hasClickAction()).onFirst().assertExists()
         compose.onAllNodes(hasText("Delete") and hasClickAction()).assertCountEquals(1)
         compose.onAllNodes(hasContentDescription("Add wish")).assertCountEquals(0)
         // The cards' own ⋮, share and bin are gone while selecting.
@@ -353,7 +353,7 @@ class WishPressTest : NavigationBase() {
         // ⋮ opens the sheet: the wish's name at the top, then its actions.
         compose.onAllNodes(hasContentDescription("More") and hasClickAction()).onFirst().performClick()
         compose.waitForIdle()
-        for (t in listOf("Edit", "Share", "Move to…", "Private", "I have it", "Price history")) shows(t)
+        for (t in listOf("Edit", "Share", "Move or copy…", "Private", "I have it", "Price history")) shows(t)
     }
 }
 
@@ -382,7 +382,7 @@ class WishlistSheetTest : NavigationBase() {
     @Test fun formStartsWithPhotoThenTiles() {
         val src = java.io.File("src/main/java/com/wishlist/app/WishForm.kt").readText()
         val photo = src.indexOf("ImageBlock(image,")
-        val top = src.indexOf("tr(\"Love this\"), tr(\"Givers see it first\")")
+        val top = src.indexOf("tr(\"Love it\"), tr(\"Givers see it first\")")
         val link = src.indexOf("label = { Text(tr(\"Product link\")) }")
         val name = src.indexOf("tr(\"Name*\")")
         org.junit.Assert.assertTrue("photo, Top wish and Private, link, name", photo in 0 until top && top < link && link < name)

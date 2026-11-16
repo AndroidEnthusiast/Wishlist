@@ -1,6 +1,16 @@
 package com.wishlist.app
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.unit.toSize
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.zIndex
 import androidx.compose.foundation.background
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.derivedStateOf
@@ -105,6 +115,20 @@ fun HomeScreen(
         picked = setOf(w.id)
     }
     val selecting = picked.isNotEmpty()
+    // Drag to reorder (owner, 16 November 2026): hold a wish and move your finger to drag it, or hold and let go to
+    // select it as before. While held, [holding] waits for one or the other; [dragId] is the wish being dragged and
+    // [dragIds] the order on screen while dragging.
+    var holding by remember { mutableStateOf<Wish?>(null) }
+    var dragId by remember { mutableStateOf<Long?>(null) }
+    var dragIds by remember(Repo.openMine, Shared.active) { mutableStateOf<List<Long>?>(null) }
+    var dragArmed by remember { mutableStateOf(false) }
+    var dragPointer by remember { mutableStateOf(androidx.compose.ui.geometry.Offset.Zero) }
+    var dragGrab by remember { mutableStateOf(androidx.compose.ui.geometry.Offset.Zero) }
+    val cardBounds = remember { androidx.compose.runtime.mutableStateMapOf<Long, androidx.compose.ui.geometry.Rect>() }
+    val holdSelect: (Wish) -> Unit = { w ->
+        if (selecting) startSelect(w)
+        else { haptic.performHapticFeedback(HapticFeedbackType.LongPress); holding = w }
+    }
     BackHandler(enabled = selecting) { picked = emptySet() }
     SelectingFlag(selecting)
     fun toggle(w: Wish) { picked = if (w.id in picked) picked - w.id else picked + w.id }
@@ -143,15 +167,24 @@ fun HomeScreen(
     }
     // A shared wishlist is put together by the givers, for someone else: there is no "most wanted" (nobody can say
     // that for the person) and no "got it" (reserving is what counts). Wishes are shown without them.
-    val sortMode = if (inShared && Repo.sort == "star") "new" else Repo.sort
+    // Someone who loves a wish on one of their own lists knows the heart: its tip is done for good (LoveTip.kt).
+    val anyLoved = !inShared && Repo.wishes.any { it.star }
+    LaunchedEffect(anyLoved) { if (anyLoved && !LoveTip.done(ctx)) LoveTip.finish(ctx) }
+    // Each list has its own sort, "My order" included (ListOrder.kt, owner 16 November 2026).
+    val listKey = ListOrder.openKey()
+    val chosenSort = ListOrder.sortFor(ctx, listKey)
+    val sortMode = if (inShared && chosenSort == "star") "new" else chosenSort
     val res = if (inShared) Shared.reserved else emptyMap()
     val source = if (inShared) Repo.wishes.map { it.copy(star = false, got = false) } else Repo.wishes
 
     val sel = if (cat == "All" || cat in Repo.cats) cat else "All"
-    val list = sortWishes(
-        source.filter { (sel == "All" || it.category == sel) && matchesQuery(it, query) },
-        sortMode
-    )
+    val shownWishes = source.filter { (sel == "All" || it.category == sel) && matchesQuery(it, query) }
+    val sorted = if (sortMode == ListOrder.MINE) sortByOrder(shownWishes, ListOrder.order(ctx, listKey)) else sortWishes(shownWishes, sortMode)
+    // While dragging, the order on screen; wishes that arrive meanwhile go after it.
+    val list = dragIds?.let { ids ->
+        val byId = sorted.associateBy { it.id }
+        ids.mapNotNull { byId[it] } + sorted.filter { it.id !in ids }
+    } ?: sorted
     val view = Repo.view
     val look = LocalLook.current
     // A wish tapped on "All your wishes" or "Top wishes": scroll to it (showing every category if it was hidden by
@@ -251,9 +284,10 @@ fun HomeScreen(
                 ListTools(
                     sel, Repo.cats, { c -> if (c == "All") Repo.wishes.size else Repo.wishes.count { it.category == c } }, { cat = it },
                     catMenu && live, { catMenu = it },
-                    sortMode, !inShared, { Repo.setSort(ctx, it) },
+                    sortMode, !inShared, { ListOrder.setSort(ctx, listKey, it) },
                     view, { Repo.setView(ctx, it) },
-                    onNewCategory = { catDlg = true }
+                    onNewCategory = { catDlg = true },
+                    withMine = true
                 )
             }
             // The top that stays in sight while scrolling (owner, 2.111): the summary card (your own lists) and the
@@ -316,24 +350,114 @@ fun HomeScreen(
             } else {
                 val gap = if (view == "list") 16.dp else 12.dp
                 androidx.compose.runtime.CompositionLocalProvider(LocalWishDeco provides listDeco) {
+                // The end of a hold: moved = the new order is kept (the list becomes "My order"), else the wish is
+                // selected as before. The whole list order is saved, so wishes hidden by a category keep their place.
+                fun endHold(moved: Boolean) {
+                    val ids = dragIds
+                    if (moved && dragArmed && ids != null) {
+                        val shown = ids.toSet()
+                        val rest = sorted.map { it.id }.filter { it !in shown }
+                        val all = sortWishes(source, sortMode).map { it.id }
+                        // Hidden wishes (another category, a search) keep their place around the dragged ones.
+                        val merged = if (shown.size + rest.size == all.size) ids + rest else {
+                            val queue = ids.iterator()
+                            all.map { if (it in shown) queue.next() else it }
+                        }
+                        ListOrder.save(ctx, listKey, merged)
+                    } else holding?.let { startSelect(it) }
+                    holding = null; dragId = null; dragIds = null; dragArmed = false
+                }
+                var gridBox by remember { mutableStateOf<androidx.compose.ui.layout.LayoutCoordinates?>(null) }
                 LazyVerticalGrid(
                     state = gridState,
                     columns = if (view == "grid") GridCells.Fixed(2) else GridCells.Adaptive(300.dp),
+                    modifier = Modifier.onGloballyPositioned { gridBox = it }
+                        .pointerInput(listKey, view, selecting) {
+                            if (selecting) return@pointerInput
+                            // Read before the cards (Initial pass): a card's own long press takes every later move for
+                            // itself, so the list would never see the drag. Until the finger really moves nothing is
+                            // taken here, so taps, the card's long press and scrolling work as before.
+                            awaitEachGesture {
+                                val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                                val early = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                                    var ended = false
+                                    while (!ended) {
+                                        val c = awaitPointerEvent(PointerEventPass.Initial).changes.firstOrNull { it.id == down.id }
+                                        ended = c == null || !c.pressed || (c.position - down.position).getDistance() > viewConfiguration.touchSlop
+                                    }
+                                    true
+                                }
+                                // A tap, a scroll or a lifted finger before the hold: not ours.
+                                if (early != null) return@awaitEachGesture
+                                val root = gridBox?.localToRoot(down.position) ?: return@awaitEachGesture
+                                val hit = cardBounds.entries.firstOrNull { it.value.contains(root) && list.any { w -> w.id == it.key } }
+                                    ?: return@awaitEachGesture
+                                dragId = hit.key; dragIds = list.map { it.id }
+                                dragPointer = root; dragGrab = root - hit.value.topLeft
+                                var lifted = false
+                                while (true) {
+                                    val c = awaitPointerEvent(PointerEventPass.Initial).changes.firstOrNull { it.id == down.id } ?: break
+                                    if (!c.pressed) { lifted = true; if (dragArmed) c.consume(); break }
+                                    dragPointer += c.position - c.previousPosition
+                                    val id = hit.key
+                                    // A real move, not a trembling finger: from now on it is a drag, not a selection.
+                                    if (!dragArmed && (dragPointer - root).getDistance() > 12.dp.toPx()) dragArmed = true
+                                    if (!dragArmed) continue
+                                    c.consume()
+                                    val size = cardBounds[id]?.size ?: continue
+                                    val centre = dragPointer - dragGrab + androidx.compose.ui.geometry.Offset(size.width / 2, size.height / 2)
+                                    val target = cardBounds.entries.firstOrNull { it.key != id && it.value.contains(centre) && dragIds?.contains(it.key) == true }
+                                    if (target != null) dragIds = dragIds?.let { moveInOrder(it, id, target.key) }
+                                    // Near the top or bottom edge the list scrolls along.
+                                    gridBox?.let { g ->
+                                        val y = dragPointer.y - g.positionInRoot().y
+                                        val edge = 64.dp.toPx()
+                                        val speed = when {
+                                            y < edge -> -(edge - y) / 4f
+                                            y > g.size.height - edge -> (y - (g.size.height - edge)) / 4f
+                                            else -> 0f
+                                        }
+                                        if (speed != 0f) scope.launch { gridState.scrollBy(speed) }
+                                    }
+                                }
+                                endHold(lifted)
+                            }
+                        },
                     contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 24.dp), // no floating button to keep clear of any more (2.112)
                     horizontalArrangement = Arrangement.spacedBy(gap),
                     verticalArrangement = Arrangement.spacedBy(gap)
                 ) {
                     if (hasCover) item(key = "header", span = { GridItemSpan(maxLineSpan) }) { ListHeader(Repo.wishes, snack) }
                     item(key = "filters", span = { GridItemSpan(maxLineSpan) }) { stickyTop(!pinned) }
+                    // The heart explained once (LoveTip.kt, owner 16 November 2026), on your own lists.
+                    if (!inShared && LoveTip.shows(ctx, Repo.wishes)) item(key = "lovetip", span = { GridItemSpan(maxLineSpan) }) {
+                        LoveTipCard(ctx, Repo.wishes)
+                    }
                     gridItems(list, key = { it.id }) { w ->
                         val r = res[w.id]
+                        val dragged = w.id == dragId && dragArmed
+                        // Where each card is (for the drag), then the dragged one follows the finger, lifted a little.
+                        Box(
+                            Modifier.zIndex(if (dragged) 1f else 0f)
+                                .then(if (dragged) Modifier else Modifier.animateItem())
+                                .onGloballyPositioned { cardBounds[w.id] = androidx.compose.ui.geometry.Rect(it.positionInRoot(), it.size.toSize()) }
+                                .graphicsLayer {
+                                    if (dragged) {
+                                        val at = cardBounds[w.id]?.topLeft ?: dragPointer
+                                        val to = dragPointer - dragGrab - at
+                                        translationX = to.x; translationY = to.y
+                                        scaleX = 1.03f; scaleY = 1.03f
+                                        shadowElevation = 12.dp.toPx()
+                                    }
+                                }
+                        ) {
                         // A wish opened from "All your wishes" glows softly twice (WishFocus).
                         GlowBox(w.id, small = view == "grid") {
                         Selectable(selecting, w.id in picked, { toggle(w) }) {
                         when (view) {
                             "grid" -> CompactCard(
                                 // Two per row: the ⋮ holds everything; a long press starts selecting (every list).
-                                w, onLongPress = { startSelect(w) },
+                                w, onLongPress = { holdSelect(w) },
                                 onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
                                 reserve = if (inShared) Reserving(r, reserveLabel(Shared.active.orEmpty(), w, r)) { on -> Shared.reserve(w, on) } else null,
                                 onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) }),
@@ -379,7 +503,7 @@ fun HomeScreen(
                                 w,
                                 badge = if (inShared) reserveLabel(Shared.active.orEmpty(), w, r) else if (w.got) tr("Owned") else null,
                                 dim = if (inShared) r == false else w.got,
-                                onLongPress = { startSelect(w) },
+                                onLongPress = { holdSelect(w) },
                                 onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
                                 onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) }),
                                 actions = actions
@@ -387,12 +511,13 @@ fun HomeScreen(
                                 w,
                                 badge = if (inShared) reserveLabel(Shared.active.orEmpty(), w, r) else if (w.got) tr("Owned") else null,
                                 dim = if (inShared) r == false else w.got,
-                                onLongPress = { startSelect(w) },
+                                onLongPress = { holdSelect(w) },
                                 onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
                                 onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) }),
                                 actions = actions
                             )
                             }
+                        }
                         }
                         }
                         }

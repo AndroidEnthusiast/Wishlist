@@ -202,7 +202,7 @@ abstract class ScreenshotBase(private val mode: String, private val tag: String 
         tapAbove("My wishlist", 150f); compose.mainClock.advanceTimeBy(1000)
         compose.onAllNodes(hasText("Ceramic teapot", substring = true)).onFirst().performTouchInput { longClick() }
         compose.mainClock.advanceTimeBy(500)
-        tap("Move to…")
+        tap("Move or copy…")
         shot("dialog")
     }
     // The profile picture's sheet itself (2.208: its text was black on Quiet's dark grey).

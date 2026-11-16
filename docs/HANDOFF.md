@@ -5,6 +5,10 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.214 (16 November 2026), read first.** The owner's review (`docs/decisions/screens.md`, last section): ask how
+  "Love it", the tip, dragging (can't be felt here), Move or copy…, the Friends icon, Gen Z settings cards and the
+  chat feel. Then the chosen next features: Sold out / back in stock, then Screenshot to wish
+  (`docs/decisions/ideas.md`, "Solo use"); interview on risks first.
 - **2.213 (15 November 2026), read first.** "♥ Love this" replaced "Top wish" (app and web). Ask how it reads.
 - **2.212 (15 November 2026).** Sheets, price page and wish form rebuilt (`docs/styles/identity.md`, last
   section). Ask how they feel; the remaining drop-down menus elsewhere (e.g. a category's menu) could become sheets too.
@@ -35,6 +39,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 16 November 2026: owner's review and solo interview (2.214)
+"♥ Love it" / "Jorai loves it", smaller label (Rows on the picture), one-time heart tip; hold and move to drag
+("My order", sort per list), Move or copy…; two-people Friends icon; Gen Z settings on cards; chat opens at its end,
+no bounce going back (Moving had a size animation). Interviewed on solo use: sold out alerts and screenshot to wish next.
+
 ### 15 November 2026, very late: "Love this" (2.213)
 Owner asked whether people say "top wish": they don't. Now "♥ Love this" with a heart in the same gold, everywhere in
 the app and on the web pages; smaller label on small cards. Data unchanged. App, web and database checks pass.
@@ -43,8 +52,3 @@ the app and on the web pages; smaller label on small cards. Data unchanged. App,
 Wishlist ⋮ as a bottom sheet with a Visibility sheet ("Visible to" renamed), no long press on wishlists; Price history a
 one-screen sheet with photo, big price, chips, "View in shop" first; the wish form photo-first with Top wish and
 Private tiles. Same structure in both styles. Each has a check or a screenshot.
-
-### 15 November 2026, night: first look at the character (2.211)
-Owner: "much better and more like our own app". Fixed: dialog text black on dark, scrolling broken (the collapsing
-title took every swipe), fixed titles on the main tabs, no confetti but a pulsing "Reserved by you", "Top wish" on
-every view, profile picture without ring. Each fix has a check that fails without it.

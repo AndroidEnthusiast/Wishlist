@@ -205,3 +205,8 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   squircles, Plus Jakarta Sans, own rounded-line icons, grouped menus with icon tiles, own switch / dialogs / top bars,
   a soft press instead of the ripple, warm neutral surfaces, a warm voice, vibration only at a few moments,
   celebrations on reserving and on price drops. Every style gets the shared feel; wordmark and app icon later.
+
+## Gen Z chaos settings on cards (owner, 16 November 2026, built in 2.214)
+- The big coloured circles sat behind text (App settings hard to read). The owner chose solid cards behind settings
+  (not moving or fading the circles): App settings, a list's settings and Profile put each group, its title
+  included, on a straight (not tilted) card (`ReadingCard` in `Settings.kt`). Lists, Home and chat keep the open look.

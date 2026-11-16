@@ -29,7 +29,7 @@ class DialogInkTest : NavigationBase() {
         compose.waitForIdle()
         compose.onAllNodes(hasText("Ceramic teapot", substring = true)).onFirst().performTouchInput { longClick() }
         compose.waitForIdle()
-        compose.onAllNodes(hasText("Move to…") and hasClickAction()).onFirst().performClick()
+        compose.onAllNodes(hasText("Move or copy…") and hasClickAction()).onFirst().performClick()
         compose.waitForIdle()
         val node = compose.onAllNodes(hasText("Household")).onFirst().fetchSemanticsNode()
         val layouts = mutableListOf<TextLayoutResult>()

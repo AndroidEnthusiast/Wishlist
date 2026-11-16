@@ -34,7 +34,8 @@ fun ListTools(
     menuOpen: Boolean, onMenu: (Boolean) -> Unit,
     sortMode: String, withStar: Boolean, onSort: (String) -> Unit,
     view: String, onView: (String) -> Unit,
-    onNewCategory: (() -> Unit)? = null
+    onNewCategory: (() -> Unit)? = null,
+    withMine: Boolean = false
 ) {
     Row(
         Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 2.dp),
@@ -73,7 +74,7 @@ fun ListTools(
             }
             // Room between the category and the sort button (owner, 2.127: they touched).
             Spacer(Modifier.width(8.dp))
-            SortButton(sortMode, withStar = withStar, quiet = true, onPick = onSort)
+            SortButton(sortMode, withStar = withStar, quiet = true, withMine = withMine, onPick = onSort)
             Spacer(Modifier.width(8.dp))
         }
         // One icon for the view (owner, 2.130): it shows the view in use and opens Rows, Two per row, Large cards.

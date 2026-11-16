@@ -43,7 +43,9 @@ import kotlinx.coroutines.launch
 private fun GroupTitle(t: String) {
     Text(
         t, style = MaterialTheme.typography.titleLarge, fontWeight = LocalLook.current.titleWeight,
-        color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(top = 28.dp)
+        color = MaterialTheme.colorScheme.onBackground,
+        // On a chaos card (ReadingCard) less room above: the card's edge already separates the groups.
+        modifier = Modifier.padding(top = if (LocalLook.current.design == "chaos") 12.dp else 28.dp)
     )
 }
 
@@ -109,7 +111,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // Four groups (owner, 2.95): about this list, who can see it, its wishes, and the danger zone at the bottom.
-            GroupTitle(tr("About this list"))
+            ReadingCard(heading = { GroupTitle(tr("About this list")) }) {
             SectionTitle(tr("Name of the wishlist"))
             // Like your name on Profile: no Save button, the keyboard's tick saves it and closes the keyboard, then a
             // green tick with "Saved" (2.88). An empty name isn't saved: the old one comes back.
@@ -180,8 +182,9 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                 )
                 SavedFeedback(noteSaved)
             }
+            }
 
-            GroupTitle(tr("Visibility"))
+            ReadingCard(heading = { GroupTitle(tr("Visibility")) }) {
             if (shared != null) {
                 val title = Repo.listName
                 val invite = inviteLink(shared.key)
@@ -203,22 +206,24 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
             } else {
                 WhoCanSeeSection(snack)
             }
+            }
 
             // Categories moved to the wish form's drop-down, "Edit categories" (owner, 2.110): your own lists share
             // them, so they didn't belong to one list's settings.
             if (shared == null) {
-                GroupTitle(tr("Wishes"))
+                ReadingCard(heading = { GroupTitle(tr("Wishes")) }) {
                 // Copy wishes from your other lists into this one (also offered when a list is made).
                 if (canCopyFromOthers(ctx, Repo.openMine)) {
                     TextButton(onClick = { copyDlg = true }) { Text(tr("Add wishes from your other lists")) }
                 }
                 TextButton(onClick = { shareList(ctx, Repo.wishes) }) { Text(tr("Export as plain text")) }
+                }
             }
 
             // Lists you made yourself can be deleted (you always keep one); a wishlist for someone can be left, or
             // deleted for everyone by the person who made it.
             if (shared != null || Repo.mineIds.size > 1) {
-                GroupTitle(tr("Danger zone"))
+                ReadingCard(heading = { GroupTitle(tr("Danger zone")) }) {
                 if (shared != null) {
                     TextButton(onClick = { manage = "leave" }) { Text(tr("Leave this wishlist")) }
                     if (shared.owner.isNotEmpty()) {
@@ -226,6 +231,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                     }
                 } else {
                     TextButton(onClick = { deleteMineDlg = true }) { Text(tr("Delete this wishlist"), color = cs.error) }
+                }
                 }
             }
         }

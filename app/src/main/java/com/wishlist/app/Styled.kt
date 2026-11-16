@@ -454,6 +454,8 @@ object AppIcons {
     val MoreVert: ImageVector @Composable get() = set.more
     val Person: ImageVector @Composable get() = set.person
     val PersonFilled: ImageVector @Composable get() = set.personFilled
+    val Friends: ImageVector @Composable get() = set.friends
+    val FriendsFilled: ImageVector @Composable get() = set.friendsFilled
     val Refresh: ImageVector @Composable get() = set.refresh
     val Search: ImageVector @Composable get() = set.search
     val Settings: ImageVector @Composable get() = set.gear

@@ -118,12 +118,29 @@ object MoveFlow {
         return moved to problem
     }
 
-    /** Runs a move from the open list and shows its message. */
+    /**
+     * After the list is picked: "Move or copy?" every time (owner, 16 November 2026: "Move to…" became "Move or
+     * copy…", and copying works between all your lists, not only to and from collab wishlists).
+     */
     fun start(c: Context, to: String, ids: Set<Long>, scope: kotlinx.coroutines.CoroutineScope) {
-        val from = sourceKey()
         picking = null
-        if (MoveAcross.isCollab(from)) { choosing = ids to to; return }
-        if (MoveAcross.isCollab(to)) { across(c, to, ids, copy = false, scope = scope); return }
+        choosing = ids to to
+    }
+
+    /** Moves (or with [copy], copies) [ids] from the open list to [to], after "Move or copy?". */
+    fun go(c: Context, to: String, ids: Set<Long>, copy: Boolean, scope: kotlinx.coroutines.CoroutineScope) {
+        val from = sourceKey()
+        if (MoveAcross.isCollab(from) || MoveAcross.isCollab(to)) { across(c, to, ids, copy = copy, scope = scope); return }
+        choosing = null
+        if (copy) {
+            // Between your own lists a copy is the same wish on both (as "Add wishes from your other lists").
+            val wishes = Repo.mine(c, from).wishes.filter { it.id in ids }
+            val added = Repo.copyInto(c, to, wishes)
+            // Already on that list: nothing new, but it is there, so say so as a copy without Undo.
+            done = Done(if (added.isEmpty()) ids else added, from, to, Repo.mineName(to), null, copied = true,
+                undoer = if (added.isEmpty()) null else ({ Repo.uncopy(c, to, added); null }))
+            return
+        }
         busy = true
         scope.launch {
             val (moved, problem) = move(c, from, to, ids)
@@ -178,20 +195,24 @@ fun MoveHost(snack: SnackbarHostState) {
     // Leaving a collab wishlist: Move or Copy? (owner, 11 November 2026)
     MoveFlow.choosing?.let { (ids, to) ->
         val here = shortName(MoveFlow.nameOf(MoveFlow.sourceKey()))
-        val blocked = ids.any { !MoveAcross.mayLeave(Shared.reserved[it]) }
+        val fromCollab = MoveAcross.isCollab(MoveFlow.sourceKey())
+        val blocked = fromCollab && ids.any { !MoveAcross.mayLeave(Shared.reserved[it]) }
         AlertDialog(
             onDismissRequest = { MoveFlow.choosing = null },
             title = { Text(tr("Move or copy?")) },
             text = {
                 Text(
-                    if (blocked) tr("Someone reserved this wish, so it stays on “%s”. You can still copy it.", here)
-                    else tr("Move takes it off “%s” for everyone on it. It stays in that list’s bin for 30 days. Copy leaves it there.", here)
+                    when {
+                        !fromCollab -> tr("Move takes it off “%1\$s”. Copy keeps it on both lists, so “%2\$s” has it too.", here, shortName(MoveFlow.nameOf(to)))
+                        blocked -> tr("Someone reserved this wish, so it stays on “%s”. You can still copy it.", here)
+                        else -> tr("Move takes it off “%s” for everyone on it. It stays in that list’s bin for 30 days. Copy leaves it there.", here)
+                    }
                 )
             },
             confirmButton = {
                 Row {
-                    TextButton(onClick = { MoveFlow.across(ctx, to, ids, copy = true, scope = scope) }) { Text(tr("Copy")) }
-                    TextButton(onClick = { MoveFlow.across(ctx, to, ids, copy = false, scope = scope) }, enabled = !blocked) { Text(tr("Move")) }
+                    TextButton(onClick = { MoveFlow.go(ctx, to, ids, copy = true, scope = scope) }) { Text(tr("Copy")) }
+                    TextButton(onClick = { MoveFlow.go(ctx, to, ids, copy = false, scope = scope) }, enabled = !blocked) { Text(tr("Move")) }
                 }
             },
             dismissButton = { TextButton(onClick = { MoveFlow.choosing = null }) { Text(tr("Cancel")) } }
@@ -233,11 +254,11 @@ fun MoveToDialog(ids: Set<Long>, onPick: (String) -> Unit, onClose: () -> Unit) 
     var newList by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text(if (ids.size == 1) tr("Move to…") else tr("Move %d wishes to…", ids.size)) },
+        title = { Text(if (ids.size == 1) tr("Move or copy to…") else tr("Move or copy %d wishes to…", ids.size)) },
         text = {
             Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 if (others.isEmpty() && collabs.isEmpty()) Text(
-                    tr("You have one wishlist. Make a new one to move wishes to."),
+                    tr("You have one wishlist. Make a new one to move or copy wishes to."),
                     style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(bottom = 4.dp)
                 )
                 others.forEach { d ->

@@ -161,52 +161,71 @@ private fun DrawScope.drawSparkles(center: Offset, p: Float) {
 }
 
 /**
- * The gold "Top wish" label for the corner of a picture. [showLabel] false gives just the star (small cards).
- * With [onClick] the owner can tap it to take the star away again.
+ * Whose wishes these are, for the words on the gold label (owner, 16 November 2026): null on your own lists ("Love it"),
+ * a name on a friend's list ("Jorai loves it"), "" when the name isn't known ("Loves it"). Small cards always say
+ * "Loves it" for givers, so the label stays small.
+ */
+val LocalLover = androidx.compose.runtime.compositionLocalOf<String?> { null }
+
+/** The words on the gold label for [lover] (see [LocalLover]). Only the first name, so it stays short. */
+fun loveWords(lover: String?, small: Boolean): String {
+    val first = lover?.trim()?.split(Regex("\\s+"))?.firstOrNull()?.take(20).orEmpty()
+    return when {
+        lover == null -> tr("Love it")
+        small || first.isEmpty() -> tr("Loves it")
+        else -> tr("%s loves it", first)
+    }
+}
+
+/**
+ * The gold "Love it" label for the corner of a picture. [showLabel] false gives just the heart.
+ * With [onClick] the owner can tap it to take the heart away again. [small]: two per row and rows, a compact label
+ * (owner, 16 November 2026: it almost touched the product), 11 sp words and a 10 dp heart.
  */
 @Composable
 fun MostWantedBadge(showLabel: Boolean, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null, small: Boolean = false) {
-    val shape = RoundedCornerShape(8.dp)
+    val shape = RoundedCornerShape(if (small) 6.dp else 8.dp)
+    val words = loveWords(LocalLover.current, small)
     var m = modifier.clip(shape).background(StarGold)
     m = if (onClick != null) {
         m.clickable(onClickLabel = tr("Remove from wishes you love"), role = Role.Button, onClick = onClick)
     } else if (!showLabel) {
-        m.semantics { contentDescription = tr("Love this") }
+        m.semantics { contentDescription = words }
     } else m
     Row(
-        // [small]: two per row and rows (owner, 15 November 2026: "slightly smaller" there).
-        m.padding(horizontal = if (showLabel) (if (small) 6.dp else 8.dp) else 5.dp, vertical = if (small) 3.dp else 4.dp),
+        m.padding(horizontal = if (showLabel) (if (small) 5.dp else 8.dp) else 5.dp, vertical = if (small) 2.dp else 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
-        LoveIcon(true, StarInk, if (small) 12.dp else 14.dp)
+        LoveIcon(true, StarInk, if (small) 10.dp else 14.dp)
         if (showLabel) {
             Spacer(Modifier.width(if (small) 3.dp else 4.dp))
             Text(
-                tr("Love this"), style = if (small) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold, color = StarInk
+                words, style = if (small) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold, color = StarInk, maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
         }
         // A small cross when you can tap the label to take it away again.
         if (onClick != null) {
-            Spacer(Modifier.width(6.dp))
-            Icon(AppIcons.Close, null, Modifier.size(if (small) 12.dp else 14.dp), tint = StarInk)
+            Spacer(Modifier.width(if (small) 4.dp else 6.dp))
+            Icon(AppIcons.Close, null, Modifier.size(if (small) 10.dp else 14.dp), tint = StarInk)
         }
     }
 }
 
 /** A round outlined star on the picture: tap it to mark the wish as most wanted. */
 @Composable
-fun MarkMostWantedButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun MarkMostWantedButton(onClick: () -> Unit, modifier: Modifier = Modifier, size: Dp = 34.dp) {
     val quiet = LocalLook.current.design == "quiet"
     Box(
-        modifier.size(34.dp).then(if (quiet) Modifier.shadow(2.dp, CircleShape) else Modifier).clip(CircleShape)
+        modifier.size(size).then(if (quiet) Modifier.shadow(2.dp, CircleShape) else Modifier).clip(CircleShape)
             .background(if (quiet) Color.White.copy(alpha = 0.92f) else Color.Black.copy(alpha = 0.45f))
             .semantics { contentDescription = tr("Love this wish") }
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        LoveIcon(false, if (quiet) Color(0xFF6C6C74) else Color.White, 20.dp)
+        LoveIcon(false, if (quiet) Color(0xFF6C6C74) else Color.White, size * 0.59f)
     }
 }
 
@@ -216,17 +235,17 @@ fun MarkMostWantedButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
  * Wishes you already got show nothing. Marking a wish plays the pulse and sparkles.
  */
 @Composable
-fun StarCorner(w: Wish, onToggle: (() -> Unit)?, small: Boolean = false) {
+fun StarCorner(w: Wish, onToggle: (() -> Unit)?, small: Boolean = false, buttonSize: Dp = 34.dp) {
     if (!w.got) {
         val fx = rememberStarFx()
         val toggle: (() -> Unit)? = onToggle?.let { go -> { if (!w.star) fx.play(); go() } }
         // The sparkles start 17 dp from the right edge: that is where the round button was, so where the finger is.
-        Box(Modifier.starSparkles(fx, 17.dp)) {
+        Box(Modifier.starSparkles(fx, buttonSize / 2)) {
             if (w.star) {
                 MostWantedBadge(
                     showLabel = true, modifier = Modifier.starPulse(fx, TransformOrigin(1f, 0.5f)), onClick = toggle, small = small
                 )
-            } else if (toggle != null) MarkMostWantedButton(toggle)
+            } else if (toggle != null) MarkMostWantedButton(toggle, size = buttonSize)
         }
     }
 }

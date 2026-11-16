@@ -17,6 +17,7 @@ val SORT_OPTIONS: List<Pair<String, String>> = listOf(
 /** Short names for the sort button when a sort is active. */
 fun sortShortName(mode: String): String = when (mode) {
     "star" -> "Loved first"
+    ListOrder.MINE -> "My order"
     "low" -> "Price: low"
     "high" -> "Price: high"
     else -> "Newest"

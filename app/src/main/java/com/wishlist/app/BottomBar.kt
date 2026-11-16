@@ -90,7 +90,7 @@ fun AppBottomBar(
             }
             }
             BarItem(tr("My shops"), current == "discover", onDiscover) { Icon(if (current == "discover") AppIcons.StoreFilled else AppIcons.Store, null, tint = it, modifier = Modifier.size(30.dp)) }
-            BarItem(tr("Friends"), current == "friends", onFriends, dot = friendsDot) { Icon(if (current == "friends") AppIcons.PersonFilled else AppIcons.Person, null, tint = it, modifier = Modifier.size(30.dp)) }
+            BarItem(tr("Friends"), current == "friends", onFriends, dot = friendsDot) { Icon(if (current == "friends") AppIcons.FriendsFilled else AppIcons.Friends, null, tint = it, modifier = Modifier.size(30.dp)) }
     }
 }
 

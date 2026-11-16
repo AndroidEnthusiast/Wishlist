@@ -707,7 +707,7 @@ private fun FriendWishesPage(f: Person, page: String, snack: SnackbarHostState) 
         ) {
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(bottom = 4.dp)) {
-                    if (page == "top") MostWantedBadge(showLabel = true)
+                    if (page == "top") androidx.compose.runtime.CompositionLocalProvider(LocalLover provides f.name) { MostWantedBadge(showLabel = true) }
                     Text(
                         if (page == "top") tr("The wishes %s would love most: a safe bet.", f.name)
                         else tr("Every wish %s lets friends see, in one place.", f.name),
@@ -751,7 +751,8 @@ private fun FriendWishesPage(f: Person, page: String, snack: SnackbarHostState) 
                     w.price?.let {
                         Text(money(it, w.currency), style = MaterialTheme.typography.titleSmall, fontWeight = look.priceWeight, color = look.cardInk(id))
                     }
-                    if (w.star) Text("★", color = StarGold, fontSize = 20.sp, modifier = Modifier.padding(start = 8.dp))
+                    // The heart, not the old star (2.213: "Love it" replaced "Top wish").
+                    if (w.star) LoveIcon(true, StarGold, 20.dp, Modifier.padding(start = 8.dp).semantics { contentDescription = tr("%s loves it", f.name) })
                 }
             }
         }
@@ -948,6 +949,8 @@ fun ProfileScreen(snack: SnackbarHostState) {
                 }
             }
 
+            // Gen Z chaos: everything under the photo on a solid card (ReadingCard, owner 16 November 2026).
+            ReadingCard {
             ProfileTitle(tr("Your name"))
             // No Save button: the keyboard's tick saves the name (as it did in App settings).
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -1088,6 +1091,7 @@ fun ProfileScreen(snack: SnackbarHostState) {
             // Blocked people, when there are any (Safety.kt), and deleting everything (DeleteMe.kt), at the very bottom.
             BlockedPeople(snack)
             DeleteMeSection()
+            }
         }
     }
 

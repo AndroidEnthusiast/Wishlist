@@ -87,6 +87,7 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   store.owner = "Robin <b>R</b>";
   own = await load("?c=abcd2345");
   check("Owned by the owner's name, as text (2.102)", own.window.document.getElementById("owner").textContent === "Wishlist of Robin <b>R</b>" && !own.window.document.getElementById("owner").hidden && !own.window.document.querySelector("#owner b"));
+  check("gold label reads the owner's first name, as text (16 November 2026)", [...own.window.document.querySelectorAll(".badge.star .lbl")].every(x => x.textContent === "Robin loves it"));
   delete store.owner;
   check("HTML in title is not injected", !doc.querySelector(".title b") && doc.body.innerHTML.includes("&lt;b&gt;X"));
   check("javascript: link not used", ![...doc.querySelectorAll("a")].some(a => a.href.startsWith("javascript")));
@@ -295,7 +296,7 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   check("default order: most wanted first, then as listed", titles(ms).join("|") === "Fancy watch|Book|Cheap mug|Mystery|Reserved lamp|Old star got");
   const mc = [...D(ms).querySelectorAll(".card")];
   check("star badge on starred, not on others or on got ones", !!mc[0].querySelector(".badge.star") && !!mc[1].querySelector(".badge.star") && !mc[2].querySelector(".badge.star") && !mc[5].querySelector(".badge.star"));
-  check("star label text", mc[0].querySelector(".badge.star .lbl").textContent === "Love this" && mc[0].querySelector(".badge.star").getAttribute("aria-label") === "Love this");
+  check("star label text: givers read \"Loves it\" without a name (16 November 2026)", mc[0].querySelector(".badge.star .lbl").textContent === "Loves it" && mc[0].querySelector(".badge.star").getAttribute("aria-label") === "Loves it");
   check("star + reserved: both badges in one corner stack, star first", mc[0].querySelectorAll(".badges > .badge").length === 2 && mc[0].querySelector(".badges").firstChild.classList.contains("star") && mc[0].querySelector(".badge.status").textContent === "Reserved");
   check("reserved without star: status badge only", mc[4].querySelectorAll(".badges > .badge").length === 1 && mc[4].querySelector(".badge.status").textContent === "Reserved");
   check("no badges container when nothing to show", !mc[3].querySelector(".badges"));

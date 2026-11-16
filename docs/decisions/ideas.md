@@ -22,3 +22,15 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
 - **No flashing photos** (owner, 2.102): switching tabs or views must never reload a product photo that was already shown; toggles keep their style's shape when on; the bottom bar must not jump when coming back to the app (cause: keyboard of another app; the app now draws edge to edge).
 - **Number tiles follow the style** (owner, 2.103): the Wishlists / Wishes / Top wishes tiles next to the profile picture are a small card of the style in use (Quiet stays subtle).
 - **Friend code as six blocks** (owner, 2.104): three blocks, a dash, three blocks, in the style; capitals; paste works (also the whole shared message). Full code: wait for the button, no auto-send (owner).
+
+## Solo use: what the owner wants next (interview of 16 November 2026, not built yet)
+- The owner uses the app alone for: waiting for a price drop, saving up / deciding, remembering ideas, comparing options.
+- **Sold out / back in stock** (chosen): a grey "Sold out" label on the picture and a "Back in stock" notification,
+  through the same two-readings rule as prices (`PriceWatch.judge`), own lists. Not per size.
+- **Screenshot to wish** (chosen): share a screenshot (Instagram, TikTok…) to Wishlist: Add a wish opens with that
+  picture. Video links as ideas, cropping and a "Find in a shop" search were not chosen.
+- **Cheaper alternatives from the internet:** wanted, but left for now (a free version would be janky; a real one
+  needs a paid shopping search). Owner asked how people save finds on TikTok: mostly the platform's own Save, screenshots
+  and shared links.
+- Not chosen: "Bought it myself" history, think-it-over timer, budget per list, savings overview, same product in other
+  shops, a widget, quick note wishes.

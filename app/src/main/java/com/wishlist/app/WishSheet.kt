@@ -162,7 +162,7 @@ fun WishSheet(w: Wish, a: WishActions, onClose: () -> Unit) {
                 "unreserve" -> SheetRow({ Icon(AppIcons.Bag, null, tint = cs.onSurfaceVariant) }, tr("Unreserve"), then { a.reserve?.set?.invoke(false) })
                 "edit" -> SheetRow({ Icon(AppIcons.Edit, null, tint = cs.onSurfaceVariant) }, tr("Edit"), then { a.onEdit?.invoke() })
                 "share" -> SheetRow({ Icon(AppIcons.Share, null, tint = cs.onSurfaceVariant) }, tr("Share"), then { shareItem(ctx, w, idea = a.shareAsIdea) })
-                "move" -> SheetRow({ Icon(AppIcons.Swap, null, tint = cs.onSurfaceVariant) }, tr("Move to…"), then { a.onMove?.invoke() })
+                "move" -> SheetRow({ Icon(AppIcons.Swap, null, tint = cs.onSurfaceVariant) }, tr("Move or copy…"), then { a.onMove?.invoke() })
                 "private" -> SheetRow(
                     { Icon(PrivateIcon, null, tint = cs.onSurfaceVariant) }, tr("Private"),
                     keep("private") { a.everywhere?.setPrivate?.invoke(!w.priv) ?: togglePrivate(ctx, w) },

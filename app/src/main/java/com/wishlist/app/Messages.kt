@@ -71,6 +71,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -378,8 +379,9 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
     val convo = Chat.conversations.firstOrNull { it.id == peer }
     val name = friend?.name ?: convo?.name ?: tr("Someone")
     val canSend = friend != null
-    var msgs by remember(peer) { mutableStateOf<List<ChatMessage>>(emptyList()) }
-    var loading by remember(peer) { mutableStateOf(true) }
+    // A chat opened before shows its messages at once, at the end (Chat.opened); the server's answer follows.
+    var msgs by remember(peer) { mutableStateOf(Chat.opened[peer].orEmpty()) }
+    var loading by remember(peer) { mutableStateOf(Chat.opened[peer] == null) }
     var text by remember(peer) { mutableStateOf("") }
     var sending by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf<ChatMessage?>(null) }
@@ -408,7 +410,10 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
             ImageStore.import(ctx, cameraUriLazy.value)?.let { preview = it } ?: snack.showToast(tr("Couldn’t open that photo."))
         }
     }
-    val listState = rememberLazyListState()
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = (msgs.size - 1).coerceAtLeast(0))
+    // The first time the messages are there, the list jumps to the end while still invisible (owner, 16 November
+    // 2026: it scrolled through the whole conversation in front of you); after that a new message slides in.
+    var placed by remember(peer) { mutableStateOf(msgs.isNotEmpty()) }
 
     // Load, then ask for new messages (and read ticks) whenever something changes in your chats (live, ROADMAP S3.2,
     // Live.kt); without the live connection every 3 seconds, as before.
@@ -438,7 +443,12 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
             round++
         }
     }
-    LaunchedEffect(msgs.size) { if (msgs.isNotEmpty()) listState.animateScrollToItem(msgs.size - 1) }
+    LaunchedEffect(msgs) { if (msgs.isNotEmpty()) Chat.opened[peer] = msgs }
+    LaunchedEffect(msgs.size) {
+        if (msgs.isEmpty()) return@LaunchedEffect
+        if (!placed) { listState.scrollToItem(msgs.size - 1); placed = true }
+        else listState.animateScrollToItem(msgs.size - 1)
+    }
 
     // "Read" (owner, 2.105): only once you have really seen their newest message: the app is in front, this chat is
     // open and the end of the conversation is on screen. Opening the chat from the notification does the same.
@@ -569,7 +579,7 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
                     color = cs.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.align(Alignment.Center).padding(32.dp)
                 )
                 else LazyColumn(
-                    state = listState, modifier = Modifier.fillMaxSize(),
+                    state = listState, modifier = Modifier.fillMaxSize().alpha(if (placed) 1f else 0f),
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                 ) {
                     items(msgs.size, key = { msgs[it].id }) { i ->

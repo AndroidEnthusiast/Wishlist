@@ -60,7 +60,7 @@ private fun SortIcon(tint: Color) {
  * Opens the list of orders. When a sort is active it is highlighted and says which one.
  */
 @Composable
-fun SortButton(mode: String, withStar: Boolean = true, quiet: Boolean = false, onPick: (String) -> Unit) {
+fun SortButton(mode: String, withStar: Boolean = true, quiet: Boolean = false, withMine: Boolean = false, onPick: (String) -> Unit) {
     val look = LocalLook.current
     var open by remember { mutableStateOf(false) }
     // Always shows its order, also "Newest" (owner, 2.127: the default showed nothing while the others did), in the
@@ -84,7 +84,8 @@ fun SortButton(mode: String, withStar: Boolean = true, quiet: Boolean = false, o
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             // A shared list has no "most wanted", so it can't be sorted by it either.
-            SORT_OPTIONS.filter { withStar || it.first != "star" }.forEach { (key, label) ->
+            // "My order" (owner, 16 November 2026) on the lists you can drag in: the order you made by holding and moving.
+            ((if (withMine) listOf(ListOrder.MINE to "My order") else emptyList()) + SORT_OPTIONS.filter { withStar || it.first != "star" }).forEach { (key, label) ->
                 DropdownMenuItem(
                     text = { Text(tr(label), fontWeight = if (key == mode) FontWeight.Bold else FontWeight.Normal) },
                     trailingIcon = if (key == mode) ({ Icon(AppIcons.Check, null) }) else null,

@@ -57,6 +57,12 @@ class PartsScreenshotTest {
                     LinearProgressIndicator({ 0.6f }, Modifier.fillMaxWidth())
                     HorizontalDivider()
                     Slider(0.4f, {}, Modifier.width(240.dp))
+                    // The heart's tip and labels (2.214): small on yours, the giver's with a name.
+                    LoveTipCard(androidx.compose.ui.platform.LocalContext.current, (1L..3L).map { Wish(it, "", "W", "", "", null, null, "EUR", "") })
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        MostWantedBadge(true, onClick = {}, small = true); MostWantedBadge(true)
+                        androidx.compose.runtime.CompositionLocalProvider(LocalLover provides "Jorai") { MostWantedBadge(true) }
+                    }
                 }
             }
         }

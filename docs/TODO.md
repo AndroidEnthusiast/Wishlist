@@ -7,6 +7,11 @@ it**, grouped as below, with a recommendation. Add every new open item here the 
 Details of each item are in the doc named after it.
 
 ## Now
+- **Try 2.214 on the phone:** "Love it" labels (Rows on the picture, two per row smaller), the tip on a list with 3
+  wishes, hold-and-move to reorder (also on a gift list), Move or copy…, the two-people Friends icon, Gen Z settings on
+  cards, opening a chat and going back. Dragging can't be felt here: say how it feels.
+- **Next features, chosen 16 November 2026** (`docs/decisions/ideas.md`, "Solo use"): Sold out / back in stock, then
+  Screenshot to wish. Interview on risks before building each.
 - **Choose the next design style** (owner, 14 November 2026), when you want one: it is made one at a time, to a
   professional standard, following `docs/DESIGN-STYLES.md` (your references and three words for the feeling first;
   a style brief and a specification with mock-ups for you to approve before anything is built).
@@ -70,6 +75,7 @@ Details of each item are in the doc named after it.
 - **Brainstorm with the owner (15 November 2026, next to plan, nothing built yet):** "chip in" together (owner wants
   it worked out); improve "Gift ideas for others" (today: collab wishlists for someone) and "About me for givers"
   (today: "I like…" and "My sizes" in Profile): the owner asked for suggestions, even if they change what exists.
-- Gen Z chaos: move the coloured blobs away from text (not chosen on 15 November 2026; ask again).
+- Gen Z chaos: the coloured circles behind text on other screens than settings (settings got solid cards in 2.214;
+  ask if another screen is hard to read).
 - Buttons: one rule for the whole app (main = filled, secondary = tonal, minor = text, one height and shape); today
   at least six kinds. The owner kept the three buttons on wish cards (15 November 2026).

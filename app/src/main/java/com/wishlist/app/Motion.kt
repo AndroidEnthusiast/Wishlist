@@ -11,7 +11,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
@@ -73,10 +72,12 @@ object Motion {
         Kind.THROUGH -> fadeOut(tween(OUT_MS))
     }
 
-    fun transform(k: Kind): ContentTransform = (enter(k) togetherWith exit(k)).apply {
-        // Going back, the screen that leaves stays on top while it slides away.
-        targetContentZIndex = if (k == Kind.BACK) -1f else 1f
-    }
+    // Going back, the screen that leaves stays on top while it slides away.
+    fun transform(k: Kind): ContentTransform =
+        ContentTransform(enter(k), exit(k), targetContentZIndex = if (k == Kind.BACK) -1f else 1f, sizeTransform = null)
+    // No size animation (sizeTransform = null, owner 16 November 2026: going back from a chat "bounced" Messages): the screen
+    // always has the room it is given. With one, it kept its old, taller size for a moment while the bottom bar came
+    // back, so it was drawn centred, too high, and then slid down.
 }
 
 /**

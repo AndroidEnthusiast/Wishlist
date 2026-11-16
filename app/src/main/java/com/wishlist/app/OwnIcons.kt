@@ -97,6 +97,14 @@ class OwnIcons(private val stroke: Float) {
             line("M15.5,6.2a2.8,2.8 0 1,1 0,5.6"), line("M17.5,14.6c1.6,0.6 2.6,2 3,4.4")
         )
     }
+    // Friends in the bottom bar (owner, 16 November 2026: one person read as "profile"): a person with a second one
+    // behind, filled when the tab is open (the one behind stays a line, so it reads as two, not a blob).
+    private val friendHead = "M6.3,8.5a3.2,3.2 0 1,0 6.4,0a3.2,3.2 0 1,0 -6.4,0z"
+    private val friendBody = "M3,19.2c0.7,-3 3.2,-4.7 6.5,-4.7s5.8,1.7 6.5,4.7a0.8,0.8 0 0,1 -0.8,0.8H3.8a0.8,0.8 0 0,1 -0.8,-0.8z"
+    private val friendBackHead = "M15.2,5.5a3,3 0 1,1 0,6"
+    private val friendBackBody = "M17.8,14.4c1.8,0.6 3,2.1 3.3,4.5"
+    val friends by lazy { icon("Friends", line(friendHead), line(friendBody), line(friendBackHead), line(friendBackBody)) }
+    val friendsFilled by lazy { icon("FriendsFilled", solid(friendHead), solid(friendBody), line(friendBackHead), line(friendBackBody)) }
     val gift by lazy {
         icon(
             "Gift", line("M5,11h14v7.5a1.5,1.5 0 0,1 -1.5,1.5h-11A1.5,1.5 0 0,1 5,18.5z"),
@@ -135,7 +143,7 @@ class OwnIcons(private val stroke: Float) {
     /** Every icon, for the checks (all drawn, none empty). */
     val all: List<ImageVector> get() = listOf(
         add, close, check, back, chevron, dropDown, bin, edit, heart, heartFilled, home, homeFilled, lock, list, bell, more,
-        person, personFilled, refresh, search, gear, share, group, gift, bag, swap, store, storeFilled, chat, chatFilled, eye, eyeOff, gallery
+        person, personFilled, friends, friendsFilled, refresh, search, gear, share, group, gift, bag, swap, store, storeFilled, chat, chatFilled, eye, eyeOff, gallery
     )
 }
 
