@@ -125,6 +125,9 @@
     ].some(function (x) { return t.indexOf(x) >= 0; });
   }
 
+  // A picture address the phone and browser can load: http:// becomes https:// (same as secureImage in Fetch.kt).
+  function secureImage(u) { return /^http:\/\//i.test(u) ? "https://" + u.slice(7) : u; }
+
   function absUrl(v, base) {
     try { return new URL(v, base).href; } catch (e) { return ""; }
   }
@@ -297,7 +300,8 @@
       title = title.replace(/^Amazon\.[a-z.]+\s*:\s*/, "").replace(/\s+:\s+[^:]+$/, "");
     }
     var image = "";
-    var im = d.querySelector('meta[property="og:image"], meta[name="twitter:image"]');
+    // The shop's own secure address first (Shopify writes og:image as http://; same as Fetch.kt).
+    var im = d.querySelector('meta[property="og:image:secure_url"], meta[property="og:image"], meta[name="twitter:image"]');
     if (im) image = absUrl(String(im.getAttribute("content") || ""), base);
     if (!image && isAmazon) {
       var li = d.querySelector("#landingImage, #imgBlkFront");
@@ -373,7 +377,7 @@
     return {
       title: cleanTitle(title, host).slice(0, 120),
       desc: m("og:description", "twitter:description", "description").slice(0, 200),
-      image: image, price: price, currency: cur || currencyOf("", host), blocked: false, product: product,
+      image: secureImage(image), price: price, currency: cur || currencyOf("", host), blocked: false, product: product,
       currencySure: sure && price !== null
     };
   }
@@ -388,7 +392,8 @@
 
   var api = {
     cleanUrl: cleanUrl, toNum: toNum, currencyOf: currencyOf, localCurrency: localCurrency, looksBlocked: looksBlocked,
-    parsePage: parsePage, readHelperAnswer: readHelperAnswer, hostOfUrl: hostOfUrl, cleanTitle: cleanTitle
+    parsePage: parsePage, readHelperAnswer: readHelperAnswer, hostOfUrl: hostOfUrl, cleanTitle: cleanTitle,
+    secureImage: secureImage
   };
   root.WLParse = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;

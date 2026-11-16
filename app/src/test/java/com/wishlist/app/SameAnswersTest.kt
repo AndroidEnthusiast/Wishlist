@@ -42,6 +42,7 @@ class SameAnswersTest {
             if (pg.has("currency")) assertEquals("$name: currency", pg.getString("currency"), got?.currency)
             if (pg.has("sure")) assertEquals("$name: sure", pg.getBoolean("sure"), got?.currencySure)
             if (pg.has("product")) assertEquals("$name: product", pg.getBoolean("product"), got?.product)
+            if (pg.has("image")) assertEquals("$name: image", pg.getString("image"), got?.image)
         }
     }
 

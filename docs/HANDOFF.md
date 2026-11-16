@@ -43,6 +43,7 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 "♥ Love it" / "Jorai loves it", smaller label (Rows on the picture), one-time heart tip; hold and move to drag
 ("My order", sort per list), Move or copy…; two-people Friends icon; Gen Z settings on cards; chat opens at its end,
 no bounce going back (Moving had a size animation). Interviewed on solo use: sold out alerts and screenshot to wish next.
+2.215: Shopify pictures given as http:// (Baracuta) load over https (`secureImage`, app and web).
 
 ### 15 November 2026, very late: "Love this" (2.213)
 Owner asked whether people say "top wish": they don't. Now "♥ Love this" with a heart in the same gold, everywhere in

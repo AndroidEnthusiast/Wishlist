@@ -335,7 +335,9 @@ internal fun parsePage(d: Document, host: String, status: Int): Meta? {
     if (isAmazon) {
         title = title.replace(Regex("^Amazon\\.[a-z.]+\\s*:\\s*"), "").replace(Regex("\\s+:\\s+[^:]+$"), "")
     }
-    var image = d.selectFirst("meta[property=\"og:image\"], meta[name=\"twitter:image\"]")
+    // The shop's own secure address first (Shopify writes og:image as http://, owner 16 November 2026: Baracuta's
+    // picture stayed white, Android won't load http).
+    var image = d.selectFirst("meta[property=\"og:image:secure_url\"], meta[property=\"og:image\"], meta[name=\"twitter:image\"]")
         ?.absUrl("content").orEmpty()
     if (image.isEmpty() && isAmazon) {
         image = d.selectFirst("#landingImage, #imgBlkFront")?.let {
@@ -401,9 +403,16 @@ internal fun parsePage(d: Document, host: String, status: Int): Meta? {
     else Meta(
         cleanTitle(title, host).take(120),
         m("og:description", "twitter:description", "description").take(200),
-        image, price, cur.ifEmpty { currencyOf("", host) }, product = product, currencySure = sure && price != null
+        secureImage(image), price, cur.ifEmpty { currencyOf("", host) }, product = product, currencySure = sure && price != null
     )
 }
+
+/**
+ * A picture address that the phone can load (owner, 16 November 2026: a Baracuta wish stayed white): http:// becomes
+ * https://, since Android refuses plain http and shops (Shopify above all) serve the same picture over https.
+ * Same as secureImage in web/parse.js.
+ */
+fun secureImage(url: String): String = if (url.startsWith("http://", ignoreCase = true)) "https://" + url.substring(7) else url
 
 /** The plain request to a shop, the same for reading a product (fetchMeta) and for a price report (PriceReport.kt). */
 internal fun shopRequest(url: String): org.jsoup.Connection.Response = Jsoup.connect(url).userAgent(UA)

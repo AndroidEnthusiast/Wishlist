@@ -432,6 +432,26 @@
    "price": null,
    "sure": false,
    "product": false
+  },
+  {
+   "name": "Shopify picture as http:// (Baracuta, 16 November 2026): the https one is used",
+   "html": "<html><head><title>Mackinaw Wool G9</title><meta property=\"og:title\" content=\"Mackinaw Wool G9\"><meta property=\"og:image\" content=\"http://www.baracuta.com/cdn/shop/files/g9.jpg?v=1\"><meta property=\"og:image:secure_url\" content=\"https://www.baracuta.com/cdn/shop/files/g9.jpg?v=1\"><meta property=\"product:price:amount\" content=\"470.00\"><meta property=\"product:price:currency\" content=\"EUR\"></head><body></body></html>",
+   "host": "www.baracuta.com",
+   "status": 200,
+   "url": "https://www.baracuta.com/products/g9",
+   "price": 470.0,
+   "currency": "EUR",
+   "image": "https://www.baracuta.com/cdn/shop/files/g9.jpg?v=1"
+  },
+  {
+   "name": "only an http:// picture: upgraded to https://",
+   "html": "<html><head><title>Lamp</title><meta property=\"og:image\" content=\"http://cdn.shop.example/lamp.jpg\"><meta property=\"product:price:amount\" content=\"40\"><meta property=\"product:price:currency\" content=\"EUR\"></head><body></body></html>",
+   "host": "shop.example",
+   "status": 200,
+   "url": "https://shop.example/lamp",
+   "price": 40.0,
+   "currency": "EUR",
+   "image": "https://cdn.shop.example/lamp.jpg"
   }
  ]
 }

@@ -606,7 +606,8 @@ fun rememberWishPhoto(url: String, px: Int = PHOTO_PX, exact: Boolean = false): 
         return p to (if (cached.height > 0) cached.width.toFloat() / cached.height else 1f)
     }
     val request = remember(key) {
-        ImageRequest.Builder(ctx).data(url).size(px).memoryCacheKey(key)
+        // An http:// picture saved before 2.215 loads over https (Android refuses plain http).
+        ImageRequest.Builder(ctx).data(secureImage(url)).size(px).memoryCacheKey(key)
             .apply { if (exact) precision(Precision.EXACT) }.build()
     }
     val painter = rememberAsyncImagePainter(request)
