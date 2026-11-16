@@ -208,6 +208,27 @@ abstract class ScreenshotBase(private val mode: String, private val tag: String 
     // The profile picture's sheet itself (2.208: its text was black on Quiet's dark grey).
     @Test fun profileSheet() { tap("Profile and settings"); shot("profile") }
     // App settings (Quiet 2.207: grouped blocks), from the profile picture's sheet.
+    // A friend's page, person first (16 November 2026): a pretend friend with lists of 1, 2 and 3 photos.
+    @Test fun friendPage() {
+        val app = ApplicationProvider.getApplicationContext<android.app.Application>()
+        val ws = (1..6).map { i ->
+            Wish(100L + i, "https://example.com/$i", "Thing $i", "", photo(app, "f$i", listOf(0xFF37474F, 0xFFE0A96D, 0xFF2E7D32, 0xFF8E24AA, 0xFFC62828, 0xFF1565C0)[i - 1].toInt()),
+                10.0 * i, null, "EUR", "", star = i == 2)
+        }
+        compose.runOnUiThread {
+            val lists = listOf(FriendList("L1", "Birthday", 3), FriendList("L2", "Mexico", 2), FriendList("L3", "Books", 1))
+            Friends.pretend(FriendsState("ME", listOf(Person("p1", "Magdalena", 0, lists = lists, birthday = "04-01",
+                bio = "Candles, paint, canvas, pencils, experiences")), emptyList(), emptyList()), mapOf("p1" to "Clothing M · Shoes 37"))
+            FriendCache.loaded = mapOf(
+                "L1" to RemoteList("Birthday", emptyList(), ws.take(3)),
+                "L2" to RemoteList("Mexico", emptyList(), ws.drop(3).take(2)),
+                "L3" to RemoteList("Books", emptyList(), ws.drop(5))
+            )
+        }
+        tap("Friends"); shot("friendsTab")
+        tap("Magdalena"); shot("friendpage")
+    }
+
     @Test fun settings() {
         tap("Profile and settings"); repeat(5) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
         tap("App settings"); shot("settings")

@@ -128,9 +128,12 @@ object RecoveryKey {
         val p = prefs(c)
         return cardShown && Config.enabled && !saved(c) && p.getInt("rk_later_n", 0) < 3 && now >= p.getLong("rk_later_until", 0L)
     }
+    /**
+     * ✕ on the Home card: gone for good (owner, 16 November 2026: it stayed on Home; until then "Later" hid it for a
+     * week, three times). The key stays in App settings > Backup and Profile.
+     */
     fun later(c: Context) {
-        val p = prefs(c)
-        p.edit().putInt("rk_later_n", p.getInt("rk_later_n", 0) + 1).putLong("rk_later_until", System.currentTimeMillis() + 7L * 24 * 60 * 60 * 1000).apply()
+        prefs(c).edit().putInt("rk_later_n", 3).apply()
         cardShown = false
     }
 
@@ -262,8 +265,11 @@ fun RecoveryCard() {
                 )
                 Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     FilledTonalButton(onClick = { open = true }) { Text(tr("Save your key")) }
-                    TextButton(onClick = { RecoveryKey.later(ctx) }) { Text(tr("Later")) }
                 }
+            }
+            // ✕: never again on Home (owner, 16 November 2026).
+            IconButton(onClick = { RecoveryKey.later(ctx) }, modifier = Modifier.size(48.dp)) {
+                Icon(AppIcons.Close, tr("Close"), tint = cs.onSurfaceVariant, modifier = Modifier.size(20.dp))
             }
         }
         if (open) RecoveryKeyDialog { open = false }
@@ -273,13 +279,18 @@ fun RecoveryCard() {
         Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp).fillMaxWidth()
             .lookSurface(LocalLook.current, MaterialTheme.shapes.medium, cs.secondaryContainer, depth = 4.dp).padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = 4.dp)
     ) {
-        Text(tr("Keep your wishlists safe on a new phone"), style = MaterialTheme.typography.titleSmall, color = cs.onSecondaryContainer)
+        Row(verticalAlignment = Alignment.Top) {
+            Text(tr("Keep your wishlists safe on a new phone"), style = MaterialTheme.typography.titleSmall, color = cs.onSecondaryContainer, modifier = Modifier.weight(1f).padding(top = 8.dp))
+            // ✕: never again on Home (owner, 16 November 2026).
+            IconButton(onClick = { RecoveryKey.later(ctx) }, modifier = Modifier.size(48.dp)) {
+                Icon(AppIcons.Close, tr("Close"), tint = cs.onSecondaryContainer, modifier = Modifier.size(20.dp))
+            }
+        }
         Text(
             tr("Save your recovery key once. With it, everything comes back on a new phone."),
             style = MaterialTheme.typography.bodyMedium, color = cs.onSecondaryContainer, modifier = Modifier.padding(top = 4.dp)
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = { RecoveryKey.later(ctx) }) { Text(tr("Later")) }
             TextButton(onClick = { open = true }) { Text(tr("Save your key")) }
         }
     }

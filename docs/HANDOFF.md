@@ -8,7 +8,7 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 - **2.214 (16 November 2026), read first.** The owner's review (`docs/decisions/screens.md`, last section): ask how
   "Love it", the tip, dragging (can't be felt here), Move or copy…, the Friends icon, Gen Z settings cards and the
   chat feel. Then the chosen next features: Sold out / back in stock, then Screenshot to wish
-  (`docs/decisions/ideas.md`, "Solo use"); interview on risks first. Ask how the trimmed wish form (2.216) feels.
+  (`docs/decisions/ideas.md`, "Solo use"); interview on risks first. Ask how the trimmed wish form (2.216) and the friend page (2.217) feel.
 - **2.213 (15 November 2026), read first.** "♥ Love this" replaced "Top wish" (app and web). Ask how it reads.
 - **2.212 (15 November 2026).** Sheets, price page and wish form rebuilt (`docs/styles/identity.md`, last
   section). Ask how they feel; the remaining drop-down menus elsewhere (e.g. a category's menu) could become sheets too.
@@ -44,7 +44,7 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 ("My order", sort per list), Move or copy…; two-people Friends icon; Gen Z settings on cards; chat opens at its end,
 no bounce going back (Moving had a size animation). Interviewed on solo use: sold out alerts and screenshot to wish next.
 2.215: Shopify pictures given as http:// (Baracuta) load over https (`secureImage`, app and web).
-2.216: the wish form trimmed (link first, chips, More details, sheets, no Exactly this), Quiet field text full ink.
+2.216: wish form trimmed, Quiet field text full ink. 2.217: friend page person first, 2-photo collages, failed pictures, card ✕.
 
 ### 15 November 2026, very late: "Love this" (2.213)
 Owner asked whether people say "top wish": they don't. Now "♥ Love this" with a heart in the same gold, everywhere in

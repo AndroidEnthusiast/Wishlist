@@ -458,7 +458,22 @@ fun ImageBlock(image: String, onPick: () -> Unit, onRemove: () -> Unit, big: Boo
                 .clickable(onClick = onPick),
             contentAlignment = Alignment.Center
         ) {
-            AsyncImage(model = image, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+            // A picture that can't be loaded says so, and a tap adds your own (owner, 16 November 2026: it stayed white).
+            var failed by remember(image) { mutableStateOf(false) }
+            AsyncImage(
+                model = secureImage(image), contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize(),
+                onError = { failed = true; BrokenPhotos.mark(image) }, onSuccess = { failed = false; BrokenPhotos.clear(image) }
+            )
+            if (failed) Column(
+                Modifier.fillMaxSize().background(look.photoSurface(0)).padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
+            ) {
+                PlaceholderIcon("gift", 36.dp, look.photoInk)
+                Text(tr("The shop’s picture couldn’t load"), style = MaterialTheme.typography.titleSmall, color = look.photoInk,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
+                Text(tr("Tap to add your own photo"), style = MaterialTheme.typography.bodySmall, color = look.photoInk.copy(alpha = 0.8f),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            }
             // ✕ in the corner: 32 dp to see, a 48 dp area to tap (docs/STYLE.md).
             Box(
                 Modifier.align(Alignment.TopEnd).size(48.dp)

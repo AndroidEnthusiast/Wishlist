@@ -621,6 +621,11 @@ internal fun ListBlock(
                 val pics = item.pics
                 when {
                     pics.size >= 3 -> Collage(pics)
+                    // Two photos side by side (owner, 16 November 2026, like Giftful), not just the first.
+                    pics.size == 2 -> Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                        WishImage(pics[0], Modifier.weight(1f).fillMaxHeight(), ContentScale.Crop)
+                        WishImage(pics[1], Modifier.weight(1f).fillMaxHeight(), ContentScale.Crop)
+                    }
                     item.picture != null -> WishImage(item.picture, Modifier.fillMaxSize(), ContentScale.Crop)
                     item.count == 0 && item.addTo.isNotEmpty() && !small -> Text(
                         "+ " + tr("Add wish"), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,

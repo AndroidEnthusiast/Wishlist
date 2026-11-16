@@ -52,6 +52,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -555,10 +560,12 @@ private fun friendWishes(f: Person, loaded: Map<String, RemoteList>): List<Pair<
         .sortedByDescending { it.first.id }
 
 /**
- * A friend's page, like your own Home (owner, 2.95): their picture and name (with their birthday and "I like…"), the
- * numbers (wishlists, wishes, top wishes: tap for their pages) and their visible lists as blocks.
+ * A friend's page, person first (owner, 16 November 2026, after comparing with Giftful): their photo and name once,
+ * in the middle; what a giver needs as chips (birthday, sizes, what they like, and how many wishes they love when there
+ * are any: never a 0); a Message button; then their lists as photo collages. The private note is a small row under
+ * the lists. No number tiles any more.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun FriendPage(f: Person, snack: SnackbarHostState) {
     val places = LocalPlaces.current
@@ -568,18 +575,15 @@ private fun FriendPage(f: Person, snack: SnackbarHostState) {
     val look = LocalLook.current
     LoadFriendLists(f)
     val wishes = friendWishes(f, FriendCache.loaded)
+    var noteOpen by remember(f.id) { mutableStateOf(false) }
+    var note by remember(f.id) { mutableStateOf(Friends.note(ctx, f.id)) }
     Scaffold(
         containerColor = cs.background,
         topBar = {
+            // Only the way back: the name is under the photo (it was shown twice).
             TopAppBar(
-                title = { ScreenTitle(f.name) },
+                title = {}, large = false,
                 navigationIcon = { IconButton(onClick = { places.leavePerson(go) }) { Icon(AppIcons.ArrowBack, tr("Back")) } },
-                // Message this friend (2.98).
-                actions = {
-                    IconButton(onClick = { go(Deep.Chat(f.id)) }) {
-                        ChatIcon(MaterialTheme.colorScheme.onSurface)
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
         },
@@ -588,67 +592,109 @@ private fun FriendPage(f: Person, snack: SnackbarHostState) {
         Column(
             Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 32.dp)
         ) {
-            // Picture and name on the left, the numbers next to them, as on your Home.
-            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.widthIn(max = 96.dp).padding(4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Avatar(Friends.photos[f.id], f.name, 64.dp)
+            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Avatar(Friends.photos[f.id], f.name, 112.dp)
+                Text(
+                    f.name, style = MaterialTheme.typography.headlineSmall, fontWeight = look.titleWeight, fontFamily = look.display,
+                    color = cs.onBackground, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 12.dp)
+                )
+                // What a giver needs, as chips; nothing empty is shown.
+                val days = Friends.daysUntil(f.birthday)
+                val loved = wishes.count { it.first.star && !it.first.got }
+                val likes = likesOf(f.bio)
+                val sizes = Friends.sizes[f.id]
+                if (days != null || sizes != null || loved > 0 || likes.isNotEmpty()) FlowRow(
+                    Modifier.fillMaxWidth().padding(top = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (days != null) AboutChip(
+                        "🎂 " + birthdayText(f.birthday) + " · " + (if (days == 0) tr("today") else tr("in %d days", days)),
+                        // Within two weeks: in your colour.
+                        on = days <= 14
+                    )
+                    if (sizes != null) AboutChip(sizes)
+                    if (loved > 0) AboutChip("♥ " + (if (loved == 1) tr("Loves 1 wish") else tr("Loves %d wishes", loved)), onClick = { places.friendPage = "top" })
+                    likes.forEach { AboutChip(it) }
+                }
+                if (f.lists.isEmpty()) Text(
+                    tr("%s hasn’t added a wishlist yet.", f.name), style = MaterialTheme.typography.bodyMedium,
+                    color = cs.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 16.dp)
+                )
+                // Message (2.98), as a button under the name (owner, 16 November 2026), not an icon in the top bar.
+                OutlinedButton(onClick = { go(Deep.Chat(f.id)) }, modifier = Modifier.padding(top = 16.dp)) {
+                    ChatIcon(cs.onSurface, 18.dp)
+                    androidx.compose.foundation.layout.Spacer(Modifier.width(8.dp))
+                    Text(if (f.lists.isEmpty()) tr("Send a message") else tr("Message"))
+                }
+            }
+            if (f.lists.isNotEmpty()) {
+                Text(
+                    tr("Wishlists"), style = MaterialTheme.typography.titleLarge, fontWeight = look.titleWeight,
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 4.dp)
+                )
+                val items = f.lists.map { l ->
+                    val ws = FriendCache.loaded[l.code]?.wishes.orEmpty().filter { it.bin == 0L && it.id != ABOUT_ITEM_ID }
+                    // Their newest photos as a collage, as on your own Home (16 November 2026: friends showed one photo).
+                    val pics = newestPics(ws)
+                    HubItem("f:" + l.code, l.name, if (FriendCache.loaded.containsKey(l.code)) ws.size else l.count, pics.firstOrNull(), false, "", pics) { places.friendList = l }
+                }
+                BlockGrid(items, onHome = false, actionsOf = { emptyList() }, onAddTo = {})
+            }
+            // The private note (owner, 2.128; only on this phone): a small row under the lists, a sheet to write it.
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp).heightIn(min = 48.dp)
+                    .clip(RoundedCornerShape(12.dp)).clickable { noteOpen = true }.padding(horizontal = 4.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(AppIcons.Edit, null, tint = cs.onSurfaceVariant, modifier = Modifier.size(20.dp))
+                Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                    Text(if (note.isBlank()) tr("Add a private note") else tr("Private note"), style = MaterialTheme.typography.titleSmall, color = cs.onSurface)
                     Text(
-                        f.name, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 6.dp)
+                        note.ifBlank { tr("Only you can see this.") }, style = MaterialTheme.typography.bodySmall,
+                        color = cs.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis
                     )
                 }
-                Row(Modifier.weight(1f).padding(start = 8.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    val top = wishes.count { it.first.star }
-                    FriendStat(f.lists.size, if (f.lists.size == 1) tr("Wishlist") else tr("Wishlists")) {}
-                    FriendStat(wishes.size, if (wishes.size == 1) tr("Wish") else tr("Wishes")) { places.friendPage = "wishes" }
-                    FriendStat(top, tr("Loved")) { places.friendPage = "top" }
-                }
             }
-            // Birthday and "I like…" (2.95).
-            val days = Friends.daysUntil(f.birthday)
-            if (days != null || f.bio.isNotBlank()) {
-                Column(Modifier.padding(horizontal = 20.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    if (days != null) Text(
-                        (if (days == 0) tr("Birthday today") else tr("Birthday in %d days", days)) + " · " + birthdayText(f.birthday),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    if (f.bio.isNotBlank()) Text(tr("I like: %s", f.bio), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
-                }
-            }
-            // Their sizes (owner, 2.128).
-            Friends.sizes[f.id]?.let { sz ->
-                Text(sz, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 20.dp, vertical = 2.dp))
-            }
-            // A private note about this friend (owner, 2.128): only on this phone.
-            var note by remember(f.id) { mutableStateOf(Friends.note(ctx, f.id)) }
-            Text(
-                tr("Private note"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 12.dp)
-            )
-            Text(tr("Only you can see this."), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(horizontal = 20.dp))
+        }
+    }
+    if (noteOpen) PrivateNoteSheet(f, note, { note = it.take(500); Friends.setNote(ctx, f.id, note) }) { noteOpen = false }
+}
+
+/** "Candles, paint and canvas" as separate words for chips: split at commas, semicolons and "and"; at most 12. */
+fun likesOf(bio: String): List<String> =
+    bio.split(Regex("[,;\n]|\\s+and\\s+|\\s+&\\s+")).map { it.trim().trimEnd('.') }.filter { it.isNotEmpty() }.take(12)
+
+/** A small chip of facts on a friend's page; [on] in your colour; with [onClick] it can be tapped. */
+@Composable
+private fun AboutChip(text: String, on: Boolean = false, onClick: (() -> Unit)? = null) {
+    val look = LocalLook.current
+    Text(
+        text, style = MaterialTheme.typography.labelLarge, color = look.chipContent(on), maxLines = 1, overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.lookChip(look, on).then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+    )
+}
+
+/** Writing the private note about a friend, in a sheet; saved as you type, on this phone only. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PrivateNoteSheet(f: Person, note: String, onChange: (String) -> Unit, onClose: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    ModalBottomSheet(onDismissRequest = onClose, sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        Column(Modifier.fillMaxWidth().navigationBarsPadding().imePadding().padding(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(tr("Private note about %s", f.name), style = MaterialTheme.typography.titleMedium, color = cs.onSurface)
+            Text(tr("Only you can see this."), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
             OutlinedTextField(
-                // Saved as you type, on this phone only.
-                note, { note = it.take(500); Friends.setNote(ctx, f.id, note) }, maxLines = 5,
+                note, onChange, minLines = 3, maxLines = 6,
                 placeholder = { Text(tr("For example: loves tea, no candles")) },
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
+                modifier = Modifier.fillMaxWidth()
             )
-            Text(
-                tr("Wishlists"), style = MaterialTheme.typography.titleLarge, fontWeight = look.titleWeight,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 4.dp)
-            )
-            if (f.lists.isEmpty()) {
-                Text(
-                    tr("%s hasn’t made a wishlist visible to friends yet.", f.name),
-                    color = cs.onSurfaceVariant, modifier = Modifier.padding(horizontal = 16.dp)
-                )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = onClose) { Text(tr("Done")) }
             }
-            val items = f.lists.map { l ->
-                val ws = FriendCache.loaded[l.code]?.wishes.orEmpty().filter { it.bin == 0L && it.id != ABOUT_ITEM_ID }
-                val pic = ws.filter { it.image.isNotBlank() }.maxByOrNull { it.id }?.image
-                HubItem("f:" + l.code, l.name, if (FriendCache.loaded.containsKey(l.code)) ws.size else l.count, pic, false, "") { places.friendList = l }
-            }
-            BlockGrid(items, onHome = false, actionsOf = { emptyList() }, onAddTo = {})
         }
     }
 }
@@ -659,19 +705,6 @@ fun birthdayText(b: String): String {
     val month = java.time.Month.of(m.groupValues[1].toInt())
     val locale = if (Lang.code == "nl") java.util.Locale("nl") else java.util.Locale.UK
     return m.groupValues[2].toInt().toString() + " " + month.getDisplayName(java.time.format.TextStyle.FULL, locale)
-}
-
-@Composable
-private fun FriendStat(n: Int, label: String, onClick: () -> Unit) {
-    Column(
-        Modifier.statTile().clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 3.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // The tile's own ink (dark on the bright cards of some styles) and the style's display font for the number.
-        val look = LocalLook.current
-        Text(n.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, fontFamily = look.display, color = look.cardInk(5L))
-        Text(label, style = MaterialTheme.typography.bodySmall, color = look.cardMuted(5L), maxLines = 1)
-    }
 }
 
 /**

@@ -208,3 +208,10 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here. Look and f
 - **Pickers:** Category and Save to open bottom sheets. Owner asked whether sheets everywhere are good: the rule is a
   sheet for lists that can grow or have actions, a drop-down for a short fixed choice next to its button (Size, sort).
 - **Grey text fixed:** in Quiet, a field inside a dialog took the dialog's grey text colour; values are full ink now.
+
+## Pictures that can't load, the Home recovery card (owner, 16 November 2026; 2.217)
+- A wish picture that fails (a shop refusing, a broken address, offline) shows the gift on cards instead of a white
+  box (`BrokenPhotos`, in memory: tried again on the next start); the wish form shows "The shop's picture couldn't
+  load" and "Tap to add your own photo" (the tap opens Take / Choose photo).
+- The recovery key card on Home ("Keep your wishlists safe on a new phone") has a ✕ that closes it for good (it was
+  "Later": a week, three times). The key stays in App settings > Backup and Profile.

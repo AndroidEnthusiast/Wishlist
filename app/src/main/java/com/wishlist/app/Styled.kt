@@ -611,14 +611,37 @@ fun rememberWishPhoto(url: String, px: Int = PHOTO_PX, exact: Boolean = false): 
             .apply { if (exact) precision(Precision.EXACT) }.build()
     }
     val painter = rememberAsyncImagePainter(request)
+    // A picture that can't be loaded (a shop that refuses, a broken address, offline) is remembered, so the cards show
+    // the gift instead of a white box (owner, 16 November 2026, after a Barnes & Noble review and Baracuta).
+    if (painter.state is AsyncImagePainter.State.Error) LaunchedEffect(url) { BrokenPhotos.mark(url) }
+    else if (painter.state is AsyncImagePainter.State.Success) LaunchedEffect(url) { BrokenPhotos.clear(url) }
     val d = (painter.state as? AsyncImagePainter.State.Success)?.result?.drawable
     val ratio = d?.let { if (it.intrinsicWidth > 0 && it.intrinsicHeight > 0) it.intrinsicWidth.toFloat() / it.intrinsicHeight else null }
     return painter to ratio
 }
 
+/**
+ * Wish pictures that couldn't be loaded since the app started (in memory only: online again, a new start tries again).
+ * Cards then show the gift as for a wish without a picture; the wish form says so and offers your own photo.
+ */
+object BrokenPhotos {
+    private val broken = androidx.compose.runtime.mutableStateMapOf<String, Boolean>()
+    fun mark(url: String) { if (url.isNotBlank()) broken[url] = true }
+    fun clear(url: String) { broken.remove(url) }
+    fun isBroken(url: String): Boolean = broken[url] == true
+}
+
 @Composable
 fun PhotoStage(url: String, description: String, small: Boolean, modifier: Modifier = Modifier) {
     val look = LocalLook.current
+    if (BrokenPhotos.isBroken(url)) {
+        // Still asked for in the background (so it comes back once it loads), the gift on top.
+        Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Image(rememberWishPhoto(url).first, null, Modifier.size(1.dp))
+            PlaceholderIcon("gift", if (small) 32.dp else 48.dp, look.photoInk)
+        }
+        return
+    }
     if (look.design == "quiet") { QuietPhoto(url, description, small, modifier); return }
     val tiny = rememberWishPhoto(url, 24, exact = true).first
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

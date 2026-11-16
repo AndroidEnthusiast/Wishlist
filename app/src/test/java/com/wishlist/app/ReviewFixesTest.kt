@@ -216,3 +216,49 @@ class WishFormTrimTest {
     }
 }
 
+
+/** The friend's page person first, collages, the Home card's ✕ and broken pictures (owner, 16 November 2026). */
+@RunWith(RobolectricTestRunner::class)
+@org.robolectric.annotation.Config(sdk = [34])
+class PersonFirstTest {
+    @Test fun likesBecomeChips() {
+        assertEquals(listOf("Candles", "paint", "canvas", "pencils", "experiences"), likesOf("Candles, paint, canvas, pencils, experiences."))
+        assertEquals(listOf("tea", "cake"), likesOf("tea and cake"))
+        assertTrue(likesOf("  ").isEmpty())
+    }
+
+    /** No number tiles, the name once, lists as collages, the note as a row with a sheet, Message as a button. */
+    @Test fun friendPageIsPersonFirst() {
+        val f = File("src/main/java/com/wishlist/app/FriendsUi.kt").readText()
+        val page = f.substring(f.indexOf("private fun FriendPage("), f.indexOf("fun likesOf("))
+        assertFalse(page.contains("FriendStat("))
+        assertFalse("no zero shown", page.contains("FriendStat(top"))
+        assertTrue(page.contains("if (loved > 0) AboutChip("))
+        assertTrue(page.contains("val pics = newestPics(ws)"))
+        assertTrue(page.contains("PrivateNoteSheet("))
+        assertTrue(page.contains("go(Deep.Chat(f.id))"))
+        assertTrue(page.contains("title = {}"))
+    }
+
+    @Test fun twoPhotosSideBySide() {
+        assertTrue(File("src/main/java/com/wishlist/app/Hub.kt").readText().contains("pics.size == 2 -> Row("))
+    }
+
+    /** ✕ on the recovery card: never again on Home. */
+    @Test fun recoveryCardClosesForGood() {
+        val app = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()
+        RecoveryKey.later(app)
+        assertEquals(3, app.getSharedPreferences("wishlist", android.content.Context.MODE_PRIVATE).getInt("rk_later_n", 0))
+        assertFalse(RecoveryKey.showCard(app, System.currentTimeMillis() + 365L * 24 * 3600 * 1000))
+    }
+
+    /** A picture that can't load shows the gift on cards, and the form says so. */
+    @Test fun brokenPicturesAreShownAsSuch() {
+        BrokenPhotos.mark("https://x.example/a.jpg")
+        assertTrue(BrokenPhotos.isBroken("https://x.example/a.jpg"))
+        BrokenPhotos.clear("https://x.example/a.jpg")
+        assertFalse(BrokenPhotos.isBroken("https://x.example/a.jpg"))
+        assertTrue(File("src/main/java/com/wishlist/app/Styled.kt").readText().contains("if (BrokenPhotos.isBroken(url)) {"))
+        assertTrue(File("src/main/java/com/wishlist/app/WishForm.kt").readText().contains("tr(\"The shop’s picture couldn’t load\")"))
+    }
+}

@@ -149,3 +149,15 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
 - **"Viewed 23 times" removed** ("that functionality shouldn't be there"): the app and the web pages no longer count
   or show views; `wl_view` / `wl_view_count` stay on the server, unused (no script to run, old apps keep working).
 
+
+## A friend's page, person first (owner, 16 November 2026, after comparing with Giftful and competitor reviews; 2.217)
+- Replaces the Home-like friend page of 2.95: the photo (112 dp) and name once, centred (no title in the top bar, no
+  chat icon there); chips for the birthday ("1 April · in 136 days", in your colour within 2 weeks), sizes, "Loves 3
+  wishes" (only when more than 0; opens their loved wishes) and each thing they like (split at commas and "and");
+  a "Message" button ("Send a message" when they have no visible list, with "… hasn't added a wishlist yet.").
+- No number tiles on friend pages (their wishes page is reached through the lists; Loved through its chip). On your own
+  Home the tiles stay as shortcuts.
+- Their lists as photo collages like your own (they showed one photo); a collage with 2 photos is side by side
+  everywhere (Home, friends, groups).
+- The private note: a small row under the lists ("Add a private note" or the note in 2 lines), written in a sheet.
+- Not chosen from the reviews: price comparison, bulk import, adding on the web, recommended products, public following.

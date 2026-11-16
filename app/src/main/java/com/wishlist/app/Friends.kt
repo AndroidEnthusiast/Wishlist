@@ -144,6 +144,9 @@ object Friends {
     var sizes by mutableStateOf<Map<String, String>>(emptyMap())
         private set
 
+    /** Only for the screenshots (ScreenshotTest.friendPage): a pretend friend without a server. */
+    internal fun pretend(s: FriendsState, sz: Map<String, String>) { state = s; sizes = sz }
+
     /** Your sizes as stored online and sent with your lists: {"c": clothing, "s": shoes}, or "" when none. */
     fun sizesJson(): String =
         if (myClothing.isBlank() && myShoes.isBlank()) "" else JSONObject().put("c", myClothing).put("s", myShoes).toString()
