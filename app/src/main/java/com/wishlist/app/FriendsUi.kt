@@ -592,32 +592,11 @@ private fun FriendPage(f: Person, snack: SnackbarHostState) {
         Column(
             Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 32.dp)
         ) {
-            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Avatar(Friends.photos[f.id], f.name, 112.dp)
-                Text(
-                    f.name, style = MaterialTheme.typography.headlineSmall, fontWeight = look.titleWeight, fontFamily = look.display,
-                    color = cs.onBackground, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(top = 12.dp)
-                )
-                // What a giver needs, as chips; nothing empty is shown.
-                val days = Friends.daysUntil(f.birthday)
-                val loved = wishes.count { it.first.star && !it.first.got }
-                val likes = likesOf(f.bio)
-                val sizes = Friends.sizes[f.id]
-                if (days != null || sizes != null || loved > 0 || likes.isNotEmpty()) FlowRow(
-                    Modifier.fillMaxWidth().padding(top = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    if (days != null) AboutChip(
-                        "🎂 " + birthdayText(f.birthday) + " · " + (if (days == 0) tr("today") else tr("in %d days", days)),
-                        // Within two weeks: in your colour.
-                        on = days <= 14
-                    )
-                    if (sizes != null) AboutChip(sizes)
-                    if (loved > 0) AboutChip("♥ " + (if (loved == 1) tr("Loves 1 wish") else tr("Loves %d wishes", loved)), onClick = { places.friendPage = "top" })
-                    likes.forEach { AboutChip(it) }
-                }
+            val loved = wishes.count { it.first.star && !it.first.got }
+            PersonHero(
+                Friends.photos[f.id], f.name, f.birthday, Friends.sizes[f.id], f.bio,
+                extra = { if (loved > 0) AboutChip("♥ " + (if (loved == 1) tr("Loves 1 wish") else tr("Loves %d wishes", loved)), onClick = { places.friendPage = "top" }) }
+            ) {
                 if (f.lists.isEmpty()) Text(
                     tr("%s hasn’t added a wishlist yet.", f.name), style = MaterialTheme.typography.bodyMedium,
                     color = cs.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 16.dp)
@@ -666,9 +645,51 @@ private fun FriendPage(f: Person, snack: SnackbarHostState) {
 fun likesOf(bio: String): List<String> =
     bio.split(Regex("[,;\n]|\\s+and\\s+|\\s+&\\s+")).map { it.trim().trimEnd('.') }.filter { it.isNotEmpty() }.take(12)
 
+/**
+ * A person at the top of their page, the same on your Home and a friend's page (owner, 16 November 2026: "what you see
+ * is what friends see"): the photo and name centred, then chips for the birthday (in your colour within 2 weeks),
+ * sizes and each thing they like, then [extra] chips; [below] under the chips (a button, a line). Nothing empty shows.
+ */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+internal fun PersonHero(
+    photo: String?, name: String, birthday: String, sizes: String?, bio: String,
+    onPhoto: (() -> Unit)? = null, extra: @Composable () -> Unit = {}, below: @Composable () -> Unit = {}
+) {
+    val cs = MaterialTheme.colorScheme
+    val look = LocalLook.current
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(Modifier.clip(CircleShape).then(if (onPhoto != null) Modifier.clickable(onClickLabel = tr("Profile"), onClick = onPhoto) else Modifier)) {
+            Avatar(photo, name, 112.dp)
+        }
+        Text(
+            name, style = MaterialTheme.typography.headlineSmall, fontWeight = look.titleWeight, fontFamily = look.display,
+            color = cs.onBackground, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 12.dp).clip(RoundedCornerShape(8.dp))
+                .then(if (onPhoto != null) Modifier.clickable(onClick = onPhoto) else Modifier).padding(horizontal = 4.dp)
+        )
+        val days = Friends.daysUntil(birthday)
+        val likes = likesOf(bio)
+        FlowRow(
+            Modifier.fillMaxWidth().padding(top = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            if (days != null) AboutChip(
+                "🎂 " + birthdayText(birthday) + " · " + (if (days == 0) tr("today") else tr("in %d days", days)),
+                on = days <= 14
+            )
+            if (!sizes.isNullOrBlank()) AboutChip(sizes)
+            extra()
+            likes.forEach { AboutChip(it) }
+        }
+        below()
+    }
+}
+
 /** A small chip of facts on a friend's page; [on] in your colour; with [onClick] it can be tapped. */
 @Composable
-private fun AboutChip(text: String, on: Boolean = false, onClick: (() -> Unit)? = null) {
+internal fun AboutChip(text: String, on: Boolean = false, onClick: (() -> Unit)? = null) {
     val look = LocalLook.current
     Text(
         text, style = MaterialTheme.typography.labelLarge, color = look.chipContent(on), maxLines = 1, overflow = TextOverflow.Ellipsis,

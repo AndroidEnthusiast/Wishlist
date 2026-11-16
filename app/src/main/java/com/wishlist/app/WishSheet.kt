@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -279,4 +280,41 @@ fun HaveItDialog(count: Int, onKeep: () -> Unit, onReceived: () -> Unit, onClose
         confirmButton = {},
         dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
     )
+}
+
+/** One row of a [PopMenu]: its icon, its word, red when it removes, and an optional second line (the current choice). */
+class PopRow(
+    val icon: androidx.compose.ui.graphics.vector.ImageVector, val label: String, val danger: Boolean = false,
+    val detail: String? = null, val onClick: () -> Unit
+)
+
+/**
+ * A small menu at its button (owner, 16 November 2026, after Giftful's ⋯ menu: "clean and clear, with the icons"): an
+ * icon and a word per row, a thin line, then what removes in red. For up to four actions; longer menus (a wish's ⋮) stay
+ * bottom sheets. Shown while it is in the composition (call it only when open).
+ */
+@Composable
+fun PopMenu(onClose: () -> Unit, rows: List<PopRow>) {
+    val cs = MaterialTheme.colorScheme
+    val (removing, doing) = rows.partition { it.danger }
+    @Composable
+    fun item(r: PopRow) {
+        val ink = if (r.danger) cs.error else cs.onSurface
+        androidx.compose.material3.DropdownMenuItem(
+            text = {
+                Column {
+                    Text(r.label, style = MaterialTheme.typography.bodyLarge, color = ink)
+                    if (r.detail != null) Text(r.detail, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                }
+            },
+            leadingIcon = { Icon(r.icon, null, tint = ink, modifier = Modifier.size(22.dp)) },
+            onClick = { onClose(); r.onClick() },
+            modifier = Modifier.heightIn(min = 52.dp).padding(horizontal = 4.dp)
+        )
+    }
+    DropdownMenu(expanded = true, onDismissRequest = onClose, modifier = Modifier.widthIn(min = 220.dp)) {
+        doing.forEach { item(it) }
+        if (doing.isNotEmpty() && removing.isNotEmpty()) androidx.compose.material3.HorizontalDivider(Modifier.padding(vertical = 4.dp), color = cs.outlineVariant)
+        removing.forEach { item(it) }
+    }
 }

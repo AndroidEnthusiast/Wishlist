@@ -229,6 +229,10 @@ abstract class ScreenshotBase(private val mode: String, private val tag: String 
         tap("Magdalena"); shot("friendpage")
     }
 
+    // The + menu outside a list, and a list's small ⋮ menu (16 November 2026).
+    @Test fun plusMenu() { tap("Add wish"); shot("plusmenu") }
+    @Test fun listMenu() { tap("More for My wishlist"); shot("listmenu_pop") }
+
     @Test fun settings() {
         tap("Profile and settings"); repeat(5) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
         tap("App settings"); shot("settings")

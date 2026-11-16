@@ -272,17 +272,23 @@ fun HubScreen(
                 UpdateBar()
                 // "Keep your wishlists safe on a new phone" until the recovery key is saved (RecoveryKey.kt, 2.187).
                 RecoveryCard()
-                // Your picture and name, and the numbers (2.89: the cover photo card is gone).
-                ProfileSummary(onProfile, onFriends, onAddWish)
-    
-                // (The shops moved to their own tab, Discover, owner 7 November 2026.)
-                ListsSection(onHome = true)
-    
+                // Home is your profile (owner, 16 November 2026, after Giftful): you as friends see you (PersonHero), then
+                // all your lists in one grid, yours first; no numbers card, no headings, no "Create list" tiles (the
+                // bottom bar's + makes new lists).
+                Spacer(Modifier.height(16.dp))
+                HomeHero(onProfile, onFriends, onAddWish)
+                GroupInvites()
+                val groupsOfMine = wishGroupItems(onOpenWishGroup)
+                BlockGrid(
+                    byRecent(mineItems) + byRecent(groupItems) + byRecent(groupsOfMine), true,
+                    { item -> if (item.key.startsWith("g:")) emptyList() else actionsOf(item) }, onAddTo, dots = true,
+                    modifier = Modifier.padding(top = 20.dp)
+                )
+
                 // Gift exchange in its season (owner, 7 November 2026).
                 SeasonCard(onNewExchange)
-                // Gift exchanges (owner, 7 November 2026: out of the menu, onto Home): yours as blocks and a small "New gift
-                // exchange" block, all year.
-                if (Config.enabled) ExchangesSection(onNewExchange)
+                // Your gift exchanges as blocks (only when you have one; "New gift exchange" is in the + menu, 16 November 2026).
+                if (Config.enabled && Exchanges.list.isNotEmpty()) ExchangesSection(onNewExchange, withNew = false)
     
                 // No "Price changes" here any more (owner, 2.95): price news is on Price watch and in Notifications.
             }
@@ -507,15 +513,17 @@ internal fun BlockGrid(
     items: List<HubItem>, onHome: Boolean, actionsOf: (HubItem) -> List<Triple<String, Boolean, () -> Unit>>,
     onAddTo: (String) -> Unit,
     // "+ New …" as the last block (owner, 2.134): a new list appears right where you tapped.
-    newLabel: String? = null, onNew: (() -> Unit)? = null
+    newLabel: String? = null, onNew: (() -> Unit)? = null,
+    // The ⋮ next to each name (Home, 16 November 2026).
+    dots: Boolean = false, modifier: Modifier = Modifier
 ) {
     val cells: List<HubItem?> = items + (if (onNew != null) listOf(null) else emptyList())
-    Column(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    Column(modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         cells.chunked(2).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 row.forEach { item ->
                     if (item == null) NewBlock(newLabel.orEmpty(), onNew ?: {}, Modifier.weight(1f))
-                    else ListBlock(item, if (onHome) actionsOf(item) else emptyList(), onAddTo, Modifier.weight(1f), small = false)
+                    else ListBlock(item, if (onHome) actionsOf(item) else emptyList(), onAddTo, Modifier.weight(1f), small = false, dots = dots)
                 }
                 if (row.size == 1) Spacer(Modifier.weight(1f))
             }
@@ -881,7 +889,7 @@ internal fun byRecent(items: List<HubItem>): List<HubItem> = items.sortedByDesce
 
 /** "Gift exchanges ›" on Home: your exchanges (tap: open it) and "New gift exchange"; the › opens the exchanges page. */
 @Composable
-private fun ExchangesSection(onNew: () -> Unit) {
+private fun ExchangesSection(onNew: () -> Unit, withNew: Boolean = true) {
     val go = LocalGo.current
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
@@ -911,7 +919,7 @@ private fun ExchangesSection(onNew: () -> Unit) {
                 )
             }
         }
-        item(key = "new") { NewBlock(tr("New gift exchange"), onNew, Modifier.width(w)) }
+        if (withNew) item(key = "new") { NewBlock(tr("New gift exchange"), onNew, Modifier.width(w)) }
     }
 }
 
@@ -927,6 +935,25 @@ internal fun ListMenuSheet(item: HubItem, actions: List<Triple<String, Boolean, 
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
     val code = item.key.substringAfter(':')
+    @Composable fun iconOf(label: String) = when (label) {
+        tr("Share") -> AppIcons.Share
+        tr("Edit name") -> AppIcons.Edit
+        tr("Visibility") -> AppIcons.Lock
+        tr("Leave wishlist") -> AppIcons.Close
+        else -> AppIcons.Delete
+    }
+    // Up to four actions: the small menu at the ⋮ (owner, 16 November 2026, like Giftful's ⋯), not a sheet.
+    if (actions.size <= 4) {
+        val visibility = remember(code, ListVisibility.version, Repo.mineVersion) {
+            when (ListVisibility.of(ctx, code)) {
+                Who.ME -> tr("Only me"); Who.FRIENDS -> tr("My friends"); Who.LINK -> tr("Friends + anyone with the link")
+            }
+        }
+        PopMenu(onClose, actions.map { (label, danger, act) ->
+            PopRow(iconOf(label), label, danger, if (label == tr("Visibility") && !item.group) visibility else null, act)
+        })
+        return
+    }
     ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp)) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -990,3 +1017,28 @@ internal fun VisibilitySheet(item: HubItem, snack: SnackbarHostState, onClose: (
     }
 }
 
+
+/**
+ * You at the top of Home (owner, 16 November 2026: "Home = your profile"), as friends see you: photo and name (tap for
+ * Profile), birthday, sizes and likes; then "19 wishes" (all your wishes) and "♥ 3 loved" (only above 0) as chips,
+ * and "+ Add friends" while you have none. No numbers card and no total value any more.
+ */
+@Composable
+private fun HomeHero(onProfile: () -> Unit, onFriends: () -> Unit, onAddWish: () -> Unit) {
+    val places = LocalPlaces.current
+    val ctx = LocalContext.current
+    Friends.load(ctx)
+    val all = placedWishes()
+    val loved = all.count { it.w.star && !it.w.got }
+    val friends = Friends.state?.friends?.size ?: 0
+    PersonHero(
+        Friends.myPhoto, Shared.lastName.ifBlank { tr("Add your name") }, Friends.myBirthday,
+        Friends.sizesText(Friends.sizesJson()).ifBlank { null }, Friends.myBio, onPhoto = onProfile,
+        extra = {
+            if (all.isEmpty()) AboutChip("+ " + tr("Add wish"), on = true, onClick = onAddWish)
+            else AboutChip(wishesLabel(all.size), onClick = { places.homePage = "wishes" })
+            if (loved > 0) AboutChip("♥ " + tr("%d loved", loved), onClick = { places.homePage = "top" })
+            if (friends == 0 && Config.enabled) AboutChip("+ " + tr("Add friends"), on = true, onClick = onFriends)
+        }
+    )
+}

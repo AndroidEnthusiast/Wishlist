@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -234,5 +235,31 @@ private fun Choice(title: String, detail: String, onClick: () -> Unit) {
     ) {
         Text(title, style = MaterialTheme.typography.bodyLarge)
         Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/**
+ * The bottom bar's + outside a list (owner, 16 November 2026: Home has no "Create list" tiles any more): Add a wish
+ * first, then a new wishlist, collab wishlist, wishlist group or gift exchange, each with one line that says what it is.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+fun PlusMenuSheet(onWish: () -> Unit, onNew: (String) -> Unit, onClose: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    ModalBottomSheet(onDismissRequest = onClose, sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp)) {
+            SheetGroup(listOf {
+                SheetRow({ Icon(AppIcons.Add, null, tint = cs.onSurfaceVariant) }, tr("Add a wish"), onWish, detail = tr("From a link, a photo or just a name."))
+            })
+            val more = mutableListOf<@Composable () -> Unit>(
+                { SheetRow({ Icon(AppIcons.ListIcon, null, tint = cs.onSurfaceVariant) }, tr("New wishlist"), { onNew("mine") }, detail = tr("For things you’d love to get.")) }
+            )
+            if (Config.enabled) {
+                more += { SheetRow({ Icon(AppIcons.Gift, null, tint = cs.onSurfaceVariant) }, tr("New collab wishlist"), { onNew("collab") }, detail = tr("Find and save gifts for someone, together with others.")) }
+                more += { SheetRow({ Icon(AppIcons.Group, null, tint = cs.onSurfaceVariant) }, tr("New wishlist group"), { onNew("group") }, detail = tr("A circle of people who can see each other’s wishlists.")) }
+                more += { SheetRow({ Icon(AppIcons.Exchange, null, tint = cs.onSurfaceVariant) }, tr("New gift exchange"), { onNew("exchange") }, detail = tr("Draw names, everyone gives one gift.")) }
+            }
+            SheetGroup(more)
+        }
     }
 }

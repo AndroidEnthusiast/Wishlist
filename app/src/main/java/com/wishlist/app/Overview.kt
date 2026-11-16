@@ -125,14 +125,14 @@ fun GlowBox(id: Long, small: Boolean, content: @Composable () -> Unit) {
  * A wish with the lists it is on (your own). A wish copied into other lists keeps its id, so it is one wish: counted
  * and shown once, with every list in "Added to …" (owner, 2.90). Top wish when any of its copies is.
  */
-private data class Placed(val w: Wish, val listIds: List<String>, val listNames: List<String>) {
+internal data class Placed(val w: Wish, val listIds: List<String>, val listNames: List<String>) {
     val starred: Boolean get() = w.star
 }
 
 private fun listLabel(name: String) = if (name == "My wishlist") tr(name) else name
 
 @Composable
-private fun placedWishes(): List<Placed> {
+internal fun placedWishes(): List<Placed> {
     val ctx = LocalContext.current
     val mine = remember(Repo.mineVersion, Repo.myWishes, Repo.myName, Repo.mineIds, Repo.openMine) { Repo.allMine(ctx) }
     return mine.flatMap { d -> d.wishes.map { Triple(it, d.id, listLabel(d.name)) } }

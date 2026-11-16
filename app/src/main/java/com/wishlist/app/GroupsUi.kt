@@ -81,6 +81,28 @@ fun groupNote(c: Context, listId: String): String {
  * "Your groups" on Home: invites waiting for you, then your groups (on Home one sideways row with "New group" at the
  * end, owner 7 November 2026). Only shown once you have a group or an invite: Home starts with your own wishlists.
  */
+/** Invitations to a wishlist group, as cards on Home (16 November 2026: the groups themselves are in Home's grid). */
+@Composable
+fun GroupInvites() {
+    val ctx = LocalContext.current
+    Groups.load(ctx)
+    Groups.invites.forEach { InviteCard(it) }
+}
+
+/** Your wishlist groups as blocks for Home's one grid. */
+@Composable
+internal fun wishGroupItems(onOpen: (String) -> Unit): List<HubItem> {
+    val ctx = LocalContext.current
+    Groups.load(ctx)
+    return Groups.groups.map { g ->
+        val memberPics = g.members.mapNotNull { it.list?.image?.takeIf { i -> i.isNotBlank() } }.distinct().take(3)
+        val pic = Groups.photos[g.id] ?: memberPics.firstOrNull()
+        val pics = if (Groups.photos[g.id] != null) listOf(pic!!) else memberPics
+        val n = g.members.size
+        HubItem("g:" + g.id, g.name, n, pic, true, "", pics, if (n == 1) tr("1 member") else tr("%d members", n)) { onOpen(g.id) }
+    }
+}
+
 @Composable
 fun GroupsHomeSection(onHome: Boolean, onOpen: (String) -> Unit, onNew: () -> Unit) {
     val places = LocalPlaces.current

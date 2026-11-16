@@ -10,6 +10,8 @@ Details of each item are in the doc named after it.
 - **Try 2.214 on the phone:** "Love it" labels (Rows on the picture, two per row smaller), the tip on a list with 3
   wishes, hold-and-move to reorder (also on a gift list), Move or copy…, the two-people Friends icon, Gen Z settings on
   cards, opening a chat and going back. Dragging can't be felt here: say how it feels.
+- **A wish's own page** (owner, 16 November 2026: "yes, plan it"; `docs/decisions/screens.md`, last section): interview
+  on the details first (what goes on it, own vs friends vs gift lists, the web pages), then build in its own session.
 - **Next features, chosen 16 November 2026** (`docs/decisions/ideas.md`, "Solo use"): Sold out / back in stock, then
   Screenshot to wish. Interview on risks before building each.
 - **Choose the next design style** (owner, 14 November 2026), when you want one: it is made one at a time, to a

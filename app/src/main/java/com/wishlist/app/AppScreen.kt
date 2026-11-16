@@ -80,6 +80,9 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     var receivedAsk by remember { mutableStateOf<String?>(null) }
     // "New gift exchange" (2.129): from Home and from Gift exchanges, so app-wide.
     var newExchange by remember { mutableStateOf(false) }
+    // The bottom bar's + outside a list (owner, 16 November 2026): Add a wish, or a new list, group or exchange.
+    var plusMenu by remember { mutableStateOf(false) }
+    var plusNew by remember { mutableStateOf<String?>(null) }
 
     /** Closes every screen above Home (a list, a tab, a section, a screen on top): Home shows. */
     fun closeAll() {
@@ -459,8 +462,11 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
             },
             onAdd = {
                 val onAList = route == Route.LIST
-                addTarget = if (onAList) (Shared.active ?: MyLists.saveKey(Repo.openMine, false)) else Repo.lastSaveTo
-                prefill = ""; adding = true
+                // Inside a list: straight to Add a wish for that list (owner, 16 November 2026); elsewhere the menu.
+                if (onAList) {
+                    addTarget = Shared.active ?: MyLists.saveKey(Repo.openMine, false)
+                    prefill = ""; adding = true
+                } else plusMenu = true
             },
             onDiscover = { nav.openTab(Route.SHOPS) },
             onFriends = {
@@ -494,6 +500,25 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
         onBin = { account = false; nav.openOnTop(Route.BIN) },
         onSettings = { account = false; nav.openOnTop(Route.SETTINGS) }
     )
+    if (plusMenu) PlusMenuSheet(
+        onWish = { plusMenu = false; addTarget = Repo.lastSaveTo; prefill = ""; adding = true },
+        onNew = { kind -> plusMenu = false; if (kind == "exchange") newExchange = true else plusNew = kind },
+        onClose = { plusMenu = false }
+    )
+    when (plusNew) {
+        "mine" -> NewListDialog(
+            onCreated = { id -> plusNew = null; scope.launch { snack.showToast(tr("“%s” is ready", Repo.mineName(id))) } },
+            onClose = { plusNew = null }
+        )
+        "collab" -> NewSharedDialog(
+            onCreated = { code -> plusNew = null; Shared.open(ctx, code); closeAll(); inviteDlg = true },
+            onClose = { plusNew = null }
+        )
+        "group" -> NewGroupDialog(
+            onCreated = { gid -> plusNew = null; goStable(Deep.GroupPage(gid, invite = true)) },
+            onClose = { plusNew = null }
+        )
+    }
     if (newExchange) NewExchangeDialog(
         onCreated = { gx -> newExchange = false; openExchange(gx, invite = true) },
         onClose = { newExchange = false }

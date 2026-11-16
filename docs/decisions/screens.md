@@ -215,3 +215,17 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here. Look and f
   load" and "Tap to add your own photo" (the tap opens Take / Choose photo).
 - The recovery key card on Home ("Keep your wishlists safe on a new phone") has a ✕ that closes it for good (it was
   "Later": a week, three times). The key stays in App settings > Backup and Profile.
+
+## Home is your profile; the + menu; small menus as pop-ups (owner, 16 November 2026, after Giftful; 2.218)
+- **Home** = you as friends see you (`PersonHero`, shared with a friend's page): photo and name centred (tap: Profile),
+  the same chips (birthday, sizes, likes), plus "5 wishes" (All your wishes; "+ Add wish" when 0), "♥ 3 loved" (only
+  above 0) and "+ Add friends" while you have none. The small photo top right stays (owner). Then all lists in one
+  grid: yours first, then collab wishlists, then wishlist groups (invitations as cards above). No numbers card, no
+  total value (it stays in a list's summary), no headings or "See all", no "Create list" tiles. Gift exchanges only
+  when you have one, without a "New" block; the season card as before.
+- **+ in the bottom bar:** inside a list it adds a wish there at once; elsewhere a menu: Add a wish (first), New
+  wishlist, New collab wishlist, New wishlist group, New gift exchange, each with one line.
+- **Menus:** up to 4 actions = a small pop-up at the button (icon and word per row, a line, then red), like Giftful's ⋯;
+  longer ones (a wish's ⋮) stay bottom sheets. First used for a list's ⋮ on Home.
+- **Planned, not built:** a wish's own page (big photo, price, shop button, details, price history, reactions,
+  Reserve; cards then only photo, name, price, ♥). Owner: yes; interview on the details first, in its own session.

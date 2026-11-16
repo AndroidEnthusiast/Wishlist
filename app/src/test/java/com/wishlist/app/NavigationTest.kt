@@ -229,12 +229,24 @@ class NavigationTest : NavigationBase() {
     }
 
     @Test fun createListFromHome() {
-        // "Create list" on Home opens the choice (it lives in Home since 2.163); Cancel closes it, Home stays.
-        tap("Create list")
-        shows("Create a list")
-        tap("Cancel")
+        // The bottom bar's + on Home opens its menu (owner, 16 November 2026: no "Create list" tiles any more): Add a
+        // wish first, then the new lists. (Their forms aren't opened here: a blinking cursor never lets this pretend
+        // phone settle.) Back closes the menu, Home stays.
+        compose.onAllNodes(hasText("Create list", substring = false)).assertCountEquals(0)
+        tap("Add wish")
+        for (t in listOf("Add a wish", "New wishlist")) shows(t)
+        phoneBack()
+        compose.waitForIdle()
         tabOn("Home")
-        compose.onAllNodes(hasText("Create a list", substring = false)).assertCountEquals(0)
+    }
+
+    @Test fun plusInsideAListAddsAWish() {
+        // Inside a list, + goes straight to Add a wish for that list; elsewhere it opens the menu (owner, 16 November
+        // 2026). Read from the code (the wish form's cursor never lets this pretend phone settle).
+        val src = java.io.File("src/main/java/com/wishlist/app/AppScreen.kt").readText()
+        val at = src.indexOf("val onAList = route == Route.LIST")
+        val block = src.substring(at, src.indexOf("} else plusMenu = true", at))
+        org.junit.Assert.assertTrue(block.contains("if (onAList) {") && block.contains("adding = true"))
     }
 
     @Test fun friendsListFromALinkBackHome() {
@@ -318,7 +330,7 @@ class ScrollTest : NavigationBase() {
         // Enough on Home to scroll: a few lists.
         val app = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()
         compose.runOnUiThread { repeat(4) { i -> Repo.createMine(app, "List $i", "") } }
-        swipeUpMoves("Your wishlists")
+        swipeUpMoves("List 0")
     }
 }
 
@@ -405,8 +417,8 @@ class TopWishTest : NavigationBase() {
     @Test fun noQuestionWhenUnstarring() {
         val app = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()
         compose.runOnUiThread { Repo.addMine(app, Wish(7, "https://example.com/t", "Headphones", "", "", 99.0, null, "EUR", "Tech", star = true)) }
-        tap("Wish") // the tile says "Wish" with one wish
-        tap("Wishes you love")
+        // Home's chip for loved wishes (16 November 2026, the tiles are gone).
+        tap("♥ 1 loved")
         compose.waitForIdle()
         compose.onAllNodes(hasContentDescription("Remove from wishes you love") and hasClickAction()).onFirst().performClick()
         compose.waitForIdle()
@@ -429,7 +441,7 @@ class AllWishesTest : NavigationBase() {
             val other = Repo.createMine(app, "Birthday", "")
             Repo.copyInto(app, other, listOf(lamp))
         }
-        tap("Wishes")
+        tap("2 wishes") // Home's chip (16 November 2026, the tiles are gone)
         compose.waitForIdle()
     }
 

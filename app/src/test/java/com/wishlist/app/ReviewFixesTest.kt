@@ -262,3 +262,33 @@ class PersonFirstTest {
         assertTrue(File("src/main/java/com/wishlist/app/WishForm.kt").readText().contains("tr(\"The shop’s picture couldn’t load\")"))
     }
 }
+
+/** Home is your profile, the + menu, small menus as pop-ups (owner, 16 November 2026). */
+@RunWith(RobolectricTestRunner::class)
+@org.robolectric.annotation.Config(sdk = [34])
+class HomeAsProfileTest {
+    private val hub get() = File("src/main/java/com/wishlist/app/Hub.kt").readText()
+
+    @Test fun homeIsYourProfile() {
+        val screen = hub.substring(hub.indexOf("fun HubScreen("), hub.indexOf("internal fun HubTitle("))
+        assertFalse("no numbers card", screen.contains("ProfileSummary("))
+        assertTrue(screen.contains("HomeHero(onProfile, onFriends, onAddWish)"))
+        assertTrue("one grid, yours first", screen.contains("byRecent(mineItems) + byRecent(groupItems) + byRecent(groupsOfMine)"))
+        assertTrue("no New gift exchange block", screen.contains("ExchangesSection(onNewExchange, withNew = false)"))
+        assertTrue("same hero as a friend's page", hub.contains("PersonHero("))
+    }
+
+    @Test fun plusMenuOffersEveryNewThing() {
+        val bar = File("src/main/java/com/wishlist/app/BottomBar.kt").readText()
+        val menu = bar.substring(bar.indexOf("fun PlusMenuSheet("))
+        for (t in listOf("Add a wish", "New wishlist", "New collab wishlist", "New wishlist group", "New gift exchange"))
+            assertTrue(t, menu.contains("tr(\"$t\")"))
+        assertTrue(menu.indexOf("Add a wish") < menu.indexOf("New wishlist"))
+    }
+
+    @Test fun shortMenusArePopUps() {
+        assertTrue(hub.contains("if (actions.size <= 4) {") && hub.contains("PopMenu(onClose"))
+        val pop = File("src/main/java/com/wishlist/app/WishSheet.kt").readText()
+        assertTrue("red last, after a line", pop.contains("removing.forEach { item(it) }"))
+    }
+}
