@@ -43,7 +43,7 @@ class PartsScreenshotTest {
                         Switch(true, {}); Switch(false, {})
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        FilterChip(true, {}, { Text("Exactly this") }); FilterChip(false, {}, { Text("Similar") })
+                        FilterChip(true, {}, { Text("Love it") }); FilterChip(false, {}, { Text("Private") })
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Button({}) { Text("Save") }; OutlinedButton({}) { Text("Later") }; TextButton({}) { Text("Undo") }

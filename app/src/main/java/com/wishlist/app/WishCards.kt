@@ -83,11 +83,11 @@ fun reserveButton(w: Wish, reserve: Reserving?): String? = when {
     else -> null
 }
 
-/** "2×" and "Exactly this" / "Similar is fine" (owner, 2.128), as one short line, or "". */
-fun wishTags(w: Wish): String = listOfNotNull(
-    if (w.qty > 1) "${w.qty}×" else null,
-    when (w.exact) { "exact" -> tr("Exactly this"); "similar" -> tr("Similar is fine"); else -> null }
-).joinToString(" · ")
+/**
+ * "2×" (owner, 2.128), or "". "Exactly this" / "Similar is fine" is no longer shown anywhere (owner, 16 November
+ * 2026: removed from the form and the cards); the saved value stays in the data, so old app versions keep working.
+ */
+fun wishTags(w: Wish): String = if (w.qty > 1) "${w.qty}×" else ""
 
 /** The label for a reservation on a shared list, or null when the wish is still free. */
 fun reservedLabel(r: Boolean?): String? = when (r) {

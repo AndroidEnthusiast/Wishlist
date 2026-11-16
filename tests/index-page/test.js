@@ -403,7 +403,7 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   const szEl = D(q).getElementById("sizes");
   check("owner's sizes shown as text", !szEl.hidden && szEl.textContent === "Clothing M <b> · Shoes 43" && !szEl.querySelector("b"));
   const sock = [...D(q).querySelectorAll(".card")].find(c => c.textContent.includes("Socks"));
-  check("3× and Similar is fine on the card", sock.querySelector(".tags").textContent === "3× · Similar is fine");
+  check("3× on the card; a saved Similar is fine is no longer shown (16 November 2026)", sock.querySelector(".tags").textContent === "3×");
   check("1 of 3 reserved, still reservable", sock.querySelector(".badge.status").textContent === "1 of 3 reserved" && sock.querySelector("button.act").textContent === "Reserve");
   sock.querySelector("button.act").click();
   await sleep(50);

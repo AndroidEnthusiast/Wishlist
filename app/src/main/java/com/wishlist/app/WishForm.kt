@@ -42,6 +42,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.ui.draw.rotate
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.border
@@ -88,7 +91,7 @@ fun WishDialog(
     var cat by remember { mutableStateOf(edit?.category ?: "") }
     var note by remember { mutableStateOf(edit?.note ?: "") }
     var sizeSel by remember { mutableStateOf(edit?.size ?: "") }
-    // How many, and "Exactly this" / "Similar is fine" (owner, 2.128).
+    // How many (owner, 2.128). The exact-or-similar value is kept as it was (no longer shown or chosen, 16 November 2026).
     var qty by remember { mutableStateOf(edit?.qty ?: 1) }
     var exact by remember { mutableStateOf(edit?.exact ?: "") }
     var star by remember { mutableStateOf(edit?.star ?: false) }
@@ -255,53 +258,13 @@ fun WishDialog(
             } else Text(heading)
         },
         text = {
-            // One scrolling page with three headings (owner, 2.128): Wish, Details, Visibility. Nothing folded away.
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                FormHeading(tr("Wish"))
-                // The order (owner, 15 November 2026): a large photo first, then Top wish and Private as two tiles you
-                // tap, then the link, the name and the price, and the details last.
-                Box {
-                    ImageBlock(image, onPick = { photoMenu = true }, onRemove = {
-                        if (picked.isNotEmpty() && picked == image) { ImageStore.delete(ctx, picked); picked = "" }
-                        image = ""
-                    }, big = true)
-                }
-                // No "Top wish" or "Private" on a shared list: nobody can say that for the person the gifts are for, and
-                // a shared list is for the givers (there is nothing to hide there).
-                if (Shared.active == null) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    ToggleTile(
-                        { on -> LoveIcon(on, if (on) StarInk else MaterialTheme.colorScheme.onSurfaceVariant, 22.dp, Modifier.starPulse(starFx)) },
-                        tr("Love it"), tr("Givers see it first"), star, StarGold, StarInk,
-                        Modifier.weight(1f)
-                    ) { if (!star) starFx.play(); star = !star }
-                    ToggleTile(
-                        { on -> Icon(PrivateIcon, null, tint = if (on) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(22.dp)) },
-                        tr("Private"), tr("Only you see it"), priv, MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer,
-                        Modifier.weight(1f)
-                    ) { priv = !priv }
-                }
-                if (chooseList && edit == null) {
-                    SaveToField(
-                        targets = targets, selected = Shared.active ?: MyLists.saveKey(Repo.openMine, false),
-                        onPick = { pickTarget(it) },
-                        modifier = Modifier.fillMaxWidth(),
-                        onNew = { newListDlg = true }
-                    )
-                }
-                if (clip != null && url.isBlank()) {
-                    val host = try { java.net.URI(clip).host.orEmpty().removePrefix("www.") } catch (e: Exception) { "" }
-                    Row(
-                        Modifier.fillMaxWidth().lookSurface(LocalLook.current, MaterialTheme.shapes.medium, MaterialTheme.colorScheme.secondaryContainer, depth = 3.dp)
-                            .clickable { go(clip) }.padding(horizontal = 14.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("📋", modifier = Modifier.padding(end = 10.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(tr("Paste the link you copied"), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSecondaryContainer)
-                            if (host.isNotEmpty()) Text(host, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer)
-                        }
-                    }
-                }
+            // The form trimmed (owner, 16 November 2026: "it feels very full"): no headings; adding starts with the link
+            // (it fills in the photo, name and price), editing with the photo; Love it and Private as two small chips;
+            // the rarely used details folded under "More details" (open on Edit when one is filled); the exact-or-similar
+            // choice is gone (owner: removed everywhere).
+            val linkField: @Composable () -> Unit = {
+                val host = clip?.let { c -> try { java.net.URI(c).host.orEmpty().removePrefix("www.") } catch (e: Exception) { "" } }.orEmpty()
+                val canPaste = clip != null && url.isBlank() && !busy
                 OutlinedTextField(
                     url,
                     { new ->
@@ -312,9 +275,15 @@ fun WishDialog(
                         if (pasted) go(new)
                     },
                     label = { Text(tr("Product link")) },
-                    // No "Fetch details" button any more: pasting a link reads the page, and so does the keyboard's
-                    // Done key after typing or changing one. A small circle shows while the page is being read.
-                    trailingIcon = if (busy) ({ CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp) }) else null,
+                    // The copied link is offered inside the field (owner, 16 November 2026), not as a block above it.
+                    placeholder = if (canPaste && host.isNotEmpty()) ({ Text(tr("Copied from %s", host), maxLines = 1) }) else null,
+                    // No "Fetch details" button: pasting a link reads the page, and so does the keyboard's Done key after
+                    // typing or changing one. A small circle shows while the page is being read.
+                    trailingIcon = when {
+                        busy -> ({ CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp) })
+                        canPaste -> ({ TextButton(onClick = { clip?.let { go(it) } }) { Text(tr("Paste")) } })
+                        else -> null
+                    },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { if (!busy && url.isNotBlank()) go(url) }),
                     singleLine = true, modifier = Modifier.fillMaxWidth()
@@ -323,7 +292,41 @@ fun WishDialog(
                     Text(err, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 }
                 dupOf?.let { Text(tr("This item is already on “%s”", it), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-                // (No tip under the link any more: removed by the owner, 2.118.)
+            }
+            val photo: @Composable () -> Unit = {
+                ImageBlock(image, onPick = { photoMenu = true }, onRemove = {
+                    if (picked.isNotEmpty() && picked == image) { ImageStore.delete(ctx, picked); picked = "" }
+                    image = ""
+                }, big = true)
+            }
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (chooseList && edit == null) {
+                    SaveToField(
+                        targets = targets, selected = Shared.active ?: MyLists.saveKey(Repo.openMine, false),
+                        onPick = { pickTarget(it) },
+                        modifier = Modifier.fillMaxWidth(),
+                        onNew = { newListDlg = true }
+                    )
+                }
+                if (edit == null) linkField()
+                photo()
+                // No "Love it" or "Private" on a shared list: nobody can say that for the person the gifts are for, and
+                // a shared list is for the givers (there is nothing to hide there).
+                if (Shared.active == null) Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    FilterChip(
+                        selected = star, onClick = { if (!star) starFx.play(); star = !star },
+                        label = { Text(tr("Love it")) },
+                        leadingIcon = { LoveIcon(star, if (star) StarGold else MaterialTheme.colorScheme.onSurfaceVariant, 18.dp, Modifier.starPulse(starFx)) },
+                        modifier = Modifier.semantics { stateDescription = if (star) tr("Givers see it first") else "" }
+                    )
+                    FilterChip(
+                        selected = priv, onClick = { priv = !priv },
+                        label = { Text(tr("Private")) },
+                        leadingIcon = { Icon(PrivateIcon, null, modifier = Modifier.size(18.dp)) },
+                        modifier = Modifier.semantics { stateDescription = if (priv) tr("Only you see it") else "" }
+                    )
+                }
+                if (edit != null) linkField()
                 // Name and price side by side: the price only needs room for "€9999,99", the name gets the rest and
                 // stays on one line (a long name scrolls inside the field instead of taking three lines).
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
@@ -347,17 +350,23 @@ fun WishDialog(
                         modifier = Modifier.width(104.dp)
                     )
                 }
-                FormHeading(tr("Details"))
-                // One line, however many categories there are (a row of chips got too long).
-                CategoryField(cat, Repo.cats, onPick = { cat = it }, onNew = { newCatDlg = true }, onEdit = { editCats = true }, modifier = Modifier.fillMaxWidth())
-                QuantityField(qty) { qty = it }
-                ExactField(exact) { exact = it }
-                SizeField(sizeSel, { sizeSel = it }, Modifier.fillMaxWidth())
-                // No "Note for givers" field any more (owner, 2.137): Description is for your own words now. A note
-                // written before stays with the wish and keeps showing.
-                OutlinedTextField(
-                    desc, { desc = it }, label = { Text(tr("Description")) },
-                    maxLines = 3, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
+                // "More details" (owner, 16 November 2026): category, how many, size and description folded away; open
+                // by itself when editing a wish that has one of them, so nothing is changed unseen. Folded, it says what
+                // is set.
+                MoreDetails(
+                    summary = detailsSummary(cat, qty, sizeSel, desc),
+                    startOpen = edit != null && detailsSummary(edit.category, edit.qty, edit.size, edit.desc).isNotEmpty()
+                ) {
+                    // One line, however many categories there are; it opens a bottom sheet (16 November 2026).
+                    CategoryField(cat, Repo.cats, onPick = { cat = it }, onNew = { newCatDlg = true }, onEdit = { editCats = true }, modifier = Modifier.fillMaxWidth())
+                    SizeField(sizeSel, { sizeSel = it }, Modifier.fillMaxWidth())
+                    QuantityField(qty) { qty = it }
+                    // No "Note for givers" field any more (owner, 2.137): Description is for your own words now. A note
+                    // written before stays with the wish and keeps showing.
+                    OutlinedTextField(
+                        desc, { desc = it }, label = { Text(tr("Description")) },
+                        maxLines = 3, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
+                }
             }
         },
         confirmButton = {
@@ -410,7 +419,8 @@ fun ImageBlock(image: String, onPick: () -> Unit, onRemove: () -> Unit, big: Boo
     val cs = MaterialTheme.colorScheme
     val line = cs.outline
     // [big]: the wish form's photo (2.212, owner: the photo first), the width of the form and 200 dp tall.
-    val tile = (if (big) Modifier.fillMaxWidth().height(200.dp) else Modifier.size(128.dp))
+    // 168 dp since 16 November 2026 (owner: the form felt full), 200 before.
+    val tile = (if (big) Modifier.fillMaxWidth().height(168.dp) else Modifier.size(128.dp))
         .clip(if (LocalLook.current.design == "quiet") Squircle(if (big) 20.dp else 16.dp) else RoundedCornerShape(16.dp))
     val look = LocalLook.current
     if (image.isEmpty() && look.design == "quiet") {
@@ -508,3 +518,32 @@ fun PhotoSourceSheet(onTake: () -> Unit, onChoose: () -> Unit, onClose: () -> Un
     }
 }
 
+
+/** What is set under "More details", in one short line ("Fashion · Size M · 2× · Description"), or "". */
+fun detailsSummary(cat: String, qty: Int, size: String, desc: String): String = listOfNotNull(
+    cat.takeIf { it.isNotBlank() }?.let { catLabel(it) },
+    size.takeIf { it.isNotBlank() }?.let { tr("Size %s", it) },
+    if (qty > 1) "${qty}×" else null,
+    if (desc.isNotBlank()) tr("Description") else null
+).joinToString(" · ")
+
+/** "More details" with what is set, tap to show or hide [content] (owner, 16 November 2026). */
+@Composable
+fun MoreDetails(summary: String, startOpen: Boolean, content: @Composable ColumnScope.() -> Unit) {
+    var open by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(startOpen) }
+    val cs = MaterialTheme.colorScheme
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(RoundedCornerShape(12.dp))
+            .clickable(onClickLabel = if (open) tr("Hide details") else tr("Show details")) { open = !open }
+            .padding(horizontal = 4.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(tr("More details"), style = MaterialTheme.typography.titleSmall, color = cs.onSurface)
+            if (summary.isNotEmpty() && !open) Text(summary, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+            else if (!open) Text(tr("Category, size, how many, description"), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        }
+        Icon(AppIcons.ArrowDropDown, null, tint = cs.onSurfaceVariant, modifier = Modifier.rotate(if (open) 180f else 0f))
+    }
+    if (open) Column(verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
+}

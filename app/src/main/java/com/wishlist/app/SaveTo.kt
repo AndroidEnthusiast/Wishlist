@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 
@@ -47,28 +48,20 @@ fun SaveToField(
             value = current.name, onValueChange = {}, readOnly = true, singleLine = true,
             label = { Text(tr("Save to")) },
             trailingIcon = { Icon(AppIcons.ArrowDropDown, null) },
-            modifier = Modifier.fillMaxWidth()
+            // A picker, not a text box: it never takes the focus (16 November 2026: it opened with a blue edge).
+            modifier = Modifier.fillMaxWidth().focusProperties { canFocus = false }
         )
         // A text field would pop up the keyboard. This invisible layer opens the menu instead.
         Box(
             Modifier.matchParentSize()
                 .clickable(role = Role.DropdownList, onClickLabel = tr("Choose a wishlist")) { open = true }
         )
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            targets.forEach { t ->
-                DropdownMenuItem(
-                    text = { Text(t.name, fontWeight = if (t.key == current.key) FontWeight.Bold else FontWeight.Normal) },
-                    onClick = { open = false; onPick(t.key) }
-                )
-            }
-            if (onNew != null) {
-                HorizontalDivider()
-                DropdownMenuItem(
-                    text = { Text(tr("New wishlist"), fontWeight = FontWeight.SemiBold) },
-                    leadingIcon = { Icon(AppIcons.Add, null) },
-                    onClick = { open = false; onNew() }
-                )
-            }
-        }
+        // A bottom sheet like Category (owner, 16 November 2026), with "+ New wishlist" below the lists.
+        if (open) PickSheet(
+            tr("Save to"), targets.map { it.key to it.name }, current.key,
+            onPick = { open = false; onPick(it) },
+            actions = if (onNew != null) listOf(Triple(AppIcons.Add, tr("New wishlist")) { open = false; onNew() }) else emptyList(),
+            onClose = { open = false }
+        )
     }
 }

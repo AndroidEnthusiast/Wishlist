@@ -69,12 +69,3 @@ fun QuantityField(qty: Int, onChange: (Int) -> Unit) {
     }
 }
 
-/** "Exactly this" / "Similar is fine": one choice, or none (tap the chosen one again). */
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
-@Composable
-fun ExactField(value: String, onChange: (String) -> Unit) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilterChip(selected = value == "exact", onClick = { onChange(if (value == "exact") "" else "exact") }, label = { Text(tr("Exactly this")) })
-        FilterChip(selected = value == "similar", onClick = { onChange(if (value == "similar") "" else "similar") }, label = { Text(tr("Similar is fine")) })
-    }
-}

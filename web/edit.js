@@ -1612,19 +1612,13 @@
         els.size.addEventListener("change", function () { f.size = els.size.value; });
         b.appendChild(field(T("Size"), els.size));
 
-        // How many, and "Exactly this" / "Similar is fine" (2.128), like the app.
+        // How many (2.128), like the app. "Exactly this" / "Similar is fine" was removed (owner, 16 November 2026); a
+        // value saved before is kept as it is (f.exact).
         var qe = el("div", "row2");
         els.qty = el("input");
         els.qty.type = "number"; els.qty.min = "1"; els.qty.max = "99"; els.qty.inputMode = "numeric"; els.qty.value = String(f.qty);
         els.qty.addEventListener("input", function () { var n = Math.floor(Number(els.qty.value)); f.qty = n >= 1 && n <= 99 ? n : 1; });
         qe.appendChild(field(T("How many"), els.qty));
-        els.exact = el("select");
-        [["", "—"], ["exact", T("Exactly this")], ["similar", T("Similar is fine")]].forEach(function (x) {
-          var o = el("option", null, x[1]); o.value = x[0]; els.exact.appendChild(o);
-        });
-        els.exact.value = f.exact;
-        els.exact.addEventListener("change", function () { f.exact = els.exact.value; });
-        qe.appendChild(field(T("Exactly this") + " / " + T("Similar is fine"), els.exact));
         b.appendChild(qe);
 
         // No "Note for givers" field any more (owner, 2.137, like the app): Description is for your own words. A note

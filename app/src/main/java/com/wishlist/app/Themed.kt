@@ -206,7 +206,11 @@ fun OutlinedTextField(
     val sh = shape ?: fieldShape(look)
     if (look.design == "quiet") {
         // Typed text starts at the left, also inside Quiet's centred dialogs (2.210), unless the caller asked otherwise.
-        val typed = if (textStyle == LocalTextStyle.current) textStyle.copy(textAlign = androidx.compose.ui.text.style.TextAlign.Start) else textStyle
+        // The text's own colour too (owner, 16 November 2026: values looked greyed out): inside a dialog the dialog's
+        // grey explanation colour came along with the text style; what you type or chose is full ink.
+        val typed = if (textStyle == LocalTextStyle.current) textStyle.copy(
+            textAlign = androidx.compose.ui.text.style.TextAlign.Start, color = androidx.compose.ui.graphics.Color.Unspecified
+        ) else textStyle
         QuietLabelled(modifier, label) {
             M3OutlinedTextField(
                 value, onValueChange, Modifier.fillMaxWidth(), enabled, readOnly, typed, null, placeholder, leadingIcon, trailingIcon,
@@ -267,7 +271,11 @@ fun OutlinedTextField(
     val sh = shape ?: fieldShape(look)
     if (look.design == "quiet") {
         // Typed text starts at the left, also inside Quiet's centred dialogs (2.210), unless the caller asked otherwise.
-        val typed = if (textStyle == LocalTextStyle.current) textStyle.copy(textAlign = androidx.compose.ui.text.style.TextAlign.Start) else textStyle
+        // The text's own colour too (owner, 16 November 2026: values looked greyed out): inside a dialog the dialog's
+        // grey explanation colour came along with the text style; what you type or chose is full ink.
+        val typed = if (textStyle == LocalTextStyle.current) textStyle.copy(
+            textAlign = androidx.compose.ui.text.style.TextAlign.Start, color = androidx.compose.ui.graphics.Color.Unspecified
+        ) else textStyle
         QuietLabelled(modifier, label) {
             M3OutlinedTextField(
                 value, onValueChange, Modifier.fillMaxWidth(), enabled, readOnly, typed, null, placeholder, leadingIcon, trailingIcon,

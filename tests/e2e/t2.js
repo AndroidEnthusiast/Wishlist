@@ -27,9 +27,9 @@ const CHAIR = `<html><head><title>Chair - Shop</title><meta property="og:title" 
   await t.page.locator(".dlg .chips .chip", { hasText: "Home" }).click();
   await t.page.locator(".dlg").getByLabel("Size", { exact: true }).selectOption("L");
   await t.page.locator(".dlg").getByLabel("Description", { exact: true }).fill("Black");
-  // How many and "Similar is fine" (2.128)
+  // How many (2.128); no "Exactly this / Similar is fine" any more (owner, 16 November 2026)
   await t.page.locator(".dlg").getByLabel("How many", { exact: true }).fill("2");
-  await t.page.locator(".dlg").getByLabel("Exactly this / Similar is fine", { exact: true }).selectOption("similar");
+  check("no Exactly this / Similar is fine in the form", (await t.page.locator(".dlg").getByText(/Exactly this|Similar is fine/).count()) === 0);
   await t.page.getByRole("button", { name: "Save" }).click();
   await t.page.waitForFunction(() => window.__wl.pending() === 0);
   check("dialog closed", (await t.page.locator(".dlg").count()) === 0);
@@ -47,8 +47,8 @@ const CHAIR = `<html><head><title>Chair - Shop</title><meta property="og:title" 
   await t.page.waitForFunction(() => { const e = document.querySelector(".dlg .err"); return e && !e.hidden && /already on/.test(e.textContent); });
   check("duplicate: already on this list", /This item is already on/.test(await t.page.locator(".dlg .err").innerText()));
   await t.page.getByRole("button", { name: "Cancel" }).click();
-  check("quantity and Similar is fine saved", saved && saved.qty === 2 && saved.exact === "similar", saved);
-  check("2× · Similar is fine on the card", /2× · Similar is fine/.test(await first.innerText()));
+  check("quantity saved", saved && saved.qty === 2 && !saved.exact, saved);
+  check("2× on the card, no Similar is fine", /2×/.test(await first.innerText()) && !/Similar is fine/.test(await first.innerText()));
   check("no js errors", t.errors.length === 0, t.errors);
 
   // ---- blocked / no price / helper missing / manual ----

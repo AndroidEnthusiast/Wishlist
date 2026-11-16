@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -34,7 +35,7 @@ fun SizeField(size: String, onPick: (String) -> Unit, modifier: Modifier = Modif
             value = size, onValueChange = {}, readOnly = true, singleLine = true,
             label = { Text(tr("Size")) },
             trailingIcon = { Icon(AppIcons.ArrowDropDown, null) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().focusProperties { canFocus = false }
         )
         // A text field would pop up the keyboard. This invisible layer opens the menu instead.
         Box(

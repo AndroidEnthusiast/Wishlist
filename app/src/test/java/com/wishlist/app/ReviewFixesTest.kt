@@ -183,3 +183,36 @@ class DragOrderTest : NavigationBase() {
         assertTrue("still here", Repo.mine(app, listId).wishes.any { it.id == lamp })
     }
 }
+
+/** The wish form trimmed (owner, 16 November 2026). */
+@RunWith(RobolectricTestRunner::class)
+@org.robolectric.annotation.Config(sdk = [34])
+class WishFormTrimTest {
+    @Test fun detailsSummarySaysWhatIsSet() {
+        assertEquals("", detailsSummary("", 1, "", ""))
+        assertEquals("Size M · 2× · Description", detailsSummary("", 2, "M", "Black"))
+    }
+
+    /** Exactly this / Similar is fine is never shown any more; the saved value stays in the data. */
+    @Test fun exactIsNotShownButKept() {
+        val w = Wish(1, "", "Socks", "", "", null, null, "EUR", "", qty = 3, exact = "similar")
+        assertEquals("3×", wishTags(w))
+        assertEquals("similar", wishFromJson(wishToJson(w)).exact)
+    }
+
+    /** Typed and chosen values in Quiet's fields are full ink, not the dialog's grey (the text style's colour is reset). */
+    @Test fun quietFieldTextIsInk() {
+        val t = File("src/main/java/com/wishlist/app/Themed.kt").readText()
+        assertEquals(2, Regex("textAlign = androidx.compose.ui.text.style.TextAlign.Start, color = androidx.compose.ui.graphics.Color.Unspecified").findAll(t).count())
+    }
+
+    /** Category and Save to open a bottom sheet and never take the focus. */
+    @Test fun pickersAreSheets() {
+        val f = File("src/main/java/com/wishlist/app/FormParts.kt").readText()
+        val save = File("src/main/java/com/wishlist/app/SaveTo.kt").readText()
+        assertTrue(f.contains("if (open) PickSheet(") && save.contains("if (open) PickSheet("))
+        assertFalse(save.contains("DropdownMenu("))
+        assertTrue(f.contains("focusProperties { canFocus = false }") && save.contains("focusProperties { canFocus = false }"))
+    }
+}
+

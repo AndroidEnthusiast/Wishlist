@@ -378,14 +378,25 @@ class WishlistSheetTest : NavigationBase() {
         for (t in listOf("Only me", "My friends", "Friends + anyone with the link")) shows(t)
     }
 
-    /** The form's order (the open form's blinking cursor never lets this pretend phone settle, so it is read from the code). */
-    @Test fun formStartsWithPhotoThenTiles() {
+    /**
+     * The form's order (owner, 16 November 2026; read from the code, as the open form's blinking cursor never lets this
+     * pretend phone settle): adding starts with the link, editing with the photo; then the Love it and Private chips,
+     * the name and price, and the details folded under "More details". No headings, no Exactly this / Similar is fine.
+     */
+    @Test fun formOrderLinkFirstWhenAdding() {
         val src = java.io.File("src/main/java/com/wishlist/app/WishForm.kt").readText()
-        val photo = src.indexOf("ImageBlock(image,")
-        val top = src.indexOf("tr(\"Love it\"), tr(\"Givers see it first\")")
-        val link = src.indexOf("label = { Text(tr(\"Product link\")) }")
-        val name = src.indexOf("tr(\"Name*\")")
-        org.junit.Assert.assertTrue("photo, Top wish and Private, link, name", photo in 0 until top && top < link && link < name)
+        val body = src.substring(src.indexOf("Column(Modifier.verticalScroll(rememberScrollState())"))
+        val linkAdd = body.indexOf("if (edit == null) linkField()")
+        val photo = body.indexOf("photo()")
+        val chips = body.indexOf("label = { Text(tr(\"Love it\")) }")
+        val linkEdit = body.indexOf("if (edit != null) linkField()")
+        val name = body.indexOf("tr(\"Name*\")")
+        val more = body.indexOf("MoreDetails(")
+        org.junit.Assert.assertTrue("link (add), photo, chips, link (edit), name, more details",
+            linkAdd in 0 until photo && photo < chips && chips < linkEdit && linkEdit < name && name < more)
+        org.junit.Assert.assertFalse(src.contains("FormHeading("))
+        org.junit.Assert.assertFalse(src.contains("Exactly this"))
+        org.junit.Assert.assertFalse(src.contains("ExactField("))
     }
 }
 

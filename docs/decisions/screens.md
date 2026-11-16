@@ -195,3 +195,16 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here. Look and f
   (kept in memory only). Going back no longer "bounces" Messages (no size animation in `Moving`).
 - **Not now:** cheaper alternatives found automatically (needs a paid shopping search; owner: "leave it for now");
   the target price stays inside Price history (owner: keep it there for now).
+
+## The wish form trimmed (owner, 16 November 2026, interviewed in 2 rounds; built in 2.216)
+- Owner: "it feels very full", text "dark / greyed out". Replaces the photo-first order of 15 November for adding.
+- **Add:** Save to (kept as a field, owner), the link (with "Paste" inside it when a link was copied, no blue block),
+  the photo (168 dp), Love it and Private as two small one-line chips, name and price, then "More details".
+  **Edit:** the photo first, the chips, then the link, name and price, then "More details".
+- **More details** folds Category, Size, How many and Description; it shows what is set when folded and opens by
+  itself on Edit when one of them is filled. No "Wish" or "Details" headings.
+- **"Exactly this / Similar is fine" removed everywhere** (form, cards, web pages, browser editor); the saved `exact`
+  value stays in the data so old app versions keep working.
+- **Pickers:** Category and Save to open bottom sheets. Owner asked whether sheets everywhere are good: the rule is a
+  sheet for lists that can grow or have actions, a drop-down for a short fixed choice next to its button (Size, sort).
+- **Grey text fixed:** in Quiet, a field inside a dialog took the dialog's grey text colour; values are full ink now.

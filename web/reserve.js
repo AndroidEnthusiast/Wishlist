@@ -37,13 +37,10 @@
       var q = qty(w);
       return c ? Math.max(0, q - (c.n - c.my)) : q;
     },
-    // "2×" and "Exactly this" / "Similar is fine", as one short line, or "".
+    // "2×", or "" (same as wishTags in the app). "Exactly this" / "Similar is fine" is no longer shown (owner,
+    // 16 November 2026); the saved value stays in the data.
     tags: function (w) {
-      var t = [];
-      if (qty(w) > 1) t.push(qty(w) + "×");
-      if (w.exact === "exact") t.push(T("Exactly this"));
-      else if (w.exact === "similar") t.push(T("Similar is fine"));
-      return t.join(" · ");
+      return qty(w) > 1 ? qty(w) + "×" : "";
     },
     // "How many will you buy?" with 1..max and Cancel, inside the card.
     picker: function (max, onPick, onCancel) {
