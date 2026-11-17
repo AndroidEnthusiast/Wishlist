@@ -294,8 +294,10 @@ class HomeAsProfileTest {
     @Test fun plusMenuOffersEveryNewThing() {
         val bar = File("src/main/java/com/wishlist/app/BottomBar.kt").readText()
         val menu = bar.substring(bar.indexOf("fun PlusMenuSheet("))
-        for (t in listOf("Add a wish", "New wishlist", "New collab wishlist", "New wishlist group", "New gift exchange"))
+        // "New collab wishlist" folded into "New wishlist" (owner, 17 November 2026).
+        for (t in listOf("Add a wish", "New wishlist", "New wishlist group", "New gift exchange"))
             assertTrue(t, menu.contains("tr(\"$t\")"))
+        assertFalse(menu.contains("New collab wishlist"))
         assertTrue(menu.indexOf("Add a wish") < menu.indexOf("New wishlist"))
     }
 
@@ -303,5 +305,44 @@ class HomeAsProfileTest {
         assertTrue(hub.contains("if (actions.size <= 4) {") && hub.contains("PopMenu(onClose"))
         val pop = File("src/main/java/com/wishlist/app/WishSheet.kt").readText()
         assertTrue("red last, after a line", pop.contains("removing.forEach { item(it) }"))
+    }
+}
+
+
+/**
+ * Collab wishlists folded into "New wishlist" (owner, 17 November 2026): "Who is it for? Me / Someone else"; a list
+ * for someone else asks their name, never offers them in Invite Friends and warns on the share screen; "collab" is no
+ * longer said anywhere.
+ */
+@RunWith(RobolectricTestRunner::class)
+@org.robolectric.annotation.Config(sdk = [34])
+class OneNewWishlistTest {
+    @Test fun whoIsItForSwitchesBetweenTheTwo() {
+        val app = File("src/main/java/com/wishlist/app/AppScreen.kt").readText()
+        assertTrue(app.contains("onForSomeoneElse = if (Config.enabled) ({ plusNew = \"collab\" }) else null"))
+        assertTrue(app.contains("onForMe = { plusNew = \"mine\" }"))
+        val shared = File("src/main/java/com/wishlist/app/SharedUi.kt").readText()
+        assertTrue(shared.contains("Shared.setForName(ctx, l.code, forWho)"))
+        assertTrue(shared.contains("tr(\"Don’t send it to %s: it’s a surprise.\", forWho)"))
+        val inv = File("src/main/java/com/wishlist/app/GiftInvites.kt").readText()
+        assertTrue(inv.contains("val friends = all.filterNot { Shared.isFor(forWho, it.name) }"))
+    }
+
+    @Test fun thePersonItIsForIsRecognised() {
+        assertTrue(Shared.isFor("Mum", "mum"))
+        assertTrue(Shared.isFor("Anna", "Anna de Vries"))
+        assertTrue(Shared.isFor("Anna de Vries", "Anna"))
+        assertFalse(Shared.isFor("Anna", "Annabel"))
+        assertFalse(Shared.isFor("", "Anna"))
+        val ctx = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()
+        Shared.setForName(ctx, "CODE1", "  Mum  ")
+        assertEquals("Mum", Shared.forName(ctx, "CODE1"))
+        assertEquals("", Shared.forName(ctx, "OTHER"))
+    }
+
+    @Test fun collabIsNoLongerSaid() {
+        File("src/main/java/com/wishlist/app").listFiles()!!.filter { it.name.endsWith(".kt") }.forEach { f ->
+            assertFalse(f.name, Regex("tr\\(\"[^\"]*[Cc]ollab").containsMatchIn(f.readText()))
+        }
     }
 }

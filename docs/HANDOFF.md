@@ -7,8 +7,8 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 ## Next session
 - **2.219 (17 November 2026), read first.** Ask whether every dialog's buttons now read well (Share, Move, Profile),
   and how "About me" under the name looks. Then build the agreed collab merge (`docs/decisions/sharing.md`, last
-  section: one "New wishlist" with "Who is it for? Me / Someone else", the name, the invite warning, the Friends
-  picker) unless it was built in the same session (see Last sessions).
+  section), built in 2.220: ask how "Who is it for?" feels, and whether the name should also reach the other members'
+  phones (needs a server script).
 - **2.214 (16 November 2026), read first.** The owner's review (`docs/decisions/screens.md`, last section): ask how
   "Love it", the tip, dragging (can't be felt here), Move or copy…, the Friends icon, Gen Z settings cards and the
   chat feel. Then the chosen next features: Sold out / back in stock, then Screenshot to wish
@@ -47,7 +47,8 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 Buttons in a dialog's text took the dialog's grey (Share: "Send invite", "Copy"): every button keeps its own colour now.
 Owner: no chips under a person, only "About me" (100 letters, was "I like…"); birthday only on a friend's page near
 it; sizes deleted (`supabase-sizes-off.sql`). Interviewed on dropping collab wishlists: merge in the menus, with
-"Who is it for?" to protect the surprise. Checks: `DialogButtonInkTest`, `aboutMeInsteadOfChips`, `sizes_off_test.sql`.
+"Who is it for?" to protect the surprise; built in 2.220 ("collab" no longer said). Checks: `DialogButtonInkTest`,
+`aboutMeInsteadOfChips`, `sizes_off_test.sql`, `OneNewWishlistTest`.
 
 ### 16 November 2026: owner's review and solo interview (2.214)
 "♥ Love it" / "Jorai loves it", smaller label (Rows on the picture), one-time heart tip; hold and move to drag

@@ -92,7 +92,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                     Column {
                         ScreenTitle(Repo.listName)
                         Text(
-                            if (shared != null) tr("Collab wishlist") else tr("Wishlist settings"),
+                            tr("Wishlist settings"),
                             style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
                         )
                     }

@@ -41,4 +41,14 @@ class DialogButtonsScreenshotTest : NavigationBase() {
             captureScreenRoboImage("build/outputs/roborazzi/dialog_buttons_$m.png")
         }
     }
+
+    /** "New wishlist" for someone else (2.220): Who is it for?, their name, the suggested list name. */
+    @Test fun newWishlistForSomeoneElse() {
+        compose.mainClock.autoAdvance = false
+        compose.runOnUiThread { compose.activity.setContent {
+            LookTheme(lookFor("quiet", "blue", "dark")) { NewSharedDialog(onCreated = {}, onClose = {}, onForMe = {}) }
+        } }
+        repeat(10) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
+        captureScreenRoboImage("build/outputs/roborazzi/new_wishlist_someone_else.png")
+    }
 }

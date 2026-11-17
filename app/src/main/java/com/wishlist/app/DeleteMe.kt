@@ -149,7 +149,7 @@ private fun DeleteMeFlow(onClose: () -> Unit) {
             items = emptyList()
         }
     }
-    fun kindLabel(k: String) = when (k) { "collab" -> tr("Collab wishlist"); "group" -> tr("Wishlist group"); else -> tr("Gift exchange") }
+    fun kindLabel(k: String) = when (k) { "collab" -> tr("Wishlist for someone else"); "group" -> tr("Wishlist group"); else -> tr("Gift exchange") }
 
     if (step == 0) AlertDialog(
         onDismissRequest = onClose, title = { Text(tr("Delete my profile and data")) },

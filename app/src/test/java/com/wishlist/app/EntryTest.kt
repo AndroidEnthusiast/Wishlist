@@ -104,7 +104,7 @@ class EntryTest : NavigationBase() {
     @Test fun webLinksOpenTheApp() {
         // A collab wishlist invitation (App Link): the Join screen.
         send(link("https://androidenthusiast.github.io/Wishlist/?j=ABCDEFGHJKLMNPQRSTUV"))
-        shows("Invitation to a collab wishlist")
+        shows("Invitation to a wishlist")
     }
 
     @Test fun groupLinkShowsTheJoinScreen() {

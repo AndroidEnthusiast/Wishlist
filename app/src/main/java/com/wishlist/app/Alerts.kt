@@ -56,7 +56,7 @@ object Alerts {
         ch(MESSAGES_CHANNEL, tr("Messages"), tr("New messages from your friends"))
         ch(EXCHANGE_CHANNEL, tr("Gift exchange"), tr("Invitations, names drawn, anonymous messages and the exchange day"))
         ch(OCC_CHANNEL, tr("Occasions"), tr("Reminders around birthdays and other occasions"))
-        ch(GIFTLIST_CHANNEL, tr("Collab wishlist invitations"), tr("A Friend invites you to plan gifts together"))
+        ch(GIFTLIST_CHANNEL, tr("Wishlist invitations"), tr("A Friend invites you to plan gifts together"))
         ch(REACT_CHANNEL, tr("Reactions"), tr("Once a day: who reacted to your wishes"))
     }
 
@@ -74,7 +74,7 @@ object Alerts {
         return listOfNotNull(
             if (off(BIN_CHANNEL)) tr("Notifications about gifts you reserved are off. You’ll miss important updates about them.") else null,
             if (off(GROUPS_CHANNEL)) tr("Group notifications are off. You’ll miss invitations.") else null,
-            if (off(GIFTLIST_CHANNEL)) tr("Collab wishlist invitations are off. You’ll miss invitations from Friends.") else null,
+            if (off(GIFTLIST_CHANNEL)) tr("Wishlist invitations are off. You’ll miss invitations from Friends.") else null,
             if (off(EXCHANGE_CHANNEL)) tr("Gift exchange notifications are off. You’ll miss invitations and the draw.") else null
         )
     }
@@ -454,7 +454,7 @@ object Alerts {
             .setContentIntent(pi)
             .setAutoCancel(true)
         NotifyPace.post(c, nid, n, NotifyPace.Bundle(
-            "gl_inv", title, { k -> tr("%d invitations to collab wishlists", k) }, NotifyPace.notesIntent(c)
+            "gl_inv", title, { k -> tr("%d invitations to wishlists", k) }, NotifyPace.notesIntent(c)
         ))
     }
 

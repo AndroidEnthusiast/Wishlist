@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.launch
@@ -35,11 +36,19 @@ fun toast(c: Context, message: String) {
     Toast.makeText(c, message, Toast.LENGTH_SHORT).show()
 }
 
-/** "New shared wishlist": a name for the list and your own name. */
+/**
+ * A new wishlist for someone else, made together with others (was "Create a collab wishlist"; owner, 17 November
+ * 2026): who it's for (kept on this phone, to keep the surprise: [Shared.forName]), a name, a description and the
+ * occasion. [onForMe]: "Who is it for?" back to "Me" ([NewListDialog]).
+ */
 @Composable
-fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
+fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit, onForMe: (() -> Unit)? = null) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
+    var forWho by remember { mutableStateOf("") }
+    var forMissing by remember { mutableStateOf(false) }
+    // The list's name follows "Gifts for Mum" until you type your own.
+    var nameTyped by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var missing by remember { mutableStateOf(false) }
@@ -53,16 +62,26 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
     AlertDialog(
         onDismissRequest = { if (!busy) onClose() },
         properties = DialogProperties(dismissOnClickOutside = false),
-        title = { Text(tr("Create a collab wishlist")) },
+        title = { Text(tr("New wishlist")) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (onForMe != null) WhoIsItFor(true) { onForMe() }
                 Text(
-                    tr("Collect gift ideas for someone with others. Reserve what you’ll buy, so nobody buys it twice."),
+                    tr("Find gifts together: everyone you invite can add ideas and reserve what they’ll buy, so nobody buys it twice."),
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 OutlinedTextField(
-                    name, { name = it.take(60); if (it.isNotBlank()) missing = false }, label = { Text(tr("Collab wishlist name*")) },
-                    placeholder = { Text(tr("Baby registry")) }, singleLine = true, isError = missing,
+                    forWho, {
+                        forWho = it.take(Shared.FOR_MAX); if (it.isNotBlank()) forMissing = false
+                        if (!nameTyped) name = if (it.isBlank()) "" else tr("Gifts for %s", it.trim()).take(60)
+                        if (name.isNotBlank()) missing = false
+                    },
+                    label = { Text(tr("Their name*")) }, placeholder = { Text(tr("Mum")) }, singleLine = true, isError = forMissing,
+                    supportingText = { Text(if (forMissing) tr("Who are the gifts for?") else tr("Never shown to them. Don’t invite them.")) },
+                    modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
+                OutlinedTextField(
+                    name, { name = it.take(60); nameTyped = true; if (it.isNotBlank()) missing = false }, label = { Text(tr("Wishlist name*")) },
+                    placeholder = { Text(tr("Gifts for Mum")) }, singleLine = true, isError = missing,
                     supportingText = if (missing) ({ Text(tr("What is this wishlist called?")) }) else null,
                     modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 OutlinedTextField(
@@ -86,6 +105,10 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
             TextButton(
                 enabled = !busy && Config.enabled,
                 onClick = {
+                    if (forWho.isBlank()) {
+                        forMissing = true
+                        return@TextButton
+                    }
                     if (name.isBlank()) {
                         missing = true
                         return@TextButton
@@ -98,6 +121,7 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
                     scope.launch {
                         try {
                             val l = Shared.create(ctx, name, me)
+                            Shared.setForName(ctx, l.code, forWho)
                             // The notes become the list's note for everyone on it.
                             if (notes.isNotBlank()) {
                                 try {
@@ -161,7 +185,7 @@ fun JoinDialog(key: String, onJoined: (String) -> Unit, onClose: () -> Unit) {
         onDismissRequest = { if (!joining) onClose() },
         // Only the buttons close this, so a tap next to it doesn't lose the invitation.
         properties = DialogProperties(dismissOnClickOutside = false),
-        title = { Text(if (name != null) tr("Join “%s”?", name) else tr("Invitation to a collab wishlist")) },
+        title = { Text(if (name != null) tr("Join “%s”?", name) else tr("Invitation to a wishlist")) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (name != null) {
@@ -245,6 +269,12 @@ fun SharedShareDialog(list: SharedList? = null, onClose: () -> Unit) {
                 Text(
                     tr("They can edit and reserve wishes. Only send it to people you trust."),
                     style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
+                )
+                // The surprise (owner, 17 November 2026): who it's for, when this phone made the list.
+                val forWho = remember(l.code) { Shared.forName(ctx, l.code) }
+                if (forWho.isNotBlank()) Text(
+                    tr("Don’t send it to %s: it’s a surprise.", forWho),
+                    style = MaterialTheme.typography.bodyMedium, color = cs.onSurface, fontWeight = FontWeight.SemiBold
                 )
                 Text(invite, style = MaterialTheme.typography.bodyMedium, color = cs.onSurface)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

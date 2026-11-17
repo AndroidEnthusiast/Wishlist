@@ -65,7 +65,7 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `PriceWatch.kt` (when a price check believes what it read, 2.178: two readings that agree, a quiet first look, typed prices stay; its notes per wish are the database table `price_watch`)
 - `Shops.kt` (Find a gift: the shop row on Home and the in-app shop with Add to wishlist; `CONSENT_JS` refuses cookie questions)
 
-### Collab wishlists (gift lists in the code)
+### Collab wishlists (gift lists in the code; on screen since 2.220 "wishlists for someone else", made from "New wishlist")
 - `Shared.kt` + `SharedUi.kt` (shared lists, online saving)
 - `ShareCard.kt` (share picture)
 - `Members.kt` (gift list members and a new owner)

@@ -88,6 +88,25 @@ object Shared {
 
     private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
 
+    /**
+     * Who a wishlist for someone else is for ("Mum"), asked when it is made (owner, 17 November 2026, to keep the
+     * surprise). Kept on the phone that made it only; "" when not known (lists made before, or joined).
+     */
+    fun forName(c: Context, code: String): String = prefs(c).getString("sh_for_$code", "") ?: ""
+
+    fun setForName(c: Context, code: String, name: String) {
+        prefs(c).edit().putString("sh_for_$code", name.trim().take(FOR_MAX)).apply()
+    }
+
+    const val FOR_MAX = 40
+
+    /** True when a friend called [name] looks like the person the list is for: the same name or first name. */
+    fun isFor(forName: String, name: String): Boolean {
+        val f = forName.trim().lowercase(); val n = name.trim().lowercase()
+        if (f.isEmpty() || n.isEmpty()) return false
+        return f == n || f == n.substringBefore(' ') || n == f.substringBefore(' ')
+    }
+
     fun load(c: Context) {
         val p = prefs(c)
         lastName = p.getString("sh_me", "") ?: ""
@@ -680,7 +699,7 @@ object Shared {
 
     /** Creator only: a new edit key. The old invite link stops working. Returns the new key. */
     suspend fun resetKey(c: Context): String {
-        val l = current ?: throw CloudException(tr("No collab wishlist is open."))
+        val l = current ?: throw CloudException(tr("No wishlist is open."))
         if (l.owner.isEmpty()) throw CloudException(tr("Only the person who made this list can do that."))
         val nk = Sync.newKey()
         Cloud.shReset(l.code, l.owner, nk)

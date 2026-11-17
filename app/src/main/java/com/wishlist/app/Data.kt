@@ -146,7 +146,7 @@ object Repo {
     val cats: List<String> get() = if (Shared.active == null) myCats else Shared.content.cats
     val listName: String
         get() = if (Shared.active == null) (if (myName == "My wishlist") tr(myName) else myName)
-        else Shared.content.name.ifBlank { tr("Collab wishlist") }
+        else Shared.content.name.ifBlank { tr("Wishlist") }
     val about: String get() = if (Shared.active == null) myAbout else Shared.content.about
     /** Written on wishes you add to a shared wishlist ("Added by ..."). Empty on My wishlist. */
     val authorName: String get() = if (Shared.active == null) "" else Shared.me

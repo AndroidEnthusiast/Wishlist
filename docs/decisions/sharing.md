@@ -47,3 +47,8 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
   friend): lists for someone else are never on your friend page, only for people with the invite. Chosen: ask
   "Who is it for?" (a name) when making it; the invite screen says not to send it to that person, and the Friends
   picker leaves out a friend with that name.
+- **Built in 2.220.** The name is kept only on the phone that made the list (other members' phones don't know it;
+  syncing it would need a server script). Lists made before have no name, so no warning. The friend match is by
+  name or first name, so "Mum" can't be matched to a friend called Anneke: the invite screen then says
+  "Don't invite Mum". **Naming** (owner): "collab" is gone; say just "wishlist", and where the kinds must be told
+  apart "Wishlists for someone else" (Home, Move to…) or "wishlist you make with others".

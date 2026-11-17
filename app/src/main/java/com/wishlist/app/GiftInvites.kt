@@ -186,7 +186,11 @@ fun GiftInviteFriendsDialog(l: SharedList, onClose: () -> Unit) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
-    val friends = Friends.state?.friends ?: emptyList()
+    // The person a wishlist for someone else is for is never offered (owner, 17 November 2026: the surprise).
+    val forWho = remember(l.code) { Shared.forName(ctx, l.code) }
+    val all = Friends.state?.friends ?: emptyList()
+    val friends = all.filterNot { Shared.isFor(forWho, it.name) }
+    val hidden = all.filter { Shared.isFor(forWho, it.name) }
     var taken by remember { mutableStateOf<Set<String>?>(null) }
     var err by remember { mutableStateOf("") }
     var picked by remember { mutableStateOf(setOf<String>()) }
@@ -210,6 +214,12 @@ fun GiftInviteFriendsDialog(l: SharedList, onClose: () -> Unit) {
                 Text(
                     tr("They get an invitation to join “%s”.", l.name.ifBlank { Repo.listName }),
                     style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp)
+                )
+                // The surprise (owner, 17 November 2026): the person it's for is left out, or named as a reminder.
+                if (forWho.isNotBlank()) Text(
+                    if (hidden.isNotEmpty()) tr("%s isn’t shown: this wishlist is a surprise for them.", hidden.joinToString(", ") { it.name })
+                    else tr("Don’t invite %s: this wishlist is a surprise for them.", forWho),
+                    style = MaterialTheme.typography.bodyMedium, color = cs.onSurface, modifier = Modifier.padding(bottom = 6.dp)
                 )
                 val t = taken
                 if (err.isNotEmpty()) {

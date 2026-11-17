@@ -209,7 +209,7 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
             key.startsWith("s:") -> {
                 val code = key.removePrefix("s:")
                 if (Shared.lists.any { it.code == code }) openGroup(code)
-                else scope.launch { snack.showToast(tr("That collab wishlist isn’t on this phone any more.")) }
+                else scope.launch { snack.showToast(tr("That wishlist isn’t on this phone any more.")) }
             }
             key.startsWith("c:") -> openListByCode(key.removePrefix("c:"))
             // A gift list invitation (2.142).
@@ -506,13 +506,16 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
         onClose = { plusMenu = false }
     )
     when (plusNew) {
+        // One "New wishlist" (owner, 17 November 2026): "Who is it for?" switches between the two.
         "mine" -> NewListDialog(
             onCreated = { id -> plusNew = null; scope.launch { snack.showToast(tr("“%s” is ready", Repo.mineName(id))) } },
-            onClose = { plusNew = null }
+            onClose = { plusNew = null },
+            onForSomeoneElse = if (Config.enabled) ({ plusNew = "collab" }) else null
         )
         "collab" -> NewSharedDialog(
             onCreated = { code -> plusNew = null; Shared.open(ctx, code); closeAll(); inviteDlg = true },
-            onClose = { plusNew = null }
+            onClose = { plusNew = null },
+            onForMe = { plusNew = "mine" }
         )
         "group" -> NewGroupDialog(
             onCreated = { gid -> plusNew = null; goStable(Deep.GroupPage(gid, invite = true)) },

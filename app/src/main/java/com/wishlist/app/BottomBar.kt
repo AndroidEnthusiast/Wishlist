@@ -218,8 +218,8 @@ fun CreateChoiceDialog(onMine: () -> Unit, onGroup: () -> Unit, onWishGroup: () 
         text = {
             // Owner, 7 November 2026: clear what each makes and where it shows.
             Column {
-                Choice(tr("Wishlist"), tr("For things you’d love to get. Shows under Your wishlists.")) { onMine() }
-                Choice(tr("Collab wishlist"), tr("Find and save gifts for someone, together with others.")) { onGroup() }
+                Choice(tr("Wishlist for me"), tr("For things you’d love to get.")) { onMine() }
+                Choice(tr("Wishlist for someone else"), tr("Find gifts for someone, together with others.")) { onGroup() }
                 Choice(tr("Wishlist group"), tr("A circle of people who can see each other’s wishlists.")) { onWishGroup() }
             }
         },
@@ -252,10 +252,9 @@ fun PlusMenuSheet(onWish: () -> Unit, onNew: (String) -> Unit, onClose: () -> Un
                 SheetRow({ Icon(AppIcons.Add, null, tint = cs.onSurfaceVariant) }, tr("Add a wish"), onWish, detail = tr("From a link, a photo or just a name."))
             })
             val more = mutableListOf<@Composable () -> Unit>(
-                { SheetRow({ Icon(AppIcons.ListIcon, null, tint = cs.onSurfaceVariant) }, tr("New wishlist"), { onNew("mine") }, detail = tr("For things you’d love to get.")) }
+                { SheetRow({ Icon(AppIcons.ListIcon, null, tint = cs.onSurfaceVariant) }, tr("New wishlist"), { onNew("mine") }, detail = tr("For you, or for someone else together with others.")) }
             )
             if (Config.enabled) {
-                more += { SheetRow({ Icon(AppIcons.Gift, null, tint = cs.onSurfaceVariant) }, tr("New collab wishlist"), { onNew("collab") }, detail = tr("Find and save gifts for someone, together with others.")) }
                 more += { SheetRow({ Icon(AppIcons.Group, null, tint = cs.onSurfaceVariant) }, tr("New wishlist group"), { onNew("group") }, detail = tr("A circle of people who can see each other’s wishlists.")) }
                 more += { SheetRow({ Icon(AppIcons.Exchange, null, tint = cs.onSurfaceVariant) }, tr("New gift exchange"), { onNew("exchange") }, detail = tr("Draw names, everyone gives one gift.")) }
             }

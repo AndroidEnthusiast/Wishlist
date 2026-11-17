@@ -159,11 +159,13 @@ fun HubScreen(
     if (newMine) NewListDialog(
         // It appears under your wishlists on Home.
         onCreated = { id -> newMine = false; scope.launch { snack.showToast(tr("“%s” is ready", Repo.mineName(id))) } },
-        onClose = { newMine = false }
+        onClose = { newMine = false },
+        onForSomeoneElse = if (Config.enabled) ({ newMine = false; newShared = true }) else null
     )
     if (newShared) NewSharedDialog(
         onCreated = { code -> newShared = false; onCollabCreated(code) },
-        onClose = { newShared = false }
+        onClose = { newShared = false },
+        onForMe = { newShared = false; newMine = true }
     )
     if (newWishGroup) NewGroupDialog(
         onCreated = { gid -> newWishGroup = false; go(Deep.GroupPage(gid, invite = true)) },
@@ -240,8 +242,8 @@ fun HubScreen(
         GroupsHomeSection(onHome, onOpenWishGroup, onNewWishGroup)
 
         if (groupItems.isNotEmpty()) {
-            HubTitle(tr("Collab wishlists"), onMore = more)
-            HubBlocks(byRecent(groupItems), onHome, ::actionsOf, onAddTo, tr("New collab wishlist"), if (onHome) onNewGroup else null, dots = true)
+            HubTitle(tr("Wishlists for someone else"), onMore = more)
+            HubBlocks(byRecent(groupItems), onHome, ::actionsOf, onAddTo, tr("New wishlist"), if (onHome) onNewGroup else null, dots = true)
         }
     }
 
@@ -807,9 +809,25 @@ private fun ChaosSeasonCard(onStart: () -> Unit, onHide: () -> Unit) {
     }
 }
 
-/** A new wishlist of your own: a name (required) and, optionally, the note for friends shown at the top of the list. */
+/**
+ * "Who is it for? Me / Someone else" at the top of a new wishlist (owner, 17 November 2026: collab wishlists folded
+ * into "New wishlist"). Someone else = a wishlist made together with others, where everyone sees reservations.
+ */
 @Composable
-fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
+fun WhoIsItFor(someoneElse: Boolean, onChange: (Boolean) -> Unit) {
+    Text(tr("Who is it for?"), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FilterChip(!someoneElse, { if (someoneElse) onChange(false) }, { Text(tr("Me")) })
+        FilterChip(someoneElse, { if (!someoneElse) onChange(true) }, { Text(tr("Someone else")) })
+    }
+}
+
+/**
+ * A new wishlist of your own: a name (required) and, optionally, the note for friends shown at the top of the list.
+ * [onForSomeoneElse]: from the + menu, "Who is it for?" is asked first; "Someone else" switches to [NewSharedDialog].
+ */
+@Composable
+fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit, onForSomeoneElse: (() -> Unit)? = null) {
     val ctx = LocalContext.current
     var name by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
@@ -826,6 +844,7 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
         title = { Text(tr("New wishlist")) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (onForSomeoneElse != null) WhoIsItFor(false) { onForSomeoneElse() }
                 OutlinedTextField(
                     name, { name = it.take(60); if (it.isNotBlank()) missing = false },
                     label = { Text(tr("Wishlist name*")) }, singleLine = true, isError = missing,
