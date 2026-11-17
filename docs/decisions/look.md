@@ -210,3 +210,12 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
 - The big coloured circles sat behind text (App settings hard to read). The owner chose solid cards behind settings
   (not moving or fading the circles): App settings, a list's settings and Profile put each group, its title
   included, on a straight (not tilted) card (`ReadingCard` in `Settings.kt`). Lists, Home and chat keep the open look.
+
+## Forms, menus, settings and themes (owner, 17 November 2026; interviewed, plan in `docs/designs/plan-2026-11-17.md`)
+- New wishlist chips: "My own" / "With others" (owner). Full-width form sheet with X, no Cancel, swipe down closes at
+  once without asking (owner), same height for both kinds; for the + menu, Wishlist settings and a list's ⋮ menu.
+- Chips: keep the tick; the text centred between the chip's top and bottom (owner's meaning of "centred").
+- Settings: a full screen instead of the profile pop-up. Themes: 5 hand-tuned themes that tint the whole app, plus
+  Gen Z chaos as a 6th bonus; the colour wheel goes; a theme screen like Giftful's but our own, without a logo picker.
+- Shared ("With others") lists: "Hide reservations" for the collaborators, on by default (owner); co-owners as such
+  were not wanted separately ("Not now"), this setting covers the couple's case.

@@ -5,19 +5,9 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
-- **Discussion in progress (17 November 2026, evening), read first; build NOTHING until the owner says the
-  discussion is done** (owner: "before you build anything I have more screenshots"). On the table, from the owner's
-  screenshots of GoWish and Giftful (make our own, never copy their look):
-  1. The New wishlist chips: "Someone else" too specific; owner wants "With someone"/"Together"-like wording for
-     adding collaborators (more than 2 people). Open: the wedding case (everyone on a shared list sees reservations).
-  2. Chips: keep the tick; text exactly centred top-to-bottom in every chip.
-  3. One full-width form sheet (X top right, no Cancel, swipe down closes at once, no question; same height for
-     Me/Together): everything in the + menu; owner asks where else.
-  4. Menus (a list's ⋮) look cheap: full-width sheets with a header; ideas to make the app unique.
-  5. The profile pop-up → a polished settings screen (header card, 2-column tiles, rows), and a Theme screen with
-     preview cards and System/Light/Dark.
-  6. Theming like Giftful: 5 themes that tint the whole app subtly (page, cards, bars, wordmark), light and dark,
-     plus Gen Z chaos kept as a 6th bonus theme.
+- **Plan waiting for approval (17 November 2026, evening), read first**: `docs/designs/plan-2026-11-17.md` (chips
+  centred, My own / With others, one full-width form sheet, settings screen, 5 themes + Gen Z, shared lists with
+  hidden reservations). Build nothing from it until the owner approves; then step by step, one update each.
 - **2.219 (17 November 2026), read first.** Ask whether every dialog's buttons now read well (Share, Move, Profile),
   and how "About me" under the name looks. Then build the agreed collab merge (`docs/decisions/sharing.md`, last
   section), built in 2.220: ask how "Who is it for?" feels, and whether the name should also reach the other members'
