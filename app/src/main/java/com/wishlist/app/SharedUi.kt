@@ -37,16 +37,15 @@ fun toast(c: Context, message: String) {
 }
 
 /**
- * A new wishlist for someone else, made together with others (was "Create a collab wishlist"; owner, 17 November
- * 2026): who it's for (kept on this phone, to keep the surprise: [Shared.forName]), a name, a description and the
- * occasion. [onForMe]: "Who is it for?" back to "Me" ([NewListDialog]).
+ * A new wishlist "With others" (was "Create a collab wishlist"; owner, 17 November 2026): a name, optionally who the
+ * gifts are for (kept on this phone, to keep the surprise: [Shared.forName]), a description and the occasion.
+ * [onForMe]: back to "My own" ([NewListDialog]).
  */
 @Composable
 fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit, onForMe: (() -> Unit)? = null) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var forWho by remember { mutableStateOf("") }
-    var forMissing by remember { mutableStateOf(false) }
     // The list's name follows "Gifts for Mum" until you type your own.
     var nameTyped by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
@@ -67,22 +66,22 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit, onForMe: (
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (onForMe != null) WhoIsItFor(true) { onForMe() }
                 Text(
-                    tr("Find gifts together: everyone you invite can add ideas and reserve what they’ll buy, so nobody buys it twice."),
+                    tr("Invite people to add ideas with you. Everyone on it sees what’s reserved, so nobody buys it twice."),
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 OutlinedTextField(
+                    name, { name = it.take(60); nameTyped = true; if (it.isNotBlank()) missing = false }, label = { Text(tr("Wishlist name*")) },
+                    placeholder = { Text(tr("Our wedding, Gifts for Mum…")) }, singleLine = true, isError = missing,
+                    supportingText = if (missing) ({ Text(tr("What is this wishlist called?")) }) else null,
+                    modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
+                OutlinedTextField(
                     forWho, {
-                        forWho = it.take(Shared.FOR_MAX); if (it.isNotBlank()) forMissing = false
+                        forWho = it.take(Shared.FOR_MAX)
                         if (!nameTyped) name = if (it.isBlank()) "" else tr("Gifts for %s", it.trim()).take(60)
                         if (name.isNotBlank()) missing = false
                     },
-                    label = { Text(tr("Their name*")) }, placeholder = { Text(tr("Mum")) }, singleLine = true, isError = forMissing,
-                    supportingText = { Text(if (forMissing) tr("Who are the gifts for?") else tr("Never shown to them. Don’t invite them.")) },
-                    modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
-                OutlinedTextField(
-                    name, { name = it.take(60); nameTyped = true; if (it.isNotBlank()) missing = false }, label = { Text(tr("Wishlist name*")) },
-                    placeholder = { Text(tr("Gifts for Mum")) }, singleLine = true, isError = missing,
-                    supportingText = if (missing) ({ Text(tr("What is this wishlist called?")) }) else null,
+                    label = { Text(tr("Gifts for someone? (optional)")) }, placeholder = { Text(tr("Their name, e.g. Mum")) }, singleLine = true,
+                    supportingText = { Text(tr("A surprise: they’re never shown it, and you’re reminded not to invite them.")) },
                     modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 OutlinedTextField(
                     notes, { notes = it.take(ABOUT_MAX) },
@@ -105,10 +104,6 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit, onForMe: (
             TextButton(
                 enabled = !busy && Config.enabled,
                 onClick = {
-                    if (forWho.isBlank()) {
-                        forMissing = true
-                        return@TextButton
-                    }
                     if (name.isBlank()) {
                         missing = true
                         return@TextButton
@@ -121,7 +116,7 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit, onForMe: (
                     scope.launch {
                         try {
                             val l = Shared.create(ctx, name, me)
-                            Shared.setForName(ctx, l.code, forWho)
+                            if (forWho.isNotBlank()) Shared.setForName(ctx, l.code, forWho)
                             // The notes become the list's note for everyone on it.
                             if (notes.isNotBlank()) {
                                 try {

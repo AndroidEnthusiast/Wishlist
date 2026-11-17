@@ -284,6 +284,30 @@ fun typographyFor(design: String, @Suppress("UNUSED_PARAMETER") classic: Typogra
     else -> quietType()
 }
 
+/** Plus Jakarta Sans' own measurements (its font file, per letter height): ascent, descent and capital height. */
+internal const val JAKARTA_ASCENT = 1.038f
+internal const val JAKARTA_DESCENT = 0.222f
+internal const val JAKARTA_CAP = 0.745f
+
+/**
+ * How much of a label's spare line height goes above the text so its capitals sit exactly in the middle of the line
+ * (owner, 17 November 2026: chip text "perfectly centred" between the chip's top and bottom). The font draws its
+ * capitals low in its box (a tall ascent), so an even split left them about 1 px low. [size] and [line] in sp.
+ */
+internal fun capsTopRatio(size: Int, line: Int): Float {
+    val spare = line - size * (JAKARTA_ASCENT + JAKARTA_DESCENT)
+    if (spare <= 0f) return 0.5f
+    val top = line / 2f - size * (JAKARTA_ASCENT - JAKARTA_CAP / 2f)
+    return (top / spare).coerceIn(0f, 1f)
+}
+
+private fun TextStyle.capsCentred(size: Int, line: Int) = copy(
+    lineHeightStyle = androidx.compose.ui.text.style.LineHeightStyle(
+        androidx.compose.ui.text.style.LineHeightStyle.Alignment(capsTopRatio(size, line)),
+        androidx.compose.ui.text.style.LineHeightStyle.Trim.None
+    )
+)
+
 /**
  * Quiet's type scale (2.207, docs/styles/quiet.md): Fraunces SemiBold for titles (28 for the wordmark and the main
  * tabs, 20 for screen titles, sections and dialogs), Figtree for the rest with clear steps: prices 17, names 16, text
@@ -303,8 +327,9 @@ private fun quietType(): Typography {
         titleSmall = f(d.titleSmall, jakarta, FontWeight.Medium, 16, 21),
         bodyLarge = f(d.bodyLarge, jakarta, FontWeight.Normal, 16, 22), bodyMedium = f(d.bodyMedium, jakarta, FontWeight.Normal, 15, 21),
         bodySmall = f(d.bodySmall, jakarta, FontWeight.Normal, 13, 18),
-        labelLarge = f(d.labelLarge, jakarta, FontWeight.SemiBold, 15, 20), labelMedium = f(d.labelMedium, jakarta, FontWeight.Medium, 13, 18),
-        labelSmall = f(d.labelSmall, jakarta, FontWeight.Medium, 12, 16, 0.1f)
+        labelLarge = f(d.labelLarge, jakarta, FontWeight.SemiBold, 15, 20).capsCentred(15, 20),
+        labelMedium = f(d.labelMedium, jakarta, FontWeight.Medium, 13, 18).capsCentred(13, 18),
+        labelSmall = f(d.labelSmall, jakarta, FontWeight.Medium, 12, 16, 0.1f).capsCentred(12, 16)
     )
 }
 

@@ -242,7 +242,7 @@ fun HubScreen(
         GroupsHomeSection(onHome, onOpenWishGroup, onNewWishGroup)
 
         if (groupItems.isNotEmpty()) {
-            HubTitle(tr("Wishlists for someone else"), onMore = more)
+            HubTitle(tr("Shared wishlists"), onMore = more)
             HubBlocks(byRecent(groupItems), onHome, ::actionsOf, onAddTo, tr("New wishlist"), if (onHome) onNewGroup else null, dots = true)
         }
     }
@@ -810,15 +810,15 @@ private fun ChaosSeasonCard(onStart: () -> Unit, onHide: () -> Unit) {
 }
 
 /**
- * "Who is it for? Me / Someone else" at the top of a new wishlist (owner, 17 November 2026: collab wishlists folded
- * into "New wishlist"). Someone else = a wishlist made together with others, where everyone sees reservations.
+ * "My own / With others" at the top of a new wishlist (owner, 17 November 2026: collab wishlists folded into "New
+ * wishlist"). With others = a wishlist made together with others, where everyone on it sees reservations.
  */
 @Composable
 fun WhoIsItFor(someoneElse: Boolean, onChange: (Boolean) -> Unit) {
-    Text(tr("Who is it for?"), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Text(tr("Whose wishlist?"), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilterChip(!someoneElse, { if (someoneElse) onChange(false) }, { Text(tr("Me")) })
-        FilterChip(someoneElse, { if (!someoneElse) onChange(true) }, { Text(tr("Someone else")) })
+        FilterChip(!someoneElse, { if (someoneElse) onChange(false) }, { Text(tr("My own")) })
+        FilterChip(someoneElse, { if (!someoneElse) onChange(true) }, { Text(tr("With others")) })
     }
 }
 
