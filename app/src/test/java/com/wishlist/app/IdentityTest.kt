@@ -51,11 +51,16 @@ class IdentityTest {
         assertNotEquals(0xFF8585FF, ACCENTS.first { it.key == "indigo" }.dark)
     }
 
-    /** Warm neutrals: not the phone-settings grey and not pure black. */
+    /**
+     * Warm neutrals, gently tinted by the theme since 17 November 2026 (owner, ThemesTest): never the phone-settings
+     * grey and never pure black, and still close to the warm neutrals.
+     */
     @Test fun warmSurfaces() {
-        assertEquals(QuietColours.pageLight, lookFor("quiet", "blue", "light").scheme.background)
-        assertEquals(QuietColours.pageDark, lookFor("quiet", "blue", "dark").scheme.background)
-        assertNotEquals(Color.Black, lookFor("quiet", "blue", "dark").scheme.background)
+        val light = lookFor("quiet", "blue", "light").scheme.background
+        val dark = lookFor("quiet", "blue", "dark").scheme.background
+        assertNotEquals(Color.Black, dark)
+        assertTrue("light stays light", light.luminance() > 0.8f)
+        assertTrue("dark stays very dark", dark.luminance() < 0.03f)
     }
 
     /** A new phone starts in Berry; a phone that already chose a colour keeps it (also the old default, never saved). */

@@ -71,18 +71,40 @@ fun styleFor(key: String): StyleInfo = STYLES.firstOrNull { it.key == key } ?: S
 /** An accent colour: the tone for light and the (lighter) tone for dark. */
 class Accent(val key: String, val name: String, val light: Long, val dark: Long)
 
+/**
+ * The five themes (owner, 17 November 2026, plan step 5): each tints the whole app gently (page, cards, panels, the
+ * wordmark) in light and dark; Gen Z chaos is the sixth. The keys stay the old accents' so nobody's choice is lost.
+ * Berry, the app's own colour, is first and the default for new people.
+ */
 val ACCENTS: List<Accent> = listOf(
-    // Berry, the app's own colour (owner, 15 November 2026, docs/styles/identity.md): first, and the default for new
-    // people. Indigo's dark tone moved away from Android's default purple and green's from the Android robot's green.
     Accent("berry", "Berry", 0xFFB0245A, 0xFFF0679A),
-    Accent("blue", "Blue", 0xFF0A6CFF, 0xFF4D94FF),
-    Accent("indigo", "Indigo", 0xFF3F4BD0, 0xFF8E9BFF),
-    Accent("green", "Green", 0xFF1F9D55, 0xFF4CC08A),
-    Accent("orange", "Orange", 0xFFF2711C, 0xFFFF9A52),
-    Accent("pink", "Pink", 0xFFE5367A, 0xFFFF6FA3)
+    Accent("blue", "Ocean", 0xFF0A6CFF, 0xFF4D94FF),
+    Accent("green", "Forest", 0xFF1F9D55, 0xFF4CC08A),
+    Accent("orange", "Amber", 0xFFE0650F, 0xFFFFA24D),
+    Accent("indigo", "Lilac", 0xFF7A3FD1, 0xFFB79CFF)
 )
 
-fun accentFor(key: String): Accent = ACCENTS.firstOrNull { it.key == key } ?: customAccent(key) ?: ACCENTS[0]
+/**
+ * The theme for any colour stored before 17 November 2026 (Pink, the colour wheel's "#RRGGBB"): the closest of the
+ * five by hue, once (Repo.load). A key of the five stays itself.
+ */
+fun closestTheme(key: String): String {
+    if (ACCENTS.any { it.key == key }) return key
+    if (key == "pink") return "berry"
+    val own = customAccent(key) ?: return ACCENTS[0].key
+    fun hue(c: Color): Float {
+        val r = c.red; val g = c.green; val b = c.blue
+        val max = maxOf(r, g, b); val min = minOf(r, g, b); val d = max - min
+        if (d < 0.0001f) return 0f
+        val h = when (max) { r -> ((g - b) / d) % 6f; g -> (b - r) / d + 2f; else -> (r - g) / d + 4f } * 60f
+        return if (h < 0) h + 360f else h
+    }
+    val h = hue(Color(own.light))
+    return ACCENTS.minBy { val d = kotlin.math.abs(hue(Color(it.light)) - h); minOf(d, 360f - d) }.key
+}
+
+fun accentFor(key: String): Accent = ACCENTS.firstOrNull { it.key == key } ?: accentForTheme(closestTheme(key))
+private fun accentForTheme(key: String): Accent = ACCENTS.first { it.key == key }
 
 /**
  * Any colour (owner, 2.101): picked on the colour ball in the Themer and stored as "#RRGGBB". The same colour in light
@@ -131,7 +153,11 @@ class Look(
     val rise: Color,
     /** The colour of filled blocks (buttons, the chosen chip, Add wish, the + buttons) and what goes on them. */
     val accent: Color = scheme.primary,
-    val onAccent: Color = scheme.onPrimary
+    val onAccent: Color = scheme.onPrimary,
+    /** Quiet's page, cards and what floats (bars, panels), tinted by the theme (17 November 2026). */
+    val page: Color = scheme.background,
+    val card: Color = scheme.surface,
+    val raised: Color = scheme.surface
 ) {
     /** The signature look. (Kept under the old name: "classic" meant the plain standard look.) */
     val classic: Boolean get() = design == "quiet"
@@ -227,7 +253,8 @@ fun lookFor(style: String, accentKey: String, mode: String): Look {
             val onQ = bestInk(a)
             // Warm neutrals (owner, 15 November 2026, docs/styles/identity.md): a warm off-white page and a warm
             // charcoal instead of the phone-settings grey and pure black.
-            val bg = if (dark) QuietColours.pageDark else QuietColours.pageLight
+            // Each theme tints the page, cards and panels gently (owner, 17 November 2026, like Giftful's themes).
+            val bg = if (dark) mix(QuietColours.pageDark, a, 0.07f) else mix(QuietColours.pageLight, a, 0.06f)
             // Your colour as text and lines (text buttons, links, chosen tabs): in light the same colour, darkened just
             // enough to read at 4.5 : 1 on the grey page (green, orange and pink were too light, found 14 November
             // 2026). Filled buttons keep the colour itself ([Look.accent]).
@@ -235,10 +262,11 @@ fun lookFor(style: String, accentKey: String, mode: String): Look {
             val readable = (0..20).map { mix(a, inkText, it / 20f) }.first { col ->
                 (maxOf(col.luminance(), bg.luminance()) + 0.05f) / (minOf(col.luminance(), bg.luminance()) + 0.05f) >= 4.6f
             }
-            val surface = if (dark) QuietColours.cardDark else white
+            val surface = if (dark) mix(QuietColours.cardDark, a, 0.12f) else white
+            val raised = if (dark) mix(QuietColours.raisedDark, a, 0.14f) else white
             val text = if (dark) c(0xFFF6F3F0) else c(0xFF17141A)
             val muted = if (dark) c(0xFFA7A1A9) else c(0xFF6B6570)
-            val hair = if (dark) QuietColours.raisedDark else c(0xFFE9E4DE)
+            val hair = if (dark) raised else mix(c(0xFFE9E4DE), a, 0.12f)
             Look(
                 "quiet", dark,
                 // The outline (fields, tick boxes) at least 3 : 1 on the cards, so they can be found (13 November 2026).
@@ -246,9 +274,9 @@ fun lookFor(style: String, accentKey: String, mode: String): Look {
                     if (dark) c(0xFF847D88) else c(0xFF8C8590), hair,
                     // A real red for Delete and errors (owner, 17 November 2026: Material's red was pink), 4.5 : 1.
                     error = if (dark) c(0xFFFF6B5E) else c(0xFFC62828)),
-                listOf(surface), listOf(if (dark) c(0xFFECE8E4) else c(0xFFF4F1ED)), hair,
+                listOf(surface), listOf(if (dark) c(0xFFECE8E4) else mix(c(0xFFF4F1ED), a, 0.10f)), hair,
                 listOf(Color.Black.copy(alpha = if (dark) 0.5f else 0.06f)), emptyList(),
-                jakarta, drop, rise, accent = a, onAccent = onQ
+                jakarta, drop, rise, accent = a, onAccent = onQ, page = bg, card = surface, raised = raised
             )
         }
     }
@@ -379,7 +407,7 @@ fun Look.pictureShape(id: Long, small: Boolean): Shape = RectangleShape
 /** Behind a picture without a photo: a soft colour of the look (a photo gets its own Blur stage, PhotoStage). */
 fun Look.pictureBg(id: Long, hasImage: Boolean): Color =
     // Quiet dark: a small icon without a photo (Notifications, Prices) keeps a dark mat; photos get the light surface.
-    if (design == "quiet" && dark && !hasImage) QuietColours.raisedDark else tints[pick(id, tints.size)]
+    if (design == "quiet" && dark && !hasImage) raised else tints[pick(id, tints.size)]
 
 /**
  * The surface every wish photo sits on (Quiet 2.207: one calm light surface in light and dark, the owner's choice, so

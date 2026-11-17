@@ -457,6 +457,10 @@ Everything under `tests/` was written in the browser-editor session and runs wit
   both (Crashlytics reopens them if they come back). Crashlytics' "latest release" said 2.182: check next session
   that 2.194 shows up (it can take a day); if not, look at `Crash.kt`/`WishlistApp.kt` after the 2.191 library update. **Next (owner's order):** the app's final name, then the copy project. R7 and
   R8: later.
+### 15 November 2026, very late: "Love this" (2.213)
+Owner asked whether people say "top wish": they don't. Now "♥ Love this" with a heart in the same gold, everywhere in
+the app and on the web pages; smaller label on small cards. Data unchanged. App, web and database checks pass.
+
 ### 15 November 2026, late night: sheets, price page, wish form (2.212)
 Wishlist ⋮ as a bottom sheet with a Visibility sheet ("Visible to" renamed), no long press on wishlists; Price history a
 one-screen sheet with photo, big price, chips, "View in shop" first; the wish form photo-first with Top wish and

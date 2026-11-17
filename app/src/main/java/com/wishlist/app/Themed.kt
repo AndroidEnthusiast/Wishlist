@@ -525,7 +525,7 @@ fun FilterChip(
 fun SegmentedTabs(labels: List<String>, selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
     val look = LocalLook.current
     if (look.design == "quiet") {
-        val track = if (look.dark) QuietColours.raisedDark else Color(0xFFEAE5DF)
+        val track = if (look.dark) look.raised else Color(0xFFEAE5DF)
         val chosen = if (look.dark) Color(0xFF453F47) else Color.White
         Row(modifier.fillMaxWidth().clip(CircleShape).background(track).padding(3.dp)) {
             labels.forEachIndexed { i, label ->
@@ -686,7 +686,7 @@ fun ModalBottomSheet(
  */
 internal fun quietRaised(look: Look, asked: Color): Color = when {
     asked != look.scheme.surface && asked != look.scheme.background -> asked
-    look.dark -> QuietColours.raisedDark
+    look.dark -> look.raised
     else -> Color.White
 }
 

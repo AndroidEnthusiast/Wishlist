@@ -234,7 +234,7 @@ object Repo {
         }
         // There is no "System default" any more (2.53): the first start (and a phone that had it) quietly takes
         // Light or Dark to match the phone's setting at that moment.
-        theme = p.getString("theme", null)?.takeIf { it == "light" || it == "dark" || it == "amoled" }
+        theme = p.getString("theme", null)?.takeIf { it == "light" || it == "dark" || it == "amoled" || it == "system" }
             ?: if ((c.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
                 android.content.res.Configuration.UI_MODE_NIGHT_YES) "dark" else "light"
         // A new phone with nothing saved yet starts in Berry, the app's own colour (owner, 15 November 2026); everyone
@@ -269,8 +269,11 @@ object Repo {
             // (styleFor), light or dark and the accent stay; saved at once so it is settled.
             design = styleFor(oldStyle).key
             if (design != oldStyle) p.edit().putString("style", design).apply()
-            if (ACCENTS.none { it.key == palette } && customAccent(palette) == null) palette = "blue"
+            // (An unknown colour becomes the closest theme just below, and is saved.)
         }
+        // The five themes (owner, 17 November 2026): Pink and a colour from the old colour wheel become the closest
+        // theme, once, saved at once.
+        closestTheme(palette).let { t -> if (t != palette) { palette = t; p.edit().putString("palette", t).apply() } }
         font = p.getString("font", "google_sans") ?: "google_sans"
         instantDelete = p.getBoolean("instant_delete", false)
         notifyDrops = p.getBoolean("notify_drops", true)

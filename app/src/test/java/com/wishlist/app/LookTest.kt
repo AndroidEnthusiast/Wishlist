@@ -153,8 +153,12 @@ class LookTest {
             assertEquals("green", Repo.palette)
             assertEquals("quiet", prefs.getString("style", null))
         }
-        Repo.setLook(c, "chaos", "light", "pink")
+        // Pink is gone since 17 November 2026 (five themes, owner): it becomes Berry, once.
+        Repo.setLook(c, "chaos", "light", "orange")
         fresh(); Repo.load(c)
-        assertEquals("chaos", Repo.design); assertEquals("light", Repo.theme); assertEquals("pink", Repo.palette)
+        assertEquals("chaos", Repo.design); assertEquals("light", Repo.theme); assertEquals("orange", Repo.palette)
+        prefs.edit().putString("palette", "pink").commit()
+        fresh(); Repo.load(c)
+        assertEquals("berry", Repo.palette); assertEquals("berry", prefs.getString("palette", null))
     }
 }

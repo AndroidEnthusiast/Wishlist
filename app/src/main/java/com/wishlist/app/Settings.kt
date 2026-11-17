@@ -166,11 +166,11 @@ private fun SettingsBody(snack: SnackbarHostState, onThemer: () -> Unit) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f).padding(end = 12.dp)) {
                     Text(
-                        tr("Themes and colours to personalise your wishlist"),
+                        tr("Five themes and Gen Z chaos, in light or dark."),
                         style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
                     )
                 }
-                Button(onClick = onThemer) { Text(tr("Themer")) }
+                Button(onClick = onThemer) { Text(tr("Change theme")) }
             }
             }
             // What you see (owner, 2.101): for all your lists, only on this phone. Everything on by default.

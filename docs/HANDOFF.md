@@ -5,9 +5,12 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
-- **Plan waiting for approval (17 November 2026, evening), read first**: `docs/designs/plan-2026-11-17.md` (chips
-  centred, My own / With others, one full-width form sheet, settings screen, 5 themes + Gen Z, shared lists with
-  hidden reservations: step 6 left for now, owner). Build nothing from it until the owner approves; then step by step, one update each.
+- **2.221–2.225 (17 November 2026, evening), read first.** The approved plan (`docs/designs/plan-2026-11-17.md`,
+  steps 1–5) is built: centred chip text, My own / With others, the full-width form sheet (+ menu forms, Wishlist
+  settings, list menu), the settings sheet, five themes + Gen Z with a Theme screen. Ask how each feels on the phone
+  (fonts, tints and sheets can't be seen here). Step 6 left for now. Known limits: the Theme row opens App settings with
+  the Theme screen on top (Back then shows App settings); New group / New gift exchange: only their first step is a
+  sheet; a form's typed text is lost when switching My own / With others.
 - **2.219 (17 November 2026), read first.** Ask whether every dialog's buttons now read well (Share, Move, Profile),
   and how "About me" under the name looks. Then build the agreed collab merge (`docs/decisions/sharing.md`, last
   section), built in 2.220: ask how "Who is it for?" feels, and whether the name should also reach the other members'
@@ -46,6 +49,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 17 November 2026, evening: red buttons, plan built (2.221–2.225)
+2.221 every red action readable (danger buttons, scan check). Interviewed on GoWish/Giftful screenshots; plan approved
+(step 6 left). 2.222 centred chip text (measured from the font file), My own / With others. 2.223 full-width form
+sheet and list menu sheet. 2.224 settings sheet (card, tiles, rows). 2.225 five themes + Gen Z, Theme screen.
+
 ### 17 November 2026: readable dialog buttons, About me, sizes removed (2.219)
 Buttons in a dialog's text took the dialog's grey (Share: "Send invite", "Copy"): every button keeps its own colour now.
 Owner: no chips under a person, only "About me" (100 letters, was "I like…"); birthday only on a friend's page near
@@ -59,7 +67,3 @@ it; sizes deleted (`supabase-sizes-off.sql`). Interviewed on dropping collab wis
 no bounce going back (Moving had a size animation). Interviewed on solo use: sold out alerts and screenshot to wish next.
 2.215: Shopify pictures given as http:// (Baracuta) load over https (`secureImage`, app and web).
 2.216: wish form trimmed, Quiet field text full ink. 2.217: friend page person first, 2-photo collages, failed pictures, card ✕. 2.218: Home = your profile, + menu, pop-ups.
-
-### 15 November 2026, very late: "Love this" (2.213)
-Owner asked whether people say "top wish": they don't. Now "♥ Love this" with a heart in the same gold, everywhere in
-the app and on the web pages; smaller label on small cards. Data unchanged. App, web and database checks pass.

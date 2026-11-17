@@ -27,6 +27,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -87,114 +90,122 @@ fun AddWishButton(onClick: () -> Unit) {
 }
 
 /**
- * The Themer (App settings > Theme): a big sample wishlist in the look being tried, and under it the choices: the
- * style (Quiet and Gen Z chaos, side by side with a small sample each), Light or Dark, and the accent colour
- * (2.97). Nothing changes in the app until "Apply" (top right, shown once the choice differs from the look in use).
- * Back without Apply keeps the look in use.
+ * The Theme screen (owner, 17 November 2026, plan step 5; like Giftful's, our own drawing, no app-icon picker): six
+ * cards in two columns, the five themes and Gen Z chaos, each a small preview of the app in its colours, the chosen
+ * one with a tick; under them Appearance: System, Light or Dark. A tap changes the whole app at once.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun ThemerScreen(onBack: () -> Unit) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     BackHandler(onBack = onBack)
-    val inUseMode = effectiveTheme()
-    var tryStyle by remember { mutableStateOf(styleFor(Repo.design).key) }
-    var tryMode by remember { mutableStateOf(inUseMode) }
-    var tryAccent by remember { mutableStateOf(accentFor(Repo.palette).key) }
-    val changed = tryStyle != styleFor(Repo.design).key || tryMode != inUseMode || tryAccent != accentFor(Repo.palette).key
-    var picker by remember { mutableStateOf(false) }
-    val snack = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
-    // Apply, then "Theme applied" (owner, 2.101).
-    val apply = {
-        Repo.setLook(ctx, tryStyle, tryMode, tryAccent)
-        scope.launch { snack.showToast(tr("Looking good. Your new look is on.")) }
-        Unit
-    }
-
+    val mode = Repo.theme.takeIf { it == "system" || it == "light" } ?: "dark"
+    val shownMode = effectiveTheme()
+    val style = styleFor(Repo.design).key
+    val accent = accentFor(Repo.palette).key
     Scaffold(
         containerColor = cs.background,
         topBar = {
             TopAppBar(
-                title = { ScreenTitle(tr("Themer")) },
+                title = { ScreenTitle(tr("Theme")) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(AppIcons.ArrowBack, tr("Back")) } },
-                actions = {
-                    if (changed) Button(onClick = apply, modifier = Modifier.padding(end = 8.dp)) { Text(tr("Apply")) }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
             )
-        },
-        snackbarHost = { AppSnackbarHost(snack) }
+        }
     ) { pad ->
-        Column(Modifier.padding(pad).fillMaxSize()) {
-            Spacer(Modifier.height(8.dp))
-            // The preview is drawn in the look being tried out; the rest of the screen keeps the look in use.
-            LookTheme(lookFor(tryStyle, tryAccent, tryMode)) {
-                ThemePreview(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp))
+        Column(
+            Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // The five themes, then Gen Z chaos as the sixth (a bonus, owner).
+            val cards: List<Triple<String, String, String>> = ACCENTS.map { Triple("quiet", it.key, tr(it.name)) } +
+                Triple("chaos", accent, tr("Gen Z chaos"))
+            cards.chunked(2).forEach { pair ->
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    pair.forEach { (st, ac, name) ->
+                        val chosen = st == style && (st == "chaos" || ac == accent)
+                        ThemeCard(name, lookFor(st, ac, shownMode), chosen, Modifier.weight(1f)) {
+                            Repo.setLook(ctx, st, mode, ac)
+                        }
+                    }
+                }
             }
             Text(
-                tr(styleFor(tryStyle).about), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
-                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp)
+                tr("Appearance"), style = MaterialTheme.typography.titleMedium, color = cs.onBackground,
+                modifier = Modifier.padding(top = 12.dp)
             )
-            // The styles, side by side; swipe to see them all.
-            LazyRow(
-                modifier = Modifier.fillMaxWidth().height(126.dp),
-                verticalAlignment = Alignment.Top,
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                items(STYLES.size) { i ->
-                    val st = STYLES[i]
-                    DesignTile(tr(st.name), lookFor(st.key, tryAccent, tryMode), tryStyle == st.key) { tryStyle = st.key }
-                }
-            }
-            // Light or dark, then the accent colours with the rainbow dot (any colour, owner 2.101) as the last one.
-            Row(
-                Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 10.dp),
-                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                listOf("light" to tr("Light"), "dark" to tr("Dark")).forEach { (k, n) ->
-                    val on = tryMode == k
-                    Text(
-                        n, style = MaterialTheme.typography.labelLarge, color = LocalLook.current.chipContent(on),
-                        modifier = Modifier.lookChip(LocalLook.current, on).clickable { tryMode = k }
-                            .padding(horizontal = 14.dp, vertical = 8.dp)
-                    )
-                }
-            }
-            Row(
-                Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                ACCENTS.forEach { ac ->
-                    val on = ac.key == tryAccent
-                    val col = Color(if (tryMode == "light") ac.light else ac.dark)
-                    Box(
-                        Modifier.size(34.dp).clip(CircleShape)
-                            .border(if (on) 2.dp else 0.dp, if (on) cs.onSurface else Color.Transparent, CircleShape)
-                            .padding(if (on) 4.dp else 0.dp).clip(CircleShape).background(col)
-                            .clickable(onClickLabel = tr(ac.name)) { tryAccent = ac.key }
-                    )
-                }
-                // The rainbow dot: opens the colour ball. Once a colour of your own is chosen, it shows in the middle.
-                val own = customAccent(tryAccent)
-                Box(
-                    Modifier.size(34.dp).clip(CircleShape)
-                        .border(if (own != null) 2.dp else 0.dp, if (own != null) cs.onSurface else Color.Transparent, CircleShape)
-                        .padding(if (own != null) 4.dp else 0.dp).rainbowDot()
-                        .clickable(onClickLabel = tr("Any colour")) { picker = true },
-                    contentAlignment = Alignment.Center
+            Segmented(
+                listOf("system" to tr("System"), "light" to tr("Light"), "dark" to tr("Dark")), mode
+            ) { Repo.setLook(ctx, style, it, accent) }
+            Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+/** One theme: a small page in its colours with its name, a card and a button in it; a tick when chosen. */
+@Composable
+private fun ThemeCard(name: String, sample: Look, chosen: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    val ring = MaterialTheme.colorScheme.primary
+    val shape = RoundedCornerShape(22.dp)
+    Box(
+        modifier.height(132.dp).clip(shape)
+            .border(if (chosen) 3.dp else 1.dp, if (chosen) ring else MaterialTheme.colorScheme.outlineVariant, shape)
+            .clickable(onClickLabel = name, onClick = onClick)
+            .semantics { selected = chosen }
+    ) {
+        LookTheme(sample) {
+            val cs = MaterialTheme.colorScheme
+            Column(Modifier.fillMaxSize().background(sample.page).padding(14.dp)) {
+                Text(
+                    name, style = MaterialTheme.typography.titleMedium, color = cs.primary,
+                    maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(end = 28.dp)
+                )
+                Spacer(Modifier.weight(1f))
+                // A wish card in this theme: a picture, two lines and its button.
+                Row(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(sample.card).padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (own != null) Box(
-                        Modifier.size(14.dp).clip(CircleShape).background(Color(if (tryMode == "light") own.light else own.dark))
-                            .border(1.5.dp, Color.White, CircleShape)
-                    )
+                    Box(Modifier.size(30.dp).clip(RoundedCornerShape(8.dp)).background(sample.pictureBg(1L, true)))
+                    Column(Modifier.weight(1f).padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Box(Modifier.fillMaxWidth(0.8f).height(6.dp).clip(CircleShape).background(cs.onSurface.copy(alpha = 0.7f)))
+                        Box(Modifier.fillMaxWidth(0.5f).height(6.dp).clip(CircleShape).background(cs.onSurfaceVariant.copy(alpha = 0.6f)))
+                    }
+                    Box(Modifier.width(26.dp).height(14.dp).clip(CircleShape).background(sample.accent))
                 }
             }
         }
+        if (chosen) Box(
+            Modifier.align(Alignment.TopEnd).padding(10.dp).size(26.dp).clip(CircleShape).background(ring),
+            contentAlignment = Alignment.Center
+        ) { Icon(AppIcons.Check, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp)) }
     }
-    if (picker) ColourPickerDialog(tryAccent, onPick = { tryAccent = it; picker = false }, onClose = { picker = false })
+}
+
+/** A row of choices in one rounded bar, the chosen one filled in the theme's colour (Appearance). */
+@Composable
+private fun Segmented(options: List<Pair<String, String>>, value: String, onPick: (String) -> Unit) {
+    val look = LocalLook.current
+    val cs = MaterialTheme.colorScheme
+    Row(
+        Modifier.fillMaxWidth().clip(CircleShape).background(if (look.design == "quiet") (if (look.dark) look.raised else look.card) else cs.surfaceVariant)
+            .border(1.dp, cs.outlineVariant, CircleShape).padding(4.dp)
+    ) {
+        options.forEach { (k, label) ->
+            val on = k == value
+            Box(
+                Modifier.weight(1f).heightIn(min = 44.dp).clip(CircleShape)
+                    .background(if (on) look.accent else Color.Transparent)
+                    .clickable(onClickLabel = label) { onPick(k) }
+                    .semantics { selected = on },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(label, style = MaterialTheme.typography.labelLarge, color = if (on) look.onAccent else cs.onSurface)
+            }
+        }
+    }
 }
 
 /** One style in the row under the preview: a small sample and its name. */

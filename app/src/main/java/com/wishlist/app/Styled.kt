@@ -384,7 +384,7 @@ fun IconButton(
     val round = round && LocalInTopBar.current && look.design == "quiet"
     androidx.compose.material3.IconButton(onClick, modifier.pressScale(), enabled) {
         if (round) Box(
-            Modifier.size(40.dp).clip(CircleShape).background(if (look.dark) QuietColours.raisedDark else Color.White),
+            Modifier.size(40.dp).clip(CircleShape).background(if (look.dark) look.raised else Color.White),
             contentAlignment = Alignment.Center
         ) { Box(Modifier.size(22.dp), contentAlignment = Alignment.Center) { content() } }
         else content()
@@ -433,7 +433,7 @@ fun StatusBadge(text: String, small: Boolean, modifier: Modifier = Modifier) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
     val bg = when (look.design) {
-        "quiet" -> if (look.dark) QuietColours.raisedDark else QuietColours.pageLight
+        "quiet" -> if (look.dark) look.raised else look.page
         else -> cs.surfaceVariant
     }
     StyleBadge(text, bg, cs.onSurface, small, null, modifier)

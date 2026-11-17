@@ -111,7 +111,7 @@ fun FloatingBar(content: @Composable RowScope.() -> Unit) {
     val frame = if (look.design == "quiet") Modifier
         .shadow(12.dp, shape, clip = false, ambientColor = Color.Black.copy(alpha = 0.25f), spotColor = Color.Black.copy(alpha = 0.18f))
         // Quiet 2.207: white (dark: the lifted grey of what floats), a round pill.
-        .clip(shape).background(if (look.dark) QuietColours.raisedDark.copy(alpha = 0.96f) else Color.White.copy(alpha = 0.96f)).border(1.dp, look.line, shape)
+        .clip(shape).background(if (look.dark) look.raised.copy(alpha = 0.96f) else Color.White.copy(alpha = 0.96f)).border(1.dp, look.line, shape)
     else Modifier.lookSurface(look, shape, cs.surfaceVariant, depth = 7.dp)
     Box(
         Modifier.fillMaxWidth().background(cs.background).windowInsetsPadding(WindowInsets.navigationBars)

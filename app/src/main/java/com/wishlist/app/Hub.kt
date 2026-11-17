@@ -88,7 +88,8 @@ fun Wordmark() {
             style = style.copy(shadow = androidx.compose.ui.graphics.Shadow(look.blobs[0], Offset(6f, 6f), 0f)),
             modifier = Modifier.rotate(-3f)
         )
-        else -> Text("Wishlist", style = style, color = ink)
+        // In the theme's colour (owner, 17 November 2026: the whole app takes the theme, the wordmark too).
+        else -> Text("Wishlist", style = style, color = MaterialTheme.colorScheme.primary)
     }
 }
 
