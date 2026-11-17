@@ -35,6 +35,14 @@ class OwnIcons(private val stroke: Float) {
     val check by lazy { icon("Check", line("M5,12.5l4.5,4.5L19,7.5")) }
     val back by lazy { icon("Back", line("M19,12H5"), line("M11,6l-6,6l6,6")) }
     val chevron by lazy { icon("Chevron", line("M9.5,6l6,6l-6,6")) }
+    /** A painter's palette with three dots of paint (Theme, 17 November 2026; drawn here). */
+    val palette by lazy {
+        icon(
+            "Palette",
+            line("M12,3.5a8.5,8.5 0 1,0 0,17c1,0 1.6,-0.7 1.6,-1.5c0,-0.9 -0.7,-1.3 -0.7,-2.1c0,-0.9 0.7,-1.5 1.6,-1.5h2c2.2,0 4,-1.8 4,-4C20.5,6.9 16.7,3.5 12,3.5z"),
+            line("M7.5,12h0.01"), line("M9.5,8h0.01"), line("M14,7.5h0.01")
+        )
+    }
     val dropDown by lazy { icon("DropDown", line("M7,10l5,5l5,-5")) }
     val bin by lazy {
         icon(
@@ -142,7 +150,7 @@ class OwnIcons(private val stroke: Float) {
 
     /** Every icon, for the checks (all drawn, none empty). */
     val all: List<ImageVector> get() = listOf(
-        add, close, check, back, chevron, dropDown, bin, edit, heart, heartFilled, home, homeFilled, lock, list, bell, more,
+        add, close, check, back, chevron, palette, dropDown, bin, edit, heart, heartFilled, home, homeFilled, lock, list, bell, more,
         person, personFilled, friends, friendsFilled, refresh, search, gear, share, group, gift, bag, swap, store, storeFilled, chat, chatFilled, eye, eyeOff, gallery
     )
 }

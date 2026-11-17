@@ -112,6 +112,12 @@ fun ReadingCard(
     }
 }
 
+/** "Theme" in the profile sheet (17 November 2026) opens App settings with the theme screen already open. */
+object ThemeOpen {
+    var next = false
+    fun take(): Boolean { val v = next; next = false; return v }
+}
+
 /**
  * Settings for the whole app (menu > Settings): your name, theme, price alerts, deleting, sharing the app.
  * What belongs to one list (name, note, categories, sharing) is in [ListSettingsScreen], the ⚙ on that list.
@@ -121,7 +127,7 @@ fun ReadingCard(
 fun SettingsScreen(snack: SnackbarHostState) {
     // The Themer (App settings > Theme) covers this screen with its own back arrow and slides in like a screen
     // (Motion.kt); kept when the phone is turned.
-    var themer by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    var themer by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(ThemeOpen.take()) }
     Moving(themer, depth = { if (it) 1 else 0 }) { open ->
         if (open) ThemerScreen { themer = false } else SettingsBody(snack) { themer = true }
     }

@@ -501,7 +501,9 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
         onReserved = { account = false; nav.openOnTop(Route.RESERVED) },
         onReceived = { account = false; nav.openOnTop(Route.RECEIVED) },
         onBin = { account = false; nav.openOnTop(Route.BIN) },
-        onSettings = { account = false; nav.openOnTop(Route.SETTINGS) }
+        onSettings = { account = false; nav.openOnTop(Route.SETTINGS) },
+        onNotes = { account = false; nav.openOnTop(Route.NOTES) },
+        onTheme = { account = false; ThemeOpen.next = true; nav.openOnTop(Route.SETTINGS) }
     )
     if (plusMenu) PlusMenuSheet(
         onWish = { plusMenu = false; addTarget = Repo.lastSaveTo; prefill = ""; adding = true },

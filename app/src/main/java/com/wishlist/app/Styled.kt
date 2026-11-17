@@ -497,6 +497,7 @@ object AppIcons {
     val Store: ImageVector @Composable get() = set.store
     val StoreFilled: ImageVector @Composable get() = set.storeFilled
     val Chevron: ImageVector @Composable get() = set.chevron
+    val Palette: ImageVector @Composable get() = set.palette
     val Chat: ImageVector @Composable get() = set.chat
     val ChatFilled: ImageVector @Composable get() = set.chatFilled
     val Gallery: ImageVector @Composable get() = set.gallery

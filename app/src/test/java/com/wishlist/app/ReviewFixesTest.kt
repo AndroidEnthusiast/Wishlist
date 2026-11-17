@@ -351,3 +351,17 @@ class OneNewWishlistTest {
         }
     }
 }
+
+
+/** You and your settings as a tall sheet (owner, 17 November 2026, plan step 4): nothing that was there went missing. */
+@RunWith(RobolectricTestRunner::class)
+@org.robolectric.annotation.Config(sdk = [34])
+class SettingsSheetTest {
+    @Test fun everyPlaceIsStillThere() {
+        val f = File("src/main/java/com/wishlist/app/Account.kt").readText()
+        for (t in listOf("Gifts I reserved", "Received gifts", "Notifications", "Bin", "Theme", "App settings", "Share"))
+            assertTrue(t, f.contains("tr(\"$t\")"))
+        assertTrue(f.contains("onProfile") && f.contains("FormSheetHost(onClose)") && f.contains("AppIcons.Close"))
+        assertTrue(QuietIcons.palette in QuietIcons.all && QuietIcons.palette.root.size > 0)
+    }
+}
