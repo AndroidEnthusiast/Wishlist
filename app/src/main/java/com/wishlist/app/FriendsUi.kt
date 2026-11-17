@@ -379,10 +379,10 @@ private fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpenL
                 Text(tr("You’ll stop seeing each other’s wishlists. They won’t be told, and you can add each other again later."))
             },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(danger = true, onClick = {
                     unfollow = null
                     act(tr("You and %s are no longer friends", f.name)) { Friends.remove(ctx, f.id) }
-                }) { Text(tr("Unfriend"), color = cs.error) }
+                }) { Text(tr("Unfriend")) }
             },
             dismissButton = { TextButton(onClick = { unfollow = null }) { Text(tr("Cancel")) } }
         )

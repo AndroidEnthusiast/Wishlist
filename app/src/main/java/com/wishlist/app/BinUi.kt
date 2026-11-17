@@ -210,7 +210,7 @@ fun BinScreen(snack: SnackbarHostState) {
                 )
             },
             confirmButton = {
-                TextButton(onClick = { askDelete = null; deleteForGood(e) }) { Text(tr("Delete"), color = cs.error) }
+                TextButton(danger = true, onClick = { askDelete = null; deleteForGood(e) }) { Text(tr("Delete")) }
             },
             dismissButton = { TextButton(onClick = { askDelete = null }) { Text(tr("Cancel")) } }
         )
@@ -264,7 +264,7 @@ fun BinScreen(snack: SnackbarHostState) {
                 )
             },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(danger = true, onClick = {
                     askEmpty = false
                     busy = "all"
                     scope.launch {
@@ -272,7 +272,7 @@ fun BinScreen(snack: SnackbarHostState) {
                         busy = null
                         if (!ok) snack.showToast(tr("Couldn’t delete everything. Check your connection and try again."))
                     }
-                }) { Text(tr("Empty bin"), color = cs.error) }
+                }) { Text(tr("Empty bin")) }
             },
             dismissButton = { TextButton(onClick = { askEmpty = false }) { Text(tr("Cancel")) } }
         )
@@ -346,7 +346,7 @@ private fun BinRow(e: BinEntry, enabled: Boolean, glow: Int, onRestore: () -> Un
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = onDelete, enabled = enabled) { Text(tr("Delete now"), color = cs.error) }
+                TextButton(danger = true, onClick = onDelete, enabled = enabled) { Text(tr("Delete now")) }
                 FilledTonalButton(onClick = onRestore, enabled = enabled) { Text(tr("Restore")) }
             }
         }

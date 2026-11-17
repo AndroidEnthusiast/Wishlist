@@ -116,8 +116,8 @@ object DeleteMe {
 fun DeleteMeSection() {
     val cs = MaterialTheme.colorScheme
     var open by remember { mutableStateOf(false) }
-    TextButton(onClick = { open = true }, modifier = Modifier.padding(top = 24.dp)) {
-        Text(tr("Delete my profile and data"), color = cs.error)
+    TextButton(danger = true, onClick = { open = true }, modifier = Modifier.padding(top = 24.dp)) {
+        Text(tr("Delete my profile and data"))
     }
     if (open) DeleteMeFlow { open = false }
 }
@@ -198,7 +198,7 @@ private fun DeleteMeFlow(onClose: () -> Unit) {
             }
         },
         confirmButton = {
-            TextButton(enabled = !busy, onClick = {
+            TextButton(danger = true, enabled = !busy, onClick = {
                 busy = true; err = ""
                 scope.launch {
                     try {
@@ -208,7 +208,7 @@ private fun DeleteMeFlow(onClose: () -> Unit) {
                         err = tr("Couldn’t delete everything. Check your connection and try again.")
                     }
                 }
-            }) { Text(if (busy) tr("Deleting…") else tr("Delete everything"), color = cs.error) }
+            }) { Text(if (busy) tr("Deleting…") else tr("Delete everything")) }
         },
         dismissButton = { TextButton(enabled = !busy, onClick = onClose) { Text(tr("Cancel")) } }
     )

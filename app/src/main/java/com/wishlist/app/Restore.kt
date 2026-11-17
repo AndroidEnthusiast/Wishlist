@@ -301,7 +301,7 @@ fun RestoreDialog(confirmFirst: Boolean, onClose: () -> Unit) {
             onDismissRequest = { asking = false },
             title = { Text(if (n == 1) tr("Delete the wishlist on this phone?") else tr("Delete the %d wishlists on this phone?", n)) },
             text = { Text(if (n == 1) tr("It is replaced by the wishlists saved with your recovery key.") else tr("They are replaced by the wishlists saved with your recovery key.")) },
-            confirmButton = { TextButton(onClick = { asking = false; go() }) { Text(tr("Delete and restore"), color = cs.error) } },
+            confirmButton = { TextButton(danger = true, onClick = { asking = false; go() }) { Text(tr("Delete and restore")) } },
             dismissButton = { TextButton(onClick = { asking = false }) { Text(tr("Cancel")) } }
         )
     }

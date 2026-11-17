@@ -25,8 +25,8 @@ fun DeleteHost(snack: SnackbarHostState) {
                 )
             },
             confirmButton = {
-                TextButton(onClick = { DeleteFlow.confirm(ctx) }) {
-                    Text(tr("Delete"), color = MaterialTheme.colorScheme.error)
+                TextButton(danger = true, onClick = { DeleteFlow.confirm(ctx) }) {
+                    Text(tr("Delete"))
                 }
             },
             dismissButton = { TextButton(onClick = { DeleteFlow.cancel() }) { Text(tr("Cancel")) } }

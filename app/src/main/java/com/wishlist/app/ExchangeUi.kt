@@ -903,10 +903,10 @@ fun ExchangeScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, on
                 )
             },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(danger = true, onClick = {
                     removing = null
                     act { Exchanges.remove(ctx, gid, m.id); tr("%s was removed", m.name.ifBlank { tr("Someone") }) }
-                }) { Text(tr("Remove"), color = cs.error) }
+                }) { Text(tr("Remove")) }
             },
             dismissButton = { TextButton(onClick = { removing = null }) { Text(tr("Cancel")) } }
         )
@@ -1150,7 +1150,7 @@ fun ExchangeSettingsDialog(x: Exchange, snack: SnackbarHostState, onCancelled: (
                     }) { Text(tr("Use the theme")) }
                 }
                 if (x.members.any { it.id != Exchanges.myId(ctx) && !it.web }) TextButton(enabled = !busy, onClick = { handing = true }) { Text(tr("Hand over to someone else")) }
-                TextButton(enabled = !busy, onClick = { cancelling = true }) { Text(tr("Cancel the exchange"), color = cs.error) }
+                TextButton(danger = true, enabled = !busy, onClick = { cancelling = true }) { Text(tr("Cancel the exchange")) }
                 if (busy) CircularProgressIndicator(Modifier.size(24.dp))
             }
         },
@@ -1199,7 +1199,7 @@ fun ExchangeSettingsDialog(x: Exchange, snack: SnackbarHostState, onCancelled: (
         title = { Text(tr("Cancel “%s” for everyone?", x.name)) },
         text = { Text(tr("Everyone is told. Nobody’s wishlist is deleted.")) },
         confirmButton = {
-            TextButton(onClick = {
+            TextButton(danger = true, onClick = {
                 cancelling = false
                 scope.launch {
                     try {
@@ -1210,7 +1210,7 @@ fun ExchangeSettingsDialog(x: Exchange, snack: SnackbarHostState, onCancelled: (
                         snack.toastSoon(tr("Couldn’t do that. Check your connection."))
                     }
                 }
-            }) { Text(tr("Cancel it"), color = cs.error) }
+            }) { Text(tr("Cancel it")) }
         },
         dismissButton = { TextButton(onClick = { cancelling = false }) { Text(tr("Keep it")) } }
     )
@@ -1294,7 +1294,7 @@ private fun GxLeaveDialog(x: Exchange, snack: SnackbarHostState, onLeft: () -> U
             )
         },
         confirmButton = {
-            TextButton(enabled = !busy, onClick = {
+            TextButton(danger = true, enabled = !busy, onClick = {
                 busy = true
                 scope.launch {
                     try {
@@ -1306,7 +1306,7 @@ private fun GxLeaveDialog(x: Exchange, snack: SnackbarHostState, onLeft: () -> U
                     }
                     busy = false
                 }
-            }) { Text(if (org) tr("Cancel it") else tr("Leave"), color = cs.error) }
+            }) { Text(if (org) tr("Cancel it") else tr("Leave")) }
         },
         dismissButton = { TextButton(enabled = !busy, onClick = onClose) { Text(tr("Stay")) } }
     )

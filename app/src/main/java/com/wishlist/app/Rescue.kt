@@ -129,7 +129,7 @@ fun RescueScreen() {
             title = { Text(tr("Replace everything on this phone?")) },
             text = { Text(tr("Everything on this phone will be replaced by the backup. This can’t be undone.")) },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(danger = true, onClick = {
                     importing = null; busy = true; err = ""
                     scope.launch {
                         try {
@@ -140,7 +140,7 @@ fun RescueScreen() {
                             err = tr("That file isn’t a Wishlist backup.")
                         }
                     }
-                }) { Text(tr("Import"), color = cs.error) }
+                }) { Text(tr("Import")) }
             },
             dismissButton = { TextButton(onClick = { importing = null }) { Text(tr("Cancel")) } }
         )

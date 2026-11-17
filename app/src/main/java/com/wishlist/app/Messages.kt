@@ -652,7 +652,7 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
                         }
                     }
                     if (canSend) TextButton(onClick = { menuFor = null; replying = m }, modifier = Modifier.padding(top = 8.dp)) { Text(tr("Reply")) }
-                    if (m.mine) TextButton(onClick = { menuFor = null; deleting = m }) { Text(tr("Delete"), color = cs.error) }
+                    if (m.mine) TextButton(danger = true, onClick = { menuFor = null; deleting = m }) { Text(tr("Delete")) }
                 }
             },
             confirmButton = { TextButton(onClick = { menuFor = null }) { Text(tr("Close")) } }
@@ -664,7 +664,7 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
             title = { Text(tr("Delete message?")) },
             text = { Text(tr("It is deleted for both of you.")) },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(danger = true, onClick = {
                     deleting = null
                     scope.launch {
                         try {
@@ -675,7 +675,7 @@ private fun ChatScreen(peer: String, snack: SnackbarHostState) {
                             snack.showToast(tr("Couldn’t reach the server. Check your connection."))
                         }
                     }
-                }) { Text(tr("Delete"), color = cs.error) }
+                }) { Text(tr("Delete")) }
             },
             dismissButton = { TextButton(onClick = { deleting = null }) { Text(tr("Cancel")) } }
         )

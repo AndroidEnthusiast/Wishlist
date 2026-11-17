@@ -440,7 +440,7 @@ private fun CreatorLeaveDialog(l: SharedList, onClose: () -> Unit, onGone: () ->
             title = { Text(tr("Delete “%s” for everyone?", l.name)) },
             text = { Text(tr("This can’t be undone.")) },
             confirmButton = {
-                TextButton(enabled = !busy, onClick = {
+                TextButton(danger = true, enabled = !busy, onClick = {
                     busy = true
                     scope.launch {
                         try {
@@ -449,7 +449,7 @@ private fun CreatorLeaveDialog(l: SharedList, onClose: () -> Unit, onGone: () ->
                             busy = false; toast(ctx, tr("Couldn’t delete it. Check your connection."))
                         }
                     }
-                }) { Text(tr("Delete"), color = cs.error) }
+                }) { Text(tr("Delete")) }
             },
             dismissButton = { TextButton(enabled = !busy, onClick = onClose) { Text(tr("Cancel")) } }
         )

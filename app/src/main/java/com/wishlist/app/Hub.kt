@@ -342,7 +342,7 @@ fun HubScreen(
                 )
             },
             confirmButton = {
-                TextButton(enabled = !busy, onClick = {
+                TextButton(danger = true, enabled = !busy, onClick = {
                     busy = true
                     scope.launch {
                         val msg = try {
@@ -368,7 +368,7 @@ fun HubScreen(
                         deleting = null
                         snack.showToast(msg)
                     }
-                }) { Text(tr("Delete"), color = cs.error) }
+                }) { Text(tr("Delete")) }
             },
             dismissButton = { TextButton(enabled = !busy, onClick = { deleting = null }) { Text(tr("Cancel")) } }
         )

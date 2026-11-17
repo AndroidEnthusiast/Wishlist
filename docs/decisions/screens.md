@@ -244,3 +244,6 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here. Look and f
 - **Buttons inside dialogs keep their own label colour** (owner's screenshot: "Send invite" and "Copy" grey on blue,
   "This needs to be fixed everywhere"): the Quiet dialog's grey for its text was in the text style, which beat the
   buttons' colour; every button now resets it (`ownInk` in `Styled.kt`, `DialogButtonInkTest`).
+- **Red actions** (owner, 17 November 2026, "Delete" pink on blue, "be more thorough"): a button never colours its own
+  label; `danger = true` gives a deep red filled button with white text as a dialog's main action, red text
+  elsewhere. Quiet's error colour is a real red. `NoColouredButtonLabelsTest` scans every button (3 allowed exceptions).

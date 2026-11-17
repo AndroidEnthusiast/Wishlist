@@ -243,7 +243,9 @@ fun lookFor(style: String, accentKey: String, mode: String): Look {
                 "quiet", dark,
                 // The outline (fields, tick boxes) at least 3 : 1 on the cards, so they can be found (13 November 2026).
                 scheme(dark, readable, bestInk(readable), mix(a, surface, if (dark) 0.78f else 0.88f), mix(a, text, if (dark) 0.25f else 0.35f), bg, surface, text, muted,
-                    if (dark) c(0xFF847D88) else c(0xFF8C8590), hair),
+                    if (dark) c(0xFF847D88) else c(0xFF8C8590), hair,
+                    // A real red for Delete and errors (owner, 17 November 2026: Material's red was pink), 4.5 : 1.
+                    error = if (dark) c(0xFFFF6B5E) else c(0xFFC62828)),
                 listOf(surface), listOf(if (dark) c(0xFFECE8E4) else c(0xFFF4F1ED)), hair,
                 listOf(Color.Black.copy(alpha = if (dark) 0.5f else 0.06f)), emptyList(),
                 jakarta, drop, rise, accent = a, onAccent = onQ

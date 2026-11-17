@@ -97,7 +97,7 @@ fun BlockDialog(id: String, name: String, snack: SnackbarHostState, onDone: () -
         title = { Text(tr("Block %s?", name)) },
         text = { Text(tr("You’re no longer friends, they can’t send you a friend request, and your chat is hidden. They aren’t told.")) },
         confirmButton = {
-            TextButton(enabled = !busy, onClick = {
+            TextButton(danger = true, enabled = !busy, onClick = {
                 busy = true
                 scope.launch {
                     try {
@@ -109,7 +109,7 @@ fun BlockDialog(id: String, name: String, snack: SnackbarHostState, onDone: () -
                         snack.toastSoon(tr("Couldn’t do that. Check your connection."))
                     }
                 }
-            }) { Text(tr("Block"), color = cs.error) }
+            }) { Text(tr("Block")) }
         },
         dismissButton = { TextButton(enabled = !busy, onClick = onClose) { Text(tr("Cancel")) } }
     )

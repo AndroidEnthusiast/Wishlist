@@ -150,8 +150,18 @@ private fun ownInk(content: @Composable RowScope.() -> Unit): @Composable RowSco
     CompositionLocalProvider(LocalTextStyle provides LocalTextStyle.current.copy(color = Color.Unspecified)) { row.content() }
 }
 
+/**
+ * The fill of a dangerous main action (Delete, Leave, Block) and its text: a deep red with white text, readable in
+ * light and dark (owner's screenshot, 17 November 2026: "Delete" was pink on blue).
+ */
+val DangerFill = Color(0xFFD03A2F)
+
+/**
+ * [danger]: Delete, Leave, Block and the like. Never colour a button's Text yourself (DialogButtonInkTest checks it):
+ * the button picks readable colours for its slot (a filled red main action in a dialog, red text elsewhere).
+ */
 @Composable
-fun Button(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) {
+fun Button(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, danger: Boolean = false, content: @Composable RowScope.() -> Unit) {
     val look = LocalLook.current
     val shape = look.buttonShape
     val z = buttonSize()
@@ -160,22 +170,24 @@ fun Button(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean 
         // Quiet: a calm pill in the accent colour, a little taller than Material's.
         M3Button(
             onClick, modifier.pressScale().then(wide).padding(vertical = z.room).heightIn(min = z.height), enabled, shape = shape, elevation = null,
-            colors = ButtonDefaults.buttonColors(containerColor = look.accent, contentColor = look.onAccent),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (danger) DangerFill else look.accent, contentColor = if (danger) Color.White else look.onAccent
+            ),
             contentPadding = z.pad, content = ownInk(content)
         )
     } else {
         M3Button(
             onClick, modifier.pressScale().then(wide).padding(vertical = z.room).heightIn(min = z.height)
-                .then(if (enabled) Modifier.lookSurface(look, shape, look.accent, depth = z.depth) else Modifier),
+                .then(if (enabled) Modifier.lookSurface(look, shape, if (danger) DangerFill else look.accent, depth = z.depth) else Modifier),
             enabled, shape = shape, elevation = null,
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = look.onAccent),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = if (danger) Color.White else look.onAccent),
             contentPadding = z.pad, content = ownInk(content)
         )
     }
 }
 
 @Composable
-fun OutlinedButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) {
+fun OutlinedButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, danger: Boolean = false, content: @Composable RowScope.() -> Unit) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
     val shape = look.buttonShape
@@ -185,7 +197,10 @@ fun OutlinedButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: 
         // Quiet: a soft tinted pill with the accent as text (the "secondary" button of iOS).
         M3Button(
             onClick, modifier.pressScale().then(wide).padding(vertical = z.room).heightIn(min = z.height), enabled, shape = shape, elevation = null,
-            colors = ButtonDefaults.buttonColors(containerColor = cs.primaryContainer, contentColor = if (look.dark) look.accent else cs.onPrimaryContainer),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = cs.primaryContainer,
+                contentColor = if (danger) cs.error else if (look.dark) look.accent else cs.onPrimaryContainer
+            ),
             contentPadding = z.pad, content = ownInk(content)
         )
     } else {
@@ -193,31 +208,31 @@ fun OutlinedButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: 
             onClick, modifier.pressScale().then(wide).padding(vertical = z.room).heightIn(min = z.height)
                 .then(if (enabled) Modifier.lookSurface(look, shape, cs.surfaceVariant, depth = z.depth) else Modifier),
             enabled, shape = shape, elevation = null,
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = cs.onSurface),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = if (danger) cs.error else cs.onSurface),
             contentPadding = z.pad, content = ownInk(content)
         )
     }
 }
 
 @Composable
-fun FilledTonalButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) =
-    OutlinedButton(onClick, modifier, enabled, content)
+fun FilledTonalButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, danger: Boolean = false, content: @Composable RowScope.() -> Unit) =
+    OutlinedButton(onClick, modifier, enabled, danger, content)
 
 @Composable
-fun TextButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) {
+fun TextButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, danger: Boolean = false, content: @Composable RowScope.() -> Unit) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
     // Chaos: ink text (its accent is for blocks); the others: the style's readable text colour (its primary; in Quiet
     // that is the accent).
-    val col = if (look.design == "chaos") cs.onSurface else cs.primary
+    val col = if (danger) cs.error else if (look.design == "chaos") cs.onSurface else cs.primary
     // In Quiet's own dialogs (2.210): the confirm button is the filled main action, the other a full-width plain one.
     when (LocalDialogSlot.current.takeIf { look.design == "quiet" }) {
-        "confirm" -> { Button(onClick, modifier, enabled, content); return }
-        "only" -> { OutlinedButton(onClick, modifier, enabled, content); return }
+        "confirm" -> { Button(onClick, modifier, enabled, danger, content); return }
+        "only" -> { OutlinedButton(onClick, modifier, enabled, danger, content); return }
         "dismiss" -> {
             M3TextButton(
                 onClick, modifier.pressScale().fillMaxWidth().heightIn(min = 48.dp), enabled, shape = look.buttonShape,
-                colors = ButtonDefaults.textButtonColors(contentColor = cs.onSurface), content = ownInk(content)
+                colors = ButtonDefaults.textButtonColors(contentColor = if (danger) cs.error else cs.onSurface), content = ownInk(content)
             )
             return
         }

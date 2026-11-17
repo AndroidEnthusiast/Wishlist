@@ -227,10 +227,10 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                 if (shared != null) {
                     TextButton(onClick = { manage = "leave" }) { Text(tr("Leave this wishlist")) }
                     if (shared.owner.isNotEmpty()) {
-                        TextButton(onClick = { manage = "delete" }) { Text(tr("Delete for everyone"), color = cs.error) }
+                        TextButton(danger = true, onClick = { manage = "delete" }) { Text(tr("Delete for everyone")) }
                     }
                 } else {
-                    TextButton(onClick = { deleteMineDlg = true }) { Text(tr("Delete this wishlist"), color = cs.error) }
+                    TextButton(danger = true, onClick = { deleteMineDlg = true }) { Text(tr("Delete this wishlist")) }
                 }
                 }
             }
@@ -257,7 +257,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
             title = { Text(tr("Delete “%s”?", Repo.listName)) },
             text = { Text(tr("Deleting this wishlist will move all its wishes to the bin, where they can be restored within 30 days.") + groupNote(ctx, Repo.openMine)) },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(danger = true, onClick = {
                     deleteMineDlg = false
                     scope.launch {
                         // Online first (when it has a friends' link), then on the phone.
@@ -270,7 +270,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
                         Repo.deleteMine(ctx, id)
                         (onDeleted ?: onBack)()
                     }
-                }) { Text(tr("Delete"), color = cs.error) }
+                }) { Text(tr("Delete")) }
             },
             dismissButton = { TextButton(onClick = { deleteMineDlg = false }) { Text(tr("Cancel")) } }
         )

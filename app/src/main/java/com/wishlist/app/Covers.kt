@@ -367,7 +367,7 @@ fun CoverSection(snack: androidx.compose.material3.SnackbarHostState) {
     if (cover != null) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TextButton(onClick = { adjusting = true }) { Text(tr("Edit cover photo")) }
-            TextButton(onClick = { ListCovers.remove(ctx, key) }) { Text(tr("Remove cover photo"), color = cs.error) }
+            TextButton(danger = true, onClick = { ListCovers.remove(ctx, key) }) { Text(tr("Remove cover photo")) }
         }
     }
 

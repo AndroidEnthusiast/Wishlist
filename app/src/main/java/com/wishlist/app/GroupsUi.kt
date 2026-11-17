@@ -653,7 +653,7 @@ fun GroupScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, onOpe
             title = { Text(tr("Remove %1\$s from “%2\$s”?", mb.name, g.name)) },
             text = { Text(tr("They are told that they were removed. Their wishlist stays theirs.")) },
             confirmButton = {
-                TextButton(enabled = !busy, onClick = {
+                TextButton(danger = true, enabled = !busy, onClick = {
                     busy = true
                     scope.launch {
                         val msg = try {
@@ -666,7 +666,7 @@ fun GroupScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, onOpe
                         removing = null
                         snack.toastSoon(msg)
                     }
-                }) { Text(tr("Remove"), color = cs.error) }
+                }) { Text(tr("Remove")) }
             },
             dismissButton = { TextButton(enabled = !busy, onClick = { removing = null }) { Text(tr("Cancel")) } }
         )
@@ -898,13 +898,13 @@ fun GroupSettingsDialog(g: Group, snack: SnackbarHostState, onDeleted: () -> Uni
                     OutlinedButton(enabled = !busy, onClick = { pick.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) {
                         Text(if (Groups.photos[g.id] == null) tr("Choose a photo") else tr("New photo"))
                     }
-                    if (Groups.photos[g.id] != null) TextButton(enabled = !busy, onClick = {
+                    if (Groups.photos[g.id] != null) TextButton(danger = true, enabled = !busy, onClick = {
                         run(tr("Photo removed")) { Groups.setPhoto(ctx, g.id, null, HeroEdit(), fa) }
-                    }) { Text(tr("Remove photo"), color = cs.error) }
+                    }) { Text(tr("Remove photo")) }
                 }
                 Text(tr("Group link"), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 4.dp))
                 TextButton(enabled = !busy, onClick = { askLink = true }) { Text(tr("Make a new link")) }
-                TextButton(enabled = !busy, onClick = { askDelete = true }) { Text(tr("Delete group"), color = cs.error) }
+                TextButton(danger = true, enabled = !busy, onClick = { askDelete = true }) { Text(tr("Delete group")) }
                 if (busy) CircularProgressIndicator(Modifier.size(24.dp))
             }
         },
@@ -964,7 +964,7 @@ private fun DeleteGroupDialog(g: Group, snack: SnackbarHostState, onDeleted: () 
         title = { Text(tr("Delete “%s” for everyone?", g.name)) },
         text = { Text(tr("The group goes for all its members. Everyone keeps their own wishlist.")) },
         confirmButton = {
-            TextButton(enabled = !busy, onClick = {
+            TextButton(danger = true, enabled = !busy, onClick = {
                 busy = true
                 scope.launch {
                     try {
@@ -977,7 +977,7 @@ private fun DeleteGroupDialog(g: Group, snack: SnackbarHostState, onDeleted: () 
                         snack.toastSoon(tr("Couldn’t do that. Check your connection."))
                     }
                 }
-            }) { Text(tr("Delete"), color = MaterialTheme.colorScheme.error) }
+            }) { Text(tr("Delete")) }
         },
         dismissButton = { TextButton(enabled = !busy, onClick = onClose) { Text(tr("Cancel")) } }
     )
@@ -1005,7 +1005,7 @@ fun LeaveGroupDialog(g: Group, snack: SnackbarHostState, onLeft: () -> Unit, onC
             onDismissRequest = onClose,
             title = { Text(tr("Leave “%s”?", g.name)) },
             text = { Text(tr("You are the only member. You can delete the group instead.")) },
-            confirmButton = { TextButton(onClick = { deleting = true }) { Text(tr("Delete group"), color = MaterialTheme.colorScheme.error) } },
+            confirmButton = { TextButton(danger = true, onClick = { deleting = true }) { Text(tr("Delete group")) } },
             dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
         )
         return
@@ -1028,7 +1028,7 @@ fun LeaveGroupDialog(g: Group, snack: SnackbarHostState, onLeft: () -> Unit, onC
             }
         },
         confirmButton = {
-            TextButton(enabled = !busy && (!organiser || next != null), onClick = {
+            TextButton(danger = true, enabled = !busy && (!organiser || next != null), onClick = {
                 busy = true
                 scope.launch {
                     try {
@@ -1040,7 +1040,7 @@ fun LeaveGroupDialog(g: Group, snack: SnackbarHostState, onLeft: () -> Unit, onC
                         snack.toastSoon(tr("Couldn’t do that. Check your connection."))
                     }
                 }
-            }) { Text(tr("Leave"), color = MaterialTheme.colorScheme.error) }
+            }) { Text(tr("Leave")) }
         },
         dismissButton = { TextButton(enabled = !busy, onClick = onClose) { Text(tr("Cancel")) } }
     )
