@@ -81,3 +81,4 @@ Details of each item are in the doc named after it.
   ask if another screen is hard to read).
 - Buttons: one rule for the whole app (main = filled, secondary = tonal, minor = text, one height and shape); today
   at least six kinds. The owner kept the three buttons on wish cards (15 November 2026).
+- Shared wishlists: "Hide reservations" for collaborators, on by default (plan step 6, `docs/designs/plan-2026-11-17.md`): left for now (owner, 17 November 2026).

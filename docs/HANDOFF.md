@@ -7,7 +7,7 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 ## Next session
 - **Plan waiting for approval (17 November 2026, evening), read first**: `docs/designs/plan-2026-11-17.md` (chips
   centred, My own / With others, one full-width form sheet, settings screen, 5 themes + Gen Z, shared lists with
-  hidden reservations). Build nothing from it until the owner approves; then step by step, one update each.
+  hidden reservations: step 6 left for now, owner). Build nothing from it until the owner approves; then step by step, one update each.
 - **2.219 (17 November 2026), read first.** Ask whether every dialog's buttons now read well (Share, Move, Profile),
   and how "About me" under the name looks. Then build the agreed collab merge (`docs/decisions/sharing.md`, last
   section), built in 2.220: ask how "Who is it for?" feels, and whether the name should also reach the other members'

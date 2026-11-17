@@ -219,3 +219,4 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   Gen Z chaos as a 6th bonus; the colour wheel goes; a theme screen like Giftful's but our own, without a logo picker.
 - Shared ("With others") lists: "Hide reservations" for the collaborators, on by default (owner); co-owners as such
   were not wanted separately ("Not now"), this setting covers the couple's case.
+- Step 6 (hide reservations on shared lists) left for now (owner, 17 November 2026); also in `docs/TODO.md`.
