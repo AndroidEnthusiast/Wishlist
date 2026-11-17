@@ -316,7 +316,7 @@ fun NewGroupDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
     LaunchedEffect(Unit) { try { Friends.refresh(ctx) } catch (e: Exception) {} }
     val friends = Friends.state?.friends ?: emptyList()
     if (step == 1) {
-        AlertDialog(
+        FormSheet(
             onDismissRequest = onClose,
             properties = DialogProperties(dismissOnClickOutside = false),
             title = { Text(tr("New group")) },

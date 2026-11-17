@@ -302,7 +302,10 @@ class HomeAsProfileTest {
     }
 
     @Test fun shortMenusArePopUps() {
-        assertTrue(hub.contains("if (actions.size <= 4) {") && hub.contains("PopMenu(onClose"))
+        // 17 November 2026 (owner: the pop-up "looks cheap"): a list's ⋮ is always the full-width sheet, X and icon tiles.
+        val menu = hub.substring(hub.indexOf("internal fun ListMenuSheet("), hub.indexOf("internal fun VisibilitySheet("))
+        assertFalse(menu.contains("PopMenu(") || menu.contains("actions.size <= 4"))
+        assertTrue(menu.contains("AppIcons.Close"))
         val pop = File("src/main/java/com/wishlist/app/WishSheet.kt").readText()
         assertTrue("red last, after a line", pop.contains("removing.forEach { item(it) }"))
     }
@@ -319,8 +322,10 @@ class HomeAsProfileTest {
 class OneNewWishlistTest {
     @Test fun whoIsItForSwitchesBetweenTheTwo() {
         val app = File("src/main/java/com/wishlist/app/AppScreen.kt").readText()
-        assertTrue(app.contains("onForSomeoneElse = if (Config.enabled) ({ plusNew = \"collab\" }) else null"))
-        assertTrue(app.contains("onForMe = { plusNew = \"mine\" }"))
+        // One sheet for both (2.223): the chips swap the fields inside it.
+        assertTrue(app.contains("\"mine\", \"collab\" -> NewWishlistSheet("))
+        val hub = File("src/main/java/com/wishlist/app/Hub.kt").readText()
+        assertTrue(hub.contains("FormSheetHost(onClose) {") && hub.contains("WhoIsItFor(others) { others = it }"))
         val shared = File("src/main/java/com/wishlist/app/SharedUi.kt").readText()
         assertTrue(shared.contains("Shared.setForName(ctx, l.code, forWho)"))
         assertTrue(shared.contains("tr(\"Don’t send it to %s: it’s a surprise.\", forWho)"))

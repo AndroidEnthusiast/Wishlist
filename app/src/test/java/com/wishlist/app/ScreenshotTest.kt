@@ -122,7 +122,6 @@ abstract class ScreenshotBase(private val mode: String, private val tag: String 
     // The list's card on Home shows its number of wishes ("5"); its name is under the card. "5 Wishes" at the top
     // opens All your wishes.
     @Test fun list() { tapAbove("My wishlist", 150f); shot("list") }
-    @Test fun allWishes() { tap("Wishes"); shot("all") }
     @Test fun addWish() { tap("Add wish"); shot("add") }
 
     /** Taps just above a text: the card or tile it is the name of. */

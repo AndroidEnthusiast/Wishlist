@@ -226,7 +226,8 @@ fun TextButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Bool
     // that is the accent).
     val col = if (danger) cs.error else if (look.design == "chaos") cs.onSurface else cs.primary
     // In Quiet's own dialogs (2.210): the confirm button is the filled main action, the other a full-width plain one.
-    when (LocalDialogSlot.current.takeIf { look.design == "quiet" }) {
+    // A form sheet's main button is the filled full-width one in every style (owner, 17 November 2026).
+    when (LocalDialogSlot.current.takeIf { look.design == "quiet" || LocalInFormSheet.current }) {
         "confirm" -> { Button(onClick, modifier, enabled, danger, content); return }
         "only" -> { OutlinedButton(onClick, modifier, enabled, danger, content); return }
         "dismiss" -> {

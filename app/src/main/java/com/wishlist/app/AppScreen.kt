@@ -366,13 +366,16 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
             val here = remember(listKey) { openListOf(ctx, listKey) }
             if (!here) LaunchedEffect(listKey) { goHome() }
             else key(Shared.active, Repo.openMine) {
+                // Wishlist settings as a sheet over the list (owner, 17 November 2026); the route stays for links.
+                var settings by rememberSaveable { mutableStateOf(false) }
                 HomeScreen(
                     snack,
                     onAdd = { prefill = ""; adding = true },
                     onInvite = { inviteDlg = true },
-                    onListSettings = { nav.openOnTop(Route.LIST_SETTINGS) },
+                    onListSettings = { settings = true },
                     onBack = { goHome() }
                 )
+                if (settings) ListSettingsScreen(snack, onDeleted = { settings = false; nav.backToMain() }, asSheet = true) { settings = false }
             }
         }
         // The tabs. Each remembers where you were (Places.kt); Back on its first page goes Home (the screen's
@@ -506,16 +509,12 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
         onClose = { plusMenu = false }
     )
     when (plusNew) {
-        // One "New wishlist" (owner, 17 November 2026): "Who is it for?" switches between the two.
-        "mine" -> NewListDialog(
-            onCreated = { id -> plusNew = null; scope.launch { snack.showToast(tr("“%s” is ready", Repo.mineName(id))) } },
-            onClose = { plusNew = null },
-            onForSomeoneElse = if (Config.enabled) ({ plusNew = "collab" }) else null
-        )
-        "collab" -> NewSharedDialog(
-            onCreated = { code -> plusNew = null; Shared.open(ctx, code); closeAll(); inviteDlg = true },
-            onClose = { plusNew = null },
-            onForMe = { plusNew = "mine" }
+        // One "New wishlist" sheet (owner, 17 November 2026): My own / With others swap inside it.
+        "mine", "collab" -> NewWishlistSheet(
+            withOthers = plusNew == "collab",
+            onCreatedMine = { id -> plusNew = null; scope.launch { snack.showToast(tr("“%s” is ready", Repo.mineName(id))) } },
+            onCreatedShared = { code -> plusNew = null; Shared.open(ctx, code); closeAll(); inviteDlg = true },
+            onClose = { plusNew = null }
         )
         "group" -> NewGroupDialog(
             onCreated = { gid -> plusNew = null; goStable(Deep.GroupPage(gid, invite = true)) },

@@ -24,6 +24,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import kotlinx.coroutines.launch
+import androidx.compose.material3.Icon
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.offset
@@ -744,3 +748,79 @@ fun ThemedSnackbar(data: SnackbarData) {
         }
     }
 }
+
+// ---------- the form sheet (owner, 17 November 2026; docs/designs/plan-2026-11-17.md, step 3) ----------
+
+/** The sheet a form sits in: [close] slides it down, then closes it. */
+class FormHost(val close: () -> Unit)
+
+/** Set inside a [FormSheetHost]: a [FormSheet] then draws itself in that sheet instead of opening its own. */
+val LocalFormHost = androidx.compose.runtime.compositionLocalOf<FormHost?> { null }
+
+/**
+ * A full-width sheet that slides up from the bottom, for forms (New wishlist, New group, New gift exchange …). Several
+ * forms can take turns inside one host (My own / With others) without the sheet moving. Swipe down, tap outside or
+ * the X: it slides down and closes at once, without asking (owner).
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+fun FormSheetHost(onClose: () -> Unit, content: @Composable () -> Unit) {
+    val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val latest = androidx.compose.runtime.rememberUpdatedState(onClose)
+    val host = androidx.compose.runtime.remember {
+        FormHost { scope.launch { state.hide() }.invokeOnCompletion { latest.value() } }
+    }
+    ModalBottomSheet(onDismissRequest = { latest.value() }, sheetState = state) {
+        androidx.compose.runtime.CompositionLocalProvider(LocalFormHost provides host) { content() }
+    }
+}
+
+/**
+ * A form in the full-width sheet, with the same parts as [AlertDialog] so a dialog becomes a sheet by its name alone:
+ * the [title] centred with a round X top right, the [text] (the fields, scrolling inside when long) and the
+ * [confirmButton] full width at the bottom. There is no Cancel ([dismissButton] is not shown: the X, a swipe down or a
+ * tap outside close it). The sheet has one fixed height, so changing what's in it never makes it jump.
+ */
+@Composable
+fun FormSheet(
+    onDismissRequest: () -> Unit,
+    confirmButton: @Composable () -> Unit,
+    @Suppress("UNUSED_PARAMETER") dismissButton: (@Composable () -> Unit)? = null,
+    title: (@Composable () -> Unit)? = null,
+    text: (@Composable () -> Unit)? = null,
+    @Suppress("UNUSED_PARAMETER") properties: androidx.compose.ui.window.DialogProperties? = null
+) {
+    val host = LocalFormHost.current
+    if (host == null) {
+        FormSheetHost(onDismissRequest) { FormSheet(onDismissRequest, confirmButton, null, title, text) }
+        return
+    }
+    val tall = (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp * 0.88f).dp
+    androidx.compose.foundation.layout.Column(
+        Modifier.fillMaxWidth().height(tall).imePadding()
+    ) {
+        Box(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) {
+            if (title != null) androidx.compose.material3.ProvideTextStyle(
+                MaterialTheme.typography.titleLarge.copy(textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            ) {
+                Box(Modifier.align(Alignment.Center).padding(horizontal = 56.dp)) { title() }
+            }
+            // The X in the same soft round button as the top bars' (LocalInTopBar).
+            androidx.compose.runtime.CompositionLocalProvider(LocalInTopBar provides true) {
+                IconButton(onClick = host.close, modifier = Modifier.align(Alignment.CenterEnd)) {
+                    Icon(AppIcons.Close, tr("Close"))
+                }
+            }
+        }
+        Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 24.dp)) { text?.invoke() }
+        Box(Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 16.dp).navigationBarsPadding()) {
+            androidx.compose.runtime.CompositionLocalProvider(LocalInFormSheet provides true, LocalDialogSlot provides "confirm") {
+                confirmButton()
+            }
+        }
+    }
+}
+
+/** True for the main button of a [FormSheet]: it is the filled full-width button in every style. */
+val LocalInFormSheet = androidx.compose.runtime.compositionLocalOf { false }

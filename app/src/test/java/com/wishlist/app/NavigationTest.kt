@@ -12,6 +12,7 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.isSelected
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -292,8 +293,10 @@ class ListNavigationTest : NavigationBase() {
         val id = Repo.mineIds.first()
         send(open(MainActivity.OPEN_NOTE, "m:$id"))
         tap("Wishlist settings")
-        shows("Wishlist settings"); noBar()
-        phoneBack()
+        // A sheet over the list since 17 November 2026 (owner); its X closes it (on a phone Back does too: the sheet's
+        // own window gets it, which this pretend phone can't send).
+        shows("About this list")
+        compose.onAllNodes(hasContentDescription("Close") and hasClickAction()).onFirst().performClick()
         // The list again: its ⚙ is back, and Back from there goes Home.
         compose.waitForIdle()
         compose.onAllNodes(hasContentDescription("Wishlist settings") and hasClickAction()).onFirst().assertExists()
@@ -313,7 +316,8 @@ class ScrollTest : NavigationBase() {
     private fun swipeUpMoves(text: String) {
         compose.waitForIdle()
         val before = topOf(text)
-        compose.onRoot().performTouchInput { swipeUp(startY = bottom * 0.75f, endY = bottom * 0.25f) }
+        // The top window: a sheet (Wishlist settings, 17 November 2026) or the screen.
+        compose.onAllNodes(androidx.compose.ui.test.isRoot()).onLast().performTouchInput { swipeUp(startY = bottom * 0.75f, endY = bottom * 0.25f) }
         compose.waitForIdle()
         org.junit.Assert.assertTrue("$text did not move: the page didn't scroll", topOf(text) < before - 20f)
     }

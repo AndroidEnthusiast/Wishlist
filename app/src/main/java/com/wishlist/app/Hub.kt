@@ -156,16 +156,12 @@ fun HubScreen(
         onWishGroup = { createChoice = false; newWishGroup = true },
         onClose = { createChoice = false }
     )
-    if (newMine) NewListDialog(
+    if (newMine || newShared) NewWishlistSheet(
+        withOthers = newShared,
         // It appears under your wishlists on Home.
-        onCreated = { id -> newMine = false; scope.launch { snack.showToast(tr("“%s” is ready", Repo.mineName(id))) } },
-        onClose = { newMine = false },
-        onForSomeoneElse = if (Config.enabled) ({ newMine = false; newShared = true }) else null
-    )
-    if (newShared) NewSharedDialog(
-        onCreated = { code -> newShared = false; onCollabCreated(code) },
-        onClose = { newShared = false },
-        onForMe = { newShared = false; newMine = true }
+        onCreatedMine = { id -> newMine = false; newShared = false; scope.launch { snack.showToast(tr("“%s” is ready", Repo.mineName(id))) } },
+        onCreatedShared = { code -> newMine = false; newShared = false; onCollabCreated(code) },
+        onClose = { newMine = false; newShared = false }
     )
     if (newWishGroup) NewGroupDialog(
         onCreated = { gid -> newWishGroup = false; go(Deep.GroupPage(gid, invite = true)) },
@@ -823,11 +819,26 @@ fun WhoIsItFor(someoneElse: Boolean, onChange: (Boolean) -> Unit) {
 }
 
 /**
- * A new wishlist of your own: a name (required) and, optionally, the note for friends shown at the top of the list.
- * [onForSomeoneElse]: from the + menu, "Who is it for?" is asked first; "Someone else" switches to [NewSharedDialog].
+ * "New wishlist" (owner, 17 November 2026): one full-width sheet with My own / With others at the top; the chips swap
+ * the fields below without the sheet moving or changing height. [withOthers]: the choice it opens on.
  */
 @Composable
-fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit, onForSomeoneElse: (() -> Unit)? = null) {
+fun NewWishlistSheet(withOthers: Boolean, onCreatedMine: (String) -> Unit, onCreatedShared: (String) -> Unit, onClose: () -> Unit) {
+    var others by remember { mutableStateOf(withOthers) }
+    val chips: @Composable () -> Unit = { if (Config.enabled) WhoIsItFor(others) { others = it } }
+    FormSheetHost(onClose) {
+        if (others) NewSharedDialog(onCreatedShared, onClose, top = chips)
+        else NewListDialog(onCreatedMine, onClose, top = chips)
+    }
+}
+
+/**
+ * A new wishlist of your own: a name (required) and, optionally, the note for friends shown at the top of the list.
+ * In the full-width form sheet (2.223). [top]: what goes above the fields (the My own / With others chips of
+ * [NewWishlistSheet]).
+ */
+@Composable
+fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit, top: (@Composable () -> Unit)? = null) {
     val ctx = LocalContext.current
     var name by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
@@ -838,13 +849,13 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit, onForSomeone
     var picked by remember { mutableStateOf(listOf<Wish>()) }
     var picking by remember { mutableStateOf(false) }
     val canCopy = remember { canCopyFromOthers(ctx, null) }
-    AlertDialog(
+    FormSheet(
         onDismissRequest = onClose,
         properties = DialogProperties(dismissOnClickOutside = false),
         title = { Text(tr("New wishlist")) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (onForSomeoneElse != null) WhoIsItFor(false) { onForSomeoneElse() }
+                top?.invoke()
                 OutlinedTextField(
                     name, { name = it.take(60); if (it.isNotBlank()) missing = false },
                     label = { Text(tr("Wishlist name*")) }, singleLine = true, isError = missing,
@@ -954,25 +965,7 @@ internal fun ListMenuSheet(item: HubItem, actions: List<Triple<String, Boolean, 
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
     val code = item.key.substringAfter(':')
-    @Composable fun iconOf(label: String) = when (label) {
-        tr("Share") -> AppIcons.Share
-        tr("Edit name") -> AppIcons.Edit
-        tr("Visibility") -> AppIcons.Lock
-        tr("Leave wishlist") -> AppIcons.Close
-        else -> AppIcons.Delete
-    }
-    // Up to four actions: the small menu at the ⋮ (owner, 16 November 2026, like Giftful's ⋯), not a sheet.
-    if (actions.size <= 4) {
-        val visibility = remember(code, ListVisibility.version, Repo.mineVersion) {
-            when (ListVisibility.of(ctx, code)) {
-                Who.ME -> tr("Only me"); Who.FRIENDS -> tr("My friends"); Who.LINK -> tr("Friends + anyone with the link")
-            }
-        }
-        PopMenu(onClose, actions.map { (label, danger, act) ->
-            PopRow(iconOf(label), label, danger, if (label == tr("Visibility") && !item.group) visibility else null, act)
-        })
-        return
-    }
+    // Always the full-width sheet (owner, 17 November 2026: the small pop-up "looks cheap"; it replaced 2.218's).
     ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp)) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -985,8 +978,11 @@ internal fun ListMenuSheet(item: HubItem, actions: List<Triple<String, Boolean, 
                     else PlaceholderIcon(if (item.group) "group" else "gift", 28.dp)
                 }
                 Column(Modifier.padding(start = 16.dp).weight(1f)) {
-                    Text(item.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                    Text(item.sub ?: wishesLabel(item.count), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                    Text(item.name, style = MaterialTheme.typography.titleLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(item.sub ?: wishesLabel(item.count), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                }
+                androidx.compose.runtime.CompositionLocalProvider(LocalInTopBar provides true) {
+                    IconButton(onClick = onClose) { Icon(AppIcons.Close, tr("Close")) }
                 }
             }
             Spacer(Modifier.height(8.dp))

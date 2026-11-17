@@ -5,6 +5,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -63,7 +68,7 @@ private fun SectionTitle(t: String) {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null, onBack: () -> Unit) {
+fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null, asSheet: Boolean = false, onBack: () -> Unit) {
     val ctx = LocalContext.current
     val clip = LocalClipboardManager.current
     val scope = rememberCoroutineScope()
@@ -81,32 +86,12 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
     var occDlg by remember { mutableStateOf(false) }
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
-    BackHandler(onBack = onBack)
+    if (!asSheet) BackHandler(onBack = onBack)
 
-    Scaffold(
-        containerColor = cs.background,
-        topBar = {
-            TopAppBar(
-                large = false,
-                title = {
-                    Column {
-                        ScreenTitle(Repo.listName)
-                        Text(
-                            tr("Wishlist settings"),
-                            style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(AppIcons.ArrowBack, tr("Back")) }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
-            )
-        },
-        snackbarHost = { AppSnackbarHost(snack) }
-    ) { pad ->
+    // The settings themselves, the same in the sheet and on the screen.
+    val body: @Composable (Modifier) -> Unit = { outer ->
         Column(
-            Modifier.padding(pad).verticalScroll(rememberScrollState())
+            outer.verticalScroll(rememberScrollState())
                 .padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -236,8 +221,31 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
             }
         }
     }
+    if (asSheet) ListSettingsSheet(Repo.listName, snack, onBack) { body(Modifier) }
+    else     Scaffold(
+        containerColor = cs.background,
+        topBar = {
+            TopAppBar(
+                large = false,
+                title = {
+                    Column {
+                        ScreenTitle(Repo.listName)
+                        Text(
+                            tr("Wishlist settings"),
+                            style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) { Icon(AppIcons.ArrowBack, tr("Back")) }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
+            )
+        },
+        snackbarHost = { AppSnackbarHost(snack) }
+    ) { pad -> body(Modifier.padding(pad)) }
 
-    manage?.let { m -> SharedManageDialog(m, onClose = { manage = null }, onGone = { manage = null; onBack() }) }
+    manage?.let { m -> SharedManageDialog(m, onClose = { manage = null }, onGone = { manage = null; (onDeleted ?: onBack)() }) }
     if (copyDlg) {
         val target = Repo.openMine
         CopyWishesDialog(
@@ -301,5 +309,34 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
             },
             dismissButton = { TextButton(onClick = { stopDlg = false }) { Text(tr("Cancel")) } }
         )
+    }
+}
+
+/**
+ * Wishlist settings as a full-width sheet over the list (owner, 17 November 2026, plan step 3): the list's name
+ * centred with "Wishlist settings" under it, a round X top right; swipe down or X slides it away. Everything saves
+ * as you go, so there is no button at the bottom. Messages show inside the sheet.
+ */
+@Composable
+fun ListSettingsSheet(title: String, snack: SnackbarHostState, onClose: () -> Unit, content: @Composable () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    FormSheetHost(onClose) {
+        val host = LocalFormHost.current!!
+        val tall = (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp * 0.92f).dp
+        Box(Modifier.fillMaxWidth().height(tall)) {
+            Column(Modifier.fillMaxSize()) {
+                Box(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) {
+                    Column(Modifier.align(Alignment.Center).padding(horizontal = 56.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(title, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                        Text(tr("Wishlist settings"), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                    }
+                    androidx.compose.runtime.CompositionLocalProvider(LocalInTopBar provides true) {
+                        IconButton(onClick = host.close, modifier = Modifier.align(Alignment.CenterEnd)) { Icon(AppIcons.Close, tr("Close")) }
+                    }
+                }
+                Box(Modifier.weight(1f).fillMaxWidth().imePadding()) { content() }
+            }
+            AppSnackbarHost(snack, Modifier.align(Alignment.BottomCenter).navigationBarsPadding())
+        }
     }
 }

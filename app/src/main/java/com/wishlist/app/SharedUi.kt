@@ -39,10 +39,10 @@ fun toast(c: Context, message: String) {
 /**
  * A new wishlist "With others" (was "Create a collab wishlist"; owner, 17 November 2026): a name, optionally who the
  * gifts are for (kept on this phone, to keep the surprise: [Shared.forName]), a description and the occasion.
- * [onForMe]: back to "My own" ([NewListDialog]).
+ * [top]: the My own / With others chips of [NewWishlistSheet].
  */
 @Composable
-fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit, onForMe: (() -> Unit)? = null) {
+fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit, top: (@Composable () -> Unit)? = null) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var forWho by remember { mutableStateOf("") }
@@ -58,13 +58,13 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit, onForMe: (
     var busy by remember { mutableStateOf(false) }
     var err by remember { mutableStateOf("") }
 
-    AlertDialog(
+    FormSheet(
         onDismissRequest = { if (!busy) onClose() },
         properties = DialogProperties(dismissOnClickOutside = false),
         title = { Text(tr("New wishlist")) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (onForMe != null) WhoIsItFor(true) { onForMe() }
+                top?.invoke()
                 Text(
                     tr("Invite people to add ideas with you. Everyone on it sees what’s reserved, so nobody buys it twice."),
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant

@@ -42,13 +42,13 @@ class DialogButtonsScreenshotTest : NavigationBase() {
         }
     }
 
-    /** "New wishlist" for someone else (2.220): Who is it for?, their name, the suggested list name. */
+    /** "New wishlist" (2.223): the full-width sheet with My own / With others, X top right, Create at the bottom. */
     @Test fun newWishlistForSomeoneElse() {
         compose.mainClock.autoAdvance = false
         compose.runOnUiThread { compose.activity.setContent {
-            LookTheme(lookFor("quiet", "blue", "dark")) { NewSharedDialog(onCreated = {}, onClose = {}, onForMe = {}) }
+            LookTheme(lookFor("quiet", "blue", "dark")) { NewWishlistSheet(withOthers = true, onCreatedMine = {}, onCreatedShared = {}, onClose = {}) }
         } }
         repeat(10) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
-        captureScreenRoboImage("build/outputs/roborazzi/new_wishlist_someone_else.png")
+        captureScreenRoboImage("build/outputs/roborazzi/new_wishlist_with_others.png")
     }
 }
