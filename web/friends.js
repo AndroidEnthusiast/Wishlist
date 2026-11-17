@@ -688,13 +688,8 @@ function render() {
   var oc = $("occasion");
   oc.textContent = window.occasionLine ? window.occasionLine(list.occ) : "";
   oc.hidden = !oc.textContent;
-  // The owner's sizes (2.128), as text: "Clothing M · Shoes 43".
-  var sz = $("sizes");
-  var parts = [];
-  if (list.sz && String(list.sz.c || "").trim()) parts.push(T("Clothing {0}", String(list.sz.c).trim().slice(0, 20)));
-  if (list.sz && String(list.sz.s || "").trim()) parts.push(T("Shoes {0}", String(list.sz.s).trim().slice(0, 10)));
-  sz.textContent = parts.join(" · ");
-  sz.hidden = !parts.length;
+  // Sizes were removed (owner, 17 November 2026): never shown, even when an older app still sends them.
+  $("sizes").hidden = true;
   $("sub").textContent = T("Reserve a gift so nobody gives the same gift twice.");
   var ab = $("about");
   ab.textContent = list.about || "";
@@ -773,7 +768,7 @@ async function refresh() {
     // A tap still on its way keeps what it shows.
     Object.keys(pend).forEach(function (id) { if (res[id] === undefined) delete m[id]; else m[id] = res[id]; });
     // The note for friends travels as one extra item of kind "about". It is not a wish.
-    var about = "", cover = "", cedit = "", occ = null, sz = null, received = {};
+    var about = "", cover = "", cedit = "", occ = null, received = {};
     // Wishes the owner received after the occasion are in the bin with "recv" (2.128): remember them for the thank-you.
     (l.items || []).forEach(function (w) { if (w && w.bin && w.recv) received[w.id] = true; });
     // Wishes in the bin (deleted, kept 30 days so they can be restored) are not on the list.
@@ -783,8 +778,6 @@ async function refresh() {
         // The list's cover photo (2.105) and its text travel in the same item.
         cover = String(w.cover || ""); cedit = String(w.cedit || "");
         occ = w.occ && typeof w.occ === "object" ? w.occ : null;
-        // The owner's sizes (2.128): {c: clothing, s: shoes}.
-        sz = w.sz && typeof w.sz === "object" ? w.sz : null;
         return false;
       }
       return !(w && w.bin);
@@ -793,7 +786,6 @@ async function refresh() {
     l.cover = cover;
     l.cedit = cedit;
     l.occ = occ;
-    l.sz = sz;
     // Remember what this browser reserved, and say so when one of those gifts is no longer on the list, or (owner,
     // 4 November 2026) was marked as owned, so nobody buys a duplicate.
     var mine = readMyRes(), seen = {}, gone = [], goneIds = [], owned = [], thanks = [];

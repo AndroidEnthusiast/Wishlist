@@ -401,7 +401,7 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   store.resRows = dev => [{id: 21, mine: false, n: 1, my: 0, full: false}];
   let q = await load("?c=ABCD2345");
   const szEl = D(q).getElementById("sizes");
-  check("owner's sizes shown as text", !szEl.hidden && szEl.textContent === "Clothing M <b> · Shoes 43" && !szEl.querySelector("b"));
+  check("sizes are never shown (removed 17 November 2026), even from an older app", szEl.hidden && !D(q).body.textContent.includes("Clothing M"));
   const sock = [...D(q).querySelectorAll(".card")].find(c => c.textContent.includes("Socks"));
   check("3× on the card; a saved Similar is fine is no longer shown (16 November 2026)", sock.querySelector(".tags").textContent === "3×");
   check("1 of 3 reserved, still reservable", sock.querySelector(".badge.status").textContent === "1 of 3 reserved" && sock.querySelector("button.act").textContent === "Reserve");

@@ -36,3 +36,14 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
 - One GitHub workflow for build, release and web pages. No second workflow (an earlier idea caused confusion).
 - The Supabase URL and publishable key are public on purpose.
 - The browser editor reads shop pages via the helper function, because browsers may not load other sites. The page itself parses the HTML (`web/parse.js`).
+
+## Collab wishlists folded into "New wishlist" (owner, 17 November 2026; interviewed)
+- Owner: drop the separate collab wishlist ("saves a lot of confusion"); what remains is wishlist, wishlist group and
+  gift exchange. Weak spot named: your own list hides reservations from you, a list for someone else shows them to
+  everyone on it, so the two can't simply become one. **Chosen: merge in the menus only**: one "New wishlist" that asks
+  "Who is it for? Me / Someone else"; "Someone else" makes what was a collab wishlist (invite people to add ideas).
+  Existing lists keep working; no server change.
+- **The surprise** (owner: making a list with a partner for Mum's birthday, Mum must never see it, also not as a
+  friend): lists for someone else are never on your friend page, only for people with the invite. Chosen: ask
+  "Who is it for?" (a name) when making it; the invite screen says not to send it to that person, and the Friends
+  picker leaves out a friend with that name.

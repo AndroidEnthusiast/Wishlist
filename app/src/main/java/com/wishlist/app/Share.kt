@@ -150,7 +150,7 @@ object Sync {
         // Only what changed goes online (ROADMAP S3.1, MineSync.kt); a failed save is tried again later.
         val items = Cloud.listItems(
             out, d.about, coverUrl, if (coverUrl.isEmpty() || cover == null) "" else cover.edit.toJson(),
-            Occasions.ofMine(c, d.id), Friends.sizesJson()
+            Occasions.ofMine(c, d.id)
         )
         MineSync.send(c, code, token, d.name, d.cats, items, Shared.lastName.trim())
 

@@ -276,7 +276,7 @@ fun HubScreen(
                 // all your lists in one grid, yours first; no numbers card, no headings, no "Create list" tiles (the
                 // bottom bar's + makes new lists).
                 Spacer(Modifier.height(16.dp))
-                HomeHero(onProfile, onFriends, onAddWish)
+                HomeHero(onProfile)
                 GroupInvites()
                 val groupsOfMine = wishGroupItems(onOpenWishGroup)
                 BlockGrid(
@@ -1020,25 +1020,10 @@ internal fun VisibilitySheet(item: HubItem, snack: SnackbarHostState, onClose: (
 
 /**
  * You at the top of Home (owner, 16 November 2026: "Home = your profile"), as friends see you: photo and name (tap for
- * Profile), birthday, sizes and likes; then "19 wishes" (all your wishes) and "♥ 3 loved" (only above 0) as chips,
- * and "+ Add friends" while you have none. No numbers card and no total value any more.
+ * Profile) and your "About me" line. No chips (owner, 17 November 2026: no sizes, counts, loved or birthday here).
  */
 @Composable
-private fun HomeHero(onProfile: () -> Unit, onFriends: () -> Unit, onAddWish: () -> Unit) {
-    val places = LocalPlaces.current
-    val ctx = LocalContext.current
-    Friends.load(ctx)
-    val all = placedWishes()
-    val loved = all.count { it.w.star && !it.w.got }
-    val friends = Friends.state?.friends?.size ?: 0
-    PersonHero(
-        Friends.myPhoto, Shared.lastName.ifBlank { tr("Add your name") }, Friends.myBirthday,
-        Friends.sizesText(Friends.sizesJson()).ifBlank { null }, Friends.myBio, onPhoto = onProfile,
-        extra = {
-            if (all.isEmpty()) AboutChip("+ " + tr("Add wish"), on = true, onClick = onAddWish)
-            else AboutChip(wishesLabel(all.size), onClick = { places.homePage = "wishes" })
-            if (loved > 0) AboutChip("♥ " + tr("%d loved", loved), onClick = { places.homePage = "top" })
-            if (friends == 0 && Config.enabled) AboutChip("+ " + tr("Add friends"), on = true, onClick = onFriends)
-        }
-    )
+private fun HomeHero(onProfile: () -> Unit) {
+    Friends.load(LocalContext.current)
+    PersonHero(Friends.myPhoto, Shared.lastName.ifBlank { tr("Add your name") }, Friends.myBirthday, Friends.myBio, onPhoto = onProfile)
 }

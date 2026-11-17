@@ -218,7 +218,7 @@ abstract class ScreenshotBase(private val mode: String, private val tag: String 
         compose.runOnUiThread {
             val lists = listOf(FriendList("L1", "Birthday", 3), FriendList("L2", "Mexico", 2), FriendList("L3", "Books", 1))
             Friends.pretend(FriendsState("ME", listOf(Person("p1", "Magdalena", 0, lists = lists, birthday = "04-01",
-                bio = "Candles, paint, canvas, pencils, experiences")), emptyList(), emptyList()), mapOf("p1" to "Clothing M · Shoes 37"))
+                bio = "Painter, candle collector and always up for an experience rather than a thing")), emptyList(), emptyList()))
             FriendCache.loaded = mapOf(
                 "L1" to RemoteList("Birthday", emptyList(), ws.take(3)),
                 "L2" to RemoteList("Mexico", emptyList(), ws.drop(3).take(2)),

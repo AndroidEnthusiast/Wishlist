@@ -44,21 +44,18 @@ alter table wl_profiles add column if not exists sizes text not null default '';
 create or replace function wl_pf_sizes(p_id text, p_token text, p_sizes text)
 returns void language plpgsql security definer set search_path = public as $$
 begin
+  -- Sizes were removed (17 November 2026, supabase-sizes-off.sql): nothing is kept, also when this runs again.
   perform wl_pf_check(p_id, p_token);
-  if length(coalesce(p_sizes, '')) > 200 then raise exception 'too long'; end if;
-  update wl_profiles set sizes = coalesce(p_sizes, '') where id = p_id;
+  update wl_profiles set sizes = '' where id = p_id;
 end $$;
 
 -- Your friends' sizes: {profile id: sizes}, only friends who accepted and have sizes.
 create or replace function wl_fr_sizes(p_id text, p_token text)
 returns jsonb language plpgsql security definer set search_path = public as $$
-declare v jsonb;
 begin
+  -- Sizes were removed (17 November 2026, supabase-sizes-off.sql): always empty.
   perform wl_pf_check(p_id, p_token);
-  select coalesce(jsonb_object_agg(p.id, p.sizes), '{}'::jsonb) into v
-    from wl_friends f join wl_profiles p on p.id = case when f.a = p_id then f.b else f.a end
-    where f.accepted and (f.a = p_id or f.b = p_id) and p.sizes <> '';
-  return v;
+  return '{}'::jsonb;
 end $$;
 
 -- ---------- 3. Gift list members and a new owner ----------

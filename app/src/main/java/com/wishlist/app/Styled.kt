@@ -141,6 +141,15 @@ private fun buttonSize(): ButtonSize = if (LocalInDialog.current)
 // Quiet (2.207): 48 dp, the height of everything you tap.
 else ButtonSize(if (LocalLook.current.design == "quiet") 48.dp else 46.dp, PaddingValues(horizontal = 22.dp, vertical = 10.dp), 5.dp, 0.dp)
 
+/**
+ * A button's label always in the button's own text colour: a colour set in the text style around it (a dialog's grey
+ * body text) beat the button's colour, so labels went grey on blue (owner's screenshot, 17 November 2026).
+ */
+private fun ownInk(content: @Composable RowScope.() -> Unit): @Composable RowScope.() -> Unit = {
+    val row = this
+    CompositionLocalProvider(LocalTextStyle provides LocalTextStyle.current.copy(color = Color.Unspecified)) { row.content() }
+}
+
 @Composable
 fun Button(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) {
     val look = LocalLook.current
@@ -152,7 +161,7 @@ fun Button(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean 
         M3Button(
             onClick, modifier.pressScale().then(wide).padding(vertical = z.room).heightIn(min = z.height), enabled, shape = shape, elevation = null,
             colors = ButtonDefaults.buttonColors(containerColor = look.accent, contentColor = look.onAccent),
-            contentPadding = z.pad, content = content
+            contentPadding = z.pad, content = ownInk(content)
         )
     } else {
         M3Button(
@@ -160,7 +169,7 @@ fun Button(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean 
                 .then(if (enabled) Modifier.lookSurface(look, shape, look.accent, depth = z.depth) else Modifier),
             enabled, shape = shape, elevation = null,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = look.onAccent),
-            contentPadding = z.pad, content = content
+            contentPadding = z.pad, content = ownInk(content)
         )
     }
 }
@@ -177,7 +186,7 @@ fun OutlinedButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: 
         M3Button(
             onClick, modifier.pressScale().then(wide).padding(vertical = z.room).heightIn(min = z.height), enabled, shape = shape, elevation = null,
             colors = ButtonDefaults.buttonColors(containerColor = cs.primaryContainer, contentColor = if (look.dark) look.accent else cs.onPrimaryContainer),
-            contentPadding = z.pad, content = content
+            contentPadding = z.pad, content = ownInk(content)
         )
     } else {
         M3Button(
@@ -185,7 +194,7 @@ fun OutlinedButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: 
                 .then(if (enabled) Modifier.lookSurface(look, shape, cs.surfaceVariant, depth = z.depth) else Modifier),
             enabled, shape = shape, elevation = null,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = cs.onSurface),
-            contentPadding = z.pad, content = content
+            contentPadding = z.pad, content = ownInk(content)
         )
     }
 }
@@ -208,14 +217,14 @@ fun TextButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Bool
         "dismiss" -> {
             M3TextButton(
                 onClick, modifier.pressScale().fillMaxWidth().heightIn(min = 48.dp), enabled, shape = look.buttonShape,
-                colors = ButtonDefaults.textButtonColors(contentColor = cs.onSurface), content = content
+                colors = ButtonDefaults.textButtonColors(contentColor = cs.onSurface), content = ownInk(content)
             )
             return
         }
     }
     M3TextButton(
         onClick, modifier.pressScale(), enabled, shape = look.buttonShape,
-        colors = ButtonDefaults.textButtonColors(contentColor = col), content = content
+        colors = ButtonDefaults.textButtonColors(contentColor = col), content = ownInk(content)
     )
 }
 

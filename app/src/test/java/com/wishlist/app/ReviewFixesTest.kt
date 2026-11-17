@@ -221,19 +221,32 @@ class WishFormTrimTest {
 @RunWith(RobolectricTestRunner::class)
 @org.robolectric.annotation.Config(sdk = [34])
 class PersonFirstTest {
-    @Test fun likesBecomeChips() {
-        assertEquals(listOf("Candles", "paint", "canvas", "pencils", "experiences"), likesOf("Candles, paint, canvas, pencils, experiences."))
-        assertEquals(listOf("tea", "cake"), likesOf("tea and cake"))
-        assertTrue(likesOf("  ").isEmpty())
+    /**
+     * Owner, 17 November 2026: no chips under a person (sizes, likes, counts, loved), only "About me" as text (at most
+     * 100 letters); the birthday only on a friend's page in the 2 weeks before; sizes gone from the Profile and never
+     * sent with a list.
+     */
+    @Test fun aboutMeInsteadOfChips() {
+        val f = File("src/main/java/com/wishlist/app/FriendsUi.kt").readText()
+        val hero = f.substring(f.indexOf("internal fun PersonHero("), f.indexOf("internal fun AboutChip("))
+        assertFalse(hero.contains("FlowRow") || hero.contains("likesOf") || hero.contains("sizes"))
+        assertTrue(hero.contains("if (birthdaySoon && days != null && days <= 14)"))
+        assertTrue(f.contains("ProfileTitle(tr(\"About me\"))") && !f.contains("tr(\"My sizes\")") && !f.contains("tr(\"I like…\")"))
+        assertEquals(100, Friends.BIO_MAX)
+        val items = Cloud.listItems(emptyList(), "Hello")
+        assertFalse(items.getJSONObject(0).has("sz"))
+        val hub = File("src/main/java/com/wishlist/app/Hub.kt").readText()
+        val home = hub.substring(hub.indexOf("private fun HomeHero("))
+        assertFalse("no chips on Home", home.substring(0, home.indexOf("\n}\n")).contains("AboutChip"))
     }
 
     /** No number tiles, the name once, lists as collages, the note as a row with a sheet, Message as a button. */
     @Test fun friendPageIsPersonFirst() {
         val f = File("src/main/java/com/wishlist/app/FriendsUi.kt").readText()
-        val page = f.substring(f.indexOf("private fun FriendPage("), f.indexOf("fun likesOf("))
+        val page = f.substring(f.indexOf("private fun FriendPage("), f.indexOf("internal fun PersonHero("))
         assertFalse(page.contains("FriendStat("))
         assertFalse("no zero shown", page.contains("FriendStat(top"))
-        assertTrue(page.contains("if (loved > 0) AboutChip("))
+        assertFalse("no loved chip (17 November 2026)", page.contains("AboutChip("))
         assertTrue(page.contains("val pics = newestPics(ws)"))
         assertTrue(page.contains("PrivateNoteSheet("))
         assertTrue(page.contains("go(Deep.Chat(f.id))"))
@@ -272,7 +285,7 @@ class HomeAsProfileTest {
     @Test fun homeIsYourProfile() {
         val screen = hub.substring(hub.indexOf("fun HubScreen("), hub.indexOf("internal fun HubTitle("))
         assertFalse("no numbers card", screen.contains("ProfileSummary("))
-        assertTrue(screen.contains("HomeHero(onProfile, onFriends, onAddWish)"))
+        assertTrue(screen.contains("HomeHero(onProfile)"))
         assertTrue("one grid, yours first", screen.contains("byRecent(mineItems) + byRecent(groupItems) + byRecent(groupsOfMine)"))
         assertTrue("no New gift exchange block", screen.contains("ExchangesSection(onNewExchange, withNew = false)"))
         assertTrue("same hero as a friend's page", hub.contains("PersonHero("))

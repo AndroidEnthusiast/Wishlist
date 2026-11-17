@@ -166,21 +166,20 @@ object Cloud {
 
     /**
      * Your list's wishes as they go online (private wishes never; pictures only on this phone are left out), plus the
-     * "about" item (id 0): the note, and (since 2.105) the cover photo, the occasion and your sizes, so friends see
-     * them (older apps only read "about" and skip the rest). No about item when all of those are empty.
+     * "about" item (id 0): the note, and (since 2.105) the cover photo and the occasion, so friends see them (older
+     * apps only read "about" and skip the rest). No about item when all of those are empty. Sizes ("sz") were removed
+     * on 17 November 2026 (owner) and are never sent.
      */
     fun listItems(
-        wishes: List<Wish>, about: String = "", cover: String = "", coverEdit: String = "", occ: Occasion? = null,
-        sizes: String = ""
+        wishes: List<Wish>, about: String = "", cover: String = "", coverEdit: String = "", occ: Occasion? = null
     ): JSONArray {
         val items = JSONArray()
         wishes.filter { !it.priv }.forEach { items.put(wishToJson(if (ImageStore.isLocal(it.image)) it.copy(image = "") else it)) }
-        if (about.isNotBlank() || cover.isNotEmpty() || occ != null || sizes.isNotEmpty()) {
+        if (about.isNotBlank() || cover.isNotEmpty() || occ != null) {
             val o = JSONObject().put("id", ABOUT_ITEM_ID).put("kind", "about").put("about", about)
                 .put("url", "").put("title", "")
             if (cover.isNotEmpty()) o.put("cover", cover).put("cedit", coverEdit)
             if (occ != null) o.put("occ", occ.toJson())
-            if (sizes.isNotEmpty()) o.put("sz", JSONObject(sizes))
             items.put(o)
         }
         return items

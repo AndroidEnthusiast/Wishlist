@@ -81,12 +81,9 @@ object Friends {
         myPhoto = p.getString("pf_photo", "") ?: ""
         myBirthday = p.getString("pf_bday", "") ?: ""
         myBio = p.getString("pf_bio", "") ?: ""
-        myClothing = p.getString("pf_sz_c", "") ?: ""
-        myShoes = p.getString("pf_sz_s", "") ?: ""
-        sizes = try {
-            val o = JSONObject(p.getString("fr_sizes", null) ?: "{}")
-            o.keys().asSequence().associateWith { o.optString(it) }
-        } catch (e: Exception) { emptyMap() }
+        // Sizes were removed (owner, 17 November 2026): sizes saved on this phone are deleted, and once more online.
+        if (p.contains("pf_sz_c") || p.contains("pf_sz_s") || p.contains("fr_sizes"))
+            p.edit().remove("pf_sz_c").remove("pf_sz_s").remove("fr_sizes").putBoolean("pf_sizes_dirty", true).apply()
         photoSrc = p.getString("pf_src", "") ?: ""
         photoEdit = HeroEdit.fromJson(p.getString("pf_edit", null))
         visible = p.getStringSet("fr_vis", null)?.toSet() ?: emptySet()
@@ -130,55 +127,18 @@ object Friends {
             pushLists(c)
             if (myBirthday.isNotEmpty() || myBio.isNotEmpty()) pushAbout(c)
         } else if (p.getBoolean("pf_about_dirty", false)) pushAbout(c)
-        if (p.getBoolean("pf_sizes_dirty", false)) try { pushSizes(c) } catch (e: Exception) {}
+        if (p.getBoolean("pf_sizes_dirty", false)) try { clearSizes(c) } catch (e: Exception) {}
     }
 
-    // ---- sizes (owner, 2.128): clothing and shoes, seen by friends ----
-
-    var myClothing by mutableStateOf("")
-        private set
-    var myShoes by mutableStateOf("")
-        private set
-
-    /** Friends' sizes as "Clothing M · Shoes 43" by profile id (empty for friends without sizes). */
-    var sizes by mutableStateOf<Map<String, String>>(emptyMap())
-        private set
+    // ---- sizes: removed (owner, 17 November 2026, docs/decisions/people.md) ----
 
     /** Only for the screenshots (ScreenshotTest.friendPage): a pretend friend without a server. */
-    internal fun pretend(s: FriendsState, sz: Map<String, String>) { state = s; sizes = sz }
+    internal fun pretend(s: FriendsState) { state = s }
 
-    /** Your sizes as stored online and sent with your lists: {"c": clothing, "s": shoes}, or "" when none. */
-    fun sizesJson(): String =
-        if (myClothing.isBlank() && myShoes.isBlank()) "" else JSONObject().put("c", myClothing).put("s", myShoes).toString()
-
-    /** "Clothing M · Shoes 43" from sizes JSON, or "". */
-    fun sizesText(json: String): String = try {
-        val o = JSONObject(json)
-        listOfNotNull(
-            o.optString("c").takeIf { it.isNotBlank() }?.let { tr("Clothing %s", it.take(20)) },
-            o.optString("s").takeIf { it.isNotBlank() }?.let { tr("Shoes %s", it.take(10)) }
-        ).joinToString(" · ")
-    } catch (e: Exception) { "" }
-
-    /** Saves your sizes on the phone, then online and with your lists (offline: next time). */
-    suspend fun setSizes(c: Context, clothing: String, shoes: String) {
-        myClothing = clothing.trim().take(20); myShoes = shoes.trim().take(10)
-        prefs(c).edit().putString("pf_sz_c", myClothing).putString("pf_sz_s", myShoes).putBoolean("pf_sizes_dirty", true).apply()
-        Sync.push()
-        ensure(c)
-    }
-
-    private suspend fun pushSizes(c: Context) {
-        Cloud.rpc("wl_pf_sizes", base(c).put("p_sizes", sizesJson()))
+    /** Clears the sizes an earlier version saved online (supabase-sizes-off.sql also clears them on the server). */
+    private suspend fun clearSizes(c: Context) {
+        Cloud.rpc("wl_pf_sizes", base(c).put("p_sizes", ""))
         prefs(c).edit().putBoolean("pf_sizes_dirty", false).apply()
-    }
-
-    /** Friends' sizes (supabase-features.sql); without the script nothing changes. */
-    private suspend fun loadSizes(c: Context) {
-        val t = try { Cloud.rpc("wl_fr_sizes", base(c)) } catch (e: Exception) { return }
-        val o = try { JSONObject(t) } catch (e: Exception) { return }
-        sizes = o.keys().asSequence().associateWith { sizesText(o.optString(it)) }.filterValues { it.isNotEmpty() }
-        prefs(c).edit().putString("fr_sizes", JSONObject(sizes).toString()).apply()
     }
 
     // ---- a private note about a friend (owner, 2.128): only on this phone, never online ----
@@ -195,14 +155,16 @@ object Friends {
     /** Your birthday as "MM-DD", or "". */
     var myBirthday by mutableStateOf("")
         private set
-    /** Your "I like…" line. */
+    const val BIO_MAX = 100
+
+    /** Your "About me" line (was "I like…"; at most [BIO_MAX] letters, shown under your name). */
     var myBio by mutableStateOf("")
         private set
 
     /** Saves your birthday and "I like…" on the phone, then online (an error is thrown when offline: saved next time). */
     suspend fun setAbout(c: Context, birthday: String, bio: String) {
         myBirthday = birthday
-        myBio = bio.trim().take(120)
+        myBio = bio.trim().take(BIO_MAX)
         // "Not sent yet" until the server has it: an offline save goes online with the next refresh ([ensure]).
         prefs(c).edit().putString("pf_bday", myBirthday).putString("pf_bio", myBio).putBoolean("pf_about_dirty", true).apply()
         ensure(c)
@@ -277,7 +239,6 @@ object Friends {
         prefs(c).edit().putString("fr_state", t).apply()
         loadPhotos(c, s)
         notifyNews(c, s, onScreen = true)
-        loadSizes(c)
     }
 
     /** The background check: notifications for new requests and for requests that were approved. */

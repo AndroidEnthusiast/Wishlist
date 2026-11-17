@@ -229,3 +229,18 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here. Look and f
   longer ones (a wish's ⋮) stay bottom sheets. First used for a list's ⋮ on Home.
 - **Planned, not built:** a wish's own page (big photo, price, shop button, details, price history, reactions,
   Reserve; cards then only photo, name, price, ♥). Owner: yes; interview on the details first, in its own session.
+
+## Under your name only "About me"; sizes removed; dialog buttons (owner, 17 November 2026; 2.219)
+- Owner: the chips under the profile ("Clothing M · Shoes 43/44", "2 wishes", "♥ 1 loved") "feel messy", unclear and
+  redundant. **All chips go**, on Home and a friend's page: sizes, likes, wishes, loved, "+ Add wish", "+ Add friends".
+  The "All your wishes", "Loved" and a friend's "Loves these" pages lose their way in (owner: drop them; the code
+  stays for now, unreachable; their checks `TopWishTest` and `AllWishesTest` were retired with them).
+- **"About me"** (was "I like…", same saved value, no script): one short text, at most 100 letters, shown as plain
+  text under the name on Home and a friend's page. Saved with Done and when you tap elsewhere.
+- **Birthday kept, without a chip on Home**: still set in Profile, friends still get the reminder, a friend's page shows
+  "🎂 … · in 5 days" only in the 2 weeks before.
+- **Sizes removed and deleted** (owner chose delete over hide): gone from Profile, Home, a friend's page and the
+  friends' web page; `supabase-sizes-off.sql` clears them online and stops older apps saving new ones.
+- **Buttons inside dialogs keep their own label colour** (owner's screenshot: "Send invite" and "Copy" grey on blue,
+  "This needs to be fixed everywhere"): the Quiet dialog's grey for its text was in the text style, which beat the
+  buttons' colour; every button now resets it (`ownInk` in `Styled.kt`, `DialogButtonInkTest`).

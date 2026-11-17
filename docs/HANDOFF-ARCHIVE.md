@@ -457,6 +457,11 @@ Everything under `tests/` was written in the browser-editor session and runs wit
   both (Crashlytics reopens them if they come back). Crashlytics' "latest release" said 2.182: check next session
   that 2.194 shows up (it can take a day); if not, look at `Crash.kt`/`WishlistApp.kt` after the 2.191 library update. **Next (owner's order):** the app's final name, then the copy project. R7 and
   R8: later.
+### 15 November 2026, late night: sheets, price page, wish form (2.212)
+Wishlist ⋮ as a bottom sheet with a Visibility sheet ("Visible to" renamed), no long press on wishlists; Price history a
+one-screen sheet with photo, big price, chips, "View in shop" first; the wish form photo-first with Top wish and
+Private tiles. Same structure in both styles. Each has a check or a screenshot.
+
 ### 12 November 2026, night: the code clean-up and the notes tidy-up (2.192–2.194)
 Screenshot tests fixed (a name, animations off). Clean-up: one way between screens (`LocalGo`, 2.192), where you are
 is `Places` owned by the screen and every `*Nav` object gone (2.193), screenshots identical before and after. Bug

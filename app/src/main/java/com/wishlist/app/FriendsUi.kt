@@ -592,11 +592,7 @@ private fun FriendPage(f: Person, snack: SnackbarHostState) {
         Column(
             Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 32.dp)
         ) {
-            val loved = wishes.count { it.first.star && !it.first.got }
-            PersonHero(
-                Friends.photos[f.id], f.name, f.birthday, Friends.sizes[f.id], f.bio,
-                extra = { if (loved > 0) AboutChip("♥ " + (if (loved == 1) tr("Loves 1 wish") else tr("Loves %d wishes", loved)), onClick = { places.friendPage = "top" }) }
-            ) {
+            PersonHero(Friends.photos[f.id], f.name, f.birthday, f.bio, birthdaySoon = true) {
                 if (f.lists.isEmpty()) Text(
                     tr("%s hasn’t added a wishlist yet.", f.name), style = MaterialTheme.typography.bodyMedium,
                     color = cs.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 16.dp)
@@ -641,20 +637,16 @@ private fun FriendPage(f: Person, snack: SnackbarHostState) {
     if (noteOpen) PrivateNoteSheet(f, note, { note = it.take(500); Friends.setNote(ctx, f.id, note) }) { noteOpen = false }
 }
 
-/** "Candles, paint and canvas" as separate words for chips: split at commas, semicolons and "and"; at most 12. */
-fun likesOf(bio: String): List<String> =
-    bio.split(Regex("[,;\n]|\\s+and\\s+|\\s+&\\s+")).map { it.trim().trimEnd('.') }.filter { it.isNotEmpty() }.take(12)
-
 /**
  * A person at the top of their page, the same on your Home and a friend's page (owner, 16 November 2026: "what you see
- * is what friends see"): the photo and name centred, then chips for the birthday (in your colour within 2 weeks),
- * sizes and each thing they like, then [extra] chips; [below] under the chips (a button, a line). Nothing empty shows.
+ * is what friends see"): the photo and name centred, then their "About me" as one short line of text (owner,
+ * 17 November 2026: the chips for sizes, likes, counts and loved wishes felt messy and are gone). [birthdaySoon]: the
+ * birthday shows only on a friend's page, and only in the 2 weeks before it. [below] under it (a button, a line).
  */
-@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 internal fun PersonHero(
-    photo: String?, name: String, birthday: String, sizes: String?, bio: String,
-    onPhoto: (() -> Unit)? = null, extra: @Composable () -> Unit = {}, below: @Composable () -> Unit = {}
+    photo: String?, name: String, birthday: String, bio: String, birthdaySoon: Boolean = false,
+    onPhoto: (() -> Unit)? = null, below: @Composable () -> Unit = {}
 ) {
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
@@ -668,32 +660,26 @@ internal fun PersonHero(
             modifier = Modifier.padding(top = 12.dp).clip(RoundedCornerShape(8.dp))
                 .then(if (onPhoto != null) Modifier.clickable(onClick = onPhoto) else Modifier).padding(horizontal = 4.dp)
         )
+        if (bio.isNotBlank()) Text(
+            bio.trim(), style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant, textAlign = TextAlign.Center,
+            maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp).widthIn(max = 340.dp)
+        )
         val days = Friends.daysUntil(birthday)
-        val likes = likesOf(bio)
-        FlowRow(
-            Modifier.fillMaxWidth().padding(top = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            if (days != null) AboutChip(
-                "🎂 " + birthdayText(birthday) + " · " + (if (days == 0) tr("today") else tr("in %d days", days)),
-                on = days <= 14
-            )
-            if (!sizes.isNullOrBlank()) AboutChip(sizes)
-            extra()
-            likes.forEach { AboutChip(it) }
-        }
+        if (birthdaySoon && days != null && days <= 14) AboutChip(
+            "🎂 " + birthdayText(birthday) + " · " + (if (days == 0) tr("today") else tr("in %d days", days)),
+            on = true, modifier = Modifier.padding(top = 12.dp)
+        )
         below()
     }
 }
 
 /** A small chip of facts on a friend's page; [on] in your colour; with [onClick] it can be tapped. */
 @Composable
-internal fun AboutChip(text: String, on: Boolean = false, onClick: (() -> Unit)? = null) {
+internal fun AboutChip(text: String, on: Boolean = false, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
     val look = LocalLook.current
     Text(
         text, style = MaterialTheme.typography.labelLarge, color = look.chipContent(on), maxLines = 1, overflow = TextOverflow.Ellipsis,
-        modifier = Modifier.lookChip(look, on).then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+        modifier = modifier.lookChip(look, on).then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(horizontal = 12.dp, vertical = 8.dp)
     )
 }
@@ -905,9 +891,6 @@ fun ProfileScreen(snack: SnackbarHostState) {
     var nameSaved by remember { mutableIntStateOf(0) }
     var bio by remember { mutableStateOf(Friends.myBio) }
     var bioSaved by remember { mutableIntStateOf(0) }
-    var clothing by remember { mutableStateOf(Friends.myClothing) }
-    var shoes by remember { mutableStateOf(Friends.myShoes) }
-    var sizesSaved by remember { mutableIntStateOf(0) }
     var photoMenu by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
     var newCodeDlg by remember { mutableStateOf(false) }
@@ -1047,54 +1030,31 @@ fun ProfileScreen(snack: SnackbarHostState) {
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
             )
 
-            ProfileTitle(tr("I like…"))
+            // "About me" (owner, 17 November 2026): was "I like…"; shown as text under your name on Home and your page.
+            ProfileTitle(tr("About me"))
+            // Saved with Done and when you tap elsewhere (leaving it without Done no longer loses it).
+            fun saveBio() {
+                if (bio.trim() == Friends.myBio) return
+                val b = bio
+                scope.launch { try { Friends.setAbout(ctx, Friends.myBirthday, b) } catch (e: Exception) {} }
+                bioSaved++
+            }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(
-                    bio, { bio = it.take(120) }, singleLine = true, modifier = Modifier.weight(1f),
-                    placeholder = { Text(tr("For example: hiking, coffee and Lego")) },
+                    bio, { bio = it.replace('\n', ' ').take(Friends.BIO_MAX) }, maxLines = 3,
+                    modifier = Modifier.weight(1f).onFocusChanged { if (!it.isFocused) saveBio() },
+                    placeholder = { Text(tr("For example: Coffee lover, always cold, into Lego")) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done, capitalization = KeyboardCapitalization.Sentences),
-                    keyboardActions = KeyboardActions(onDone = {
-                        val b = bio
-                        scope.launch {
-                            try {
-                                Friends.setAbout(ctx, Friends.myBirthday, b)
-                            } catch (e: Exception) {
-                            }
-                        }
-                        bioSaved++
-                        keyboard?.hide()
-                        focusManager.clearFocus()
-                    })
+                    keyboardActions = KeyboardActions(onDone = { saveBio(); keyboard?.hide(); focusManager.clearFocus() })
                 )
                 SavedFeedback(bioSaved)
             }
             Text(
-                tr("Gift ideas for your friends, in a few words."),
+                tr("Friends see this under your name. %d of %d letters.", bio.length, Friends.BIO_MAX),
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
             )
 
-            // My sizes (owner, 2.128): clothing and shoes, seen by friends (their app and the friends' web page).
-            ProfileTitle(tr("My sizes"))
-            fun saveSizes() {
-                if (clothing.trim() == Friends.myClothing && shoes.trim() == Friends.myShoes) return
-                val cl = clothing; val sh = shoes
-                scope.launch { try { Friends.setSizes(ctx, cl, sh) } catch (e: Exception) {} }
-                sizesSaved++
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(
-                    clothing, { clothing = it.take(20) }, singleLine = true, label = { Text(tr("Clothing")) },
-                    modifier = Modifier.weight(1f).onFocusChanged { if (!it.isFocused) saveSizes() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next, capitalization = KeyboardCapitalization.Characters)
-                )
-                OutlinedTextField(
-                    shoes, { shoes = it.take(10) }, singleLine = true, label = { Text(tr("Shoes")) },
-                    modifier = Modifier.weight(1f).onFocusChanged { if (!it.isFocused) saveSizes() },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { saveSizes(); keyboard?.hide(); focusManager.clearFocus() })
-                )
-                SavedFeedback(sizesSaved)
-            }
+            // "My sizes" was removed (owner, 17 November 2026): sizes are deleted, also online (supabase-sizes-off.sql).
 
             ProfileTitle(tr("Your friend code"))
             val code = Friends.state?.code.orEmpty()

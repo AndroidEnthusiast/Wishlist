@@ -13,7 +13,11 @@ select wl_fr_add('BBBBBBBBBBBBBBBBBBBB','tokB_tokB_tokB_tokB_', :'code_a');
 select wl_fr_answer('AAAAAAAAAAAAAAAAAAAA','tokA_tokA_tokA_tokA_','BBBBBBBBBBBBBBBBBBBB',true);
 -- 2. sizes
 select wl_pf_sizes('AAAAAAAAAAAAAAAAAAAA','tokA_tokA_tokA_tokA_','{"c":"M","s":"43"}');
-select pg_temp.ok(wl_fr_sizes('BBBBBBBBBBBBBBBBBBBB','tokB_tokB_tokB_tokB_')->>'AAAAAAAAAAAAAAAAAAAA' = '{"c":"M","s":"43"}', 'a friend sees my sizes');
+-- Sizes were removed (17 November 2026): an older app may still send them, nothing is kept or given out.
+select pg_temp.ok(wl_fr_sizes('BBBBBBBBBBBBBBBBBBBB','tokB_tokB_tokB_tokB_') = '{}'::jsonb, 'sizes are no longer given to friends');
+reset role;
+select pg_temp.ok((select sizes from wl_profiles where id = 'AAAAAAAAAAAAAAAAAAAA') = '', 'sizes are not kept');
+set role anon;
 select pg_temp.ok(wl_fr_sizes('CCCCCCCCCCCCCCCCCCCC','tokC_tokC_tokC_tokC_') = '{}'::jsonb, 'a stranger sees nothing');
 do $$ begin perform wl_pf_sizes('AAAAAAAAAAAAAAAAAAAA','wrong_wrong_wrong_wr','{}'); raise exception 'FAIL wrong token';
 exception when others then if sqlerrm like 'FAIL%' then raise; end if; end $$;
