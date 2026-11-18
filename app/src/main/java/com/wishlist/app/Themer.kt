@@ -62,6 +62,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 /** The Add wish button, drawn in the chosen theme (classic: as it always was). */
 @Composable
@@ -101,7 +102,7 @@ fun ThemerScreen(onBack: () -> Unit) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     BackHandler(onBack = onBack)
-    val mode = Repo.theme.takeIf { it == "system" || it == "light" } ?: "dark"
+    val mode = when (Repo.theme) { "system", "light" -> Repo.theme; "black", "amoled" -> "black"; else -> "dark" }
     val shownMode = effectiveTheme()
     val style = styleFor(Repo.design).key
     val accent = accentFor(Repo.palette).key
@@ -111,7 +112,10 @@ fun ThemerScreen(onBack: () -> Unit) {
             TopAppBar(
                 title = { ScreenTitle(tr("Theme")) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(AppIcons.ArrowBack, tr("Back")) } },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
+                // The same one-line bar in every style, so switching to Gen Z chaos never moves the blocks (owner's
+                // recording, 18 November 2026: Quiet's large title made the screen jump).
+                large = false
             )
         }
     ) { pad ->
@@ -137,7 +141,7 @@ fun ThemerScreen(onBack: () -> Unit) {
                 modifier = Modifier.padding(top = 12.dp)
             )
             Segmented(
-                listOf("system" to tr("System"), "light" to tr("Light"), "dark" to tr("Dark")), mode
+                listOf("system" to tr("System"), "light" to tr("Light"), "dark" to tr("Dark"), "black" to tr("Black")), mode
             ) { Repo.setLook(ctx, style, it, accent) }
             Spacer(Modifier.height(24.dp))
         }
@@ -145,41 +149,58 @@ fun ThemerScreen(onBack: () -> Unit) {
 }
 
 /**
- * One theme (owner, 18 November 2026: "as slick and minimalistic as Giftful's", our own shape): the theme's page
- * colour, its name in its own colour, and one gentle hill of its colour along the bottom; a tick and a ring when chosen.
+ * One theme (owner, 18 November 2026: "as slick and minimalistic as Giftful's", our own shape): the page, the theme's
+ * name in its colour and one gentle hill of its colour along the bottom; a ring and a tick when chosen. Gen Z chaos in
+ * its real colours (owner): its cream (light) or black page with dots, a lime and a yellow ball, a hot-pink hill with a
+ * thick edge, the name in its own heading font.
  */
 @Composable
 private fun ThemeCard(name: String, sample: Look, chosen: Boolean, modifier: Modifier, onClick: () -> Unit) {
-    val shape = if (sample.design == "quiet") Squircle(22.dp) else RoundedCornerShape(22.dp)
-    val ring = sample.accent
+    val chaos = sample.design == "chaos"
+    val shape = if (chaos) RoundedCornerShape(22.dp) else Squircle(22.dp)
+    val hot = Color(0xFFFF2BD6); val lime = Color(0xFFC6FF00); val sun = Color(0xFFFFE600)
+    val ink = sample.scheme.onSurface
+    val ring = if (chaos) hot else sample.accent
     Box(
         modifier.height(124.dp).clip(shape).background(sample.page)
-            .border(if (chosen) 3.dp else 1.dp, if (chosen) ring else sample.line, shape)
+            .border(if (chosen) 3.dp else if (chaos) 2.dp else 1.dp, if (chosen) ring else if (chaos) ink else sample.line, shape)
             .clickable(onClickLabel = name, onClick = onClick)
             .semantics { selected = chosen }
             .drawBehind {
-                // One hill, highest a little right of the middle, its foot lower on the left than on the right.
                 val w = size.width; val h = size.height
+                if (chaos) {
+                    // The polka dots, then the two balls peeking in at the corners.
+                    val dot = ink.copy(alpha = 0.16f)
+                    val step = 14.dp.toPx()
+                    var y = step / 2
+                    while (y < h) { var x = step / 2; while (x < w) { drawCircle(dot, 1.3.dp.toPx(), Offset(x, y)); x += step }; y += step }
+                    drawCircle(lime, h * 0.30f, Offset(w * 0.98f, h * 0.10f))
+                    drawCircle(sun, h * 0.18f, Offset(w * 0.06f, h * 0.62f))
+                }
+                // One hill, highest a little right of the middle, its foot lower on the left than on the right.
                 val hill = androidx.compose.ui.graphics.Path().apply {
                     moveTo(0f, h * 0.80f)
                     cubicTo(w * 0.28f, h * 0.80f, w * 0.42f, h * 0.50f, w * 0.66f, h * 0.50f)
                     cubicTo(w * 0.84f, h * 0.50f, w * 0.92f, h * 0.62f, w, h * 0.66f)
                     lineTo(w, h); lineTo(0f, h); close()
                 }
-                drawPath(hill, sample.accent)
+                drawPath(hill, if (chaos) hot else sample.accent)
+                if (chaos) drawPath(hill, ink, style = androidx.compose.ui.graphics.drawscope.Stroke(3.dp.toPx()))
             }
     ) {
         LookTheme(sample) {
             Text(
-                name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary,
-                maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                name, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                style = if (chaos) MaterialTheme.typography.titleLarge.copy(fontSize = 18.sp) else MaterialTheme.typography.titleMedium,
+                fontWeight = if (chaos) null else FontWeight.Bold,
+                color = if (chaos) ink else MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(start = 16.dp, top = 14.dp, end = 44.dp)
             )
         }
         if (chosen) Box(
             Modifier.align(Alignment.TopEnd).padding(10.dp).size(26.dp).clip(CircleShape).background(ring),
             contentAlignment = Alignment.Center
-        ) { Icon(AppIcons.Check, null, tint = sample.onAccent, modifier = Modifier.size(16.dp)) }
+        ) { Icon(AppIcons.Check, null, tint = if (chaos) Color(0xFF0D0D0D) else sample.onAccent, modifier = Modifier.size(16.dp)) }
     }
 }
 

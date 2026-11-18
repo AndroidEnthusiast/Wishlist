@@ -409,6 +409,7 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
         }
         composable(Route.PROFILE) { RouteBox { ProfileScreen(snack) } }
         composable(Route.SETTINGS) { RouteBox { SettingsScreen(snack) } }
+        composable(Route.THEME) { RouteBox { ThemerScreen { nav.popBackStack() } } }
         composable(Route.BIN) { RouteBox { BinScreen(snack) } }
         composable(Route.NOTES) { RouteBox { NotificationsScreen(snack) { key -> openNote(key) } } }
         composable(Route.RECEIVED) { RouteBox { ReceivedScreen { nav.popBackStack() } } }
@@ -506,7 +507,7 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
         onBin = { account = false; nav.openOnTop(Route.BIN) },
         onSettings = { account = false; nav.openOnTop(Route.SETTINGS) },
         onNotes = { account = false; nav.openOnTop(Route.NOTES) },
-        onTheme = { account = false; ThemeOpen.next = true; nav.openOnTop(Route.SETTINGS) }
+        onTheme = { account = false; nav.openOnTop(Route.THEME) }
     )
     if (plusMenu) PlusMenuSheet(
         onWish = { plusMenu = false; addTarget = Repo.lastSaveTo; prefill = ""; adding = true },

@@ -221,7 +221,7 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   were not wanted separately ("Not now"), this setting covers the couple's case.
 - Step 6 (hide reservations on shared lists) left for now (owner, 17 November 2026); also in `docs/TODO.md`.
 
-## Themes deeper, theme blocks minimal (owner, 18 November 2026, after comparing with Giftful; 2.227)
+## Themes deeper, theme blocks minimal (owner, 18 November 2026, after comparing with Giftful; 2.227; the deep tint was replaced the same evening, see the next section)
 - 2.225's gentle tint felt flat and muddy ("the colours don't blend"): parts that weren't tinted (a sheet's grouped rows
   were a fixed grey-violet, the settings tiles grey, the grey text plain grey) clashed with the tinted page. Owner chose:
   **deep, like Giftful**: one hue per theme for everything, only its lightness steps up (page → cards → panels →
@@ -230,4 +230,20 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
 - **Theme blocks:** as minimal as Giftful's but our own shape (owner): the theme's page colour, its name in its own
   colour, one gentle hill of its colour along the bottom (not Giftful's wave), a ring and tick when chosen. No mini
   wish card. The owner chose to skip a preview ("just build it").
+
+## Neutral backdrop, colour on the elements (owner, 18 November 2026, after trying 2.227; replaces the deep tint above)
+- 2.227's deep tint went wrong: a deep shade of orange is brown, Forest's dark page went green ("not pretty"), light
+  mode was "super bright", dark showed faint colours on the backdrop. Owner: "I don't want the backdrop to be coloured
+  but only the elements"; it must be "slick and polished and pleasant for the eyes".
+- **Backdrop and cards: a matched grey** (owner): neutral grey leaning only about 3% towards the theme's hue, so it
+  reads as grey but harmonises. **Light:** a soft grey page with white cards (not glaring). **Dark:** dark grey like
+  most apps. **Black** (AMOLED): a 4th Appearance choice, System / Light / Dark / Black; pure black page, deep-grey
+  cards. System follows the phone with light and dark grey.
+- **The colour shows "clear but calm"** (owner): full colour on the main button, the + button, switches, ticks, chosen
+  chips, links and the wordmark; icon tiles a soft tint of it. Cards, sheets and text neutral.
+- **Amber is replaced by Teal** (owner: no brownish colours). An old Amber choice becomes Teal.
+- **Gen Z chaos block in its real colours** (owner): cream page with dots (light) or black (dark), a hot-pink hill with a
+  thick black edge, a lime and a yellow ball, the name in Bungee.
+- **No jump on the Theme screen** (owner's recording): switching between Quiet and Gen Z chaos must not move the blocks;
+  the Theme screen keeps the same header height in every style.
 

@@ -621,3 +621,8 @@ Owner: no chips under a person, only "About me" (100 letters, was "I like…"); 
 it; sizes deleted (`supabase-sizes-off.sql`). Interviewed on dropping collab wishlists: merge in the menus, with
 "Who is it for?" to protect the surprise; built in 2.220 ("collab" no longer said). Checks: `DialogButtonInkTest`,
 `aboutMeInsteadOfChips`, `sizes_off_test.sql`, `OneNewWishlistTest`.
+
+### 17 November 2026, evening: red buttons, plan built (2.221–2.225)
+2.221 every red action readable (danger buttons, scan check). Interviewed on GoWish/Giftful screenshots; plan approved
+(step 6 left). 2.222 centred chip text (measured from the font file), My own / With others. 2.223 full-width form
+sheet and list menu sheet. 2.224 settings sheet (card, tiles, rows). 2.225 five themes + Gen Z, Theme screen.

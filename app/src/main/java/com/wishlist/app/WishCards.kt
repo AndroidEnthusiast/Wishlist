@@ -161,7 +161,7 @@ fun CompactCard(
                 Modifier.align(Alignment.TopStart).padding(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically
             ) {
-                if (Show["show_badge"] && (drop || rise) && newP != null && oldP != null) {
+                if ((drop || rise) && newP != null && oldP != null) {
                     PriceBadge(
                         if (rise) "+${Math.round((newP / oldP - 1) * 100)}%" else "−${Math.round((1 - newP / oldP) * 100)}%",
                         rise, small = true
@@ -309,7 +309,7 @@ fun WishCard(
                 Modifier.align(Alignment.TopStart).padding(12.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically
             ) {
-                if (Show["show_badge"] && (drop || rise) && newP != null && oldP != null) {
+                if ((drop || rise) && newP != null && oldP != null) {
                     PriceBadge(
                         if (rise) "+${Math.round((newP / oldP - 1) * 100)}%" else "−${Math.round((1 - newP / oldP) * 100)}%",
                         rise, small = false
@@ -353,7 +353,7 @@ fun WishCard(
                     wishTags(w).takeIf { it.isNotEmpty() }?.let { t ->
                         Text(t, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = ink)
                     }
-                if (Show["show_desc"] && w.desc.isNotBlank()) {
+                if (w.desc.isNotBlank()) {
                     Text(
                         w.desc, style = MaterialTheme.typography.bodyMedium,
                         maxLines = 2, overflow = TextOverflow.Ellipsis, color = muted

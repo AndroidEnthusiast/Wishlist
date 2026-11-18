@@ -235,6 +235,13 @@ abstract class ScreenshotBase(private val mode: String, private val tag: String 
     @Test fun settings() {
         tap("Profile and settings"); repeat(5) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
         tap("App settings"); shot("settings")
+        tap("Notifications"); shot("settings_notes")
+    }
+    @Test fun settingsPrices() {
+        tap("Profile and settings"); repeat(5) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
+        tap("App settings"); repeat(5) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
+        tap("Prices"); shot("settings_prices")
+        tap("Check prices"); shot("settings_interval")
     }
 }
 

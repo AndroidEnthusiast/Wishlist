@@ -234,7 +234,7 @@ object Repo {
         }
         // There is no "System default" any more (2.53): the first start (and a phone that had it) quietly takes
         // Light or Dark to match the phone's setting at that moment.
-        theme = p.getString("theme", null)?.takeIf { it == "light" || it == "dark" || it == "amoled" || it == "system" }
+        theme = p.getString("theme", null)?.takeIf { it == "light" || it == "dark" || it == "black" || it == "amoled" || it == "system" }
             ?: if ((c.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
                 android.content.res.Configuration.UI_MODE_NIGHT_YES) "dark" else "light"
         // A new phone with nothing saved yet starts in Berry, the app's own colour (owner, 15 November 2026); everyone

@@ -96,7 +96,7 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 ### Look, text and fonts
 - `I18n.kt` (`tr`, English only)
 - `Fonts.kt` (font choice)
-- `Settings.kt`
+- `Settings.kt` (App settings since 2.228: six rows opening small pages; the Theme screen is its own route `Route.THEME`, `Themer.kt`)
 - `Theme.kt` + `Design.kt` + `Styled.kt` + `Themer.kt` (themes and the themed buttons, dialogs, icons)
 - Design styles: Quiet and Gen Z chaos only since 2.206 (the others are in git history, commit `057fe42`); how a new
   one is made: `docs/DESIGN-STYLES.md` (one style at a time, to a professional standard); Quiet's specification:

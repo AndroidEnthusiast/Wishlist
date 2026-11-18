@@ -23,6 +23,8 @@ object Route {
     const val MAIN = "main"
     const val PROFILE = "profile"
     const val SETTINGS = "settings"
+    /** The Theme screen, from the profile sheet (18 November 2026: no longer inside App settings). */
+    const val THEME = "theme"
     const val BIN = "bin"
     const val NOTES = "notifications"
     const val RECEIVED = "received"
@@ -58,7 +60,7 @@ object Route {
     fun friend(code: String) = "friend/" + android.net.Uri.encode(code)
 
     /** The routes that open on top of [MAIN] (from the profile sheet, the bell, a list or a notification). */
-    val onTop = listOf(PROFILE, SETTINGS, BIN, NOTES, RECEIVED, RESERVED, PRICES, LIST_SETTINGS, FRIEND)
+    val onTop = listOf(PROFILE, SETTINGS, THEME, BIN, NOTES, RECEIVED, RESERVED, PRICES, LIST_SETTINGS, FRIEND)
 }
 
 /**

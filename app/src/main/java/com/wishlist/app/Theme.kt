@@ -24,13 +24,14 @@ val GoogleSans = FontFamily(
     Font(R.font.google_sans, FontWeight.Bold, variationSettings = FontVariation.Settings(FontVariation.weight(700)))
 )
 
-/** The mode in use: "light" or "dark" ("system", from before 2.53, follows the phone). */
+/** The mode in use: "light", "dark" or "black" (pure black, 18 November 2026); "system" follows the phone (dark grey). */
 @Composable
 fun effectiveTheme(): String {
     val sys = isSystemInDarkTheme()
     return when (Repo.theme) {
         "system" -> if (sys) "dark" else "light"
         "light" -> "light"
+        "black", "amoled" -> "black"
         else -> "dark"
     }
 }

@@ -80,7 +80,8 @@ val ACCENTS: List<Accent> = listOf(
     Accent("berry", "Berry", 0xFFB0245A, 0xFFF0679A),
     Accent("blue", "Ocean", 0xFF0A6CFF, 0xFF4D94FF),
     Accent("green", "Forest", 0xFF1F9D55, 0xFF4CC08A),
-    Accent("orange", "Amber", 0xFFE0650F, 0xFFFFA24D),
+    // Teal replaced Amber (owner, 18 November 2026: no brownish colours); an Amber choice becomes Teal.
+    Accent("teal", "Teal", 0xFF0F8A84, 0xFF3FD3C6),
     Accent("indigo", "Lilac", 0xFF7A3FD1, 0xFFB79CFF)
 )
 
@@ -91,6 +92,7 @@ val ACCENTS: List<Accent> = listOf(
 fun closestTheme(key: String): String {
     if (ACCENTS.any { it.key == key }) return key
     if (key == "pink") return "berry"
+    if (key == "orange") return "teal"
     val own = customAccent(key) ?: return ACCENTS[0].key
     fun hue(c: Color): Float {
         val r = c.red; val g = c.green; val b = c.blue
@@ -236,6 +238,8 @@ private fun scheme(
  */
 fun lookFor(style: String, accentKey: String, mode: String): Look {
     val dark = mode != "light"
+    // Black (owner, 18 November 2026): the pure black page for OLED screens, a 4th choice next to Dark.
+    val black = mode == "black" || mode == "amoled"
     val ac = accentFor(accentKey)
     val a = c(if (dark) ac.dark else ac.light)
     val onA = inkOn(a)
@@ -246,7 +250,7 @@ fun lookFor(style: String, accentKey: String, mode: String): Look {
     val rise = if (dark) redD else redL
     return when (styleFor(style).key) {
         "chaos" -> {
-            val bg = if (dark) c(0xFF0D0D0D) else c(0xFFFFF7E8)
+            val bg = if (black) Color.Black else if (dark) c(0xFF0D0D0D) else c(0xFFFFF7E8)
             val surface = if (dark) c(0xFF1B1B1B) else white
             val ink = if (dark) white else c(0xFF0D0D0D)
             val muted = if (dark) c(0xFFE6E6E6) else c(0xFF333333)
@@ -265,30 +269,31 @@ fun lookFor(style: String, accentKey: String, mode: String): Look {
             val onQ = bestInk(a)
             // Warm neutrals (owner, 15 November 2026, docs/styles/identity.md): a warm off-white page and a warm
             // charcoal instead of the phone-settings grey and pure black.
-            // Each theme colours the whole app deeply (owner, 18 November 2026: the gentle tint of 17 November felt flat
-            // and muddy, "the colours don't blend"): ONE hue for everything, only its lightness steps up from the page
-            // to the cards to what floats (panels, menus) to the groups inside them, the grey text tinted too. Light
-            // mode is a soft pastel of the same hue with near-white cards. Every text stays at least 4.5 : 1 (ThemesTest).
+            // The backdrop is neutral and only the elements carry the theme's colour (owner, 18 November 2026, after the
+            // deep tint of 2.227 turned Amber brown and Forest green): page, cards and panels are grey leaning only a
+            // few per cent towards the theme's hue, so they read as grey but sit in harmony with it. Light: a soft
+            // grey page with white cards (not glaring); Dark: dark grey like most apps; Black: a pure black page.
+            // Every text stays at least 4.5 : 1 (ThemesTest).
             val h = hueOf(c(ac.light))
             fun t(sat: Float, light: Float) = Color.hsl(h, sat, light)
-            val bg = if (dark) t(0.50f, 0.065f) else t(0.60f, 0.955f)
+            val bg = when { black -> Color.Black; dark -> t(0.05f, 0.075f); else -> t(0.12f, 0.953f) }
             // Your colour as text and lines (text buttons, links, chosen tabs): in light the same colour, darkened just
             // enough to read at 4.5 : 1 on the page (green, orange and pink were too light, found 14 November
             // 2026). Filled buttons keep the colour itself ([Look.accent]).
-            val inkText = if (dark) t(0.30f, 0.965f) else t(0.30f, 0.09f)
+            val inkText = if (dark) t(0.04f, 0.96f) else t(0.08f, 0.10f)
             val readable = (0..20).map { mix(a, inkText, it / 20f) }.first { col ->
                 (maxOf(col.luminance(), bg.luminance()) + 0.05f) / (minOf(col.luminance(), bg.luminance()) + 0.05f) >= 4.6f
             }
-            val surface = if (dark) t(0.44f, 0.13f) else t(0.65f, 0.99f)
-            val raised = if (dark) t(0.40f, 0.175f) else white
+            val surface = when { black -> t(0.05f, 0.075f); dark -> t(0.05f, 0.12f); else -> white }
+            val raised = when { black -> t(0.05f, 0.11f); dark -> t(0.05f, 0.155f); else -> white }
             val text = inkText
-            val muted = if (dark) t(0.20f, 0.74f) else t(0.14f, 0.36f)
-            val hair = if (dark) t(0.28f, 0.24f) else t(0.35f, 0.885f)
+            val muted = if (dark) t(0.05f, 0.68f) else t(0.06f, 0.40f)
+            val hair = when { black -> t(0.05f, 0.17f); dark -> t(0.05f, 0.21f); else -> t(0.08f, 0.885f) }
             Look(
                 "quiet", dark,
                 // The outline (fields, tick boxes) at least 3 : 1 on the cards, so they can be found (13 November 2026).
                 scheme(dark, readable, bestInk(readable), mix(a, surface, if (dark) 0.78f else 0.88f), mix(a, text, if (dark) 0.25f else 0.35f), bg, surface, text, muted,
-                    if (dark) t(0.14f, 0.56f) else t(0.12f, 0.54f), hair,
+                    if (dark) t(0.05f, 0.52f) else t(0.06f, 0.55f), hair,
                     // A real red for Delete and errors (owner, 17 November 2026: Material's red was pink), 4.5 : 1.
                     error = if (dark) c(0xFFFF6B5E) else c(0xFFC62828)),
                 listOf(surface), listOf(if (dark) c(0xFFECE8E4) else mix(c(0xFFF4F1ED), a, 0.10f)), hair,

@@ -5,6 +5,9 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.228 (18 November 2026, evening), read first.** Themes now a neutral matched grey with colour on the elements,
+  Black mode, Teal, a real Gen Z block; App settings redone as six rows with pages (decisions: `look.md` and
+  `screens.md`, last sections). Ask how both feel on the phone; the 2.227 entry below is superseded by this one.
 - **2.227 (18 November 2026, later), read first.** Themes made deep (one hue everywhere, light = pastel) and theme
   blocks minimal (`docs/decisions/look.md`, last section). Ask how they feel on the phone in each theme, light and
   dark (colours on a real screen can't be judged here). Then Import step 2 below.
@@ -57,6 +60,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 18 November 2026, evening: calm themes, App settings redone (2.228)
+Owner: 2.227's deep tint looked brown/green; now a grey backdrop with a 3% hint, colour on the elements, Black mode,
+Teal for Amber, Gen Z block in its own look, Theme as its own route (no jump). App settings: six rows opening pages,
+two switches and the theme block removed with their code. Checks: `AppSettingsTest`, `ThemesTest`.
+
 ### 18 November 2026, later: deeper themes (2.227)
 Owner: themes felt flat, colours didn't blend. Cause: a 7% tint plus untinted parts (fixed grey-violet sheet rows, grey
 tiles, plain grey text). Now one hue per theme in steps of lightness, pastel in light; theme blocks: colour, name, a hill.
@@ -66,8 +74,3 @@ Interviewed (5 rounds) after Listful's Import sheet; decisions in `docs/decision
 Home / welcome / Share → Import sheet (site icons live, paste link or text), hidden read with the updatable reader
 `web/import/reader.js` (any-page reader), "Import this page" fallback, check screen, fill-in of photos and prices,
 real shop links, daily `import-check.yml` (opens an issue). Checks: `ImportTest`, `tests/import/test.js`.
-
-### 17 November 2026, evening: red buttons, plan built (2.221–2.225)
-2.221 every red action readable (danger buttons, scan check). Interviewed on GoWish/Giftful screenshots; plan approved
-(step 6 left). 2.222 centred chip text (measured from the font file), My own / With others. 2.223 full-width form
-sheet and list menu sheet. 2.224 settings sheet (card, tiles, rows). 2.225 five themes + Gen Z, Theme screen.

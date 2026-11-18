@@ -17,12 +17,12 @@ class ThemesTest {
     }
 
     @Test fun fiveThemesWithTheirNames() {
-        assertEquals(listOf("Berry", "Ocean", "Forest", "Amber", "Lilac"), ACCENTS.map { it.name })
+        assertEquals(listOf("Berry", "Ocean", "Forest", "Teal", "Lilac"), ACCENTS.map { it.name })
         assertEquals("berry", ACCENTS.first().key)
     }
 
     @Test fun everyThemeReadsWellInLightAndDark() {
-        for (ac in ACCENTS) for (m in listOf("light", "dark")) {
+        for (ac in ACCENTS) for (m in listOf("light", "dark", "black")) {
             val l = lookFor("quiet", ac.key, m)
             val s = l.scheme
             for ((where, bg) in listOf("page" to l.page, "card" to l.card, "panel" to l.raised)) {
@@ -34,16 +34,27 @@ class ThemesTest {
         }
     }
 
-    @Test fun themesReallyTintThePage() {
-        val pages = ACCENTS.map { lookFor("quiet", it.key, "dark").page }.toSet()
-        assertEquals("each theme its own page colour", ACCENTS.size, pages.size)
+    /** Owner, 18 November 2026: the backdrop is grey (only a hint of the theme), the colour is on the elements. */
+    @Test fun backdropIsGreyAndColourIsOnTheElements() {
+        fun chroma(c: Color) = maxOf(c.red, c.green, c.blue) - minOf(c.red, c.green, c.blue)
+        for (ac in ACCENTS) for (m in listOf("light", "dark", "black")) {
+            val l = lookFor("quiet", ac.key, m)
+            for ((where, bg) in listOf("page" to l.page, "card" to l.card, "panel" to l.raised))
+                assertTrue("${ac.name} $m: $where is grey, not coloured (${chroma(bg)})", chroma(bg) <= 0.025f)
+            assertTrue("${ac.name} $m: the button is in colour", chroma(l.accent) >= 0.3f)
+        }
+        assertEquals("Black is a pure black page", Color.Black, lookFor("quiet", "berry", "black").page)
+        assertEquals(Color.Black, lookFor("chaos", "berry", "black").page)
+        assertTrue("Dark is dark grey, not black", lookFor("quiet", "berry", "dark").page.luminance() > 0.004f)
+        assertTrue("Light is a soft grey page, not white", lookFor("quiet", "berry", "light").page.luminance() < 0.93f)
     }
 
     @Test fun oldColoursMoveToTheClosestTheme() {
         assertEquals("berry", closestTheme("pink"))
         assertEquals("blue", closestTheme("#1E88E5"))
         assertEquals("green", closestTheme("#2E7D32"))
-        assertEquals("orange", closestTheme("#FB8C00"))
+        assertEquals("berry", closestTheme("#FB8C00"))
+        assertEquals("an Amber choice becomes Teal", "teal", closestTheme("orange"))
         assertEquals("indigo", closestTheme("#8E24AA"))
         assertEquals("green", closestTheme("green"))
         assertEquals("berry", closestTheme("nonsense"))

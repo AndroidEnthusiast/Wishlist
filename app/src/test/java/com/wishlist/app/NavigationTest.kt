@@ -114,7 +114,7 @@ class NavigationTest : NavigationBase() {
     @Test fun appSettingsBackToHome() {
         tabOn("Home")
         fromSheet("App settings")
-        shows("App settings"); shows("Change theme"); noBar()
+        shows("App settings"); shows("Backup"); noBar()
         phoneBack()
         tabOn("Home")
     }

@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
 /**
- * What you see and which notifications you get (owner, 2.101): App settings > "What you see" and "Notifications".
+ * What you see and which notifications you get (owner, 2.101): App settings > Display and Notifications (the price badge and descriptions are always shown since 18 November 2026).
  * For all your lists, only on this phone. Price drops and increases keep their own settings in [Repo]
  * (notifyDrops, notifyRises).
  *
@@ -16,8 +16,6 @@ import androidx.compose.runtime.setValue
 object Show {
     /** Key, default. Everything to see is on by default; birthdays are off (owner). */
     private val DEFAULTS = mapOf(
-        "show_badge" to true,    // the price change badge on a picture (−55% / +3%)
-        "show_desc" to true,     // the description on the large cards
         "show_summary" to true,  // the Wishes / Total value tiles at the top of a list
         "nt_bin" to true,        // a gift you reserved was moved to the bin
         "nt_gone" to true,       // a gift you reserved was taken off a list
