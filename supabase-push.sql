@@ -88,3 +88,17 @@ grant execute on function
   wl_chat_seen(text, text, text, bigint),
   wl_push_set(text, text, text)
 to anon;
+
+-- Version stamp (owner, 18 November 2026; docs/MAP.md "Server script versions"): records on the server which version
+-- of this script was run. Raise the number below with every change to this script: the daily check on GitHub
+-- (.github/workflows/import-check.yml) compares it with the server and opens an issue "Run supabase-push.sql" when it is behind.
+-- Only script names and numbers: nothing about people. Safe to run again.
+create table if not exists public.wl_versions (script text primary key, version int not null, run_at timestamptz not null default now());
+alter table public.wl_versions enable row level security;
+revoke all on public.wl_versions from anon;
+create or replace function public.wl_script_versions() returns jsonb
+  language sql stable security definer set search_path = public
+  as $$ select coalesce(jsonb_object_agg(script, version), '{}'::jsonb) from public.wl_versions $$;
+grant execute on function public.wl_script_versions() to anon;
+insert into public.wl_versions (script, version, run_at) values ('supabase-push.sql', 1, now())
+  on conflict (script) do update set version = excluded.version, run_at = now();

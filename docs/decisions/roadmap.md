@@ -187,3 +187,13 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
   together as 2.193). The `*Nav` objects are gone (`LocalGo`, `Places`).
 - **A bug found while building: ask first** (owner), then fix it once the owner says so. The first one: no message
   notification for the chat left open in Messages; fixed in 2.194 (owner: "I do want you to fix the bug").
+
+## The rebuild of review points 1 and 2 (owner, 18 November 2026)
+- Owner: fix the review's points, 1 (big files, screen state in shared objects) and 2 (no record of which server
+  scripts run) first. Point 2 first (small, separate): version stamps in every script and a daily check that opens a
+  GitHub issue (owner chose this over showing it in the app or keeping a list in the notes).
+- Point 1: **Home first**, then the other screens, **one screen per version**; the owner uses each for a day or two.
+  **Bug fixes only during the rebuild** (each rebuilt version looks exactly the same). Asked whether it makes building
+  faster: working on the app yes (smaller files, fewer side effects); GitHub's build time hardly (splitting into Gradle
+  modules would, a bigger project not chosen now).
+

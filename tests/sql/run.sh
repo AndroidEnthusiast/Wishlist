@@ -43,6 +43,7 @@ check() {
 }
 
 check "setup" quantity_test.sql
+check "setup shared" versions_test.sql
 check "setup shared" occasion_test.sql
 check "setup shared friends" friends_test.sql
 check "setup shared friends chat" chat_test.sql chat_photos_test.sql

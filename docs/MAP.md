@@ -118,6 +118,14 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 ## Web pages
 - `web/index.html` + `friends.js`: the friends' page and the invite page (styled with `edit.css` plus `wishlist.css`, same look as the editor and the app). `web/edit.html`, `edit.js`, `edit.css`: the browser editor (its Bin can only restore, by the owner's choice). `web/parse.js`: reads a product page. `web/occasion.js`: a list's occasion line (friends' page and editor). `web/reserve.js`: quantity labels and "How many will you buy?" (friends' page and editor). `web/i18n.js`: `T()` (English only) and the light/dark switch. `web/join/` and `web/list/`: link pages with their own preview pictures for invites and (older) friends' links of shared lists. `web/group.html` + `group.js` + `group.css` (+ `web/group/`, its link preview): a wishlist group for people without the app. `web/exchange.html` + `exchange.js` + `exchange.css` (+ `web/exchange/`, its link preview): a gift exchange for people without the app (organising is app-only). `web/together.js` (+ `web/emoji.js`, loaded only when the picker opens): reactions and "Is it still being bought?" on the friends' page, the group page and the editor (styles in `edit.css`).
 
+## Server script versions (owner, 18 November 2026)
+- Every `supabase-*.sql` ends with a version stamp: it records its name and number in the locked table `wl_versions`
+  (read only through `wl_script_versions()`: names and numbers, nothing about people). Raise the number with every
+  change to a script. `tests/sql/stamps.js` checks each script stamps itself once (in `run-all.sh`) and, with
+  `--server`, asks the live server read-only; `.github/workflows/server-check.yml` runs that daily and opens the issue
+  "Server scripts to run" (links, in the order to run) when the server is behind, and closes it when caught up.
+  `tests/sql/versions_test.sql` checks the table is locked.
+
 ## Server helpers
 - `supabase/functions/fetch-page/index.ts`: the helper that loads a shop page for the browser editor and the group page (the browser may not load other sites itself; it accepts a gift list's edit key or a group link). `supabase/functions/push/index.ts`: wakes a friend's phone for a new message, and (2.129) for an anonymous gift-exchange message (`{gx: id}`) (needs the secret `FCM_SERVICE_ACCOUNT`, Verify JWT off).
 
@@ -125,6 +133,8 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `tests/`: automated checks for everything under `web/` and the helper (see below); `tests/shared/same-answers.json` is answered by both the app and the web pages. `app/src/test/`: the app's own checks (JUnit).
 
 ## The notes themselves
+- "Put back the notes from before the tidy-up": MAP "Undoing the notes tidy-up" (commit `ef02546`).
+  (Moved here from CLAUDE.md on 18 November 2026 for its size limit.)
 - Moved from CLAUDE.md "Which doc for which task" (14 November 2026, to make room for the challenge rule):
 - **Texts:** `docs/COPY.md`. **Backups:** `docs/BACKUPS.md`.
 - `tests/notes/limits.sh`: the notes' size limits (`CLAUDE.md` "Keeping the notes small"); `.claude/settings.json` runs it as the session's stop hook (`--hook`: exit 2 keeps the session from finishing while a limit is passed or the notes are not pushed to `main`).

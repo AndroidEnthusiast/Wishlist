@@ -5,6 +5,10 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **The rebuild (owner, 18 November 2026; `docs/decisions/roadmap.md`, last section).** Point 2 done: version stamps in
+  every script + `server-check.yml`. First check the owner ran all 17 scripts once and the issue "Server scripts to run"
+  closed. Then point 1: Home (`Hub.kt`) split and its state out of the shared objects, looking exactly the same; one
+  screen per version, bug fixes only.
 - **2.231–2.232 (18 November 2026).** Home's numbers on a card; card buttons in one order (Reserve left, ⋮ last). **Next, owner's choice:** fix the review points, 1 and 2
   first (split the big files and move screen state out of the shared objects; a version record of the server scripts).
   Interview on the plan before starting (big build, one screen at a time).

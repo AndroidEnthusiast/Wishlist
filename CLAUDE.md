@@ -40,6 +40,7 @@ The rules for every session; details are in other docs, read only the part you n
   **App available for [download](https://github.com/AndroidEnthusiast/Wishlist/releases/download/latest/Wishlist.apk)**
 - Supabase scripts are run by the owner by hand: say so, give a direct GitHub link to each script in the order to run,
   and "run the script first, then install the new app". Never run SQL on the real server without asking.
+  A script change raises its stamp version (MAP "Server script versions").
 - Bump `versionName`/`versionCode` when app code changes, one bullet per version in `README.md`; never touch the
   signing key. Details: MAP "How it is built and published".
 
@@ -80,4 +81,3 @@ The rules for every session; details are in other docs, read only the part you n
   40,000 characters: split it or archive its old parts.
 - Never delete a rule or a decision: only move it, leave a pointer to where it went, and run
   `python3 tests/notes/moved.py <old commit>` to prove every removed line exists word for word elsewhere.
-- "Put back the notes from before the tidy-up": MAP "Undoing the notes tidy-up" (commit `ef02546`).
