@@ -126,6 +126,7 @@ async function attach(ctx) {
   await s.page.locator(".wlt-picker .wlt-e").click();
   await sleep(300);
   check("my reaction shows at once", (await scarf.locator(".wlt-chip.mine").innerText()).replace(/\s+/g, "") === "🎉1");
+  check("after reacting, + React hides", !(await scarf.locator(".wlt-add").isVisible()));
   const saved = rpc("wl_rx_get", { p_code: "ZQELSTW2", p_id: "", p_token: "", p_device: "" });
   check("saved with the name", saved.some(r => r.e === "🎉" && r.n === "Sam"), saved);
   // One per person: tapping Ben's 😍 replaces mine.
@@ -138,7 +139,10 @@ async function attach(ctx) {
   await s.page.waitForSelector(".wlt-box");
   check("who reacted", (await s.page.locator(".wlt-box .wlt-p").innerText()) === "Ben, You");
   await s.page.keyboard.press("Escape");
-  // Tap yours to take it away.
+  // Tap yours once: + React comes back (to pick another); tap yours again to take it away (owner, 18 November 2026).
+  await scarf.locator(".wlt-chip.mine").click();
+  check("tapping yours shows + React again", await scarf.locator(".wlt-add").isVisible());
+  check("…without removing yours", (await scarf.locator(".wlt-chip.mine").count()) === 1);
   await scarf.locator(".wlt-chip.mine").click();
   await sleep(300);
   check("tap yours to remove", (await scarf.locator(".wlt-chip").innerText()).replace(/\s+/g, "") === "😍1" && (await scarf.locator(".wlt-chip.mine").count()) === 0);

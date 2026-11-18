@@ -626,3 +626,9 @@ it; sizes deleted (`supabase-sizes-off.sql`). Interviewed on dropping collab wis
 2.221 every red action readable (danger buttons, scan check). Interviewed on GoWish/Giftful screenshots; plan approved
 (step 6 left). 2.222 centred chip text (measured from the font file), My own / With others. 2.223 full-width form
 sheet and list menu sheet. 2.224 settings sheet (card, tiles, rows). 2.225 five themes + Gen Z, Theme screen.
+
+### 18 November 2026: Import a list, step 1 (2.226)
+Interviewed (5 rounds) after Listful's Import sheet; decisions in `docs/decisions/import.md`. Built: + menu / empty
+Home / welcome / Share → Import sheet (site icons live, paste link or text), hidden read with the updatable reader
+`web/import/reader.js` (any-page reader), "Import this page" fallback, check screen, fill-in of photos and prices,
+real shop links, daily `import-check.yml` (opens an issue). Checks: `ImportTest`, `tests/import/test.js`.

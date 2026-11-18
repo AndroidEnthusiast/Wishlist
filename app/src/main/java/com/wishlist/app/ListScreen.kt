@@ -489,10 +489,13 @@ fun HomeScreen(
                                 }
                                 if (inShared) {
                                     // Reserving takes the place of "got it" on a shared list.
-                                    if (r == true) {
-                                        OutlinedButton(onClick = { Shared.reserve(w, false) }) { Text(tr("Unreserve")) }
-                                    } else if (r == null) {
-                                        Button(onClick = { Shared.reserve(w, true) }) { Text(tr("Reserve")) }
+                                    // A compact pill, in proportion to the card (owner, 18 November 2026).
+                                    CompositionLocalProvider(LocalCardButton provides true) {
+                                        if (r == true) {
+                                            OutlinedButton(onClick = { Shared.reserve(w, false) }) { Text(tr("Unreserve"), maxLines = 1) }
+                                        } else if (r == null) {
+                                            Button(onClick = { Shared.reserve(w, true) }) { Text(tr("Reserve"), maxLines = 1) }
+                                        }
                                     }
                                 }
                                 IconButton(onClick = { DeleteFlow.request(ctx, w) }) {

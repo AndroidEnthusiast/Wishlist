@@ -617,6 +617,7 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     NameGate.Host()
     DeleteHost(snack)
     MoveHost(snack)
+    AddToMineHost(snack)
     PrivateHost(snack)
     OwnedHost(snack)
     if (askBackground) BackgroundQuestion()

@@ -127,6 +127,12 @@ val Capitalised = androidx.compose.foundation.text.KeyboardOptions(
 val LocalInDialog = compositionLocalOf { false }
 
 /**
+ * True for Reserve / Unreserve on a wish card (owner, 18 November 2026: the regular size "barely feels proportional"):
+ * a compact pill, 36 dp to see, with room above and below so it is still 48 dp to tap.
+ */
+val LocalCardButton = compositionLocalOf { false }
+
+/**
  * Quiet's own dialogs (2.210): which button slot a button is in, "confirm" or "dismiss" (null: not in a dialog's
  * buttons). There the buttons are full width and stacked; the confirm one filled (the main action), the other plain.
  */
@@ -136,7 +142,9 @@ val LocalDialogSlot = compositionLocalOf<String?> { null }
 private class ButtonSize(val height: androidx.compose.ui.unit.Dp, val pad: PaddingValues, val depth: androidx.compose.ui.unit.Dp, val room: androidx.compose.ui.unit.Dp)
 
 @Composable
-private fun buttonSize(): ButtonSize = if (LocalInDialog.current)
+private fun buttonSize(): ButtonSize = if (LocalCardButton.current)
+    ButtonSize(36.dp, PaddingValues(horizontal = 12.dp, vertical = 6.dp), 3.dp, 6.dp)
+else if (LocalInDialog.current)
     ButtonSize(40.dp, PaddingValues(horizontal = 18.dp, vertical = 8.dp), 3.dp, 6.dp)
 // Quiet (2.207): 48 dp, the height of everything you tap.
 else ButtonSize(if (LocalLook.current.design == "quiet") 48.dp else 46.dp, PaddingValues(horizontal = 22.dp, vertical = 10.dp), 5.dp, 0.dp)

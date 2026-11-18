@@ -72,6 +72,9 @@ fun wishSheetRows(w: Wish, a: WishActions): List<String> = buildList {
     }
     if (a.onEdit != null) add("edit")
     add("share")
+    // Someone else's wish (a friend's, a group member's, a gift exchange's or a collab wishlist's): copy it into one of
+    // your own lists (owner, 18 November 2026).
+    if (a.shareAsIdea) add("addmine")
     if (a.onMove != null) add("move")
     if (a.own) { add("private"); add("have") }
     if (a.own && a.onHistory != null) add("history")
@@ -83,7 +86,7 @@ fun wishSheetRows(w: Wish, a: WishActions): List<String> = buildList {
  * The order inside each group stays [wishSheetRows]'s.
  */
 fun sheetGroups(rows: List<String>): List<List<String>> {
-    val doing = setOf("reserve", "unreserve", "edit", "share", "move")
+    val doing = setOf("reserve", "unreserve", "edit", "share", "addmine", "move")
     val switches = setOf("private", "have")
     return listOf(rows.filter { it in doing }, rows.filter { it in switches }, rows.filter { it !in doing && it !in switches })
         .filter { it.isNotEmpty() }
@@ -164,6 +167,7 @@ fun WishSheet(w: Wish, a: WishActions, onClose: () -> Unit) {
                 "edit" -> SheetRow({ Icon(AppIcons.Edit, null, tint = cs.onSurfaceVariant) }, tr("Edit"), then { a.onEdit?.invoke() })
                 "share" -> SheetRow({ Icon(AppIcons.Share, null, tint = cs.onSurfaceVariant) }, tr("Share"), then { shareItem(ctx, w, idea = a.shareAsIdea) })
                 "move" -> SheetRow({ Icon(AppIcons.Swap, null, tint = cs.onSurfaceVariant) }, tr("Move or copy…"), then { a.onMove?.invoke() })
+                "addmine" -> SheetRow({ Icon(AppIcons.Add, null, tint = cs.onSurfaceVariant) }, tr("Add to my wishlist"), then { AddToMine.ask(w) })
                 "private" -> SheetRow(
                     { Icon(PrivateIcon, null, tint = cs.onSurfaceVariant) }, tr("Private"),
                     keep("private") { a.everywhere?.setPrivate?.invoke(!w.priv) ?: togglePrivate(ctx, w) },

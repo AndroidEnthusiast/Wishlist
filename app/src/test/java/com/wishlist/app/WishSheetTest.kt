@@ -19,7 +19,7 @@ class WishSheetTest {
 
     @Test fun aCollabListHasReserveFirst() {
         val free = Reserving(null) {}
-        assertEquals(listOf("reserve", "edit", "share", "move"), wishSheetRows(w, WishActions(reserve = free, onEdit = none, onMove = none, shareAsIdea = true)))
+        assertEquals(listOf("reserve", "edit", "share", "addmine", "move"), wishSheetRows(w, WishActions(reserve = free, onEdit = none, onMove = none, shareAsIdea = true)))
         val mine = Reserving(true) {}
         assertEquals(listOf("unreserve", "edit", "share", "move"), wishSheetRows(w, WishActions(reserve = mine, onEdit = none, onMove = none)))
         // Reserved by someone else: nothing to reserve, the rest stays.
@@ -28,9 +28,9 @@ class WishSheetTest {
     }
 
     @Test fun aFriendsList() {
-        assertEquals(listOf("reserve", "share"), wishSheetRows(w, WishActions(reserve = Reserving(null) {}, shareAsIdea = true)))
+        assertEquals(listOf("reserve", "share", "addmine"), wishSheetRows(w, WishActions(reserve = Reserving(null) {}, shareAsIdea = true)))
         // Owned already: only Share.
-        assertEquals(listOf("share"), wishSheetRows(w, WishActions(shareAsIdea = true)))
+        assertEquals(listOf("share", "addmine"), wishSheetRows(w, WishActions(shareAsIdea = true)))
     }
 
     @Test fun reserveButtonOnTwoPerRow() {

@@ -1,5 +1,7 @@
 package com.wishlist.app
 
+import androidx.compose.runtime.CompositionLocalProvider
+
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -316,10 +318,13 @@ fun FriendScreen(
                                     }
                                     if (!w.got) {
                                         // "Unreserve" says exactly what it does (owner: "Undo" could be forgotten).
-                                        if (r == null) {
-                                            Button(onClick = { toggle(w, true) }) { Text(tr("Reserve")) }
-                                        } else if (r == true) {
-                                            OutlinedButton(onClick = { toggle(w, false) }) { Text(tr("Unreserve")) }
+                                        // A compact pill, in proportion to the card (owner, 18 November 2026).
+                                        CompositionLocalProvider(LocalCardButton provides true) {
+                                            if (r == null) {
+                                                Button(onClick = { toggle(w, true) }) { Text(tr("Reserve"), maxLines = 1) }
+                                            } else if (r == true) {
+                                                OutlinedButton(onClick = { toggle(w, false) }) { Text(tr("Unreserve"), maxLines = 1) }
+                                            }
                                         }
                                     }
                                 }

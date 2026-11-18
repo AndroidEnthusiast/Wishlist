@@ -64,7 +64,8 @@ import java.time.LocalTime
  *    givers). Never on your own list, and not in a gift exchange. The owner sees the reactions on their own list.
  *  - Any emoji: a picker with categories, "Recently used" and a search bar (the free Unicode emoji list with English
  *    names, assets/emoji.txt; credited in Licences). Shown as "😊 2"; yours is highlighted.
- *  - One reaction per person per wish: a new one replaces the old; tap yours to take it away. Long press shows who.
+ *  - One reaction per person per wish: a new one replaces the old. Once you reacted, "+ React" hides (owner, 18 November
+ *    2026); tapping yours brings it back, tapping yours again takes your reaction away. Long press shows who.
  *  - The owner gets one bundled notification a day at most, in the evening (around 19:00), with a switch in App
  *    settings > Notifications.
  */
@@ -269,9 +270,14 @@ fun ReactionBar(
         return
     }
     var picking by remember { mutableStateOf(false) }
+    // You react once per wish (owner, 18 November 2026): once you have, "+ React" hides to keep the card clean.
+    // Tapping your reaction brings it back ([again]) to pick another; tapping yours once more takes it away.
+    var again by remember(w.id) { mutableStateOf(false) }
+    val reacted = rx.any { it.mine }
     var who by remember { mutableStateOf<String?>(null) }
     var msg by remember { mutableStateOf<String?>(null) }
     fun react(e: String) {
+        again = false
         scope.launch { msg = Reactions.set(ctx, deco.code, w.id, e) }
     }
     val byEmoji = rx.groupBy { it.emoji }.entries.sortedByDescending { it.value.size }
@@ -290,7 +296,11 @@ fun ReactionBar(
                     .background(if (mine) look.accent.copy(alpha = 0.18f) else ink.copy(alpha = 0.07f))
                     .border(1.dp, if (mine) look.textAccent else ink.copy(alpha = 0.12f), CircleShape)
                     .combinedClickable(
-                        onClick = { if (deco.canReact) react(if (mine) "" else e) else who = e },
+                        onClick = {
+                            if (!deco.canReact) who = e
+                            else if (mine && !again) again = true
+                            else react(if (mine) "" else e)
+                        },
                         onLongClick = { who = e }
                     )
                     .padding(horizontal = pad),
@@ -309,7 +319,7 @@ fun ReactionBar(
         ) {
             Text("+$hidden", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = ink, maxLines = 1)
         }
-        if (deco.canReact) Row(
+        if (deco.canReact && (!reacted || again)) Row(
             Modifier.minimumInteractiveComponentSize().heightIn(min = CHIP_HEIGHT).clip(CircleShape).border(1.dp, ink.copy(alpha = 0.25f), CircleShape)
                 .clickable(onClickLabel = tr("React")) { picking = true }.padding(horizontal = if (compact) 10.dp else 12.dp),
             verticalAlignment = Alignment.CenterVertically

@@ -240,12 +240,15 @@ fun CompactCard(
         }
         // Reserve as a button on the card, as in the other views (owner, 12 November 2026: it was only in the ⋮ here).
         // Reserved by someone else: nothing (the badge says so); reserved by you: Unreserve.
-        if (!inert) when (reserveButton(w, reserve)) {
-            "reserve" -> Button(onClick = { reserve?.set?.invoke(true) }, modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, bottom = 8.dp)) {
-                Text(tr("Reserve"), maxLines = 1)
-            }
-            "unreserve" -> OutlinedButton(onClick = { reserve?.set?.invoke(false) }, modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, bottom = 8.dp)) {
-                Text(tr("Unreserve"), maxLines = 1)
+        // A compact pill (owner, 18 November 2026: the regular size was out of proportion with the card).
+        if (!inert) CompositionLocalProvider(LocalCardButton provides true) {
+            when (reserveButton(w, reserve)) {
+                "reserve" -> Button(onClick = { reserve?.set?.invoke(true) }, modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp)) {
+                    Text(tr("Reserve"), maxLines = 1)
+                }
+                "unreserve" -> OutlinedButton(onClick = { reserve?.set?.invoke(false) }, modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp)) {
+                    Text(tr("Unreserve"), maxLines = 1)
+                }
             }
         }
         // Reactions under the name, as wide as the card, sized for it (owner, 7 November 2026): 2 at most, then "+N",

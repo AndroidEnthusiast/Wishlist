@@ -33,7 +33,7 @@ not chosen" in `ideas.md` (the owner brought it up again).
   Not chosen: undo the whole import, link filled in from the clipboard, fetch new wishes again, a whole profile at once.
 - After importing from a site: "Gifts reserved on GoWish don't come along. Send your friends your new list so nobody
   buys the same gift twice." with a Share button.
-- Entry points: the + menu ("Import a list"), the empty Home and the welcome, Share from another app.
+- Entry points: the + menu ("Import a list", last, under New gift exchange: owner, 18 November 2026), the empty Home and the welcome, Share from another app.
 - App only for now (the browser can't read these sites; the web pages get nothing).
 - The Import sheet shows each site's icon live from Google's icon service, like Discover's shop tiles (owner liked
   Listful's logos; copying logos breaks Rule 7 and risks a Google Play refusal).

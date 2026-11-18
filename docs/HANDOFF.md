@@ -5,6 +5,8 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.229 (18 November 2026, night), read first.** Compact Reserve pills, Add to my wishlist, one reaction, Import last
+  in the + menu (`docs/decisions/people.md`, last section). Ask how they feel on the phone.
 - **2.228 (18 November 2026, evening), read first.** Themes now a neutral matched grey with colour on the elements,
   Black mode, Teal, a real Gen Z block; App settings redone as six rows with pages (decisions: `look.md` and
   `screens.md`, last sections). Ask how both feel on the phone; the 2.227 entry below is superseded by this one.
@@ -60,6 +62,10 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 18 November 2026, night: friends' wishes (2.229)
+Reserve pills compact (`LocalCardButton`, 36 dp); "Add to my wishlist" in the ⋮ of others' wishes (list picker, Undo,
+`AddToMine.kt`); "+ React" hides once you reacted (app and web); Import last in the + menu. Checks: `FriendWishesTest`.
+
 ### 18 November 2026, evening: calm themes, App settings redone (2.228)
 Owner: 2.227's deep tint looked brown/green; now a grey backdrop with a 3% hint, colour on the elements, Black mode,
 Teal for Amber, Gen Z block in its own look, Theme as its own route (no jump). App settings: six rows opening pages,
@@ -68,9 +74,3 @@ two switches and the theme block removed with their code. Checks: `AppSettingsTe
 ### 18 November 2026, later: deeper themes (2.227)
 Owner: themes felt flat, colours didn't blend. Cause: a 7% tint plus untinted parts (fixed grey-violet sheet rows, grey
 tiles, plain grey text). Now one hue per theme in steps of lightness, pastel in light; theme blocks: colour, name, a hill.
-
-### 18 November 2026: Import a list, step 1 (2.226)
-Interviewed (5 rounds) after Listful's Import sheet; decisions in `docs/decisions/import.md`. Built: + menu / empty
-Home / welcome / Share → Import sheet (site icons live, paste link or text), hidden read with the updatable reader
-`web/import/reader.js` (any-page reader), "Import this page" fallback, check screen, fill-in of photos and prices,
-real shop links, daily `import-check.yml` (opens an issue). Checks: `ImportTest`, `tests/import/test.js`.
