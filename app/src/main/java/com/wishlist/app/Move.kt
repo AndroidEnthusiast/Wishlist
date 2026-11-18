@@ -331,7 +331,7 @@ fun Selectable(selecting: Boolean, on: Boolean, onToggle: () -> Unit, content: @
                     Modifier.align(Alignment.TopStart).padding(8.dp).size(26.dp).clip(CircleShape)
                         // Quiet: the empty circle is white on the light photo surface, in light and dark alike.
                         .background(if (on) cs.primary else if (quiet) Color.White.copy(alpha = 0.92f) else cs.surface.copy(alpha = 0.9f))
-                        .border(2.dp, if (on) cs.primary else if (quiet) Color(0xFF8C8590) else cs.outline, CircleShape),
+                        .border(2.dp, if (on) cs.primary else cs.outline, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     if (on) Icon(AppIcons.Check, null, tint = cs.onPrimary, modifier = Modifier.size(18.dp))

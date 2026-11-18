@@ -220,3 +220,14 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
 - Shared ("With others") lists: "Hide reservations" for the collaborators, on by default (owner); co-owners as such
   were not wanted separately ("Not now"), this setting covers the couple's case.
 - Step 6 (hide reservations on shared lists) left for now (owner, 17 November 2026); also in `docs/TODO.md`.
+
+## Themes deeper, theme blocks minimal (owner, 18 November 2026, after comparing with Giftful; 2.227)
+- 2.225's gentle tint felt flat and muddy ("the colours don't blend"): parts that weren't tinted (a sheet's grouped rows
+  were a fixed grey-violet, the settings tiles grey, the grey text plain grey) clashed with the tinted page. Owner chose:
+  **deep, like Giftful**: one hue per theme for everything, only its lightness steps up (page → cards → panels →
+  groups in panels), grey text and lines tinted too; **light mode a soft pastel** of the same hue with near-white cards.
+  Every text still at least 4.5 : 1 (`ThemesTest`).
+- **Theme blocks:** as minimal as Giftful's but our own shape (owner): the theme's page colour, its name in its own
+  colour, one gentle hill of its colour along the bottom (not Giftful's wave), a ring and tick when chosen. No mini
+  wish card. The owner chose to skip a preview ("just build it").
+

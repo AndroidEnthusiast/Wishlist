@@ -59,6 +59,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
@@ -143,44 +144,42 @@ fun ThemerScreen(onBack: () -> Unit) {
     }
 }
 
-/** One theme: a small page in its colours with its name, a card and a button in it; a tick when chosen. */
+/**
+ * One theme (owner, 18 November 2026: "as slick and minimalistic as Giftful's", our own shape): the theme's page
+ * colour, its name in its own colour, and one gentle hill of its colour along the bottom; a tick and a ring when chosen.
+ */
 @Composable
 private fun ThemeCard(name: String, sample: Look, chosen: Boolean, modifier: Modifier, onClick: () -> Unit) {
-    val ring = MaterialTheme.colorScheme.primary
-    val shape = RoundedCornerShape(22.dp)
+    val shape = if (sample.design == "quiet") Squircle(22.dp) else RoundedCornerShape(22.dp)
+    val ring = sample.accent
     Box(
-        modifier.height(132.dp).clip(shape)
-            .border(if (chosen) 3.dp else 1.dp, if (chosen) ring else MaterialTheme.colorScheme.outlineVariant, shape)
+        modifier.height(124.dp).clip(shape).background(sample.page)
+            .border(if (chosen) 3.dp else 1.dp, if (chosen) ring else sample.line, shape)
             .clickable(onClickLabel = name, onClick = onClick)
             .semantics { selected = chosen }
+            .drawBehind {
+                // One hill, highest a little right of the middle, its foot lower on the left than on the right.
+                val w = size.width; val h = size.height
+                val hill = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(0f, h * 0.80f)
+                    cubicTo(w * 0.28f, h * 0.80f, w * 0.42f, h * 0.50f, w * 0.66f, h * 0.50f)
+                    cubicTo(w * 0.84f, h * 0.50f, w * 0.92f, h * 0.62f, w, h * 0.66f)
+                    lineTo(w, h); lineTo(0f, h); close()
+                }
+                drawPath(hill, sample.accent)
+            }
     ) {
         LookTheme(sample) {
-            val cs = MaterialTheme.colorScheme
-            Column(Modifier.fillMaxSize().background(sample.page).padding(14.dp)) {
-                Text(
-                    name, style = MaterialTheme.typography.titleMedium, color = cs.primary,
-                    maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(end = 28.dp)
-                )
-                Spacer(Modifier.weight(1f))
-                // A wish card in this theme: a picture, two lines and its button.
-                Row(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(sample.card).padding(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(Modifier.size(30.dp).clip(RoundedCornerShape(8.dp)).background(sample.pictureBg(1L, true)))
-                    Column(Modifier.weight(1f).padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Box(Modifier.fillMaxWidth(0.8f).height(6.dp).clip(CircleShape).background(cs.onSurface.copy(alpha = 0.7f)))
-                        Box(Modifier.fillMaxWidth(0.5f).height(6.dp).clip(CircleShape).background(cs.onSurfaceVariant.copy(alpha = 0.6f)))
-                    }
-                    Box(Modifier.width(26.dp).height(14.dp).clip(CircleShape).background(sample.accent))
-                }
-            }
+            Text(
+                name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary,
+                maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                modifier = Modifier.padding(start = 16.dp, top = 14.dp, end = 44.dp)
+            )
         }
         if (chosen) Box(
             Modifier.align(Alignment.TopEnd).padding(10.dp).size(26.dp).clip(CircleShape).background(ring),
             contentAlignment = Alignment.Center
-        ) { Icon(AppIcons.Check, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp)) }
+        ) { Icon(AppIcons.Check, null, tint = sample.onAccent, modifier = Modifier.size(16.dp)) }
     }
 }
 

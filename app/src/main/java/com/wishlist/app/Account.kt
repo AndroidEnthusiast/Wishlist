@@ -49,7 +49,8 @@ fun AccountSheet(
         try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName.orEmpty() } catch (e: Exception) { "" }
     }
     // The tiles one clear step lighter (dark) or darker (light) than the sheet they sit on.
-    val tile = androidx.compose.ui.graphics.lerp(sheetColor(look, cs.surface), cs.onSurface, if (look.dark) 0.08f else 0.05f)
+    // The theme's own colour a step up from the sheet (owner, 18 November 2026: no plain grey tiles on a tinted theme).
+    val tile = if (look.design == "quiet") look.groupFill() else androidx.compose.ui.graphics.lerp(sheetColor(look, cs.surface), cs.onSurface, 0.08f)
     val shape = if (look.design == "quiet") Squircle(20.dp) else RoundedCornerShape(16.dp)
     FormSheetHost(onClose) {
         val host = LocalFormHost.current!!

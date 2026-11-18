@@ -5,6 +5,9 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.227 (18 November 2026, later), read first.** Themes made deep (one hue everywhere, light = pastel) and theme
+  blocks minimal (`docs/decisions/look.md`, last section). Ask how they feel on the phone in each theme, light and
+  dark (colours on a real screen can't be judged here). Then Import step 2 below.
 - **2.226 (18 November 2026), read first.** Import step 1 is built (`docs/decisions/import.md`). Ask how it feels on
   the phone (paste a GoWish/Giftful/Amazon link, share one from their app, text from notes) and whether the owner
   made the six PUBLIC test lists yet (TODO, "Import, step 2"). With the links: fill `tests/import/lists.json`, see the
@@ -54,6 +57,10 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 18 November 2026, later: deeper themes (2.227)
+Owner: themes felt flat, colours didn't blend. Cause: a 7% tint plus untinted parts (fixed grey-violet sheet rows, grey
+tiles, plain grey text). Now one hue per theme in steps of lightness, pastel in light; theme blocks: colour, name, a hill.
+
 ### 18 November 2026: Import a list, step 1 (2.226)
 Interviewed (5 rounds) after Listful's Import sheet; decisions in `docs/decisions/import.md`. Built: + menu / empty
 Home / welcome / Share → Import sheet (site icons live, paste link or text), hidden read with the updatable reader
@@ -64,10 +71,3 @@ real shop links, daily `import-check.yml` (opens an issue). Checks: `ImportTest`
 2.221 every red action readable (danger buttons, scan check). Interviewed on GoWish/Giftful screenshots; plan approved
 (step 6 left). 2.222 centred chip text (measured from the font file), My own / With others. 2.223 full-width form
 sheet and list menu sheet. 2.224 settings sheet (card, tiles, rows). 2.225 five themes + Gen Z, Theme screen.
-
-### 17 November 2026: readable dialog buttons, About me, sizes removed (2.219)
-Buttons in a dialog's text took the dialog's grey (Share: "Send invite", "Copy"): every button keeps its own colour now.
-Owner: no chips under a person, only "About me" (100 letters, was "I like…"); birthday only on a friend's page near
-it; sizes deleted (`supabase-sizes-off.sql`). Interviewed on dropping collab wishlists: merge in the menus, with
-"Who is it for?" to protect the surprise; built in 2.220 ("collab" no longer said). Checks: `DialogButtonInkTest`,
-`aboutMeInsteadOfChips`, `sizes_off_test.sql`, `OneNewWishlistTest`.

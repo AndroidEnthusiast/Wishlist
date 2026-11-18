@@ -614,3 +614,10 @@ every view, profile picture without ring. Each fix has a check that fails withou
 no bounce going back (Moving had a size animation). Interviewed on solo use: sold out alerts and screenshot to wish next.
 2.215: Shopify pictures given as http:// (Baracuta) load over https (`secureImage`, app and web).
 2.216: wish form trimmed, Quiet field text full ink. 2.217: friend page person first, 2-photo collages, failed pictures, card ✕. 2.218: Home = your profile, + menu, pop-ups.
+
+### 17 November 2026: readable dialog buttons, About me, sizes removed (2.219)
+Buttons in a dialog's text took the dialog's grey (Share: "Send invite", "Copy"): every button keeps its own colour now.
+Owner: no chips under a person, only "About me" (100 letters, was "I like…"); birthday only on a friend's page near
+it; sizes deleted (`supabase-sizes-off.sql`). Interviewed on dropping collab wishlists: merge in the menus, with
+"Who is it for?" to protect the surprise; built in 2.220 ("collab" no longer said). Checks: `DialogButtonInkTest`,
+`aboutMeInsteadOfChips`, `sizes_off_test.sql`, `OneNewWishlistTest`.

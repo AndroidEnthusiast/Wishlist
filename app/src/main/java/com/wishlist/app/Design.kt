@@ -166,6 +166,18 @@ class Look(
 val LocalLook = staticCompositionLocalOf { lookFor("quiet", "blue", "light") }
 
 private fun c(v: Long) = Color(v)
+
+/** The hue of a colour (0–360°): the one colour a theme is built from. */
+internal fun hueOf(col: Color): Float {
+    val r = col.red; val g = col.green; val b = col.blue
+    val max = maxOf(r, g, b); val min = minOf(r, g, b); val d = max - min
+    if (d < 0.0001f) return 0f
+    val hh = when (max) { r -> ((g - b) / d) % 6f; g -> (b - r) / d + 2f; else -> (r - g) / d + 4f } * 60f
+    return if (hh < 0) hh + 360f else hh
+}
+
+/** A group of rows inside a panel (a sheet's menu): a step lighter than the panel in the theme's own colour. */
+fun Look.groupFill(): Color = if (dark) lerp(raised, scheme.onSurface, 0.07f) else page
 private fun mix(a: Color, b: Color, t: Float) = lerp(a, b, t)
 private fun pick(id: Long, n: Int) = Math.floorMod(id, n.toLong()).toInt()
 /** Dark ink on light colours, white on dark ones. */
@@ -253,25 +265,30 @@ fun lookFor(style: String, accentKey: String, mode: String): Look {
             val onQ = bestInk(a)
             // Warm neutrals (owner, 15 November 2026, docs/styles/identity.md): a warm off-white page and a warm
             // charcoal instead of the phone-settings grey and pure black.
-            // Each theme tints the page, cards and panels gently (owner, 17 November 2026, like Giftful's themes).
-            val bg = if (dark) mix(QuietColours.pageDark, a, 0.07f) else mix(QuietColours.pageLight, a, 0.06f)
+            // Each theme colours the whole app deeply (owner, 18 November 2026: the gentle tint of 17 November felt flat
+            // and muddy, "the colours don't blend"): ONE hue for everything, only its lightness steps up from the page
+            // to the cards to what floats (panels, menus) to the groups inside them, the grey text tinted too. Light
+            // mode is a soft pastel of the same hue with near-white cards. Every text stays at least 4.5 : 1 (ThemesTest).
+            val h = hueOf(c(ac.light))
+            fun t(sat: Float, light: Float) = Color.hsl(h, sat, light)
+            val bg = if (dark) t(0.50f, 0.065f) else t(0.60f, 0.955f)
             // Your colour as text and lines (text buttons, links, chosen tabs): in light the same colour, darkened just
-            // enough to read at 4.5 : 1 on the grey page (green, orange and pink were too light, found 14 November
+            // enough to read at 4.5 : 1 on the page (green, orange and pink were too light, found 14 November
             // 2026). Filled buttons keep the colour itself ([Look.accent]).
-            val inkText = if (dark) c(0xFFF6F3F0) else c(0xFF17141A)
+            val inkText = if (dark) t(0.30f, 0.965f) else t(0.30f, 0.09f)
             val readable = (0..20).map { mix(a, inkText, it / 20f) }.first { col ->
                 (maxOf(col.luminance(), bg.luminance()) + 0.05f) / (minOf(col.luminance(), bg.luminance()) + 0.05f) >= 4.6f
             }
-            val surface = if (dark) mix(QuietColours.cardDark, a, 0.12f) else white
-            val raised = if (dark) mix(QuietColours.raisedDark, a, 0.14f) else white
-            val text = if (dark) c(0xFFF6F3F0) else c(0xFF17141A)
-            val muted = if (dark) c(0xFFA7A1A9) else c(0xFF6B6570)
-            val hair = if (dark) raised else mix(c(0xFFE9E4DE), a, 0.12f)
+            val surface = if (dark) t(0.44f, 0.13f) else t(0.65f, 0.99f)
+            val raised = if (dark) t(0.40f, 0.175f) else white
+            val text = inkText
+            val muted = if (dark) t(0.20f, 0.74f) else t(0.14f, 0.36f)
+            val hair = if (dark) t(0.28f, 0.24f) else t(0.35f, 0.885f)
             Look(
                 "quiet", dark,
                 // The outline (fields, tick boxes) at least 3 : 1 on the cards, so they can be found (13 November 2026).
                 scheme(dark, readable, bestInk(readable), mix(a, surface, if (dark) 0.78f else 0.88f), mix(a, text, if (dark) 0.25f else 0.35f), bg, surface, text, muted,
-                    if (dark) c(0xFF847D88) else c(0xFF8C8590), hair,
+                    if (dark) t(0.14f, 0.56f) else t(0.12f, 0.54f), hair,
                     // A real red for Delete and errors (owner, 17 November 2026: Material's red was pink), 4.5 : 1.
                     error = if (dark) c(0xFFFF6B5E) else c(0xFFC62828)),
                 listOf(surface), listOf(if (dark) c(0xFFECE8E4) else mix(c(0xFFF4F1ED), a, 0.10f)), hair,

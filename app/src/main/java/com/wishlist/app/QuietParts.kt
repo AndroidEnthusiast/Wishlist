@@ -53,7 +53,7 @@ fun QuietSwitch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifie
         if (off) tween(0) else spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMedium), label = "knob"
     )
     val track by animateColorAsState(
-        if (checked) look.accent else if (look.dark) Color(0xFF4D4650) else Color(0xFFE6E0D9),
+        if (checked) look.accent else look.line,
         if (off) tween(0) else tween(180), label = "track"
     )
     val tap = if (onCheckedChange != null) Modifier.toggleable(checked, enabled = enabled, role = Role.Switch, onValueChange = onCheckedChange)

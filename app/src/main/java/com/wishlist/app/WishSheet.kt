@@ -243,7 +243,7 @@ val LocalInSheetGroup = androidx.compose.runtime.compositionLocalOf { false }
 fun SheetGroup(rows: List<@Composable () -> Unit>) {
     val look = LocalLook.current
     if (look.design != "quiet") { rows.forEach { it() }; return }
-    val bg = if (look.dark) Color(0xFF353038) else look.page
+    val bg = look.groupFill()
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp).clip(Squircle(18.dp)).background(bg)) {
         androidx.compose.runtime.CompositionLocalProvider(LocalInSheetGroup provides true) {
             rows.forEachIndexed { i, row ->
