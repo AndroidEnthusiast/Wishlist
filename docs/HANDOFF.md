@@ -5,6 +5,9 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.231 (18 November 2026).** Home's numbers on a card. **Next, owner's choice:** fix the review points, 1 and 2
+  first (split the big files and move screen state out of the shared objects; a version record of the server scripts).
+  Interview on the plan before starting (big build, one screen at a time).
 - **2.230 (18 November 2026, late night), read first.** Profile as rows, Home blocks + My wishlists | Shared swipe,
   AliExpress shares open Add a wish (`docs/decisions/settings-profile.md`, last section). Ask how they feel. Open: the
   AliExpress photo shows its logo; ask the owner for the page file ("Price is wrong?" on that wish's price page).

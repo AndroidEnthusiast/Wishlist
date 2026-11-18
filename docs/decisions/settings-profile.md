@@ -34,3 +34,5 @@ Moved here from `screens.md` on 18 November 2026 (its size limit); newest at the
   Add a wish with only the link, never Import. Import is for list links, two or more links, or lines without links.
 - **AliExpress shows its logo instead of the photo:** not fixed yet; Claude can't open AliExpress from its computer and
   the owner declined (the tool was refused) to look through GitHub's. The owner sends the page from "Price is wrong?".
+- **The three numbers on a card** (owner, 18 November 2026, 2.231: "it looks too flat"): the style's own card behind
+  them (Gen Z chaos: white with its thick edge and shadow, as it had before).

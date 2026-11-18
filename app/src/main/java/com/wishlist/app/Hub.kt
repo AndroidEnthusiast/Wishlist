@@ -1083,11 +1083,13 @@ private fun HomeHero(onProfile: () -> Unit) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.clip(CircleShape).clickable(onClickLabel = tr("Profile"), onClick = onProfile)) { Avatar(Friends.myPhoto, name, 88.dp) }
+            // On a card in the style's own look (owner, 18 November 2026: "it looks too flat"; Gen Z chaos had a white one).
             Row(
-                Modifier.weight(1f).padding(start = 12.dp).height(androidx.compose.foundation.layout.IntrinsicSize.Min),
+                Modifier.weight(1f).padding(start = 12.dp).lookCard(look, 5L, look.cardShape(5L, small = true))
+                    .height(androidx.compose.foundation.layout.IntrinsicSize.Min).padding(horizontal = 4.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val line = cs.outlineVariant
+                val line = look.cardMuted(5L).copy(alpha = 0.3f)
                 HomeStat(all.size.toString(), if (all.size == 1) tr("Wish") else tr("Wishes"), Modifier.weight(1f)) { places.homePage = "wishes" }
                 Box(Modifier.width(1.dp).fillMaxHeight(0.6f).background(line))
                 HomeStat(mine.size.toString(), if (mine.size == 1) tr("Wishlist") else tr("Wishlists"), Modifier.weight(1f)) { places.homePage = "lists" }
@@ -1117,7 +1119,8 @@ private fun HomeStat(value: String, label: String, modifier: Modifier, onClick: 
             .padding(horizontal = 2.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        FitText(value, MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontFamily = look.display), MaterialTheme.colorScheme.onBackground)
-        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        // The card's own ink (dark on the bright cards of Gen Z chaos).
+        FitText(value, MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontFamily = look.display), look.cardInk(5L))
+        Text(label, style = MaterialTheme.typography.bodySmall, color = look.cardMuted(5L), maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
