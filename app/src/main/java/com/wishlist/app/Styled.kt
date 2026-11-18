@@ -143,7 +143,7 @@ private class ButtonSize(val height: androidx.compose.ui.unit.Dp, val pad: Paddi
 
 @Composable
 private fun buttonSize(): ButtonSize = if (LocalCardButton.current)
-    ButtonSize(36.dp, PaddingValues(horizontal = 12.dp, vertical = 6.dp), 3.dp, 6.dp)
+    ButtonSize(36.dp, PaddingValues(horizontal = 16.dp, vertical = 6.dp), 3.dp, 6.dp)
 else if (LocalInDialog.current)
     ButtonSize(40.dp, PaddingValues(horizontal = 18.dp, vertical = 8.dp), 3.dp, 6.dp)
 // Quiet (2.207): 48 dp, the height of everything you tap.

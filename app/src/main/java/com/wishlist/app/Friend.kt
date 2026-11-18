@@ -1,5 +1,7 @@
 package com.wishlist.app
 
+import androidx.compose.foundation.layout.size
+
 import androidx.compose.runtime.CompositionLocalProvider
 
 import androidx.compose.ui.draw.clip
@@ -305,27 +307,29 @@ fun FriendScreen(
                                 val r = res[w.id]
                                 val label = if (w.got) tr("Owned") else reserveLabel(f.code, w, r)
                                     ?: if (overBudget?.invoke(w) == true) tr("Over budget") else null
+                                val ico = cardIcon(Repo.view)
                                 val actions: @Composable RowScope.() -> Unit = {
-                                    // The wish's ⋮ sheet, as on every list (WishSheet.kt, 12 November 2026): Reserve and
-                                    // Share this gift idea (its shop link, owner 7 November 2026).
-                                    WishMoreButton(
-                                        w, LocalLook.current.cardMuted(w.id), 24.dp,
-                                        WishActions(reserve = if (w.got) null else Reserving(r, label) { on -> toggle(w, on) }, shareAsIdea = true)
-                                    )
-                                    // Share as its own button too (owner, 12 November 2026).
-                                    IconButton(onClick = { shareItem(ctx, w, idea = true) }) {
-                                        Icon(AppIcons.CardShare, tr("Share"), tint = LocalLook.current.cardMuted(w.id))
-                                    }
-                                    if (!w.got) {
+                                    // Reserve left, share, then the ⋮ last (owner, 18 November 2026; CardButtons).
+                                    CardButtons(
+                                        spread = Repo.view == "rows",
                                         // "Unreserve" says exactly what it does (owner: "Undo" could be forgotten).
-                                        // A compact pill, in proportion to the card (owner, 18 November 2026).
-                                        CompositionLocalProvider(LocalCardButton provides true) {
-                                            if (r == null) {
-                                                Button(onClick = { toggle(w, true) }) { Text(tr("Reserve"), maxLines = 1) }
-                                            } else if (r == true) {
-                                                OutlinedButton(onClick = { toggle(w, false) }) { Text(tr("Unreserve"), maxLines = 1) }
+                                        reserve = if (w.got || r == false) null else ({
+                                            if (r == true) OutlinedButton(onClick = { toggle(w, false) }) { Text(tr("Unreserve"), maxLines = 1) }
+                                            else Button(onClick = { toggle(w, true) }) { Text(tr("Reserve"), maxLines = 1) }
+                                        }),
+                                        icons = {
+                                            // Share as its own button too (owner, 12 November 2026).
+                                            IconButton(onClick = { shareItem(ctx, w, idea = true) }) {
+                                                Icon(AppIcons.CardShare, tr("Share"), tint = LocalLook.current.cardMuted(w.id), modifier = Modifier.size(ico))
                                             }
                                         }
+                                    ) {
+                                        // The wish's ⋮ sheet, as on every list (WishSheet.kt, 12 November 2026): Reserve and
+                                        // Share this gift idea (its shop link, owner 7 November 2026).
+                                        WishMoreButton(
+                                            w, LocalLook.current.cardMuted(w.id), ico,
+                                            WishActions(reserve = if (w.got) null else Reserving(r, label) { on -> toggle(w, on) }, shareAsIdea = true)
+                                        )
                                     }
                                 }
                                 GlowBox(w.id, small = Repo.view == "grid") {

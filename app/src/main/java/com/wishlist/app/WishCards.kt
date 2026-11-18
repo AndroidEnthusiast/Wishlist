@@ -47,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.ui.unit.sp
 
 // A wish on a list: the three card styles (Rows, Two per row, Large), its price line and labels. Moved out of
@@ -257,6 +258,25 @@ fun CompactCard(
         }
     }
 }
+
+/**
+ * The buttons of a wish card, the same on every list (owner, 18 November 2026: "it looks sloppy"): Reserve (or
+ * Unreserve) first, at the left in Rows ([spread]) or right after the price on a large card; then the icons (share,
+ * bin) and the ⋮ always last, at the right edge, as in Two per row. All icons one size ([cardIcon]).
+ */
+@Composable
+fun RowScope.CardButtons(spread: Boolean, reserve: (@Composable () -> Unit)?, icons: @Composable () -> Unit, more: @Composable () -> Unit) {
+    if (reserve != null) Box(Modifier.padding(start = if (spread) 0.dp else 8.dp)) {
+        CompositionLocalProvider(LocalCardButton provides true) { reserve() }
+    }
+    if (spread && reserve != null) Spacer(Modifier.weight(1f))
+    icons()
+    more()
+}
+
+/** The one size of the icons on a wish card: 20 dp in Quiet and in Rows, 24 dp on the large cards of other styles. */
+@Composable
+fun cardIcon(view: String): androidx.compose.ui.unit.Dp = if (view == "rows" || LocalLook.current.design == "quiet") 20.dp else 24.dp
 
 /** One wish. [actions] are the buttons at the bottom right, which differ for the owner and for friends. */
 @OptIn(ExperimentalFoundationApi::class)

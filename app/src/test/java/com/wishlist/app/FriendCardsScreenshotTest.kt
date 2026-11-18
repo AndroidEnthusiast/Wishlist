@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
@@ -39,11 +40,16 @@ class FriendCardsScreenshotTest {
                         Column(Modifier.fillMaxWidth().lookPage().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             ws.forEachIndexed { i, w ->
                                 RowCard(w, badge = if (i == 2) "Reserved by you" else null) {
-                                    WishMoreButton(w, LocalLook.current.cardMuted(w.id), 24.dp, WishActions(reserve = Reserving(if (i == 2) true else null) {}, shareAsIdea = true))
-                                    IconButton(onClick = {}) { Icon(AppIcons.CardShare, null) }
-                                    CompositionLocalProvider(LocalCardButton provides true) {
-                                        if (i == 2) OutlinedButton(onClick = {}) { Text("Unreserve", maxLines = 1) } else Button(onClick = {}) { Text("Reserve", maxLines = 1) }
-                                    }
+                                    val ico = cardIcon("rows")
+                                    CardButtons(
+                                        spread = true,
+                                        reserve = { if (i == 2) OutlinedButton(onClick = {}) { Text("Unreserve", maxLines = 1) } else Button(onClick = {}) { Text("Reserve", maxLines = 1) } },
+                                        icons = {
+                                            // The second card is a shared wishlist's: no share icon next to Reserve (it is in the ⋮).
+                                            if (i != 1) IconButton(onClick = {}) { Icon(AppIcons.CardShare, null, modifier = androidx.compose.ui.Modifier.size(ico)) }
+                                            if (i == 1) IconButton(onClick = {}) { Icon(AppIcons.CardDelete, null, modifier = androidx.compose.ui.Modifier.size(ico)) }
+                                        }
+                                    ) { WishMoreButton(w, LocalLook.current.cardMuted(w.id), ico, WishActions(reserve = Reserving(if (i == 2) true else null) {}, shareAsIdea = true)) }
                                 }
                             }
                         }

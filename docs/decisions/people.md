@@ -162,13 +162,5 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
 - The private note: a small row under the lists ("Add a private note" or the note in 2 lines), written in a sheet.
 - Not chosen from the reviews: price comparison, bulk import, adding on the web, recommended products, public following.
 
-## Someone else's wishes: compact Reserve, Add to my wishlist, one reaction (owner, 18 November 2026; 2.229)
-- **Reserve / Unreserve on a card is a compact pill** (owner: the regular size "barely feels proportional"): 36 dp to
-  see, still 48 dp to tap (`LocalCardButton`), on friends', groups', gift exchanges' and collab wishlists' cards.
-- **"Add to my wishlist"** in the ⋮ of someone else's wish (friends' wishlists, wishlist groups, collab wishlists, gift
-  exchanges): a small list picker, copied straight in, "Added to …" with Undo (owner chose this over the filled-in
-  form). Only link, name, description, photo (online only), price and currency come along; never their note, size,
-  quantity, Love this, reservations or reactions. App only (the web pages have no lists of yours).
-- **One reaction:** once you reacted, "+ React" hides; tapping your reaction brings it back to pick another; tapping
-  yours once more removes it (owner). The same on the web pages (`together.js`).
-
+- Someone else's wishes (compact Reserve, Add to my wishlist, one reaction) and the buttons on a wish card (18 November
+  2026): moved to `docs/decisions/wish-cards.md`.

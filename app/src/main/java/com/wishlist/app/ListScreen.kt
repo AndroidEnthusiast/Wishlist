@@ -469,37 +469,40 @@ fun HomeScreen(
                             // Rows has smaller icons than the large cards (owner, 2.127: bigger than the private badge,
                             // smaller than before); the tap area stays the same.
                             // Quiet (2.207): 20 dp in every view, so the buttons stay quieter than the wish.
-                            val ico = if (view == "rows" || look.design == "quiet") 20.dp else 24.dp
-                            val actions: @Composable RowScope.() -> Unit = { Row(Modifier.hiddenWhileSelecting(), verticalAlignment = Alignment.CenterVertically) {
-                                // The bin stays, the rest is in one ⋮ (owner, 2.135: calmer rows), the same sheet as Two
-                                // per row on every list (12 November 2026; a collab wishlist had only Share here).
-                                WishMoreButton(
-                                    w, look.cardMuted(w.id), ico,
-                                    if (inShared) WishActions(
-                                        reserve = Reserving(r, reserveLabel(Shared.active.orEmpty(), w, r)) { on -> Shared.reserve(w, on) },
-                                        onEdit = { editing = w }, onMove = { MoveFlow.ask(setOf(w.id)) }, shareAsIdea = true
-                                    ) else WishActions(
-                                        onEdit = { editing = w }, onMove = { MoveFlow.ask(setOf(w.id)) }, own = true,
-                                        onHistory = if (w.url.isBlank()) null else ({ historyId = w.id })
-                                    )
-                                )
-                                // Share as its own button too (owner, 12 November 2026: sharing a wish should be one tap).
-                                IconButton(onClick = { shareItem(ctx, w, idea = inShared) }) {
-                                    Icon(AppIcons.CardShare, tr("Share"), tint = look.cardMuted(w.id), modifier = Modifier.size(ico))
-                                }
-                                if (inShared) {
+                            val ico = cardIcon(view)
+                            // Reserve left, then share, the bin and the ⋮ last (owner, 18 November 2026; CardButtons).
+                            val actions: @Composable RowScope.() -> Unit = { Row(Modifier.hiddenWhileSelecting().then(if (view == "rows" && inShared) Modifier.weight(1f) else Modifier), verticalAlignment = Alignment.CenterVertically) {
+                                CardButtons(
+                                    spread = view == "rows",
                                     // Reserving takes the place of "got it" on a shared list.
-                                    // A compact pill, in proportion to the card (owner, 18 November 2026).
-                                    CompositionLocalProvider(LocalCardButton provides true) {
-                                        if (r == true) {
-                                            OutlinedButton(onClick = { Shared.reserve(w, false) }) { Text(tr("Unreserve"), maxLines = 1) }
-                                        } else if (r == null) {
-                                            Button(onClick = { Shared.reserve(w, true) }) { Text(tr("Reserve"), maxLines = 1) }
+                                    reserve = if (!inShared || r == false) null else ({
+                                        if (r == true) OutlinedButton(onClick = { Shared.reserve(w, false) }) { Text(tr("Unreserve"), maxLines = 1) }
+                                        else Button(onClick = { Shared.reserve(w, true) }) { Text(tr("Reserve"), maxLines = 1) }
+                                    }),
+                                    icons = {
+                                        // Share as its own button too (owner, 12 November 2026: sharing a wish should be one tap).
+                                        // On a shared wishlist with Reserve showing, Reserve + share + bin + ⋮ don't fit:
+                                        // Share is then only in the ⋮ (owner, 18 November 2026).
+                                        if (!(inShared && r != false)) IconButton(onClick = { shareItem(ctx, w, idea = inShared) }) {
+                                            Icon(AppIcons.CardShare, tr("Share"), tint = look.cardMuted(w.id), modifier = Modifier.size(ico))
+                                        }
+                                        IconButton(onClick = { DeleteFlow.request(ctx, w) }) {
+                                            Icon(AppIcons.CardDelete, tr("Delete"), tint = look.cardMuted(w.id), modifier = Modifier.size(ico))
                                         }
                                     }
-                                }
-                                IconButton(onClick = { DeleteFlow.request(ctx, w) }) {
-                                    Icon(AppIcons.CardDelete, tr("Delete"), tint = look.cardMuted(w.id), modifier = Modifier.size(ico))
+                                ) {
+                                    // The bin stays, the rest is in one ⋮ (owner, 2.135: calmer rows), the same sheet as Two
+                                    // per row on every list (12 November 2026; a collab wishlist had only Share here).
+                                    WishMoreButton(
+                                        w, look.cardMuted(w.id), ico,
+                                        if (inShared) WishActions(
+                                            reserve = Reserving(r, reserveLabel(Shared.active.orEmpty(), w, r)) { on -> Shared.reserve(w, on) },
+                                            onEdit = { editing = w }, onMove = { MoveFlow.ask(setOf(w.id)) }, shareAsIdea = true
+                                        ) else WishActions(
+                                            onEdit = { editing = w }, onMove = { MoveFlow.ask(setOf(w.id)) }, own = true,
+                                            onHistory = if (w.url.isBlank()) null else ({ historyId = w.id })
+                                        )
+                                    )
                                 }
                             } }
                             if (view == "rows") RowCard(
