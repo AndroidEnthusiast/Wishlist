@@ -130,7 +130,7 @@ object RecoveryKey {
     }
     /**
      * ✕ on the Home card: gone for good (owner, 16 November 2026: it stayed on Home; until then "Later" hid it for a
-     * week, three times). The key stays in App settings > Backup and Profile.
+     * week, three times). The key stays on Profile > Keep your lists safe.
      */
     fun later(c: Context) {
         prefs(c).edit().putInt("rk_later_n", 3).apply()

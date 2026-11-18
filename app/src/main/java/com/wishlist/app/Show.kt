@@ -17,6 +17,8 @@ object Show {
     /** Key, default. Everything to see is on by default; birthdays are off (owner). */
     private val DEFAULTS = mapOf(
         "show_summary" to true,  // the Wishes / Total value tiles at the top of a list
+        "home_summary" to true,  // Home: your photo on the left with Wishes, Wishlists and Total value (18 November 2026)
+        "home_swipe" to true,    // Home: My wishlists | Shared, swipeable under the divider (18 November 2026)
         "nt_bin" to true,        // a gift you reserved was moved to the bin
         "nt_gone" to true,       // a gift you reserved was taken off a list
         "nt_req" to true,        // friend requests

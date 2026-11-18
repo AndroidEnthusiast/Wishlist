@@ -118,12 +118,13 @@ object Import {
     }
 
     /**
-     * True when shared text should open Import rather than Add a wish: a list link of a known site, or a list (three or
-     * more lines with words, or two or more links), as a notes app shares it.
+     * True when shared text should open Import rather than Add a wish: a list link of a known site, two or more links
+     * (a list from a notes app), or three or more lines without any link. One shop link with words around it ("I just
+     * found this on AliExpress: … https://a.aliexpress.com/…", owner 18 November 2026) is one wish: Add a wish.
      */
     fun looksLikeList(text: String): Boolean {
         val links = Regex("https?://\\S+").findAll(text).map { it.value }.toList()
-        if (links.size == 1 && isListLink(links[0])) return true
+        if (links.size == 1) return isListLink(links[0])
         if (links.size >= 2) return true
         return text.lines().count { it.any(Char::isLetterOrDigit) } >= 3
     }

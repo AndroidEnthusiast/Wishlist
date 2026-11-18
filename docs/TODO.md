@@ -7,6 +7,9 @@ it**, grouped as below, with a recommendation. Add every new open item here the 
 Details of each item are in the doc named after it.
 
 ## Now
+- **AliExpress shows its logo instead of the product photo** (owner, 18 November 2026): needs the real page. Owner: open
+  that wish's price page, tap "Price is wrong?", share the file; then fix `Fetch.kt` + `web/parse.js` together and add
+  the page to `tests/shared/same-answers.json` → `pages`.
 - **Import, step 2 (owner, 18 November 2026; `docs/decisions/import.md`):** the owner makes a small PUBLIC test list on
   GoWish, Giftful, Amazon, bol.com, Etsy and Pinterest (3–4 wishes: one with a price, one without a photo, one marked
   favourite) and sends the links. Then: put them in `tests/import/lists.json`, look at each real page through the

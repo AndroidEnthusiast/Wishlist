@@ -55,6 +55,9 @@ class ImportTest {
         assertTrue(Import.looksLikeList("Look at my list https://gowish.com/s/e04yb6"))
         assertTrue(Import.looksLikeList("Lego\nSocks\nBook"))
         assertFalse(Import.looksLikeList("Check out this product!\nhttps://www.coolblue.nl/product/123"))
+        // AliExpress shares three lines with one product link (owner, 18 November 2026): one wish, not a list.
+        assertFalse(Import.looksLikeList("I just found this on AliExpress: \n360° Rotating Brush Holder - White Plastic Organizer\nhttps://a.aliexpress.com/_EQKURKI"))
+        assertEquals("https://a.aliexpress.com/_EQKURKI", cleanUrl("I just found this on AliExpress: \n360° Rotating Brush Holder\nhttps://a.aliexpress.com/_EQKURKI"))
     }
 
     @Test fun sharedListOpensImportAndAProductStillOpensAddWish() {

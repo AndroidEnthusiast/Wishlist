@@ -15,7 +15,8 @@ import java.io.File
 class AppSettingsTest : NavigationBase() {
     @Test fun shortListOfRowsOpeningPages() {
         fromSheet("App settings")
-        for (row in listOf("Notifications", "Prices", "Display", "Backup", "About")) shows(row)
+        for (row in listOf("Notifications", "Prices", "Display", "About")) shows(row)
+        compose.onAllNodes(hasText("Backup")).assertCountEquals(0)
         compose.onAllNodes(hasText("Change theme")).assertCountEquals(0)
         compose.onAllNodes(hasText("Price change on pictures")).assertCountEquals(0)
         tap("Prices")
@@ -32,7 +33,7 @@ class AppSettingsTest : NavigationBase() {
         tap("Notifications")
         for (s in listOf("Friend requests", "New messages", "Price drops", "Price increases")) shows(s)
         phoneBack()
-        shows("Backup")
+        shows("Display")
         phoneBack()
         tabOn("Home")
     }

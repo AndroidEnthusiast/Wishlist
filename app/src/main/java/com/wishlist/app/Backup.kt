@@ -32,7 +32,7 @@ import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
 /*
- * Export and import (owner, 2.95): App settings > Backup. "Export everything" makes one .zip file with all the app's
+ * Export and import (owner, 2.95): Profile > Keep your lists safe > Backup file (App settings > Backup until 2.230). "Export everything" makes one .zip file with all the app's
  * settings and data (the "wishlist" preferences: your lists, wishes, keys of your lists, your profile and friends, the
  * wishlists for someone you're on, notifications, price history) and every file the app keeps (your own photos,
  * covers, profile photo). You keep the file yourself (Drive, e-mail, USB). "Import" on another phone replaces
@@ -223,7 +223,7 @@ object Backup {
     }
 }
 
-/** App settings > Backup: export everything, or import a backup (replaces everything, after a warning). */
+/** Profile > Keep your lists safe > Backup file (since 2.230; was App settings > Backup): export everything, or import a backup (replaces everything, after a warning). */
 @Composable
 fun BackupSection(snack: SnackbarHostState) {
     val ctx = LocalContext.current

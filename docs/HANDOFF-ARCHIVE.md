@@ -632,3 +632,7 @@ Interviewed (5 rounds) after Listful's Import sheet; decisions in `docs/decision
 Home / welcome / Share → Import sheet (site icons live, paste link or text), hidden read with the updatable reader
 `web/import/reader.js` (any-page reader), "Import this page" fallback, check screen, fill-in of photos and prices,
 real shop links, daily `import-check.yml` (opens an issue). Checks: `ImportTest`, `tests/import/test.js`.
+
+### 18 November 2026, later: deeper themes (2.227)
+Owner: themes felt flat, colours didn't blend. Cause: a 7% tint plus untinted parts (fixed grey-violet sheet rows, grey
+tiles, plain grey text). Now one hue per theme in steps of lightness, pastel in light; theme blocks: colour, name, a hill.

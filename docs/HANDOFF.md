@@ -5,6 +5,9 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.230 (18 November 2026, late night), read first.** Profile as rows, Home blocks + My wishlists | Shared swipe,
+  AliExpress shares open Add a wish (`docs/decisions/settings-profile.md`, last section). Ask how they feel. Open: the
+  AliExpress photo shows its logo; ask the owner for the page file ("Price is wrong?" on that wish's price page).
 - **2.229 (18 November 2026, night), read first.** Compact Reserve pills, Add to my wishlist, one reaction, Import last
   in the + menu (`docs/decisions/people.md`, last section). Ask how they feel on the phone.
 - **2.228 (18 November 2026, evening), read first.** Themes now a neutral matched grey with colour on the elements,
@@ -62,6 +65,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 18 November 2026, late night: Profile, Home, shared links (2.230)
+Profile: rows with small edit sheets and a Keep your lists safe page (backups kept there on advice). Home: photo left
+with three blocks, a divider, My wishlists | Shared pager, switches in Display. One-link shares → Add a wish. A GitHub
+"look at a page" tool was refused (it would reach shops this computer may not): AliExpress waits on the owner's page file.
+
 ### 18 November 2026, night: friends' wishes (2.229)
 Reserve pills compact (`LocalCardButton`, 36 dp); "Add to my wishlist" in the ⋮ of others' wishes (list picker, Undo,
 `AddToMine.kt`); "+ React" hides once you reacted (app and web); Import last in the + menu. Checks: `FriendWishesTest`.
@@ -70,7 +78,3 @@ Reserve pills compact (`LocalCardButton`, 36 dp); "Add to my wishlist" in the �
 Owner: 2.227's deep tint looked brown/green; now a grey backdrop with a 3% hint, colour on the elements, Black mode,
 Teal for Amber, Gen Z block in its own look, Theme as its own route (no jump). App settings: six rows opening pages,
 two switches and the theme block removed with their code. Checks: `AppSettingsTest`, `ThemesTest`.
-
-### 18 November 2026, later: deeper themes (2.227)
-Owner: themes felt flat, colours didn't blend. Cause: a 7% tint plus untinted parts (fixed grey-violet sheet rows, grey
-tiles, plain grey text). Now one hue per theme in steps of lightness, pastel in light; theme blocks: colour, name, a hill.

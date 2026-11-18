@@ -51,10 +51,13 @@ abstract class AmountFitsBase(private val style: String) {
         Repo.addMine(app, Wish(1, "https://example.com/a", "Sofa", "", "", 12345.67, null, "EUR", "Home"))
     }
 
-    /** The total value: no longer on Home (owner, 16 November 2026), still in the list's summary, and never cut off. */
+    /**
+     * The total value: back on Home next to your photo (owner, 18 November 2026; it was gone since 16 November), in the
+     * list's summary too, and never cut off.
+     */
     @Test fun totalValueOnHomeFits() {
         compose.waitForIdle()
-        org.junit.Assert.assertEquals("no total on Home any more", 0, compose.onAllNodes(hasText("12,345.67", substring = true)).fetchSemanticsNodes().size)
+        org.junit.Assert.assertTrue("the total is on Home again", compose.onAllNodes(hasText("12,345.67", substring = true)).fetchSemanticsNodes().isNotEmpty())
         val app = ApplicationProvider.getApplicationContext<android.app.Application>()
         compose.runOnUiThread {
             compose.activity.handle(android.content.Intent(app, MainActivity::class.java).putExtra(MainActivity.OPEN_NOTE, "m:" + Repo.mineIds.first()))

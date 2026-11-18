@@ -82,8 +82,8 @@ fun ImportSheet(start: String, onOpen: (String) -> Unit, onClose: () -> Unit) {
         val t = input.trim()
         if (t.isEmpty()) return
         val link = Regex("https?://\\S+").find(t)?.value
-        val oneLink = link != null && t.lines().count { it.isNotBlank() } <= 2 && Regex("https?://\\S+").findAll(t).count() == 1 &&
-            (Import.isListLink(link) || t.replace(link, "").trim().split(Regex("\\s+")).size <= 8)
+        // One link (with or without words around it, as apps share it): read that page. Two or more, or none: text.
+        val oneLink = link != null && Regex("https?://\\S+").findAll(t).count() == 1
         if (!oneLink) {
             // Text from notes (or several links): each line a wish.
             val ws = Import.parseText(t)

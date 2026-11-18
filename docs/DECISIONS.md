@@ -11,6 +11,7 @@ decided something. Every decision was moved word for word, nothing was dropped.
 - `docs/decisions/sharing.md`: Lists, sharing, security and the server (Lists and sharing; Security; Backend).
 - `docs/decisions/people.md`: Friends, chat, groups and gift exchanges (Friends and Groups; Messages; Wishlist groups; Side menu, Gifts I reserved and Gift exchange).
 - `docs/decisions/roadmap.md`: The roadmap: a real app, Stages 0–4 and the reviews (A real app; Roadmap decisions D1–D5; Second review; Stage R; Stage 4; Stage 4, second part).
+- `docs/decisions/settings-profile.md`: App settings, Profile, Home's summary blocks and the Mine / Shared swipe (18 November 2026).
 - `docs/decisions/import.md`: Import from GoWish, Giftful, Amazon, other sites and notes (18 November 2026).
 - `docs/decisions/ideas.md`: Open ideas (not decided) (Open ideas).
 

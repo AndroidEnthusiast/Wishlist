@@ -162,7 +162,6 @@ private fun SettingsMain(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                 NavRow({ Icon(AppIcons.Bag, null) }, tr("Prices"), intervalLabel(Repo.intervalHours) + " · " + currencySymbol(CurrencyChoice.chosen.ifEmpty { countryCurrency() })) { onOpen("prices") }
                 if (Config.enabled) NavRow({ Icon(AppIcons.Lock, null) }, tr("New wishlists"), whoLabel(ListVisibility.newDefault)) { onOpen("lists") }
                 NavRow({ Icon(AppIcons.ListIcon, null) }, tr("Display"), null) { onOpen("display") }
-                NavRow({ Icon(AppIcons.Refresh, null) }, tr("Backup"), null) { onOpen("backup") }
                 NavRow({ Icon(AppIcons.Gift, null) }, tr("About"), appVersion(ctx)) { onOpen("about") }
             }
         }
@@ -218,7 +217,7 @@ private fun SettingsPage(page: String, snack: SnackbarHostState, onBack: () -> U
     androidx.activity.compose.BackHandler(onBack = onBack)
     val title = when (page) {
         "notes" -> tr("Notifications"); "prices" -> tr("Prices"); "lists" -> tr("New wishlists")
-        "display" -> tr("Display"); "backup" -> tr("Backup"); else -> tr("About")
+        "display" -> tr("Display"); else -> tr("About")
     }
     Scaffold(
         containerColor = cs.background,
@@ -243,8 +242,10 @@ private fun SettingsPage(page: String, snack: SnackbarHostState, onBack: () -> U
                     // The only "What you see" switch left (owner, 18 November 2026): price labels on photos and the
                     // descriptions on the large cards are always shown now.
                     SettingSwitch(tr("List summary"), tr("Wishes and total value at the top of a list."), Show["show_summary"]) { Show.set(ctx, "show_summary", it) }
+                    // Home (owner, 18 November 2026): the three blocks next to your photo, and My wishlists | Shared.
+                    SettingSwitch(tr("Home summary"), tr("Wishes, wishlists and total value next to your photo."), Show["home_summary"]) { Show.set(ctx, "home_summary", it) }
+                    SettingSwitch(tr("My wishlists and Shared"), tr("Swipe between them on Home."), Show["home_swipe"]) { Show.set(ctx, "home_swipe", it) }
                 }
-                "backup" -> SettingsGroup("") { BackupSection(snack) }
                 else -> AboutPage(snack)
             }
         }

@@ -408,13 +408,16 @@ private fun CodeCard(code: String, offline: Boolean, onAdd: () -> Unit, onRetry:
     val ctx = LocalContext.current
     val look = LocalLook.current
     val id = 3L
+    // Tapping the code: Copy or Make a new code (owner, 18 November 2026: the code lives only here, not on Profile).
+    var codeMenu by remember { mutableStateOf(false) }
+    if (codeMenu) CodeDialog(code) { codeMenu = false }
     // Once you have friends: one slim row (owner, 2.139).
     if (small && !offline && code.isNotEmpty()) {
         Row(
             Modifier.fillMaxWidth().padding(top = 8.dp).lookCard(look, id, look.cardShape(id, small = true)).padding(start = 14.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(Modifier.weight(1f)) {
+            Column(Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).clickable(onClickLabel = tr("Copy or make a new code")) { codeMenu = true }) {
                 Text(tr("Your code"), style = MaterialTheme.typography.labelSmall, color = look.cardMuted(id))
                 Text(Friends.pretty(code), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = look.cardInk(id), letterSpacing = 1.sp)
             }
@@ -433,7 +436,8 @@ private fun CodeCard(code: String, offline: Boolean, onAdd: () -> Unit, onRetry:
         when {
             code.isNotEmpty() -> Text(
                 Friends.pretty(code), style = MaterialTheme.typography.headlineMedium.copy(shadow = null),
-                fontWeight = FontWeight.Bold, color = look.cardInk(id), letterSpacing = 2.sp
+                fontWeight = FontWeight.Bold, color = look.cardInk(id), letterSpacing = 2.sp,
+                modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClickLabel = tr("Copy or make a new code")) { codeMenu = true }
             )
             offline -> Text(
                 tr("Couldn’t reach the server. Check your connection."), color = look.cardMuted(id),
@@ -451,6 +455,39 @@ private fun CodeCard(code: String, offline: Boolean, onAdd: () -> Unit, onRetry:
             OutlinedButton(onClick = onAdd) { Text(tr("Add a friend")) }
         }
     }
+}
+
+/** Your friend code: Copy, or Make a new code (the old one stops working; friends stay). */
+@Composable
+private fun CodeDialog(code: String, onClose: () -> Unit) {
+    val ctx = LocalContext.current
+    val clip = LocalClipboardManager.current
+    val scope = rememberCoroutineScope()
+    var sure by remember { mutableStateOf(false) }
+    var msg by remember { mutableStateOf<String?>(null) }
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text(if (sure) tr("Make a new code?") else Friends.pretty(code)) },
+        text = {
+            Text(
+                msg ?: if (sure) tr("Your old code stops working. Friends you already have stay.") else tr("Your friend code."),
+                style = MaterialTheme.typography.bodyMedium
+            )
+        },
+        confirmButton = {
+            if (sure) TextButton(onClick = {
+                scope.launch {
+                    msg = try { Friends.newCode(ctx); null } catch (e: Exception) { tr("Couldn’t reach the server. Check your connection.") }
+                    if (msg == null) onClose()
+                }
+            }) { Text(tr("Make a new code")) }
+            else TextButton(onClick = { clip.setText(AnnotatedString(Friends.pretty(code))); onClose() }) { Text(tr("Copy")) }
+        },
+        dismissButton = {
+            if (sure) TextButton(onClick = onClose) { Text(tr("Cancel")) }
+            else TextButton(onClick = { sure = true }) { Text(tr("Make a new code")) }
+        }
+    )
 }
 
 /** Someone in a request: picture, name, a line, and the buttons. */
@@ -875,11 +912,19 @@ fun AddFriendDialog(onClose: (String?) -> Unit, prefill: String = "", prefillNam
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(snack: SnackbarHostState) {
+    // Profile like App settings (owner, 18 November 2026): one short page; "Keep your lists safe" opens its own page.
+    var page by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
+    Moving(page, depth = { if (it.isEmpty()) 0 else 1 }) { p ->
+        if (p.isEmpty()) ProfileMain(snack) { page = "safe" } else KeepSafePage(snack) { page = "" }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ProfileMain(snack: SnackbarHostState, onSafe: () -> Unit) {
     val ctx = LocalContext.current
-    var showKey by remember { mutableStateOf(false) }
-    if (showKey) RecoveryKeyDialog { showKey = false }
-    var restoring by remember { mutableStateOf(false) }
-    if (restoring) RestoreDialog(confirmFirst = true) { restoring = false }
+    // Which small editing sheet is open: "name", "birthday", "bio" or null.
+    var editing by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
@@ -887,24 +932,13 @@ fun ProfileScreen(snack: SnackbarHostState) {
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     Friends.load(ctx)
-    var me by remember { mutableStateOf(Shared.lastName) }
-    var nameSaved by remember { mutableIntStateOf(0) }
-    var bio by remember { mutableStateOf(Friends.myBio) }
-    var bioSaved by remember { mutableIntStateOf(0) }
+    val me = Shared.lastName
     var photoMenu by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
-    var newCodeDlg by remember { mutableStateOf(false) }
-    var adding by remember { mutableStateOf(false) }
-    var problem by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         if (!Config.enabled) return@LaunchedEffect
-        problem = try {
-            Friends.refresh(ctx)
-            false
-        } catch (e: Exception) {
-            true
-        }
+        try { Friends.refresh(ctx) } catch (e: Exception) { }
     }
 
     // A new photo (chosen or taken) goes to the editor first, with a round frame, like the cover photo on Home.
@@ -986,133 +1020,33 @@ fun ProfileScreen(snack: SnackbarHostState) {
                 }
             }
 
-            // Gen Z chaos: everything under the photo on a solid card (ReadingCard, owner 16 November 2026).
-            ReadingCard {
-            ProfileTitle(tr("Your name"))
-            // No Save button: the keyboard's tick saves the name (as it did in App settings).
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(
-                    me, { me = it.take(30) }, singleLine = true, label = { Text(tr("Name")) },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done, capitalization = KeyboardCapitalization.Sentences),
-                    keyboardActions = KeyboardActions(onDone = {
-                        if (me.isNotBlank()) {
-                            Shared.setAppName(ctx, me)
-                            nameSaved++
-                            scope.launch { try { Friends.nameChanged(ctx) } catch (e: Exception) {} }
-                        }
-                        me = Shared.lastName
-                        keyboard?.hide()
-                        focusManager.clearFocus()
-                    }),
-                    modifier = Modifier.weight(1f)
-                )
-                SavedFeedback(nameSaved)
+            // Your name under the photo, big; tap to change (owner, 18 November 2026: Profile like App settings).
+            Text(
+                Shared.lastName.ifBlank { tr("Add your name") }, style = MaterialTheme.typography.headlineSmall,
+                fontWeight = look.titleWeight, fontFamily = look.display, color = cs.onBackground, maxLines = 2,
+                overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).clickable(onClickLabel = tr("Edit name")) { editing = "name" }
+            )
+            // Short rows with their value in grey and ›; each edits in a small sheet. Gen Z chaos: on a solid card.
+            ProfileGroup {
+                ProfileRow(tr("Name"), Shared.lastName.ifBlank { tr("Add") }) { editing = "name" }
+                ProfileRow(tr("Birthday"), birthdayText(Friends.myBirthday).ifBlank { tr("Add") }) { editing = "birthday" }
+                ProfileRow(tr("About me"), Friends.myBio.ifBlank { tr("Add") }) { editing = "bio" }
             }
-            Text(
-                tr("Friends see your name and photo. Your name is also shown as “Added by” on wishlists you make with others."),
-                style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
-            )
-
-            // Birthday (day and month, no year) and "I like…", both seen by friends (2.95).
-            ProfileTitle(tr("Birthday"))
-            DayMonthPicker(Friends.myBirthday) { b ->
-                scope.launch {
-                    try {
-                        Friends.setAbout(ctx, b, Friends.myBio)
-                        snack.showToast(if (b.isEmpty()) tr("Birthday removed") else tr("Birthday saved"))
-                    } catch (e: Exception) {
-                        snack.showToast(tr("Saved on this phone. It goes online when you have a connection."))
-                    }
-                }
+            ProfileGroup {
+                ProfileRow(tr("Keep your lists safe"), if (RecoveryKey.saved(ctx)) tr("Key saved") else tr("Not yet"), warn = !RecoveryKey.saved(ctx)) { onSafe() }
             }
-            Text(
-                tr("Optional. Friends see the day and month, and get a reminder two weeks before."),
-                style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
-            )
-
-            // "About me" (owner, 17 November 2026): was "I like…"; shown as text under your name on Home and your page.
-            ProfileTitle(tr("About me"))
-            // Saved with Done and when you tap elsewhere (leaving it without Done no longer loses it).
-            fun saveBio() {
-                if (bio.trim() == Friends.myBio) return
-                val b = bio
-                scope.launch { try { Friends.setAbout(ctx, Friends.myBirthday, b) } catch (e: Exception) {} }
-                bioSaved++
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(
-                    bio, { bio = it.replace('\n', ' ').take(Friends.BIO_MAX) }, maxLines = 3,
-                    modifier = Modifier.weight(1f).onFocusChanged { if (!it.isFocused) saveBio() },
-                    placeholder = { Text(tr("For example: Coffee lover, always cold, into Lego")) },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done, capitalization = KeyboardCapitalization.Sentences),
-                    keyboardActions = KeyboardActions(onDone = { saveBio(); keyboard?.hide(); focusManager.clearFocus() })
-                )
-                SavedFeedback(bioSaved)
-            }
-            Text(
-                tr("Friends see this under your name. %d of %d letters.", bio.length, Friends.BIO_MAX),
-                style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
-            )
-
-            // "My sizes" was removed (owner, 17 November 2026): sizes are deleted, also online (supabase-sizes-off.sql).
-
-            ProfileTitle(tr("Your friend code"))
-            val code = Friends.state?.code.orEmpty()
-            when {
-                !Config.enabled -> Text(tr("Online sharing isn’t set up in this build yet."), color = cs.onSurfaceVariant)
-                code.isNotEmpty() -> Text(Friends.pretty(code), style = MaterialTheme.typography.headlineMedium.copy(shadow = null), fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-                problem -> Text(tr("Couldn’t reach the server. Check your connection."), color = cs.onSurfaceVariant)
-                else -> CircularProgressIndicator(Modifier.size(28.dp))
-            }
-            Text(
-                tr("Share it with friends. You approve them first."),
-                style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { Friends.shareCode(ctx, code) }, enabled = code.isNotEmpty()) { Text(tr("Share code")) }
-                OutlinedButton(onClick = {
-                    clip.setText(AnnotatedString(Friends.pretty(code)))
-                    scope.launch { snack.showToast(tr("Code copied")) }
-                }, enabled = code.isNotEmpty()) { Text(tr("Copy")) }
-            }
-            TextButton(onClick = { adding = true }, enabled = Config.enabled) { Text(tr("Add a friend")) }
-            TextButton(onClick = { newCodeDlg = true }, enabled = code.isNotEmpty()) { Text(tr("Make a new code")) }
-
-            ProfileTitle(tr("Wishlists your friends can see"))
-            val shown = Repo.mineIds.filter { Friends.isVisible(it) }.map { Repo.mineName(it) }
-            Text(
-                if (shown.isEmpty()) tr("None yet. Set Visibility to “My friends” in a wishlist’s settings (⚙).")
-                else shown.joinToString(", "),
-                color = if (shown.isEmpty()) cs.onSurfaceVariant else cs.onSurface
-            )
-            if (shown.isNotEmpty()) Text(
-                tr("Change this in the list’s settings (⚙). Private wishes stay hidden."),
-                style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
-            )
-            // The recovery key (owner, 11 November 2026: "Recovery key" in Profile; RecoveryKey.kt).
-            ProfileTitle(tr("Recovery key"))
-            Text(
-                tr("With your recovery key, everything comes back on a new phone."),
-                style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
-            )
-            OutlinedButton(onClick = { showKey = true }) { Text(tr("Show and save your key")) }
-            // For someone who tapped past "I already have lists" in the welcome (owner, 12 November 2026).
-            TextButton(onClick = { restoring = true }) { Text(tr("Restore with a recovery key")) }
-            Text(
-                tr("You can also make a backup file in App settings > Backup."),
-                style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp)
-            )
             // Blocked people, when there are any (Safety.kt), and deleting everything (DeleteMe.kt), at the very bottom.
             BlockedPeople(snack)
             DeleteMeSection()
-            }
         }
     }
 
-    if (adding) AddFriendDialog(onClose = { msg ->
-        adding = false
-        if (msg != null) scope.launch { snack.showToast(msg) }
-    })
+    when (editing) {
+        "name" -> EditNameSheet { editing = null }
+        "birthday" -> EditBirthdaySheet(snack) { editing = null }
+        "bio" -> EditBioSheet { editing = null }
+    }
     pending?.let { img ->
         HeroEditor(
             img, HeroEdit(), round = true,
@@ -1132,26 +1066,156 @@ fun ProfileScreen(snack: SnackbarHostState) {
             onCancel = { adjusting = false }
         )
     }
-    if (newCodeDlg) {
-        AlertDialog(
-            onDismissRequest = { newCodeDlg = false },
-            title = { Text(tr("Make a new code?")) },
-            text = { Text(tr("Your old code stops working. Friends you already have stay.")) },
-            confirmButton = {
-                TextButton(onClick = {
-                    newCodeDlg = false
+}
+
+/** Profile's rows on one card, like App settings' groups (Quiet); Gen Z chaos: its solid ReadingCard. */
+@Composable
+private fun ProfileGroup(content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
+    val look = LocalLook.current
+    if (look.design != "quiet") { ReadingCard(content = content); return }
+    Column(
+        Modifier.fillMaxWidth().padding(top = 8.dp).lookCard(look, 3L, look.cardShape(3L, small = true)).padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp), content = content
+    )
+}
+
+/** A row of Profile: its name, its value in grey (one line) and ›. 48 dp or taller. */
+@Composable
+private fun ProfileRow(label: String, value: String, warn: Boolean = false, onClick: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 52.dp).clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick).padding(horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyLarge, color = cs.onSurface)
+        Text(
+            value, style = MaterialTheme.typography.bodyMedium, color = if (warn) cs.error else cs.onSurfaceVariant,
+            maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f).padding(start = 16.dp)
+        )
+        Icon(AppIcons.Chevron, null, tint = cs.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp).size(20.dp))
+    }
+}
+
+/** Your name: friends see it, and it shows as "Added by" on wishlists you make with others. */
+@Composable
+private fun EditNameSheet(onClose: () -> Unit) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var me by remember { mutableStateOf(Shared.lastName) }
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text(tr("Your name")) },
+        text = {
+            OutlinedTextField(
+                me, { me = it.take(30) }, singleLine = true, label = { Text(tr("Name")) },
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences), modifier = Modifier.fillMaxWidth()
+            )
+        },
+        confirmButton = {
+            TextButton(enabled = me.isNotBlank(), onClick = {
+                Shared.setAppName(ctx, me)
+                scope.launch { try { Friends.nameChanged(ctx) } catch (e: Exception) {} }
+                onClose()
+            }) { Text(tr("Save")) }
+        },
+        dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
+    )
+}
+
+/** Your birthday (day and month): friends see it and get a reminder two weeks before. */
+@Composable
+private fun EditBirthdaySheet(snack: SnackbarHostState, onClose: () -> Unit) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text(tr("Birthday")) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(tr("Friends see the day and month, and get a reminder."), style = MaterialTheme.typography.bodyMedium)
+                DayMonthPicker(Friends.myBirthday) { b ->
                     scope.launch {
                         try {
-                            Friends.newCode(ctx)
-                            snack.showToast(tr("You have a new friend code"))
+                            Friends.setAbout(ctx, b, Friends.myBio)
                         } catch (e: Exception) {
-                            snack.showToast(tr("Couldn’t reach the server. Check your connection."))
+                            snack.showToast(tr("Saved on this phone. It goes online when you have a connection."))
                         }
                     }
-                }) { Text(tr("Make a new code")) }
-            },
-            dismissButton = { TextButton(onClick = { newCodeDlg = false }) { Text(tr("Cancel")) } }
-        )
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onClose) { Text(tr("Done")) } }
+    )
+}
+
+/** "About me": a line friends see under your name. */
+@Composable
+private fun EditBioSheet(onClose: () -> Unit) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var bio by remember { mutableStateOf(Friends.myBio) }
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text(tr("About me")) },
+        text = {
+            OutlinedTextField(
+                bio, { bio = it.replace('\n', ' ').take(Friends.BIO_MAX) }, maxLines = 3, modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text(tr("For example: Coffee lover, always cold, into Lego")) },
+                supportingText = { Text("${bio.length} / ${Friends.BIO_MAX}") },
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val b = bio
+                scope.launch { try { Friends.setAbout(ctx, Friends.myBirthday, b) } catch (e: Exception) {} }
+                onClose()
+            }) { Text(tr("Save")) }
+        },
+        dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
+    )
+}
+
+/**
+ * "Keep your lists safe" (owner, 18 November 2026): the recovery key first (show and save it, restore with it), then the
+ * backup file as a small row at the bottom (kept on Claude's advice: the last safety net when the server can't help).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun KeepSafePage(snack: SnackbarHostState, onBack: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    androidx.activity.compose.BackHandler(onBack = onBack)
+    var showKey by remember { mutableStateOf(false) }
+    if (showKey) RecoveryKeyDialog { showKey = false }
+    var restoring by remember { mutableStateOf(false) }
+    if (restoring) RestoreDialog(confirmFirst = true) { restoring = false }
+    var file by remember { mutableStateOf(false) }
+    Scaffold(
+        containerColor = cs.background,
+        topBar = {
+            TopAppBar(
+                title = { ScreenTitle(tr("Keep your lists safe")) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(AppIcons.ArrowBack, tr("Back")) } },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
+            )
+        },
+        snackbarHost = { AppSnackbarHost(snack) }
+    ) { pad ->
+        Column(
+            Modifier.padding(pad).verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            ProfileGroup {
+                Text(tr("With your recovery key, everything comes back on a new phone."), style = MaterialTheme.typography.bodyMedium, color = cs.onSurface)
+                Button(onClick = { showKey = true }, modifier = Modifier.fillMaxWidth()) { Text(tr("Show and save your key")) }
+                TextButton(onClick = { restoring = true }) { Text(tr("Restore with a recovery key")) }
+            }
+            ProfileGroup {
+                ProfileRow(tr("Backup file"), if (file) "" else tr("Optional")) { file = !file }
+                if (file) BackupSection(snack)
+            }
+        }
     }
 }
 

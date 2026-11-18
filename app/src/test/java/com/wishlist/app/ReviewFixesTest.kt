@@ -78,7 +78,7 @@ class ReviewFixesTest {
     @Test fun settingsScreensUseReadingCards() {
         assertTrue(src("Settings.kt").contains("ReadingCard(heading = { SectionTitle(title) }, content = content)"))
         assertEquals(4, Regex("ReadingCard\\(heading").findAll(src("ListSettings.kt")).count())
-        assertTrue(src("FriendsUi.kt").contains("ReadingCard {"))
+        assertTrue(src("FriendsUi.kt").contains("if (look.design != \"quiet\") { ReadingCard(content = content); return }"))
     }
 
     /** Going back from a chat "bounced" Messages: no size animation between screens inside a tab. */
@@ -231,7 +231,7 @@ class PersonFirstTest {
         val hero = f.substring(f.indexOf("internal fun PersonHero("), f.indexOf("internal fun AboutChip("))
         assertFalse(hero.contains("FlowRow") || hero.contains("likesOf") || hero.contains("sizes"))
         assertTrue(hero.contains("if (birthdaySoon && days != null && days <= 14)"))
-        assertTrue(f.contains("ProfileTitle(tr(\"About me\"))") && !f.contains("tr(\"My sizes\")") && !f.contains("tr(\"I like…\")"))
+        assertTrue(f.contains("tr(\"About me\")") && !f.contains("tr(\"My sizes\")") && !f.contains("tr(\"I like…\")"))
         assertEquals(100, Friends.BIO_MAX)
         val items = Cloud.listItems(emptyList(), "Hello")
         assertFalse(items.getJSONObject(0).has("sz"))

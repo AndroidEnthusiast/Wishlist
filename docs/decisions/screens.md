@@ -248,17 +248,4 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here. Look and f
   label; `danger = true` gives a deep red filled button with white text as a dialog's main action, red text
   elsewhere. Quiet's error colour is a real red. `NoColouredButtonLabelsTest` scans every button (3 allowed exceptions).
 
-## App settings redone (owner, 18 November 2026: "insanely long and bloated with copy")
-- **A short list of rows** on one screen, each with an icon in a soft tile (like the + menu), its current value in grey
-  and ›, each opening its own small page: Notifications, Prices, New wishlists, Backup, Display, About. No explanation
-  lines unless a label is unclear, then a few words.
-- **Theme leaves App settings** (it is in the side sheet). **Notifications** holds every alert, the price drops and
-  increases included. **Prices**: "Check prices · Every 3 hours" as one row opening a small list with a tick (chips
-  were too big, owner), and the currency. **Backup** stays a row (Export, Import, one warning line).
-- **Display:** only "List summary" stays a switch. "Price labels on photos" and "Descriptions" are removed and always
-  on; their code goes too (owner: remove the code of whatever is removed).
-- **About:** the version; "Download" only when a newer version exists; Share app; Licences; Privacy. The crash report
-  text moves into Privacy. "Server calls today" is hidden: a long press on the version shows it.
-- Earlier decisions this changes: App settings > Backup stays (screens.md "Export and import"), the crash reports line
-  "said in App settings > About" now lives in Privacy, the server calls counter (`Calls.kt`) moves behind the long press.
-
+- App settings redone, Profile redone, Home blocks and swipe (18 November 2026): moved to `docs/decisions/settings-profile.md`.

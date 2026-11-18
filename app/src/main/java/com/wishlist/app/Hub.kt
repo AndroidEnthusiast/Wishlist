@@ -280,10 +280,34 @@ fun HubScreen(
                 HomeHero(onProfile)
                 GroupInvites()
                 val groupsOfMine = wishGroupItems(onOpenWishGroup)
-                BlockGrid(
-                    byRecent(mineItems) + byRecent(groupItems) + byRecent(groupsOfMine), true,
-                    { item -> if (item.key.startsWith("g:")) emptyList() else actionsOf(item) }, onAddTo, dots = true,
-                    modifier = Modifier.padding(top = 20.dp)
+                val acts: (HubItem) -> List<Triple<String, Boolean, () -> Unit>> = { item -> if (item.key.startsWith("g:")) emptyList() else actionsOf(item) }
+                // A divider between you and your wishlists (owner, 18 November 2026); only what is below it swipes.
+                HorizontalDivider(Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 12.dp))
+                if (Show["home_swipe"]) {
+                    // My wishlists | Shared (your wishlists with others and your wishlist groups): swipe or tap the tabs.
+                    // App settings > Display can switch it off (then everything stands one under the other).
+                    var tab by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableIntStateOf(0) }
+                    val pager = androidx.compose.foundation.pager.rememberPagerState(initialPage = tab) { 2 }
+                    androidx.compose.runtime.LaunchedEffect(pager.currentPage) { tab = pager.currentPage }
+                    SegmentedTabs(
+                        listOf(tr("My wishlists"), tr("Shared")), pager.currentPage,
+                        { i -> scope.launch { pager.animateScrollToPage(i) } },
+                        Modifier.padding(horizontal = 16.dp)
+                    )
+                    androidx.compose.foundation.pager.HorizontalPager(pager, verticalAlignment = Alignment.Top, modifier = Modifier.padding(top = 12.dp)) { p ->
+                        if (p == 0) BlockGrid(byRecent(mineItems), true, acts, onAddTo, dots = true)
+                        else {
+                            val shared = byRecent(groupItems) + byRecent(groupsOfMine)
+                            if (shared.isEmpty()) Text(
+                                tr("Nothing shared yet. Tap + to make a wishlist with others or start a wishlist group."),
+                                style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant,
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 32.dp)
+                            )
+                            else BlockGrid(shared, true, acts, onAddTo, dots = true)
+                        }
+                    }
+                } else BlockGrid(
+                    byRecent(mineItems) + byRecent(groupItems) + byRecent(groupsOfMine), true, acts, onAddTo, dots = true
                 )
 
                 // Gift exchange in its season (owner, 7 November 2026).
@@ -1042,6 +1066,58 @@ internal fun VisibilitySheet(item: HubItem, snack: SnackbarHostState, onClose: (
  */
 @Composable
 private fun HomeHero(onProfile: () -> Unit) {
-    Friends.load(LocalContext.current)
-    PersonHero(Friends.myPhoto, Shared.lastName.ifBlank { tr("Add your name") }, Friends.myBirthday, Friends.myBio, onPhoto = onProfile)
+    val ctx = LocalContext.current
+    Friends.load(ctx)
+    val name = Shared.lastName.ifBlank { tr("Add your name") }
+    // App settings > Display > Home summary off: you in the middle, as friends see you (owner, 18 November 2026).
+    if (!Show["home_summary"]) {
+        PersonHero(Friends.myPhoto, name, Friends.myBirthday, Friends.myBio, onPhoto = onProfile)
+        return
+    }
+    // Your photo on the left, three blocks on its right (owner, 18 November 2026): your own lists only.
+    val places = LocalPlaces.current
+    val cs = MaterialTheme.colorScheme
+    val look = LocalLook.current
+    val mine = remember(Repo.mineVersion, Repo.myWishes, Repo.mineIds) { Repo.allMine(ctx) }
+    val all = remember(mine) { mine.flatMap { it.wishes }.filter { it.bin == 0L && it.recv == 0L }.distinctBy { it.id } }
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.clip(CircleShape).clickable(onClickLabel = tr("Profile"), onClick = onProfile)) { Avatar(Friends.myPhoto, name, 88.dp) }
+            Row(
+                Modifier.weight(1f).padding(start = 12.dp).height(androidx.compose.foundation.layout.IntrinsicSize.Min),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val line = cs.outlineVariant
+                HomeStat(all.size.toString(), if (all.size == 1) tr("Wish") else tr("Wishes"), Modifier.weight(1f)) { places.homePage = "wishes" }
+                Box(Modifier.width(1.dp).fillMaxHeight(0.6f).background(line))
+                HomeStat(mine.size.toString(), if (mine.size == 1) tr("Wishlist") else tr("Wishlists"), Modifier.weight(1f)) { places.homePage = "lists" }
+                Box(Modifier.width(1.dp).fillMaxHeight(0.6f).background(line))
+                // Total value can't be tapped (owner).
+                HomeStat(homeTotal(all), tr("Total value"), Modifier.weight(1.4f), null)
+            }
+        }
+        Text(
+            name, style = MaterialTheme.typography.titleLarge, fontWeight = look.titleWeight, fontFamily = look.display,
+            color = cs.onBackground, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 12.dp).clip(RoundedCornerShape(8.dp)).clickable(onClick = onProfile)
+        )
+        if (Friends.myBio.isNotBlank()) Text(
+            Friends.myBio.trim(), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant,
+            maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp)
+        )
+    }
+}
+
+/** One of the three blocks next to your photo: the number (never cut off: it shrinks, FitText) and its name. */
+@Composable
+private fun HomeStat(value: String, label: String, modifier: Modifier, onClick: (() -> Unit)?) {
+    val look = LocalLook.current
+    Column(
+        modifier.clip(RoundedCornerShape(10.dp)).then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(horizontal = 2.dp, vertical = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        FitText(value, MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontFamily = look.display), MaterialTheme.colorScheme.onBackground)
+        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
 }

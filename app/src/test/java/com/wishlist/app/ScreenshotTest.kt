@@ -206,6 +206,11 @@ abstract class ScreenshotBase(private val mode: String, private val tag: String 
     }
     // The profile picture's sheet itself (2.208: its text was black on Quiet's dark grey).
     @Test fun profileSheet() { tap("Profile and settings"); shot("profile") }
+    // Profile as rows (owner, 18 November 2026).
+    @Test fun profilePage() {
+        tap("Profile and settings"); repeat(5) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
+        tap("Profile", exact = true); shot("profilepage")
+    }
     // App settings (Quiet 2.207: grouped blocks), from the profile picture's sheet.
     // A friend's page, person first (16 November 2026): a pretend friend with lists of 1, 2 and 3 photos.
     @Test fun friendPage() {
