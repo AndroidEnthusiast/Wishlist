@@ -7,6 +7,13 @@ it**, grouped as below, with a recommendation. Add every new open item here the 
 Details of each item are in the doc named after it.
 
 ## Now
+- **Import, step 2 (owner, 18 November 2026; `docs/decisions/import.md`):** the owner makes a small PUBLIC test list on
+  GoWish, Giftful, Amazon, bol.com, Etsy and Pinterest (3–4 wishes: one with a price, one without a photo, one marked
+  favourite) and sends the links. Then: put them in `tests/import/lists.json`, look at each real page through the
+  daily check's browser, write a reader per site in `web/import/reader.js` (raise VERSION) and check it on GitHub.
+- **Try Import (2.226) on the phone:** paste a GoWish/Giftful/Amazon link, share one from their app, paste text from
+  notes; the check screen, duplicates, the new list, the fill-in of photos and prices, "Open the page" when nothing is
+  found. Until step 2, those sites are read by the general reader: results may be incomplete.
 - **Try 2.214 on the phone:** "Love it" labels (Rows on the picture, two per row smaller), the tip on a list with 3
   wishes, hold-and-move to reorder (also on a gift list), Move or copy…, the two-people Friends icon, Gen Z settings on
   cards, opening a chat and going back. Dragging can't be felt here: say how it feels.

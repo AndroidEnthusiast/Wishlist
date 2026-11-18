@@ -574,7 +574,7 @@ private fun decodeJsString(r: String?): String? {
 @OptIn(ExperimentalFoundationApi::class)
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Unit, search: String? = null) {
+fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Unit, search: String? = null, onImport: ((ImportRead) -> Unit)? = null) {
     val places = LocalPlaces.current
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -662,7 +662,26 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
         }
     }
 
+    // Import (owner, 18 November 2026): the list page on screen is read by the Import reader (Import.kt).
+    var importHint by remember { mutableStateOf(false) }
+    fun importPage() {
+        val w = web ?: return
+        val url = w.url ?: return
+        val done = onImport ?: return
+        importHint = false
+        reading = true
+        scope.launch {
+            val r = try { Import.fromReader(ImportReaders.run(w, ImportReaders.script(ctx)), url) } catch (e: Exception) { null }
+            reading = false
+            if (r == null || r.wishes.isEmpty()) {
+                Import.reportNothing(r?.site ?: Import.siteKey(url), r?.version ?: 0)
+                importHint = true
+            } else done(r)
+        }
+    }
+
     fun add(anyway: Boolean = false) {
+        if (onImport != null) { importPage(); return }
         val w = web ?: return
         val url = w.url ?: return
         hint = false
@@ -791,18 +810,25 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                         Modifier.align(Alignment.BottomEnd).padding(14.dp).height(42.dp)
                             .clip(RoundedCornerShape(21.dp))
                             .background(cs.primary)
-                            .combinedClickable(enabled = !reading, onClickLabel = tr("Add wish")) { add() }
+                            .combinedClickable(enabled = !reading, onClickLabel = if (onImport != null) tr("Import this page") else tr("Add wish")) { add() }
                             .padding(start = 12.dp, end = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         val fg = cs.onPrimary
                         Icon(AppIcons.Add, null, tint = fg, modifier = Modifier.size(20.dp))
                         Text(
-                            if (reading) tr("Reading…") else tr("Add wish"), color = fg,
+                            if (reading) tr("Reading…") else if (onImport != null) tr("Import this page") else tr("Add wish"), color = fg,
                             style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(start = 6.dp)
                         )
                     }
+                }
+                if (importHint) {
+                    Text(
+                        tr("No wishes found on this page yet. Scroll until you see them, then try again."), color = cs.inverseOnSurface,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.fillMaxWidth().background(cs.inverseSurface).padding(horizontal = 16.dp, vertical = 12.dp)
+                    )
                 }
                 if (hint) {
                     Row(

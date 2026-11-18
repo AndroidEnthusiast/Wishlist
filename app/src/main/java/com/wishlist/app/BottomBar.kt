@@ -244,7 +244,7 @@ private fun Choice(title: String, detail: String, onClick: () -> Unit) {
  */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-fun PlusMenuSheet(onWish: () -> Unit, onNew: (String) -> Unit, onClose: () -> Unit) {
+fun PlusMenuSheet(onWish: () -> Unit, onNew: (String) -> Unit, onClose: () -> Unit, onImport: () -> Unit = {}) {
     val cs = MaterialTheme.colorScheme
     ModalBottomSheet(onDismissRequest = onClose, sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp)) {
@@ -252,7 +252,9 @@ fun PlusMenuSheet(onWish: () -> Unit, onNew: (String) -> Unit, onClose: () -> Un
                 SheetRow({ Icon(AppIcons.Add, null, tint = cs.onSurfaceVariant) }, tr("Add a wish"), onWish, detail = tr("From a link, a photo or just a name."))
             })
             val more = mutableListOf<@Composable () -> Unit>(
-                { SheetRow({ Icon(AppIcons.ListIcon, null, tint = cs.onSurfaceVariant) }, tr("New wishlist"), { onNew("mine") }, detail = tr("Your own, or one you make with others.")) }
+                { SheetRow({ Icon(AppIcons.ListIcon, null, tint = cs.onSurfaceVariant) }, tr("New wishlist"), { onNew("mine") }, detail = tr("Your own, or one you make with others.")) },
+                // Import (owner, 18 November 2026): a list from another app or your notes.
+                { SheetRow({ Icon(AppIcons.Swap, null, tint = cs.onSurfaceVariant) }, tr("Import a list"), onImport, detail = tr("From GoWish, Giftful, Amazon, your notes and more.")) }
             )
             if (Config.enabled) {
                 more += { SheetRow({ Icon(AppIcons.Group, null, tint = cs.onSurfaceVariant) }, tr("New wishlist group"), { onNew("group") }, detail = tr("A circle of people who can see each other’s wishlists.")) }

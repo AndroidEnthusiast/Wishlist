@@ -82,6 +82,8 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     var newExchange by remember { mutableStateOf(false) }
     // The bottom bar's + outside a list (owner, 16 November 2026): Add a wish, or a new list, group or exchange.
     var plusMenu by remember { mutableStateOf(false) }
+    // The Import sheet (owner, 18 November 2026): null = closed, else what to start with (a shared link or text).
+    var importing by remember { mutableStateOf<String?>(null) }
     var plusNew by remember { mutableStateOf<String?>(null) }
 
     /** Closes every screen above Home (a list, a tab, a section, a screen on top): Home shows. */
@@ -278,6 +280,7 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
             is Deep.Bin -> { Bin.focus = d.code to d.wishId; closeAll(); nav.openOnTop(Route.BIN) }
             is Deep.Invite -> { closeAll(); joinDlg = d.key }
             is Deep.AddLink -> { closeAll(); addTarget = null; prefill = d.url; adding = true }
+            is Deep.Import -> { closeAll(); importing = d.text }
         }
     }
     LaunchedEffect(deep) {
@@ -508,8 +511,12 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     if (plusMenu) PlusMenuSheet(
         onWish = { plusMenu = false; addTarget = Repo.lastSaveTo; prefill = ""; adding = true },
         onNew = { kind -> plusMenu = false; if (kind == "exchange") newExchange = true else plusNew = kind },
-        onClose = { plusMenu = false }
+        onClose = { plusMenu = false },
+        onImport = { plusMenu = false; importing = "" }
     )
+    importing?.let { start -> key(start) { ImportSheet(start, onOpen = { openMine(it) }, onClose = { importing = null }) } }
+    // Photos and prices of imported wishes that are still waiting fill in (Import.kt), also after a restart.
+    LaunchedEffect(Unit) { ImportFill.start(ctx) }
     when (plusNew) {
         // One "New wishlist" sheet (owner, 17 November 2026): My own / With others swap inside it.
         "mine", "collab" -> NewWishlistSheet(

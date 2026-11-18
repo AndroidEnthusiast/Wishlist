@@ -607,3 +607,10 @@ Berry, warm surfaces, Jakarta, squircles, soft press, own switch/dialogs/bars, g
 Owner: "much better and more like our own app". Fixed: dialog text black on dark, scrolling broken (the collapsing
 title took every swipe), fixed titles on the main tabs, no confetti but a pulsing "Reserved by you", "Top wish" on
 every view, profile picture without ring. Each fix has a check that fails without it.
+
+### 16 November 2026: owner's review and solo interview (2.214)
+"♥ Love it" / "Jorai loves it", smaller label (Rows on the picture), one-time heart tip; hold and move to drag
+("My order", sort per list), Move or copy…; two-people Friends icon; Gen Z settings on cards; chat opens at its end,
+no bounce going back (Moving had a size animation). Interviewed on solo use: sold out alerts and screenshot to wish next.
+2.215: Shopify pictures given as http:// (Baracuta) load over https (`secureImage`, app and web).
+2.216: wish form trimmed, Quiet field text full ink. 2.217: friend page person first, 2-photo collages, failed pictures, card ✕. 2.218: Home = your profile, + menu, pop-ups.

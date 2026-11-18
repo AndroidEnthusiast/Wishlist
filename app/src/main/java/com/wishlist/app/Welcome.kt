@@ -76,12 +76,16 @@ fun WelcomeFlow(onDone: () -> Unit) {
     var listEdited by remember { mutableStateOf(false) }
     var pending by remember { mutableStateOf<String?>(null) }
     var restoring by remember { mutableStateOf(false) }
+    // "Import it after this": the Import sheet opens when the welcome is done.
+    var importAfter by remember { mutableStateOf(false) }
+    val go = LocalGo.current
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) scope.launch { ImageStore.import(ctx, uri)?.let { pending = it } }
     }
     fun finish() {
         Welcome.done(ctx)
         onDone()
+        if (importAfter) go(Deep.Import(""))
     }
     fun next() {
         when (step) {
@@ -148,6 +152,10 @@ fun WelcomeFlow(onDone: () -> Unit) {
                                 listName, { listName = it.take(60); listEdited = true }, singleLine = true, label = { Text(tr("Name of the wishlist")) },
                                 keyboardOptions = Capitalised, modifier = Modifier.fillMaxWidth()
                             )
+                            // Import (owner, 18 November 2026): coming from GoWish, Giftful, Amazon or a notes app.
+                            TextButton(onClick = { importAfter = true; next() }, modifier = Modifier.padding(top = 8.dp)) {
+                                Text(tr("Already have a list somewhere? Import it after this"), textAlign = TextAlign.Center)
+                            }
                         }
                         4 -> {
                             // The recovery key (owner, 11 November 2026: asked during the welcome; RecoveryKey.kt).

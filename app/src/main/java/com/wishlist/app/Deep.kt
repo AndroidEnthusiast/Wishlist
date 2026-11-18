@@ -54,6 +54,8 @@ sealed interface Deep {
     data class ShareCard(val listId: String) : Deep
     /** A shop link shared into the app: the Add wish form with it. */
     data class AddLink(val url: String) : Deep
+    /** A wish list link (GoWish, Giftful, Amazon, …) or a list of wishes as text shared into the app: Import with it. */
+    data class Import(val text: String) : Deep
 }
 
 /**
@@ -129,6 +131,8 @@ internal fun deepOf(i: Intent): Deep? {
         val invite = if (t.uppercase().contains("J=")) Sync.parseInvite(t) else null
         if (invite != null) return Deep.Invite(invite)
         Sync.embeddedCode(t)?.let { return Deep.FriendList(it) }
+        // A wish list from GoWish, Giftful, Amazon … or a list from a notes app: Import (owner, 18 November 2026).
+        if (com.wishlist.app.Import.looksLikeList(t)) return Deep.Import(t.trim().take(20000))
         return cleanUrl(t)?.let { Deep.AddLink(it) }
     }
     return null

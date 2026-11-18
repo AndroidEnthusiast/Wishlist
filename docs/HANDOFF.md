@@ -5,6 +5,11 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.226 (18 November 2026), read first.** Import step 1 is built (`docs/decisions/import.md`). Ask how it feels on
+  the phone (paste a GoWish/Giftful/Amazon link, share one from their app, text from notes) and whether the owner
+  made the six PUBLIC test lists yet (TODO, "Import, step 2"). With the links: fill `tests/import/lists.json`, see the
+  real pages through the daily check, write one reader per site in `web/import/reader.js` (raise VERSION). This
+  session couldn't open gowish.com (blocked here): GitHub's computers can.
 - **2.221–2.225 (17 November 2026, evening), read first.** The approved plan (`docs/designs/plan-2026-11-17.md`,
   steps 1–5) is built: centred chip text, My own / With others, the full-width form sheet (+ menu forms, Wishlist
   settings, list menu), the settings sheet, five themes + Gen Z with a Theme screen. Ask how each feels on the phone
@@ -49,6 +54,12 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 18 November 2026: Import a list, step 1 (2.226)
+Interviewed (5 rounds) after Listful's Import sheet; decisions in `docs/decisions/import.md`. Built: + menu / empty
+Home / welcome / Share → Import sheet (site icons live, paste link or text), hidden read with the updatable reader
+`web/import/reader.js` (any-page reader), "Import this page" fallback, check screen, fill-in of photos and prices,
+real shop links, daily `import-check.yml` (opens an issue). Checks: `ImportTest`, `tests/import/test.js`.
+
 ### 17 November 2026, evening: red buttons, plan built (2.221–2.225)
 2.221 every red action readable (danger buttons, scan check). Interviewed on GoWish/Giftful screenshots; plan approved
 (step 6 left). 2.222 centred chip text (measured from the font file), My own / With others. 2.223 full-width form
@@ -60,10 +71,3 @@ Owner: no chips under a person, only "About me" (100 letters, was "I like…"); 
 it; sizes deleted (`supabase-sizes-off.sql`). Interviewed on dropping collab wishlists: merge in the menus, with
 "Who is it for?" to protect the surprise; built in 2.220 ("collab" no longer said). Checks: `DialogButtonInkTest`,
 `aboutMeInsteadOfChips`, `sizes_off_test.sql`, `OneNewWishlistTest`.
-
-### 16 November 2026: owner's review and solo interview (2.214)
-"♥ Love it" / "Jorai loves it", smaller label (Rows on the picture), one-time heart tip; hold and move to drag
-("My order", sort per list), Move or copy…; two-people Friends icon; Gen Z settings on cards; chat opens at its end,
-no bounce going back (Moving had a size animation). Interviewed on solo use: sold out alerts and screenshot to wish next.
-2.215: Shopify pictures given as http:// (Baracuta) load over https (`secureImage`, app and web).
-2.216: wish form trimmed, Quiet field text full ink. 2.217: friend page person first, 2-photo collages, failed pictures, card ✕. 2.218: Home = your profile, + menu, pop-ups.

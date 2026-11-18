@@ -234,6 +234,8 @@ fun HubScreen(
         // In every section the list opened last comes first (owner, 2.110, instead of a "Recently opened" row).
         // "Create list" offers all three kinds: that is how people find groups and gift lists.
         HubBlocks(byRecent(mineItems), onHome, ::actionsOf, onAddTo, tr("Create list"), if (onHome) onCreateList else null, dots = true)
+        // Nothing on any list yet (owner, 18 November 2026): offer to bring a list over from elsewhere.
+        if (onHome && mine.all { it.wishes.isEmpty() } && groupItems.isEmpty()) ImportHomeCard { go(Deep.Import("")) }
 
         // Your groups, right after your own lists (owner, 2.108).
         GroupsHomeSection(onHome, onOpenWishGroup, onNewWishGroup)

@@ -1,0 +1,44 @@
+name: Import check
+# Every day (owner, 18 November 2026; docs/decisions/import.md): the Import reader (web/import/reader.js) reads the
+# owner's public test list on each site (tests/import/lists.json) in a real browser. When a site changed and the
+# reader no longer finds the wishes, this job fails and opens a GitHub issue, so the owner gets an e-mail. It runs on
+# GitHub's computers: free for a public repository, and it costs no Claude tokens.
+on:
+  schedule:
+    - cron: '41 5 * * *'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Get the test tools
+        working-directory: tests
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: The reader on saved pages
+        run: node tests/import/test.js
+      - name: The reader on the owner's test lists
+        run: node tests/import/live.js
+      - name: Tell the owner (a GitHub issue)
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const title = 'Import check failed';
+            const body = (fs.existsSync('import-failures.md') ? fs.readFileSync('import-failures.md', 'utf8')
+              : 'The Import reader failed its checks on saved pages (tests/import/test.js).') +
+              `\n\nRun: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const open = await github.rest.issues.listForRepo({ owner: context.repo.owner, repo: context.repo.repo, state: 'open', per_page: 100 });
+            const same = open.data.find(i => i.title === title && !i.pull_request);
+            if (same) await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: same.number, body });
+            else await github.rest.issues.create({ owner: context.repo.owner, repo: context.repo.repo, title, body });

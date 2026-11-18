@@ -1,0 +1,4 @@
+{
+  "about": "The owner's public TEST lists, one per site, read every day by .github/workflows/import-check.yml (docs/decisions/import.md). Each: the site, the link, the least number of wishes it must find, and a few titles it must find. Empty until the owner sends the links.",
+  "lists": []
+}
