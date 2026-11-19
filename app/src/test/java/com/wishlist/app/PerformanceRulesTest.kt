@@ -11,7 +11,7 @@ import java.io.File
  */
 class PerformanceRulesTest {
     private fun src(name: String) = File("src/main/java/com/wishlist/app/$name").readText()
-    private val styleFiles = listOf("Design.kt", "Styled.kt", "StyledButtons.kt", "StyledBars.kt", "StyledPhotos.kt", "AppIcons.kt", "Themed.kt", "Placeholders.kt")
+    private val styleFiles = listOf("Design.kt", "Styled.kt", "StyledButtons.kt", "StyledBars.kt", "StyledPhotos.kt", "AppIcons.kt", "Themed.kt", "ThemedFields.kt", "ThemedControls.kt", "ThemedSheets.kt", "Placeholders.kt")
 
     @Test fun stylesDrawLinesWithEdgeLineNotBorder() {
         for (f in styleFiles) assertTrue("$f uses Modifier.border; use edgeLine (made once per size)", !Regex("""\.border\(""").containsMatchIn(src(f)))

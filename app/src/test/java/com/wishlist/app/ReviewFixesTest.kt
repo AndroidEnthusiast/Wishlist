@@ -212,7 +212,7 @@ class WishFormTrimTest {
 
     /** Typed and chosen values in Quiet's fields are full ink, not the dialog's grey (the text style's colour is reset). */
     @Test fun quietFieldTextIsInk() {
-        val t = File("src/main/java/com/wishlist/app/Themed.kt").readText()
+        val t = File("src/main/java/com/wishlist/app/ThemedFields.kt").readText()
         assertEquals(2, Regex("textAlign = androidx.compose.ui.text.style.TextAlign.Start, color = androidx.compose.ui.graphics.Color.Unspecified").findAll(t).count())
     }
 

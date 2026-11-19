@@ -25,7 +25,6 @@ class ArchitectureTest {
         /** Over the limit on 19 November 2026, with their size then. Only shrinks. */
         val ALLOWED: Map<String, Int> = mapOf(
         "Data.kt" to 1110,
-        "Themed.kt" to 826,
         "Shared.kt" to 710,
         "AppScreen.kt" to 628,
         "Exchange.kt" to 608,

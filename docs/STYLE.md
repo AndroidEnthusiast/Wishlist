@@ -8,7 +8,7 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
 - Buttons, dialogs, switches, top bars and icons come from `StyledButtons.kt` / `StyledBars.kt` / `AppIcons.kt` (split from `Styled.kt` in 2.242) (`Button`, `OutlinedButton`, `TextButton`,
   `AlertDialog`, `Switch`, `TopAppBar`, `AppIcons`). Never import Material's own `Button`/`AlertDialog` in a screen:
   ours carry the chosen design style (Quiet, Gen Z chaos; a new one only as in `docs/DESIGN-STYLES.md`) and the sizes below. The same for text fields, menus, tick boxes, choice circles, chips, spinners, progress bars, dividers,
-  sliders, bottom panels and `Scaffold` (`Themed.kt`, since 2.199): never import Material's own in a screen (the
+  sliders, bottom panels and `Scaffold` (`Themed*.kt`, since 2.199): never import Material's own in a screen (the
   photo editor's dark field is the one exception). Owner, 13 November 2026: "a theme must change absolutely every
   element of the app"; a new part gets its style in every theme, light and dark.
 - Cards, mats and surfaces use `lookCard`, `lookMat`, `lookSurface` (`Design.kt`); a box with its own background uses

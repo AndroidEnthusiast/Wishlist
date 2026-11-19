@@ -681,3 +681,8 @@ The guard now also watches Chat/ChatPhotos. 24 files left on ALLOWED (biggest ne
 Owner chose: Data.kt later with its own plan (not a screen; saving could lose data). `HeroEditor.kt` split into
 HeroEdit, HeroPicture, HeroEditor, HeroEditorParts + `HeroEditorState`; 7 screenshots identical; dead crop code
 removed. GitHub caught a rare start-up crash (a store made mid-drawing): stores now made in MainActivity first.
+
+### 19 November 2026, early morning: My shops (2.241)
+`Shops.kt` split into Shops, ShopsScreen, ShopBrowser + `ShopsModel`/`ShopBrowserState`; 7 screenshots identical
+(the test rejects the shop icons up front: from the internet they arrived at random moments). Guard watches Shops.
+22 files left on ALLOWED (next: Styled, Themed, Shared, AppScreen).
