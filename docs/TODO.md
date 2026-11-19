@@ -7,7 +7,7 @@ it**, grouped as below, with a recommendation. Add every new open item here the 
 Details of each item are in the doc named after it.
 
 ## Now
-- **Try the rebuild on the phone (owner, 19 November 2026: nothing of 2.233–2.247 tried yet).** Everything should look
+- **Try the rebuild on the phone (owner, 19 November 2026: nothing of 2.233–2.255 tried yet; the owner tests after the 8 screens).** Everything should look
   and work exactly as before; say what doesn't. In order of risk:
   1. Notifications and links open the right place (a price alert, a message, a friend's list link, a group or gift
      exchange invitation); Back from a tab or a list goes Home (2.244).
@@ -20,10 +20,10 @@ Details of each item are in the doc named after it.
   6. Home, a list (drag to reorder, select, Reserve on a friend's list; a 2× wish: "How many?" then it shows in Gifts
      I reserved, 2.248), Friends and Profile (2.233–2.236), and the
      look of buttons, dialogs, fields and cards in every view (2.242, 2.243, 2.245, 2.247).
-- **The rebuild (owner, 18–19 November 2026; `docs/decisions/roadmap.md`):** Home done (2.233), guards in (2.234), Friends/Profile (2.235), the open list (2.236), gift exchange (2.237), wishlist groups (2.238), Messages (2.239), the photo editor (2.240), My shops (2.241), the building blocks (Styled, 2.242; Themed, 2.243), the app's frame (AppScreen, 2.244), the wish cards (2.245), the wish form (2.246), the styles (Design, 2.247), a friend's list (2.248), App settings (2.249), covers (2.250), the price page (2.251), gift invitations (2.252), shared wishlist dialogs (2.253), reactions (2.254). Left:
-  the files left on `ArchitectureTest.ALLOWED` (9) (biggest: Data (waits for its own plan, owner: `docs/decisions/roadmap.md`),
-  Shared, Exchange, Alerts, Friends (these four wait with Data, owner; Groups, Import, Fetch proposed to wait too). Owner: the 7 screens left get the full rebuild,
-  then the owner tests: Overview.
+- **The rebuild (owner, 18–19 November 2026; `docs/decisions/roadmap.md`):** Home done (2.233), guards in (2.234), Friends/Profile (2.235), the open list (2.236), gift exchange (2.237), wishlist groups (2.238), Messages (2.239), the photo editor (2.240), My shops (2.241), the building blocks (Styled, 2.242; Themed, 2.243), the app's frame (AppScreen, 2.244), the wish cards (2.245), the wish form (2.246), the styles (Design, 2.247), a friend's list (2.248), App settings (2.249), covers (2.250), the price page (2.251), gift invitations (2.252), shared wishlist dialogs (2.253), reactions (2.254), Overview (2.255): **every screen is done.** Left:
+  the files left on `ArchitectureTest.ALLOWED` (8) (biggest: Data (waits for its own plan, owner: `docs/decisions/roadmap.md`),
+  Shared, Exchange, Alerts, Friends (these four wait with Data, owner; Groups, Import, Fetch proposed to wait too). Next: the owner tests (above),
+  then the data part (below, "Later, remind the owner").
 - **Later, remind the owner (owner, 19 November 2026: "remind me later"): the data part, built like a team would.**
   After the 8 screens and the owner's test: Data, Shared, Exchange, Alerts, Friends (and Groups, Import, Fetch) behind
   cleaner "repositories" with their own checks (saving and loading give back exactly the same lists); then checks on a

@@ -732,3 +732,7 @@ light chart moves with the clock: proven by running the old code at the same tim
 ### 19 November 2026, night: gift invitations (2.252)
 `GiftInvites.kt` split into GiftInvites + GiftInviteViews + `GiftInviteModel`; screenshots found and fixed black-on-
 black headings in dark. 3 screens to go: Overview, Reactions, SharedUi.
+
+### 19 November 2026, night: shared list dialogs (2.253)
+`SharedUi.kt` split into SharedUi + SharedManage + `SharedListModel`; screenshots found Leave/Delete not red: fixed.
+2 screens to go: Overview, Reactions; then the owner tests (TODO "Try the rebuild").

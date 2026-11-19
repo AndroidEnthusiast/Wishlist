@@ -34,6 +34,7 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 
 ### Your lists and wishes
 - `ListScreen.kt` (the open list; rebuilt in 2.236: layout only) + `ListModel.kt` (its state holder: category, search, selection, open dialog, Reserve, Love, view, sort; `shownWishes`, `keptOrder`) + `ListWishItem.kt` (one wish's card and buttons) + `ListDrag.kt` (drag to reorder) + `ListViewButtons.kt` (view switch, a wish's ⋮); checks `ListModelTest`
+- `Overview.kt` (`WishFocus`: a wish opened from elsewhere scrolls into view and glows, `GlowBox`, `placedWishes`, `ProfileSummary`) + `OverviewScreen.kt` (All your wishes / Wishes you love, rebuilt in 2.255) + state holder `OverviewModel.kt` (`OverviewState`); checks `OverviewModelTest`, screenshots `OverviewScreenshotTest`
 - `WishCards.kt` (wish cards; split in 2.245: `CompactCard.kt` Two per row, `WishCard.kt` Large cards, `RowCard.kt` Rows, `WishCardParts.kt` (`CardButtons`, `cardIcon`), `WishPriceLine.kt`; `WishCards.kt` keeps the shared bits: `Reserving`, `reserveButton`, `priceRose`)
 - `WishForm.kt` (Add/Edit wish; rebuilt in 2.246) + `WishFormParts.kt` (photo block, Take or Choose photo, More details) + state holder `WishFormModel.kt` (`WishFormState`: the fields, reading a link, the photo, the list, saving); checks `WishFormModelTest`, screenshots `WishFormScreenshotTest`
 - `Data.kt` (`Wish`, `Repo`)
