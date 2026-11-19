@@ -764,3 +764,16 @@ The "Next session" plan after 2.257 (done in 2.258), word for word:
   in step: the riskiest so far, two people saving at once, Rule 3), the same way: interview on the plan and its risks
   first; record a before/after check with the OLD code in its own commit (`DataSameTest`/`FriendsSameTest` show how;
   the pretend server `Cloud.pretendServer` answers server calls), then split by moving code word for word.
+
+### 19 November 2026, late night: the data rebuild, Data.kt (2.256)
+Owner chose (interview): start now, "split inside, same doors", Data → Friends → Shared → rest, same storage format +
+a before/after check. `DataSameTest` recorded with the old code first (own commit), then Data.kt split into `Wish.kt`
++ `Repo*.kt` parts by moving code word for word: identical. Guard `ownDataOnlyThroughRepo`; `RepoPartsTest`.
+
+The "Next session" plan after 2.258 (done in 2.259), word for word:
+- **The data rebuild (owner, 19 November 2026; `docs/decisions/roadmap.md`, last section), read first.** 2.256 Data,
+  2.257 Friends, 2.258 Shared (nothing on screen changed). Ask how they and the screen rebuild behave on the phone
+  (TODO "Try 2.258", "Try 2.257", "Try 2.256", "Try the rebuild"). Then the next area, **Groups.kt**, then Exchange,
+  Alerts, Import, Fetch, the same way: interview on the plan and its risks first; record a before/after check with
+  the OLD code in its own commit (`SharedSameTest` shows how: a pretend server with its own state; let each background
+  save finish before the next so the record is stable), then split by moving code word for word.

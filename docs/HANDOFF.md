@@ -6,9 +6,9 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Next session
 - **The data rebuild (owner, 19 November 2026; `docs/decisions/roadmap.md`, last section), read first.** 2.256 Data,
-  2.257 Friends, 2.258 Shared (nothing on screen changed). Ask how they and the screen rebuild behave on the phone
-  (TODO "Try 2.258", "Try 2.257", "Try 2.256", "Try the rebuild"). Then the next area, **Groups.kt**, then Exchange,
-  Alerts, Import, Fetch, the same way: interview on the plan and its risks first; record a before/after check with
+  2.257 Friends, 2.258 Shared, 2.259 Groups (nothing on screen changed). Ask how they and the screen rebuild behave on
+  the phone (TODO "Try 2.259" … "Try the rebuild"). Then the next area, **Exchange.kt** (gift exchanges and the draw),
+  then Alerts, Import, Fetch, the same way: interview on the plan and its risks first; record a before/after check with
   the OLD code in its own commit (`SharedSameTest` shows how: a pretend server with its own state; let each background
   save finish before the next so the record is stable), then split by moving code word for word.
 - **The rebuild (owner, 18 November 2026; `docs/decisions/roadmap.md`, last section).** Point 2 done: version stamps in
@@ -81,6 +81,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 19 November 2026, late night: the data rebuild, Groups (2.259)
+Four parts, four risks checked (owner). `GroupsSameTest` recorded with the old code first; to be stable it waits for
+Sync's background sends, sorts the calls within a step and blanks the chat key. Split word for word: identical.
+`GroupsPartsTest`; the guard covers `GroupPhotos`.
+
 ### 19 November 2026, late night: the data rebuild, Shared (2.258)
 Owner: ship now, "make sure everything works". `SharedSameTest` with `PretendSharedServer` (writes only fields sent,
 offline, late answers) recorded with the old code first, then Shared.kt split word for word: identical (stable over
@@ -90,8 +95,3 @@ runs once saves in one step waited for each other). `SharedPartsTest` for the fo
 Owner chose: build and ship now (not wait for testing), a pretend server for the checks, five parts, all four risks
 checked. `FriendsSameTest` recorded with the old code first (own commit), then Friends.kt split word for word:
 identical. `FriendsPartsTest`; the guard covers Friends' parts. Cloud.kt hit 401 lines: the guard caught it.
-
-### 19 November 2026, late night: the data rebuild, Data.kt (2.256)
-Owner chose (interview): start now, "split inside, same doors", Data → Friends → Shared → rest, same storage format +
-a before/after check. `DataSameTest` recorded with the old code first (own commit), then Data.kt split into `Wish.kt`
-+ `Repo*.kt` parts by moving code word for word: identical. Guard `ownDataOnlyThroughRepo`; `RepoPartsTest`.

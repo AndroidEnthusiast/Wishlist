@@ -19,6 +19,7 @@ import java.io.File
  *     changes them through Repo (Repo.myWishes, Repo.trash, …), so saving always goes through Repo.persist. The same for
  *     Friends: its parts (FriendPhotos, FriendAbout, FriendVisibility) only in Friends.kt and FriendsPhotos, -About,
  *     -Visible, -Links. And Shared: its save engine and SharedReservations only in Shared.kt and its four part files.
+ *     And Groups: GroupPhotos only in Groups.kt, GroupsMembership, GroupsPhotos, GroupsLinks.
  */
 class ArchitectureTest {
     private val dir = File("src/main/java/com/wishlist/app")
@@ -32,7 +33,6 @@ class ArchitectureTest {
         "Exchange.kt" to 608,
         "Alerts.kt" to 585,
         "Import.kt" to 516,
-        "Groups.kt" to 506,
         "Fetch.kt" to 473
         )
 
@@ -122,6 +122,11 @@ class ArchitectureTest {
         val sharedHits = dir.listFiles()!!.filter { it.name.endsWith(".kt") && it.name !in sharedFiles }
             .flatMap { f -> f.readLines().mapIndexedNotNull { i, l -> sharedPart.find(l)?.let { "${f.name}:${i + 1} ${l.trim()}" } } }
         assertTrue("Use Shared's doors (Shared.put, Shared.reserve, …), not its insides: $sharedHits", sharedHits.isEmpty())
+        // Groups (2.259): its photo part only inside its own files.
+        val groupFiles = setOf("Groups.kt", "GroupsMembership.kt", "GroupsPhotos.kt", "GroupsLinks.kt")
+        val groupHits = dir.listFiles()!!.filter { it.name.endsWith(".kt") && it.name !in groupFiles }
+            .flatMap { f -> f.readLines().mapIndexedNotNull { i, l -> Regex("\\bGroupPhotos\\.").find(l)?.let { "${f.name}:${i + 1} ${l.trim()}" } } }
+        assertTrue("Use Groups' doors (Groups.photos, Groups.setPhoto, …), not its parts: $groupHits", groupHits.isEmpty())
         assertFalse(part.containsMatchIn("MyOwnLists.x"))
     }
 

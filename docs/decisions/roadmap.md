@@ -253,4 +253,8 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
   people, offline and a late answer), but not how it feels on a real phone. **Five parts** (lists you're on; open list
   and offline copy; saving wishes; details; reservations). **All four risks checked:** two people one wish, failed save
   undone, old answer ignored, offline / deleted / left.
+- **Groups next** (owner, 19 November 2026; timing not asked again: the owner's standing answer is "ship now, make sure
+  everything works"). **Four parts** (groups and invites; photos; making/joining/leaving/settings/invites; links and
+  the browser member moving in). **All four risks checked:** an "Only me" list stays private outside the group, news
+  told once, offline and old saved state, a browser member moving in (and a wrong link changing nothing).
 
