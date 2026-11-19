@@ -21,6 +21,7 @@ import java.io.File
  *     -Visible, -Links. And Shared: its save engine and SharedReservations only in Shared.kt and its four part files.
  *     And Groups: GroupPhotos only in Groups.kt, GroupsMembership, GroupsPhotos, GroupsLinks.
  *     And gift exchanges: ExchangePhotos only in Exchange.kt and ExchangeNews, -Membership, -Draw, -Types.
+ *     And notifications: PriceAlertQueue only in Alerts.kt and AlertsPrices, -Lists, -People.
  */
 class ArchitectureTest {
     private val dir = File("src/main/java/com/wishlist/app")
@@ -31,7 +32,6 @@ class ArchitectureTest {
 
         /** Over the limit on 19 November 2026, with their size then. Only shrinks. */
         val ALLOWED: Map<String, Int> = mapOf(
-        "Alerts.kt" to 585,
         "Import.kt" to 516,
         "Fetch.kt" to 473
         )
@@ -132,6 +132,11 @@ class ArchitectureTest {
         val gxHits = dir.listFiles()!!.filter { it.name.endsWith(".kt") && it.name !in gxFiles }
             .flatMap { f -> f.readLines().mapIndexedNotNull { i, l -> Regex("\\bExchangePhotos\\.").find(l)?.let { "${f.name}:${i + 1} ${l.trim()}" } } }
         assertTrue("Use Exchanges' doors (Exchanges.photos, Exchanges.setPhoto, …), not its parts: $gxHits", gxHits.isEmpty())
+        // Notifications (2.261): the price queue only inside Alerts' own files.
+        val alertFiles = setOf("Alerts.kt", "AlertsPrices.kt", "AlertsLists.kt", "AlertsPeople.kt")
+        val alertHits = dir.listFiles()!!.filter { it.name.endsWith(".kt") && it.name !in alertFiles }
+            .flatMap { f -> f.readLines().mapIndexedNotNull { i, l -> Regex("\\bPriceAlertQueue\\.").find(l)?.let { "${f.name}:${i + 1} ${l.trim()}" } } }
+        assertTrue("Use Alerts' doors (Alerts.collectPrices, Alerts.notifyDrop, …), not its insides: $alertHits", alertHits.isEmpty())
         assertFalse(part.containsMatchIn("MyOwnLists.x"))
     }
 

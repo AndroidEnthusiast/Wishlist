@@ -71,7 +71,12 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `SharedPrices.kt` (price checks for shared lists)
 - `Fetch.kt` + `Browser.kt` (reading product pages)
 - `History.kt` + `PriceHistory.kt` (a wish's price page; rebuilt in 2.251) + `PriceChart.kt` + state holders `PriceModel.kt` (`PriceDialogState`, `TargetState`, `targetError`) + `ChartMath.kt`; checks `PriceModelTest`
-- `PriceWorker.kt` + `Alerts.kt` + `Background.kt` (background checks)
+- `PriceWorker.kt` + `Alerts.kt` + `Background.kt` (background checks). Notifications (split in 2.261, the data
+  rebuild; none changed): `Alerts.kt` (front door: channels, whose ids carry the owner's Android settings; schedule;
+  settings shortcuts), `AlertsPrices.kt` (drops, rises, the summary: `PriceAlertQueue`), `AlertsLists.kt` (your lists
+  and gifts), `AlertsPeople.kt` (friends, birthdays, groups, exchanges, messages); bundling and pace: `NotifyPace.kt`.
+  Checks: `AlertsSameTest` (every notification word for word against `alerts-same.txt`, recorded before the split),
+  `AlertsPartsTest` (same text and place, channels kept, grouping and pace, schedule)
 - `PriceReport.kt` ("Price is wrong?" on a wish's price page: the shop's page as the phone reads it, saved to a file for the share sheet; a file the owner uploads goes into `tests/shared/same-answers.json` → `pages` with the fix in both readers)
 - `PriceWatch.kt` (when a price check believes what it read, 2.178: two readings that agree, a quiet first look, typed prices stay; its notes per wish are the database table `price_watch`)
 - `Shops.kt` (Find a gift: your shops and their icons; rebuilt in 2.241) + `ShopsScreen.kt` (My shops page, Add shop, `ShopIcon`) + `ShopBrowser.kt` (a shop inside the app with Add to wishlist) + state holders `ShopsModel.kt` (`ShopsModel`, `ShopBrowserState`); checks `ShopsModelTest`, screenshots `ShopsScreenshotTest`; `CONSENT_JS` refuses cookie questions

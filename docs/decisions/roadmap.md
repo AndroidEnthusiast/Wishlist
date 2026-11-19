@@ -261,4 +261,8 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
   joining, settings, invites, photo; rules, draw, reveal, chats, links) plus the data shapes in their own file. **All
   four risks checked:** only your own pair is kept (the draw's secrecy itself is the server's, `exchange_test.sql`),
   news and reminders told once, offline and old saved state, anonymous chats.
+- **Notifications next** (owner, 19 November 2026): Alerts.kt builds every notification (it saves no data, so the
+  risks are different): four parts (basics; prices; your lists and gifts; people). **All four risks checked:** same
+  text and same place when tapped, the channels keep their ids (your Android settings stay), grouping and pace,
+  the background check's schedule.
 
