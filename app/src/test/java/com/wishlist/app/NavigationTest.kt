@@ -246,8 +246,11 @@ class NavigationTest : NavigationBase() {
         // 2026). Read from the code (the wish form's cursor never lets this pretend phone settle).
         val src = java.io.File("src/main/java/com/wishlist/app/AppScreen.kt").readText()
         val at = src.indexOf("val onAList = route == Route.LIST")
-        val block = src.substring(at, src.indexOf("} else plusMenu = true", at))
-        org.junit.Assert.assertTrue(block.contains("if (onAList) {") && block.contains("adding = true"))
+        val block = src.substring(at, src.indexOf("} else a.plusMenu = true", at))
+        org.junit.Assert.assertTrue(block.contains("if (onAList) {") && block.contains("a.addWish(Shared.active"))
+        // addWish opens the form (AppModel.kt).
+        val model = java.io.File("src/main/java/com/wishlist/app/AppModel.kt").readText()
+        org.junit.Assert.assertTrue(model.contains("fun addWish(target: String?, url: String = \"\") { addTarget = target; prefill = url; adding = true }"))
     }
 
     @Test fun friendsListFromALinkBackHome() {

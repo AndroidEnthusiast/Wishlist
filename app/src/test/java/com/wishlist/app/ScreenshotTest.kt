@@ -12,6 +12,7 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.longClick
@@ -155,7 +156,9 @@ abstract class ScreenshotBase(private val mode: String, private val tag: String 
     // The screens the owner found hard to read (15 November 2026): Visible to, Price history, Edit wish.
     @Test fun visibleTo() {
         compose.waitForIdle()
-        compose.onAllNodes(hasContentDescription("More for", substring = true) and hasClickAction()).onFirst().performTouchInput { click() }
+        // With big text the list block's ⋮ sits under the bottom bar (a tap there hits the bar): pressed directly.
+        compose.onAllNodes(hasContentDescription("More for", substring = true) and hasClickAction()).onFirst()
+            .performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick)
         repeat(10) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
         shot("listmenu")
         tap("Visibility"); shot("visible")

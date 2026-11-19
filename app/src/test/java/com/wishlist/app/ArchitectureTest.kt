@@ -26,7 +26,6 @@ class ArchitectureTest {
         val ALLOWED: Map<String, Int> = mapOf(
         "Data.kt" to 1110,
         "Shared.kt" to 710,
-        "AppScreen.kt" to 628,
         "Exchange.kt" to 608,
         "Alerts.kt" to 585,
         "WishCards.kt" to 576,
@@ -63,14 +62,16 @@ class ArchitectureTest {
             // The photo editor (19 November 2026): its state holder is HeroEditorState.kt.
             "HeroEditor.kt", "HeroEditorParts.kt", "HeroPicture.kt",
             // My shops (19 November 2026): its state holders are in ShopsModel.kt.
-            "ShopsScreen.kt", "ShopBrowser.kt"
+            "ShopsScreen.kt", "ShopBrowser.kt",
+            // The app's frame (19 November 2026): its state holder is AppModel.kt.
+            "AppScreen.kt", "AppPopups.kt"
         )
 
         /** A store's data set straight away ("Exchanges.list = …"; only the checks' pretend data may). */
         val STORE_SET = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|Chat)\\.[a-z][A-Za-z]*(\\[[^\\]]*])? = ")
 
         /** A call that changes shared data: Store.set…(), .delete…(), .leave(), … */
-        val WRITES = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|ListVisibility|Occasions|MyLists|Chat|ChatPhotos|Shops)\\.(set|add|delete|remove|rename|create|leave|put|update|replace|trash|reserve|move|copy|open|hide|join|answer|new|cancel|invite|decline|send|seen|save|reveal|handover|draw|settings|takeover|react|upload|forget|mark|restore)[A-Za-z]*\\(")
+        val WRITES = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|ListVisibility|Occasions|MyLists|Chat|ChatPhotos|Shops)\\.(set|add|delete|remove|rename|create|leave|put|update|replace|trash|reserve|move|copy|open|hide|join|answer|new|cancel|invite|decline|send|seen|save(?!Key)|reveal|handover|draw|settings|takeover|react|upload|forget|mark|restore)[A-Za-z]*\\(")
     }
 
     @Test fun everyFileStaysSmall() {
@@ -115,6 +116,8 @@ class ArchitectureTest {
         assertTrue(WRITES.containsMatchIn("Shops.opened(ctx, s)"))
         assertTrue(WRITES.containsMatchIn("Shops.markOffered(ctx, h)"))
         assertFalse(WRITES.containsMatchIn("Shops.has(ctx, host)"))
+        // A list's key ("m:…"), not a save.
+        assertFalse(WRITES.containsMatchIn("MyLists.saveKey(Repo.openMine, false)"))
         assertTrue(STORE_SET.containsMatchIn("Groups.unsent = Groups.unsent - g.id"))
     }
 }

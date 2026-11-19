@@ -686,3 +686,8 @@ removed. GitHub caught a rare start-up crash (a store made mid-drawing): stores 
 `Shops.kt` split into Shops, ShopsScreen, ShopBrowser + `ShopsModel`/`ShopBrowserState`; 7 screenshots identical
 (the test rejects the shop icons up front: from the internet they arrived at random moments). Guard watches Shops.
 22 files left on ALLOWED (next: Styled, Themed, Shared, AppScreen).
+
+### 19 November 2026, morning: the building blocks (2.242)
+`Styled.kt` (not a screen) split by kind into StyledButtons, StyledBars, AppIcons, StyledPhotos, Styled; a script
+proved all 745 lines moved unchanged. Tests reading Styled.kt updated. 21 files left (next: Themed, Shared, AppScreen).
+GitHub's "Publish the web page" failed 3× (its own artifact error; the APK published): rerun the pages job if needed.

@@ -207,3 +207,7 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
   screenshots can't catch. Asked with options (later with its own plan / only the parts that save nothing / all now);
   the owner chose **later, with its own plan** and extra checks that saving and loading give back exactly the same
   lists. The screens go first (next: the photo editor, then Shops).
+- **Shared.kt, Exchange.kt and Alerts.kt join Data.kt's own plan** (owner, 19 November 2026, "Continue" on the
+  recommendation): like Data.kt they save and send data (shared lists kept in step, gift exchanges and the draw,
+  background price checks and notifications), where a mistake could lose or mix up data and screenshots can't catch
+  it. The screens go first; next AppScreen.kt (moving between screens).

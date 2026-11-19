@@ -332,7 +332,7 @@ class HomeAsProfileTest {
 @org.robolectric.annotation.Config(sdk = [34])
 class OneNewWishlistTest {
     @Test fun whoIsItForSwitchesBetweenTheTwo() {
-        val app = File("src/main/java/com/wishlist/app/AppScreen.kt").readText()
+        val app = File("src/main/java/com/wishlist/app/AppPopups.kt").readText()
         // One sheet for both (2.223): the chips swap the fields inside it.
         assertTrue(app.contains("\"mine\", \"collab\" -> NewWishlistSheet("))
         val hub = File("src/main/java/com/wishlist/app").listFiles()!!.filter { it.name.startsWith("Home") && it.name.endsWith(".kt") || it.name == "NewWishlist.kt" }.sortedBy { it.name }.joinToString("\n") { it.readText() }

@@ -26,7 +26,7 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 
 ### Frame, screens and moving between them
 - `MainActivity.kt` (only sets up the app and reads Intents, since 2.163)
-- `AppScreen.kt` (`App`: routes, bottom bar, app-wide pop-ups)
+- `AppScreen.kt` (`App`: routes, bottom bar; rebuilt in 2.244) + `AppPopups.kt` (app-wide pop-ups) + state holder `AppModel.kt` (`AppState`: which pop-up is open, `go(Deep)`, opening lists, groups, exchanges, friends and notifications, `startUp`; `AppSaved` keeps the pop-ups over Android closing the app)
 - `Deep.kt` (every way into the app: notifications, links, shared text → `deepOf` → `App.go`)
 - `Places.kt` (since 2.193: where you are inside the tabs, owned by `App` with `rememberSaveable` and read as `LocalPlaces`; `FriendCache`, a friend's loaded lists; `ChatOnScreen`, the chat on screen for the message check, 2.194). Screens open other screens with `LocalGo` (`Deep.kt`, 2.192).
 - `Nav.kt` (screens as routes, Navigation Compose: Profile, App settings, Bin, Notifications, Received gifts, Gifts I reserved, Price changes, a list's settings, a list opened from its link, the tabs Messages/My shops/Friends, a wishlist group, Gift exchanges, Home, the open list: every screen since 2.160; ROADMAP Stage 1). The app's checks never reach the real server (`Cloud.noServerInChecks`) and run with animations off
