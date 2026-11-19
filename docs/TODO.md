@@ -49,6 +49,7 @@ Details of each item are in the doc named after it.
   ("1.299,00 kr" on a .se shop, "20 zł" on a .pl shop) gets the phone's own currency; an Amazon link written as
   …/Some-Name/dp/B0…/ref=…?th=1 keeps its "ref" part (duplicates of the same product may not be spotted). Both are in the
   shared price reading (`Fetch.kt` + `web/parse.js`, Rule 2): fix together, with cases in `tests/parse`.
+- **Try 2.264 on the phone:** react on a friend's wish, then tap your reaction: it is gone and "+ React" is back.
 - **Try 2.263 on the phone (price reading split, nothing should differ):** add a wish from a shop link (name, photo,
   price fill in), "Price is wrong?" on a wish's price page, wait for a price check.
 - **The data rebuild (owner, 19 November 2026; `docs/decisions/roadmap.md`, last section): done.** Data.kt 2.256,

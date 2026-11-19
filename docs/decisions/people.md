@@ -164,3 +164,10 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
 
 - Someone else's wishes (compact Reserve, Add to my wishlist, one reaction) and the buttons on a wish card (18 November
   2026): moved to `docs/decisions/wish-cards.md`.
+
+## Reactions: one tap on yours takes it away (owner, 20 November 2026)
+- The owner reacted on a friend's wish and tapped the reaction: "+ React" came back but the reaction stayed (since 18
+  November a first tap on your own reaction only brought "+ React" back; a second tap took it away). Owner: tapping
+  your reaction should remove it and then "+ React" reappears. Built in 2.264, in the app (`ReactionModel.kt`) and on
+  the friends' and group pages (`web/together.js`); checks `ReactionModelTest`, `FriendWishesTest`, `tests/together`.
+

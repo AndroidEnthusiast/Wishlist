@@ -131,7 +131,7 @@ fun ReactionBar(
         ) {
             Text("+$hidden", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = ink, maxLines = 1)
         }
-        if (deco.canReact && (!reacted || st.again)) Row(
+        if (deco.canReact && !reacted) Row(
             Modifier.minimumInteractiveComponentSize().heightIn(min = CHIP_HEIGHT).clip(CircleShape).border(1.dp, ink.copy(alpha = 0.25f), CircleShape)
                 .clickable(onClickLabel = tr("React")) { st.picking = true }.padding(horizontal = if (compact) 10.dp else 12.dp),
             verticalAlignment = Alignment.CenterVertically

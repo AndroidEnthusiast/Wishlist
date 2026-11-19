@@ -833,3 +833,8 @@ The "Next session" plan after 2.262 (done in 2.263), word for word:
   on the plan and its risks first; record a before/after check with (never write today's date into a record)
   the OLD code in its own commit (`SharedSameTest` shows how: a pretend server with its own state; let each background
   save finish before the next so the record is stable), then split by moving code word for word.
+
+### 19 November 2026, late night: the data rebuild, Alerts (2.261)
+Notifications, four parts, four risks checked (owner). `AlertsSameTest` records every notification's details (read
+from Android's list of shown notifications, by id) with the old code first; split word for word: identical.
+`AlertsPartsTest`; the guard covers `PriceAlertQueue`. Left: Import, Fetch.

@@ -139,13 +139,11 @@ async function attach(ctx) {
   await s.page.waitForSelector(".wlt-box");
   check("who reacted", (await s.page.locator(".wlt-box .wlt-p").innerText()) === "Ben, You");
   await s.page.keyboard.press("Escape");
-  // Tap yours once: + React comes back (to pick another); tap yours again to take it away (owner, 18 November 2026).
-  await scarf.locator(".wlt-chip.mine").click();
-  check("tapping yours shows + React again", await scarf.locator(".wlt-add").isVisible());
-  check("…without removing yours", (await scarf.locator(".wlt-chip.mine").count()) === 1);
+  // Tap yours once: it is taken away and + React is back (owner, 20 November 2026).
   await scarf.locator(".wlt-chip.mine").click();
   await sleep(300);
   check("tap yours to remove", (await scarf.locator(".wlt-chip").innerText()).replace(/\s+/g, "") === "😍1" && (await scarf.locator(".wlt-chip.mine").count()) === 0);
+  check("…and + React is back", await scarf.locator(".wlt-add").isVisible());
   // The picker remembers what you used.
   await scarf.locator(".wlt-add").click();
   await s.page.waitForSelector(".wlt-picker .wlt-e");

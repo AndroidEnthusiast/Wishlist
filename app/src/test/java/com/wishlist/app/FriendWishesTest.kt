@@ -48,7 +48,8 @@ class FriendWishesTest {
 
     @Test fun reactHidesOnceYouReacted() {
         val r = src("ReactionViews.kt") + src("ReactionModel.kt")
-        assertTrue(r.contains("if (deco.canReact && (!reacted || st.again)) Row("))
-        assertTrue(r.contains("else if (mine && !again) again = true"))
+        // Tapping yours takes it away at once (owner, 20 November 2026), so "+ React" shows whenever you have none.
+        assertTrue(r.contains("if (deco.canReact && !reacted) Row("))
+        assertTrue(r.contains("else react(item, if (mine) \"\" else emoji)"))
     }
 }

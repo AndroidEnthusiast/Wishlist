@@ -17,8 +17,8 @@ import kotlinx.coroutines.launch
 internal class ReactionBarState(private val ctx: Context, private val code: String, private val scope: CoroutineScope) {
     var picking by mutableStateOf(false)
     // You react once per wish (owner, 18 November 2026): once you have, "+ React" hides to keep the card clean.
-    // Tapping your reaction brings it back ([again]) to pick another; tapping yours once more takes it away.
-    var again by mutableStateOf(false)
+    // Tapping your reaction takes it away at once, and "+ React" is back (owner, 20 November 2026: before, a first tap
+    // only brought "+ React" back and your reaction stayed until a second tap).
     // The emoji whose people are shown (a long press), and every reaction (the "+N" circle).
     var who by mutableStateOf<String?>(null)
     var all by mutableStateOf(false)
@@ -27,14 +27,12 @@ internal class ReactionBarState(private val ctx: Context, private val code: Stri
 
     /** Reacts on wish [item] with [emoji] ("" takes yours away). It shows at once; a "no" puts it back with a message. */
     fun react(item: Long, emoji: String) {
-        again = false
         scope.launch { msg = Reactions.set(ctx, code, item, emoji) }
     }
 
-    /** A tap on a reaction chip: who reacted (when you may not react), your own (pick another, or take it away), or the same. */
+    /** A tap on a reaction chip: who reacted (when you may not react), your own (takes it away), or the same as someone's. */
     fun tapChip(item: Long, emoji: String, mine: Boolean, canReact: Boolean) {
         if (!canReact) who = emoji
-        else if (mine && !again) again = true
         else react(item, if (mine) "" else emoji)
     }
 }

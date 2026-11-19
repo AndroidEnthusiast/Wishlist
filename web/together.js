@@ -101,8 +101,6 @@
     try { localStorage.setItem("wl_rx_recent", JSON.stringify([e].concat(recent().filter(function (x) { return x !== e; })).slice(0, 24))); } catch (x) { }
   }
 
-  // Wishes where you tapped your own reaction, so "+ React" shows again ("code:id" → true).
-  var reactAgain = {};
 
   async function setReact(code, item, emoji) {
     var before = reacts[code] || [];
@@ -336,8 +334,8 @@
       var list = (reacts[code] || []).filter(function (r) { return r.i === w.id; });
       if (!list.length && !canReact) return null;
       var bar = el("div", "wlt-bar");
-      // You react once per wish (owner, 18 November 2026): once you have, "+ React" hides; tapping your reaction brings
-      // it back to pick another, tapping yours once more takes it away (same as the app's ReactionBar).
+      // You react once per wish (owner, 18 November 2026): once you have, "+ React" hides; tapping your reaction takes it
+      // away at once and "+ React" is back (owner, 20 November 2026; same as the app's ReactionBar).
       var reacted = list.some(function (r) { return r.m; });
       var key = code + ":" + w.id;
       var add = null;
@@ -361,8 +359,6 @@
         chip.addEventListener("click", function () {
           if (longDone) { longDone = false; return; }
           if (!canReact) { who(list, e); return; }
-          if (mine && !reactAgain[key]) { reactAgain[key] = true; if (add) add.hidden = false; return; }
-          reactAgain[key] = false;
           if (mine) setReact(code, w.id, "");
           else withName(function () { setReact(code, w.id, e); });
         });
@@ -378,8 +374,8 @@
       if (canReact) {
         add = el("button", "wlt-add", "+ " + T_("React"));
         add.type = "button";
-        add.hidden = reacted && !reactAgain[key];
-        add.addEventListener("click", function () { withName(function () { picker(function (e) { reactAgain[key] = false; setReact(code, w.id, e); }); }); });
+        add.hidden = reacted;
+        add.addEventListener("click", function () { withName(function () { picker(function (e) { setReact(code, w.id, e); }); }); });
         bar.appendChild(add);
       }
       return bar;
