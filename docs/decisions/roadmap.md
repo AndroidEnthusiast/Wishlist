@@ -265,4 +265,7 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
   risks are different): four parts (basics; prices; your lists and gifts; people). **All four risks checked:** same
   text and same place when tapped, the channels keep their ids (your Android settings stay), grouping and pace,
   the background check's schedule.
+- **Import next** (owner, 19 November 2026): three files, its three objects moved whole (the least change). **All four
+  risks checked:** same result for the same input, the fill-in never overwrites (Rule 8), reader updates still arrive
+  (a broken download falls back), an older version's waiting list is finished. Shop pages are not fetched in the check.
 

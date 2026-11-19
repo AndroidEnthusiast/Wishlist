@@ -1,25 +1,11 @@
 package com.wishlist.app
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.os.SystemClock
-import android.webkit.WebView
-import android.webkit.WebViewClient
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONArray
 import org.json.JSONObject
-import org.json.JSONTokener
 import java.net.URI
 import java.net.URLDecoder
 import java.time.LocalDate
-import kotlin.coroutines.resume
 
 /*
  * Import (owner, 18 November 2026; docs/decisions/import.md): a list from GoWish, Giftful, Amazon, bol.com, Etsy,
@@ -32,6 +18,9 @@ import kotlin.coroutines.resume
  *    ([ImportFill]), also after a restart or when the phone was offline. A price is only filled when the wish has none
  *    (Rule 8: a price check never changes a price from one reading; this is a new wish's first price, as in Add a wish).
  *  - Own lists only, never a collab wishlist. App only (the browser can't read these sites).
+ *
+ * Since the data rebuild (owner, 19 November 2026): this file holds the rules; [ImportReaders] is in ImportReaders.kt
+ * and [ImportFill] in ImportFill.kt, moved whole. ImportSameTest proves they do exactly what they did before.
  */
 
 /** One wish found by Import, before it is a [Wish]. */
@@ -291,226 +280,4 @@ object Import {
     class NothingFound(site: String, version: Int) : Exception("Import found 0 wishes: site=${site.ifEmpty { "other" }} reader=v$version")
 
     fun reportNothing(site: String, version: Int) = Crash.report(NothingFound(site, version))
-}
-
-/**
- * The Import reader script: the newest of the built-in copy (assets/import/reader.js) and the one on our web pages
- * (downloaded at most every 12 hours, kept on the phone), so a fixed reader reaches every phone within a day.
- * Only our own site over https; the script only reads the list page it runs in (no bridge to the app).
- */
-object ImportReaders {
-    const val URL = "https://androidenthusiast.github.io/Wishlist/import/reader.js"
-    private const val EVERY = 12 * 60 * 60 * 1000L
-
-    fun versionOf(src: String): Int = Regex("var VERSION = (\\d+);").find(src)?.groupValues?.get(1)?.toIntOrNull() ?: 0
-
-    private fun builtIn(c: Context): String = try {
-        c.assets.open("import/reader.js").bufferedReader().use { it.readText() }
-    } catch (e: Exception) { "" }
-
-    private fun file(c: Context) = java.io.File(c.filesDir, "import-reader.js")
-
-    /** The script to run: the downloaded one when it is newer than the built-in one. */
-    suspend fun script(c: Context): String = withContext(Dispatchers.IO) {
-        refresh(c)
-        val mine = builtIn(c)
-        val got = try { file(c).takeIf { it.exists() }?.readText().orEmpty() } catch (e: Exception) { "" }
-        if (got.isNotEmpty() && versionOf(got) > versionOf(mine)) got else mine
-    }
-
-    private fun refresh(c: Context) {
-        val p = c.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
-        val last = p.getLong("import_reader_at", 0L)
-        if (System.currentTimeMillis() - last < EVERY || Crash.onComputer) return
-        try {
-            val res = org.jsoup.Jsoup.connect(URL).ignoreContentType(true).timeout(6000).maxBodySize(512 * 1024).execute()
-            val body = res.body()
-            if (res.statusCode() == 200 && body.contains("WLImport") && versionOf(body) > 0) file(c).writeText(body)
-            p.edit().putLong("import_reader_at", System.currentTimeMillis()).apply()
-        } catch (e: Exception) {
-            // Offline: the copy on the phone (or the built-in one) is used.
-        }
-    }
-
-    /** Runs the reader on [w]'s page; the reader's JSON, or null. */
-    suspend fun run(w: WebView, script: String): String? = withContext(Dispatchers.Main) {
-        val code = "(function(){try{" + script + "\n;return JSON.stringify(window.WLImport.read(document, location.href));}catch(e){return null;}})()"
-        withTimeoutOrNull(6000L) {
-            suspendCancellableCoroutine<String?> { cont ->
-                w.evaluateJavascript(code) { r ->
-                    val s = if (r == null || r == "null") null else try { JSONTokener(r).nextValue() as? String } catch (e: Exception) { null }
-                    if (cont.isActive) cont.resume(s)
-                }
-            }
-        }
-    }
-
-    /**
-     * Opens [url] in a hidden browser and reads its wishes: again every 1.5 seconds while the page fills in (and
-     * scrolled down, so lists that load more while scrolling show them), until the count stays the same twice or
-     * [timeoutMs] is over. Null when the page couldn't be read at all.
-     */
-    @SuppressLint("SetJavaScriptEnabled")
-    suspend fun readHidden(c: Context, url: String, timeoutMs: Long = 30000L): ImportRead? {
-        val script = script(c)
-        if (script.isEmpty()) return null
-        return withContext(Dispatchers.Main) {
-            var wv: WebView? = null
-            try {
-                val w = WebView(c.applicationContext)
-                wv = w
-                w.settings.javaScriptEnabled = true
-                w.settings.domStorageEnabled = true
-                w.settings.allowFileAccess = false
-                w.settings.allowContentAccess = false
-                w.settings.blockNetworkImage = true
-                w.webViewClient = WebViewClient()
-                w.loadUrl(url)
-                val start = SystemClock.elapsedRealtime()
-                var best: ImportRead? = null
-                var same = 0
-                while (SystemClock.elapsedRealtime() - start < timeoutMs) {
-                    delay(1500L)
-                    val r = Import.fromReader(run(w, script), w.url ?: url) ?: continue
-                    if (best != null && r.wishes.size == best.wishes.size && r.wishes.isNotEmpty()) same++ else same = 0
-                    if (best == null || r.wishes.size >= best.wishes.size) best = r
-                    if (same >= 2) break
-                    w.evaluateJavascript("window.scrollTo(0, document.body ? document.body.scrollHeight : 0)", null)
-                }
-                best
-            } catch (e: Exception) {
-                null
-            } finally {
-                try { wv?.stopLoading(); wv?.destroy() } catch (e: Exception) { }
-            }
-        }
-    }
-}
-
-/**
- * The fill-in after an import (owner: wishes in at once, details afterwards; "it can take a minute"): for each
- * imported wish with a shop link, the shop's page is read once, slowly (one at a time, a pause between), and only what
- * is missing is filled: the name, the price (only when it has none) and the photo. The shop's own photo replaces the
- * list page's small one (owner: sharper photos). Waiting wishes are kept on the phone, so a restart or being offline
- * only delays them. Never touches a wish you changed or removed meanwhile: it is looked up again just before.
- */
-object ImportFill {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private var running = false
-    private const val KEY = "import_fill"
-
-    private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
-
-    private fun waiting(c: Context): JSONObject = try { JSONObject(prefs(c).getString(KEY, null) ?: "{}") } catch (e: Exception) { JSONObject() }
-
-    @Synchronized
-    fun queue(c: Context, listId: String, ids: List<Long>) {
-        if (ids.isEmpty()) return
-        val o = waiting(c)
-        val a = o.optJSONArray(listId) ?: JSONArray()
-        ids.forEach { a.put(it) }
-        o.put(listId, a)
-        prefs(c).edit().putString(KEY, o.toString()).apply()
-        start(c)
-    }
-
-    @Synchronized
-    private fun next(c: Context): Pair<String, Long>? {
-        val o = waiting(c)
-        for (k in o.keys().asSequence().toList()) {
-            val a = o.optJSONArray(k)
-            if (a == null || a.length() == 0) { o.remove(k); continue }
-            prefs(c).edit().putString(KEY, o.toString()).apply()
-            return k to a.getLong(0)
-        }
-        prefs(c).edit().putString(KEY, o.toString()).apply()
-        return null
-    }
-
-    @Synchronized
-    private fun done(c: Context, listId: String, id: Long) {
-        val o = waiting(c)
-        val a = o.optJSONArray(listId) ?: return
-        val left = JSONArray()
-        for (i in 0 until a.length()) if (a.optLong(i) != id) left.put(a.optLong(i))
-        if (left.length() == 0) o.remove(listId) else o.put(listId, left)
-        prefs(c).edit().putString(KEY, o.toString()).apply()
-    }
-
-    /** Starts (or resumes, at app start) the fill-in, when there is anything waiting. */
-    fun start(c: Context) {
-        val ctx = c.applicationContext
-        synchronized(this) { if (running) return; running = true }
-        scope.launch {
-            try {
-                var misses = 0
-                while (true) {
-                    val (listId, id) = next(ctx) ?: break
-                    if (listId !in Repo.mineIds) { done(ctx, listId, id); continue }
-                    val w = Repo.mine(ctx, listId).wishes.firstOrNull { it.id == id }
-                    if (w == null || w.url.isBlank()) { done(ctx, listId, id); continue }
-                    val meta = try { fetchMeta(w.url, ctx) } catch (e: Exception) { null }
-                    if (meta == null) {
-                        // Offline or the shop didn't answer: try again later (next start), at most a few in a row now.
-                        // A wish whose shop never answers is given up after 5 tries (it keeps what it has).
-                        done(ctx, listId, id)
-                        if (tried(ctx, id) < 5) queueLast(ctx, listId, id)
-                        if (++misses >= 3) break
-                        delay(3000L)
-                        continue
-                    }
-                    misses = 0
-                    withContext(Dispatchers.Main) { fill(ctx, listId, id, meta) }
-                    done(ctx, listId, id)
-                    delay(1500L)
-                }
-            } finally {
-                synchronized(this@ImportFill) { running = false }
-            }
-        }
-    }
-
-    /** Counts a failed try of wish [id] and returns how many there were. */
-    @Synchronized
-    private fun tried(c: Context, id: Long): Int {
-        val o = try { JSONObject(prefs(c).getString("import_fill_tries", null) ?: "{}") } catch (e: Exception) { JSONObject() }
-        val n = o.optInt(id.toString(), 0) + 1
-        o.put(id.toString(), n)
-        prefs(c).edit().putString("import_fill_tries", o.toString()).apply()
-        return n
-    }
-
-    @Synchronized
-    private fun queueLast(c: Context, listId: String, id: Long) {
-        val o = waiting(c)
-        val a = o.optJSONArray(listId) ?: JSONArray()
-        a.put(id)
-        o.put(listId, a)
-        prefs(c).edit().putString(KEY, o.toString()).apply()
-    }
-
-    /** Fills only what is missing (see [filled]); the wish as it is now, so nothing you changed is overwritten. */
-    private fun fill(c: Context, listId: String, id: Long, meta: Meta) {
-        if (listId !in Repo.mineIds) return
-        var priced: Double? = null
-        Repo.updateMine(c, listId) { ws ->
-            ws.map { w ->
-                if (w.id != id) w else filled(w, meta).also { n -> if (w.price == null && n.price != null) priced = n.price }
-            }
-        }
-        priced?.let { History.record(c, id, it) }
-    }
-
-    /**
-     * [w] with what the shop's page adds: a name when it has none, a price when it has none (never a changed price:
-     * Rule 8), and the shop's own photo (bigger than a list page's thumbnail; only when the page is a product page).
-     */
-    fun filled(w: Wish, meta: Meta): Wish {
-        if (meta.blocked) return w
-        val title = w.title.ifBlank { meta.title.take(200) }
-        val price = w.price ?: meta.price
-        val currency = if (w.price == null && meta.price != null) meta.currency else w.currency
-        val image = if (meta.image.startsWith("http") && (w.image.isBlank() || meta.product)) secureImage(meta.image) else w.image
-        return w.copy(title = title, price = price, currency = currency, image = image)
-    }
 }

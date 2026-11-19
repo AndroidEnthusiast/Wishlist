@@ -129,6 +129,7 @@ class ImportSameTest {
         line("## adding to a list (the fill-in waits)")
         fillRunning(true)
         val list = Repo.createMine(c, "Imported", "")
+        Thread.sleep(5) // the list's id (a moment) never equals a new wish's id (moments counted back)
         val add = listOf(Found("Teapot", "https://shop.example/t", "", 20.0, "EUR", love = true), Found("Note only", "", "", null, "EUR"))
         line("added=${Import.add(c, list, add)} to a gone list=${Import.add(c, "gone", add)} nothing=${Import.add(c, list, emptyList())}")
         Repo.mine(c, list).wishes.forEach { line("on the list ${it.id} ${it.title} ${it.url} ${it.price} star=${it.star}") }

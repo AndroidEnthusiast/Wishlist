@@ -804,3 +804,17 @@ The "Next session" plan after 2.260 (done in 2.261), word for word:
   on the plan and its risks first; record a before/after check with (never write today's date into a record)
   the OLD code in its own commit (`SharedSameTest` shows how: a pretend server with its own state; let each background
   save finish before the next so the record is stable), then split by moving code word for word.
+
+### 19 November 2026, late night: the data rebuild, Groups (2.259)
+Four parts, four risks checked (owner). `GroupsSameTest` recorded with the old code first; to be stable it waits for
+Sync's background sends, sorts the calls within a step and blanks the chat key. Split word for word: identical.
+`GroupsPartsTest`; the guard covers `GroupPhotos`.
+
+The "Next session" plan after 2.261 (done in 2.262), word for word:
+- **The data rebuild (owner, 19 November 2026; `docs/decisions/roadmap.md`, last section), read first.** 2.256 Data,
+  2.257 Friends, 2.258 Shared, 2.259 Groups, 2.260 Exchange, 2.261 Alerts (nothing on screen changed). Ask how they
+  and the screen rebuild behave on the phone (TODO "Try 2.261" … "Try the rebuild"). Then **Import.kt**, then Fetch
+  (Fetch stays in step with `web/parse.js`, Rule 2; its checks: `tests/parse`, `SameAnswersTest`), the same way: interview
+  on the plan and its risks first; record a before/after check with (never write today's date into a record)
+  the OLD code in its own commit (`SharedSameTest` shows how: a pretend server with its own state; let each background
+  save finish before the next so the record is stable), then split by moving code word for word.

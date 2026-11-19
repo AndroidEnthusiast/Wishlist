@@ -6,9 +6,10 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Next session
 - **The data rebuild (owner, 19 November 2026; `docs/decisions/roadmap.md`, last section), read first.** 2.256 Data,
-  2.257 Friends, 2.258 Shared, 2.259 Groups, 2.260 Exchange, 2.261 Alerts (nothing on screen changed). Ask how they
-  and the screen rebuild behave on the phone (TODO "Try 2.261" … "Try the rebuild"). Then **Import.kt**, then Fetch
-  (Fetch stays in step with `web/parse.js`, Rule 2; its checks: `tests/parse`, `SameAnswersTest`), the same way: interview
+  2.257 Friends, 2.258 Shared, 2.259 Groups, 2.260 Exchange, 2.261 Alerts, 2.262 Import (nothing on screen changed).
+  Ask how they and the screen rebuild behave on the phone (TODO "Try 2.262" … "Try the rebuild"), and about the two
+  Import findings (TODO). Then **Fetch.kt**, the last one (in step with `web/parse.js`, Rule 2; its checks:
+  `tests/parse`, `SameAnswersTest`), the same way: interview
   on the plan and its risks first; record a before/after check with (never write today's date into a record)
   the OLD code in its own commit (`SharedSameTest` shows how: a pretend server with its own state; let each background
   save finish before the next so the record is stable), then split by moving code word for word.
@@ -82,6 +83,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 19 November 2026, late night: the data rebuild, Import (2.262)
+Three objects moved whole (owner), proven line by line; `ImportSameTest` recorded first (no shop page fetched) and
+`ImportPartsTest`. Found, not fixed (TODO): kr/zł prices get the phone's currency; Amazon …/Name/dp/…/ref= keeps ref.
+A timestamp collision made the record flaky once: a 5 ms pause after making the list.
+
 ### 19 November 2026, late night: the data rebuild, Alerts (2.261)
 Notifications, four parts, four risks checked (owner). `AlertsSameTest` records every notification's details (read
 from Android's list of shown notifications, by id) with the old code first; split word for word: identical.
@@ -91,8 +97,3 @@ from Android's list of shown notifications, by id) with the old code first; spli
 Four parts + data shapes, four risks checked (owner). `ExchangeSameTest` recorded with the old code first (dates
 relative to today); split word for word: identical. Found and fixed: `FriendsSameTest` wrote today+10 into its record
 (would fail from 20 November). Exchange notifications are gathered into one: checks compare them, not count titles.
-
-### 19 November 2026, late night: the data rebuild, Groups (2.259)
-Four parts, four risks checked (owner). `GroupsSameTest` recorded with the old code first; to be stable it waits for
-Sync's background sends, sorts the calls within a step and blanks the chat key. Split word for word: identical.
-`GroupsPartsTest`; the guard covers `GroupPhotos`.

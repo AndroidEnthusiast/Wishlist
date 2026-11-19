@@ -64,7 +64,9 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `Quantity.kt` + `QuantityUi.kt` ("2×", reservations with a number, the wish form's How many / Exactly this; same rules as `web/reserve.js`)
 - `AddToMine.kt` ("Add to my wishlist" on someone else's wish, 2.229)
 - `Move.kt` (Move to… and selecting several wishes; reservations move along with `wl_move_item`) + `MoveAcross.kt` (to and from collab wishlists, 2.181: leaving one asks Move or Copy, Move goes through that list's bin, a wish reserved by someone else stays)
-- `Import.kt` + `ImportUi.kt` (Import a list, 2.226: text from notes, list links read by `web/import/reader.js` in a hidden browser (built in as `assets/import/reader.js`, kept the same by `tests/import/test.js`, downloaded fresh by `ImportReaders`), `ImportFill` fills photos and prices afterwards; daily check `.github/workflows/import-check.yml` + `tests/import/live.js` on `tests/import/lists.json`; `docs/decisions/import.md`)
+- `Import.kt` + `ImportUi.kt` (Import a list, 2.226: text from notes, list links read by `web/import/reader.js` in a hidden browser (built in as `assets/import/reader.js`, kept the same by `tests/import/test.js`, downloaded fresh by `ImportReaders`), `ImportFill` fills photos and prices afterwards; daily check `.github/workflows/import-check.yml` + `tests/import/live.js` on `tests/import/lists.json`; `docs/decisions/import.md`). Split in 2.262 (the data rebuild, moved whole, nothing changed): `Import.kt` (the rules),
+  `ImportReaders.kt`, `ImportFill.kt`; checks `ImportSameTest` (against `import-same.txt`, recorded before),
+  `ImportPartsTest`, `ImportTest`
 - `Rescue.kt` (the stop screen when the lists can't be opened, `ListStore.stale`: Get my lists back with `wl_mine_get`, Try again, Import)
 
 ### Prices and shops

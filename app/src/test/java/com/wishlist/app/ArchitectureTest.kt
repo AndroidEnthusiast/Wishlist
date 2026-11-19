@@ -32,7 +32,6 @@ class ArchitectureTest {
 
         /** Over the limit on 19 November 2026, with their size then. Only shrinks. */
         val ALLOWED: Map<String, Int> = mapOf(
-        "Import.kt" to 516,
         "Fetch.kt" to 473
         )
 
