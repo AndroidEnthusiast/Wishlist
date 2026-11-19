@@ -351,14 +351,9 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
                 snack,
                 onOpenMine = { openMine(it) },
                 onOpenGroup = { openGroup(it) },
-                // A new collab wishlist: it appears on Home and its invitation comes up so you can ask people in.
-                onCollabCreated = { code -> Shared.open(ctx, code); closeAll(); inviteDlg = true },
                 onProfile = { nav.openOnTop(Route.PROFILE) },
                 onAddTo = { t -> addTarget = t; prefill = ""; adding = true },
                 onOpenWishGroup = { openWishGroup(it) },
-                onFriends = { places.resetFriends(); nav.openTab(Route.FRIENDS) },
-                onReserved = { nav.openOnTop(Route.RESERVED) },
-                onAddWish = { addTarget = Repo.lastSaveTo; prefill = ""; adding = true },
                 onNewExchange = { newExchange = true }
             )
         }

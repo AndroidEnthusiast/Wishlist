@@ -206,39 +206,6 @@ fun PriceIcon(tint: Color, modifier: Modifier = Modifier.size(24.dp)) {
 }
 
 /**
- * "New list" (owner, 2.128: one item in the side menu instead of three): your own wishlist, a gift list or a wishlist
- * group, each with the same line as its section on Home; the same forms as the + buttons on Home.
- */
-@Composable
-fun CreateChoiceDialog(onMine: () -> Unit, onGroup: () -> Unit, onWishGroup: () -> Unit, onClose: () -> Unit) {
-    val cs = MaterialTheme.colorScheme
-    AlertDialog(
-        onDismissRequest = onClose,
-        title = { Text(tr("Create a list")) },
-        text = {
-            // Owner, 7 November 2026: clear what each makes and where it shows.
-            Column {
-                Choice(tr("My own wishlist"), tr("For things you’d love to get.")) { onMine() }
-                Choice(tr("Wishlist with others"), tr("Add ideas together and see what’s reserved.")) { onGroup() }
-                Choice(tr("Wishlist group"), tr("A circle of people who can see each other’s wishlists.")) { onWishGroup() }
-            }
-        },
-        confirmButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
-    )
-}
-
-@Composable
-private fun Choice(title: String, detail: String, onClick: () -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 12.dp)
-    ) {
-        Text(title, style = MaterialTheme.typography.bodyLarge)
-        Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-}
-
-/**
  * The bottom bar's + outside a list (owner, 16 November 2026: Home has no "Create list" tiles any more): Add a wish
  * first, then a new wishlist, collab wishlist, wishlist group or gift exchange, each with one line that says what it is.
  */

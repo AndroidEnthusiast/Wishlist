@@ -39,8 +39,8 @@ class ProfileHomeTest : NavigationBase() {
         val st = src("Settings.kt")
         assertTrue(st.contains("Show[\"home_summary\"]") && st.contains("Show[\"home_swipe\"]"))
         assertFalse(st.contains("tr(\"Backup\")"))
-        assertTrue(src("Hub.kt").contains("if (!Show[\"home_summary\"])"))
+        assertTrue((File("src/main/java/com/wishlist/app").listFiles()!!.filter { it.name.startsWith("Home") && it.name.endsWith(".kt") || it.name == "NewWishlist.kt" }.sortedBy { it.name }.joinToString("\n") { it.readText() }).contains("if (!Show[\"home_summary\"])"))
         // The three numbers sit on a card in every style (owner, 18 November 2026: "it looks too flat").
-        assertTrue(src("Hub.kt").contains(".padding(start = 12.dp).lookCard(look, 5L, look.cardShape(5L, small = true))"))
+        assertTrue((File("src/main/java/com/wishlist/app").listFiles()!!.filter { it.name.startsWith("Home") && it.name.endsWith(".kt") || it.name == "NewWishlist.kt" }.sortedBy { it.name }.joinToString("\n") { it.readText() }).contains(".padding(start = 12.dp).lookCard(look, 5L, look.cardShape(5L, small = true))"))
     }
 }

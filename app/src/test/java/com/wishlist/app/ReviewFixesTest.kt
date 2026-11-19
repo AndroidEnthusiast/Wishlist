@@ -235,8 +235,8 @@ class PersonFirstTest {
         assertEquals(100, Friends.BIO_MAX)
         val items = Cloud.listItems(emptyList(), "Hello")
         assertFalse(items.getJSONObject(0).has("sz"))
-        val hub = File("src/main/java/com/wishlist/app/Hub.kt").readText()
-        val home = hub.substring(hub.indexOf("private fun HomeHero("))
+        val hub = File("src/main/java/com/wishlist/app").listFiles()!!.filter { it.name.startsWith("Home") && it.name.endsWith(".kt") || it.name == "NewWishlist.kt" }.sortedBy { it.name }.joinToString("\n") { it.readText() }
+        val home = hub.substring(hub.indexOf("internal fun HomeHero("))
         assertFalse("no chips on Home", home.substring(0, home.indexOf("\n}\n")).contains("AboutChip"))
     }
 
@@ -254,7 +254,7 @@ class PersonFirstTest {
     }
 
     @Test fun twoPhotosSideBySide() {
-        assertTrue(File("src/main/java/com/wishlist/app/Hub.kt").readText().contains("pics.size == 2 -> Row("))
+        assertTrue(File("src/main/java/com/wishlist/app").listFiles()!!.filter { it.name.startsWith("Home") && it.name.endsWith(".kt") || it.name == "NewWishlist.kt" }.sortedBy { it.name }.joinToString("\n") { it.readText() }.contains("pics.size == 2 -> Row("))
     }
 
     /** ✕ on the recovery card: never again on Home. */
@@ -280,10 +280,10 @@ class PersonFirstTest {
 @RunWith(RobolectricTestRunner::class)
 @org.robolectric.annotation.Config(sdk = [34])
 class HomeAsProfileTest {
-    private val hub get() = File("src/main/java/com/wishlist/app/Hub.kt").readText()
+    private val hub get() = File("src/main/java/com/wishlist/app").listFiles()!!.filter { it.name.startsWith("Home") && it.name.endsWith(".kt") || it.name == "NewWishlist.kt" }.sortedBy { it.name }.joinToString("\n") { it.readText() }
 
     @Test fun homeIsYourProfile() {
-        val screen = hub.substring(hub.indexOf("fun HubScreen("), hub.indexOf("internal fun HubTitle("))
+        val screen = File("src/main/java/com/wishlist/app/Home.kt").readText()
         assertFalse("no numbers card", screen.contains("ProfileSummary("))
         assertTrue(screen.contains("HomeHero(onProfile)"))
         assertTrue("one grid, yours first", screen.contains("byRecent(mineItems) + byRecent(groupItems) + byRecent(groupsOfMine)"))
@@ -324,7 +324,7 @@ class OneNewWishlistTest {
         val app = File("src/main/java/com/wishlist/app/AppScreen.kt").readText()
         // One sheet for both (2.223): the chips swap the fields inside it.
         assertTrue(app.contains("\"mine\", \"collab\" -> NewWishlistSheet("))
-        val hub = File("src/main/java/com/wishlist/app/Hub.kt").readText()
+        val hub = File("src/main/java/com/wishlist/app").listFiles()!!.filter { it.name.startsWith("Home") && it.name.endsWith(".kt") || it.name == "NewWishlist.kt" }.sortedBy { it.name }.joinToString("\n") { it.readText() }
         assertTrue(hub.contains("FormSheetHost(onClose) {") && hub.contains("WhoIsItFor(others) { others = it }"))
         val shared = File("src/main/java/com/wishlist/app/SharedUi.kt").readText()
         assertTrue(shared.contains("Shared.setForName(ctx, l.code, forWho)"))

@@ -36,3 +36,5 @@ Moved here from `screens.md` on 18 November 2026 (its size limit); newest at the
   the owner declined (the tool was refused) to look through GitHub's. The owner sends the page from "Price is wrong?".
 - **The three numbers on a card** (owner, 18 November 2026, 2.231: "it looks too flat"): the style's own card behind
   them (Gen Z chaos: white with its thick edge and shadow, as it had before).
+- **The Import card on an empty Home sits under your lists** (2.233, found in the rebuild: it never showed since 2.226;
+  above the lists it pushed your own list down behind the bottom bar, so it goes under them).

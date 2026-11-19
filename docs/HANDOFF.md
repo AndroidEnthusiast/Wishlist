@@ -6,9 +6,10 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Next session
 - **The rebuild (owner, 18 November 2026; `docs/decisions/roadmap.md`, last section).** Point 2 done: version stamps in
-  every script + `server-check.yml`. First check the owner ran all 17 scripts once and the issue "Server scripts to run"
-  closed. Then point 1: Home (`Hub.kt`) split and its state out of the shared objects, looking exactly the same; one
-  screen per version, bug fixes only.
+  every script + `server-check.yml` (owner ran all 17; issue closed). Point 1: **Home done in 2.233** (7 small files,
+  `HomeModel`, pixel-identical). Ask whether Home behaves the same after a day or two; then the next screen (ask which:
+  Friends / Profile `FriendsUi.kt` 1,370 lines, or the open list `ListScreen.kt`), same method: before/after
+  screenshots compared pixel by pixel, a state holder, bug fixes only.
 - **2.231–2.232 (18 November 2026).** Home's numbers on a card; card buttons in one order (Reserve left, ⋮ last). **Next, owner's choice:** fix the review points, 1 and 2
   first (split the big files and move screen state out of the shared objects; a version record of the server scripts).
   Interview on the plan before starting (big build, one screen at a time).
@@ -72,6 +73,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 18–19 November 2026: the rebuild starts (server versions, Home 2.233)
+Server scripts stamp their version; `server-check.yml` opens/closes "Server scripts to run" (owner ran all 17). Home:
+`Hub.kt` split into 7 files with `HomeModel`; 21 before/after screenshots identical; dead "Create list" code removed;
+the empty-Home Import card (never shown since 2.226) fixed. Earlier: card buttons in one order (2.232).
+
 ### 18 November 2026, late night: Profile, Home, shared links (2.230)
 Profile: rows with small edit sheets and a Keep your lists safe page (backups kept there on advice). Home: photo left
 with three blocks, a divider, My wishlists | Shared pager, switches in Display. One-link shares → Add a wish. A GitHub
@@ -80,8 +86,3 @@ with three blocks, a divider, My wishlists | Shared pager, switches in Display. 
 ### 18 November 2026, night: friends' wishes (2.229)
 Reserve pills compact (`LocalCardButton`, 36 dp); "Add to my wishlist" in the ⋮ of others' wishes (list picker, Undo,
 `AddToMine.kt`); "+ React" hides once you reacted (app and web); Import last in the + menu. Checks: `FriendWishesTest`.
-
-### 18 November 2026, evening: calm themes, App settings redone (2.228)
-Owner: 2.227's deep tint looked brown/green; now a grey backdrop with a 3% hint, colour on the elements, Black mode,
-Teal for Amber, Gen Z block in its own look, Theme as its own route (no jump). App settings: six rows opening pages,
-two switches and the theme block removed with their code. Checks: `AppSettingsTest`, `ThemesTest`.

@@ -636,3 +636,8 @@ real shop links, daily `import-check.yml` (opens an issue). Checks: `ImportTest`
 ### 18 November 2026, later: deeper themes (2.227)
 Owner: themes felt flat, colours didn't blend. Cause: a 7% tint plus untinted parts (fixed grey-violet sheet rows, grey
 tiles, plain grey text). Now one hue per theme in steps of lightness, pastel in light; theme blocks: colour, name, a hill.
+
+### 18 November 2026, evening: calm themes, App settings redone (2.228)
+Owner: 2.227's deep tint looked brown/green; now a grey backdrop with a 3% hint, colour on the elements, Black mode,
+Teal for Amber, Gen Z block in its own look, Theme as its own route (no jump). App settings: six rows opening pages,
+two switches and the theme block removed with their code. Checks: `AppSettingsTest`, `ThemesTest`.
