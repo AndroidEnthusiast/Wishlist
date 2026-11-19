@@ -247,4 +247,10 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
   proves what is sent to the server. **Five parts** (requests and the Friends tab; photos; birthday and About me;
   visible lists; links and codes). **The owner's four risks, all checked:** notifications told once (also after a
   restart), the offline switch goes back, photos kept after a restart, an older saved Friends tab still reads.
+- **Shared next, shipped at once** (owner, 19 November 2026; asked with options, recommended: ship after testing
+  2.256/2.257): the owner chose to ship now: "You simply need to make sure everything works. That counts for all the
+  things we do right now." Told honestly: the checks prove the new code does exactly what the old did (also with two
+  people, offline and a late answer), but not how it feels on a real phone. **Five parts** (lists you're on; open list
+  and offline copy; saving wishes; details; reservations). **All four risks checked:** two people one wish, failed save
+  undone, old answer ignored, offline / deleted / left.
 

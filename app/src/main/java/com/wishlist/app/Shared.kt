@@ -42,6 +42,12 @@ data class SharedContent(
  * change (only the fields you changed in one wish, one category, the name...), never the whole list, so two
  * people editing at the same time don't undo each other. The screen refreshes from the online copy every few
  * seconds. Editing needs internet; the last copy is kept on the phone so you can still look at the list offline.
+ *
+ * Since the data rebuild (owner, 19 November 2026) this file is the front door: the lists on this phone, the open list,
+ * its offline copy, refreshing and [write] (a change shown at once, saved in the background, undone if it fails). The
+ * rest is in parts, while callers keep writing Shared.…: SharedMembership.kt (making, joining, leaving, names),
+ * SharedWishes.kt (saving wishes field by field, bin and Undo, pictures), SharedDetails.kt (name, note, occasion,
+ * categories), SharedReservations.kt. SharedSameTest proves it all does exactly what it did before.
  */
 object Shared {
     var lists by mutableStateOf(listOf<SharedList>())
@@ -51,61 +57,42 @@ object Shared {
     var active by mutableStateOf<String?>(null)
         internal set
     var content by mutableStateOf(SharedContent())
-        private set
+        internal set
 
     /** True when the open list can't be reached with our key anymore (deleted, or the invite link was reset). */
     var gone by mutableStateOf(false)
-        private set
+        internal set
 
     /** A short message for the snackbar (for example "Couldn't save that"). Cleared once shown. */
     var notice by mutableStateOf("")
-        private set
+        internal set
 
-    /**
-     * Reservations on the open list: wish id -> true (reserved on this phone) or false (by someone else).
-     * Everyone on a shared list sees them: the list is only shared between the givers, so nobody buys a gift twice.
-     */
-    var reserved by mutableStateOf(mapOf<Long, Boolean>())
-        private set
-    @Volatile
-    private var resBusy = false
+    // Reservations (SharedReservations.kt), read as before.
+    val reserved: Map<Long, Boolean> get() = SharedReservations.reserved
+    /** A "2×" wish waiting for "How many will you buy?" (2.128); the dialog is on the list screen. */
+    var askCount: Wish?
+        get() = SharedReservations.askCount
+        set(v) { SharedReservations.askCount = v }
 
     /** The name typed last time, to prefill the "your name" fields. */
     var lastName by mutableStateOf("")
-        private set
+        internal set
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val lock = Mutex()
-    private val pending = AtomicInteger(0)
+    internal val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    internal val lock = Mutex()
+    internal val pending = AtomicInteger(0)
 
     /** Goes up with every change made on this phone, so a refresh that started before a change can't overwrite it. */
-    private val stamp = AtomicInteger(0)
+    internal val stamp = AtomicInteger(0)
 
     val current: SharedList? get() = lists.firstOrNull { it.code == active }
     /** Your name on gift lists: always your profile name (owner, 2.102: never asked, no other name per list). */
     val me: String get() = lastName
     val isCreator: Boolean get() = current?.owner?.isNotEmpty() == true
 
-    private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
-
-    /**
-     * Who a wishlist for someone else is for ("Mum"), asked when it is made (owner, 17 November 2026, to keep the
-     * surprise). Kept on the phone that made it only; "" when not known (lists made before, or joined).
-     */
-    fun forName(c: Context, code: String): String = prefs(c).getString("sh_for_$code", "") ?: ""
-
-    fun setForName(c: Context, code: String, name: String) {
-        prefs(c).edit().putString("sh_for_$code", name.trim().take(FOR_MAX)).apply()
-    }
-
     const val FOR_MAX = 40
 
-    /** True when a friend called [name] looks like the person the list is for: the same name or first name. */
-    fun isFor(forName: String, name: String): Boolean {
-        val f = forName.trim().lowercase(); val n = name.trim().lowercase()
-        if (f.isEmpty() || n.isEmpty()) return false
-        return f == n || f == n.substringBefore(' ') || n == f.substringBefore(' ')
-    }
+    internal fun prefs(c: Context) = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
 
     fun load(c: Context) {
         val p = prefs(c)
@@ -121,7 +108,7 @@ object Shared {
         gone = false
     }
 
-    private fun saveLists(c: Context) {
+    internal fun saveLists(c: Context) {
         val a = JSONArray()
         lists.forEach {
             a.put(
@@ -132,37 +119,17 @@ object Shared {
         prefs(c).edit().putString("shared", a.toString()).apply()
     }
 
-    private fun rememberName(c: Context, name: String) {
+    internal fun rememberName(c: Context, name: String) {
         if (name.isBlank()) return
         lastName = name
         prefs(c).edit().putString("sh_me", name).apply()
     }
 
-    /**
-     * "Your name" in the app's Settings: used on every shared list, except a list where you chose another name
-     * (in that list's settings). Lists that used the old name follow the new one.
-     */
-    fun setAppName(c: Context, name: String) {
-        val n = name.trim().take(30)
-        if (n.isEmpty()) return
-        val old = lastName
-        rememberName(c, n)
-        lists = lists.map { it.copy(me = n) }
-        saveLists(c)
-    }
-
-    /** Your name on one shared list only (its settings). Empty: use the name from the app's Settings. */
-    fun setMe(c: Context, code: String, name: String) {
-        val n = name.trim().take(30).ifEmpty { lastName }
-        lists = lists.map { if (it.code == code) it.copy(me = n) else it }
-        saveLists(c)
-    }
-
     // ---- the copy kept on the phone, for looking at a list without internet ----
 
-    private fun cacheKey(code: String) = "shc_$code"
+    internal fun cacheKey(code: String) = "shc_$code"
 
-    private fun readCache(c: Context, code: String): SharedContent? {
+    internal fun readCache(c: Context, code: String): SharedContent? {
         val s = prefs(c).getString(cacheKey(code), null) ?: return null
         return try {
             val o = JSONObject(s)
@@ -184,7 +151,7 @@ object Shared {
     fun cachedWishes(c: Context, code: String): List<Wish> =
         (if (active == code) content.wishes else readCache(c, code)?.wishes.orEmpty()).filter { it.bin == 0L }
 
-    private fun writeCache(c: Context, code: String, ct: SharedContent) {
+    internal fun writeCache(c: Context, code: String, ct: SharedContent) {
         val items = JSONArray()
         ct.wishes.forEach { items.put(wishToJson(it)) }
         val o = JSONObject().put("name", ct.name).put("cats", JSONArray(ct.cats))
@@ -198,7 +165,7 @@ object Shared {
     fun open(c: Context, code: String) {
         val l = lists.firstOrNull { it.code == code } ?: return
         content = readCache(c, code) ?: SharedContent(name = l.name)
-        reserved = emptyMap()
+        SharedReservations.reserved = emptyMap()
         gone = false
         active = code
     }
@@ -212,10 +179,10 @@ object Shared {
         notice = ""
     }
 
-    /** Fetches the online copy of the open list. Returns false when the server couldn't be reached (the screen keeps what it has). */
     /** A save of this phone is still on its way (a refresh now would be thrown away). */
     fun busy(): Boolean = pending.get() > 0
 
+    /** Fetches the online copy of the open list. Returns false when the server couldn't be reached (the screen keeps what it has). */
     suspend fun refresh(c: Context): Boolean {
         val l = current ?: return true
         if (pending.get() > 0) return true
@@ -246,73 +213,9 @@ object Shared {
         return true
     }
 
-    // ---- reservations: the givers reserve what they will buy, and everyone on the list sees it ----
-
-    private suspend fun loadReservations(code: String) {
-        if (resBusy) return
-        val m = try {
-            Cloud.fetchReservations(code, Repo.deviceId)
-        } catch (e: Exception) {
-            return
-        }
-        if (active == code && !resBusy) reserved = m
-    }
-
-    /** Reserves a wish of the open list ([on] = true) or takes this phone's reservation away again. */
-    /** A "2×" wish waiting for "How many will you buy?" (2.128); the dialog is on the list screen. */
-    var askCount by mutableStateOf<Wish?>(null)
-
-    /** Reserves [n] of [w] on the open list (0 takes yours away). */
-    fun reserveCount(w: Wish, n: Int) {
-        val l = current ?: return
-        if (resBusy) return
-        val before = reserved
-        reserved = if (n > 0) before + (w.id to true) else before - w.id
-        resBusy = true
-        scope.launch {
-            try {
-                if (!Cloud.reserveCount(l.code, w.id, Repo.deviceId, n)) notice = tr("Someone else just reserved that one.")
-                else if (n > 0) Celebrate.reserved()
-            } catch (e: Exception) {
-                if (active == l.code) reserved = before
-                notice = tr("Couldn’t save that. Check your connection and try again.")
-            } finally {
-                resBusy = false
-            }
-            loadReservations(l.code)
-        }
-    }
-
-    fun reserve(w: Wish, on: Boolean) {
-        val l = current ?: return
-        if (resBusy) return
-        // A wish wanted more than once asks how many first.
-        if (on && w.qty > 1) { askCount = w; return }
-        if (!on && w.qty > 1) { reserveCount(w, 0); return }
-        val before = reserved
-        reserved = if (on) before + (w.id to true) else before - w.id
-        resBusy = true
-        scope.launch {
-            try {
-                if (on) {
-                    if (!Cloud.reserve(l.code, w.id, Repo.deviceId)) notice = tr("Someone else just reserved that one.")
-                    else Celebrate.reserved()
-                } else {
-                    Cloud.unreserve(l.code, w.id, Repo.deviceId)
-                }
-            } catch (e: Exception) {
-                if (active == l.code) reserved = before
-                notice = tr("Couldn’t save that. Check your connection and try again.")
-            } finally {
-                resBusy = false
-            }
-            loadReservations(l.code)
-        }
-    }
-
     // ---- changing the open list: shown at once, saved online one wish at a time, undone if saving fails ----
 
-    private fun write(
+    internal fun write(
         c: Context, l: SharedList, before: SharedContent, after: SharedContent,
         failed: (Exception) -> String? = { null }, job: suspend () -> Unit
     ) {
@@ -338,373 +241,5 @@ object Shared {
                 if (content === after) content = before else { refresh(c) }
             }
         }
-    }
-
-    private fun photoNameOf(code: String, url: String): String? {
-        val prefix = Cloud.photoUrl(code, "")
-        if (!url.startsWith(prefix)) return null
-        return url.removePrefix(prefix).takeIf { it.isNotEmpty() && !it.contains('/') }
-    }
-
-    suspend fun dropPhoto(l: SharedList, url: String) {
-        val n = photoNameOf(l.code, url) ?: return
-        try {
-            Cloud.deletePhoto(l.code, l.key, n, "x-edit-key")
-        } catch (e: Exception) {
-        }
-    }
-
-    /** The names (as stored online) of the fields that differ between two versions of a wish. ("by" is only set when a wish is made.) */
-    private fun changedFields(a: Wish, b: Wish): List<String> {
-        val f = ArrayList<String>()
-        if (a.url != b.url) f.add("url")
-        if (a.title != b.title) f.add("title")
-        if (a.desc != b.desc) f.add("desc")
-        if (a.image != b.image) f.add("image")
-        if (a.price != b.price) f.add("price")
-        if (a.oldPrice != b.oldPrice) f.add("old")
-        if (a.currency != b.currency) f.add("cur")
-        if (a.category != b.category) f.add("cat")
-        if (a.got != b.got) f.add("got")
-        if (a.star != b.star) f.add("star")
-        if (a.note != b.note) f.add("note")
-        if (a.size != b.size) f.add("size")
-        if (a.qty != b.qty) f.add("qty")
-        if (a.exact != b.exact) f.add("exact")
-        return f
-    }
-
-    /** [into] with only the given fields taken from [from]. */
-    private fun applyFields(into: Wish, from: Wish, fields: List<String>): Wish {
-        var w = into
-        for (f in fields) {
-            w = when (f) {
-                "url" -> w.copy(url = from.url)
-                "title" -> w.copy(title = from.title)
-                "desc" -> w.copy(desc = from.desc)
-                "image" -> w.copy(image = from.image)
-                "price" -> w.copy(price = from.price)
-                "old" -> w.copy(oldPrice = from.oldPrice)
-                "cur" -> w.copy(currency = from.currency)
-                "cat" -> w.copy(category = from.category)
-                "got" -> w.copy(got = from.got)
-                "star" -> w.copy(star = from.star)
-                "note" -> w.copy(note = from.note)
-                "size" -> w.copy(size = from.size)
-                "qty" -> w.copy(qty = from.qty)
-                "exact" -> w.copy(exact = from.exact)
-                else -> w
-            }
-        }
-        return w
-    }
-
-    /**
-     * Adds a wish, or saves a changed one. [base] is the version the edit form was opened on (leave it out for quick
-     * changes like the star). Only the fields that differ from it are written online, on top of what is online now,
-     * so a change someone else made to another field of the same wish stays. A picture picked on this phone is uploaded first.
-     */
-    fun put(c: Context, w: Wish, base: Wish? = null) {
-        val l = current ?: return
-        val before = content
-        val old = before.wishes.firstOrNull { it.id == w.id }
-        val mine = if (old == null && w.by.isBlank()) w.copy(by = l.me) else w
-        // null = a new wish here: all of it is sent.
-        val fields = if (old != null) changedFields(base ?: old, mine) else null
-        if (fields != null && fields.isEmpty()) return
-        val was = (base ?: old)?.image
-        val shown = if (old != null && fields != null) applyFields(old, mine, fields) else mine
-        val after = before.copy(
-            wishes = if (old != null) before.wishes.map { if (it.id == w.id) shown else it } else listOf(mine) + before.wishes
-        )
-        write(c, l, before, after) {
-            var out = mine
-            val sendsImage = fields == null || "image" in fields
-            if (sendsImage && ImageStore.isLocal(out.image)) {
-                val name = out.image.substringAfterLast('/')
-                val bytes = ImageStore.shareCopy(out.image)
-                out = if (bytes != null) {
-                    try {
-                        Cloud.uploadPhoto(l.code, l.key, name, bytes, "x-edit-key")
-                        out.copy(image = Cloud.photoUrl(l.code, name))
-                    } catch (e: Exception) {
-                        notice = tr("Saved without the picture: it couldn’t be uploaded.")
-                        out.copy(image = "")
-                    }
-                } else out.copy(image = "")
-            }
-            Cloud.shPut(l.key, out, fields)
-            if (out.image != mine.image) {
-                // The picture now lives online. Show that one here too and free the copy on this phone.
-                ImageStore.delete(c, mine.image)
-                if (active == l.code) {
-                    content = content.copy(
-                        wishes = content.wishes.map { if (it.id == out.id && it.image == mine.image) out else it }
-                    )
-                }
-            }
-            // A picture that this save replaced or removed is deleted online too (never one someone else just set).
-            if (fields != null && "image" in fields && was != null && was != out.image) dropPhoto(l, was)
-        }
-    }
-
-    // ---- moving to and from collab wishlists (MoveAcross.kt, owner 11 November 2026) ----
-
-    /**
-     * Puts a new wish on collab wishlist [l] (open or not) and waits for the server: throws when it can't be reached,
-     * and nothing has changed then. A picture stored on this phone is uploaded to that list first (the file stays,
-     * for Undo). Returns the wish as it is online.
-     */
-    suspend fun addTo(c: Context, l: SharedList, w: Wish): Wish {
-        var out = w
-        if (ImageStore.isLocal(out.image)) {
-            val name = out.image.substringAfterLast('/')
-            val bytes = ImageStore.shareCopy(out.image)
-            out = if (bytes != null) try {
-                Cloud.uploadPhoto(l.code, l.key, name, bytes, "x-edit-key")
-                out.copy(image = Cloud.photoUrl(l.code, name))
-            } catch (e: Exception) {
-                out.copy(image = "")
-            } else out.copy(image = "")
-        }
-        lock.withLock { Cloud.shPut(l.key, out, null) }
-        if (active == l.code) {
-            if (content.wishes.none { it.id == out.id }) content = content.copy(wishes = listOf(out) + content.wishes)
-            stamp.incrementAndGet()
-            writeCache(c, l.code, content)
-        } else readCache(c, l.code)?.let { ct ->
-            // The phone's copy (the list's block on Home shows its newest wishes).
-            if (ct.wishes.none { it.id == out.id }) writeCache(c, l.code, ct.copy(wishes = listOf(out) + ct.wishes))
-        }
-        return out
-    }
-
-    /**
-     * A wish leaves collab wishlist [l] for another list: into [l]'s bin (so the others can put it back for 30 days),
-     * waiting for the server. Throws when it can't be reached; nothing has changed then.
-     */
-    suspend fun sendAway(c: Context, l: SharedList, w: Wish): Trashed {
-        val at = System.currentTimeMillis()
-        val binned = w.copy(bin = at, binBy = l.me)
-        lock.withLock { Cloud.shPut(l.key, binned, listOf("bin", "binBy")) }
-        var index = 0
-        if (active == l.code) {
-            index = content.wishes.indexOfFirst { it.id == w.id }.coerceAtLeast(0)
-            Bin.binnedHere(c, l.code, w.id, at)
-            Bin.added(BinEntry(binned, l.code, content.name.ifBlank { l.name }, reserved[w.id]))
-            content = content.copy(wishes = content.wishes.filter { it.id != w.id })
-            stamp.incrementAndGet()
-            writeCache(c, l.code, content)
-        } else readCache(c, l.code)?.let { ct -> writeCache(c, l.code, ct.copy(wishes = ct.wishes.filter { it.id != w.id })) }
-        return Trashed(binned, index, l.code)
-    }
-
-    /** The categories collab wishlist [code] has, as this phone last saw them. */
-    fun catsOf(c: Context, code: String): List<String> = if (active == code) content.cats else readCache(c, code)?.cats.orEmpty()
-
-    /** True when [url] is a picture stored online for collab wishlist [code] (it goes when that wish is deleted for good). */
-    fun ownsPhoto(code: String, url: String): Boolean = photoNameOf(code, url) != null
-
-    // ---- deleting: the wish goes to the bin at once (for everyone); Undo takes it out again ----
-
-    /**
-     * Moves a wish of the open list to the bin: it leaves the list at once and is marked online (only the fields
-     * "bin" and "binBy" are written; its picture and any reservation stay). If that fails it comes back with a message.
-     */
-    fun trash(c: Context, id: Long): Trashed? {
-        val l = current ?: return null
-        val before = content
-        val i = before.wishes.indexOfFirst { it.id == id }
-        if (i < 0) return null
-        val at = System.currentTimeMillis()
-        val binned = before.wishes[i].copy(bin = at, binBy = l.me)
-        Bin.binnedHere(c, l.code, id, at)
-        Bin.added(BinEntry(binned, l.code, before.name.ifBlank { l.name }, reserved[id]))
-        write(c, l, before, before.copy(wishes = before.wishes.filter { it.id != id })) {
-            try {
-                Cloud.shPut(l.key, binned, listOf("bin", "binBy"))
-            } catch (e: Exception) {
-                Bin.removed(l.code, id)
-                throw e
-            }
-        }
-        return Trashed(binned, i, l.code)
-    }
-
-    /** Undo: the wish comes out of the bin and back where it was. */
-    fun untrash(c: Context, t: Trashed) {
-        val l = lists.firstOrNull { it.code == t.listCode } ?: return
-        Bin.removed(l.code, t.wish.id)
-        val back = t.wish.copy(bin = 0L, binBy = "")
-        // Only the bin fields are written (left out = cleared). The lock makes sure this goes after the move to the bin.
-        val job: suspend () -> Unit = { Cloud.shPut(l.key, back, listOf("bin", "binBy")) }
-        if (active == l.code && content.wishes.none { it.id == back.id }) {
-            val before = content
-            val after = before.copy(wishes = before.wishes.toMutableList().also { it.add(t.index.coerceIn(0, it.size), back) })
-            write(c, l, before, after, job = job)
-        } else {
-            scope.launch {
-                try {
-                    lock.withLock { job() }
-                } catch (e: Exception) {
-                    notice = tr("Couldn’t save that. Check your connection and try again.")
-                }
-            }
-        }
-    }
-
-    fun delete(c: Context, id: Long) {
-        val l = current ?: return
-        val before = content
-        val removed = before.wishes.firstOrNull { it.id == id } ?: return
-        val after = before.copy(wishes = before.wishes.filter { it.id != id })
-        write(c, l, before, after) {
-            Cloud.shDelete(l.key, id)
-            ImageStore.delete(c, removed.image)
-            dropPhoto(l, removed.image)
-        }
-    }
-
-    fun setName(c: Context, name: String) {
-        val l = current ?: return
-        val before = content
-        val after = before.copy(name = name)
-        lists = lists.map { if (it.code == l.code) it.copy(name = name) else it }
-        saveLists(c)
-        write(c, l, before, after) { Cloud.shName(l.key, name) }
-    }
-
-    fun setAbout(c: Context, about: String) {
-        val l = current ?: return
-        val before = content
-        val after = before.copy(about = about)
-        write(c, l, before, after) { Cloud.shAbout(l.key, about) }
-    }
-
-    /** The occasion of the open gift list (null removes it); everyone on it sees it. */
-    fun setOccasion(c: Context, occ: Occasion?) {
-        val l = current ?: return
-        val before = content
-        val after = before.copy(occ = occ)
-        // Without the script of 5 November 2026 the online function doesn't exist yet: say so.
-        val noScript: (Exception) -> String? = { e ->
-            if ((e.message ?: "").contains("wl_sh_set_occasion")) tr("Occasions need an update in Supabase first: run supabase-shared.sql again.") else null
-        }
-        write(c, l, before, after, noScript) { Cloud.shOccasion(l.key, occ) }
-    }
-
-    /** [name] is already cleaned and known to be new (Repo.addCat checks that). */
-    fun addCat(c: Context, name: String): String? {
-        val l = current ?: return null
-        val before = content
-        val after = before.copy(cats = before.cats + name)
-        write(c, l, before, after) { Cloud.shCatAdd(l.key, name) }
-        return name
-    }
-
-    fun renameCat(c: Context, old: String, name: String): Boolean {
-        val l = current ?: return false
-        val before = content
-        val after = before.copy(
-            cats = before.cats.map { if (it == old) name else it },
-            wishes = before.wishes.map { if (it.category == old) it.copy(category = name) else it }
-        )
-        // The online copy renames the category and moves every wish in it, including ones this phone hasn't seen yet.
-        write(c, l, before, after) { Cloud.shCatRename(l.key, old, name) }
-        return true
-    }
-
-    fun removeCat(c: Context, name: String) {
-        val l = current ?: return
-        val before = content
-        val after = before.copy(
-            cats = before.cats.filter { it != name },
-            wishes = before.wishes.map { if (it.category == name) it.copy(category = "") else it }
-        )
-        write(c, l, before, after) { Cloud.shCatRemove(l.key, name) }
-    }
-
-    /**
-     * The invitation key in text from the clipboard (the invite page copies its link when "Download app" is tapped),
-     * or null when there is none, or this phone is on that list already.
-     */
-    fun inviteFromClipboard(c: Context, text: String?): String? {
-        if (text.isNullOrBlank() || text.length > 500) return null
-        // Only a real invite link counts, never a loose string of letters.
-        if (!text.uppercase().contains("J=")) return null
-        val key = Sync.parseInvite(text) ?: return null
-        if (lists.any { it.key == key }) return null
-        return key
-    }
-
-    // ---- making, joining and leaving lists ----
-
-    /** Makes a new shared wishlist online and adds it to this phone. */
-    suspend fun create(c: Context, name: String, me: String): SharedList {
-        val n = name.trim().ifEmpty { tr("Our wishlist") }
-        val code = Sync.newCode()
-        val key = Sync.newKey()
-        val token = Sync.newKey()
-        Cloud.shCreate(code, key, token, n)
-        val l = SharedList(code, key, n, token, me.trim())
-        rememberName(c, l.me)
-        lists = lists + l
-        saveLists(c)
-        return l
-    }
-
-    /** Accepts an invite. Returns the list, or null when the invite doesn't work (anymore). */
-    suspend fun join(c: Context, key: String, me: String): SharedList? {
-        val r = Cloud.shGet(key) ?: return null
-        val name = me.trim()
-        rememberName(c, name)
-        val old = lists.firstOrNull { it.code == r.code }
-        val l = if (old != null) {
-            // Already on this list (for example after the invite link was reset): just take the new key.
-            old.copy(key = key, name = r.list.name, me = name.ifEmpty { old.me })
-        } else {
-            SharedList(r.code, key, r.list.name, "", name)
-        }
-        lists = if (old != null) lists.map { if (it.code == r.code) l else it } else lists + l
-        saveLists(c)
-        writeCache(c, r.code, SharedContent(r.list.name, r.list.cats, r.list.about, r.list.wishes, r.list.occ))
-        return l
-    }
-
-    /** Takes the list off this phone only. It stays online for everyone else. */
-    fun leave(c: Context, code: String) {
-        // Off the list of members (2.128), so nobody picks you as its new owner later.
-        lists.firstOrNull { it.code == code }?.let { l -> scope.launch { Members.left(c, l.key) } }
-        if (active == code) close()
-        lists = lists.filter { it.code != code }
-        saveLists(c)
-        prefs(c).edit().remove(cacheKey(code)).remove("shp_$code").apply()
-        Bin.forget(c, code)
-    }
-
-    /** This phone became the owner of list [code] (2.128): its new owner token. */
-    fun becameOwner(c: Context, code: String, token: String) {
-        lists = lists.map { if (it.code == code) it.copy(owner = token) else it }
-        saveLists(c)
-    }
-
-    /** Creator only: deletes the list online for everyone (wishes, reservations, pictures). */
-    suspend fun deleteForEveryone(c: Context) {
-        val l = current ?: return
-        if (l.owner.isEmpty()) throw CloudException(tr("Only the person who made this list can delete it."))
-        content.wishes.forEach { dropPhoto(l, it.image) }
-        Cloud.deleteList(l.code, l.owner)
-        leave(c, l.code)
-    }
-
-    /** Creator only: a new edit key. The old invite link stops working. Returns the new key. */
-    suspend fun resetKey(c: Context): String {
-        val l = current ?: throw CloudException(tr("No wishlist is open."))
-        if (l.owner.isEmpty()) throw CloudException(tr("Only the person who made this list can do that."))
-        val nk = Sync.newKey()
-        Cloud.shReset(l.code, l.owner, nk)
-        lists = lists.map { if (it.code == l.code) it.copy(key = nk) else it }
-        saveLists(c)
-        return nk
     }
 }

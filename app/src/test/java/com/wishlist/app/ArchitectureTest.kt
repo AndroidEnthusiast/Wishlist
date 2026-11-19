@@ -17,7 +17,8 @@ import java.io.File
  *  3. Your own data has one front door (the data rebuild, owner 19 November 2026): the parts of Repo (OwnLists, OwnBin,
  *     OwnCopies, AppPrefs, FriendLists) are only touched in Data.kt and the Repo*.kt files; everything else reads and
  *     changes them through Repo (Repo.myWishes, Repo.trash, …), so saving always goes through Repo.persist. The same for
- *     Friends: its parts (FriendPhotos, FriendAbout, FriendVisibility) are only touched in Friends.kt and FriendsPhotos, -About, -Visible, -Links.
+ *     Friends: its parts (FriendPhotos, FriendAbout, FriendVisibility) only in Friends.kt and FriendsPhotos, -About,
+ *     -Visible, -Links. And Shared: its save engine and SharedReservations only in Shared.kt and its four part files.
  */
 class ArchitectureTest {
     private val dir = File("src/main/java/com/wishlist/app")
@@ -28,7 +29,6 @@ class ArchitectureTest {
 
         /** Over the limit on 19 November 2026, with their size then. Only shrinks. */
         val ALLOWED: Map<String, Int> = mapOf(
-        "Shared.kt" to 710,
         "Exchange.kt" to 608,
         "Alerts.kt" to 585,
         "Import.kt" to 516,
@@ -116,6 +116,12 @@ class ArchitectureTest {
         val friendHits = dir.listFiles()!!.filter { it.name.endsWith(".kt") && it.name !in setOf("Friends.kt", "FriendsPhotos.kt", "FriendsAbout.kt", "FriendsVisible.kt", "FriendsLinks.kt") }
             .flatMap { f -> f.readLines().mapIndexedNotNull { i, l -> friendPart.find(l)?.let { "${f.name}:${i + 1} ${l.trim()}" } } }
         assertTrue("Use Friends' doors (Friends.setPhoto, Friends.visible, …), not its parts directly: $friendHits", friendHits.isEmpty())
+        // Shared (2.258): its save engine and reservation state only inside its own files.
+        val sharedPart = Regex("\\b(SharedReservations\\.|Shared\\.(scope|lock|pending|stamp|write|saveLists|readCache|writeCache|rememberName)\\b)")
+        val sharedFiles = setOf("Shared.kt", "SharedMembership.kt", "SharedWishes.kt", "SharedDetails.kt", "SharedReservations.kt")
+        val sharedHits = dir.listFiles()!!.filter { it.name.endsWith(".kt") && it.name !in sharedFiles }
+            .flatMap { f -> f.readLines().mapIndexedNotNull { i, l -> sharedPart.find(l)?.let { "${f.name}:${i + 1} ${l.trim()}" } } }
+        assertTrue("Use Shared's doors (Shared.put, Shared.reserve, …), not its insides: $sharedHits", sharedHits.isEmpty())
         assertFalse(part.containsMatchIn("MyOwnLists.x"))
     }
 

@@ -5,12 +5,12 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
-- **The data rebuild (owner, 19 November 2026; `docs/decisions/roadmap.md`, last section), read first.** 2.256 split
-  Data.kt, 2.257 Friends.kt (nothing on screen changed). Ask how 2.256, 2.257 and the screen rebuild behave on the
-  phone (TODO "Try 2.257", "Try 2.256", "Try the rebuild"). Then the next area, **Shared.kt** (shared wishlists kept
-  in step: the riskiest so far, two people saving at once, Rule 3), the same way: interview on the plan and its risks
-  first; record a before/after check with the OLD code in its own commit (`DataSameTest`/`FriendsSameTest` show how;
-  the pretend server `Cloud.pretendServer` answers server calls), then split by moving code word for word.
+- **The data rebuild (owner, 19 November 2026; `docs/decisions/roadmap.md`, last section), read first.** 2.256 Data,
+  2.257 Friends, 2.258 Shared (nothing on screen changed). Ask how they and the screen rebuild behave on the phone
+  (TODO "Try 2.258", "Try 2.257", "Try 2.256", "Try the rebuild"). Then the next area, **Groups.kt**, then Exchange,
+  Alerts, Import, Fetch, the same way: interview on the plan and its risks first; record a before/after check with
+  the OLD code in its own commit (`SharedSameTest` shows how: a pretend server with its own state; let each background
+  save finish before the next so the record is stable), then split by moving code word for word.
 - **The rebuild (owner, 18 November 2026; `docs/decisions/roadmap.md`, last section).** Point 2 done: version stamps in
   every script + `server-check.yml` (owner ran all 17; issue closed). Point 1: **Home done in 2.233** (7 small files,
   `HomeModel`, pixel-identical). Ask whether Home behaves the same after a day or two; then the next screen (ask which:
@@ -81,6 +81,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 19 November 2026, late night: the data rebuild, Shared (2.258)
+Owner: ship now, "make sure everything works". `SharedSameTest` with `PretendSharedServer` (writes only fields sent,
+offline, late answers) recorded with the old code first, then Shared.kt split word for word: identical (stable over
+runs once saves in one step waited for each other). `SharedPartsTest` for the four risks; guard for Shared's insides.
+
 ### 19 November 2026, late night: the data rebuild, Friends (2.257)
 Owner chose: build and ship now (not wait for testing), a pretend server for the checks, five parts, all four risks
 checked. `FriendsSameTest` recorded with the old code first (own commit), then Friends.kt split word for word:
@@ -90,7 +95,3 @@ identical. `FriendsPartsTest`; the guard covers Friends' parts. Cloud.kt hit 401
 Owner chose (interview): start now, "split inside, same doors", Data → Friends → Shared → rest, same storage format +
 a before/after check. `DataSameTest` recorded with the old code first (own commit), then Data.kt split into `Wish.kt`
 + `Repo*.kt` parts by moving code word for word: identical. Guard `ownDataOnlyThroughRepo`; `RepoPartsTest`.
-
-### 19 November 2026, night: Overview (2.255), the screens are done
-`Overview.kt` split into Overview + OverviewScreen + `OverviewState`; full 151-picture rerun: 141 identical, rest
-explained (version number, chart clock, fixed test). Next: owner tests (TODO), then plan the data part with them.

@@ -752,3 +752,15 @@ The "Next session" plan after 2.256 (done in 2.257), word for word:
   "Try the rebuild"). Then the next area, **Friends.kt**, the same way: interview on the plan and its risks first;
   record a before/after check with the OLD code in its own commit (like `DataSameTest`: friends, requests, notes,
   online answers faked), then split by moving code word for word, same storage format; one version. Then Shared.
+
+### 19 November 2026, night: Overview (2.255), the screens are done
+`Overview.kt` split into Overview + OverviewScreen + `OverviewState`; full 151-picture rerun: 141 identical, rest
+explained (version number, chart clock, fixed test). Next: owner tests (TODO), then plan the data part with them.
+
+The "Next session" plan after 2.257 (done in 2.258), word for word:
+- **The data rebuild (owner, 19 November 2026; `docs/decisions/roadmap.md`, last section), read first.** 2.256 split
+  Data.kt, 2.257 Friends.kt (nothing on screen changed). Ask how 2.256, 2.257 and the screen rebuild behave on the
+  phone (TODO "Try 2.257", "Try 2.256", "Try the rebuild"). Then the next area, **Shared.kt** (shared wishlists kept
+  in step: the riskiest so far, two people saving at once, Rule 3), the same way: interview on the plan and its risks
+  first; record a before/after check with the OLD code in its own commit (`DataSameTest`/`FriendsSameTest` show how;
+  the pretend server `Cloud.pretendServer` answers server calls), then split by moving code word for word.

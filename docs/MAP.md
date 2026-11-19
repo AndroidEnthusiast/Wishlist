@@ -77,7 +77,15 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `Shops.kt` (Find a gift: your shops and their icons; rebuilt in 2.241) + `ShopsScreen.kt` (My shops page, Add shop, `ShopIcon`) + `ShopBrowser.kt` (a shop inside the app with Add to wishlist) + state holders `ShopsModel.kt` (`ShopsModel`, `ShopBrowserState`); checks `ShopsModelTest`, screenshots `ShopsScreenshotTest`; `CONSENT_JS` refuses cookie questions
 
 ### Collab wishlists (gift lists in the code; on screen since 2.220 "wishlists for someone else", made from "New wishlist")
-- `Shared.kt` + `SharedUi.kt` (shared lists, online saving; the dialogs rebuilt in 2.253: `SharedUi.kt` make and join, `SharedManage.kt` share, new link, leave, delete, gone, new owner; state holder `SharedListModel.kt`; checks `SharedListModelTest`, screenshots `SharedListScreenshotTest`)
+- Shared wishlists' data (split in 2.258, the data rebuild; nothing on screen, on the server or in `web/` changed):
+  `Shared.kt` (the front door `Shared`: lists on this phone, the open list, its offline copy, refresh, the save engine
+  `write`), `SharedMembership.kt` (make, join, leave, invite link, names), `SharedWishes.kt` (saving field by field,
+  Rule 3; bin and Undo; pictures; moving across), `SharedDetails.kt` (name, note, occasion, categories),
+  `SharedReservations.kt`. Guard: `ArchitectureTest.ownDataOnlyThroughRepo`. Checks: `SharedSameTest` (with
+  `PretendSharedServer`, which writes only the fields sent and can be offline or slow: word for word against
+  `shared-same.txt`, recorded before the split), `SharedPartsTest` (two people one wish, failed save undone, old
+  answer ignored, offline / gone / left).
+- `SharedUi.kt` (shared lists' screens; the dialogs rebuilt in 2.253: `SharedUi.kt` make and join, `SharedManage.kt` share, new link, leave, delete, gone, new owner; state holder `SharedListModel.kt`; checks `SharedListModelTest`, screenshots `SharedListScreenshotTest`)
 - `ShareCard.kt` (share picture)
 - `Members.kt` (gift list members and a new owner)
 - `CollabPeople.kt` (the people circles on a collab wishlist's block; `supabase-collab.sql`)
