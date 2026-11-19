@@ -25,7 +25,6 @@ class ArchitectureTest {
         /** Over the limit on 19 November 2026, with their size then. Only shrinks. */
         val ALLOWED: Map<String, Int> = mapOf(
         "Data.kt" to 1110,
-        "Messages.kt" to 1036,
         "HeroEditor.kt" to 890,
         "Shops.kt" to 869,
         "Styled.kt" to 849,
@@ -62,14 +61,16 @@ class ArchitectureTest {
             "ExchangeParts.kt", "ExchangesList.kt", "ExchangeNew.kt", "ExchangeScreen.kt", "ExchangeDialogs.kt",
             "ExchangeRows.kt", "ExchangeSettings.kt", "ExchangeChat.kt",
             // Wishlist groups (19 November 2026): their state holder is GroupModel.kt.
-            "GroupsParts.kt", "GroupListPick.kt", "GroupNew.kt", "GroupJoin.kt", "GroupScreen.kt", "GroupMembers.kt", "GroupSettings.kt"
+            "GroupsParts.kt", "GroupListPick.kt", "GroupNew.kt", "GroupJoin.kt", "GroupScreen.kt", "GroupMembers.kt", "GroupSettings.kt",
+            // Messages (19 November 2026): one chat's state holder is ChatModel.kt.
+            "MessagesList.kt", "ChatScreen.kt", "ChatBubbles.kt", "ChatParts.kt"
         )
 
         /** A store's data set straight away ("Exchanges.list = …"; only the checks' pretend data may). */
-        val STORE_SET = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges)\\.[a-z][A-Za-z]* = ")
+        val STORE_SET = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|Chat)\\.[a-z][A-Za-z]*(\\[[^\\]]*])? = ")
 
         /** A call that changes shared data: Store.set…(), .delete…(), .leave(), … */
-        val WRITES = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|ListVisibility|Occasions|MyLists)\\.(set|add|delete|remove|rename|create|leave|put|update|replace|trash|reserve|move|copy|open|hide|join|answer|new|cancel|invite|decline|send|seen|save|reveal|handover|draw|settings|takeover)[A-Za-z]*\\(")
+        val WRITES = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|ListVisibility|Occasions|MyLists|Chat|ChatPhotos)\\.(set|add|delete|remove|rename|create|leave|put|update|replace|trash|reserve|move|copy|open|hide|join|answer|new|cancel|invite|decline|send|seen|save|reveal|handover|draw|settings|takeover|react|upload|forget)[A-Za-z]*\\(")
     }
 
     @Test fun everyFileStaysSmall() {
@@ -107,6 +108,10 @@ class ArchitectureTest {
         assertFalse(WRITES.containsMatchIn("Friends.load(ctx)"))
         assertTrue(WRITES.containsMatchIn("Groups.settings(ctx, g.id, name, inviteAll)"))
         assertTrue(WRITES.containsMatchIn("Groups.takeover(ctx, a, b, c)"))
+        assertTrue(WRITES.containsMatchIn("Chat.send(ctx, peer, content)"))
+        assertTrue(WRITES.containsMatchIn("ChatPhotos.upload(ctx, peer, image)"))
+        assertFalse(WRITES.containsMatchIn("Chat.preview(r.content)"))
+        assertTrue(STORE_SET.containsMatchIn("Chat.opened[peer] = msgs"))
         assertTrue(STORE_SET.containsMatchIn("Groups.unsent = Groups.unsent - g.id"))
     }
 }

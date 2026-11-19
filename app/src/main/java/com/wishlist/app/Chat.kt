@@ -49,7 +49,7 @@ object Chat {
     private val lock = Mutex()
 
     var conversations by mutableStateOf<List<Conversation>>(emptyList())
-        private set
+        internal set
 
     /** Messages you haven't read yet, over all conversations (the red dot on Messages). */
     val unreadTotal: Int get() = conversations.sumOf { it.unread }

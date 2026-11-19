@@ -58,7 +58,7 @@ object Friends {
 
     /** What the Friends tab shows (the last answer from the server, also kept on the phone for offline use). */
     var state by mutableStateOf<FriendsState?>(null)
-        private set
+        internal set
 
     /** Your own photo on this phone (a file), or "". */
     var myPhoto by mutableStateOf("")

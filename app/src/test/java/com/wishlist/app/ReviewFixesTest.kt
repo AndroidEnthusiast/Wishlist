@@ -88,10 +88,10 @@ class ReviewFixesTest {
 
     /** A chat opens at its end without scrolling through it, and shows what it had at once. */
     @Test fun chatOpensAtTheEnd() {
-        val m = src("Messages.kt")
+        val m = src("ChatModel.kt") + src("ChatScreen.kt")
         assertTrue(m.contains("mutableStateOf(Chat.opened[peer].orEmpty())"))
-        assertTrue(m.contains("if (!placed) { listState.scrollToItem(msgs.size - 1); placed = true }"))
-        assertTrue(m.contains(".alpha(if (placed) 1f else 0f)"))
+        assertTrue(m.contains("if (!chat.placed) { listState.scrollToItem(chat.msgs.size - 1); chat.placed = true }"))
+        assertTrue(m.contains(".alpha(if (chat.placed) 1f else 0f)"))
     }
 
     /** My order: new wishes on top, then the order you made; owned at the bottom. */

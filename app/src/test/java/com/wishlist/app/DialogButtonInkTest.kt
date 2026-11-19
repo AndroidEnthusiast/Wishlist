@@ -92,7 +92,7 @@ class DialogButtonInkTest : NavigationBase() {
 class NoColouredButtonLabelsTest {
     private val allowed = setOf(
         "HomeShare.kt:Copied",     // green "Copied" on the page, not in a dialog
-        "Messages.kt:Cancel",      // white on the photo being sent (always dark)
+        "ChatParts.kt:Cancel",     // white on the photo being sent (always dark)
         "Shops.kt:Add anyway"      // on the dark message bar (inverse colours)
     )
 

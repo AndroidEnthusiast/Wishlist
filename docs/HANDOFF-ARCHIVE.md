@@ -660,3 +660,8 @@ the empty-Home Import card (never shown since 2.226) fixed. Earlier: card button
 2.234 guards: `ArchitectureTest` (files under 400 lines, 29 frozen; rebuilt screens only draw), recipe in notes,
 `checkup.yml` quarterly. 2.235: `FriendsUi.kt` split into 8 files + `PeopleModel`; 26 screenshots identical.
 Owner asked that decisions and notes stay in order: every renamed file updated in MAP/HANDOFF/TODO; moved.py clean.
+
+### 19 November 2026, later: the open list (2.236)
+`ListScreen.kt` split into ListScreen (layout), ListModel (state + Reserve/Love/view/sort; `shownWishes`,
+`keptOrder` tested), ListWishItem, ListDrag, ListViewButtons; 28 screenshots identical; 27 files left on ALLOWED.
+
