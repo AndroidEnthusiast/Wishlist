@@ -28,7 +28,6 @@ class ArchitectureTest {
         "Shared.kt" to 710,
         "Exchange.kt" to 608,
         "Alerts.kt" to 585,
-        "Design.kt" to 556,
         "Import.kt" to 516,
         "Friends.kt" to 514,
         "Overview.kt" to 511,

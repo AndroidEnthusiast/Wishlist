@@ -700,3 +700,7 @@ GitHub's "Publish the web page" failed 3× (its own artifact error; the APK publ
 Owner: Shared/Exchange/Alerts wait with Data. `AppScreen.kt` split into AppScreen, AppPopups + `AppState` (AppModel.kt);
 151 screenshots before/after, 150 identical (price chart moves with the clock). Fixed the big-text Visibility
 screenshot test and the guard's `saveKey` false alarm. 19 left (next: WishCards, WishForm, Design).
+
+### 19 November 2026, afternoon: the wish cards (2.245)
+`WishCards.kt` (draws only, no data) split into CompactCard, WishCard, RowCard, WishCardParts, WishPriceLine and
+WishCards; a script proved all 526 lines moved unchanged. 18 files left (next: WishForm, Design, Import).

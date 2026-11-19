@@ -11,7 +11,7 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
   sliders, bottom panels and `Scaffold` (`Themed*.kt`, since 2.199): never import Material's own in a screen (the
   photo editor's dark field is the one exception). Owner, 13 November 2026: "a theme must change absolutely every
   element of the app"; a new part gets its style in every theme, light and dark.
-- Cards, mats and surfaces use `lookCard`, `lookMat`, `lookSurface` (`Design.kt`); a box with its own background uses
+- Cards, mats and surfaces use `lookCard`, `lookMat`, `lookSurface` (`DesignShapes.kt`, split from `Design.kt` in 2.247); a box with its own background uses
   `lookSurface` too, never `clip(RoundedCornerShape(…)).background(…)`. Coloured text and icons use `look.textAccent`
   (in most styles `look.accent` is a fill colour too light for text). Colours come from the theme
   (`MaterialTheme.colorScheme`, `LocalLook`), never fixed colours, except drawn illustrations.

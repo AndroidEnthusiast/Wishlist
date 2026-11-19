@@ -11,14 +11,14 @@ import java.io.File
  */
 class PerformanceRulesTest {
     private fun src(name: String) = File("src/main/java/com/wishlist/app/$name").readText()
-    private val styleFiles = listOf("Design.kt", "Styled.kt", "StyledButtons.kt", "StyledBars.kt", "StyledPhotos.kt", "AppIcons.kt", "Themed.kt", "ThemedFields.kt", "ThemedControls.kt", "ThemedSheets.kt", "Placeholders.kt")
+    private val styleFiles = listOf("Design.kt", "DesignType.kt", "DesignShapes.kt", "Styled.kt", "StyledButtons.kt", "StyledBars.kt", "StyledPhotos.kt", "AppIcons.kt", "Themed.kt", "ThemedFields.kt", "ThemedControls.kt", "ThemedSheets.kt", "Placeholders.kt")
 
     @Test fun stylesDrawLinesWithEdgeLineNotBorder() {
         for (f in styleFiles) assertTrue("$f uses Modifier.border; use edgeLine (made once per size)", !Regex("""\.border\(""").containsMatchIn(src(f)))
     }
 
     @Test fun shadowsAndCardDrawingsAreMadeOncePerSize() {
-        val d = src("Design.kt")
+        val d = src("DesignShapes.kt")
         val shadow = d.substringAfter("fun Modifier.hardShadow(").substringBefore("\n}")
         assertTrue("hardShadow must use drawWithCache", shadow.contains("drawWithCache"))
         val edge = d.substringAfter("fun Modifier.edgeLine(").substringBefore("\n}")

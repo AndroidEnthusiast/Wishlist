@@ -7,9 +7,20 @@ it**, grouped as below, with a recommendation. Add every new open item here the 
 Details of each item are in the doc named after it.
 
 ## Now
-- **The rebuild (owner, 18–19 November 2026; `docs/decisions/roadmap.md`):** Home done (2.233), guards in (2.234), Friends/Profile (2.235), the open list (2.236), gift exchange (2.237), wishlist groups (2.238), Messages (2.239), the photo editor (2.240), My shops (2.241), the building blocks (Styled, 2.242; Themed, 2.243), the app's frame (AppScreen, 2.244), the wish cards (2.245), the wish form (2.246). Left:
-  the files left on `ArchitectureTest.ALLOWED` (17) (biggest: Data (waits for its own plan, owner: `docs/decisions/roadmap.md`),
-  Shared, Exchange, Alerts (these three wait with Data, owner), Design, Import, Friends). One screen per version, bug fixes only; ask the owner which next.
+- **Try the rebuild on the phone (owner, 19 November 2026: nothing of 2.233–2.247 tried yet).** Everything should look
+  and work exactly as before; say what doesn't. In order of risk:
+  1. Notifications and links open the right place (a price alert, a message, a friend's list link, a group or gift
+     exchange invitation); Back from a tab or a list goes Home (2.244).
+  2. Add a wish: paste a shop link (photo, name, price fill in), take or choose a photo, Save to another list, edit a
+     price; Save without a name turns the name red (2.246). In My shops: + Add wish on a product page (2.241).
+  3. A chat: open it (it starts at the newest message), send text, a wish, a photo; reply, react, delete (2.239).
+  4. A group and a gift exchange: open, invite, settings, leave dialog (Cancel) (2.237, 2.238).
+  5. The photo editor: does the photo show straight away (in the test pictures it only showed after a tool) (2.240).
+  6. Home, a list (drag to reorder, select, Reserve on a friend's list), Friends and Profile (2.233–2.236), and the
+     look of buttons, dialogs, fields and cards in every view (2.242, 2.243, 2.245, 2.247).
+- **The rebuild (owner, 18–19 November 2026; `docs/decisions/roadmap.md`):** Home done (2.233), guards in (2.234), Friends/Profile (2.235), the open list (2.236), gift exchange (2.237), wishlist groups (2.238), Messages (2.239), the photo editor (2.240), My shops (2.241), the building blocks (Styled, 2.242; Themed, 2.243), the app's frame (AppScreen, 2.244), the wish cards (2.245), the wish form (2.246), the styles (Design, 2.247). Left:
+  the files left on `ArchitectureTest.ALLOWED` (16) (biggest: Data (waits for its own plan, owner: `docs/decisions/roadmap.md`),
+  Shared, Exchange, Alerts, Friends (these four wait with Data, owner), Import, Overview, Groups). One screen per version, bug fixes only; ask the owner which next.
 - **AliExpress shows its logo instead of the product photo** (owner, 18 November 2026): needs the real page. Owner: open
   that wish's price page, tap "Price is wrong?", share the file; then fix `Fetch.kt` + `web/parse.js` together and add
   the page to `tests/shared/same-answers.json` → `pages`.

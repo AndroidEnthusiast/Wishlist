@@ -211,3 +211,6 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
   recommendation): like Data.kt they save and send data (shared lists kept in step, gift exchanges and the draw,
   background price checks and notifications), where a mistake could lose or mix up data and screenshots can't catch
   it. The screens go first; next AppScreen.kt (moving between screens).
+- **Friends.kt joins Data.kt's own plan too** (owner, 19 November 2026, "Continue" on the recommendation): it saves
+  and sends your friends and requests. The owner also said nothing of the rebuild (2.233–2.246) was tried on the phone
+  yet: one combined test list is in `docs/TODO.md` ("Try the rebuild").

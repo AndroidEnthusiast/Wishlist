@@ -1,50 +1,16 @@
 package com.wishlist.app
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.CutCornerShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.Shapes
-import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.shadow
-import androidx.compose.foundation.layout.offset
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Outline
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PointMode
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.drawOutline
-import androidx.compose.ui.graphics.addOutline
-import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 /*
  * The look of the app (since 2.97, owner): one signature look, **Quiet** (calm and precise, like Apple Wallet and
@@ -55,6 +21,8 @@ import androidx.compose.ui.unit.sp
  * History: Neobrutalism, Neumorphism and Cyberpunk went on 13 November 2026; twelve more styles (2.199–2.205) were
  * removed on 14 November 2026 (owner: not to a professional standard). A new design style is made the way
  * docs/DESIGN-STYLES.md describes, one at a time.
+ * Split in the rebuild (owner, 19 November 2026): the type scale is DesignType.kt, the shapes, card colours, shadows
+ * and surfaces DesignShapes.kt; this file keeps the styles, the accent colours and [Look].
  */
 
 /** A style: its key ([Repo.design]), its name and one line about it (the Themer). */
@@ -167,7 +135,7 @@ class Look(
 
 val LocalLook = staticCompositionLocalOf { lookFor("quiet", "blue", "light") }
 
-private fun c(v: Long) = Color(v)
+internal fun c(v: Long) = Color(v)
 
 /** The hue of a colour (0–360°): the one colour a theme is built from. */
 internal fun hueOf(col: Color): Float {
@@ -181,7 +149,7 @@ internal fun hueOf(col: Color): Float {
 /** A group of rows inside a panel (a sheet's menu): a step lighter than the panel in the theme's own colour. */
 fun Look.groupFill(): Color = if (dark) lerp(raised, scheme.onSurface, 0.07f) else page
 private fun mix(a: Color, b: Color, t: Float) = lerp(a, b, t)
-private fun pick(id: Long, n: Int) = Math.floorMod(id, n.toLong()).toInt()
+internal fun pick(id: Long, n: Int) = Math.floorMod(id, n.toLong()).toInt()
 /** Dark ink on light colours, white on dark ones. */
 private fun inkOn(bg: Color) = if (bg.luminance() > 0.5f) c(0xFF0B0B0F) else Color.White
 
@@ -196,13 +164,13 @@ val figtree by lazy { google("Figtree") }
 /** The text font of Quiet since 2.210 (owner, 15 November 2026: Figtree sat too close to Google's own fonts). */
 val jakarta by lazy { google("Plus Jakarta Sans") }
 /** Headings of Quiet (owner, 7 November 2026: "a heading font with character"): a soft serif. */
-private val fraunces by lazy { google("Fraunces") }
-private val bungee by lazy { google("Bungee") }
-private val bricolage by lazy { google("Bricolage Grotesque") }
-private val caveat by lazy { google("Caveat") }
+internal val fraunces by lazy { google("Fraunces") }
+internal val bungee by lazy { google("Bungee") }
+internal val bricolage by lazy { google("Bricolage Grotesque") }
+internal val caveat by lazy { google("Caveat") }
 
 /** All the colours of a scheme from a few, plus the surface steps that menus and dialogs use. */
-private fun scheme(
+internal fun scheme(
     dark: Boolean, primary: Color, onPrimary: Color, container: Color, onContainer: Color,
     bg: Color, surface: Color, text: Color, muted: Color, outline: Color, outlineVariant: Color,
     error: Color? = null
@@ -302,255 +270,4 @@ fun lookFor(style: String, accentKey: String, mode: String): Look {
             )
         }
     }
-}
-
-private fun TextStyle.styled(f: FontFamily, w: FontWeight, spacing: Float? = null) =
-    copy(fontFamily = f, fontWeight = w, letterSpacing = if (spacing == null) letterSpacing else spacing.sp)
-
-/** The type of a style: a heading font (display, headlines, big titles) and a text font, and the labels' font. */
-private fun styleType(
-    head: FontFamily, headW: FontWeight, headSpacing: Float?, body: FontFamily, titleW: FontWeight, bodyW: FontWeight,
-    label: FontFamily, labelW: FontWeight, small: FontFamily = label, smallW: FontWeight = labelW, labelSpacing: Float? = null
-): Typography {
-    val d = Typography()
-    return Typography(
-        displayLarge = d.displayLarge.styled(head, headW, headSpacing), displayMedium = d.displayMedium.styled(head, headW, headSpacing),
-        displaySmall = d.displaySmall.styled(head, headW, headSpacing), headlineLarge = d.headlineLarge.styled(head, headW, headSpacing),
-        headlineMedium = d.headlineMedium.styled(head, headW, headSpacing), headlineSmall = d.headlineSmall.styled(head, headW, headSpacing),
-        titleLarge = d.titleLarge.styled(head, headW, headSpacing),
-        titleMedium = d.titleMedium.styled(body, titleW), titleSmall = d.titleSmall.styled(body, titleW),
-        bodyLarge = d.bodyLarge.styled(body, bodyW), bodyMedium = d.bodyMedium.styled(body, bodyW), bodySmall = d.bodySmall.styled(body, bodyW),
-        labelLarge = d.labelLarge.styled(label, labelW, labelSpacing), labelMedium = d.labelMedium.styled(label, labelW, labelSpacing),
-        labelSmall = d.labelSmall.styled(small, smallW, labelSpacing)
-    )
-}
-
-/**
- * The fonts of each style. Quiet: Fraunces headings (a soft serif, since 7 November 2026) with Figtree text. Chaos:
- * Bungee headings, Bricolage Grotesque text, handwritten Caveat for small labels. (Bungee comes in one weight.)
- */
-fun typographyFor(design: String, @Suppress("UNUSED_PARAMETER") classic: Typography? = null): Typography = when (design) {
-    "chaos" -> styleType(bungee, FontWeight.Normal, 0f, bricolage, FontWeight.Bold, FontWeight.Normal, bricolage, FontWeight.Bold, caveat, FontWeight.Bold)
-    else -> quietType()
-}
-
-/** Plus Jakarta Sans' own measurements (its font file, per letter height): ascent, descent and capital height. */
-internal const val JAKARTA_ASCENT = 1.038f
-internal const val JAKARTA_DESCENT = 0.222f
-internal const val JAKARTA_CAP = 0.745f
-
-/**
- * How much of a label's spare line height goes above the text so its capitals sit exactly in the middle of the line
- * (owner, 17 November 2026: chip text "perfectly centred" between the chip's top and bottom). The font draws its
- * capitals low in its box (a tall ascent), so an even split left them about 1 px low. [size] and [line] in sp.
- */
-internal fun capsTopRatio(size: Int, line: Int): Float {
-    val spare = line - size * (JAKARTA_ASCENT + JAKARTA_DESCENT)
-    if (spare <= 0f) return 0.5f
-    val top = line / 2f - size * (JAKARTA_ASCENT - JAKARTA_CAP / 2f)
-    return (top / spare).coerceIn(0f, 1f)
-}
-
-private fun TextStyle.capsCentred(size: Int, line: Int) = copy(
-    lineHeightStyle = androidx.compose.ui.text.style.LineHeightStyle(
-        androidx.compose.ui.text.style.LineHeightStyle.Alignment(capsTopRatio(size, line)),
-        androidx.compose.ui.text.style.LineHeightStyle.Trim.None
-    )
-)
-
-/**
- * Quiet's type scale (2.207, docs/styles/quiet.md): Fraunces SemiBold for titles (28 for the wordmark and the main
- * tabs, 20 for screen titles, sections and dialogs), Figtree for the rest with clear steps: prices 17, names 16, text
- * 15, details 13, nothing under 12. Prices use figures of equal width so they line up.
- */
-private fun quietType(): Typography {
-    val d = Typography()
-    fun f(base: TextStyle, family: FontFamily, w: FontWeight, size: Int, line: Int, spacing: Float = 0f) =
-        base.copy(fontFamily = family, fontWeight = w, fontSize = size.sp, lineHeight = line.sp, letterSpacing = spacing.sp)
-    val head = FontWeight.SemiBold
-    return Typography(
-        displayLarge = f(d.displayLarge, fraunces, head, 48, 56, -0.5f), displayMedium = f(d.displayMedium, fraunces, head, 40, 48, -0.4f),
-        displaySmall = f(d.displaySmall, fraunces, head, 34, 40, -0.3f), headlineLarge = f(d.headlineLarge, fraunces, head, 30, 36, -0.3f),
-        headlineMedium = f(d.headlineMedium, fraunces, head, 28, 34, -0.3f), headlineSmall = f(d.headlineSmall, fraunces, head, 28, 34, -0.3f),
-        titleLarge = f(d.titleLarge, fraunces, head, 20, 26, -0.2f),
-        titleMedium = f(d.titleMedium, jakarta, FontWeight.SemiBold, 17, 22).copy(fontFeatureSettings = "tnum"),
-        titleSmall = f(d.titleSmall, jakarta, FontWeight.Medium, 16, 21),
-        bodyLarge = f(d.bodyLarge, jakarta, FontWeight.Normal, 16, 22), bodyMedium = f(d.bodyMedium, jakarta, FontWeight.Normal, 15, 21),
-        bodySmall = f(d.bodySmall, jakarta, FontWeight.Normal, 13, 18),
-        labelLarge = f(d.labelLarge, jakarta, FontWeight.SemiBold, 15, 20).capsCentred(15, 20),
-        labelMedium = f(d.labelMedium, jakarta, FontWeight.Medium, 13, 18).capsCentred(13, 18),
-        labelSmall = f(d.labelSmall, jakarta, FontWeight.Medium, 12, 16, 0.1f).capsCentred(12, 16)
-    )
-}
-
-/** The weight of screen titles in the top bar (Bungee comes in one weight; Fraunces looks best a little lighter). */
-val Look.titleWeight: FontWeight
-    get() = if (design == "chaos") FontWeight.Normal else FontWeight.SemiBold
-
-/** The weight of prices. */
-val Look.priceWeight: FontWeight
-    get() = if (design == "chaos") FontWeight.Normal else FontWeight.Bold
-
-/** Icon style: rounded Material icons in both styles (AppIcons in Styled.kt). */
-@Suppress("unused")
-val Look.iconStyle: String get() = "rounded"
-
-/** The thickness of the style's lines around cards, buttons, fields and badges: thick ink in chaos, none in Quiet. */
-val Look.edge: Dp get() = if (design == "chaos") 3.dp else 0.dp
-
-/** The Material shapes (dialogs, menus, text fields, snackbars) of each style. */
-fun shapesFor(design: String): Shapes = when (design) {
-    "chaos" -> Shapes(
-        extraSmall = RoundedCornerShape(10.dp), small = RoundedCornerShape(12.dp), medium = RoundedCornerShape(16.dp),
-        large = RoundedCornerShape(20.dp), extraLarge = RoundedCornerShape(24.dp)
-    )
-    // Quiet (2.210): smooth squircle corners everywhere (owner, 15 November 2026, docs/styles/identity.md).
-    else -> Shapes(
-        extraSmall = Squircle(10.dp), small = Squircle(12.dp), medium = Squircle(16.dp),
-        large = Squircle(22.dp), extraLarge = Squircle(28.dp)
-    )
-}
-
-/** The shape of dialogs: the style's largest shape. */
-val Look.dialogShape: Shape get() = shapesFor(design).extraLarge
-
-/** The shape of a card. */
-@Suppress("UNUSED_PARAMETER")
-fun Look.cardShape(id: Long, small: Boolean): Shape =
-    if (design == "chaos") RoundedCornerShape(if (small) 14.dp else 18.dp) else Squircle(20.dp)
-
-/** Space around the picture inside a card (none since the neumorphic style went). */
-@Suppress("UNUSED_PARAMETER")
-fun Look.inset(small: Boolean): Dp = 0.dp
-
-@Suppress("UNUSED_PARAMETER")
-fun Look.pictureShape(id: Long, small: Boolean): Shape = RectangleShape
-
-/** Behind a picture without a photo: a soft colour of the look (a photo gets its own Blur stage, PhotoStage). */
-fun Look.pictureBg(id: Long, hasImage: Boolean): Color =
-    // Quiet dark: a small icon without a photo (Notifications, Prices) keeps a dark mat; photos get the light surface.
-    if (design == "quiet" && dark && !hasImage) raised else tints[pick(id, tints.size)]
-
-/**
- * The surface every wish photo sits on (Quiet 2.207: one calm light surface in light and dark, the owner's choice, so
- * white shop photos blend in and dark products stay visible), and the colour of what is drawn on it without a photo.
- */
-fun Look.photoSurface(id: Long): Color = tints[pick(id, tints.size)]
-val Look.photoInk: Color get() = if (design == "quiet") c(0xFF5E5E66) else scheme.onSurfaceVariant
-
-/** A line under the picture: chaos's thick ink. */
-val Look.pictureLine: Dp get() = edge
-
-fun Look.cardFill(id: Long): Color = fills[pick(id, fills.size)]
-
-/** The text colour on a card. */
-fun Look.cardInk(@Suppress("UNUSED_PARAMETER") id: Long): Color = scheme.onSurface
-
-/** The quieter text (shop, description, icons) on a card. */
-fun Look.cardMuted(@Suppress("UNUSED_PARAMETER") id: Long): Color = scheme.onSurfaceVariant
-
-/** Small labels on a card (price change, "Owned"). */
-fun Look.badgeShape(small: Boolean): Shape =
-    if (design == "chaos") RoundedCornerShape(10.dp) else RoundedCornerShape(if (small) 6.dp else 8.dp)
-
-/** Small buttons such as the category button and the view switch. */
-val Look.chipShape: Shape get() = if (design == "chaos") RoundedCornerShape(12.dp) else CircleShape
-
-/** The Add wish button (and the + in the bottom bar). */
-val Look.fabShape: Shape get() = if (design == "chaos") RoundedCornerShape(16.dp) else CircleShape
-
-/** The shape of ordinary buttons. */
-val Look.buttonShape: Shape get() = if (design == "chaos") RoundedCornerShape(14.dp) else CircleShape
-
-/** Gen Z chaos tilts cards a little, each its own way (by its id). */
-fun Look.tilt(id: Long): Float = if (design == "chaos") listOf(-1.6f, 1.2f, -0.8f, 1.8f, -1.2f, 0.9f)[pick(id, 6)] else 0f
-
-/** A hard shadow: the shape again, moved down and to the right, in one flat colour (or a gradient). */
-fun Modifier.hardShadow(color: Color, shape: Shape, offset: Dp = 4.dp, brush: Brush? = null): Modifier = drawWithCache {
-    // The outline is made once per size, not on every frame (2.202: scrolling lagged).
-    val o = offset.toPx()
-    val outline = shape.createOutline(size, layoutDirection, this)
-    onDrawBehind { translate(o, o) { if (brush != null) drawOutline(outline, brush) else drawOutline(outline, color) } }
-}
-
-/**
- * A line along the inside of [shape]'s edge, like Modifier.border, but drawn from an outline made once per size.
- * (Modifier.border paints every card with an irregular shape, torn, wobbly or ticket, into a picture of its own first;
- * with a list of cards that made scrolling lag, 2.202. PerformanceRulesTest keeps Modifier.border out of the styles.)
- */
-fun Modifier.edgeLine(width: Dp, color: Color, shape: Shape): Modifier = if (width <= 0.dp || color.alpha == 0f) this else drawWithCache {
-    val w = width.toPx()
-    val outline = shape.createOutline(Size(size.width - w, size.height - w), layoutDirection, this)
-    val stroke = Stroke(w)
-    onDrawWithContent { drawContent(); translate(w / 2, w / 2) { drawOutline(outline, color, style = stroke) } }
-}
-
-/**
- * Any surface in the chosen style: a card, a dialog, a button, a chip, the bottom bar. [fill] its colour; [raised]
- * false = without the hard shadow (chaos). [depth] is kept for callers (Quiet draws no shadow here). The content is
- * clipped to [shape].
- */
-@Suppress("UNUSED_PARAMETER")
-fun Modifier.lookSurface(look: Look, shape: Shape, fill: Color, raised: Boolean = true, depth: Dp = 6.dp): Modifier =
-    if (look.design == "chaos") (if (raised) hardShadow(look.shadows[0], shape, 5.dp) else this).clip(shape).background(fill).edgeLine(3.dp, look.line, shape)
-    // Quiet: just the card colour; in light a hairline so white cards don't melt into each other.
-    else clip(shape).background(fill).then(if (!look.dark) Modifier.edgeLine(1.dp, Color.Black.copy(alpha = 0.04f), shape) else Modifier)
-
-/** The frame of a wish card (or any card) in the chosen style: its colour, lines, shadow, shape and (chaos) tilt. */
-fun Modifier.lookCard(look: Look, id: Long, shape: Shape): Modifier =
-    (if (look.design == "chaos") rotate(look.tilt(id)) else this).lookSurface(look, shape, look.cardFill(id), depth = 8.dp)
-
-/** The mat a picture sits on inside a card. */
-@Suppress("UNUSED_PARAMETER")
-fun Modifier.lookMat(look: Look, shape: Shape, fill: Color, over: Boolean = false): Modifier = clip(shape).background(fill)
-
-/** The frame of a small button (category, view switch, a chip). [on] = chosen. */
-fun Modifier.lookChip(look: Look, on: Boolean = false): Modifier {
-    val cs = look.scheme
-    val shape = look.chipShape
-    return if (look.design == "chaos") (if (on) hardShadow(look.shadows[0], shape, 3.dp) else this)
-        .clip(shape).background(if (on) look.tints[0] else cs.surfaceVariant).edgeLine(2.dp, look.line, shape)
-    // Quiet (2.207): a white pill with a hairline; the chosen one in a soft wash of your colour (no black pills).
-    else clip(shape).background(if (on) cs.primaryContainer else cs.surfaceVariant)
-        .then(if (on) Modifier else Modifier.edgeLine(1.dp, cs.outlineVariant, shape))
-}
-
-/** The colour of the text and icons on a chip made with [lookChip]. */
-fun Look.chipContent(on: Boolean): Color = when {
-    !on -> scheme.onSurface
-    design == "quiet" -> scheme.onPrimaryContainer
-    else -> Color(0xFF0D0D0D)
-}
-
-/**
- * What is drawn behind the screens: chaos's polka dots and big coloured circles. Quiet stays plain.
- */
-fun Modifier.lookBackdrop(look: Look): Modifier = when (look.design) {
-    "chaos" -> drawBehind {
-        val dots = look.blobs[3]
-        val step = 18.dp.toPx()
-        var y = step / 2
-        while (y < size.height) {
-            var x = step / 2
-            while (x < size.width) { drawCircle(dots, 1.2.dp.toPx(), Offset(x, y)); x += step }
-            y += step
-        }
-        drawCircle(look.blobs[0].copy(alpha = 0.85f), 70.dp.toPx(), Offset(size.width * 0.92f, 60.dp.toPx()))
-        drawCircle(look.blobs[1].copy(alpha = 0.85f), 40.dp.toPx(), Offset(size.width * 0.06f, 340.dp.toPx()))
-        drawCircle(look.blobs[2].copy(alpha = 0.85f), 56.dp.toPx(), Offset(size.width * 0.98f, 620.dp.toPx()))
-    }
-    else -> this
-}
-
-/** The accent as a colour for text, icons and focus rings (your accent in both styles). */
-val Look.textAccent: Color get() = accent
-
-/** Quiet's warm neutrals (2.210, docs/styles/identity.md), in one place for the parts that draw them directly. */
-object QuietColours {
-    val pageLight = Color(0xFFF7F5F2)
-    val pageDark = Color(0xFF121014)
-    /** Cards in dark: a step lighter than the page. */
-    val cardDark = Color(0xFF1E1A20)
-    /** What floats in dark (bottom bar, panels, menus, dialogs): a step lighter again. */
-    val raisedDark = Color(0xFF2B262D)
 }
