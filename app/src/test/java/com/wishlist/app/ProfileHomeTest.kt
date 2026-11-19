@@ -36,7 +36,7 @@ class ProfileHomeTest : NavigationBase() {
     @Test fun bothHomePartsHaveASwitchAndAreOnByDefault() {
         val show = src("Show.kt")
         assertTrue(show.contains("\"home_summary\" to true") && show.contains("\"home_swipe\" to true"))
-        val st = src("Settings.kt")
+        val st = src("Settings.kt") + src("SettingsPages.kt")
         assertTrue(st.contains("Show[\"home_summary\"]") && st.contains("Show[\"home_swipe\"]"))
         assertFalse(st.contains("tr(\"Backup\")"))
         assertTrue((File("src/main/java/com/wishlist/app").listFiles()!!.filter { it.name.startsWith("Home") && it.name.endsWith(".kt") || it.name == "NewWishlist.kt" }.sortedBy { it.name }.joinToString("\n") { it.readText() }).contains("if (!Show[\"home_summary\"])"))

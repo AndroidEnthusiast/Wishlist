@@ -19,10 +19,10 @@ Details of each item are in the doc named after it.
   6. Home, a list (drag to reorder, select, Reserve on a friend's list; a 2× wish: "How many?" then it shows in Gifts
      I reserved, 2.248), Friends and Profile (2.233–2.236), and the
      look of buttons, dialogs, fields and cards in every view (2.242, 2.243, 2.245, 2.247).
-- **The rebuild (owner, 18–19 November 2026; `docs/decisions/roadmap.md`):** Home done (2.233), guards in (2.234), Friends/Profile (2.235), the open list (2.236), gift exchange (2.237), wishlist groups (2.238), Messages (2.239), the photo editor (2.240), My shops (2.241), the building blocks (Styled, 2.242; Themed, 2.243), the app's frame (AppScreen, 2.244), the wish cards (2.245), the wish form (2.246), the styles (Design, 2.247), a friend's list (2.248). Left:
-  the files left on `ArchitectureTest.ALLOWED` (15) (biggest: Data (waits for its own plan, owner: `docs/decisions/roadmap.md`),
+- **The rebuild (owner, 18–19 November 2026; `docs/decisions/roadmap.md`):** Home done (2.233), guards in (2.234), Friends/Profile (2.235), the open list (2.236), gift exchange (2.237), wishlist groups (2.238), Messages (2.239), the photo editor (2.240), My shops (2.241), the building blocks (Styled, 2.242; Themed, 2.243), the app's frame (AppScreen, 2.244), the wish cards (2.245), the wish form (2.246), the styles (Design, 2.247), a friend's list (2.248), App settings (2.249). Left:
+  the files left on `ArchitectureTest.ALLOWED` (14) (biggest: Data (waits for its own plan, owner: `docs/decisions/roadmap.md`),
   Shared, Exchange, Alerts, Friends (these four wait with Data, owner; Groups, Import, Fetch proposed to wait too). Owner: the 7 screens left get the full rebuild,
-  then the owner tests: Overview, Reactions, SharedUi, GiftInvites, PriceHistory, Covers, Settings.
+  then the owner tests: Overview, Reactions, SharedUi, GiftInvites, PriceHistory, Covers.
 - **AliExpress shows its logo instead of the product photo** (owner, 18 November 2026): needs the real page. Owner: open
   that wish's price page, tap "Price is wrong?", share the file; then fix `Fetch.kt` + `web/parse.js` together and add
   the page to `tests/shared/same-answers.json` → `pages`.

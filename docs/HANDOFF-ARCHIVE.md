@@ -708,3 +708,7 @@ WishCards; a script proved all 526 lines moved unchanged. 18 files left (next: W
 ### 19 November 2026, late afternoon: the wish form (2.246)
 `WishForm.kt` split into WishForm, WishFormParts + `WishFormState` (WishFormModel.kt); 7 screenshots identical; new
 `WishFormModelTest`. Tapping in the add form can't be tested here (its cursor never settles). 17 files left.
+
+### 19 November 2026, evening: the styles (2.247)
+Owner: Friends.kt waits with Data; nothing of the rebuild tried on the phone yet: combined list in TODO ("Try the
+rebuild"), ask for results first. `Design.kt` split into Design, DesignType, DesignShapes (510 lines proven). 16 left.
