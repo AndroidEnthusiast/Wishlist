@@ -728,3 +728,7 @@ identical. Owner: remind them later of the data part (TODO). 5 screens to go: Ov
 ### 19 November 2026, evening: the price page (2.251)
 `PriceHistory.kt` split into PriceHistory, PriceChart + `PriceDialogState`/`TargetState`; screenshots identical (the
 light chart moves with the clock: proven by running the old code at the same time). 4 screens to go.
+
+### 19 November 2026, night: gift invitations (2.252)
+`GiftInvites.kt` split into GiftInvites + GiftInviteViews + `GiftInviteModel`; screenshots found and fixed black-on-
+black headings in dark. 3 screens to go: Overview, Reactions, SharedUi.

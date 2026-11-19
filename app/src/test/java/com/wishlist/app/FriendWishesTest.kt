@@ -47,8 +47,8 @@ class FriendWishesTest {
     }
 
     @Test fun reactHidesOnceYouReacted() {
-        val r = src("Reactions.kt")
-        assertTrue(r.contains("if (deco.canReact && (!reacted || again)) Row("))
+        val r = src("ReactionViews.kt") + src("ReactionModel.kt")
+        assertTrue(r.contains("if (deco.canReact && (!reacted || st.again)) Row("))
         assertTrue(r.contains("else if (mine && !again) again = true"))
     }
 }

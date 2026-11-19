@@ -32,7 +32,6 @@ class ArchitectureTest {
         "Friends.kt" to 514,
         "Overview.kt" to 511,
         "Groups.kt" to 506,
-        "Reactions.kt" to 495,
         "Fetch.kt" to 473
         )
 
@@ -69,14 +68,16 @@ class ArchitectureTest {
             // Gift list invitations (19 November 2026): their state holders are in GiftInviteModel.kt.
             "GiftInviteViews.kt",
             // A shared wishlist's dialogs (19 November 2026): their state holder is SharedListModel.kt.
-            "SharedUi.kt", "SharedManage.kt"
+            "SharedUi.kt", "SharedManage.kt",
+            // Reactions on wishes (19 November 2026): the row's state holder is ReactionModel.kt.
+            "ReactionViews.kt"
         )
 
         /** A store's data set straight away ("Exchanges.list = …"; only the checks' pretend data may). */
         val STORE_SET = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|Chat)\\.[a-z][A-Za-z]*(\\[[^\\]]*])? = ")
 
         /** A call that changes shared data: Store.set…(), .delete…(), .leave(), … */
-        val WRITES = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|ListVisibility|Occasions|MyLists|Chat|ChatPhotos|Shops|Show|CurrencyChoice|ListCovers|Targets|GiftInvites)\\.(set|add|delete|remove|rename|create|leave|put|update|replace|trash|reserve|move|copy|open(?!Key)|hide|join|answer|new|cancel|invite|decline|send|seen|save(?!Key)|reveal|handover|draw|settings|takeover|react|upload|forget|mark|restore|detach|accept)[A-Za-z]*\\(")
+        val WRITES = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|ListVisibility|Occasions|MyLists|Chat|ChatPhotos|Shops|Show|CurrencyChoice|ListCovers|Targets|GiftInvites|Reactions)\\.(set|add|delete|remove|rename|create|leave|put|update|replace|trash|reserve|move|copy|open(?!Key)|hide|join|answer|new|cancel|invite|decline|send|seen|save(?!Key)|reveal|handover|draw|settings|takeover|react|upload|forget|mark|restore|detach|accept)[A-Za-z]*\\(")
     }
 
     @Test fun everyFileStaysSmall() {
