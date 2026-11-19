@@ -28,6 +28,10 @@ Details of each item are in the doc named after it.
   After the 8 screens and the owner's test: Data, Shared, Exchange, Alerts, Friends (and Groups, Import, Fetch) behind
   cleaner "repositories" with their own checks (saving and loading give back exactly the same lists); then checks on a
   few real phones, and fewer copies of app logic in `web/` (e.g. `parse.js` beside `Fetch.kt`). Interview first.
+- **GitHub's "Publish the web page" step fails now and then (19 November 2026: 2.242, 2.249, 2.255; rerunning didn't
+  always help):** "No artifacts named github-pages were found" right after it was uploaded. The APK always published;
+  the web pages kept their previous version (no web file had changed). Before the next change to `web/`: look at the
+  pages job in `.github/workflows/build.yml` (e.g. the newer upload-pages-artifact), ask the owner first.
 - **AliExpress shows its logo instead of the product photo** (owner, 18 November 2026): needs the real page. Owner: open
   that wish's price page, tap "Price is wrong?", share the file; then fix `Fetch.kt` + `web/parse.js` together and add
   the page to `tests/shared/same-answers.json` → `pages`.
