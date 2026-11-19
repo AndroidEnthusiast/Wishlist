@@ -741,3 +741,14 @@ black headings in dark. 3 screens to go: Overview, Reactions, SharedUi.
 New `GroupScreenshotTest` (pretend groups; `Groups.groups`/`invites` now `internal set`) for the comparison;
 `GroupsUi.kt` split into 7 files + `GroupModel`/`GroupScreenState`; 10 screenshots identical. The guard's verbs
 gained `settings` and `takeover`. 25 files left on ALLOWED (biggest next: Data, Messages, HeroEditor).
+
+### 19 November 2026, night: reactions (2.254)
+`Reactions.kt` split into Reactions + ReactionViews + `ReactionBarState`; screenshots identical. Last screen to go:
+Overview; then the owner tests (TODO "Try the rebuild").
+
+The "Next session" plan after 2.256 (done in 2.257), word for word:
+- **The data rebuild (owner, 19 November 2026; `docs/decisions/roadmap.md`, last section), read first.** 2.256 split
+  Data.kt (nothing on screen changed). Ask how 2.256 and the screen rebuild behave on the phone (TODO "Try 2.256",
+  "Try the rebuild"). Then the next area, **Friends.kt**, the same way: interview on the plan and its risks first;
+  record a before/after check with the OLD code in its own commit (like `DataSameTest`: friends, requests, notes,
+  online answers faked), then split by moving code word for word, same storage format; one version. Then Shared.

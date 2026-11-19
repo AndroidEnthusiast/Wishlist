@@ -6,10 +6,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Next session
 - **The data rebuild (owner, 19 November 2026; `docs/decisions/roadmap.md`, last section), read first.** 2.256 split
-  Data.kt (nothing on screen changed). Ask how 2.256 and the screen rebuild behave on the phone (TODO "Try 2.256",
-  "Try the rebuild"). Then the next area, **Friends.kt**, the same way: interview on the plan and its risks first;
-  record a before/after check with the OLD code in its own commit (like `DataSameTest`: friends, requests, notes,
-  online answers faked), then split by moving code word for word, same storage format; one version. Then Shared.
+  Data.kt, 2.257 Friends.kt (nothing on screen changed). Ask how 2.256, 2.257 and the screen rebuild behave on the
+  phone (TODO "Try 2.257", "Try 2.256", "Try the rebuild"). Then the next area, **Shared.kt** (shared wishlists kept
+  in step: the riskiest so far, two people saving at once, Rule 3), the same way: interview on the plan and its risks
+  first; record a before/after check with the OLD code in its own commit (`DataSameTest`/`FriendsSameTest` show how;
+  the pretend server `Cloud.pretendServer` answers server calls), then split by moving code word for word.
 - **The rebuild (owner, 18 November 2026; `docs/decisions/roadmap.md`, last section).** Point 2 done: version stamps in
   every script + `server-check.yml` (owner ran all 17; issue closed). Point 1: **Home done in 2.233** (7 small files,
   `HomeModel`, pixel-identical). Ask whether Home behaves the same after a day or two; then the next screen (ask which:
@@ -80,6 +81,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 19 November 2026, late night: the data rebuild, Friends (2.257)
+Owner chose: build and ship now (not wait for testing), a pretend server for the checks, five parts, all four risks
+checked. `FriendsSameTest` recorded with the old code first (own commit), then Friends.kt split word for word:
+identical. `FriendsPartsTest`; the guard covers Friends' parts. Cloud.kt hit 401 lines: the guard caught it.
+
 ### 19 November 2026, late night: the data rebuild, Data.kt (2.256)
 Owner chose (interview): start now, "split inside, same doors", Data → Friends → Shared → rest, same storage format +
 a before/after check. `DataSameTest` recorded with the old code first (own commit), then Data.kt split into `Wish.kt`
@@ -88,7 +94,3 @@ a before/after check. `DataSameTest` recorded with the old code first (own commi
 ### 19 November 2026, night: Overview (2.255), the screens are done
 `Overview.kt` split into Overview + OverviewScreen + `OverviewState`; full 151-picture rerun: 141 identical, rest
 explained (version number, chart clock, fixed test). Next: owner tests (TODO), then plan the data part with them.
-
-### 19 November 2026, night: reactions (2.254)
-`Reactions.kt` split into Reactions + ReactionViews + `ReactionBarState`; screenshots identical. Last screen to go:
-Overview; then the owner tests (TODO "Try the rebuild").

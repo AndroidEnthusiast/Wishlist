@@ -60,11 +60,7 @@ object Cloud {
         if (Crash.onComputer) throw java.io.IOException("No server in the app's checks")
     }
 
-    /**
-     * A pretend server for the app's checks only (the data rebuild, owner 19 November 2026): when set, every [rpc] goes
-     * here instead (the function's name and what the app sends) and its answer is used as the server's; it may throw
-     * to play "offline". Never set in the app itself.
-     */
+    /** Checks only (never set in the app): a pretend server that answers every [rpc], or throws to play "offline". */
     @Volatile internal var pretendServer: ((fn: String, body: JSONObject) -> String)? = null
 
     internal suspend fun rpc(fn: String, body: JSONObject): String = withContext(Dispatchers.IO) {

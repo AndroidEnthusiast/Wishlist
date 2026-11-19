@@ -241,4 +241,10 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
   read it; and a before/after check (`DataSameTest`) that compares a whole phone's saved data word for word with a
   record made with the old code. ("Remind me to back up" was not chosen.)
 - **Data.kt ships as one version** (2.256), built one part at a time with every check after each.
+- **Friends next, shipped at once** (owner, 19 November 2026, asked with options; recommended: build it but ship after
+  testing 2.256): the owner chose "build and ship now" (2.257), knowing untested layers make a problem harder to trace.
+  A **pretend server** for the checks (`Cloud.pretendServer`, never set in the app), so the before/after check also
+  proves what is sent to the server. **Five parts** (requests and the Friends tab; photos; birthday and About me;
+  visible lists; links and codes). **The owner's four risks, all checked:** notifications told once (also after a
+  restart), the offline switch goes back, photos kept after a restart, an older saved Friends tab still reads.
 

@@ -1,23 +1,14 @@
 package com.wishlist.app
 
 import android.content.Context
-import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
-import android.util.Base64
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.ByteArrayOutputStream
-import java.io.File
-import kotlin.math.min
 
 /*
  * Friends (since 2.87), with supabase-friends.sql.
@@ -29,6 +20,12 @@ import kotlin.math.min
  *  - Per friend: "Unfriend" (you are no longer friends; they aren't told). "Hide my lists from …" went in 2.108
  *    (owner: private wishes are enough); supabase-groups.sql switched every hiding off.
  * Profiles belong to the phone (no e-mail accounts): a new phone starts again.
+ *
+ * Since the data rebuild (owner, 19 November 2026) Friends is the front door and its parts live in their own files, while
+ * every screen keeps writing Friends.… as before: FriendsPhotos.kt ([FriendPhotos]: your photo and friends' photos),
+ * FriendsAbout.kt ([FriendAbout]: birthday, About me, birthday reminders), FriendsVisible.kt ([FriendVisibility]:
+ * which lists friends can see), FriendsLinks.kt (codes and links). This file: your profile, requests and the Friends
+ * tab. FriendsSameTest proves it all does exactly what it did before (with a pretend server, Cloud.pretendServer).
  */
 
 data class FriendList(val code: String, val name: String, val count: Int)
@@ -53,43 +50,41 @@ data class FriendsState(
 )
 
 object Friends {
-    private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
+    internal fun prefs(c: Context) = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
     private val lock = Mutex()
 
     /** What the Friends tab shows (the last answer from the server, also kept on the phone for offline use). */
     var state by mutableStateOf<FriendsState?>(null)
         internal set
 
-    /** Your own photo on this phone (a file), or "". */
-    var myPhoto by mutableStateOf("")
-        private set
-
-    /** Ids of your own lists that friends can see. */
-    var visible by mutableStateOf<Set<String>>(emptySet())
-        private set
-
-    /** Friends' photos on this phone, by profile id (a file address). */
-    var photos by mutableStateOf<Map<String, String>>(emptyMap())
-        private set
+    // What the parts hold, read as before (Friends.myPhoto, Friends.visible, …).
+    val myPhoto: String get() = FriendPhotos.myPhoto
+    val photos: Map<String, String> get() = FriendPhotos.photos
+    val photoSrc: String get() = FriendPhotos.photoSrc
+    val photoEdit: HeroEdit get() = FriendPhotos.photoEdit
+    val myBirthday: String get() = FriendAbout.myBirthday
+    val myBio: String get() = FriendAbout.myBio
+    val visible: Set<String> get() = FriendVisibility.visible
 
     private var loaded = false
+    const val BIO_MAX = 100
 
     fun load(c: Context) {
         if (loaded) return
         loaded = true
         val p = prefs(c)
-        myPhoto = p.getString("pf_photo", "") ?: ""
-        myBirthday = p.getString("pf_bday", "") ?: ""
-        myBio = p.getString("pf_bio", "") ?: ""
+        FriendPhotos.myPhoto = p.getString("pf_photo", "") ?: ""
+        FriendAbout.myBirthday = p.getString("pf_bday", "") ?: ""
+        FriendAbout.myBio = p.getString("pf_bio", "") ?: ""
         // Sizes were removed (owner, 17 November 2026): sizes saved on this phone are deleted, and once more online.
         if (p.contains("pf_sz_c") || p.contains("pf_sz_s") || p.contains("fr_sizes"))
             p.edit().remove("pf_sz_c").remove("pf_sz_s").remove("fr_sizes").putBoolean("pf_sizes_dirty", true).apply()
-        photoSrc = p.getString("pf_src", "") ?: ""
-        photoEdit = HeroEdit.fromJson(p.getString("pf_edit", null))
-        visible = p.getStringSet("fr_vis", null)?.toSet() ?: emptySet()
+        FriendPhotos.photoSrc = p.getString("pf_src", "") ?: ""
+        FriendPhotos.photoEdit = HeroEdit.fromJson(p.getString("pf_edit", null))
+        FriendVisibility.visible = p.getStringSet("fr_vis", null)?.toSet() ?: emptySet()
         state = p.getString("fr_state", null)?.let { parse(it) }
         val dir = photoDir(c)
-        photos = (dir.listFiles() ?: emptyArray()).filter { it.name.endsWith(".jpg") }
+        FriendPhotos.photos = (dir.listFiles() ?: emptyArray()).filter { it.name.endsWith(".jpg") }
             .associate { it.name.substringBefore('_') to Uri.fromFile(it).toString() }
     }
 
@@ -99,14 +94,14 @@ object Friends {
     /** Requests that wait for your approval: a red dot on Friends. */
     val waiting: Int get() = state?.incoming?.size ?: 0
 
-    private fun ids(c: Context): Pair<String, String> {
+    internal fun ids(c: Context): Pair<String, String> {
         val p = prefs(c)
         val id = p.getString("pf_id", null) ?: Sync.newKey().also { p.edit().putString("pf_id", it).apply() }
         val token = p.getString("pf_token", null) ?: Sync.newKey().also { p.edit().putString("pf_token", it).apply() }
         return id to token
     }
 
-    private fun base(c: Context): JSONObject {
+    internal fun base(c: Context): JSONObject {
         val (id, token) = ids(c)
         return JSONObject().put("p_id", id).put("p_token", token)
     }
@@ -114,7 +109,7 @@ object Friends {
     /** Your profile id and token for a call, or null when this phone has no profile online yet (Members.kt, 2.128). */
     fun auth(c: Context): JSONObject? = if (hasProfile(c) && prefs(c).getBoolean("pf_made", false)) base(c) else null
 
-    private fun str(t: String): String = t.trim().removeSurrounding("\"")
+    internal fun str(t: String): String = t.trim().removeSurrounding("\"")
 
     /** Makes your profile online the first time; afterwards saves your name. */
     suspend fun ensure(c: Context) {
@@ -136,7 +131,7 @@ object Friends {
     internal fun pretend(s: FriendsState) { state = s }
 
     /** Clears the sizes an earlier version saved online (supabase-sizes-off.sql also clears them on the server). */
-    private suspend fun clearSizes(c: Context) {
+    internal suspend fun clearSizes(c: Context) {
         Cloud.rpc("wl_pf_sizes", base(c).put("p_sizes", ""))
         prefs(c).edit().putBoolean("pf_sizes_dirty", false).apply()
     }
@@ -148,81 +143,6 @@ object Friends {
     fun setNote(c: Context, id: String, text: String) {
         val t = text.trim().take(500)
         prefs(c).edit().apply { if (t.isEmpty()) remove("fnote_$id") else putString("fnote_$id", t) }.apply()
-    }
-
-    // ---- birthday and "I like…" (2.95) ----
-
-    /** Your birthday as "MM-DD", or "". */
-    var myBirthday by mutableStateOf("")
-        private set
-    const val BIO_MAX = 100
-
-    /** Your "About me" line (was "I like…"; at most [BIO_MAX] letters, shown under your name). */
-    var myBio by mutableStateOf("")
-        private set
-
-    /** Saves your birthday and "I like…" on the phone, then online (an error is thrown when offline: saved next time). */
-    suspend fun setAbout(c: Context, birthday: String, bio: String) {
-        myBirthday = birthday
-        myBio = bio.trim().take(BIO_MAX)
-        // "Not sent yet" until the server has it: an offline save goes online with the next refresh ([ensure]).
-        prefs(c).edit().putString("pf_bday", myBirthday).putString("pf_bio", myBio).putBoolean("pf_about_dirty", true).apply()
-        ensure(c)
-        pushAbout(c)
-    }
-
-    private suspend fun pushAbout(c: Context) {
-        Cloud.rpc("wl_pf_about", base(c).put("p_birthday", myBirthday).put("p_bio", myBio))
-        prefs(c).edit().putBoolean("pf_about_dirty", false).apply()
-    }
-
-    /** Days until the next birthday "MM-DD" (0 = today), or null without one. */
-    fun daysUntil(birthday: String, today: java.time.LocalDate = java.time.LocalDate.now()): Int? {
-        val m = Regex("^(\\d{2})-(\\d{2})$").find(birthday) ?: return null
-        val month = m.groupValues[1].toInt()
-        val day = m.groupValues[2].toInt()
-        fun on(year: Int): java.time.LocalDate? = try {
-            // 29 February in a year without it: the 28th.
-            java.time.LocalDate.of(year, month, if (month == 2 && day == 29 && !java.time.Year.isLeap(year.toLong())) 28 else day)
-        } catch (e: Exception) {
-            null
-        }
-        var next = on(today.year) ?: return null
-        if (next.isBefore(today)) next = on(today.year + 1) ?: return null
-        return java.time.temporal.ChronoUnit.DAYS.between(today, next).toInt()
-    }
-
-    /**
-     * Birthday reminders (owner, 2.95): 14 days before a friend's birthday, and again 7 days before only when you
-     * haven't reserved anything on their lists yet. Each once a year. Runs with the background check.
-     */
-    private suspend fun birthdays(c: Context, s: FriendsState) {
-        val p = prefs(c)
-        val year = java.time.LocalDate.now().year
-        for (f in s.friends) {
-            val d = daysUntil(f.birthday) ?: continue
-            val key14 = "bd14_${f.id}_$year"
-            val key7 = "bd7_${f.id}_$year"
-            if (d in 8..14 && !p.getBoolean(key14, false)) {
-                Alerts.notifyBirthday(c, f.id, f.name, d)
-                Notifications.add(c, "birthday", "p:${f.id}", f.name, photos[f.id] ?: "", amount = d.toDouble())
-                p.edit().putBoolean(key14, true).apply()
-            } else if (d in 1..7 && !p.getBoolean(key7, false)) {
-                p.edit().putBoolean(key7, true).putBoolean(key14, true).apply()
-                // Only when nothing on their lists is reserved by this phone.
-                val reserved = f.lists.any { l ->
-                    try {
-                        Cloud.fetchReservations(l.code, Repo.deviceId).values.any { it }
-                    } catch (e: Exception) {
-                        true // can't tell: better no reminder than a wrong one
-                    }
-                }
-                if (!reserved) {
-                    Alerts.notifyBirthday(c, f.id, f.name, d)
-                    Notifications.add(c, "birthday", "p:${f.id}", f.name, photos[f.id] ?: "", amount = d.toDouble())
-                }
-            }
-        }
     }
 
     /** Your name changed (Profile, or anywhere else the app name is set). */
@@ -260,7 +180,7 @@ object Friends {
      * Requests are told once. On screen they are only remembered (you can see them, and Friends has a red dot); in the
      * background each new one gives a notification. The same for a request of yours that was approved.
      */
-    private fun notifyNews(c: Context, s: FriendsState, onScreen: Boolean) {
+    internal fun notifyNews(c: Context, s: FriendsState, onScreen: Boolean) {
         val p = prefs(c)
         val told = p.getStringSet("fr_in_told", null)?.toSet() ?: emptySet()
         val sent = p.getStringSet("fr_out", null)?.toSet() ?: emptySet()
@@ -280,7 +200,7 @@ object Friends {
             .apply()
     }
 
-    private fun parse(t: String): FriendsState? = try {
+    internal fun parse(t: String): FriendsState? = try {
         val o = JSONObject(t)
         fun people(a: JSONArray?): List<Person> = if (a == null) emptyList() else (0 until a.length()).map { i ->
             val p = a.getJSONObject(i)
@@ -298,116 +218,6 @@ object Friends {
     } catch (e: Exception) {
         null
     }
-
-    // ---- photos ----
-
-    private fun photoDir(c: Context) = File(c.filesDir, "friends").apply { mkdirs() }
-
-    /** Loads the photos that are new or changed ("<id>_<version>.jpg"); removes ones nobody needs any more. */
-    private suspend fun loadPhotos(c: Context, s: FriendsState) {
-        val dir = photoDir(c)
-        val people = s.friends + s.incoming + s.outgoing
-        val want = people.filter { it.pv > 0 }.associate { it.id to "${it.id}_${it.pv}.jpg" }
-        val out = HashMap<String, String>()
-        for ((id, name) in want) {
-            val f = File(dir, name)
-            if (!f.exists()) {
-                try {
-                    // A file's address or an embedded photo from an older app (PeoplePhotos, 2.185).
-                    val bytes = PeoplePhotos.bytes(Cloud.rpc("wl_fr_photo", base(c).put("p_other", id))) ?: continue
-                    withContext(Dispatchers.IO) { f.writeBytes(bytes) }
-                } catch (e: Exception) {
-                    continue
-                }
-            }
-            out[id] = Uri.fromFile(f).toString()
-        }
-        (dir.listFiles() ?: emptyArray()).filter { it.name !in want.values }.forEach { it.delete() }
-        photos = out
-    }
-
-    /** The photo your profile picture was cut from (kept so it can be edited again), and how it was cut. */
-    var photoSrc by mutableStateOf("")
-        private set
-    var photoEdit by mutableStateOf(HeroEdit())
-        private set
-
-    /**
-     * Your profile photo after the editor (round frame, see [HeroEditor]): [src] is the whole photo, [edit] how it is
-     * turned, cut and lightened. The part in the circle is saved as a small square JPEG and sent online.
-     * Returns false when it couldn't be sent (it is kept on the phone and sent the next time).
-     */
-    suspend fun setPhoto(c: Context, src: String, edit: HeroEdit): Boolean {
-        val cut = renderCover(c, src, edit, 1f) ?: return false
-        val file = withContext(Dispatchers.IO) {
-            try {
-                val cutFile = File(Uri.parse(cut).path ?: return@withContext null)
-                val bmp = BitmapFactory.decodeFile(cutFile.path)
-                cutFile.delete()
-                if (bmp == null) return@withContext null
-                val side = min(bmp.width, bmp.height)
-                val sq = Bitmap.createBitmap(bmp, (bmp.width - side) / 2, (bmp.height - side) / 2, side, side)
-                val small = Bitmap.createScaledBitmap(sq, 320, 320, true)
-                val f = File(c.filesDir, "profile_" + System.currentTimeMillis() + ".jpg")
-                f.outputStream().use { small.compress(Bitmap.CompressFormat.JPEG, 85, it) }
-                f
-            } catch (e: Exception) {
-                null
-            }
-        } ?: return false
-        oldPhotoFile()?.delete()
-        if (photoSrc.isNotEmpty() && photoSrc != src) ImageStore.delete(c, photoSrc)
-        myPhoto = Uri.fromFile(file).toString()
-        photoSrc = src
-        photoEdit = edit
-        prefs(c).edit().putString("pf_photo", myPhoto).putString("pf_src", src).putString("pf_edit", edit.toJson()).apply()
-        return try {
-            ensure(c)
-            uploadPhoto(c)
-            true
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    private fun oldPhotoFile(): File? = Uri.parse(myPhoto).path?.let { File(it) }?.takeIf { myPhoto.isNotEmpty() }
-
-    private suspend fun uploadPhoto(c: Context) {
-        val f = oldPhotoFile()
-        val bytes = if (f != null && f.exists()) withContext(Dispatchers.IO) { f.readBytes() } else null
-        savePhotoBytes(c, bytes)
-    }
-
-    /** Your profile photo online: as a file (2.185, PeoplePhotos), or the old way before the scripts are run. */
-    private suspend fun savePhotoBytes(c: Context, bytes: ByteArray?): Boolean {
-        val b = base(c)
-        if (PeoplePhotos.save("p/" + b.getString("p_id"), b, "wl_pf_photo_url", base(c), bytes)) return true
-        Cloud.rpc("wl_pf_photo", base(c).put("p_photo", bytes?.let { Base64.encodeToString(it, Base64.NO_WRAP) } ?: ""))
-        return true
-    }
-
-    /** Moves your profile photo from the database to a file, once (2.185). */
-    suspend fun movePhoto(c: Context) {
-        val b = auth(c) ?: return
-        PeoplePhotos.moveOld(c, "p", { Cloud.rpc("wl_fr_photo", JSONObject(b.toString()).put("p_other", b.getString("p_id"))) }) { bytes ->
-            PeoplePhotos.save("p/" + b.getString("p_id"), b, "wl_pf_photo_url", base(c), bytes)
-        }
-    }
-
-    suspend fun removePhoto(c: Context) {
-        oldPhotoFile()?.delete()
-        if (photoSrc.isNotEmpty()) ImageStore.delete(c, photoSrc)
-        myPhoto = ""
-        photoSrc = ""
-        photoEdit = HeroEdit()
-        prefs(c).edit().putString("pf_photo", "").putString("pf_src", "").putString("pf_edit", "").apply()
-        if (prefs(c).getBoolean("pf_made", false)) savePhotoBytes(c, null)
-    }
-
-    // ---- codes and requests ----
-
-    /** The friend code as people read it: "K7Q-4MZ". */
-    fun pretty(code: String) = if (code.length == 6) code.substring(0, 3) + "-" + code.substring(3) else code
 
     suspend fun newCode(c: Context) {
         ensure(c)
@@ -439,76 +249,5 @@ object Friends {
         val t = Cloud.rpc("wl_fr_list", base(c).put("p_other", id).put("p_code", code)).trim()
         if (t.isEmpty() || t == "null") return null
         return Cloud.parseRemote(JSONObject(t))
-    }
-
-    // ---- which of your lists friends can see ----
-
-    fun isVisible(id: String) = id in visible
-
-    /** Turns "Visible to friends" on or off for your list [id] (its code and token must be known when on). */
-    suspend fun setVisible(c: Context, id: String, on: Boolean) {
-        val before = visible
-        visible = if (on) visible + id else visible - id
-        prefs(c).edit().putStringSet("fr_vis", visible).apply()
-        try {
-            ensure(c)
-            pushLists(c)
-        } catch (e: Exception) {
-            // Not saved online: the switch goes back.
-            visible = before
-            prefs(c).edit().putStringSet("fr_vis", visible).apply()
-            throw e
-        }
-    }
-
-    /** A list went offline or was deleted: friends can't see it any more. */
-    fun forget(c: Context, id: String) {
-        load(c)
-        if (id !in visible) return
-        visible = visible - id
-        prefs(c).edit().putStringSet("fr_vis", visible).apply()
-    }
-
-    /** Your list [from] now lives under the id [to] (the original list was deleted and the next took its place). */
-    fun moveId(c: Context, from: String, to: String) {
-        load(c)
-        if (from !in visible) return
-        visible = visible - from + to
-        prefs(c).edit().putStringSet("fr_vis", visible).apply()
-    }
-
-    /** Sends which lists friends can see (each with its owner token, so the server knows they are yours). */
-    suspend fun pushLists(c: Context) {
-        val a = JSONArray()
-        for (d in Repo.allMine(c)) {
-            if (d.id !in visible) continue
-            val code = d.code ?: continue
-            val token = d.token ?: continue
-            a.put(JSONObject().put("code", code).put("token", token))
-        }
-        Cloud.rpc("wl_pf_lists", base(c).put("p_lists", a))
-    }
-
-    // ---- sharing your code ----
-
-    /** A friend link (…/friend/?f=CODE&n=Name, or wishlist://friend?f=…): the code and the name, or null. */
-    fun parseFriendLink(s: String): Pair<String, String>? {
-        val m = Regex("[?&]f=([A-Za-z0-9]{6})(?![A-Za-z0-9])").find(s) ?: return null
-        val n = Regex("[?&]n=([^&\\s#]+)").find(s)?.groupValues?.get(1)?.let {
-            try { java.net.URLDecoder.decode(it, "UTF-8") } catch (e: Exception) { "" }
-        }.orEmpty().take(30)
-        return m.groupValues[1].uppercase() to n
-    }
-
-    fun shareCode(c: Context, code: String) {
-        // A link that adds you with one tap (owner, 2.139); the code still works by hand.
-        val link = Config.SHARE_URL.trimEnd('/') + "/friend/?f=" + code +
-            (if (Shared.lastName.isNotBlank()) "&n=" + java.net.URLEncoder.encode(Shared.lastName, "UTF-8") else "")
-        val text = tr(
-            "Let’s be friends on Wishlist, so we can see each other’s wishlists. Tap to add me: %1\$s (or enter my friend code %2\$s under Friends > Add a friend).",
-            link, pretty(code)
-        )
-        val i = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
-        c.startActivity(Intent.createChooser(i, tr("Share your friend code")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 }

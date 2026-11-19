@@ -93,6 +93,13 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `supabase-sync.sql`. On screen "gift lists" are called **Collab wishlists** (since 2.146); in the code they are still `Shared`/gift list.
 
 ### Friends, chat, groups and gift exchanges
+- Friends' data (split in 2.257, the data rebuild; nothing on screen or on the server changed): `Friends.kt` (the front
+  door `Friends`: your profile online, requests, the Friends tab's state, private notes), `FriendsPhotos.kt`
+  (`FriendPhotos`), `FriendsAbout.kt` (`FriendAbout`: birthday, About me, birthday reminders), `FriendsVisible.kt`
+  (`FriendVisibility`: lists friends can see), `FriendsLinks.kt` (codes and links). Others go through `Friends.…`
+  (guard: `ArchitectureTest.ownDataOnlyThroughRepo`). Checks: `FriendsSameTest` (with the pretend server
+  `Cloud.pretendServer`: what is sent, saved and notified, word for word against `friends-same.txt`, recorded before
+  the split), `FriendsPartsTest` (told once, offline switch goes back, photos kept, old saved tab still reads).
 - Friends and Profile (rebuilt 2.235 from `FriendsUi.kt`): `FriendsTab.kt` (the tab), `FriendsRows.kt` (code card, request and friend rows), `FriendPage.kt` (a friend's page, their wishes, private note), `AddFriend.kt` (+ the code boxes), `Profile.kt` + `ProfileEdit.kt` (rows, edit sheets, Keep your lists safe), `DayMonthPicker.kt`, `PeopleParts.kt` (Avatar, PersonHero, chips); state holder `PeopleModel.kt`. A friend's list (reserving on it): `Friend.kt` (`FriendScreen`, rebuilt 2.248) + state holder `FriendListModel.kt` (`FriendListState`); checks `FriendListModelTest`, screenshots `FriendListScreenshotTest`
 - `FriendWatch.kt` ("a gift you reserved is no longer on the list")
 - `Chat.kt` + the screens (rebuilt in 2.239 from `Messages.kt`): `MessagesList.kt` (the conversations), `ChatScreen.kt` + state holder `ChatModel.kt` (one chat), `ChatBubbles.kt`, `ChatParts.kt` (typing bar, wish picker, photos); screenshots `ChatScreenshotTest` (encrypted chat) + `ChatPhotos.kt` (photos in chat, locked with their own key) + `Push.kt` (instant message notifications, Firebase)

@@ -16,7 +16,8 @@ import java.io.File
  *     friends, groups, exchanges, visibility, occasions); that goes through their state holder.
  *  3. Your own data has one front door (the data rebuild, owner 19 November 2026): the parts of Repo (OwnLists, OwnBin,
  *     OwnCopies, AppPrefs, FriendLists) are only touched in Data.kt and the Repo*.kt files; everything else reads and
- *     changes them through Repo (Repo.myWishes, Repo.trash, …), so saving always goes through Repo.persist.
+ *     changes them through Repo (Repo.myWishes, Repo.trash, …), so saving always goes through Repo.persist. The same for
+ *     Friends: its parts (FriendPhotos, FriendAbout, FriendVisibility) are only touched in Friends.kt and FriendsPhotos, -About, -Visible, -Links.
  */
 class ArchitectureTest {
     private val dir = File("src/main/java/com/wishlist/app")
@@ -31,7 +32,6 @@ class ArchitectureTest {
         "Exchange.kt" to 608,
         "Alerts.kt" to 585,
         "Import.kt" to 516,
-        "Friends.kt" to 514,
         "Groups.kt" to 506,
         "Fetch.kt" to 473
         )
@@ -112,6 +112,10 @@ class ArchitectureTest {
             .flatMap { f -> f.readLines().mapIndexedNotNull { i, l -> part.find(l)?.let { "${f.name}:${i + 1} ${l.trim()}" } } }
         assertTrue("Use Repo's doors (Repo.trash, Repo.myWishes, …), not its parts directly: $hits", hits.isEmpty())
         assertTrue(part.containsMatchIn("OwnLists.myWishes = x"))
+        val friendPart = Regex("\\b(FriendPhotos|FriendAbout|FriendVisibility)\\.")
+        val friendHits = dir.listFiles()!!.filter { it.name.endsWith(".kt") && it.name !in setOf("Friends.kt", "FriendsPhotos.kt", "FriendsAbout.kt", "FriendsVisible.kt", "FriendsLinks.kt") }
+            .flatMap { f -> f.readLines().mapIndexedNotNull { i, l -> friendPart.find(l)?.let { "${f.name}:${i + 1} ${l.trim()}" } } }
+        assertTrue("Use Friends' doors (Friends.setPhoto, Friends.visible, …), not its parts directly: $friendHits", friendHits.isEmpty())
         assertFalse(part.containsMatchIn("MyOwnLists.x"))
     }
 
