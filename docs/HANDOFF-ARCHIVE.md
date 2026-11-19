@@ -650,3 +650,8 @@ Reserve pills compact (`LocalCardButton`, 36 dp); "Add to my wishlist" in the �
 Profile: rows with small edit sheets and a Keep your lists safe page (backups kept there on advice). Home: photo left
 with three blocks, a divider, My wishlists | Shared pager, switches in Display. One-link shares → Add a wish. A GitHub
 "look at a page" tool was refused (it would reach shops this computer may not): AliExpress waits on the owner's page file.
+
+### 18–19 November 2026: the rebuild starts (server versions, Home 2.233)
+Server scripts stamp their version; `server-check.yml` opens/closes "Server scripts to run" (owner ran all 17). Home:
+`Hub.kt` split into 7 files with `HomeModel`; 21 before/after screenshots identical; dead "Create list" code removed;
+the empty-Home Import card (never shown since 2.226) fixed. Earlier: card buttons in one order (2.232).

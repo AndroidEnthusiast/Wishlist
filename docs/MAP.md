@@ -88,7 +88,7 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `FriendWatch.kt` ("a gift you reserved is no longer on the list")
 - `Chat.kt` + `Messages.kt` (encrypted chat) + `ChatPhotos.kt` (photos in chat, locked with their own key) + `Push.kt` (instant message notifications, Firebase)
 - `Groups.kt` + `GroupsUi.kt` (wishlist groups: people who each bring one wishlist; `supabase-groups.sql`)
-- `Exchange.kt` + `ExchangeUi.kt` (Gift exchange / Secret Santa: draw on the server, rules, anonymous chats; `supabase-exchange.sql`)
+- `Exchange.kt` + the screens (rebuilt in 2.237 from `ExchangeUi.kt`): `ExchangesList.kt`, `ExchangeNew.kt` (start / join), `ExchangeScreen.kt` + `ExchangeDialogs.kt`, `ExchangeRows.kt`, `ExchangeSettings.kt`, `ExchangeChat.kt`, `ExchangeParts.kt`; state holder `ExchangeModel.kt` (Gift exchange / Secret Santa: draw on the server, rules, anonymous chats; `supabase-exchange.sql`); screenshots `ExchangeScreenshotTest`
 - `Reactions.kt` (reactions on wishes, the emoji picker, `LocalWishDeco`; emoji names in `assets/emoji.txt`)
 
 ### Notifications, reminders and background work

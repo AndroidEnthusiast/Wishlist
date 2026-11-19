@@ -90,9 +90,9 @@ object Exchanges {
     private val lock = Mutex()
 
     var list by mutableStateOf<List<Exchange>>(emptyList())
-        private set
+        internal set
     var invites by mutableStateOf<List<GxInvite>>(emptyList())
-        private set
+        internal set
     /** Exchange photos on this phone, by id (a file address). */
     var photos by mutableStateOf<Map<String, String>>(emptyMap())
         private set

@@ -24,7 +24,6 @@ class ArchitectureTest {
 
         /** Over the limit on 19 November 2026, with their size then. Only shrinks. */
         val ALLOWED: Map<String, Int> = mapOf(
-        "ExchangeUi.kt" to 1406,
         "Data.kt" to 1110,
         "GroupsUi.kt" to 1086,
         "Messages.kt" to 1036,
@@ -59,11 +58,17 @@ class ArchitectureTest {
             // Friends and Profile (19 November 2026): their state holder is PeopleModel.kt.
             "PeopleParts.kt", "FriendsTab.kt", "FriendsRows.kt", "FriendPage.kt", "AddFriend.kt", "Profile.kt", "ProfileEdit.kt", "DayMonthPicker.kt",
             // The open list (19 November 2026): its state holder is ListModel.kt.
-            "ListScreen.kt", "ListWishItem.kt", "ListViewButtons.kt", "ListDrag.kt"
+            "ListScreen.kt", "ListWishItem.kt", "ListViewButtons.kt", "ListDrag.kt",
+            // Gift exchange (19 November 2026): its state holder is ExchangeModel.kt.
+            "ExchangeParts.kt", "ExchangesList.kt", "ExchangeNew.kt", "ExchangeScreen.kt", "ExchangeDialogs.kt",
+            "ExchangeRows.kt", "ExchangeSettings.kt", "ExchangeChat.kt"
         )
 
+        /** A store's data set straight away ("Exchanges.list = …"; only the checks' pretend data may). */
+        val STORE_SET = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges)\\.[a-z][A-Za-z]* = ")
+
         /** A call that changes shared data: Store.set…(), .delete…(), .leave(), … */
-        val WRITES = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|ListVisibility|Occasions|MyLists)\\.(set|add|delete|remove|rename|create|leave|put|update|replace|trash|reserve|move|copy|open|hide|join|answer|new)[A-Za-z]*\\(")
+        val WRITES = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|ListVisibility|Occasions|MyLists)\\.(set|add|delete|remove|rename|create|leave|put|update|replace|trash|reserve|move|copy|open|hide|join|answer|new|cancel|invite|decline|send|seen|save|reveal|handover|draw)[A-Za-z]*\\(")
     }
 
     @Test fun everyFileStaysSmall() {
@@ -84,7 +89,7 @@ class ArchitectureTest {
 
     @Test fun rebuiltScreensOnlyDraw() {
         for (f in REBUILT) {
-            val hits = File(dir, f).readLines().mapIndexedNotNull { i, l -> WRITES.find(l)?.let { "$f:${i + 1} ${it.value}" } }
+            val hits = File(dir, f).readLines().mapIndexedNotNull { i, l -> (WRITES.find(l) ?: STORE_SET.find(l))?.let { "$f:${i + 1} ${it.value}" } }
             assertTrue("A rebuilt screen changes shared data itself; move it into its state holder: $hits", hits.isEmpty())
         }
     }
@@ -93,6 +98,9 @@ class ArchitectureTest {
         assertTrue(WRITES.containsMatchIn("Repo.deleteMine(ctx, code)"))
         assertTrue(WRITES.containsMatchIn("Shared.leave(ctx, code)"))
         assertTrue(WRITES.containsMatchIn("Friends.newCode(ctx)"))
+        assertTrue(WRITES.containsMatchIn("Exchanges.draw(ctx, gid, without)"))
+        assertTrue(WRITES.containsMatchIn("Exchanges.saveSettings(ctx, x.id, name, b, c, d, t, m)"))
+        assertFalse(WRITES.containsMatchIn("Exchanges.countdown(x)"))
         assertTrue(WRITES.containsMatchIn("Friends.setNote(ctx, f.id, note)"))
         assertFalse(WRITES.containsMatchIn("Repo.mineName(id)"))
         assertFalse(WRITES.containsMatchIn("Friends.load(ctx)"))
