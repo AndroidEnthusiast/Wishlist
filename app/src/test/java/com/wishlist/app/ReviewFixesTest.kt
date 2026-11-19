@@ -282,7 +282,7 @@ class PersonFirstTest {
         assertTrue(BrokenPhotos.isBroken("https://x.example/a.jpg"))
         BrokenPhotos.clear("https://x.example/a.jpg")
         assertFalse(BrokenPhotos.isBroken("https://x.example/a.jpg"))
-        assertTrue(File("src/main/java/com/wishlist/app/Styled.kt").readText().contains("if (BrokenPhotos.isBroken(url)) {"))
+        assertTrue(File("src/main/java/com/wishlist/app/StyledPhotos.kt").readText().contains("if (BrokenPhotos.isBroken(url)) {"))
         assertTrue(File("src/main/java/com/wishlist/app/WishForm.kt").readText().contains("tr(\"The shop’s picture couldn’t load\")"))
     }
 }

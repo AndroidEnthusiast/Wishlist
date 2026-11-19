@@ -8,7 +8,7 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 - **The rebuild (owner, 18 November 2026; `docs/decisions/roadmap.md`, last section).** Point 2 done: version stamps in
   every script + `server-check.yml` (owner ran all 17; issue closed). Point 1: **Home done in 2.233** (7 small files,
   `HomeModel`, pixel-identical). Ask whether Home behaves the same after a day or two; then the next screen (ask which:
-  Friends / Profile (done in 2.235), the open list (done in 2.236), gift exchange (done in 2.237), wishlist groups (done in 2.238), Messages (done in 2.239), the photo editor (done in 2.240; Data.kt waits for its own plan, owner), My shops (done in 2.241), or `ListScreen.kt`), same method: before/after
+  Friends / Profile (done in 2.235), the open list (done in 2.236), gift exchange (done in 2.237), wishlist groups (done in 2.238), Messages (done in 2.239), the photo editor (done in 2.240; Data.kt waits for its own plan, owner), My shops (done in 2.241), the building blocks (`Styled.kt`, done in 2.242), or `ListScreen.kt`), same method: before/after
   screenshots compared pixel by pixel, a state holder, bug fixes only. **2.234: guards** (`ArchitectureTest`: files
   under 400 lines, 29 frozen in ALLOWED; REBUILT screens only draw; `checkup.yml` quarterly). Each rebuilt screen
   joins REBUILT and leaves ALLOWED.
@@ -75,15 +75,15 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 19 November 2026, morning: the building blocks (2.242)
+`Styled.kt` (not a screen) split by kind into StyledButtons, StyledBars, AppIcons, StyledPhotos, Styled; a script
+proved all 745 lines moved unchanged. Tests reading Styled.kt updated. 21 files left (next: Themed, Shared, AppScreen).
+
 ### 19 November 2026, early morning: My shops (2.241)
 `Shops.kt` split into Shops, ShopsScreen, ShopBrowser + `ShopsModel`/`ShopBrowserState`; 7 screenshots identical
 (the test rejects the shop icons up front: from the internet they arrived at random moments). Guard watches Shops.
 22 files left on ALLOWED (next: Styled, Themed, Shared, AppScreen).
 
-### 19 November 2026, after midnight: the photo editor (2.240)
-Owner chose: Data.kt later with its own plan (not a screen; saving could lose data). `HeroEditor.kt` split into
-HeroEdit, HeroPicture, HeroEditor, HeroEditorParts + `HeroEditorState`; 7 screenshots identical; dead crop code
-removed. GitHub caught a rare start-up crash (a store made mid-drawing): stores now made in MainActivity first.
 
 
 ### 19 November 2026, night: wishlist groups (2.238)

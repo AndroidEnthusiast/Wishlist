@@ -5,7 +5,7 @@ is readable and accessible. Nothing is built that is known to look wrong (a cut-
 new screen, dialog and feature follows this guide; when a rule here doesn't fit, ask the owner and add the answer here.
 
 ## Use the app's own parts
-- Buttons, dialogs, switches, top bars and icons come from `Styled.kt` (`Button`, `OutlinedButton`, `TextButton`,
+- Buttons, dialogs, switches, top bars and icons come from `StyledButtons.kt` / `StyledBars.kt` / `AppIcons.kt` (split from `Styled.kt` in 2.242) (`Button`, `OutlinedButton`, `TextButton`,
   `AlertDialog`, `Switch`, `TopAppBar`, `AppIcons`). Never import Material's own `Button`/`AlertDialog` in a screen:
   ours carry the chosen design style (Quiet, Gen Z chaos; a new one only as in `docs/DESIGN-STYLES.md`) and the sizes below. The same for text fields, menus, tick boxes, choice circles, chips, spinners, progress bars, dividers,
   sliders, bottom panels and `Scaffold` (`Themed.kt`, since 2.199): never import Material's own in a screen (the
@@ -28,7 +28,7 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
   `onSurfaceVariant`, never a lighter grey.
 
 ## Buttons
-- Two sizes (`Styled.kt`): **regular** on screens, at least 46 dp tall; **compact** inside a dialog's text, 40 dp tall
+- Two sizes (`StyledButtons.kt`): **regular** on screens, at least 46 dp tall; **compact** inside a dialog's text, 40 dp tall
   with a smaller shadow and 6 dp room above and below, so a scrolling dialog never cuts the shadow off. The compact
   size is automatic inside `AlertDialog` (`LocalInDialog`); don't set button heights or paddings by hand.
 - One main action per screen or dialog (`Button`); others are `OutlinedButton` or `TextButton`. A dialog's own

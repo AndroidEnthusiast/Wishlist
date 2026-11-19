@@ -676,3 +676,8 @@ New `ExchangeScreenshotTest` (pretend exchanges) for the comparison; `ExchangeUi
 New `ChatScreenshotTest` (pretend chats at fixed dates; `Chat.conversations`, `Friends.state` now `internal set`);
 `Messages.kt` split into MessagesList, ChatScreen, ChatBubbles, ChatParts + `ChatModel`; 9 screenshots identical.
 The guard now also watches Chat/ChatPhotos. 24 files left on ALLOWED (biggest next: Data, HeroEditor, Shops).
+
+### 19 November 2026, after midnight: the photo editor (2.240)
+Owner chose: Data.kt later with its own plan (not a screen; saving could lose data). `HeroEditor.kt` split into
+HeroEdit, HeroPicture, HeroEditor, HeroEditorParts + `HeroEditorState`; 7 screenshots identical; dead crop code
+removed. GitHub caught a rare start-up crash (a store made mid-drawing): stores now made in MainActivity first.
