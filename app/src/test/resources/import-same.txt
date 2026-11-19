@@ -1,0 +1,116 @@
+## sites
+max=300 sites=[Shop(name=GoWish, url=https://gowish.com/), Shop(name=Giftful, url=https://giftful.com/), Shop(name=Amazon, url=https://www.amazon.com/), Shop(name=bol.com, url=https://www.bol.com/), Shop(name=Etsy, url=https://www.etsy.com/), Shop(name=Pinterest, url=https://www.pinterest.com/)]
+name gowish=GoWish
+name giftful=Giftful
+name amazon=Amazon
+name bol=bol.com
+name etsy=Etsy
+name pinterest=Pinterest
+name x=
+tip GoWish=In GoWish, open your wishlist, tap Share and copy the link.
+tip Giftful=In Giftful, open your list, tap Share and copy the link.
+tip Amazon=On Amazon, open Your Lists, pick the list, set it to Public or Shared, then tap Send list to others and copy the link.
+tip bol.com=On bol.com, open your wish list, tap Share and copy the link.
+tip Etsy=On Etsy, open Favourites, make the list public, then tap Share and copy the link.
+tip Pinterest=In Pinterest, open your board, tap Share and copy the link. Secret boards can't be read.
+tip Other=
+link 'https://gowish.com/wishlist/abc' key=gowish list=true
+link 'https://www.gowish.com/' key=gowish list=false
+link 'https://dk.gowish.com/w/1' key=gowish list=true
+link 'https://giftful.com/u/list' key=giftful list=true
+link 'https://www.amazon.nl/hz/wishlist/ls/ABC' key=amazon list=true
+link 'https://amazon.com/registry/wedding/1' key=amazon list=true
+link 'https://www.amazon.de/dp/B01' key=amazon list=false
+link 'https://www.bol.com/nl/nl/verlanglijst/123' key=bol list=true
+link 'https://bol.com/nl/p/x' key=bol list=false
+link 'https://www.etsy.com/people/me/favorites' key=etsy list=true
+link 'https://etsy.com/listing/1' key=etsy list=false
+link 'https://nl.pinterest.com/ann/gifts/' key=pinterest list=true
+link 'https://pinterest.com/pin/123/' key=pinterest list=false
+link 'https://pinterest.com/search/x/' key=pinterest list=false
+link 'https://shop.example/p/1' key= list=false
+link 'not a link' key= list=false
+link '' key= list=false
+## what opens Import
+list? 'https://gowish.com/w/1' -> true
+list? 'I found this: https://a.aliexpress.com/x' -> false
+list? 'https://a.example/1\nhttps://b.example/2' -> true
+list? 'Lego\nBook\nScarf' -> true
+list? 'Lego\nBook' -> false
+list? '' -> false
+list? '- \n* \n•' -> false
+## real shop links
+unwrap 'https://go.example/r?url=https%3A%2F%2Fshop.example%2Fp%2F1%3Futm_source%3Dx%26color%3Dred' -> 'https://shop.example/p/1?color=red' key='shop.example/p/1?color=red'
+unwrap 'https://click.example/?u=https%3A%2F%2Ftrack.example%2F%3Ftarget%3Dhttps%253A%252F%252Fshop.example%252Fdeep' -> 'https://shop.example/deep' key='shop.example/deep'
+unwrap 'https://www.amazon.nl/Some-Name/dp/B0ABC123/ref=sr_1_1?tag=aff-21&th=1' -> 'https://www.amazon.nl/Some-Name/dp/B0ABC123/ref=sr_1_1?th=1' key='amazon.nl/Some-Name/dp/B0ABC123/ref=sr_1_1?th=1'
+unwrap 'https://shop.example/p?ref=x&size=M#top' -> 'https://shop.example/p?size=M#top' key='shop.example/p?size=M#top'
+unwrap 'https://shop.example/p?utm_medium=a&gclid=b' -> 'https://shop.example/p' key='shop.example/p'
+unwrap 'javascript:alert(1)' -> '' key='javascript:alert(1)'
+unwrap 'https://x.example/?redirect=javascript:alert(1)' -> 'https://x.example/?redirect=javascript:alert(1)' key='x.example/?redirect=javascript:alert(1)'
+unwrap 'ftp://x.example/f' -> '' key='ftp://x.example/f'
+unwrap '  https://SHOP.example/Path/  ' -> 'https://SHOP.example/Path/' key='shop.example/Path'
+## prices
+price '€ 39,99'  -> (39.99, EUR)
+price 'EUR 39.99'  -> (39.99, EUR)
+price '£12.50'  -> (12.5, GBP)
+price '$5'  -> (5.0, USD)
+price '1.299,00 kr' shop.se -> (1299.0, USD)
+price '12' bol.com -> (12.0, USD)
+price 'free'  -> null
+price ''  -> null
+price '0'  -> null
+price '99999999'  -> null
+price 'CHF 20'  -> (20.0, CHF)
+price '20 zł' shop.pl -> (20.0, USD)
+## notes
+found Found(title=Lego set, url=, image=, price=39.0, currency=EUR, love=false)
+found Found(title=Book, url=https://shop.example/book, image=, price=null, currency=USD, love=false)
+found Found(title=Scarf, blue, url=, image=, price=25.0, currency=EUR, love=false)
+found Found(title=, url=https://www.amazon.nl/dp/B0XYZ12345, image=, price=null, currency=USD, love=false)
+found Found(title=Candle, url=, image=, price=8.5, currency=GBP, love=false)
+found Found(title=Just a name with a link at the end, url=https://shop.example/a, image=, price=null, currency=USD, love=false)
+many=300
+## the reader's answers
+read ImportRead(name=Ann's list, date=2027-12-24, site=gowish, wishes=[Found(title=Teapot big, url=https://shop.example/t, image=https://img.example/t.jpg, price=20.0, currency=EUR, love=true), Found(title=Bad link, url=, image=, price=null, currency=USD, love=false), Found(title=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, url=https://shop.example/x, image=, price=12.0, currency=USD, love=false)], version=3)
+read bad date ImportRead(name=x, date=, site=, wishes=[], version=0)
+read not json null null null
+read many 300
+clean 'Gifts - Amazon.nl' -> 'Gifts'
+clean 'Board · Pinterest' -> 'Board'
+clean 'Favourites – Etsy UK' -> 'Favourites'
+clean 'Plain name' -> 'Plain name'
+clean '  spaced   out  ' -> 'spaced out'
+clean 'yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy' -> 'yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy'
+## duplicates, ids, occasion
+duplicates=[1, 2]
+wish 1000 A https://shop.example/1 null USD star=false
+wish 998 B https://www.shop.example/1/ null USD star=false
+wish 996 C https://shop.example/2 null USD star=false
+wish 995 D  null USD star=false
+wish 994 E https://shop.example/3 null USD star=false
+occasion 2027-12-24 'Xmas' -> Occasion(kind=own, name=Xmas, date=2027-12-24)
+occasion 2027-01-10 '' -> Occasion(kind=own, name=Occasion, date=2027-01-10)
+occasion 2026-12-24 'Old' -> null
+occasion nope 'x' -> null
+occasion 2027-02-01 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' -> Occasion(kind=own, name=zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz, date=2027-02-01)
+## adding to a list (the fill-in waits)
+added=2 to a gone list=0 nothing=0
+on the list T1 Teapot https://shop.example/t 20.0 star=true
+on the list T2 Note only  null star=false
+waiting={"T3":[T1]} history=[T1]
+## the fill-in's rule: only what is missing
+filled empty -> Wish(id=5, url=https://shop.example/t, title=Shop name, desc=, image=https://shop.example/big.jpg, price=25.0, oldPrice=null, currency=GBP, category=, got=false, star=false, note=, size=, by=, bin=0, binBy=, checked=0, priv=false, qty=1, exact=, recv=0) / set -> Wish(id=5, url=https://shop.example/t, title=Mine, desc=, image=https://shop.example/big.jpg, price=10.0, oldPrice=null, currency=EUR, category=, got=false, star=false, note=, size=, by=, bin=0, binBy=, checked=0, priv=false, qty=1, exact=, recv=0)
+filled empty -> Wish(id=5, url=https://shop.example/t, title=Shop name, desc=, image=https://list.example/small.jpg, price=25.0, oldPrice=null, currency=GBP, category=, got=false, star=false, note=, size=, by=, bin=0, binBy=, checked=0, priv=false, qty=1, exact=, recv=0) / set -> Wish(id=5, url=https://shop.example/t, title=Mine, desc=, image=https://shop.example/big.jpg, price=10.0, oldPrice=null, currency=EUR, category=, got=false, star=false, note=, size=, by=, bin=0, binBy=, checked=0, priv=false, qty=1, exact=, recv=0)
+filled empty -> Wish(id=5, url=https://shop.example/t, title=, desc=, image=https://list.example/small.jpg, price=null, oldPrice=null, currency=EUR, category=, got=false, star=false, note=, size=, by=, bin=0, binBy=, checked=0, priv=false, qty=1, exact=, recv=0) / set -> Wish(id=5, url=https://shop.example/t, title=Mine, desc=, image=, price=10.0, oldPrice=null, currency=EUR, category=, got=false, star=false, note=, size=, by=, bin=0, binBy=, checked=0, priv=false, qty=1, exact=, recv=0)
+filled empty -> Wish(id=5, url=https://shop.example/t, title=, desc=, image=https://list.example/small.jpg, price=null, oldPrice=null, currency=EUR, category=, got=false, star=false, note=, size=, by=, bin=0, binBy=, checked=0, priv=false, qty=1, exact=, recv=0) / set -> Wish(id=5, url=https://shop.example/t, title=Mine, desc=, image=, price=10.0, oldPrice=null, currency=EUR, category=, got=false, star=false, note=, size=, by=, bin=0, binBy=, checked=0, priv=false, qty=1, exact=, recv=0)
+## the waiting list after an update and a restart
+waiting after={} tries=null
+queued={"T3":[42,43],"other":[7]}
+## the reader
+version 7 0 url=https://androidenthusiast.github.io/Wishlist/import/reader.js
+built in v1 has reader=true
+downloaded 'var VERSION = 999; w' -> uses v999
+downloaded 'var VERSION = 0; win' -> uses v1
+downloaded 'broken' -> uses v1
+asked online at=0
+nothing found report: Import found 0 wishes: site=other reader=v3 / Import found 0 wishes: site=etsy reader=v1
