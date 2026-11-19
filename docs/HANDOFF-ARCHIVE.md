@@ -655,3 +655,8 @@ with three blocks, a divider, My wishlists | Shared pager, switches in Display. 
 Server scripts stamp their version; `server-check.yml` opens/closes "Server scripts to run" (owner ran all 17). Home:
 `Hub.kt` split into 7 files with `HomeModel`; 21 before/after screenshots identical; dead "Create list" code removed;
 the empty-Home Import card (never shown since 2.226) fixed. Earlier: card buttons in one order (2.232).
+
+### 19 November 2026: guards and Friends/Profile (2.234–2.235)
+2.234 guards: `ArchitectureTest` (files under 400 lines, 29 frozen; rebuilt screens only draw), recipe in notes,
+`checkup.yml` quarterly. 2.235: `FriendsUi.kt` split into 8 files + `PeopleModel`; 26 screenshots identical.
+Owner asked that decisions and notes stay in order: every renamed file updated in MAP/HANDOFF/TODO; moved.py clean.

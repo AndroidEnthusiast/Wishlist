@@ -1,0 +1,148 @@
+package com.wishlist.app
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
+
+/* Wishlist groups (see GroupsParts.kt): making a new group and choosing the friends to invite. */
+
+// ---------- new group ----------
+
+/**
+ * "New group": a name and (owner, 2.125) the friends to invite, then the list you bring. The friends get their
+ * invitation the moment the group is made. [onCreated] gets the new group's id.
+ */
+@Composable
+fun NewGroupDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
+    val ctx = LocalContext.current
+    val model = rememberGroup()
+    val cs = MaterialTheme.colorScheme
+    var name by remember { mutableStateOf("") }
+    var missing by remember { mutableStateOf(false) }
+    var step by remember { mutableStateOf(1) }
+    var friendIds by remember { mutableStateOf(listOf<String>()) }
+    var pickingFriends by remember { mutableStateOf(false) }
+    Friends.load(ctx)
+    // Friends from the phone's copy, refreshed once in the background (offline: the copy, or the row stays hidden).
+    LaunchedEffect(Unit) { try { Friends.refresh(ctx) } catch (e: Exception) {} }
+    val friends = Friends.state?.friends ?: emptyList()
+    if (step == 1) {
+        FormSheet(
+            onDismissRequest = onClose,
+            properties = DialogProperties(dismissOnClickOutside = false),
+            title = { Text(tr("New group")) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        tr("Everyone shares one wishlist. You see each other’s lists and reserve gifts."),
+                        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    OutlinedTextField(
+                        name, { name = it.take(60); if (it.isNotBlank()) missing = false },
+                        label = { Text(tr("Group name*")) }, singleLine = true, isError = missing,
+                        supportingText = if (missing) ({ Text(tr("What is this group called?")) }) else null,
+                        modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised
+                    )
+                    // Friends to invite (owner, 2.125), like "Add wishes from your other lists". Hidden without friends:
+                    // the group page has "Invite friends" and the group link.
+                    if (friends.isNotEmpty()) Row(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { pickingFriends = true }
+                            .padding(vertical = 10.dp, horizontal = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(AppIcons.Add, null, tint = cs.primary, modifier = Modifier.size(20.dp))
+                        Column(Modifier.weight(1f).padding(start = 10.dp)) {
+                            Text(tr("Add friends"), style = MaterialTheme.typography.bodyMedium, color = cs.primary)
+                            val chosen = friends.filter { it.id in friendIds }.map { it.name.ifBlank { tr("Someone") } }
+                            if (chosen.isNotEmpty()) Text(
+                                chosen.joinToString(", "), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
+                                maxLines = 2, overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { if (name.isBlank()) missing = true else step = 2 }) { Text(tr("Next")) }
+            },
+            dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
+        )
+    } else {
+        ListPickDialog(
+            title = name.trim(), confirm = tr("Create group"), current = null, onClose = onClose,
+            dismissLabel = tr("Back"), onDismissAction = { step = 1 }
+        ) { id, fresh ->
+            val gid = model.create(name, id)
+            model.newListShared(id, fresh)
+            // The invitations go out now; any that fail are told on the group page (organiser only).
+            if (friendIds.isNotEmpty()) model.inviteNew(gid, friendIds)
+            onCreated(gid)
+            null
+        }
+    }
+    if (pickingFriends) PickFriendsDialog(friends, friendIds, onDone = { friendIds = it; pickingFriends = false }, onClose = { pickingFriends = false })
+}
+
+/** Choose friends (the new-group form): ticks, then Done. */
+@Composable
+fun PickFriendsDialog(
+    friends: List<Person>, start: List<String>, onDone: (List<String>) -> Unit, onClose: () -> Unit,
+    note: String = tr("They get an invitation when the group is made.")
+) {
+    var picked by remember { mutableStateOf(start.toSet()) }
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text(tr("Add friends")) },
+        text = {
+            Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
+                Text(
+                    note,
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+                friends.forEach { f ->
+                    Row(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                            .clickable { picked = if (f.id in picked) picked - f.id else picked + f.id }
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Avatar(Friends.photos[f.id], f.name, 36.dp)
+                        Text(
+                            f.name.ifBlank { tr("Someone") }, style = MaterialTheme.typography.bodyLarge, maxLines = 1,
+                            overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).padding(start = 10.dp)
+                        )
+                        Checkbox(checked = f.id in picked, onCheckedChange = { on -> picked = if (on) picked + f.id else picked - f.id })
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = { onDone(friends.map { it.id }.filter { it in picked }) }) { Text(tr("Done")) } },
+        dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
+    )
+}

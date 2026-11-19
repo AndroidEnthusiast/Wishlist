@@ -25,7 +25,6 @@ class ArchitectureTest {
         /** Over the limit on 19 November 2026, with their size then. Only shrinks. */
         val ALLOWED: Map<String, Int> = mapOf(
         "Data.kt" to 1110,
-        "GroupsUi.kt" to 1086,
         "Messages.kt" to 1036,
         "HeroEditor.kt" to 890,
         "Shops.kt" to 869,
@@ -61,14 +60,16 @@ class ArchitectureTest {
             "ListScreen.kt", "ListWishItem.kt", "ListViewButtons.kt", "ListDrag.kt",
             // Gift exchange (19 November 2026): its state holder is ExchangeModel.kt.
             "ExchangeParts.kt", "ExchangesList.kt", "ExchangeNew.kt", "ExchangeScreen.kt", "ExchangeDialogs.kt",
-            "ExchangeRows.kt", "ExchangeSettings.kt", "ExchangeChat.kt"
+            "ExchangeRows.kt", "ExchangeSettings.kt", "ExchangeChat.kt",
+            // Wishlist groups (19 November 2026): their state holder is GroupModel.kt.
+            "GroupsParts.kt", "GroupListPick.kt", "GroupNew.kt", "GroupJoin.kt", "GroupScreen.kt", "GroupMembers.kt", "GroupSettings.kt"
         )
 
         /** A store's data set straight away ("Exchanges.list = …"; only the checks' pretend data may). */
         val STORE_SET = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges)\\.[a-z][A-Za-z]* = ")
 
         /** A call that changes shared data: Store.set…(), .delete…(), .leave(), … */
-        val WRITES = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|ListVisibility|Occasions|MyLists)\\.(set|add|delete|remove|rename|create|leave|put|update|replace|trash|reserve|move|copy|open|hide|join|answer|new|cancel|invite|decline|send|seen|save|reveal|handover|draw)[A-Za-z]*\\(")
+        val WRITES = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|ListVisibility|Occasions|MyLists)\\.(set|add|delete|remove|rename|create|leave|put|update|replace|trash|reserve|move|copy|open|hide|join|answer|new|cancel|invite|decline|send|seen|save|reveal|handover|draw|settings|takeover)[A-Za-z]*\\(")
     }
 
     @Test fun everyFileStaysSmall() {
@@ -104,5 +105,8 @@ class ArchitectureTest {
         assertTrue(WRITES.containsMatchIn("Friends.setNote(ctx, f.id, note)"))
         assertFalse(WRITES.containsMatchIn("Repo.mineName(id)"))
         assertFalse(WRITES.containsMatchIn("Friends.load(ctx)"))
+        assertTrue(WRITES.containsMatchIn("Groups.settings(ctx, g.id, name, inviteAll)"))
+        assertTrue(WRITES.containsMatchIn("Groups.takeover(ctx, a, b, c)"))
+        assertTrue(STORE_SET.containsMatchIn("Groups.unsent = Groups.unsent - g.id"))
     }
 }

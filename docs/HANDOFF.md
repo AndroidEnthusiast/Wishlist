@@ -8,7 +8,7 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 - **The rebuild (owner, 18 November 2026; `docs/decisions/roadmap.md`, last section).** Point 2 done: version stamps in
   every script + `server-check.yml` (owner ran all 17; issue closed). Point 1: **Home done in 2.233** (7 small files,
   `HomeModel`, pixel-identical). Ask whether Home behaves the same after a day or two; then the next screen (ask which:
-  Friends / Profile (done in 2.235), the open list (done in 2.236), gift exchange (done in 2.237), or `ListScreen.kt`), same method: before/after
+  Friends / Profile (done in 2.235), the open list (done in 2.236), gift exchange (done in 2.237), wishlist groups (done in 2.238), or `ListScreen.kt`), same method: before/after
   screenshots compared pixel by pixel, a state holder, bug fixes only. **2.234: guards** (`ArchitectureTest`: files
   under 400 lines, 29 frozen in ALLOWED; REBUILT screens only draw; `checkup.yml` quarterly). Each rebuilt screen
   joins REBUILT and leaves ALLOWED.
@@ -75,6 +75,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 19 November 2026, night: wishlist groups (2.238)
+New `GroupScreenshotTest` (pretend groups; `Groups.groups`/`invites` now `internal set`) for the comparison;
+`GroupsUi.kt` split into 7 files + `GroupModel`/`GroupScreenState`; 10 screenshots identical. The guard's verbs
+gained `settings` and `takeover`. 25 files left on ALLOWED (biggest next: Data, Messages, HeroEditor).
+
 ### 19 November 2026, evening: gift exchange (2.237)
 New `ExchangeScreenshotTest` (pretend exchanges) for the comparison; `ExchangeUi.kt` split into 8 files +
 `ExchangeModel`/`ExchangeScreenState`; 16 screenshots identical. The size guard caught a test hook growing
@@ -83,8 +88,3 @@ New `ExchangeScreenshotTest` (pretend exchanges) for the comparison; `ExchangeUi
 ### 19 November 2026, later: the open list (2.236)
 `ListScreen.kt` split into ListScreen (layout), ListModel (state + Reserve/Love/view/sort; `shownWishes`,
 `keptOrder` tested), ListWishItem, ListDrag, ListViewButtons; 28 screenshots identical; 27 files left on ALLOWED.
-
-### 19 November 2026: guards and Friends/Profile (2.234–2.235)
-2.234 guards: `ArchitectureTest` (files under 400 lines, 29 frozen; rebuilt screens only draw), recipe in notes,
-`checkup.yml` quarterly. 2.235: `FriendsUi.kt` split into 8 files + `PeopleModel`; 26 screenshots identical.
-Owner asked that decisions and notes stay in order: every renamed file updated in MAP/HANDOFF/TODO; moved.py clean.

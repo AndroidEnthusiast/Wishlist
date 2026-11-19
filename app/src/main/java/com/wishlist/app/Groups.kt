@@ -55,9 +55,9 @@ object Groups {
     private val lock = Mutex()
 
     var groups by mutableStateOf<List<Group>>(emptyList())
-        private set
+        internal set
     var invites by mutableStateOf<List<GroupInvite>>(emptyList())
-        private set
+        internal set
     /** Group photos on this phone, by group id (a file address). */
     var photos by mutableStateOf<Map<String, String>>(emptyMap())
         private set
