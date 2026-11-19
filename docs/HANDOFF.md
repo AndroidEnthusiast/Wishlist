@@ -78,7 +78,7 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 ### 19 November 2026, after midnight: the photo editor (2.240)
 Owner chose: Data.kt later with its own plan (not a screen; saving could lose data). `HeroEditor.kt` split into
 HeroEdit, HeroPicture, HeroEditor, HeroEditorParts + `HeroEditorState`; 7 screenshots identical; dead crop code
-removed. In the test pictures the photo shows only after a tool changes the layout (first shots: frame only).
+removed. GitHub caught a rare start-up crash (a store made mid-drawing): stores now made in MainActivity first.
 
 ### 19 November 2026, late night: Messages (2.239)
 New `ChatScreenshotTest` (pretend chats at fixed dates; `Chat.conversations`, `Friends.state` now `internal set`);

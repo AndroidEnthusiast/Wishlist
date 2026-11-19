@@ -61,6 +61,9 @@ class MainActivity : ComponentActivity() {
         Repo.load(this)
         Show.load(this)
         Friends.load(this)
+        // The shared stores are made here, before anything is drawn (19 November 2026): when a background job made one
+        // first while a screen was being drawn, reading it crashed ("a state that was created after the snapshot").
+        Exchanges.list; Groups.groups; Chat.conversations; Shared.lists
         handle(intent)
         addOnNewIntentListener { handle(it) }
         Alerts.ensureChannel(this)

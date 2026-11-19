@@ -86,6 +86,16 @@ class ReviewFixesTest {
         for (k in Motion.Kind.values()) assertNull(Motion.transform(k).sizeTransform)
     }
 
+    /**
+     * The shared stores are made at the start, before anything is drawn (GitHub's check failed once: a store made by a
+     * background job while Home was being drawn crashed with "a state that was created after the snapshot").
+     */
+    @Test fun storesAreMadeBeforeDrawing() {
+        val m = src("MainActivity.kt")
+        val touch = m.indexOf("Exchanges.list; Groups.groups; Chat.conversations; Shared.lists")
+        assertTrue(touch > 0 && touch < m.indexOf("setContent {"))
+    }
+
     /** A chat opens at its end without scrolling through it, and shows what it had at once. */
     @Test fun chatOpensAtTheEnd() {
         val m = src("ChatModel.kt") + src("ChatScreen.kt")
