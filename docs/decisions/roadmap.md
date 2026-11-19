@@ -222,3 +222,7 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
   rebuild): split plus a state holder each, like Home and Messages. The owner asked whether they would "run out of
   space": told that the 400-line limit is a tidiness rule for code files, not storage; the app, phone and GitHub have
   plenty of room, and Claude says so plainly if a real limit (build minutes, Supabase's free plan, phone space) comes near.
+- **"Is this cleaning up or future-proofing, like a team?"** (owner, 19 November 2026): both; told what is in place
+  (one screen recipe, guards that fail the build, the recipe in the notes, checks, the quarterly check-up) and what a
+  team would still do (repositories for the data, real-phone checks, fewer web copies). The owner asked to be reminded
+  of that later (TODO, "Later, remind the owner").

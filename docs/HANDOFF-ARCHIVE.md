@@ -712,3 +712,7 @@ WishCards; a script proved all 526 lines moved unchanged. 18 files left (next: W
 ### 19 November 2026, evening: the styles (2.247)
 Owner: Friends.kt waits with Data; nothing of the rebuild tried on the phone yet: combined list in TODO ("Try the
 rebuild"), ask for results first. `Design.kt` split into Design, DesignType, DesignShapes (510 lines proven). 16 left.
+
+### 19 November 2026, evening: a friend's list (2.248), the 8 screens begin
+Owner: the 8 screens get the full rebuild, then they test. `Friend.kt` + `FriendListState`; 3 screenshots identical;
+fixed: a 2× reservation wasn't remembered (missing from Gifts I reserved). Next: Overview, Reactions, SharedUi, …

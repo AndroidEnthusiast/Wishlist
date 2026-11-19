@@ -36,8 +36,7 @@ class ArchitectureTest {
         "SharedUi.kt" to 486,
         "Fetch.kt" to 473,
         "GiftInvites.kt" to 456,
-        "PriceHistory.kt" to 455,
-        "Covers.kt" to 445
+        "PriceHistory.kt" to 455
         )
 
         /** Screens rebuilt to "layout + state holder": they only draw. Every newly rebuilt screen joins this list. */
@@ -65,14 +64,16 @@ class ArchitectureTest {
             // A friend's list (19 November 2026): its state holder is FriendListModel.kt.
             "Friend.kt",
             // App settings (19 November 2026): its state holder is SettingsModel.kt.
-            "Settings.kt", "SettingsPages.kt"
+            "Settings.kt", "SettingsPages.kt",
+            // A list's cover photo (19 November 2026): its state holder is CoverModel.kt.
+            "CoverViews.kt"
         )
 
         /** A store's data set straight away ("Exchanges.list = …"; only the checks' pretend data may). */
         val STORE_SET = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|Chat)\\.[a-z][A-Za-z]*(\\[[^\\]]*])? = ")
 
         /** A call that changes shared data: Store.set…(), .delete…(), .leave(), … */
-        val WRITES = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|ListVisibility|Occasions|MyLists|Chat|ChatPhotos|Shops|Show|CurrencyChoice)\\.(set|add|delete|remove|rename|create|leave|put|update|replace|trash|reserve|move|copy|open|hide|join|answer|new|cancel|invite|decline|send|seen|save(?!Key)|reveal|handover|draw|settings|takeover|react|upload|forget|mark|restore)[A-Za-z]*\\(")
+        val WRITES = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|ListVisibility|Occasions|MyLists|Chat|ChatPhotos|Shops|Show|CurrencyChoice|ListCovers)\\.(set|add|delete|remove|rename|create|leave|put|update|replace|trash|reserve|move|copy|open(?!Key)|hide|join|answer|new|cancel|invite|decline|send|seen|save(?!Key)|reveal|handover|draw|settings|takeover|react|upload|forget|mark|restore|detach)[A-Za-z]*\\(")
     }
 
     @Test fun everyFileStaysSmall() {
@@ -120,6 +121,9 @@ class ArchitectureTest {
         assertTrue(WRITES.containsMatchIn("Show.set(ctx, \"nt_req\", it)"))
         // A list's key ("m:…"), not a save.
         assertFalse(WRITES.containsMatchIn("MyLists.saveKey(Repo.openMine, false)"))
+        // Which list is open, not opening one.
+        assertFalse(WRITES.containsMatchIn("ListCovers.openKey()"))
+        assertTrue(WRITES.containsMatchIn("ListCovers.detach(ctx, key)"))
         assertTrue(STORE_SET.containsMatchIn("Groups.unsent = Groups.unsent - g.id"))
     }
 }
