@@ -1,0 +1,456 @@
+## start: one list from an older version
+lists=[SharedList(code=LISTAAAA, key=KEYA, name=Mum, owner=, me=Ann)]
+active=null gone=false busy=false notice='' me=Ann creator=false
+content name='' about='' cats=[] occ=null
+reserved={} ask=null
+pref sh_me=Ann
+pref shared=[{"code":"LISTAAAA","key":"KEYA","name":"Mum","owner":"","me":"Ann"}]
+pref shared_backup=[{"code":"LISTAAAA","key":"KEYA","name":"Mum","owner":"","me":"Ann"}]
+pref shc_LISTAAAA={"name":"Mum","cats":["Home"],"about":"","items":[{"id":101,"url":"https:\/\/shop.example\/p\/101","title":"Old teapot","desc":"","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false}]}
+server LISTAAAA key=KEYA 'Gifts for Mum' cats=[Home, Fashion] about='For Mum's birthday' occ=null owner=
+  item cat=Home,cur=EUR,desc=,got=false,id=101,image=,old=null,price=10.0,title=Teapot,url=https://shop.example/p/101
+  item cat=Fashion,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Scarf,url=https://shop.example/p/102
+  item cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+server LISTBBBB key=KEYB 'Dad' cats=[Tools] about='' occ=null owner=
+  item cat=Tools,cur=EUR,desc=,got=false,id=201,image=,old=null,price=10.0,title=Drill,url=https://shop.example/p/201
+server reservations={104=someone-else} counts={}
+refresh offline=false
+## offline: the copy on the phone shows
+sent wl_sh_get p_key=KEYA
+lists=[SharedList(code=LISTAAAA, key=KEYA, name=Mum, owner=, me=Ann)]
+active=LISTAAAA gone=false busy=false notice='' me=Ann creator=false
+content name='Mum' about='' cats=[Home] occ=null
+  wish cat=Home,cur=EUR,desc=,got=false,id=101,image=,old=null,price=10.0,title=Old teapot,url=https://shop.example/p/101
+reserved={} ask=null
+pref sh_me=Ann
+pref shared=[{"code":"LISTAAAA","key":"KEYA","name":"Mum","owner":"","me":"Ann"}]
+pref shared_backup=[{"code":"LISTAAAA","key":"KEYA","name":"Mum","owner":"","me":"Ann"}]
+pref shc_LISTAAAA={"name":"Mum","cats":["Home"],"about":"","items":[{"id":101,"url":"https:\/\/shop.example\/p\/101","title":"Old teapot","desc":"","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false}]}
+server LISTAAAA key=KEYA 'Gifts for Mum' cats=[Home, Fashion] about='For Mum's birthday' occ=null owner=
+  item cat=Home,cur=EUR,desc=,got=false,id=101,image=,old=null,price=10.0,title=Teapot,url=https://shop.example/p/101
+  item cat=Fashion,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Scarf,url=https://shop.example/p/102
+  item cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+server LISTBBBB key=KEYB 'Dad' cats=[Tools] about='' occ=null owner=
+  item cat=Tools,cur=EUR,desc=,got=false,id=201,image=,old=null,price=10.0,title=Drill,url=https://shop.example/p/201
+server reservations={104=someone-else} counts={}
+refresh=true
+## online: the list as it is online
+sent wl_sh_get p_key=KEYA
+sent wl_get_reservations p_code=LISTAAAA,p_device=device-1
+lists=[SharedList(code=LISTAAAA, key=KEYA, name=Gifts for Mum, owner=, me=Ann)]
+active=LISTAAAA gone=false busy=false notice='' me=Ann creator=false
+content name='Gifts for Mum' about='For Mum's birthday' cats=[Home, Fashion] occ=null
+  wish cat=Home,cur=EUR,desc=,got=false,id=101,image=,old=null,price=10.0,title=Teapot,url=https://shop.example/p/101
+  wish cat=Fashion,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Scarf,url=https://shop.example/p/102
+  wish cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+reserved={104=false} ask=null
+pref sh_me=Ann
+pref shared=[{"code":"LISTAAAA","key":"KEYA","name":"Gifts for Mum","owner":"","me":"Ann"}]
+pref shared_backup=[{"code":"LISTAAAA","key":"KEYA","name":"Mum","owner":"","me":"Ann"}]
+pref shc_LISTAAAA={"name":"Gifts for Mum","cats":["Home","Fashion"],"about":"For Mum's birthday","items":[{"id":101,"url":"https:\/\/shop.example\/p\/101","title":"Teapot","desc":"","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":102,"url":"https:\/\/shop.example\/p\/102","title":"Scarf","desc":"","image":"","price":25,"old":null,"cur":"EUR","cat":"Fashion","got":false,"qty":2},{"id":104,"url":"https:\/\/shop.example\/p\/104","title":"Book","desc":"","image":"","price":null,"old":null,"cur":"EUR","cat":"","got":false}]}
+server LISTAAAA key=KEYA 'Gifts for Mum' cats=[Home, Fashion] about='For Mum's birthday' occ=null owner=
+  item cat=Home,cur=EUR,desc=,got=false,id=101,image=,old=null,price=10.0,title=Teapot,url=https://shop.example/p/101
+  item cat=Fashion,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Scarf,url=https://shop.example/p/102
+  item cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+server LISTBBBB key=KEYB 'Dad' cats=[Tools] about='' occ=null owner=
+  item cat=Tools,cur=EUR,desc=,got=false,id=201,image=,old=null,price=10.0,title=Drill,url=https://shop.example/p/201
+server reservations={104=someone-else} counts={}
+## two people, one wish: both changes stay
+sent wl_sh_put_item p_fields=["price"],p_item={"id":101,"url":"https:\/\/shop.example\/p\/101","title":"Teapot","desc":"","image":"","price":12,"old":null,"cur":"EUR","cat":"Home","got":false},p_key=KEYA
+sent wl_sh_get p_key=KEYA
+sent wl_get_reservations p_code=LISTAAAA,p_device=device-1
+lists=[SharedList(code=LISTAAAA, key=KEYA, name=Gifts for Mum, owner=, me=Ann)]
+active=LISTAAAA gone=false busy=false notice='' me=Ann creator=false
+content name='Gifts for Mum' about='For Mum's birthday' cats=[Home, Fashion] occ=null
+  wish cat=Home,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  wish cat=Fashion,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Scarf,url=https://shop.example/p/102
+  wish cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+reserved={104=false} ask=null
+pref sh_me=Ann
+pref shared=[{"code":"LISTAAAA","key":"KEYA","name":"Gifts for Mum","owner":"","me":"Ann"}]
+pref shared_backup=[{"code":"LISTAAAA","key":"KEYA","name":"Mum","owner":"","me":"Ann"}]
+pref shc_LISTAAAA={"name":"Gifts for Mum","cats":["Home","Fashion"],"about":"For Mum's birthday","items":[{"id":101,"url":"https:\/\/shop.example\/p\/101","title":"Blue teapot","desc":"","image":"","price":12,"old":null,"cur":"EUR","cat":"Home","got":false,"note":"from Bob"},{"id":102,"url":"https:\/\/shop.example\/p\/102","title":"Scarf","desc":"","image":"","price":25,"old":null,"cur":"EUR","cat":"Fashion","got":false,"qty":2},{"id":104,"url":"https:\/\/shop.example\/p\/104","title":"Book","desc":"","image":"","price":null,"old":null,"cur":"EUR","cat":"","got":false}]}
+server LISTAAAA key=KEYA 'Gifts for Mum' cats=[Home, Fashion] about='For Mum's birthday' occ=null owner=
+  item cat=Home,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  item cat=Fashion,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Scarf,url=https://shop.example/p/102
+  item cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+server LISTBBBB key=KEYB 'Dad' cats=[Tools] about='' occ=null owner=
+  item cat=Tools,cur=EUR,desc=,got=false,id=201,image=,old=null,price=10.0,title=Drill,url=https://shop.example/p/201
+server reservations={104=someone-else} counts={}
+## a failed save is undone with a message
+sent wl_sh_put_item p_fields=["price"],p_item={"id":102,"url":"https:\/\/shop.example\/p\/102","title":"Scarf","desc":"","image":"","price":15,"old":null,"cur":"EUR","cat":"Fashion","got":false,"qty":2},p_key=KEYA
+lists=[SharedList(code=LISTAAAA, key=KEYA, name=Gifts for Mum, owner=, me=Ann)]
+active=LISTAAAA gone=false busy=false notice='Couldn’t save that. Check your connection and try again.' me=Ann creator=false
+content name='Gifts for Mum' about='For Mum's birthday' cats=[Home, Fashion] occ=null
+  wish cat=Home,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  wish cat=Fashion,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Scarf,url=https://shop.example/p/102
+  wish cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+reserved={104=false} ask=null
+pref sh_me=Ann
+pref shared=[{"code":"LISTAAAA","key":"KEYA","name":"Gifts for Mum","owner":"","me":"Ann"}]
+pref shared_backup=[{"code":"LISTAAAA","key":"KEYA","name":"Mum","owner":"","me":"Ann"}]
+pref shc_LISTAAAA={"name":"Gifts for Mum","cats":["Home","Fashion"],"about":"For Mum's birthday","items":[{"id":101,"url":"https:\/\/shop.example\/p\/101","title":"Blue teapot","desc":"","image":"","price":12,"old":null,"cur":"EUR","cat":"Home","got":false,"note":"from Bob"},{"id":102,"url":"https:\/\/shop.example\/p\/102","title":"Scarf","desc":"","image":"","price":25,"old":null,"cur":"EUR","cat":"Fashion","got":false,"qty":2},{"id":104,"url":"https:\/\/shop.example\/p\/104","title":"Book","desc":"","image":"","price":null,"old":null,"cur":"EUR","cat":"","got":false}]}
+server LISTAAAA key=KEYA 'Gifts for Mum' cats=[Home, Fashion] about='For Mum's birthday' occ=null owner=
+  item cat=Home,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  item cat=Fashion,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Scarf,url=https://shop.example/p/102
+  item cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+server LISTBBBB key=KEYB 'Dad' cats=[Tools] about='' occ=null owner=
+  item cat=Tools,cur=EUR,desc=,got=false,id=201,image=,old=null,price=10.0,title=Drill,url=https://shop.example/p/201
+server reservations={104=someone-else} counts={}
+late refresh=true
+## an old refresh answer is ignored
+sent wl_sh_get p_key=KEYA
+sent wl_sh_put_item p_fields=["title"],p_item={"id":102,"url":"https:\/\/shop.example\/p\/102","title":"Red scarf","desc":"","image":"","price":25,"old":null,"cur":"EUR","cat":"Fashion","got":false,"qty":2},p_key=KEYA
+sent wl_sh_get p_key=KEYA
+sent wl_get_reservations p_code=LISTAAAA,p_device=device-1
+lists=[SharedList(code=LISTAAAA, key=KEYA, name=Gifts for Mum, owner=, me=Ann)]
+active=LISTAAAA gone=false busy=false notice='' me=Ann creator=false
+content name='Gifts for Mum' about='For Mum's birthday' cats=[Home, Fashion] occ=null
+  wish cat=Home,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  wish cat=Fashion,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  wish cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+reserved={104=false} ask=null
+pref sh_me=Ann
+pref shared=[{"code":"LISTAAAA","key":"KEYA","name":"Gifts for Mum","owner":"","me":"Ann"}]
+pref shared_backup=[{"code":"LISTAAAA","key":"KEYA","name":"Mum","owner":"","me":"Ann"}]
+pref shc_LISTAAAA={"name":"Gifts for Mum","cats":["Home","Fashion"],"about":"For Mum's birthday","items":[{"id":101,"url":"https:\/\/shop.example\/p\/101","title":"Blue teapot","desc":"","image":"","price":12,"old":null,"cur":"EUR","cat":"Home","got":false,"note":"from Bob"},{"id":102,"url":"https:\/\/shop.example\/p\/102","title":"Red scarf","desc":"","image":"","price":25,"old":null,"cur":"EUR","cat":"Fashion","got":false,"qty":2},{"id":104,"url":"https:\/\/shop.example\/p\/104","title":"Book","desc":"","image":"","price":null,"old":null,"cur":"EUR","cat":"","got":false}]}
+server LISTAAAA key=KEYA 'Gifts for Mum' cats=[Home, Fashion] about='For Mum's birthday' occ=null owner=
+  item cat=Home,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  item cat=Fashion,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  item cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+server LISTBBBB key=KEYB 'Dad' cats=[Tools] about='' occ=null owner=
+  item cat=Tools,cur=EUR,desc=,got=false,id=201,image=,old=null,price=10.0,title=Drill,url=https://shop.example/p/201
+server reservations={104=someone-else} counts={}
+## a wish added: 'by' is your name
+sent wl_sh_put_item p_item={"id":103,"url":"https:\/\/shop.example\/p\/103","title":"Mug","desc":"","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"by":"Ann"},p_key=KEYA
+sent wl_sh_get p_key=KEYA
+sent wl_get_reservations p_code=LISTAAAA,p_device=device-1
+lists=[SharedList(code=LISTAAAA, key=KEYA, name=Gifts for Mum, owner=, me=Ann)]
+active=LISTAAAA gone=false busy=false notice='' me=Ann creator=false
+content name='Gifts for Mum' about='For Mum's birthday' cats=[Home, Fashion] occ=null
+  wish by=Ann,cat=Home,cur=EUR,desc=,got=false,id=103,image=,old=null,price=10.0,title=Mug,url=https://shop.example/p/103
+  wish cat=Home,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  wish cat=Fashion,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  wish cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+reserved={104=false} ask=null
+pref sh_me=Ann
+pref shared=[{"code":"LISTAAAA","key":"KEYA","name":"Gifts for Mum","owner":"","me":"Ann"}]
+pref shared_backup=[{"code":"LISTAAAA","key":"KEYA","name":"Mum","owner":"","me":"Ann"}]
+pref shc_LISTAAAA={"name":"Gifts for Mum","cats":["Home","Fashion"],"about":"For Mum's birthday","items":[{"id":103,"url":"https:\/\/shop.example\/p\/103","title":"Mug","desc":"","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"by":"Ann"},{"id":101,"url":"https:\/\/shop.example\/p\/101","title":"Blue teapot","desc":"","image":"","price":12,"old":null,"cur":"EUR","cat":"Home","got":false,"note":"from Bob"},{"id":102,"url":"https:\/\/shop.example\/p\/102","title":"Red scarf","desc":"","image":"","price":25,"old":null,"cur":"EUR","cat":"Fashion","got":false,"qty":2},{"id":104,"url":"https:\/\/shop.example\/p\/104","title":"Book","desc":"","image":"","price":null,"old":null,"cur":"EUR","cat":"","got":false}]}
+server LISTAAAA key=KEYA 'Gifts for Mum' cats=[Home, Fashion] about='For Mum's birthday' occ=null owner=
+  item by=Ann,cat=Home,cur=EUR,desc=,got=false,id=103,image=,old=null,price=10.0,title=Mug,url=https://shop.example/p/103
+  item cat=Home,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  item cat=Fashion,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  item cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+server LISTBBBB key=KEYB 'Dad' cats=[Tools] about='' occ=null owner=
+  item cat=Tools,cur=EUR,desc=,got=false,id=201,image=,old=null,price=10.0,title=Drill,url=https://shop.example/p/201
+server reservations={104=someone-else} counts={}
+## in the bin for everyone
+sent wl_sh_put_item p_fields=["bin","binBy"],p_item={"id":101,"url":"https:\/\/shop.example\/p\/101","title":"Blue teapot","desc":"","image":"","price":12,"old":null,"cur":"EUR","cat":"Home","got":false,"note":"from Bob","bin":T1,"binBy":"Ann"},p_key=KEYA
+sent wl_sh_get p_key=KEYA
+sent wl_get_reservations p_code=LISTAAAA,p_device=device-1
+lists=[SharedList(code=LISTAAAA, key=KEYA, name=Gifts for Mum, owner=, me=Ann)]
+active=LISTAAAA gone=false busy=false notice='' me=Ann creator=false
+content name='Gifts for Mum' about='For Mum's birthday' cats=[Home, Fashion] occ=null
+  wish by=Ann,cat=Home,cur=EUR,desc=,got=false,id=103,image=,old=null,price=10.0,title=Mug,url=https://shop.example/p/103
+  wish cat=Fashion,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  wish cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+reserved={104=false} ask=null
+bin LISTAAAA 101 by=Ann reserved=null
+pref sh_me=Ann
+pref shared=[{"code":"LISTAAAA","key":"KEYA","name":"Gifts for Mum","owner":"","me":"Ann"}]
+pref shared_backup=[{"code":"LISTAAAA","key":"KEYA","name":"Mum","owner":"","me":"Ann"}]
+pref shbh_LISTAAAA=["101:T1"]
+pref shc_LISTAAAA={"name":"Gifts for Mum","cats":["Home","Fashion"],"about":"For Mum's birthday","items":[{"id":103,"url":"https:\/\/shop.example\/p\/103","title":"Mug","desc":"","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"by":"Ann"},{"id":102,"url":"https:\/\/shop.example\/p\/102","title":"Red scarf","desc":"","image":"","price":25,"old":null,"cur":"EUR","cat":"Fashion","got":false,"qty":2},{"id":104,"url":"https:\/\/shop.example\/p\/104","title":"Book","desc":"","image":"","price":null,"old":null,"cur":"EUR","cat":"","got":false}]}
+server LISTAAAA key=KEYA 'Gifts for Mum' cats=[Home, Fashion] about='For Mum's birthday' occ=null owner=
+  item by=Ann,cat=Home,cur=EUR,desc=,got=false,id=103,image=,old=null,price=10.0,title=Mug,url=https://shop.example/p/103
+  item bin=T1,binBy=Ann,cat=Home,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  item cat=Fashion,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  item cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+server LISTBBBB key=KEYB 'Dad' cats=[Tools] about='' occ=null owner=
+  item cat=Tools,cur=EUR,desc=,got=false,id=201,image=,old=null,price=10.0,title=Drill,url=https://shop.example/p/201
+server reservations={104=someone-else} counts={}
+## Undo
+sent wl_sh_put_item p_fields=["bin","binBy"],p_item={"id":101,"url":"https:\/\/shop.example\/p\/101","title":"Blue teapot","desc":"","image":"","price":12,"old":null,"cur":"EUR","cat":"Home","got":false,"note":"from Bob"},p_key=KEYA
+sent wl_sh_get p_key=KEYA
+sent wl_get_reservations p_code=LISTAAAA,p_device=device-1
+lists=[SharedList(code=LISTAAAA, key=KEYA, name=Gifts for Mum, owner=, me=Ann)]
+active=LISTAAAA gone=false busy=false notice='' me=Ann creator=false
+content name='Gifts for Mum' about='For Mum's birthday' cats=[Home, Fashion] occ=null
+  wish by=Ann,cat=Home,cur=EUR,desc=,got=false,id=103,image=,old=null,price=10.0,title=Mug,url=https://shop.example/p/103
+  wish cat=Home,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  wish cat=Fashion,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  wish cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+reserved={104=false} ask=null
+pref sh_me=Ann
+pref shared=[{"code":"LISTAAAA","key":"KEYA","name":"Gifts for Mum","owner":"","me":"Ann"}]
+pref shared_backup=[{"code":"LISTAAAA","key":"KEYA","name":"Mum","owner":"","me":"Ann"}]
+pref shbh_LISTAAAA=["101:T1"]
+pref shc_LISTAAAA={"name":"Gifts for Mum","cats":["Home","Fashion"],"about":"For Mum's birthday","items":[{"id":103,"url":"https:\/\/shop.example\/p\/103","title":"Mug","desc":"","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"by":"Ann"},{"id":101,"url":"https:\/\/shop.example\/p\/101","title":"Blue teapot","desc":"","image":"","price":12,"old":null,"cur":"EUR","cat":"Home","got":false,"note":"from Bob"},{"id":102,"url":"https:\/\/shop.example\/p\/102","title":"Red scarf","desc":"","image":"","price":25,"old":null,"cur":"EUR","cat":"Fashion","got":false,"qty":2},{"id":104,"url":"https:\/\/shop.example\/p\/104","title":"Book","desc":"","image":"","price":null,"old":null,"cur":"EUR","cat":"","got":false}]}
+server LISTAAAA key=KEYA 'Gifts for Mum' cats=[Home, Fashion] about='For Mum's birthday' occ=null owner=
+  item by=Ann,cat=Home,cur=EUR,desc=,got=false,id=103,image=,old=null,price=10.0,title=Mug,url=https://shop.example/p/103
+  item cat=Home,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  item cat=Fashion,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  item cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+server LISTBBBB key=KEYB 'Dad' cats=[Tools] about='' occ=null owner=
+  item cat=Tools,cur=EUR,desc=,got=false,id=201,image=,old=null,price=10.0,title=Drill,url=https://shop.example/p/201
+server reservations={104=someone-else} counts={}
+## the bin offline: it comes back
+sent wl_sh_put_item p_fields=["bin","binBy"],p_item={"id":103,"url":"https:\/\/shop.example\/p\/103","title":"Mug","desc":"","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"by":"Ann","bin":T2,"binBy":"Ann"},p_key=KEYA
+lists=[SharedList(code=LISTAAAA, key=KEYA, name=Gifts for Mum, owner=, me=Ann)]
+active=LISTAAAA gone=false busy=false notice='Couldn’t save that. Check your connection and try again.' me=Ann creator=false
+content name='Gifts for Mum' about='For Mum's birthday' cats=[Home, Fashion] occ=null
+  wish by=Ann,cat=Home,cur=EUR,desc=,got=false,id=103,image=,old=null,price=10.0,title=Mug,url=https://shop.example/p/103
+  wish cat=Home,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  wish cat=Fashion,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  wish cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+reserved={104=false} ask=null
+pref sh_me=Ann
+pref shared=[{"code":"LISTAAAA","key":"KEYA","name":"Gifts for Mum","owner":"","me":"Ann"}]
+pref shared_backup=[{"code":"LISTAAAA","key":"KEYA","name":"Mum","owner":"","me":"Ann"}]
+pref shbh_LISTAAAA=["101:T1","103:T2"]
+pref shc_LISTAAAA={"name":"Gifts for Mum","cats":["Home","Fashion"],"about":"For Mum's birthday","items":[{"id":103,"url":"https:\/\/shop.example\/p\/103","title":"Mug","desc":"","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"by":"Ann"},{"id":101,"url":"https:\/\/shop.example\/p\/101","title":"Blue teapot","desc":"","image":"","price":12,"old":null,"cur":"EUR","cat":"Home","got":false,"note":"from Bob"},{"id":102,"url":"https:\/\/shop.example\/p\/102","title":"Red scarf","desc":"","image":"","price":25,"old":null,"cur":"EUR","cat":"Fashion","got":false,"qty":2},{"id":104,"url":"https:\/\/shop.example\/p\/104","title":"Book","desc":"","image":"","price":null,"old":null,"cur":"EUR","cat":"","got":false}]}
+server LISTAAAA key=KEYA 'Gifts for Mum' cats=[Home, Fashion] about='For Mum's birthday' occ=null owner=
+  item by=Ann,cat=Home,cur=EUR,desc=,got=false,id=103,image=,old=null,price=10.0,title=Mug,url=https://shop.example/p/103
+  item cat=Home,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  item cat=Fashion,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  item cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+server LISTBBBB key=KEYB 'Dad' cats=[Tools] about='' occ=null owner=
+  item cat=Tools,cur=EUR,desc=,got=false,id=201,image=,old=null,price=10.0,title=Drill,url=https://shop.example/p/201
+server reservations={104=someone-else} counts={}
+## deleted for good
+sent wl_sh_del_item p_id=103,p_key=KEYA
+sent wl_sh_get p_key=KEYA
+sent wl_get_reservations p_code=LISTAAAA,p_device=device-1
+lists=[SharedList(code=LISTAAAA, key=KEYA, name=Gifts for Mum, owner=, me=Ann)]
+active=LISTAAAA gone=false busy=false notice='' me=Ann creator=false
+content name='Gifts for Mum' about='For Mum's birthday' cats=[Home, Fashion] occ=null
+  wish cat=Home,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  wish cat=Fashion,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  wish cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+reserved={104=false} ask=null
+pref sh_me=Ann
+pref shared=[{"code":"LISTAAAA","key":"KEYA","name":"Gifts for Mum","owner":"","me":"Ann"}]
+pref shared_backup=[{"code":"LISTAAAA","key":"KEYA","name":"Mum","owner":"","me":"Ann"}]
+pref shbh_LISTAAAA=["101:T1","103:T2"]
+pref shc_LISTAAAA={"name":"Gifts for Mum","cats":["Home","Fashion"],"about":"For Mum's birthday","items":[{"id":101,"url":"https:\/\/shop.example\/p\/101","title":"Blue teapot","desc":"","image":"","price":12,"old":null,"cur":"EUR","cat":"Home","got":false,"note":"from Bob"},{"id":102,"url":"https:\/\/shop.example\/p\/102","title":"Red scarf","desc":"","image":"","price":25,"old":null,"cur":"EUR","cat":"Fashion","got":false,"qty":2},{"id":104,"url":"https:\/\/shop.example\/p\/104","title":"Book","desc":"","image":"","price":null,"old":null,"cur":"EUR","cat":"","got":false}]}
+server LISTAAAA key=KEYA 'Gifts for Mum' cats=[Home, Fashion] about='For Mum's birthday' occ=null owner=
+  item cat=Home,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  item cat=Fashion,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  item cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+server LISTBBBB key=KEYB 'Dad' cats=[Tools] about='' occ=null owner=
+  item cat=Tools,cur=EUR,desc=,got=false,id=201,image=,old=null,price=10.0,title=Drill,url=https://shop.example/p/201
+server reservations={104=someone-else} counts={}
+## name, note, occasion and categories
+sent wl_sh_set_name p_key=KEYA,p_name=Gifts for Mum!
+sent wl_sh_get p_key=KEYA
+sent wl_get_reservations p_code=LISTAAAA,p_device=device-1
+sent wl_sh_set_about p_about=Size M,p_key=KEYA
+sent wl_sh_get p_key=KEYA
+sent wl_get_reservations p_code=LISTAAAA,p_device=device-1
+sent wl_sh_set_occasion p_key=KEYA,p_occ=null
+sent wl_sh_get p_key=KEYA
+sent wl_get_reservations p_code=LISTAAAA,p_device=device-1
+sent wl_sh_cat_add p_key=KEYA,p_name=Garden
+sent wl_sh_get p_key=KEYA
+sent wl_get_reservations p_code=LISTAAAA,p_device=device-1
+sent wl_sh_cat_rename p_key=KEYA,p_new=Kitchen,p_old=Home
+sent wl_sh_get p_key=KEYA
+sent wl_get_reservations p_code=LISTAAAA,p_device=device-1
+sent wl_sh_cat_remove p_key=KEYA,p_name=Fashion
+sent wl_sh_get p_key=KEYA
+sent wl_get_reservations p_code=LISTAAAA,p_device=device-1
+lists=[SharedList(code=LISTAAAA, key=KEYA, name=Gifts for Mum!, owner=, me=Ann)]
+active=LISTAAAA gone=false busy=false notice='' me=Ann creator=false
+content name='Gifts for Mum!' about='Size M' cats=[Kitchen, Garden] occ=null
+  wish cat=Kitchen,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  wish cat=,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  wish cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+reserved={104=false} ask=null
+pref sh_me=Ann
+pref shared=[{"code":"LISTAAAA","key":"KEYA","name":"Gifts for Mum!","owner":"","me":"Ann"}]
+pref shared_backup=[{"code":"LISTAAAA","key":"KEYA","name":"Mum","owner":"","me":"Ann"}]
+pref shbh_LISTAAAA=["101:T1","103:T2"]
+pref shc_LISTAAAA={"name":"Gifts for Mum!","cats":["Kitchen","Garden"],"about":"Size M","items":[{"id":101,"url":"https:\/\/shop.example\/p\/101","title":"Blue teapot","desc":"","image":"","price":12,"old":null,"cur":"EUR","cat":"Kitchen","got":false,"note":"from Bob"},{"id":102,"url":"https:\/\/shop.example\/p\/102","title":"Red scarf","desc":"","image":"","price":25,"old":null,"cur":"EUR","cat":"","got":false,"qty":2},{"id":104,"url":"https:\/\/shop.example\/p\/104","title":"Book","desc":"","image":"","price":null,"old":null,"cur":"EUR","cat":"","got":false}]}
+server LISTAAAA key=KEYA 'Gifts for Mum!' cats=[Kitchen, Garden] about='Size M' occ=null owner=
+  item cat=Kitchen,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  item cat=,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  item cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+server LISTBBBB key=KEYB 'Dad' cats=[Tools] about='' occ=null owner=
+  item cat=Tools,cur=EUR,desc=,got=false,id=201,image=,old=null,price=10.0,title=Drill,url=https://shop.example/p/201
+server reservations={104=someone-else} counts={}
+asks how many for 102
+## reservations: yours, taken, how many, taken away, offline
+sent wl_reserve_item p_code=LISTAAAA,p_device=device-1,p_item=101
+sent wl_get_reservations p_code=LISTAAAA,p_device=device-1
+sent wl_reserve_item p_code=LISTAAAA,p_device=device-1,p_item=104
+sent wl_get_reservations p_code=LISTAAAA,p_device=device-1
+sent wl_reserve_count p_code=LISTAAAA,p_device=device-1,p_item=102,p_n=2
+sent wl_get_reservations p_code=LISTAAAA,p_device=device-1
+sent wl_unreserve_item p_code=LISTAAAA,p_device=device-1,p_item=101
+sent wl_get_reservations p_code=LISTAAAA,p_device=device-1
+sent wl_reserve_item p_code=LISTAAAA,p_device=device-1,p_item=101
+sent wl_get_reservations p_code=LISTAAAA,p_device=device-1
+lists=[SharedList(code=LISTAAAA, key=KEYA, name=Gifts for Mum!, owner=, me=Ann)]
+active=LISTAAAA gone=false busy=false notice='Couldn’t save that. Check your connection and try again.' me=Ann creator=false
+content name='Gifts for Mum!' about='Size M' cats=[Kitchen, Garden] occ=null
+  wish cat=Kitchen,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  wish cat=,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  wish cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+reserved={102=true, 104=false} ask=102
+pref sh_me=Ann
+pref shared=[{"code":"LISTAAAA","key":"KEYA","name":"Gifts for Mum!","owner":"","me":"Ann"}]
+pref shared_backup=[{"code":"LISTAAAA","key":"KEYA","name":"Mum","owner":"","me":"Ann"}]
+pref shbh_LISTAAAA=["101:T1","103:T2"]
+pref shc_LISTAAAA={"name":"Gifts for Mum!","cats":["Kitchen","Garden"],"about":"Size M","items":[{"id":101,"url":"https:\/\/shop.example\/p\/101","title":"Blue teapot","desc":"","image":"","price":12,"old":null,"cur":"EUR","cat":"Kitchen","got":false,"note":"from Bob"},{"id":102,"url":"https:\/\/shop.example\/p\/102","title":"Red scarf","desc":"","image":"","price":25,"old":null,"cur":"EUR","cat":"","got":false,"qty":2},{"id":104,"url":"https:\/\/shop.example\/p\/104","title":"Book","desc":"","image":"","price":null,"old":null,"cur":"EUR","cat":"","got":false}]}
+server LISTAAAA key=KEYA 'Gifts for Mum!' cats=[Kitchen, Garden] about='Size M' occ=null owner=
+  item cat=Kitchen,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  item cat=,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  item cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+server LISTBBBB key=KEYB 'Dad' cats=[Tools] about='' occ=null owner=
+  item cat=Tools,cur=EUR,desc=,got=false,id=201,image=,old=null,price=10.0,title=Drill,url=https://shop.example/p/201
+server reservations={102=device-1, 104=someone-else} counts={102=2}
+for='Mum Smith' isFor=true false false
+invite null -> null
+invite hello -> null
+invite https://x.example/?j=KEYA -> null
+invite https://x.example/join/?j=ABCDEFGHJKLMNP -> ABCDEFGHJKLMNPQR2345
+invite J=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -> null
+cached=[101, 102, 104] other=[]
+cats=[Kitchen, Garden] owns=true false
+## names, invites and the copy on the phone
+lists=[SharedList(code=LISTAAAA, key=KEYA, name=Gifts for Mum!, owner=, me=Annie)]
+active=LISTAAAA gone=false busy=false notice='' me=Annie creator=false
+content name='Gifts for Mum!' about='Size M' cats=[Kitchen, Garden] occ=null
+  wish cat=Kitchen,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  wish cat=,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  wish cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+reserved={102=true, 104=false} ask=102
+pref sh_for_LISTAAAA=Mum Smith
+pref sh_me=Annie
+pref shared=[{"code":"LISTAAAA","key":"KEYA","name":"Gifts for Mum!","owner":"","me":"Annie"}]
+pref shared_backup=[{"code":"LISTAAAA","key":"KEYA","name":"Mum","owner":"","me":"Ann"}]
+pref shbh_LISTAAAA=["101:T1","103:T2"]
+pref shc_LISTAAAA={"name":"Gifts for Mum!","cats":["Kitchen","Garden"],"about":"Size M","items":[{"id":101,"url":"https:\/\/shop.example\/p\/101","title":"Blue teapot","desc":"","image":"","price":12,"old":null,"cur":"EUR","cat":"Kitchen","got":false,"note":"from Bob"},{"id":102,"url":"https:\/\/shop.example\/p\/102","title":"Red scarf","desc":"","image":"","price":25,"old":null,"cur":"EUR","cat":"","got":false,"qty":2},{"id":104,"url":"https:\/\/shop.example\/p\/104","title":"Book","desc":"","image":"","price":null,"old":null,"cur":"EUR","cat":"","got":false}]}
+server LISTAAAA key=KEYA 'Gifts for Mum!' cats=[Kitchen, Garden] about='Size M' occ=null owner=
+  item cat=Kitchen,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  item cat=,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  item cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+server LISTBBBB key=KEYB 'Dad' cats=[Tools] about='' occ=null owner=
+  item cat=Tools,cur=EUR,desc=,got=false,id=201,image=,old=null,price=10.0,title=Drill,url=https://shop.example/p/201
+server reservations={102=device-1, 104=someone-else} counts={102=2}
+joined LISTBBBB
+join a dead link=null
+added elsewhere 301
+sent away 301 bin=true list=LISTBBBB
+## joining, and moving wishes to a list that isn't open
+sent wl_sh_get p_key=KEYB
+sent wl_sh_get p_key=NOPE
+sent wl_sh_put_item p_item={"id":301,"url":"https:\/\/shop.example\/p\/301","title":"Saw","desc":"","image":"","price":10,"old":null,"cur":"EUR","cat":"Tools","got":false},p_key=KEYB
+sent wl_sh_put_item p_fields=["bin","binBy"],p_item={"id":301,"url":"https:\/\/shop.example\/p\/301","title":"Saw","desc":"","image":"","price":10,"old":null,"cur":"EUR","cat":"Tools","got":false,"bin":T3},p_key=KEYB
+lists=[SharedList(code=LISTAAAA, key=KEYA, name=Gifts for Mum!, owner=, me=Annie), SharedList(code=LISTBBBB, key=KEYB, name=Dad, owner=, me=)]
+active=LISTAAAA gone=false busy=false notice='' me=Annie creator=false
+content name='Gifts for Mum!' about='Size M' cats=[Kitchen, Garden] occ=null
+  wish cat=Kitchen,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  wish cat=,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  wish cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+reserved={102=true, 104=false} ask=102
+pref sh_for_LISTAAAA=Mum Smith
+pref sh_me=Annie
+pref shared=[{"code":"LISTAAAA","key":"KEYA","name":"Gifts for Mum!","owner":"","me":"Annie"},{"code":"LISTBBBB","key":"KEYB","name":"Dad","owner":"","me":""}]
+pref shared_backup=[{"code":"LISTAAAA","key":"KEYA","name":"Mum","owner":"","me":"Ann"}]
+pref shbh_LISTAAAA=["101:T1","103:T2"]
+pref shc_LISTAAAA={"name":"Gifts for Mum!","cats":["Kitchen","Garden"],"about":"Size M","items":[{"id":101,"url":"https:\/\/shop.example\/p\/101","title":"Blue teapot","desc":"","image":"","price":12,"old":null,"cur":"EUR","cat":"Kitchen","got":false,"note":"from Bob"},{"id":102,"url":"https:\/\/shop.example\/p\/102","title":"Red scarf","desc":"","image":"","price":25,"old":null,"cur":"EUR","cat":"","got":false,"qty":2},{"id":104,"url":"https:\/\/shop.example\/p\/104","title":"Book","desc":"","image":"","price":null,"old":null,"cur":"EUR","cat":"","got":false}]}
+pref shc_LISTBBBB={"name":"Dad","cats":["Tools"],"about":"","items":[{"id":201,"url":"https:\/\/shop.example\/p\/201","title":"Drill","desc":"","image":"","price":10,"old":null,"cur":"EUR","cat":"Tools","got":false}]}
+server LISTAAAA key=KEYA 'Gifts for Mum!' cats=[Kitchen, Garden] about='Size M' occ=null owner=
+  item cat=Kitchen,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  item cat=,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  item cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+server LISTBBBB key=KEYB 'Dad' cats=[Tools] about='' occ=null owner=
+  item bin=T3,cat=Tools,cur=EUR,desc=,got=false,id=301,image=,old=null,price=10.0,title=Saw,url=https://shop.example/p/301
+  item cat=Tools,cur=EUR,desc=,got=false,id=201,image=,old=null,price=10.0,title=Drill,url=https://shop.example/p/201
+server reservations={102=device-1, 104=someone-else} counts={102=2}
+made 'Our wishlist' creator=true
+new key works=true
+## made, link reset, deleted for everyone
+sent wl_sh_create p_code=<R1>,p_key=<R2>,p_name=Our wishlist,p_token=<R3>
+sent wl_sh_put_item p_item={"id":401,"url":"https:\/\/shop.example\/p\/401","title":"Kite","desc":"","image":"","price":10,"old":null,"cur":"EUR","cat":"","got":false,"by":"Ann"},p_key=<R2>
+sent wl_sh_get p_key=<R2>
+sent wl_get_reservations p_code=<R1>,p_device=device-1
+sent wl_sh_reset_key p_code=<R1>,p_new_key=<R4>,p_token=<R3>
+sent wl_delete_list p_code=<R1>,p_token=<R3>
+lists=[SharedList(code=LISTAAAA, key=KEYA, name=Gifts for Mum!, owner=, me=Annie), SharedList(code=LISTBBBB, key=KEYB, name=Dad, owner=tokB, me=)]
+active=null gone=false busy=false notice='' me=Ann creator=false
+content name='Our wishlist' about='' cats=[] occ=null
+  wish by=Ann,cat=,cur=EUR,desc=,got=false,id=401,image=,old=null,price=10.0,title=Kite,url=https://shop.example/p/401
+reserved={102=true, 104=false} ask=102
+pref sh_for_LISTAAAA=Mum Smith
+pref sh_me=Ann
+pref shared=[{"code":"LISTAAAA","key":"KEYA","name":"Gifts for Mum!","owner":"","me":"Annie"},{"code":"LISTBBBB","key":"KEYB","name":"Dad","owner":"tokB","me":""}]
+pref shared_backup=[{"code":"LISTAAAA","key":"KEYA","name":"Mum","owner":"","me":"Ann"}]
+pref shbh_LISTAAAA=["101:T1","103:T2"]
+pref shc_LISTAAAA={"name":"Gifts for Mum!","cats":["Kitchen","Garden"],"about":"Size M","items":[{"id":101,"url":"https:\/\/shop.example\/p\/101","title":"Blue teapot","desc":"","image":"","price":12,"old":null,"cur":"EUR","cat":"Kitchen","got":false,"note":"from Bob"},{"id":102,"url":"https:\/\/shop.example\/p\/102","title":"Red scarf","desc":"","image":"","price":25,"old":null,"cur":"EUR","cat":"","got":false,"qty":2},{"id":104,"url":"https:\/\/shop.example\/p\/104","title":"Book","desc":"","image":"","price":null,"old":null,"cur":"EUR","cat":"","got":false}]}
+pref shc_LISTBBBB={"name":"Dad","cats":["Tools"],"about":"","items":[{"id":201,"url":"https:\/\/shop.example\/p\/201","title":"Drill","desc":"","image":"","price":10,"old":null,"cur":"EUR","cat":"Tools","got":false}]}
+server LISTAAAA key=KEYA 'Gifts for Mum!' cats=[Kitchen, Garden] about='Size M' occ=null owner=
+  item cat=Kitchen,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  item cat=,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  item cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+server LISTBBBB key=KEYB 'Dad' cats=[Tools] about='' occ=null owner=
+  item bin=T3,cat=Tools,cur=EUR,desc=,got=false,id=301,image=,old=null,price=10.0,title=Saw,url=https://shop.example/p/301
+  item cat=Tools,cur=EUR,desc=,got=false,id=201,image=,old=null,price=10.0,title=Drill,url=https://shop.example/p/201
+server reservations={102=device-1, 104=someone-else} counts={102=2}
+refresh=true
+## deleted by someone else: gone
+sent wl_sh_get p_key=KEYA
+lists=[SharedList(code=LISTAAAA, key=KEYA, name=Gifts for Mum!, owner=, me=Annie), SharedList(code=LISTBBBB, key=KEYB, name=Dad, owner=tokB, me=)]
+active=LISTAAAA gone=true busy=false notice='' me=Ann creator=false
+content name='Gifts for Mum!' about='Size M' cats=[Kitchen, Garden] occ=null
+  wish cat=Kitchen,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  wish cat=,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  wish cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+reserved={} ask=102
+pref sh_for_LISTAAAA=Mum Smith
+pref sh_me=Ann
+pref shared=[{"code":"LISTAAAA","key":"KEYA","name":"Gifts for Mum!","owner":"","me":"Annie"},{"code":"LISTBBBB","key":"KEYB","name":"Dad","owner":"tokB","me":""}]
+pref shared_backup=[{"code":"LISTAAAA","key":"KEYA","name":"Mum","owner":"","me":"Ann"}]
+pref shbh_LISTAAAA=["101:T1","103:T2"]
+pref shc_LISTAAAA={"name":"Gifts for Mum!","cats":["Kitchen","Garden"],"about":"Size M","items":[{"id":101,"url":"https:\/\/shop.example\/p\/101","title":"Blue teapot","desc":"","image":"","price":12,"old":null,"cur":"EUR","cat":"Kitchen","got":false,"note":"from Bob"},{"id":102,"url":"https:\/\/shop.example\/p\/102","title":"Red scarf","desc":"","image":"","price":25,"old":null,"cur":"EUR","cat":"","got":false,"qty":2},{"id":104,"url":"https:\/\/shop.example\/p\/104","title":"Book","desc":"","image":"","price":null,"old":null,"cur":"EUR","cat":"","got":false}]}
+pref shc_LISTBBBB={"name":"Dad","cats":["Tools"],"about":"","items":[{"id":201,"url":"https:\/\/shop.example\/p\/201","title":"Drill","desc":"","image":"","price":10,"old":null,"cur":"EUR","cat":"Tools","got":false}]}
+server LISTBBBB key=KEYB 'Dad' cats=[Tools] about='' occ=null owner=
+  item bin=T3,cat=Tools,cur=EUR,desc=,got=false,id=301,image=,old=null,price=10.0,title=Saw,url=https://shop.example/p/301
+  item cat=Tools,cur=EUR,desc=,got=false,id=201,image=,old=null,price=10.0,title=Drill,url=https://shop.example/p/201
+server reservations={102=device-1, 104=someone-else} counts={102=2}
+## left
+lists=[SharedList(code=LISTBBBB, key=KEYB, name=Dad, owner=tokB, me=)]
+active=null gone=false busy=false notice='' me=Ann creator=false
+content name='Gifts for Mum!' about='Size M' cats=[Kitchen, Garden] occ=null
+  wish cat=Kitchen,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  wish cat=,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  wish cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+reserved={} ask=102
+pref sh_for_LISTAAAA=Mum Smith
+pref sh_me=Ann
+pref shared=[{"code":"LISTBBBB","key":"KEYB","name":"Dad","owner":"tokB","me":""}]
+pref shared_backup=[{"code":"LISTAAAA","key":"KEYA","name":"Mum","owner":"","me":"Ann"}]
+pref shc_LISTBBBB={"name":"Dad","cats":["Tools"],"about":"","items":[{"id":201,"url":"https:\/\/shop.example\/p\/201","title":"Drill","desc":"","image":"","price":10,"old":null,"cur":"EUR","cat":"Tools","got":false}]}
+server LISTBBBB key=KEYB 'Dad' cats=[Tools] about='' occ=null owner=
+  item bin=T3,cat=Tools,cur=EUR,desc=,got=false,id=301,image=,old=null,price=10.0,title=Saw,url=https://shop.example/p/301
+  item cat=Tools,cur=EUR,desc=,got=false,id=201,image=,old=null,price=10.0,title=Drill,url=https://shop.example/p/201
+server reservations={102=device-1, 104=someone-else} counts={102=2}
+## started again
+lists=[SharedList(code=LISTBBBB, key=KEYB, name=Dad, owner=tokB, me=)]
+active=null gone=false busy=false notice='' me=Ann creator=false
+content name='Gifts for Mum!' about='Size M' cats=[Kitchen, Garden] occ=null
+  wish cat=Kitchen,cur=EUR,desc=,got=false,id=101,image=,note=from Bob,old=null,price=12.0,title=Blue teapot,url=https://shop.example/p/101
+  wish cat=,cur=EUR,desc=,got=false,id=102,image=,old=null,price=25.0,qty=2,title=Red scarf,url=https://shop.example/p/102
+  wish cat=,cur=EUR,desc=,got=false,id=104,image=,old=null,price=null,title=Book,url=https://shop.example/p/104
+reserved={} ask=102
+pref sh_for_LISTAAAA=Mum Smith
+pref sh_me=Ann
+pref shared=[{"code":"LISTBBBB","key":"KEYB","name":"Dad","owner":"tokB","me":""}]
+pref shared_backup=[{"code":"LISTBBBB","key":"KEYB","name":"Dad","owner":"tokB","me":""}]
+pref shc_LISTBBBB={"name":"Dad","cats":["Tools"],"about":"","items":[{"id":201,"url":"https:\/\/shop.example\/p\/201","title":"Drill","desc":"","image":"","price":10,"old":null,"cur":"EUR","cat":"Tools","got":false}]}
+server LISTBBBB key=KEYB 'Dad' cats=[Tools] about='' occ=null owner=
+  item bin=T3,cat=Tools,cur=EUR,desc=,got=false,id=301,image=,old=null,price=10.0,title=Saw,url=https://shop.example/p/301
+  item cat=Tools,cur=EUR,desc=,got=false,id=201,image=,old=null,price=10.0,title=Drill,url=https://shop.example/p/201
+server reservations={102=device-1, 104=someone-else} counts={102=2}
