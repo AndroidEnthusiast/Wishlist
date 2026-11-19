@@ -111,6 +111,7 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `AppInfo.kt` (the "new version is ready" bar on Home and the "Please update" screen; reads `app.json` from the site, which the `pages` job writes: `min` in `web/app.json` is the oldest versionCode that still works, raise it only when an old app would really break)
 - `Crash.kt` + `WishlistApp.kt` (crash reports, Firebase Crashlytics, started first)
 - `Calls.kt` (server calls counted per day, App settings > About)
+- The photo editor (rebuilt in 2.240 from one `HeroEditor.kt`): `HeroEdit.kt` (what an edit is, `renderCover`, `renderWishPhoto`), `HeroPicture.kt` (a cover in its frame), `HeroEditor.kt` + state holder `HeroEditorState.kt`, `HeroEditorParts.kt` (text, colours, tool buttons); checks `HeroEditorStateTest`, screenshots `HeroEditorScreenshotTest`
 - `PeoplePhotos.kt` (profile, group and exchange photos as files in the Storage bucket `people-photos`, ROADMAP S4.1: a new random address per photo, the server hands out the address or an older embedded photo)
 - `RecoveryKey.kt` (the recovery key: Profile, the welcome's step 4 and a Home card; the locked copy of the Export plus chat keys in `wl_vaults`, `supabase-vault.sql`; the key never goes online)
 - `Opened.kt` ("the app was opened", once a day, for the clean-up of `supabase-cleanup.sql`; lists removed online after a year come back by themselves)

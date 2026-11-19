@@ -202,4 +202,8 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
   shared data changed outside a state holder), the recipe in the notes (CLAUDE.md, MAP "How a screen is built"), and a
   check-up issue every three months. All in `ArchitectureTest` and `.github/workflows/checkup.yml`. Honest scope told to
   the owner: the guards enforce structure, not good taste.
-
+- **Data.kt waits for its own plan** (owner, 19 November 2026): it is not a screen but the app's memory (saving your
+  lists, wishes and settings), so splitting it changes how saving works and a mistake could lose data, which
+  screenshots can't catch. Asked with options (later with its own plan / only the parts that save nothing / all now);
+  the owner chose **later, with its own plan** and extra checks that saving and loading give back exactly the same
+  lists. The screens go first (next: the photo editor, then Shops).

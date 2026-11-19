@@ -665,3 +665,9 @@ Owner asked that decisions and notes stay in order: every renamed file updated i
 `ListScreen.kt` split into ListScreen (layout), ListModel (state + Reserve/Love/view/sort; `shownWishes`,
 `keptOrder` tested), ListWishItem, ListDrag, ListViewButtons; 28 screenshots identical; 27 files left on ALLOWED.
 
+
+### 19 November 2026, evening: gift exchange (2.237)
+New `ExchangeScreenshotTest` (pretend exchanges) for the comparison; `ExchangeUi.kt` split into 8 files +
+`ExchangeModel`/`ExchangeScreenState`; 16 screenshots identical. The size guard caught a test hook growing
+`Exchange.kt`: replaced by `internal set`; the guard now also forbids `Store.x = ` in screens. 26 left.
+

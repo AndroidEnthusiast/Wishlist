@@ -25,7 +25,6 @@ class ArchitectureTest {
         /** Over the limit on 19 November 2026, with their size then. Only shrinks. */
         val ALLOWED: Map<String, Int> = mapOf(
         "Data.kt" to 1110,
-        "HeroEditor.kt" to 890,
         "Shops.kt" to 869,
         "Styled.kt" to 849,
         "Themed.kt" to 826,
@@ -63,7 +62,9 @@ class ArchitectureTest {
             // Wishlist groups (19 November 2026): their state holder is GroupModel.kt.
             "GroupsParts.kt", "GroupListPick.kt", "GroupNew.kt", "GroupJoin.kt", "GroupScreen.kt", "GroupMembers.kt", "GroupSettings.kt",
             // Messages (19 November 2026): one chat's state holder is ChatModel.kt.
-            "MessagesList.kt", "ChatScreen.kt", "ChatBubbles.kt", "ChatParts.kt"
+            "MessagesList.kt", "ChatScreen.kt", "ChatBubbles.kt", "ChatParts.kt",
+            // The photo editor (19 November 2026): its state holder is HeroEditorState.kt.
+            "HeroEditor.kt", "HeroEditorParts.kt", "HeroPicture.kt"
         )
 
         /** A store's data set straight away ("Exchanges.list = …"; only the checks' pretend data may). */
