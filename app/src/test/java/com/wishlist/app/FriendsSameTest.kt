@@ -36,6 +36,8 @@ class FriendsSameTest {
     private val out = StringBuilder()
     private val calls = mutableListOf<String>()
     private val start = System.currentTimeMillis()
+    /** Sam's birthday, 10 days from today (so the birthday reminder comes); written as <in 10 days> in the record. */
+    private val bday = java.time.LocalDate.now().plusDays(10).let { "%02d-%02d".format(it.monthValue, it.dayOfMonth) }
     private var offline = false
     private var server = JSONObject()
 
@@ -66,6 +68,7 @@ class FriendsSameTest {
         prefs.getString("pf_token", null)?.let { t = t.replace(it, "<TOKEN>") }
         t = t.replace(c.filesDir.absolutePath, "<FILES>").replace(c.cacheDir.absolutePath, "<CACHE>")
         t = Regex("(bd(?:14|7)_[A-Za-z0-9]+_)\\d{4}").replace(t, "$1<YEAR>")
+        t = t.replace("birthday=$bday", "birthday=<in 10 days>").replace("\"birthday\":\"$bday\"", "\"birthday\":\"<in 10 days>\"")
         val names = LinkedHashMap<String, String>()
         return Regex("(?<![0-9])1[0-9]{12}(?![0-9])").replace(t) { m ->
             if (m.value.toLong() < start) m.value else names.getOrPut(m.value) { "T${names.size + 1}" }
@@ -100,8 +103,6 @@ class FriendsSameTest {
         File(c.filesDir, "friends").deleteRecursively()
         shadowOf(c).grantPermissions(android.Manifest.permission.POST_NOTIFICATIONS)
         Cloud.pretendServer = ::answer
-        val soon = java.time.LocalDate.now().plusDays(10)
-        val bday = "%02d-%02d".format(soon.monthValue, soon.dayOfMonth)
         val samLists = JSONArray().put(JSONObject().put("code", "SAMLIST1").put("name", "Sam's list").put("count", 3))
         // A phone from an older version: a saved Friends tab, sizes that were removed, a list visible to friends.
         prefs.edit().putString("device", "device-1")

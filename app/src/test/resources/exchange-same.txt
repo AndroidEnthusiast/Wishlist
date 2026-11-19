@@ -1,0 +1,419 @@
+## an exchange saved by an older version, read at a start
+exchange Exchange(id=X1, link=LINKX1, name=Santa X1, organiser=me1, organiserName=Ann, budget=20.0, currency=EUR, day=null, theme=xmas, message=Be kind, pv=0, drawn=false, revealed=false, members=[GxMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, seen=false, waiting=false, gaveTo=null), GxMember(id=m2, name=Kim, pv=0, web=false, code=, friend=false, seen=false, waiting=false, gaveTo=null), GxMember(id=m3, name=Sam, pv=0, web=false, code=, friend=false, seen=false, waiting=false, gaveTo=null)], invited=[(f9, Lee)], excl=[(m2, m3)], blocked=null, me=GxMe(list=GroupList(code=MINECODE, name=Mine, count=1, image=), seen=false, waiting=false, hasSanta=false, giftee=null, unreadGiftee=0, unreadSanta=0))
+photos={OLD=file://<FILES>/exchanges/OLD_1.jpg} unread=false
+pref gx_state={"exchanges":[{"id":"X1","link":"LINKX1","name":"Santa X1","organiser":"me1","organiser_name":"Ann","budget":20,"currency":"EUR","day":null,"theme":"xmas","message":"Be kind","pv":0,"drawn":false,"revealed":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"seen":false,"waiting":false,"gave_to":null},{"id":"m2","name":"Kim","pv":0,"web":false,"code":"","friend":false,"seen":false,"waiting":false,"gave_to":null},{"id":"m3","name":"Sam","pv":0,"web":false,"code":"","friend":false,"seen":false,"waiting":false,"gave_to":null}],"invited":[{"id":"f9","name":"Lee"}],"excl":[["m2","m3"]],"me":{"list":{"code":"MINECODE","name":"Mine","count":1,"image":""},"seen":false,"waiting":false,"has_santa":false,"giftee":null,"unread_giftee":0,"unread_santa":0}}],"invites":[]}
+photo files=[OLD_1.jpg]
+list main 'My wishlist' code=MINECODE token=minetok friends=false
+## refresh on screen: an invite and a No thanks
+sent wl_gx_news_seen p_id=me1,p_token=tok1,p_upto=1
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+exchange Exchange(id=X1, link=LINKX1, name=Santa X1, organiser=me1, organiserName=Ann, budget=20.0, currency=EUR, day=<today+5>, theme=xmas, message=Be kind, pv=1, drawn=false, revealed=false, members=[GxMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, seen=false, waiting=false, gaveTo=null), GxMember(id=m2, name=Kim, pv=0, web=false, code=, friend=false, seen=false, waiting=false, gaveTo=null), GxMember(id=m3, name=Sam, pv=0, web=false, code=, friend=false, seen=false, waiting=false, gaveTo=null)], invited=[(f9, Lee)], excl=[(m2, m3)], blocked=null, me=GxMe(list=GroupList(code=MINECODE, name=Mine, count=1, image=), seen=false, waiting=false, hasSanta=false, giftee=null, unreadGiftee=0, unreadSanta=0))
+invite GxInvite(gx=X7, name=Office X7, link=LINKX7, by=id-bob, byName=Bob, theme=office, budget=10.0, currency=EUR, day=<today+30>, count=4)
+photos={X1=file://<FILES>/exchanges/X1_1.jpg} unread=true
+pref gx_inv_told=[X7]
+pref gx_state={"exchanges":[{"id":"X1","link":"LINKX1","name":"Santa X1","organiser":"me1","organiser_name":"Ann","budget":20,"currency":"EUR","day":"<today+5>","theme":"xmas","message":"Be kind","pv":1,"drawn":false,"revealed":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"seen":false,"waiting":false,"gave_to":null},{"id":"m2","name":"Kim","pv":0,"web":false,"code":"","friend":false,"seen":false,"waiting":false,"gave_to":null},{"id":"m3","name":"Sam","pv":0,"web":false,"code":"","friend":false,"seen":false,"waiting":false,"gave_to":null}],"invited":[{"id":"f9","name":"Lee"}],"excl":[["m2","m3"]],"me":{"list":{"code":"MINECODE","name":"Mine","count":1,"image":""},"seen":false,"waiting":false,"has_santa":false,"giftee":null,"unread_giftee":0,"unread_santa":0}}],"invites":[{"gx":"X7","name":"Office X7","link":"LINKX7","by":"id-bob","by_name":"Bob","theme":"office","budget":10,"currency":"EUR","day":"<today+30>","count":4}],"news":[{"id":1,"gx":"X1","name":"Santa X1","kind":"declined","who":"Lee"}]}
+note gx_declined e:X1 'Lee said no thanks' extra='To “Santa X1”.' read=true
+note gx_invite e:X7 'Office X7' extra='Bob' read=true
+photo files=[X1_1.jpg]
+list main 'My wishlist' code=MINECODE token=minetok friends=false
+## background check: drawn, every kind of news, a message, a week to go
+sent wl_gx_news_seen p_id=me1,p_token=tok1,p_upto=10
+sent wl_gx_state p_id=me1,p_token=tok1
+exchange Exchange(id=X1, link=LINKX1, name=Santa X1, organiser=me1, organiserName=Ann, budget=20.0, currency=EUR, day=<today+5>, theme=xmas, message=Be kind, pv=1, drawn=true, revealed=false, members=[GxMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, seen=true, waiting=false, gaveTo=null), GxMember(id=m2, name=Kim, pv=0, web=false, code=, friend=false, seen=false, waiting=false, gaveTo=null), GxMember(id=m3, name=Sam, pv=0, web=false, code=, friend=false, seen=true, waiting=false, gaveTo=null)], invited=[(f9, Lee)], excl=[(m2, m3)], blocked=null, me=GxMe(list=GroupList(code=MINECODE, name=Mine, count=1, image=), seen=true, waiting=false, hasSanta=true, giftee=GxGiftee(id=m2, name=Kim, pv=0, web=false, list=null), unreadGiftee=0, unreadSanta=1))
+invite GxInvite(gx=X7, name=Office X7, link=LINKX7, by=id-bob, byName=Bob, theme=office, budget=10.0, currency=EUR, day=<today+30>, count=4)
+invite GxInvite(gx=X8, name=Office X8, link=LINKX8, by=id-bob, byName=Bob, theme=office, budget=10.0, currency=EUR, day=<today+30>, count=4)
+photos={X1=file://<FILES>/exchanges/X1_1.jpg} unread=true
+pref gx_inv_told=[X7, X8]
+pref gx_state={"exchanges":[{"id":"X1","link":"LINKX1","name":"Santa X1","organiser":"me1","organiser_name":"Ann","budget":20,"currency":"EUR","day":"<today+5>","theme":"xmas","message":"Be kind","pv":1,"drawn":true,"revealed":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"seen":true,"waiting":false,"gave_to":null},{"id":"m2","name":"Kim","pv":0,"web":false,"code":"","friend":false,"seen":false,"waiting":false,"gave_to":null},{"id":"m3","name":"Sam","pv":0,"web":false,"code":"","friend":false,"seen":true,"waiting":false,"gave_to":null}],"invited":[{"id":"f9","name":"Lee"}],"excl":[["m2","m3"]],"me":{"list":{"code":"MINECODE","name":"Mine","count":1,"image":""},"seen":true,"waiting":false,"has_santa":true,"giftee":{"id":"m2","name":"Kim","pv":0,"web":false},"unread_giftee":0,"unread_santa":1}}],"invites":[{"gx":"X7","name":"Office X7","link":"LINKX7","by":"id-bob","by_name":"Bob","theme":"office","budget":10,"currency":"EUR","day":"<today+30>","count":4},{"gx":"X8","name":"Office X8","link":"LINKX8","by":"id-bob","by_name":"Bob","theme":"office","budget":10,"currency":"EUR","day":"<today+30>","count":4}],"news":[{"id":2,"gx":"X1","name":"Santa X1","kind":"drawn","who":"Jo"},{"id":3,"gx":"X1","name":"Santa X1","kind":"settings","who":"Jo"},{"id":4,"gx":"X1","name":"Santa X1","kind":"removed","who":"Jo"},{"id":5,"gx":"X1","name":"Santa X1","kind":"cancelled","who":"Jo"},{"id":6,"gx":"X1","name":"Santa X1","kind":"organiser","who":"Jo"},{"id":7,"gx":"X1","name":"Santa X1","kind":"waiting","who":"Jo"},{"id":8,"gx":"X1","name":"Santa X1","kind":"rules","who":"Jo"},{"id":9,"gx":"X1","name":"Santa X1","kind":"changed","who":"Jo"},{"id":10,"gx":"X1","name":"Santa X1","kind":"unknown","who":"Jo"}]}
+pref gx_week_X1_<today+5>=true
+note gx_changed e:X1 'Your name changed in “Santa X1”' extra='Someone left or joined. Open your new name.' read=false
+note gx_rules e:X1 'A rule couldn’t be kept in “Santa X1”' extra='Someone left, so one rule had to give way. Nobody has themselves.' read=false
+note gx_waiting e:X1 'Jo joined “Santa X1”' extra='Everyone has seen their name. Add them to the draw?' read=false
+note gx_organiser e:X1 'You organise “Santa X1” now' extra='You can draw names, set rules and invite people.' read=false
+note gx_cancelled e: '“Santa X1” was cancelled' extra='The organiser cancelled this gift exchange.' read=false
+note gx_removed e: 'You are removed from “Santa X1”' extra='The organiser removed you from this gift exchange.' read=false
+note gx_settings e:X1 '“Santa X1” changed' extra='The budget or the date changed. Take a look.' read=false
+note gx_drawn e:X1 'Names are drawn in “Santa X1”' extra='Open yours to see who you’re buying for.' read=false
+note gx_invite e:X8 'Office X8' extra='Bob' read=false
+note gx_declined e:X1 'Lee said no thanks' extra='To “Santa X1”.' read=true
+note gx_invite e:X7 'Office X7' extra='Bob' read=true
+buzz '2 updates in your gift exchange' '“Santa X1” was cancelled'
+buzz 'Your Secret Santa wrote' 'In “Santa X1”. Open to read and answer.'
+buzz 'Wishlist' '4 updates'
+buzz 'Bob invited you to “Office X8”' 'A gift exchange. Pick a wishlist and join.'
+buzz '7 updates in your gift exchange' '5 days to “Santa X1” 🎄'
+photo files=[X1_1.jpg]
+list main 'My wishlist' code=MINECODE token=minetok friends=false
+## background check again: nothing told twice
+sent wl_gx_state p_id=me1,p_token=tok1
+exchange Exchange(id=X1, link=LINKX1, name=Santa X1, organiser=me1, organiserName=Ann, budget=20.0, currency=EUR, day=<today+5>, theme=xmas, message=Be kind, pv=1, drawn=true, revealed=false, members=[GxMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, seen=true, waiting=false, gaveTo=null), GxMember(id=m2, name=Kim, pv=0, web=false, code=, friend=false, seen=false, waiting=false, gaveTo=null), GxMember(id=m3, name=Sam, pv=0, web=false, code=, friend=false, seen=true, waiting=false, gaveTo=null)], invited=[(f9, Lee)], excl=[(m2, m3)], blocked=null, me=GxMe(list=GroupList(code=MINECODE, name=Mine, count=1, image=), seen=true, waiting=false, hasSanta=true, giftee=GxGiftee(id=m2, name=Kim, pv=0, web=false, list=null), unreadGiftee=0, unreadSanta=1))
+invite GxInvite(gx=X7, name=Office X7, link=LINKX7, by=id-bob, byName=Bob, theme=office, budget=10.0, currency=EUR, day=<today+30>, count=4)
+invite GxInvite(gx=X8, name=Office X8, link=LINKX8, by=id-bob, byName=Bob, theme=office, budget=10.0, currency=EUR, day=<today+30>, count=4)
+photos={X1=file://<FILES>/exchanges/X1_1.jpg} unread=true
+pref gx_inv_told=[X7, X8]
+pref gx_state={"exchanges":[{"id":"X1","link":"LINKX1","name":"Santa X1","organiser":"me1","organiser_name":"Ann","budget":20,"currency":"EUR","day":"<today+5>","theme":"xmas","message":"Be kind","pv":1,"drawn":true,"revealed":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"seen":true,"waiting":false,"gave_to":null},{"id":"m2","name":"Kim","pv":0,"web":false,"code":"","friend":false,"seen":false,"waiting":false,"gave_to":null},{"id":"m3","name":"Sam","pv":0,"web":false,"code":"","friend":false,"seen":true,"waiting":false,"gave_to":null}],"invited":[{"id":"f9","name":"Lee"}],"excl":[["m2","m3"]],"me":{"list":{"code":"MINECODE","name":"Mine","count":1,"image":""},"seen":true,"waiting":false,"has_santa":true,"giftee":{"id":"m2","name":"Kim","pv":0,"web":false},"unread_giftee":0,"unread_santa":1}}],"invites":[{"gx":"X7","name":"Office X7","link":"LINKX7","by":"id-bob","by_name":"Bob","theme":"office","budget":10,"currency":"EUR","day":"<today+30>","count":4},{"gx":"X8","name":"Office X8","link":"LINKX8","by":"id-bob","by_name":"Bob","theme":"office","budget":10,"currency":"EUR","day":"<today+30>","count":4}],"news":[]}
+pref gx_week_X1_<today+5>=true
+note gx_changed e:X1 'Your name changed in “Santa X1”' extra='Someone left or joined. Open your new name.' read=false
+note gx_rules e:X1 'A rule couldn’t be kept in “Santa X1”' extra='Someone left, so one rule had to give way. Nobody has themselves.' read=false
+note gx_waiting e:X1 'Jo joined “Santa X1”' extra='Everyone has seen their name. Add them to the draw?' read=false
+note gx_organiser e:X1 'You organise “Santa X1” now' extra='You can draw names, set rules and invite people.' read=false
+note gx_cancelled e: '“Santa X1” was cancelled' extra='The organiser cancelled this gift exchange.' read=false
+note gx_removed e: 'You are removed from “Santa X1”' extra='The organiser removed you from this gift exchange.' read=false
+note gx_settings e:X1 '“Santa X1” changed' extra='The budget or the date changed. Take a look.' read=false
+note gx_drawn e:X1 'Names are drawn in “Santa X1”' extra='Open yours to see who you’re buying for.' read=false
+note gx_invite e:X8 'Office X8' extra='Bob' read=false
+note gx_declined e:X1 'Lee said no thanks' extra='To “Santa X1”.' read=true
+note gx_invite e:X7 'Office X7' extra='Bob' read=true
+buzz '2 updates in your gift exchange' '“Santa X1” was cancelled'
+buzz 'Your Secret Santa wrote' 'In “Santa X1”. Open to read and answer.'
+buzz 'Wishlist' '4 updates'
+buzz 'Bob invited you to “Office X8”' 'A gift exchange. Pick a wishlist and join.'
+buzz '7 updates in your gift exchange' '5 days to “Santa X1” 🎄'
+photo files=[X1_1.jpg]
+list main 'My wishlist' code=MINECODE token=minetok friends=false
+## the day itself, and a giftee's answer, after a restart: once each
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_gx_state p_id=me1,p_token=tok1
+exchange Exchange(id=X1, link=LINKX1, name=Santa X1, organiser=me1, organiserName=Ann, budget=20.0, currency=EUR, day=<today+0>, theme=xmas, message=Be kind, pv=1, drawn=true, revealed=false, members=[GxMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, seen=true, waiting=false, gaveTo=null), GxMember(id=m2, name=Kim, pv=0, web=false, code=, friend=false, seen=false, waiting=false, gaveTo=null), GxMember(id=m3, name=Sam, pv=0, web=false, code=, friend=false, seen=true, waiting=false, gaveTo=null)], invited=[(f9, Lee)], excl=[(m2, m3)], blocked=null, me=GxMe(list=GroupList(code=MINECODE, name=Mine, count=1, image=), seen=true, waiting=false, hasSanta=true, giftee=GxGiftee(id=m2, name=Kim, pv=0, web=false, list=null), unreadGiftee=2, unreadSanta=1))
+photos={X1=file://<FILES>/exchanges/X1_1.jpg} unread=true
+pref gx_day_X1_<today+0>=true
+pref gx_inv_told=[]
+pref gx_state={"exchanges":[{"id":"X1","link":"LINKX1","name":"Santa X1","organiser":"me1","organiser_name":"Ann","budget":20,"currency":"EUR","day":"<today+0>","theme":"xmas","message":"Be kind","pv":1,"drawn":true,"revealed":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"seen":true,"waiting":false,"gave_to":null},{"id":"m2","name":"Kim","pv":0,"web":false,"code":"","friend":false,"seen":false,"waiting":false,"gave_to":null},{"id":"m3","name":"Sam","pv":0,"web":false,"code":"","friend":false,"seen":true,"waiting":false,"gave_to":null}],"invited":[{"id":"f9","name":"Lee"}],"excl":[["m2","m3"]],"me":{"list":{"code":"MINECODE","name":"Mine","count":1,"image":""},"seen":true,"waiting":false,"has_santa":true,"giftee":{"id":"m2","name":"Kim","pv":0,"web":false},"unread_giftee":2,"unread_santa":1}}],"invites":[],"news":[]}
+pref gx_week_X1_<today+5>=true
+note gx_changed e:X1 'Your name changed in “Santa X1”' extra='Someone left or joined. Open your new name.' read=false
+note gx_rules e:X1 'A rule couldn’t be kept in “Santa X1”' extra='Someone left, so one rule had to give way. Nobody has themselves.' read=false
+note gx_waiting e:X1 'Jo joined “Santa X1”' extra='Everyone has seen their name. Add them to the draw?' read=false
+note gx_organiser e:X1 'You organise “Santa X1” now' extra='You can draw names, set rules and invite people.' read=false
+note gx_cancelled e: '“Santa X1” was cancelled' extra='The organiser cancelled this gift exchange.' read=false
+note gx_removed e: 'You are removed from “Santa X1”' extra='The organiser removed you from this gift exchange.' read=false
+note gx_settings e:X1 '“Santa X1” changed' extra='The budget or the date changed. Take a look.' read=false
+note gx_drawn e:X1 'Names are drawn in “Santa X1”' extra='Open yours to see who you’re buying for.' read=false
+note gx_invite e:X8 'Office X8' extra='Bob' read=false
+note gx_declined e:X1 'Lee said no thanks' extra='To “Santa X1”.' read=true
+note gx_invite e:X7 'Office X7' extra='Bob' read=true
+buzz '2 updates in your gift exchange' '“Santa X1” was cancelled'
+buzz '2 new anonymous messages' 'In “Santa X1”. Open to read.'
+buzz 'Wishlist' '4 updates'
+buzz 'Bob invited you to “Office X8”' 'A gift exchange. Pick a wishlist and join.'
+buzz '8 updates in your gift exchange' 'Today is the exchange! 🎄'
+photo files=[X1_1.jpg]
+list main 'My wishlist' code=MINECODE token=minetok friends=false
+made 20 long
+preview=GxPreview(id=X1, name=Santa X1, organiser=Ann, count=3, theme=sint, budget=15.0, currency=EUR, day=<today+9>, drawn=false) dead=null
+join=X2 dead=null
+offline join=offline draw=offline refresh=offline
+## made with an Only me list, preview, join (dead, offline)
+sent wl_create_list p_code=<R1>,p_name=Secret,p_token=<R2>
+sent wl_gx_create p_budget=15.0,p_currency=EUR,p_day=<today+20>,p_gx=<R3>,p_id=me1,p_link=<R4>,p_list=<R1>,p_list_token=<R2>,p_message=hi,p_name=Office,p_theme=office,p_token=tok1
+sent wl_gx_draw p_gx=X1,p_id=me1,p_token=tok1,p_without=false
+sent wl_gx_info p_link=LINKX1
+sent wl_gx_info p_link=NOPE
+sent wl_gx_join p_gx=,p_id=me1,p_link=DEAD,p_list=MINECODE,p_list_token=minetok,p_token=tok1
+sent wl_gx_join p_gx=,p_id=me1,p_link=LINKX2,p_list=MINECODE,p_list_token=minetok,p_token=tok1
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_set_link p_code=<R1>,p_on=false,p_token=<R2>
+sent wl_set_owner p_code=<R1>,p_name=Ann,p_token=<R2>
+sent wl_sync_list p_cats=["Tech","Home","Fashion","Books"],p_code=<R1>,p_items=[],p_name=Secret,p_token=<R2>
+exchange Exchange(id=X1, link=LINKX1, name=Santa X1, organiser=me1, organiserName=Ann, budget=20.0, currency=EUR, day=<today+0>, theme=xmas, message=Be kind, pv=1, drawn=true, revealed=false, members=[GxMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, seen=true, waiting=false, gaveTo=null), GxMember(id=m2, name=Kim, pv=0, web=false, code=, friend=false, seen=false, waiting=false, gaveTo=null), GxMember(id=m3, name=Sam, pv=0, web=false, code=, friend=false, seen=true, waiting=false, gaveTo=null)], invited=[(f9, Lee)], excl=[(m2, m3)], blocked=null, me=GxMe(list=GroupList(code=MINECODE, name=Mine, count=1, image=), seen=true, waiting=false, hasSanta=true, giftee=GxGiftee(id=m2, name=Kim, pv=0, web=false, list=null), unreadGiftee=2, unreadSanta=1))
+photos={X1=file://<FILES>/exchanges/X1_1.jpg} unread=true
+pref gx_day_X1_<today+0>=true
+pref gx_inv_told=[]
+pref gx_state={"exchanges":[{"id":"X1","link":"LINKX1","name":"Santa X1","organiser":"me1","organiser_name":"Ann","budget":20,"currency":"EUR","day":"<today+0>","theme":"xmas","message":"Be kind","pv":1,"drawn":true,"revealed":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"seen":true,"waiting":false,"gave_to":null},{"id":"m2","name":"Kim","pv":0,"web":false,"code":"","friend":false,"seen":false,"waiting":false,"gave_to":null},{"id":"m3","name":"Sam","pv":0,"web":false,"code":"","friend":false,"seen":true,"waiting":false,"gave_to":null}],"invited":[{"id":"f9","name":"Lee"}],"excl":[["m2","m3"]],"me":{"list":{"code":"MINECODE","name":"Mine","count":1,"image":""},"seen":true,"waiting":false,"has_santa":true,"giftee":{"id":"m2","name":"Kim","pv":0,"web":false},"unread_giftee":2,"unread_santa":1}}],"invites":[],"news":[]}
+pref gx_week_X1_<today+5>=true
+pref link_off=[T1]
+note gx_changed e:X1 'Your name changed in “Santa X1”' extra='Someone left or joined. Open your new name.' read=false
+note gx_rules e:X1 'A rule couldn’t be kept in “Santa X1”' extra='Someone left, so one rule had to give way. Nobody has themselves.' read=false
+note gx_waiting e:X1 'Jo joined “Santa X1”' extra='Everyone has seen their name. Add them to the draw?' read=false
+note gx_organiser e:X1 'You organise “Santa X1” now' extra='You can draw names, set rules and invite people.' read=false
+note gx_cancelled e: '“Santa X1” was cancelled' extra='The organiser cancelled this gift exchange.' read=false
+note gx_removed e: 'You are removed from “Santa X1”' extra='The organiser removed you from this gift exchange.' read=false
+note gx_settings e:X1 '“Santa X1” changed' extra='The budget or the date changed. Take a look.' read=false
+note gx_drawn e:X1 'Names are drawn in “Santa X1”' extra='Open yours to see who you’re buying for.' read=false
+note gx_invite e:X8 'Office X8' extra='Bob' read=false
+note gx_declined e:X1 'Lee said no thanks' extra='To “Santa X1”.' read=true
+note gx_invite e:X7 'Office X7' extra='Bob' read=true
+buzz '2 updates in your gift exchange' '“Santa X1” was cancelled'
+buzz '2 new anonymous messages' 'In “Santa X1”. Open to read.'
+buzz 'Wishlist' '4 updates'
+buzz 'Bob invited you to “Office X8”' 'A gift exchange. Pick a wishlist and join.'
+buzz '8 updates in your gift exchange' 'Today is the exchange! 🎄'
+photo files=[X1_1.jpg]
+list main 'My wishlist' code=MINECODE token=minetok friends=false
+list T1 'Secret' code=<R1> token=<R2> friends=false
+invite failed=1
+## organiser actions and invites
+sent wl_chat_key p_id=me1,p_other=f1,p_token=tok1
+sent wl_gx_add_late p_gx=X1,p_id=me1,p_member=m4,p_token=tok1
+sent wl_gx_decline p_gx=X7,p_id=me1,p_token=tok1
+sent wl_gx_handover p_gx=X1,p_id=me1,p_next=m2,p_token=tok1
+sent wl_gx_invite p_friend=bad,p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_invite p_friend=f1,p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_remove p_gx=X1,p_id=me1,p_member=m3,p_token=tok1
+sent wl_gx_set_list p_gx=X1,p_id=me1,p_list=<R1>,p_list_token=<R2>,p_token=tok1
+sent wl_gx_settings p_budget=null,p_currency=EUR,p_day=null,p_gx=X1,p_id=me1,p_message=x,p_name=Santa!,p_theme=plain,p_token=tok1
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_gx_uninvite p_friend=f9,p_gx=X1,p_id=me1,p_token=tok1
+sent wl_pf_key p_id=me1,p_key=<CHAT KEY>,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+exchange Exchange(id=X1, link=LINKX1, name=Santa X1, organiser=me1, organiserName=Ann, budget=20.0, currency=EUR, day=<today+0>, theme=xmas, message=Be kind, pv=1, drawn=true, revealed=false, members=[GxMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, seen=true, waiting=false, gaveTo=null), GxMember(id=m2, name=Kim, pv=0, web=false, code=, friend=false, seen=false, waiting=false, gaveTo=null), GxMember(id=m3, name=Sam, pv=0, web=false, code=, friend=false, seen=true, waiting=false, gaveTo=null)], invited=[(f9, Lee)], excl=[(m2, m3)], blocked=null, me=GxMe(list=GroupList(code=MINECODE, name=Mine, count=1, image=), seen=true, waiting=false, hasSanta=true, giftee=GxGiftee(id=m2, name=Kim, pv=0, web=false, list=null), unreadGiftee=2, unreadSanta=1))
+photos={X1=file://<FILES>/exchanges/X1_1.jpg} unread=true
+pref gx_day_X1_<today+0>=true
+pref gx_inv_told=[]
+pref gx_state={"exchanges":[{"id":"X1","link":"LINKX1","name":"Santa X1","organiser":"me1","organiser_name":"Ann","budget":20,"currency":"EUR","day":"<today+0>","theme":"xmas","message":"Be kind","pv":1,"drawn":true,"revealed":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"seen":true,"waiting":false,"gave_to":null},{"id":"m2","name":"Kim","pv":0,"web":false,"code":"","friend":false,"seen":false,"waiting":false,"gave_to":null},{"id":"m3","name":"Sam","pv":0,"web":false,"code":"","friend":false,"seen":true,"waiting":false,"gave_to":null}],"invited":[{"id":"f9","name":"Lee"}],"excl":[["m2","m3"]],"me":{"list":{"code":"MINECODE","name":"Mine","count":1,"image":""},"seen":true,"waiting":false,"has_santa":true,"giftee":{"id":"m2","name":"Kim","pv":0,"web":false},"unread_giftee":2,"unread_santa":1}}],"invites":[],"news":[]}
+pref gx_week_X1_<today+5>=true
+pref link_off=[T1]
+note gx_changed e:X1 'Your name changed in “Santa X1”' extra='Someone left or joined. Open your new name.' read=false
+note gx_rules e:X1 'A rule couldn’t be kept in “Santa X1”' extra='Someone left, so one rule had to give way. Nobody has themselves.' read=false
+note gx_waiting e:X1 'Jo joined “Santa X1”' extra='Everyone has seen their name. Add them to the draw?' read=false
+note gx_organiser e:X1 'You organise “Santa X1” now' extra='You can draw names, set rules and invite people.' read=false
+note gx_cancelled e: '“Santa X1” was cancelled' extra='The organiser cancelled this gift exchange.' read=false
+note gx_removed e: 'You are removed from “Santa X1”' extra='The organiser removed you from this gift exchange.' read=false
+note gx_settings e:X1 '“Santa X1” changed' extra='The budget or the date changed. Take a look.' read=false
+note gx_drawn e:X1 'Names are drawn in “Santa X1”' extra='Open yours to see who you’re buying for.' read=false
+note gx_invite e:X8 'Office X8' extra='Bob' read=false
+note gx_declined e:X1 'Lee said no thanks' extra='To “Santa X1”.' read=true
+note gx_invite e:X7 'Office X7' extra='Bob' read=true
+buzz '2 updates in your gift exchange' '“Santa X1” was cancelled'
+buzz '2 new anonymous messages' 'In “Santa X1”. Open to read.'
+buzz 'Wishlist' '4 updates'
+buzz 'Bob invited you to “Office X8”' 'A gift exchange. Pick a wishlist and join.'
+buzz '8 updates in your gift exchange' 'Today is the exchange! 🎄'
+photo files=[X1_1.jpg]
+list main 'My wishlist' code=MINECODE token=minetok friends=false
+list T1 'Secret' code=<R1> token=<R2> friends=false
+rule ok=null stuck=GxStuck(names=[Kim, Sam], left=1)
+draw=DrawResult(ok=true, few=false, pending=[], stuck=null) few=DrawResult(ok=false, few=true, pending=[], stuck=null) stuck=DrawResult(ok=false, few=false, pending=[Lee], stuck=GxStuck(names=[Kim], left=0))
+open=Kim giftee list=null reveal=true
+chat=[GxMsg(id=7, mine=false, body=Hi!, at=2020-01-02T10:00:00Z, read=false)] sent=true closed=false
+## rules, the draw, your name, reveal, chats, a browser member
+sent wl_gx_chat p_after=0,p_gx=X1,p_id=me1,p_side=santa,p_token=tok1
+sent wl_gx_chat_seen p_gx=X1,p_id=me1,p_side=santa,p_token=tok1,p_upto=7
+sent wl_gx_draw p_gx=FEW,p_id=me1,p_token=tok1,p_without=true
+sent wl_gx_draw p_gx=X1,p_id=me1,p_token=tok1,p_without=false
+sent wl_gx_draw p_gx=X9,p_id=me1,p_token=tok1,p_without=false
+sent wl_gx_excl_add p_both=false,p_giver=m3,p_gx=X1,p_id=me1,p_receiver=m2,p_token=tok1
+sent wl_gx_excl_add p_both=true,p_giver=me1,p_gx=X1,p_id=me1,p_receiver=m2,p_token=tok1
+sent wl_gx_excl_del p_both=true,p_giver=m2,p_gx=X1,p_id=me1,p_receiver=m3,p_token=tok1
+sent wl_gx_list p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_open p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_reveal p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_send p_body=Hey,p_gx=X1,p_id=me1,p_side=giftee,p_token=tok1
+sent wl_gx_send p_body=Thanks,p_gx=X1,p_id=me1,p_side=santa,p_token=tok1
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_gx_takeover p_id=me1,p_token=tok1,p_web=WEB,p_web_token=WT
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+exchange Exchange(id=X1, link=LINKX1, name=Santa X1, organiser=me1, organiserName=Ann, budget=20.0, currency=EUR, day=<today+0>, theme=xmas, message=Be kind, pv=1, drawn=true, revealed=false, members=[GxMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, seen=true, waiting=false, gaveTo=null), GxMember(id=m2, name=Kim, pv=0, web=false, code=, friend=false, seen=false, waiting=false, gaveTo=null), GxMember(id=m3, name=Sam, pv=0, web=false, code=, friend=false, seen=true, waiting=false, gaveTo=null)], invited=[(f9, Lee)], excl=[(m2, m3)], blocked=null, me=GxMe(list=GroupList(code=MINECODE, name=Mine, count=1, image=), seen=true, waiting=false, hasSanta=true, giftee=GxGiftee(id=m2, name=Kim, pv=0, web=false, list=null), unreadGiftee=2, unreadSanta=1))
+photos={X1=file://<FILES>/exchanges/X1_1.jpg} unread=true
+pref gx_day_X1_<today+0>=true
+pref gx_inv_told=[]
+pref gx_state={"exchanges":[{"id":"X1","link":"LINKX1","name":"Santa X1","organiser":"me1","organiser_name":"Ann","budget":20,"currency":"EUR","day":"<today+0>","theme":"xmas","message":"Be kind","pv":1,"drawn":true,"revealed":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"seen":true,"waiting":false,"gave_to":null},{"id":"m2","name":"Kim","pv":0,"web":false,"code":"","friend":false,"seen":false,"waiting":false,"gave_to":null},{"id":"m3","name":"Sam","pv":0,"web":false,"code":"","friend":false,"seen":true,"waiting":false,"gave_to":null}],"invited":[{"id":"f9","name":"Lee"}],"excl":[["m2","m3"]],"me":{"list":{"code":"MINECODE","name":"Mine","count":1,"image":""},"seen":true,"waiting":false,"has_santa":true,"giftee":{"id":"m2","name":"Kim","pv":0,"web":false},"unread_giftee":2,"unread_santa":1}}],"invites":[],"news":[]}
+pref gx_week_X1_<today+5>=true
+pref link_off=[T1]
+note gx_changed e:X1 'Your name changed in “Santa X1”' extra='Someone left or joined. Open your new name.' read=false
+note gx_rules e:X1 'A rule couldn’t be kept in “Santa X1”' extra='Someone left, so one rule had to give way. Nobody has themselves.' read=false
+note gx_waiting e:X1 'Jo joined “Santa X1”' extra='Everyone has seen their name. Add them to the draw?' read=false
+note gx_organiser e:X1 'You organise “Santa X1” now' extra='You can draw names, set rules and invite people.' read=false
+note gx_cancelled e: '“Santa X1” was cancelled' extra='The organiser cancelled this gift exchange.' read=false
+note gx_removed e: 'You are removed from “Santa X1”' extra='The organiser removed you from this gift exchange.' read=false
+note gx_settings e:X1 '“Santa X1” changed' extra='The budget or the date changed. Take a look.' read=false
+note gx_drawn e:X1 'Names are drawn in “Santa X1”' extra='Open yours to see who you’re buying for.' read=false
+note gx_invite e:X8 'Office X8' extra='Bob' read=false
+note gx_declined e:X1 'Lee said no thanks' extra='To “Santa X1”.' read=true
+note gx_invite e:X7 'Office X7' extra='Bob' read=true
+buzz '2 updates in your gift exchange' '“Santa X1” was cancelled'
+buzz '2 new anonymous messages' 'In “Santa X1”. Open to read.'
+buzz 'Wishlist' '4 updates'
+buzz 'Bob invited you to “Office X8”' 'A gift exchange. Pick a wishlist and join.'
+buzz '8 updates in your gift exchange' 'Today is the exchange! 🎄'
+photo files=[X1_1.jpg]
+list main 'My wishlist' code=MINECODE token=minetok friends=false
+list T1 'Secret' code=<R1> token=<R2> friends=false
+organiser=true mine=main budget=Budget: €20.00
+countdown -1=null
+countdown 0=Today is the exchange! 🎄
+countdown 1=Tomorrow is the exchange 🎄
+countdown 12=12 days to the exchange 🎄
+countdown none=null
+over=true false false false
+link https://x/exchange/?x=abcdefghjkmnpqrstuvw -> ABCDEFGHJKMNPQRSTUVW
+link wishlist://exchange?X=ABCDEFGHJKMNPQRSTUVW -> ABCDEFGHJKMNPQRSTUVW
+link x=SHORT -> null
+share link https://androidenthusiast.github.io/Wishlist/exchange/?x=ABC themes=[🎄Christmas, 🎁Sinterklaas, 🎈Birthday, ☕Office, ✨Plain]
+## helpers and links
+exchange Exchange(id=X1, link=LINKX1, name=Santa X1, organiser=me1, organiserName=Ann, budget=20.0, currency=EUR, day=<today+0>, theme=xmas, message=Be kind, pv=1, drawn=true, revealed=false, members=[GxMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, seen=true, waiting=false, gaveTo=null), GxMember(id=m2, name=Kim, pv=0, web=false, code=, friend=false, seen=false, waiting=false, gaveTo=null), GxMember(id=m3, name=Sam, pv=0, web=false, code=, friend=false, seen=true, waiting=false, gaveTo=null)], invited=[(f9, Lee)], excl=[(m2, m3)], blocked=null, me=GxMe(list=GroupList(code=MINECODE, name=Mine, count=1, image=), seen=true, waiting=false, hasSanta=true, giftee=GxGiftee(id=m2, name=Kim, pv=0, web=false, list=null), unreadGiftee=2, unreadSanta=1))
+photos={X1=file://<FILES>/exchanges/X1_1.jpg} unread=true
+pref gx_day_X1_<today+0>=true
+pref gx_inv_told=[]
+pref gx_state={"exchanges":[{"id":"X1","link":"LINKX1","name":"Santa X1","organiser":"me1","organiser_name":"Ann","budget":20,"currency":"EUR","day":"<today+0>","theme":"xmas","message":"Be kind","pv":1,"drawn":true,"revealed":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"seen":true,"waiting":false,"gave_to":null},{"id":"m2","name":"Kim","pv":0,"web":false,"code":"","friend":false,"seen":false,"waiting":false,"gave_to":null},{"id":"m3","name":"Sam","pv":0,"web":false,"code":"","friend":false,"seen":true,"waiting":false,"gave_to":null}],"invited":[{"id":"f9","name":"Lee"}],"excl":[["m2","m3"]],"me":{"list":{"code":"MINECODE","name":"Mine","count":1,"image":""},"seen":true,"waiting":false,"has_santa":true,"giftee":{"id":"m2","name":"Kim","pv":0,"web":false},"unread_giftee":2,"unread_santa":1}}],"invites":[],"news":[]}
+pref gx_week_X1_<today+5>=true
+pref link_off=[T1]
+note gx_changed e:X1 'Your name changed in “Santa X1”' extra='Someone left or joined. Open your new name.' read=false
+note gx_rules e:X1 'A rule couldn’t be kept in “Santa X1”' extra='Someone left, so one rule had to give way. Nobody has themselves.' read=false
+note gx_waiting e:X1 'Jo joined “Santa X1”' extra='Everyone has seen their name. Add them to the draw?' read=false
+note gx_organiser e:X1 'You organise “Santa X1” now' extra='You can draw names, set rules and invite people.' read=false
+note gx_cancelled e: '“Santa X1” was cancelled' extra='The organiser cancelled this gift exchange.' read=false
+note gx_removed e: 'You are removed from “Santa X1”' extra='The organiser removed you from this gift exchange.' read=false
+note gx_settings e:X1 '“Santa X1” changed' extra='The budget or the date changed. Take a look.' read=false
+note gx_drawn e:X1 'Names are drawn in “Santa X1”' extra='Open yours to see who you’re buying for.' read=false
+note gx_invite e:X8 'Office X8' extra='Bob' read=false
+note gx_declined e:X1 'Lee said no thanks' extra='To “Santa X1”.' read=true
+note gx_invite e:X7 'Office X7' extra='Bob' read=true
+buzz '2 updates in your gift exchange' '“Santa X1” was cancelled'
+buzz '2 new anonymous messages' 'In “Santa X1”. Open to read.'
+buzz 'Wishlist' '4 updates'
+buzz 'Bob invited you to “Office X8”' 'A gift exchange. Pick a wishlist and join.'
+buzz '8 updates in your gift exchange' 'Today is the exchange! 🎄'
+photo files=[X1_1.jpg]
+list main 'My wishlist' code=MINECODE token=minetok friends=false
+list T1 'Secret' code=<R1> token=<R2> friends=false
+## photo removed
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_photo_url p_gx=X1,p_id=me1,p_token=tok1,p_url=
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+exchange Exchange(id=X1, link=LINKX1, name=Santa X1, organiser=me1, organiserName=Ann, budget=20.0, currency=EUR, day=<today+0>, theme=xmas, message=Be kind, pv=1, drawn=true, revealed=false, members=[GxMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, seen=true, waiting=false, gaveTo=null), GxMember(id=m2, name=Kim, pv=0, web=false, code=, friend=false, seen=false, waiting=false, gaveTo=null), GxMember(id=m3, name=Sam, pv=0, web=false, code=, friend=false, seen=true, waiting=false, gaveTo=null)], invited=[(f9, Lee)], excl=[(m2, m3)], blocked=null, me=GxMe(list=GroupList(code=MINECODE, name=Mine, count=1, image=), seen=true, waiting=false, hasSanta=true, giftee=GxGiftee(id=m2, name=Kim, pv=0, web=false, list=null), unreadGiftee=2, unreadSanta=1))
+photos={X1=file://<FILES>/exchanges/X1_1.jpg} unread=true
+pref gx_day_X1_<today+0>=true
+pref gx_inv_told=[]
+pref gx_state={"exchanges":[{"id":"X1","link":"LINKX1","name":"Santa X1","organiser":"me1","organiser_name":"Ann","budget":20,"currency":"EUR","day":"<today+0>","theme":"xmas","message":"Be kind","pv":1,"drawn":true,"revealed":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"seen":true,"waiting":false,"gave_to":null},{"id":"m2","name":"Kim","pv":0,"web":false,"code":"","friend":false,"seen":false,"waiting":false,"gave_to":null},{"id":"m3","name":"Sam","pv":0,"web":false,"code":"","friend":false,"seen":true,"waiting":false,"gave_to":null}],"invited":[{"id":"f9","name":"Lee"}],"excl":[["m2","m3"]],"me":{"list":{"code":"MINECODE","name":"Mine","count":1,"image":""},"seen":true,"waiting":false,"has_santa":true,"giftee":{"id":"m2","name":"Kim","pv":0,"web":false},"unread_giftee":2,"unread_santa":1}}],"invites":[],"news":[]}
+pref gx_week_X1_<today+5>=true
+pref link_off=[T1]
+note gx_changed e:X1 'Your name changed in “Santa X1”' extra='Someone left or joined. Open your new name.' read=false
+note gx_rules e:X1 'A rule couldn’t be kept in “Santa X1”' extra='Someone left, so one rule had to give way. Nobody has themselves.' read=false
+note gx_waiting e:X1 'Jo joined “Santa X1”' extra='Everyone has seen their name. Add them to the draw?' read=false
+note gx_organiser e:X1 'You organise “Santa X1” now' extra='You can draw names, set rules and invite people.' read=false
+note gx_cancelled e: '“Santa X1” was cancelled' extra='The organiser cancelled this gift exchange.' read=false
+note gx_removed e: 'You are removed from “Santa X1”' extra='The organiser removed you from this gift exchange.' read=false
+note gx_settings e:X1 '“Santa X1” changed' extra='The budget or the date changed. Take a look.' read=false
+note gx_drawn e:X1 'Names are drawn in “Santa X1”' extra='Open yours to see who you’re buying for.' read=false
+note gx_invite e:X8 'Office X8' extra='Bob' read=false
+note gx_declined e:X1 'Lee said no thanks' extra='To “Santa X1”.' read=true
+note gx_invite e:X7 'Office X7' extra='Bob' read=true
+buzz '2 updates in your gift exchange' '“Santa X1” was cancelled'
+buzz '2 new anonymous messages' 'In “Santa X1”. Open to read.'
+buzz 'Wishlist' '4 updates'
+buzz 'Bob invited you to “Office X8”' 'A gift exchange. Pick a wishlist and join.'
+buzz '8 updates in your gift exchange' 'Today is the exchange! 🎄'
+photo files=[X1_1.jpg]
+list main 'My wishlist' code=MINECODE token=minetok friends=false
+list T1 'Secret' code=<R1> token=<R2> friends=false
+## left and cancelled
+sent wl_gx_cancel p_gx=X2,p_id=me1,p_token=tok1
+sent wl_gx_leave p_gx=X1,p_id=me1,p_next=m2,p_token=tok1
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_photo p_gx=X1,p_id=me1,p_token=tok1
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_gx_state p_id=me1,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+exchange Exchange(id=X1, link=LINKX1, name=Santa X1, organiser=me1, organiserName=Ann, budget=20.0, currency=EUR, day=<today+0>, theme=xmas, message=Be kind, pv=1, drawn=true, revealed=false, members=[GxMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, seen=true, waiting=false, gaveTo=null), GxMember(id=m2, name=Kim, pv=0, web=false, code=, friend=false, seen=false, waiting=false, gaveTo=null), GxMember(id=m3, name=Sam, pv=0, web=false, code=, friend=false, seen=true, waiting=false, gaveTo=null)], invited=[(f9, Lee)], excl=[(m2, m3)], blocked=null, me=GxMe(list=GroupList(code=MINECODE, name=Mine, count=1, image=), seen=true, waiting=false, hasSanta=true, giftee=GxGiftee(id=m2, name=Kim, pv=0, web=false, list=null), unreadGiftee=2, unreadSanta=1))
+photos={X1=file://<FILES>/exchanges/X1_1.jpg} unread=true
+pref gx_day_X1_<today+0>=true
+pref gx_inv_told=[]
+pref gx_state={"exchanges":[{"id":"X1","link":"LINKX1","name":"Santa X1","organiser":"me1","organiser_name":"Ann","budget":20,"currency":"EUR","day":"<today+0>","theme":"xmas","message":"Be kind","pv":1,"drawn":true,"revealed":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"seen":true,"waiting":false,"gave_to":null},{"id":"m2","name":"Kim","pv":0,"web":false,"code":"","friend":false,"seen":false,"waiting":false,"gave_to":null},{"id":"m3","name":"Sam","pv":0,"web":false,"code":"","friend":false,"seen":true,"waiting":false,"gave_to":null}],"invited":[{"id":"f9","name":"Lee"}],"excl":[["m2","m3"]],"me":{"list":{"code":"MINECODE","name":"Mine","count":1,"image":""},"seen":true,"waiting":false,"has_santa":true,"giftee":{"id":"m2","name":"Kim","pv":0,"web":false},"unread_giftee":2,"unread_santa":1}}],"invites":[],"news":[]}
+pref gx_week_X1_<today+5>=true
+pref link_off=[T1]
+note gx_changed e:X1 'Your name changed in “Santa X1”' extra='Someone left or joined. Open your new name.' read=false
+note gx_rules e:X1 'A rule couldn’t be kept in “Santa X1”' extra='Someone left, so one rule had to give way. Nobody has themselves.' read=false
+note gx_waiting e:X1 'Jo joined “Santa X1”' extra='Everyone has seen their name. Add them to the draw?' read=false
+note gx_organiser e:X1 'You organise “Santa X1” now' extra='You can draw names, set rules and invite people.' read=false
+note gx_cancelled e: '“Santa X1” was cancelled' extra='The organiser cancelled this gift exchange.' read=false
+note gx_removed e: 'You are removed from “Santa X1”' extra='The organiser removed you from this gift exchange.' read=false
+note gx_settings e:X1 '“Santa X1” changed' extra='The budget or the date changed. Take a look.' read=false
+note gx_drawn e:X1 'Names are drawn in “Santa X1”' extra='Open yours to see who you’re buying for.' read=false
+note gx_invite e:X8 'Office X8' extra='Bob' read=false
+note gx_declined e:X1 'Lee said no thanks' extra='To “Santa X1”.' read=true
+note gx_invite e:X7 'Office X7' extra='Bob' read=true
+buzz '2 updates in your gift exchange' '“Santa X1” was cancelled'
+buzz '2 new anonymous messages' 'In “Santa X1”. Open to read.'
+buzz 'Wishlist' '4 updates'
+buzz 'Bob invited you to “Office X8”' 'A gift exchange. Pick a wishlist and join.'
+buzz '8 updates in your gift exchange' 'Today is the exchange! 🎄'
+photo files=[X1_1.jpg]
+list main 'My wishlist' code=MINECODE token=minetok friends=false
+list T1 'Secret' code=<R1> token=<R2> friends=false
+## started again
+exchange Exchange(id=X1, link=LINKX1, name=Santa X1, organiser=me1, organiserName=Ann, budget=20.0, currency=EUR, day=<today+0>, theme=xmas, message=Be kind, pv=1, drawn=true, revealed=false, members=[GxMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, seen=true, waiting=false, gaveTo=null), GxMember(id=m2, name=Kim, pv=0, web=false, code=, friend=false, seen=false, waiting=false, gaveTo=null), GxMember(id=m3, name=Sam, pv=0, web=false, code=, friend=false, seen=true, waiting=false, gaveTo=null)], invited=[(f9, Lee)], excl=[(m2, m3)], blocked=null, me=GxMe(list=GroupList(code=MINECODE, name=Mine, count=1, image=), seen=true, waiting=false, hasSanta=true, giftee=GxGiftee(id=m2, name=Kim, pv=0, web=false, list=null), unreadGiftee=2, unreadSanta=1))
+photos={X1=file://<FILES>/exchanges/X1_1.jpg} unread=true
+pref gx_day_X1_<today+0>=true
+pref gx_inv_told=[]
+pref gx_state={"exchanges":[{"id":"X1","link":"LINKX1","name":"Santa X1","organiser":"me1","organiser_name":"Ann","budget":20,"currency":"EUR","day":"<today+0>","theme":"xmas","message":"Be kind","pv":1,"drawn":true,"revealed":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"seen":true,"waiting":false,"gave_to":null},{"id":"m2","name":"Kim","pv":0,"web":false,"code":"","friend":false,"seen":false,"waiting":false,"gave_to":null},{"id":"m3","name":"Sam","pv":0,"web":false,"code":"","friend":false,"seen":true,"waiting":false,"gave_to":null}],"invited":[{"id":"f9","name":"Lee"}],"excl":[["m2","m3"]],"me":{"list":{"code":"MINECODE","name":"Mine","count":1,"image":""},"seen":true,"waiting":false,"has_santa":true,"giftee":{"id":"m2","name":"Kim","pv":0,"web":false},"unread_giftee":2,"unread_santa":1}}],"invites":[],"news":[]}
+pref gx_week_X1_<today+5>=true
+pref link_off=[T1]
+note gx_changed e:X1 'Your name changed in “Santa X1”' extra='Someone left or joined. Open your new name.' read=false
+note gx_rules e:X1 'A rule couldn’t be kept in “Santa X1”' extra='Someone left, so one rule had to give way. Nobody has themselves.' read=false
+note gx_waiting e:X1 'Jo joined “Santa X1”' extra='Everyone has seen their name. Add them to the draw?' read=false
+note gx_organiser e:X1 'You organise “Santa X1” now' extra='You can draw names, set rules and invite people.' read=false
+note gx_cancelled e: '“Santa X1” was cancelled' extra='The organiser cancelled this gift exchange.' read=false
+note gx_removed e: 'You are removed from “Santa X1”' extra='The organiser removed you from this gift exchange.' read=false
+note gx_settings e:X1 '“Santa X1” changed' extra='The budget or the date changed. Take a look.' read=false
+note gx_drawn e:X1 'Names are drawn in “Santa X1”' extra='Open yours to see who you’re buying for.' read=false
+note gx_invite e:X8 'Office X8' extra='Bob' read=false
+note gx_declined e:X1 'Lee said no thanks' extra='To “Santa X1”.' read=true
+note gx_invite e:X7 'Office X7' extra='Bob' read=true
+buzz '2 updates in your gift exchange' '“Santa X1” was cancelled'
+buzz '2 new anonymous messages' 'In “Santa X1”. Open to read.'
+buzz 'Wishlist' '4 updates'
+buzz 'Bob invited you to “Office X8”' 'A gift exchange. Pick a wishlist and join.'
+buzz '8 updates in your gift exchange' 'Today is the exchange! 🎄'
+photo files=[X1_1.jpg]
+list main 'My wishlist' code=MINECODE token=minetok friends=false
+list T1 'Secret' code=<R1> token=<R2> friends=false
