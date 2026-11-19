@@ -8,7 +8,7 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 - **The rebuild (owner, 18 November 2026; `docs/decisions/roadmap.md`, last section).** Point 2 done: version stamps in
   every script + `server-check.yml` (owner ran all 17; issue closed). Point 1: **Home done in 2.233** (7 small files,
   `HomeModel`, pixel-identical). Ask whether Home behaves the same after a day or two; then the next screen (ask which:
-  Friends / Profile (done in 2.235), the open list (done in 2.236), gift exchange (done in 2.237), wishlist groups (done in 2.238), Messages (done in 2.239), the photo editor (done in 2.240; Data.kt waits for its own plan, owner), My shops (done in 2.241), the building blocks (`Styled.kt`, done in 2.242), `Themed.kt` (done in 2.243), the frame (`AppScreen.kt`, done in 2.244), the wish cards (done in 2.245), the wish form (done in 2.246), the styles (`Design.kt`, done in 2.247), or `ListScreen.kt`), same method: before/after
+  Friends / Profile (done in 2.235), the open list (done in 2.236), gift exchange (done in 2.237), wishlist groups (done in 2.238), Messages (done in 2.239), the photo editor (done in 2.240; Data.kt waits for its own plan, owner), My shops (done in 2.241), the building blocks (`Styled.kt`, done in 2.242), `Themed.kt` (done in 2.243), the frame (`AppScreen.kt`, done in 2.244), the wish cards (done in 2.245), the wish form (done in 2.246), the styles (`Design.kt`, done in 2.247), a friend's list (done in 2.248), or `ListScreen.kt`), same method: before/after
   screenshots compared pixel by pixel, a state holder, bug fixes only. **2.234: guards** (`ArchitectureTest`: files
   under 400 lines, 29 frozen in ALLOWED; REBUILT screens only draw; `checkup.yml` quarterly). Each rebuilt screen
   joins REBUILT and leaves ALLOWED.
@@ -75,13 +75,14 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 19 November 2026, evening: a friend's list (2.248), the 8 screens begin
+Owner: the 8 screens get the full rebuild, then they test. `Friend.kt` + `FriendListState`; 3 screenshots identical;
+fixed: a 2× reservation wasn't remembered (missing from Gifts I reserved). Next: Overview, Reactions, SharedUi, …
+
 ### 19 November 2026, evening: the styles (2.247)
 Owner: Friends.kt waits with Data; nothing of the rebuild tried on the phone yet: combined list in TODO ("Try the
 rebuild"), ask for results first. `Design.kt` split into Design, DesignType, DesignShapes (510 lines proven). 16 left.
 
-### 19 November 2026, late afternoon: the wish form (2.246)
-`WishForm.kt` split into WishForm, WishFormParts + `WishFormState` (WishFormModel.kt); 7 screenshots identical; new
-`WishFormModelTest`. Tapping in the add form can't be tested here (its cursor never settles). 17 files left.
 
 
 

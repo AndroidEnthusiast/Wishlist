@@ -704,3 +704,7 @@ screenshot test and the guard's `saveKey` false alarm. 19 left (next: WishCards,
 ### 19 November 2026, afternoon: the wish cards (2.245)
 `WishCards.kt` (draws only, no data) split into CompactCard, WishCard, RowCard, WishCardParts, WishPriceLine and
 WishCards; a script proved all 526 lines moved unchanged. 18 files left (next: WishForm, Design, Import).
+
+### 19 November 2026, late afternoon: the wish form (2.246)
+`WishForm.kt` split into WishForm, WishFormParts + `WishFormState` (WishFormModel.kt); 7 screenshots identical; new
+`WishFormModelTest`. Tapping in the add form can't be tested here (its cursor never settles). 17 files left.

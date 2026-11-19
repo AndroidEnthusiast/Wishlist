@@ -214,3 +214,11 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
 - **Friends.kt joins Data.kt's own plan too** (owner, 19 November 2026, "Continue" on the recommendation): it saves
   and sends your friends and requests. The owner also said nothing of the rebuild (2.233–2.246) was tried on the phone
   yet: one combined test list is in `docs/TODO.md` ("Try the rebuild").
+- **The 8 remaining screens first, testing after** (owner, 19 November 2026: "Do the 8 screens first, I'll test
+  after"): Overview, Reactions, SharedUi, GiftInvites, PriceHistory, Covers, Settings, Friend, one per version. Groups,
+  Import and Fetch (they save data or read prices; Fetch must stay in step with `web/parse.js`) were proposed to wait
+  with Data too; the owner didn't object.
+- **The 8 screens get the full rebuild** (owner, 19 November 2026; asked with options: split only, proven / full
+  rebuild): split plus a state holder each, like Home and Messages. The owner asked whether they would "run out of
+  space": told that the 400-line limit is a tidiness rule for code files, not storage; the app, phone and GitHub have
+  plenty of room, and Claude says so plainly if a real limit (build minutes, Supabase's free plan, phone space) comes near.

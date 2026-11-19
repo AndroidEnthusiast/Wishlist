@@ -48,7 +48,10 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/** Someone else's list: you can see it and reserve items. The owner never sees reservations. */
+/**
+ * Someone else's list: you can see it and reserve items. The owner never sees reservations. What it holds and does is
+ * FriendListState (FriendListModel.kt, the rebuild of 19 November 2026); this only draws.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FriendScreen(
@@ -69,103 +72,21 @@ fun FriendScreen(
     val places = LocalPlaces.current
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
-    var remote by remember(f.code) { mutableStateOf<RemoteList?>(null) }
-    var res by remember(f.code) { mutableStateOf<Map<Long, Boolean>>(emptyMap()) }
-    var state by remember(f.code) { mutableStateOf("loading") }
-    // Wishes whose reservation is on its way to the server (owner, 7 November 2026): only their button waits; the label
-    // changes at once and goes back if the server says no.
-    var pending by remember(f.code) { mutableStateOf<Set<Long>>(emptySet()) }
-    var cat by remember(f.code) { mutableStateOf("All") }
-    // Search and sort, as on your own lists (owner, 12 November 2026: the same tools on every list).
-    var searching by remember(f.code) { mutableStateOf(false) }
-    var query by remember(f.code) { mutableStateOf("") }
-    var catMenu by remember { mutableStateOf(false) }
-    androidx.activity.compose.BackHandler(enabled = searching) { searching = false; query = "" }
-    var tick by remember { mutableStateOf(0) }
-    var confirmRemove by remember { mutableStateOf(false) }
-    // A 2× wish asks "How many will you buy?" (2.128).
-    var askFor by remember { mutableStateOf<Wish?>(null) }
-    // "Is it still being bought?" about someone else's reservation (2.142), and "Reserve it now?" after "X is free".
-    var askBought by remember { mutableStateOf<Wish?>(null) }
-    var reserveNow by remember { mutableStateOf<Wish?>(null) }
+    // The list, your reservations on it and what is open (FriendListState in FriendListModel.kt), one per list.
+    val st = remember(f.code) { FriendListState(ctx, f, snack, scope) }
+    androidx.activity.compose.BackHandler(enabled = st.searching) { st.stopSearch() }
     ReactionsLoader(f.code)
     val deco = WishDeco(f.code, canReact = reactions, onBadge = { w ->
         val c = ResCounts.of(f.code, w.id)
-        if (!w.got && (res[w.id] == false || (w.qty > 1 && c != null && c.full && c.my == 0))) askBought = w
+        if (!w.got && (st.res[w.id] == false || (w.qty > 1 && c != null && c.full && c.my == 0))) st.askBought = w
     })
 
     // Load now, then again whenever the list changes (live, ROADMAP S3.2, Live.kt); without the live connection every
     // 20 seconds, as before. Nothing while the app is in the background.
-    LaunchedEffect(f.code, tick) {
-        Live.follow(Live.listTopic(f.code), 20000) {
-            try {
-                val r = if (fetch != null) fetch() else Cloud.fetchList(f.code)
-                if (r == null) {
-                    state = "gone"
-                } else {
-                    val m = Cloud.fetchReservations(f.code, Repo.deviceId)
-                    remote = r
-                    // A tap still on its way keeps what it shows.
-                    res = if (pending.isEmpty()) m else m.toMutableMap().apply { pending.forEach { id -> res[id]?.let { put(id, it) } ?: remove(id) } }
-                    FriendWatch.check(ctx, f, r, m.filterValues { it }.keys, FriendWatch.movedFrom(ctx, f.code, r))
-                    state = "ok"
-                    if (fetch == null && r.name != f.name) Repo.renameFriend(ctx, f.code, r.name)
-                }
-            } catch (e: Exception) {
-                if (remote == null) state = "offline"
-            }
-        }
+    LaunchedEffect(f.code, st.tick) {
+        Live.follow(Live.listTopic(f.code), 20000) { st.refresh(fetch) }
     }
 
-    fun reserveCount(w: Wish, n: Int) {
-        val before = res[w.id]
-        res = if (n > 0) res + (w.id to true) else res - w.id
-        pending = pending + w.id
-        scope.launch {
-            var msg: String? = null
-            try {
-                if (!Cloud.reserveCount(f.code, w.id, Repo.deviceId, n)) msg = tr("Someone else just reserved that one.")
-                else if (n > 0) Celebrate.reserved()
-                else if (n > 0) FriendWatch.reserved(ctx, f.code, w) else FriendWatch.unreserved(ctx, f.code, w.id)
-            } catch (e: Exception) {
-                msg = tr("No connection. Try again.")
-                res = if (before == null) res - w.id else res + (w.id to before)
-            }
-            pending = pending - w.id
-            try { res = Cloud.fetchReservations(f.code, Repo.deviceId) } catch (e: Exception) {}
-            msg?.let { snack.showToast(it) }
-        }
-    }
-
-    // Reserve shows "Reserved by you" and Unreserve at once (owner, 7 November 2026: it took too long, and every
-    // Reserve button went grey); the server is asked in the background and a "no" puts it back with a message.
-    fun toggle(w: Wish, reserve: Boolean) {
-        if (w.qty > 1) { if (reserve) askFor = w else reserveCount(w, 0); return }
-        if (w.id in pending) return
-        val before = res[w.id]
-        res = if (reserve) res + (w.id to true) else res - w.id
-        pending = pending + w.id
-        scope.launch {
-            var msg: String? = null
-            var failed = false
-            try {
-                if (reserve) {
-                    if (!Cloud.reserve(f.code, w.id, Repo.deviceId)) { msg = tr("Someone else just reserved that one."); failed = true }
-                    else { FriendWatch.reserved(ctx, f.code, w); Celebrate.reserved() }
-                } else {
-                    Cloud.unreserve(f.code, w.id, Repo.deviceId)
-                    FriendWatch.unreserved(ctx, f.code, w.id)
-                }
-            } catch (e: Exception) {
-                msg = tr("No connection. Try again.")
-                failed = true
-            }
-            if (failed) res = if (before == null) res - w.id else res + (w.id to before)
-            pending = pending - w.id
-            try { res = Cloud.fetchReservations(f.code, Repo.deviceId) } catch (e: Exception) {}
-            msg?.let { snack.showToast(it) }
-        }
-    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -175,14 +96,14 @@ fun FriendScreen(
                 title = {
                     Column {
                         ScreenTitle(f.name)
-                        val owner = ownerName?.takeIf { it.isNotBlank() } ?: remote?.owner
+                        val owner = ownerName?.takeIf { it.isNotBlank() } ?: st.remote?.owner
                         // "Owned by …" only when the list's name doesn't say whose it is (owner, 7 November 2026).
                         if (!owner.isNullOrBlank() && !nameSaysOwner(f.name, owner)) Text(
                             tr("Wishlist of %s", owner), style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis
                         )
                         // The list's occasion (owner, 2.124), e.g. "Birthday · in 3 weeks".
-                        Occasions.line(remote?.occ)?.let { o ->
+                        Occasions.line(st.remote?.occ)?.let { o ->
                             Text(
                                 o, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.primary, maxLines = 1, overflow = TextOverflow.Ellipsis
@@ -197,21 +118,21 @@ fun FriendScreen(
                 actions = {
                     extraAction?.invoke()
                     // Search, as on your own lists; the view choice is in the row above the wishes (ListTools).
-                    IconButton(onClick = { if (searching) { searching = false; query = "" } else searching = true }) {
-                        Icon(AppIcons.Search, if (searching) tr("Close search") else tr("Search"))
+                    IconButton(onClick = { if (st.searching) st.stopSearch() else st.searching = true }) {
+                        Icon(AppIcons.Search, if (st.searching) tr("Close search") else tr("Search"))
                     }
                     // No refresh button (owner, 7 November 2026): the list refreshes itself every 20 seconds.
-                    if (onBack == null) IconButton(onClick = { confirmRemove = true }) { Icon(AppIcons.Delete, tr("Remove this list")) }
+                    if (onBack == null) IconButton(onClick = { st.confirmRemove = true }) { Icon(AppIcons.Delete, tr("Remove this list")) }
                 }
             )
         },
         snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
-        val r0 = remote
+        val r0 = st.remote
         Column(Modifier.padding(pad)) {
-            if (searching && r0 != null) SearchField(query, { query = it }) { searching = false; query = "" }
+            if (st.searching && r0 != null) SearchField(st.query, { st.query = it }) { st.stopSearch() }
             when {
-                state == "gone" -> Box(Modifier.fillMaxSize().padding(32.dp), Alignment.Center) {
+                st.state == "gone" -> Box(Modifier.fillMaxSize().padding(32.dp), Alignment.Center) {
                     Text(
                         tr("This list isn’t shared any more."),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -223,7 +144,7 @@ fun FriendScreen(
                     // sort and the view (12 November 2026). A category that empties while you look at it falls back to All.
                     val onList = r0.wishes.filter { it.bin == 0L }
                     val usedCats = r0.cats.filter { c -> onList.any { it.category == c } }
-                    if (cat != "All" && cat !in usedCats) cat = "All"
+                    if (st.cat != "All" && st.cat !in usedCats) st.cat = "All"
                     val hasCover = r0.cover.isNotEmpty()
                     // The cover scrolls away with the wishes; the categories stay pinned at the top (owner, 7 November 2026).
                     val cover: @Composable (Modifier) -> Unit = { m ->
@@ -238,22 +159,22 @@ fun FriendScreen(
                     val catRow: @Composable (PaddingValues, Boolean) -> Unit = { pv, live ->
                         Box(Modifier.padding(pv)) {
                             ListTools(
-                                cat, usedCats, { c -> if (c == "All") onList.size else onList.count { it.category == c } }, { cat = it },
-                                catMenu && live, { catMenu = it },
-                                Repo.sort, true, { Repo.setSort(ctx, it) },
-                                Repo.view, { Repo.setView(ctx, it) }
+                                st.cat, usedCats, { c -> if (c == "All") onList.size else onList.count { it.category == c } }, { st.cat = it },
+                                st.catMenu && live, { st.catMenu = it },
+                                Repo.sort, true, { st.setSort(it) },
+                                Repo.view, { st.setView(it) }
                             )
                         }
                     }
                     // Wishes in the owner's bin are not on the list.
                     // Owned wishes at the bottom (owner, 2.113): what's still wanted comes first.
-                    val shown = sortWishes(onList.filter { (cat == "All" || it.category == cat) && matchesQuery(it, query) }, Repo.sort)
+                    val shown = sortWishes(onList.filter { (st.cat == "All" || it.category == st.cat) && matchesQuery(it, st.query) }, Repo.sort)
                     if (shown.isEmpty()) {
                         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                             if (hasCover) cover(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp))
                             catRow(PaddingValues(horizontal = 16.dp), true)
                             Text(
-                                if (query.isNotBlank()) tr("No wishes match “%s”.", query.trim()) else tr("Nothing here yet."), color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                if (st.query.isNotBlank()) tr("No wishes match “%s”.", st.query.trim()) else tr("Nothing here yet."), color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.fillMaxWidth().padding(32.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center
                             )
                         }
@@ -270,11 +191,11 @@ fun FriendScreen(
                                     (gridState.firstVisibleItemIndex == catIndex && gridState.firstVisibleItemScrollOffset > 0))
                             }
                         }
-                        LaunchedEffect(WishFocus.target, cat, shown.size) {
+                        LaunchedEffect(WishFocus.target, st.cat, shown.size) {
                             val t = WishFocus.target ?: return@LaunchedEffect
                             val i = shown.indexOfFirst { it.id == t }
                             if (i < 0) {
-                                if (cat != "All" || query.isNotEmpty()) { cat = "All"; query = ""; searching = false } else WishFocus.target = null
+                                if (st.cat != "All" || st.query.isNotEmpty()) { st.cat = "All"; st.query = ""; st.searching = false } else WishFocus.target = null
                                 return@LaunchedEffect
                             }
                             delay(150)
@@ -290,7 +211,7 @@ fun FriendScreen(
                         // Givers read "Jorai loves it" on the gold label (owner, 16 November 2026).
                         androidx.compose.runtime.CompositionLocalProvider(
                             LocalWishDeco provides deco,
-                            LocalLover provides (ownerName?.takeIf { it.isNotBlank() } ?: remote?.owner).orEmpty()
+                            LocalLover provides (ownerName?.takeIf { it.isNotBlank() } ?: st.remote?.owner).orEmpty()
                         ) {
                         LazyVerticalGrid(
                             state = gridState,
@@ -304,7 +225,7 @@ fun FriendScreen(
                                 catRow(PaddingValues(0.dp), !pinned)
                             }
                             gridItems(shown, key = { it.id }) { w ->
-                                val r = res[w.id]
+                                val r = st.res[w.id]
                                 val label = if (w.got) tr("Owned") else reserveLabel(f.code, w, r)
                                     ?: if (overBudget?.invoke(w) == true) tr("Over budget") else null
                                 val ico = cardIcon(Repo.view)
@@ -314,8 +235,8 @@ fun FriendScreen(
                                         spread = Repo.view == "rows",
                                         // "Unreserve" says exactly what it does (owner: "Undo" could be forgotten).
                                         reserve = if (w.got || r == false) null else ({
-                                            if (r == true) OutlinedButton(onClick = { toggle(w, false) }) { Text(tr("Unreserve"), maxLines = 1) }
-                                            else Button(onClick = { toggle(w, true) }) { Text(tr("Reserve"), maxLines = 1) }
+                                            if (r == true) OutlinedButton(onClick = { st.toggle(w, false) }) { Text(tr("Unreserve"), maxLines = 1) }
+                                            else Button(onClick = { st.toggle(w, true) }) { Text(tr("Reserve"), maxLines = 1) }
                                         }),
                                         icons = {
                                             // Share as its own button too (owner, 12 November 2026).
@@ -328,7 +249,7 @@ fun FriendScreen(
                                         // Share this gift idea (its shop link, owner 7 November 2026).
                                         WishMoreButton(
                                             w, LocalLook.current.cardMuted(w.id), ico,
-                                            WishActions(reserve = if (w.got) null else Reserving(r, label) { on -> toggle(w, on) }, shareAsIdea = true)
+                                            WishActions(reserve = if (w.got) null else Reserving(r, label) { on -> st.toggle(w, on) }, shareAsIdea = true)
                                         )
                                     }
                                 }
@@ -336,7 +257,7 @@ fun FriendScreen(
                                 when (Repo.view) {
                                     "grid" -> CompactCard(
                                         w, readOnly = true,
-                                        reserve = if (w.got) null else Reserving(r, label) { on -> toggle(w, on) }
+                                        reserve = if (w.got) null else Reserving(r, label) { on -> st.toggle(w, on) }
                                     ) {}
                                     "rows" -> RowCard(w, badge = label, dim = w.got || r == false, actions = actions)
                                     else -> WishCard(w, badge = label, dim = w.got || r == false, actions = actions)
@@ -352,10 +273,10 @@ fun FriendScreen(
                         }
                     }
                 }
-                state == "offline" -> Box(Modifier.fillMaxSize().padding(32.dp), Alignment.Center) {
+                st.state == "offline" -> Box(Modifier.fillMaxSize().padding(32.dp), Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(tr("Couldn’t load the list. Check your connection."), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Button(onClick = { tick++ }) { Text(tr("Try again")) }
+                        Button(onClick = { st.tick++ }) { Text(tr("Try again")) }
                     }
                 }
                 else -> Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
@@ -364,37 +285,36 @@ fun FriendScreen(
     }
 
     // A tapped "X is free" or "Your reservation of X has ended" (2.142): this list opens on that wish.
-    LaunchedEffect(places.askFocus, remote, res) {
+    LaunchedEffect(places.askFocus, st.remote, st.res) {
         val (code, id, reserve) = places.askFocus ?: return@LaunchedEffect
         if (code != f.code) return@LaunchedEffect
-        val w = remote?.wishes?.firstOrNull { it.id == id && it.bin == 0L } ?: return@LaunchedEffect
+        val w = st.remote?.wishes?.firstOrNull { it.id == id && it.bin == 0L } ?: return@LaunchedEffect
         places.askFocus = null
         WishFocus.target = id
-        if (reserve && res[id] == null && !w.got) reserveNow = w
+        if (reserve && st.res[id] == null && !w.got) st.reserveNow = w
     }
-    askBought?.let { w ->
-        AskDialog(f.code, w, remote?.occ, onClose = { askBought = null }) { m -> scope.launch { snack.showToast(m) } }
+    st.askBought?.let { w ->
+        AskDialog(f.code, w, st.remote?.occ, onClose = { st.askBought = null }) { m -> scope.launch { snack.showToast(m) } }
     }
-    reserveNow?.let { w -> ReserveNowDialog(w, onReserve = { toggle(w, true) }, onClose = { reserveNow = null }) }
-    askFor?.let { w ->
+    st.reserveNow?.let { w -> ReserveNowDialog(w, onReserve = { st.toggle(w, true) }, onClose = { st.reserveNow = null }) }
+    st.askFor?.let { w ->
         ReserveCountDialog(
             ResCounts.free(f.code, w), ResCounts.of(f.code, w.id)?.my ?: 1,
-            onPick = { n -> askFor = null; reserveCount(w, n) }, onClose = { askFor = null }
+            onPick = { n -> st.askFor = null; st.reserveCount(w, n) }, onClose = { st.askFor = null }
         )
     }
-    if (confirmRemove) {
+    if (st.confirmRemove) {
         AlertDialog(
-            onDismissRequest = { confirmRemove = false },
+            onDismissRequest = { st.confirmRemove = false },
             title = { Text(tr("Remove this list?")) },
             text = { Text(tr("It disappears from your menu. Your reservations stay reserved. You can add it again with its code.")) },
             confirmButton = {
                 TextButton(onClick = {
-                    confirmRemove = false
-                    Repo.removeFriend(ctx, f.code)
+                    st.removeList()
                     onRemoved()
                 }) { Text(tr("Remove")) }
             },
-            dismissButton = { TextButton(onClick = { confirmRemove = false }) { Text(tr("Cancel")) } }
+            dismissButton = { TextButton(onClick = { st.confirmRemove = false }) { Text(tr("Cancel")) } }
         )
     }
 }

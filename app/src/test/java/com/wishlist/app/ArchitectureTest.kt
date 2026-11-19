@@ -38,8 +38,7 @@ class ArchitectureTest {
         "GiftInvites.kt" to 456,
         "PriceHistory.kt" to 455,
         "Covers.kt" to 445,
-        "Settings.kt" to 441,
-        "Friend.kt" to 408
+        "Settings.kt" to 441
         )
 
         /** Screens rebuilt to "layout + state holder": they only draw. Every newly rebuilt screen joins this list. */
@@ -63,7 +62,9 @@ class ArchitectureTest {
             // The app's frame (19 November 2026): its state holder is AppModel.kt.
             "AppScreen.kt", "AppPopups.kt",
             // The Add / Edit wish form (19 November 2026): its state holder is WishFormModel.kt.
-            "WishForm.kt", "WishFormParts.kt"
+            "WishForm.kt", "WishFormParts.kt",
+            // A friend's list (19 November 2026): its state holder is FriendListModel.kt.
+            "Friend.kt"
         )
 
         /** A store's data set straight away ("Exchanges.list = …"; only the checks' pretend data may). */
