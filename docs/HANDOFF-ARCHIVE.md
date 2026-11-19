@@ -641,3 +641,7 @@ tiles, plain grey text). Now one hue per theme in steps of lightness, pastel in 
 Owner: 2.227's deep tint looked brown/green; now a grey backdrop with a 3% hint, colour on the elements, Black mode,
 Teal for Amber, Gen Z block in its own look, Theme as its own route (no jump). App settings: six rows opening pages,
 two switches and the theme block removed with their code. Checks: `AppSettingsTest`, `ThemesTest`.
+
+### 18 November 2026, night: friends' wishes (2.229)
+Reserve pills compact (`LocalCardButton`, 36 dp); "Add to my wishlist" in the ⋮ of others' wishes (list picker, Undo,
+`AddToMine.kt`); "+ React" hides once you reacted (app and web); Import last in the + menu. Checks: `FriendWishesTest`.

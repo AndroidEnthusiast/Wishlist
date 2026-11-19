@@ -84,6 +84,7 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `supabase-sync.sql`. On screen "gift lists" are called **Collab wishlists** (since 2.146); in the code they are still `Shared`/gift list.
 
 ### Friends, chat, groups and gift exchanges
+- Friends and Profile (rebuilt 2.235 from `FriendsUi.kt`): `FriendsTab.kt` (the tab), `FriendsRows.kt` (code card, request and friend rows), `FriendPage.kt` (a friend's page, their wishes, private note), `AddFriend.kt` (+ the code boxes), `Profile.kt` + `ProfileEdit.kt` (rows, edit sheets, Keep your lists safe), `DayMonthPicker.kt`, `PeopleParts.kt` (Avatar, PersonHero, chips); state holder `PeopleModel.kt`
 - `FriendWatch.kt` ("a gift you reserved is no longer on the list")
 - `Chat.kt` + `Messages.kt` (encrypted chat) + `ChatPhotos.kt` (photos in chat, locked with their own key) + `Push.kt` (instant message notifications, Firebase)
 - `Groups.kt` + `GroupsUi.kt` (wishlist groups: people who each bring one wishlist; `supabase-groups.sql`)

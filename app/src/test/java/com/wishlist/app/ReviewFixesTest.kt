@@ -51,7 +51,7 @@ class ReviewFixesTest {
     /** Givers see the name: a friend's list provides it (LocalLover). */
     @Test fun friendsListsSayWhoseHeartItIs() {
         assertTrue(src("Friend.kt").contains("LocalLover provides"))
-        assertFalse("no old star left", src("FriendsUi.kt").contains("Text(\"★\""))
+        assertFalse("no old star left", (listOf("PeopleParts.kt", "FriendsTab.kt", "FriendsRows.kt", "FriendPage.kt", "AddFriend.kt", "Profile.kt", "ProfileEdit.kt", "DayMonthPicker.kt").joinToString("\n") { src(it) }).contains("Text(\"★\""))
     }
 
     /** The heart is explained once on your own lists; closing it or using a heart ends it for good. */
@@ -78,7 +78,7 @@ class ReviewFixesTest {
     @Test fun settingsScreensUseReadingCards() {
         assertTrue(src("Settings.kt").contains("ReadingCard(heading = { SectionTitle(title) }, content = content)"))
         assertEquals(4, Regex("ReadingCard\\(heading").findAll(src("ListSettings.kt")).count())
-        assertTrue(src("FriendsUi.kt").contains("if (look.design != \"quiet\") { ReadingCard(content = content); return }"))
+        assertTrue((listOf("PeopleParts.kt", "FriendsTab.kt", "FriendsRows.kt", "FriendPage.kt", "AddFriend.kt", "Profile.kt", "ProfileEdit.kt", "DayMonthPicker.kt").joinToString("\n") { src(it) }).contains("if (look.design != \"quiet\") { ReadingCard(content = content); return }"))
     }
 
     /** Going back from a chat "bounced" Messages: no size animation between screens inside a tab. */
@@ -227,7 +227,8 @@ class PersonFirstTest {
      * sent with a list.
      */
     @Test fun aboutMeInsteadOfChips() {
-        val f = File("src/main/java/com/wishlist/app/FriendsUi.kt").readText()
+        // Friends and Profile were split out of FriendsUi.kt in the rebuild (19 November 2026).
+        val f = listOf("PeopleParts.kt", "FriendsTab.kt", "FriendsRows.kt", "FriendPage.kt", "AddFriend.kt", "Profile.kt", "ProfileEdit.kt", "DayMonthPicker.kt").joinToString("\n") { src(it) }
         val hero = f.substring(f.indexOf("internal fun PersonHero("), f.indexOf("internal fun AboutChip("))
         assertFalse(hero.contains("FlowRow") || hero.contains("likesOf") || hero.contains("sizes"))
         assertTrue(hero.contains("if (birthdaySoon && days != null && days <= 14)"))
@@ -242,8 +243,8 @@ class PersonFirstTest {
 
     /** No number tiles, the name once, lists as collages, the note as a row with a sheet, Message as a button. */
     @Test fun friendPageIsPersonFirst() {
-        val f = File("src/main/java/com/wishlist/app/FriendsUi.kt").readText()
-        val page = f.substring(f.indexOf("private fun FriendPage("), f.indexOf("internal fun PersonHero("))
+        val f = src("FriendPage.kt")
+        val page = f.substring(f.indexOf("internal fun FriendPage("), f.indexOf("internal fun PrivateNoteSheet("))
         assertFalse(page.contains("FriendStat("))
         assertFalse("no zero shown", page.contains("FriendStat(top"))
         assertFalse("no loved chip (17 November 2026)", page.contains("AboutChip("))

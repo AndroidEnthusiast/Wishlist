@@ -25,7 +25,6 @@ class ArchitectureTest {
         /** Over the limit on 19 November 2026, with their size then. Only shrinks. */
         val ALLOWED: Map<String, Int> = mapOf(
         "ExchangeUi.kt" to 1406,
-        "FriendsUi.kt" to 1370,
         "Data.kt" to 1110,
         "GroupsUi.kt" to 1086,
         "Messages.kt" to 1036,
@@ -56,10 +55,14 @@ class ArchitectureTest {
         )
 
         /** Screens rebuilt to "layout + state holder": they only draw. Every newly rebuilt screen joins this list. */
-        val REBUILT = listOf("Home.kt", "HomeHero.kt", "HomeBlocks.kt", "HomeMenus.kt", "HomeCards.kt", "NewWishlist.kt")
+        val REBUILT = listOf(
+            "Home.kt", "HomeHero.kt", "HomeBlocks.kt", "HomeMenus.kt", "HomeCards.kt", "NewWishlist.kt",
+            // Friends and Profile (19 November 2026): their state holder is PeopleModel.kt.
+            "PeopleParts.kt", "FriendsTab.kt", "FriendsRows.kt", "FriendPage.kt", "AddFriend.kt", "Profile.kt", "ProfileEdit.kt", "DayMonthPicker.kt"
+        )
 
         /** A call that changes shared data: Store.set…(), .delete…(), .leave(), … */
-        val WRITES = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|ListVisibility|Occasions|MyLists)\\.(set|add|delete|remove|rename|create|leave|put|update|replace|trash|reserve|move|copy|open|hide|join|answer)[A-Za-z]*\\(")
+        val WRITES = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|ListVisibility|Occasions|MyLists)\\.(set|add|delete|remove|rename|create|leave|put|update|replace|trash|reserve|move|copy|open|hide|join|answer|new)[A-Za-z]*\\(")
     }
 
     @Test fun everyFileStaysSmall() {
@@ -88,6 +91,8 @@ class ArchitectureTest {
     @Test fun theGuardSeesWrites() {
         assertTrue(WRITES.containsMatchIn("Repo.deleteMine(ctx, code)"))
         assertTrue(WRITES.containsMatchIn("Shared.leave(ctx, code)"))
+        assertTrue(WRITES.containsMatchIn("Friends.newCode(ctx)"))
+        assertTrue(WRITES.containsMatchIn("Friends.setNote(ctx, f.id, note)"))
         assertFalse(WRITES.containsMatchIn("Repo.mineName(id)"))
         assertFalse(WRITES.containsMatchIn("Friends.load(ctx)"))
     }

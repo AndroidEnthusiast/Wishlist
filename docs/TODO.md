@@ -8,7 +8,7 @@ Details of each item are in the doc named after it.
 
 ## Now
 - **The rebuild (owner, 18–19 November 2026; `docs/decisions/roadmap.md`):** Home done (2.233), guards in (2.234). Left:
-  the 29 files on `ArchitectureTest.ALLOWED` (biggest: ExchangeUi, FriendsUi, Data, GroupsUi, Messages, HeroEditor,
+  the 29 files on `ArchitectureTest.ALLOWED` (biggest: ExchangeUi, Data, GroupsUi, Messages, HeroEditor,
   Shops, Styled, Themed, Shared). One screen per version, bug fixes only; ask the owner which next.
 - **AliExpress shows its logo instead of the product photo** (owner, 18 November 2026): needs the real page. Owner: open
   that wish's price page, tap "Price is wrong?", share the file; then fix `Fetch.kt` + `web/parse.js` together and add
