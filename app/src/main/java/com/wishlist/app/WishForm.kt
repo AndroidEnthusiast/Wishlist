@@ -1,33 +1,20 @@
 package com.wishlist.app
 
-import androidx.compose.foundation.layout.offset
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.draw.drawBehind
 import androidx.activity.result.PickVisualMediaRequest
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.clickable
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -36,34 +23,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.ui.draw.rotate
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.border
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
-import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
-import java.util.Locale
 
-// The Add / Edit wish form and its photo block. Moved out of MainActivity.kt in 2.163.
+// The Add / Edit wish form (moved out of MainActivity.kt in 2.163; rebuilt 19 November 2026: what it holds and does is
+// WishFormState in WishFormModel.kt, its photo block and smaller parts are in WishFormParts.kt).
 
 /** Adds a new wish, or edits [edit] when it is not null. */
 @Composable
@@ -78,87 +54,30 @@ fun WishDialog(
     val places = LocalPlaces.current
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
-    // Which wishlist was open when this dialog started. A wish shared in from the browser can be saved to another one.
-    val startList = remember { Shared.active }
+    // What is typed and chosen, reading a link, the photo and saving (WishFormState in WishFormModel.kt).
+    val st = remember { WishFormState(ctx, edit, chooseList, fromShop, places, scope, initialUrl) }
     val targets = saveTargets(Repo.mineIds.map { it to (Repo.mineNames[it] ?: "My wishlist") }, Shared.lists)
-    var url by remember { mutableStateOf(edit?.url ?: initialUrl) }
-    var title by remember { mutableStateOf(edit?.title ?: "") }
-    var price by remember { mutableStateOf(edit?.price?.let { "%.2f".format(Locale.US, it) } ?: "") }
-    var desc by remember { mutableStateOf(edit?.desc ?: "") }
-    var image by remember { mutableStateOf(edit?.image ?: "") }
-    var cur by remember { mutableStateOf(edit?.currency ?: localCurrency()) }
-    // A new wish starts without a category: you pick one yourself if you want (2.64).
-    var cat by remember { mutableStateOf(edit?.category ?: "") }
-    var note by remember { mutableStateOf(edit?.note ?: "") }
-    var sizeSel by remember { mutableStateOf(edit?.size ?: "") }
-    // How many (owner, 2.128). The exact-or-similar value is kept as it was (no longer shown or chosen, 16 November 2026).
-    var qty by remember { mutableStateOf(edit?.qty ?: 1) }
-    var exact by remember { mutableStateOf(edit?.exact ?: "") }
-    var star by remember { mutableStateOf(edit?.star ?: false) }
-    // "Private wish": only on this phone, friends never see it (My wishlist only). Off unless chosen.
-    var priv by remember { mutableStateOf(edit?.priv ?: false) }
     val starFx = rememberStarFx()
-    var busy by remember { mutableStateOf(false) }
-    var err by remember { mutableStateOf("") }
-    // True after Save was tapped without a name: the name field turns red with a short message.
-    var nameErr by remember { mutableStateOf(false) }
-    var newCatDlg by remember { mutableStateOf(false) }
-    var editCats by remember { mutableStateOf(false) }
-    // A picture picked in this dialog but not saved yet. It is deleted again if you cancel or replace it.
-    var picked by remember { mutableStateOf("") }
-
-    // "+ New wishlist" from the Save to menu: the usual form, then this wish goes there (owner, 7 November 2026).
-    var newListDlg by remember { mutableStateOf(false) }
-    // Take photo / Choose photo, then a free crop (owner, 7 November 2026: "so the picture is perfect").
-    var photoMenu by remember { mutableStateOf(false) }
-    var cropping by remember { mutableStateOf<String?>(null) }
-    fun imported(p: String?) {
-        if (p == null) err = tr("Couldn’t use that picture.") else { cropping = p; err = "" }
-    }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) scope.launch { imported(ImageStore.import(ctx, uri)) }
+        if (uri != null) scope.launch { st.imported(ImageStore.import(ctx, uri)) }
     }
     val cameraFile = remember { java.io.File(java.io.File(ctx.cacheDir, "share").apply { mkdirs() }, "wish_camera.jpg") }
     // Made when the camera is opened, not when the screen is (2.183): nothing is prepared that may not be used.
     val cameraUriLazy = remember { lazy { androidx.core.content.FileProvider.getUriForFile(ctx, ctx.packageName + ".files", cameraFile) } }
     val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
-        if (ok) scope.launch { imported(ImageStore.import(ctx, cameraUriLazy.value)) }
+        if (ok) scope.launch { st.imported(ImageStore.import(ctx, cameraUriLazy.value)) }
     }
     fun pickImage() = picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-    fun takePhoto() = try { camera.launch(cameraUriLazy.value) } catch (e: Exception) { err = tr("Couldn’t open the camera.") }
+    fun takePhoto() = try { camera.launch(cameraUriLazy.value) } catch (e: Exception) { st.err = tr("Couldn’t open the camera.") }
 
     fun close() {
-        if (picked.isNotEmpty()) ImageStore.delete(ctx, picked)
-        // Cancelled after choosing another wishlist: go back to the one that was open.
-        if (Shared.active != startList) {
-            if (startList == null) Shared.close() else Shared.open(ctx, startList)
-        }
+        st.leave()
         onClose()
     }
 
-    // The price as the page gave it (2.178): another price at Save was typed by the person, and the first price check
-    // leaves a typed price alone (PriceWatch).
-    var readPrice by remember { mutableStateOf<String?>(null) }
-
-    // Fills the form from what was read from a page (a link, or the shop page on screen in Find a gift).
-    fun useMeta(m: Meta?) {
-        if (m == null) {
-            err = tr("Couldn’t read that page. Fill in the details yourself.")
-        } else if (m.blocked) {
-            err = tr("Couldn’t read this shop’s page. Fill in the name and price yourself.")
-        } else {
-            // The shop's sales text no longer fills Description (owner, 2.137): it stays free for your own words.
-            title = m.title; cur = m.currency
-            // A picture you chose yourself is kept. Otherwise the image comes from the link.
-            if (!ImageStore.isLocal(image)) image = if (m.image.isNotEmpty() || edit == null) m.image else image
-            if (m.price != null || edit == null) { price = m.price?.let { "%.2f".format(Locale.US, it) }.orEmpty(); readPrice = price }
-            if (m.price == null) err = tr("No price found on that page. Add it to track price drops.")
-        }
-    }
-
     // The same product already on one of your lists (owner, 2.137): said under the link; saving still works.
-    val dupOf = remember(url) {
-        val u = cleanUrl(url)
+    val dupOf = remember(st.url) {
+        val u = cleanUrl(st.url)
         if (u == null || edit != null) null
         else Repo.allMine(ctx).firstOrNull { d -> d.wishes.any { w -> w.bin == 0L && cleanUrl(w.url) == u } }
             ?.let { if (it.name == "My wishlist") tr(it.name) else it.name }
@@ -173,74 +92,8 @@ fun WishDialog(
         } catch (e: Exception) { null }
     }
 
-    fun go(raw: String) {
-        val u = cleanUrl(raw)
-        if (u == null) { err = tr("Enter a full product link"); return }
-        url = u; busy = true; err = ""
-        scope.launch {
-            val m = fetchMeta(u, ctx)
-            busy = false
-            useMeta(m)
-        }
-    }
-    // A wish shared in from the browser goes where the last one went (My wishlist, private, or a shared list).
-    fun pickTarget(key: String) {
-        val mineId = MyLists.idOfSaveKey(key)
-        if (mineId != null) {
-            Shared.close()
-            Repo.openMine(ctx, mineId)
-        } else if (Shared.lists.any { it.code == key }) {
-            Shared.open(ctx, key); priv = false
-        }
-        // Every wishlist has its own categories; none is picked for you.
-        cat = ""
-    }
-    LaunchedEffect(Unit) {
-        if (chooseList && edit == null) pickTarget(startTarget ?: Repo.lastSaveTo)
-        if (edit == null && initialUrl.isNotEmpty()) {
-            if (initialMeta != null) { url = initialUrl; useMeta(initialMeta) } else go(initialUrl)
-        }
-    }
+    LaunchedEffect(Unit) { st.start(startTarget, initialUrl, initialMeta) }
 
-    // Saving the wish (the Save button).
-    fun save() {
-                    if (title.isBlank() && (url.isNotBlank() || image.isBlank())) { nameErr = true; return }
-                    val p = price.replace(',', '.').toDoubleOrNull()
-                    val u = cleanUrl(url) ?: url.trim()
-                    // A picture that was replaced or removed in this dialog is no longer needed.
-                    if (edit != null && edit.image != image) ImageStore.delete(ctx, edit.image)
-                    picked = ""
-                    // Your own wishlists only: collab wishlists share one price between everyone's phones.
-                    val typedPrice = p != null && Shared.active == null && u.isNotBlank() && price != readPrice &&
-                        (edit == null || !PriceWatch.same(p, edit.price))
-                    if (edit == null) {
-                        val newId = System.currentTimeMillis()
-                        if (typedPrice && p != null) PriceWatch.noteTyped(ctx, newId, u, p)
-                        Repo.add(
-                            ctx,
-                            Wish(
-                                newId, u, title.trim(), desc, image, p, null, cur, cat,
-                                star = star && Shared.active == null, note = note.trim(), size = sizeSel, by = Repo.authorName,
-                                priv = priv && Shared.active == null, qty = qty, exact = exact
-                            )
-                        )
-                        if (chooseList) Repo.setLastSaveTo(ctx, Shared.active ?: MyLists.saveKey(Repo.openMine, false))
-                        if (fromShop) places.shopSaved(Repo.listName)
-                    } else {
-                        if (typedPrice && p != null) PriceWatch.noteTyped(ctx, edit.id, u, p)
-                        Repo.replace(
-                            ctx,
-                            edit.copy(
-                                url = u, title = title.trim(), desc = desc, image = image, price = p,
-                                oldPrice = if (p == edit.price) edit.oldPrice else null,
-                                currency = cur, category = cat, star = star && Shared.active == null, note = note.trim(), size = sizeSel,
-                                priv = priv && Shared.active == null, qty = qty, exact = exact
-                            ),
-                            base = edit
-                        )
-                    }
-                    onClose()
-    }
     // Quiet (2.207, docs/styles/quiet.md): ✕ at the top to cancel and Save as a full-width button at the bottom.
     val quiet = LocalLook.current.design == "quiet"
 
@@ -264,15 +117,15 @@ fun WishDialog(
             // choice is gone (owner: removed everywhere).
             val linkField: @Composable () -> Unit = {
                 val host = clip?.let { c -> try { java.net.URI(c).host.orEmpty().removePrefix("www.") } catch (e: Exception) { "" } }.orEmpty()
-                val canPaste = clip != null && url.isBlank() && !busy
+                val canPaste = clip != null && st.url.isBlank() && !st.busy
                 OutlinedTextField(
-                    url,
+                    st.url,
                     { new ->
                         // Pasting a whole link fills in the details by itself.
-                        val pasted = edit == null && new.length - url.length > 3 &&
+                        val pasted = edit == null && new.length - st.url.length > 3 &&
                             Regex("https?://\\S+\\.\\S+").containsMatchIn(new)
-                        url = new
-                        if (pasted) go(new)
+                        st.url = new
+                        if (pasted) st.go(new)
                     },
                     label = { Text(tr("Product link")) },
                     // The copied link is offered inside the field (owner, 16 November 2026), not as a block above it.
@@ -280,32 +133,29 @@ fun WishDialog(
                     // No "Fetch details" button: pasting a link reads the page, and so does the keyboard's Done key after
                     // typing or changing one. A small circle shows while the page is being read.
                     trailingIcon = when {
-                        busy -> ({ CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp) })
-                        canPaste -> ({ TextButton(onClick = { clip?.let { go(it) } }) { Text(tr("Paste")) } })
+                        st.busy -> ({ CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp) })
+                        canPaste -> ({ TextButton(onClick = { clip?.let { st.go(it) } }) { Text(tr("Paste")) } })
                         else -> null
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { if (!busy && url.isNotBlank()) go(url) }),
+                    keyboardActions = KeyboardActions(onDone = { if (!st.busy && st.url.isNotBlank()) st.go(st.url) }),
                     singleLine = true, modifier = Modifier.fillMaxWidth()
                 )
-                if (err.isNotEmpty()) {
-                    Text(err, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                if (st.err.isNotEmpty()) {
+                    Text(st.err, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 }
                 dupOf?.let { Text(tr("This item is already on “%s”", it), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
             }
             val photo: @Composable () -> Unit = {
-                ImageBlock(image, onPick = { photoMenu = true }, onRemove = {
-                    if (picked.isNotEmpty() && picked == image) { ImageStore.delete(ctx, picked); picked = "" }
-                    image = ""
-                }, big = true)
+                ImageBlock(st.image, onPick = { st.photoMenu = true }, onRemove = { st.removePhoto() }, big = true)
             }
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (chooseList && edit == null) {
                     SaveToField(
                         targets = targets, selected = Shared.active ?: MyLists.saveKey(Repo.openMine, false),
-                        onPick = { pickTarget(it) },
+                        onPick = { st.pickTarget(it) },
                         modifier = Modifier.fillMaxWidth(),
-                        onNew = { newListDlg = true }
+                        onNew = { st.newListDlg = true }
                     )
                 }
                 if (edit == null) linkField()
@@ -314,16 +164,16 @@ fun WishDialog(
                 // a shared list is for the givers (there is nothing to hide there).
                 if (Shared.active == null) Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     FilterChip(
-                        selected = star, onClick = { if (!star) starFx.play(); star = !star },
+                        selected = st.star, onClick = { if (!st.star) starFx.play(); st.star = !st.star },
                         label = { Text(tr("Love it")) },
-                        leadingIcon = { LoveIcon(star, if (star) StarGold else MaterialTheme.colorScheme.onSurfaceVariant, 18.dp, Modifier.starPulse(starFx)) },
-                        modifier = Modifier.semantics { stateDescription = if (star) tr("Givers see it first") else "" }
+                        leadingIcon = { LoveIcon(st.star, if (st.star) StarGold else MaterialTheme.colorScheme.onSurfaceVariant, 18.dp, Modifier.starPulse(starFx)) },
+                        modifier = Modifier.semantics { stateDescription = if (st.star) tr("Givers see it first") else "" }
                     )
                     FilterChip(
-                        selected = priv, onClick = { priv = !priv },
+                        selected = st.priv, onClick = { st.priv = !st.priv },
                         label = { Text(tr("Private")) },
                         leadingIcon = { Icon(PrivateIcon, null, modifier = Modifier.size(18.dp)) },
-                        modifier = Modifier.semantics { stateDescription = if (priv) tr("Only you see it") else "" }
+                        modifier = Modifier.semantics { stateDescription = if (st.priv) tr("Only you see it") else "" }
                     )
                 }
                 if (edit != null) linkField()
@@ -333,19 +183,19 @@ fun WishDialog(
                     // A name is needed only for a wish with a link (owner, 7 November 2026); without a link a name, a
                     // photo or the link itself is enough. Saving with too little marks the field red.
                     OutlinedTextField(
-                        title, { title = it; if (it.isNotBlank()) nameErr = false },
-                        label = { Text(if (url.isNotBlank()) tr("Name*") else tr("Name")) }, singleLine = true,
-                        isError = nameErr,
-                        supportingText = if (nameErr) ({
-                            Text(if (url.isNotBlank()) tr("What are you wishing for?") else tr("Add a name, a photo or a link."))
+                        st.title, { st.title = it; if (it.isNotBlank()) st.nameErr = false },
+                        label = { Text(if (st.url.isNotBlank()) tr("Name*") else tr("Name")) }, singleLine = true,
+                        isError = st.nameErr,
+                        supportingText = if (st.nameErr) ({
+                            Text(if (st.url.isNotBlank()) tr("What are you wishing for?") else tr("Add a name, a photo or a link."))
                         }) else null,
                         modifier = Modifier.weight(1f), keyboardOptions = Capitalised)
                     OutlinedTextField(
                         // Narrow, sized for "9999,99"; any amount can be typed, a longer one scrolls inside the field.
-                        price, { price = it },
-                        label = { Text(tr("Price (%s)", cur), maxLines = 1) }, singleLine = true,
+                        st.price, { st.price = it },
+                        label = { Text(tr("Price (%s)", st.cur), maxLines = 1) }, singleLine = true,
                         // The symbol of the currency in the label: € for EUR, $ for USD, £ for GBP, …
-                        prefix = { Text(currencySymbol(cur)) },
+                        prefix = { Text(currencySymbol(st.cur)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.width(104.dp)
                     )
@@ -354,211 +204,48 @@ fun WishDialog(
                 // by itself when editing a wish that has one of them, so nothing is changed unseen. Folded, it says what
                 // is set.
                 MoreDetails(
-                    summary = detailsSummary(cat, qty, sizeSel, desc),
+                    summary = detailsSummary(st.cat, st.qty, st.sizeSel, st.desc),
                     startOpen = edit != null && detailsSummary(edit.category, edit.qty, edit.size, edit.desc).isNotEmpty()
                 ) {
                     // One line, however many categories there are; it opens a bottom sheet (16 November 2026).
-                    CategoryField(cat, Repo.cats, onPick = { cat = it }, onNew = { newCatDlg = true }, onEdit = { editCats = true }, modifier = Modifier.fillMaxWidth())
-                    SizeField(sizeSel, { sizeSel = it }, Modifier.fillMaxWidth())
-                    QuantityField(qty) { qty = it }
+                    CategoryField(st.cat, Repo.cats, onPick = { st.cat = it }, onNew = { st.newCatDlg = true }, onEdit = { st.editCats = true }, modifier = Modifier.fillMaxWidth())
+                    SizeField(st.sizeSel, { st.sizeSel = it }, Modifier.fillMaxWidth())
+                    QuantityField(st.qty) { st.qty = it }
                     // No "Note for givers" field any more (owner, 2.137): Description is for your own words now. A note
                     // written before stays with the wish and keeps showing.
                     OutlinedTextField(
-                        desc, { desc = it }, label = { Text(tr("Description")) },
+                        st.desc, { st.desc = it }, label = { Text(tr("Description")) },
                         maxLines = 3, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 }
             }
         },
         confirmButton = {
-            if (quiet) Button(onClick = { save() }, modifier = Modifier.fillMaxWidth()) { Text(tr("Save wish")) }
-            else TextButton(onClick = { save() }) { Text(tr("Save")) }
+            if (quiet) Button(onClick = { if (st.save()) onClose() }, modifier = Modifier.fillMaxWidth()) { Text(tr("Save wish")) }
+            else TextButton(onClick = { if (st.save()) onClose() }) { Text(tr("Save")) }
         },
         dismissButton = if (quiet) null else ({ TextButton(onClick = { close() }) { Text(tr("Cancel")) } })
     )
 
     // Take photo or Choose photo (2.212): a small bottom sheet like every other menu, not a drop-down.
-    if (photoMenu) PhotoSourceSheet(onTake = { photoMenu = false; takePhoto() }, onChoose = { photoMenu = false; pickImage() }) { photoMenu = false }
+    if (st.photoMenu) PhotoSourceSheet(onTake = { st.photoMenu = false; takePhoto() }, onChoose = { st.photoMenu = false; pickImage() }) { st.photoMenu = false }
 
     // A category made here is chosen for this wish straight away.
     // The free crop after taking or choosing a photo (owner, 7 November 2026). Cancel keeps the photo as it was taken.
     // Since 2.144 the same editor as the profile and cover photo (owner, 7 November 2026): a square frame, move and
     // pinch, turn, lighter or darker, and "Fit whole photo". What is in the frame becomes the wish's photo. The back
     // arrow drops the new photo (the wish keeps the picture it had).
-    cropping?.let { src ->
+    st.cropping?.let { src ->
         HeroEditor(
             src, HeroEdit(), wish = true,
-            onSave = { chosen, e ->
-                cropping = null
-                scope.launch {
-                    val out = renderWishPhoto(ctx, chosen, e) ?: chosen
-                    if (out != chosen) ImageStore.delete(ctx, chosen)
-                    if (src != chosen && src != out) ImageStore.delete(ctx, src)
-                    if (picked.isNotEmpty() && picked != out) ImageStore.delete(ctx, picked)
-                    picked = out; image = out; if (title.isBlank()) nameErr = false
-                }
-            },
-            onCancel = { cropping = null; ImageStore.delete(ctx, src) }
+            onSave = { chosen, e -> st.photoEdited(src, chosen, e) },
+            onCancel = { st.dropCrop(src) }
         )
     }
-    if (newListDlg) NewListDialog(
-        onCreated = { id -> newListDlg = false; pickTarget(MyLists.saveKey(id, false)) },
-        onClose = { newListDlg = false }
+    if (st.newListDlg) NewListDialog(
+        onCreated = { id -> st.newListDlg = false; st.pickTarget(MyLists.saveKey(id, false)) },
+        onClose = { st.newListDlg = false }
     )
-    if (newCatDlg) CategoryDialog(onAdded = { cat = it }) { newCatDlg = false }
+    if (st.newCatDlg) CategoryDialog(onAdded = { st.cat = it }) { st.newCatDlg = false }
     // The picked category follows a rename there; a deleted one becomes "No category".
-    if (editCats) EditCategoriesScreen(onRenamed = { o, n -> if (cat == o) cat = n }) { editCats = false; if (cat.isNotEmpty() && cat !in Repo.cats) cat = "" }
-}
-
-/**
- * The picture of a wish (owner, 7 November 2026: not too small, not overpowering): a 128 dp square tile on the left.
- * Empty: a dashed tile with a plus and "Add photo". Filled: the photo fills the tile (wish photos are square since
- * 2.144; a picture from a shop page sits whole on white), tap to change, ✕ to remove.
- */
-@Composable
-fun ImageBlock(image: String, onPick: () -> Unit, onRemove: () -> Unit, big: Boolean = false) {
-    val cs = MaterialTheme.colorScheme
-    val line = cs.outline
-    // [big]: the wish form's photo (2.212, owner: the photo first), the width of the form and 200 dp tall.
-    // 168 dp since 16 November 2026 (owner: the form felt full), 200 before.
-    val tile = (if (big) Modifier.fillMaxWidth().height(168.dp) else Modifier.size(128.dp))
-        .clip(if (LocalLook.current.design == "quiet") Squircle(if (big) 20.dp else 16.dp) else RoundedCornerShape(16.dp))
-    val look = LocalLook.current
-    if (image.isEmpty() && look.design == "quiet") {
-        // Quiet (2.207): the light photo surface with a camera in a soft circle of your colour; no dashed box.
-        Column(
-            tile.background(look.photoSurface(0)).semantics { contentDescription = tr("Add photo") }.clickable(onClick = onPick),
-            horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
-        ) {
-            Box(Modifier.size(44.dp).clip(CircleShape).background(cs.primaryContainer), contentAlignment = Alignment.Center) {
-                PhotoIcon(cs.onPrimaryContainer, 24.dp)
-            }
-            Text(tr("Add photo"), style = MaterialTheme.typography.labelLarge, color = look.photoInk, modifier = Modifier.padding(top = 6.dp))
-        }
-    } else if (image.isEmpty()) {
-        Column(
-            tile.background(cs.surfaceVariant)
-                .drawBehind {
-                    drawRoundRect(
-                        color = line, cornerRadius = CornerRadius(16.dp.toPx()),
-                        style = Stroke(width = 1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 10f)))
-                    )
-                }
-                .semantics { contentDescription = tr("Add photo") }
-                .clickable(onClick = onPick),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(AppIcons.Add, null, Modifier.size(32.dp), tint = cs.onSurfaceVariant)
-            Text(tr("Add photo"), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
-        }
-    } else {
-        Box(
-            tile.background(Color.White)
-                .semantics { contentDescription = tr("Change photo") }
-                .clickable(onClick = onPick),
-            contentAlignment = Alignment.Center
-        ) {
-            // A picture that can't be loaded says so, and a tap adds your own (owner, 16 November 2026: it stayed white).
-            var failed by remember(image) { mutableStateOf(false) }
-            AsyncImage(
-                model = secureImage(image), contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize(),
-                onError = { failed = true; BrokenPhotos.mark(image) }, onSuccess = { failed = false; BrokenPhotos.clear(image) }
-            )
-            if (failed) Column(
-                Modifier.fillMaxSize().background(look.photoSurface(0)).padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
-            ) {
-                PlaceholderIcon("gift", 36.dp, look.photoInk)
-                Text(tr("The shop’s picture couldn’t load"), style = MaterialTheme.typography.titleSmall, color = look.photoInk,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
-                Text(tr("Tap to add your own photo"), style = MaterialTheme.typography.bodySmall, color = look.photoInk.copy(alpha = 0.8f),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-            }
-            // ✕ in the corner: 32 dp to see, a 48 dp area to tap (docs/STYLE.md).
-            Box(
-                Modifier.align(Alignment.TopEnd).size(48.dp)
-                    .semantics { contentDescription = tr("Remove photo") }
-                    .clickable(onClick = onRemove),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(Modifier.size(28.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.6f)), contentAlignment = Alignment.Center) {
-                    Icon(AppIcons.Close, null, Modifier.size(16.dp), tint = Color.White)
-                }
-            }
-        }
-    }
-}
-
-/**
- * A tile you tap to turn something on (2.212, owner 15 November 2026: Top wish and Private "more visible, near the
- * top"): an icon, the name and one short line; on, it fills with [onColour] and its words take [onInk]. Read out as a
- * switch.
- */
-@Composable
-fun ToggleTile(
-    icon: @Composable (Boolean) -> Unit, title: String, line: String, on: Boolean, onColour: Color, onInk: Color,
-    modifier: Modifier = Modifier, onToggle: () -> Unit
-) {
-    val look = LocalLook.current
-    val cs = MaterialTheme.colorScheme
-    val shape = look.soft(16.dp)
-    val bg = if (on) onColour else cs.surfaceVariant
-    Column(
-        modifier.pressScale().then(if (look.design == "chaos") Modifier.lookSurface(look, shape, bg, raised = on) else Modifier.clip(shape).background(bg)
-            .then(if (on) Modifier else Modifier.border(1.dp, cs.outlineVariant, shape)))
-            .toggleable(on, role = androidx.compose.ui.semantics.Role.Switch, onValueChange = { onToggle() })
-            .heightIn(min = 72.dp).padding(horizontal = 14.dp, vertical = 12.dp)
-    ) {
-        icon(on)
-        Text(
-            title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold,
-            color = if (on) onInk else cs.onSurface, modifier = Modifier.padding(top = 6.dp)
-        )
-        Text(line, style = MaterialTheme.typography.bodySmall, color = if (on) onInk.copy(alpha = 0.85f) else cs.onSurfaceVariant)
-    }
-}
-
-/** Take photo or Choose photo, as a small bottom sheet (2.212). */
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
-@Composable
-fun PhotoSourceSheet(onTake: () -> Unit, onChoose: () -> Unit, onClose: () -> Unit) {
-    val cs = MaterialTheme.colorScheme
-    ModalBottomSheet(onDismissRequest = onClose, sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-        Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp)) {
-            SheetGroup(listOf(
-                { SheetRow({ PhotoIcon(cs.onSurfaceVariant, 22.dp) }, tr("Take photo"), onTake) },
-                { SheetRow({ Icon(AppIcons.Gallery, null, tint = cs.onSurfaceVariant) }, tr("Choose photo"), onChoose) }
-            ))
-        }
-    }
-}
-
-
-/** What is set under "More details", in one short line ("Fashion · Size M · 2× · Description"), or "". */
-fun detailsSummary(cat: String, qty: Int, size: String, desc: String): String = listOfNotNull(
-    cat.takeIf { it.isNotBlank() }?.let { catLabel(it) },
-    size.takeIf { it.isNotBlank() }?.let { tr("Size %s", it) },
-    if (qty > 1) "${qty}×" else null,
-    if (desc.isNotBlank()) tr("Description") else null
-).joinToString(" · ")
-
-/** "More details" with what is set, tap to show or hide [content] (owner, 16 November 2026). */
-@Composable
-fun MoreDetails(summary: String, startOpen: Boolean, content: @Composable ColumnScope.() -> Unit) {
-    var open by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(startOpen) }
-    val cs = MaterialTheme.colorScheme
-    Row(
-        Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(RoundedCornerShape(12.dp))
-            .clickable(onClickLabel = if (open) tr("Hide details") else tr("Show details")) { open = !open }
-            .padding(horizontal = 4.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(tr("More details"), style = MaterialTheme.typography.titleSmall, color = cs.onSurface)
-            if (summary.isNotEmpty() && !open) Text(summary, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-            else if (!open) Text(tr("Category, size, how many, description"), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-        }
-        Icon(AppIcons.ArrowDropDown, null, tint = cs.onSurfaceVariant, modifier = Modifier.rotate(if (open) 180f else 0f))
-    }
-    if (open) Column(verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
+    if (st.editCats) EditCategoriesScreen(onRenamed = { o, n -> if (st.cat == o) st.cat = n }) { st.editCats = false; if (st.cat.isNotEmpty() && st.cat !in Repo.cats) st.cat = "" }
 }

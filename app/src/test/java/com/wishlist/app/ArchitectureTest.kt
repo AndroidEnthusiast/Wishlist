@@ -28,7 +28,6 @@ class ArchitectureTest {
         "Shared.kt" to 710,
         "Exchange.kt" to 608,
         "Alerts.kt" to 585,
-        "WishForm.kt" to 564,
         "Design.kt" to 556,
         "Import.kt" to 516,
         "Friends.kt" to 514,
@@ -63,7 +62,9 @@ class ArchitectureTest {
             // My shops (19 November 2026): its state holders are in ShopsModel.kt.
             "ShopsScreen.kt", "ShopBrowser.kt",
             // The app's frame (19 November 2026): its state holder is AppModel.kt.
-            "AppScreen.kt", "AppPopups.kt"
+            "AppScreen.kt", "AppPopups.kt",
+            // The Add / Edit wish form (19 November 2026): its state holder is WishFormModel.kt.
+            "WishForm.kt", "WishFormParts.kt"
         )
 
         /** A store's data set straight away ("Exchanges.list = …"; only the checks' pretend data may). */

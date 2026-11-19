@@ -695,3 +695,8 @@ GitHub's "Publish the web page" failed 3× (its own artifact error; the APK publ
 ### 19 November 2026, midday: more building blocks (2.243)
 `Themed.kt` (not a screen) split by kind into Themed, ThemedFields, ThemedControls, ThemedSheets; a script proved all
 724 lines moved unchanged. 20 files left (next: Shared, AppScreen, Exchange, Alerts; Data waits for its own plan).
+
+### 19 November 2026, afternoon: the app's frame (2.244)
+Owner: Shared/Exchange/Alerts wait with Data. `AppScreen.kt` split into AppScreen, AppPopups + `AppState` (AppModel.kt);
+151 screenshots before/after, 150 identical (price chart moves with the clock). Fixed the big-text Visibility
+screenshot test and the guard's `saveKey` false alarm. 19 left (next: WishCards, WishForm, Design).
