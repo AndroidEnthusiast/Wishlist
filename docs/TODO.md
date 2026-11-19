@@ -14,15 +14,16 @@ Details of each item are in the doc named after it.
   2. Add a wish: paste a shop link (photo, name, price fill in), take or choose a photo, Save to another list, edit a
      price; Save without a name turns the name red (2.246). In My shops: + Add wish on a product page (2.241).
   3. A chat: open it (it starts at the newest message), send text, a wish, a photo; reply, react, delete (2.239).
-  4. A group and a gift exchange: open, invite, settings, leave dialog (Cancel) (2.237, 2.238).
+  4. A group and a gift exchange: open, invite, settings, leave dialog (Cancel) (2.237, 2.238). A gift list
+     invitation in dark mode: its heading readable (2.252).
   5. The photo editor: does the photo show straight away (in the test pictures it only showed after a tool) (2.240).
   6. Home, a list (drag to reorder, select, Reserve on a friend's list; a 2× wish: "How many?" then it shows in Gifts
      I reserved, 2.248), Friends and Profile (2.233–2.236), and the
      look of buttons, dialogs, fields and cards in every view (2.242, 2.243, 2.245, 2.247).
-- **The rebuild (owner, 18–19 November 2026; `docs/decisions/roadmap.md`):** Home done (2.233), guards in (2.234), Friends/Profile (2.235), the open list (2.236), gift exchange (2.237), wishlist groups (2.238), Messages (2.239), the photo editor (2.240), My shops (2.241), the building blocks (Styled, 2.242; Themed, 2.243), the app's frame (AppScreen, 2.244), the wish cards (2.245), the wish form (2.246), the styles (Design, 2.247), a friend's list (2.248), App settings (2.249), covers (2.250), the price page (2.251). Left:
-  the files left on `ArchitectureTest.ALLOWED` (12) (biggest: Data (waits for its own plan, owner: `docs/decisions/roadmap.md`),
+- **The rebuild (owner, 18–19 November 2026; `docs/decisions/roadmap.md`):** Home done (2.233), guards in (2.234), Friends/Profile (2.235), the open list (2.236), gift exchange (2.237), wishlist groups (2.238), Messages (2.239), the photo editor (2.240), My shops (2.241), the building blocks (Styled, 2.242; Themed, 2.243), the app's frame (AppScreen, 2.244), the wish cards (2.245), the wish form (2.246), the styles (Design, 2.247), a friend's list (2.248), App settings (2.249), covers (2.250), the price page (2.251), gift invitations (2.252). Left:
+  the files left on `ArchitectureTest.ALLOWED` (11) (biggest: Data (waits for its own plan, owner: `docs/decisions/roadmap.md`),
   Shared, Exchange, Alerts, Friends (these four wait with Data, owner; Groups, Import, Fetch proposed to wait too). Owner: the 7 screens left get the full rebuild,
-  then the owner tests: Overview, Reactions, SharedUi, GiftInvites.
+  then the owner tests: Overview, Reactions, SharedUi.
 - **Later, remind the owner (owner, 19 November 2026: "remind me later"): the data part, built like a team would.**
   After the 8 screens and the owner's test: Data, Shared, Exchange, Alerts, Friends (and Groups, Import, Fetch) behind
   cleaner "repositories" with their own checks (saving and loading give back exactly the same lists); then checks on a

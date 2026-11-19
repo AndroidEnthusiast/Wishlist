@@ -73,7 +73,7 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `ShareCard.kt` (share picture)
 - `Members.kt` (gift list members and a new owner)
 - `CollabPeople.kt` (the people circles on a collab wishlist's block; `supabase-collab.sql`)
-- `GiftInvites.kt` (inviting Friends to a gift list, and `News`: the server's news for this phone, pushed at once; `supabase-together.sql`)
+- `GiftInvites.kt` (inviting Friends to a gift list, and `News`: the server's news for this phone, pushed at once; `supabase-together.sql`) + `GiftInviteViews.kt` (Invite Friends, the invitation, its chat card; rebuilt in 2.252) + state holders `GiftInviteModel.kt`; checks `GiftInviteModelTest`, screenshots `GiftInviteScreenshotTest`
 - `Asks.kt` (stuck reservations: "Is it still being bought?")
 - `Reserved.kt` ("Gifts I reserved", side menu)
 

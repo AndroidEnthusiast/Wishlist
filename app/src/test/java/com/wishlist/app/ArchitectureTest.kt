@@ -34,8 +34,7 @@ class ArchitectureTest {
         "Groups.kt" to 506,
         "Reactions.kt" to 495,
         "SharedUi.kt" to 486,
-        "Fetch.kt" to 473,
-        "GiftInvites.kt" to 456
+        "Fetch.kt" to 473
         )
 
         /** Screens rebuilt to "layout + state holder": they only draw. Every newly rebuilt screen joins this list. */
@@ -67,14 +66,16 @@ class ArchitectureTest {
             // A list's cover photo (19 November 2026): its state holder is CoverModel.kt.
             "CoverViews.kt",
             // A wish's price page (19 November 2026): its state holders are in PriceModel.kt.
-            "PriceHistory.kt", "PriceChart.kt"
+            "PriceHistory.kt", "PriceChart.kt",
+            // Gift list invitations (19 November 2026): their state holders are in GiftInviteModel.kt.
+            "GiftInviteViews.kt"
         )
 
         /** A store's data set straight away ("Exchanges.list = …"; only the checks' pretend data may). */
         val STORE_SET = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|Chat)\\.[a-z][A-Za-z]*(\\[[^\\]]*])? = ")
 
         /** A call that changes shared data: Store.set…(), .delete…(), .leave(), … */
-        val WRITES = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|ListVisibility|Occasions|MyLists|Chat|ChatPhotos|Shops|Show|CurrencyChoice|ListCovers|Targets)\\.(set|add|delete|remove|rename|create|leave|put|update|replace|trash|reserve|move|copy|open(?!Key)|hide|join|answer|new|cancel|invite|decline|send|seen|save(?!Key)|reveal|handover|draw|settings|takeover|react|upload|forget|mark|restore|detach)[A-Za-z]*\\(")
+        val WRITES = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|ListVisibility|Occasions|MyLists|Chat|ChatPhotos|Shops|Show|CurrencyChoice|ListCovers|Targets|GiftInvites)\\.(set|add|delete|remove|rename|create|leave|put|update|replace|trash|reserve|move|copy|open(?!Key)|hide|join|answer|new|cancel|invite|decline|send|seen|save(?!Key)|reveal|handover|draw|settings|takeover|react|upload|forget|mark|restore|detach|accept)[A-Za-z]*\\(")
     }
 
     @Test fun everyFileStaysSmall() {

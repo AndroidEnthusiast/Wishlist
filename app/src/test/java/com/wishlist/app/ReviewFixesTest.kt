@@ -340,7 +340,7 @@ class OneNewWishlistTest {
         val shared = File("src/main/java/com/wishlist/app/SharedUi.kt").readText()
         assertTrue(shared.contains("Shared.setForName(ctx, l.code, forWho)"))
         assertTrue(shared.contains("tr(\"Don’t send it to %s: it’s a surprise.\", forWho)"))
-        val inv = File("src/main/java/com/wishlist/app/GiftInvites.kt").readText()
+        val inv = File("src/main/java/com/wishlist/app/GiftInviteViews.kt").readText()
         assertTrue(inv.contains("val friends = all.filterNot { Shared.isFor(forWho, it.name) }"))
     }
 

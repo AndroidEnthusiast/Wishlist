@@ -720,3 +720,7 @@ fixed: a 2× reservation wasn't remembered (missing from Gifts I reserved). Next
 ### 19 November 2026, evening: App settings (2.249)
 `Settings.kt` split into Settings, SettingsPages + `SettingsModel`; 12 screenshots identical but for the version
 number. Guard watches Show and CurrencyChoice. 14 left; 6 screens to go (Overview, Reactions, SharedUi, …).
+
+### 19 November 2026, evening: covers (2.250)
+`Covers.kt` split into Covers + CoverViews + `CoverModel` (one shared photo picker instead of two); 5 screenshots
+identical. Owner: remind them later of the data part (TODO). 5 screens to go: Overview, Reactions, SharedUi, …
