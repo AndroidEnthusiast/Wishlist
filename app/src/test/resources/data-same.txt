@@ -125,7 +125,7 @@ db list L2 'Garden' about='for the garden' cats=[Tech, Home, Garden] code=null t
   db wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
 db bin L2 bin=999,cat=Home,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
 db cats=[Tech, Home, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
-db history 1 [10.0]
+db history 1 [10.0, 12.5]
 db history 2 [10.0]
 db history 4 [10.0]
 ## categories
@@ -193,7 +193,7 @@ db list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null 
   db wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
 db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
 db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
-db history 1 [10.0]
+db history 1 [10.0, 12.5]
 db history 2 [10.0]
 db history 4 [10.0]
 ## new list with a copy
@@ -266,7 +266,7 @@ db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=
   db wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
 db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
 db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
-db history 1 [10.0]
+db history 1 [10.0, 12.5]
 db history 2 [10.0]
 db history 4 [10.0]
 ## original in the bin takes its copy
@@ -335,7 +335,7 @@ db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=
 db bin main bin=T2,cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
 db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
 db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
-db history 1 [10.0]
+db history 1 [10.0, 12.5]
 db history 2 [10.0]
 db history 4 [10.0]
 ## undo brings both back
@@ -408,7 +408,7 @@ db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=
   db wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
 db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
 db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
-db history 1 [10.0]
+db history 1 [10.0, 12.5]
 db history 2 [10.0]
 db history 4 [10.0]
 ## private wish in the bin
@@ -480,7 +480,7 @@ db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=
 db bin main bin=T3,cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,priv=true,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
 db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
 db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
-db history 1 [10.0]
+db history 1 [10.0, 12.5]
 db history 2 [10.0]
 db history 4 [10.0]
 ## restored and no longer private
@@ -553,7 +553,7 @@ db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=
   db wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
 db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
 db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
-db history 1 [10.0]
+db history 1 [10.0, 12.5]
 db history 2 [10.0]
 db history 4 [10.0]
 ## received on a list that isn't open
@@ -625,7 +625,7 @@ db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=
 db bin L2 bin=T4,cat=Garden,cur=EUR,desc=about Spade,got=true,id=3,image=,old=null,price=null,recv=T4,title=Spade,url=https://shop.example/p/3
 db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
 db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
-db history 1 [10.0]
+db history 1 [10.0, 12.5]
 db history 2 [10.0]
 db history 4 [10.0]
 ## received gift back
@@ -698,7 +698,7 @@ db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=
   db wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
 db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
 db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
-db history 1 [10.0]
+db history 1 [10.0, 12.5]
 db history 2 [10.0]
 db history 4 [10.0]
 ## I have it on every list
@@ -767,7 +767,7 @@ db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=
 db bin main bin=T5,cat=Books,cur=EUR,desc=about Book,got=true,id=4,image=,old=null,price=10.0,recv=T5,star=true,title=Book,url=https://shop.example/p/4
 db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
 db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
-db history 1 [10.0]
+db history 1 [10.0, 12.5]
 db history 2 [10.0]
 db history 4 [10.0]
 ## moved
@@ -836,7 +836,7 @@ db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=
 db bin main bin=T5,cat=Books,cur=EUR,desc=about Book,got=true,id=4,image=,old=null,price=10.0,recv=T5,star=true,title=Book,url=https://shop.example/p/4
 db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
 db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
-db history 1 [10.0]
+db history 1 [10.0, 12.5]
 db history 2 [10.0]
 db history 4 [10.0]
 ## another list open
@@ -905,7 +905,7 @@ db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=
 db bin main bin=T5,cat=Books,cur=EUR,desc=about Book,got=true,id=4,image=,old=null,price=10.0,recv=T5,star=true,title=Book,url=https://shop.example/p/4
 db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
 db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
-db history 1 [10.0]
+db history 1 [10.0, 12.5]
 db history 2 [10.0]
 db history 4 [10.0]
 ## renamed
@@ -974,7 +974,7 @@ db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=
 db bin main bin=T5,cat=Books,cur=EUR,desc=about Book,got=true,id=4,image=,old=null,price=10.0,recv=T5,star=true,title=Book,url=https://shop.example/p/4
 db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
 db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
-db history 1 [10.0]
+db history 1 [10.0, 12.5]
 db history 2 [10.0]
 db history 4 [10.0]
 ## settings and friends
@@ -1043,7 +1043,7 @@ db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=
 db bin main bin=T5,cat=Books,cur=EUR,desc=about Book,got=true,id=4,image=,old=null,price=10.0,recv=T5,star=true,title=Book,url=https://shop.example/p/4
 db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
 db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sammy)]
-db history 1 [10.0]
+db history 1 [10.0, 12.5]
 db history 2 [10.0]
 db history 4 [10.0]
 ## the original list deleted: the next takes its place
@@ -1108,7 +1108,7 @@ db bin gone_T8 bin=T8,cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,
 db bin main bin=T5,cat=Books,cur=EUR,desc=about Book,got=true,id=4,image=,old=null,price=10.0,recv=T5,star=true,title=Book,url=https://shop.example/p/4
 db bin main bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
 db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sammy)]
-db history 1 [10.0]
+db history 1 [10.0, 12.5]
 db history 2 [10.0]
 db history 4 [10.0]
 ## restored to another list
@@ -1171,7 +1171,7 @@ db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=
 db bin main bin=T5,cat=Books,cur=EUR,desc=about Book,got=true,id=4,image=,old=null,price=10.0,recv=T5,star=true,title=Book,url=https://shop.example/p/4
 db bin main bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
 db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sammy)]
-db history 1 [10.0]
+db history 1 [10.0, 12.5]
 db history 2 [10.0]
 db history 4 [10.0]
 ## category removed, bin emptied
@@ -1230,7 +1230,7 @@ db list main 'Wishlist' about='dig' cats=[Tech, House, Garden] code=null token=n
 db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=null photos=[]
   db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
 db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sammy)]
-db history 1 [10.0]
+db history 1 [10.0, 12.5]
 db history 2 [10.0]
 ## names cleaned once
 open=main ids=[main, T1] names={T1=Birthday, main=Wishlist} name=Wishlist about=dig
@@ -1289,7 +1289,7 @@ db list main 'Wishlist' about='dig' cats=[Tech, House, Garden] code=null token=n
 db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=null photos=[]
   db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
 db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sammy)]
-db history 1 [10.0]
+db history 1 [10.0, 12.5]
 db history 2 [10.0]
 ## a link for a list that isn't open
 open=main ids=[main, T1] names={T1=Birthday, main=Wishlist} name=Wishlist about=dig
@@ -1348,7 +1348,7 @@ db list main 'Wishlist' about='dig' cats=[Tech, House, Garden] code=null token=n
 db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=LINKCODE token=tok photos=[a.jpg]
   db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
 db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sammy)]
-db history 1 [10.0]
+db history 1 [10.0, 12.5]
 db history 2 [10.0]
 ## started again: everything the same
 open=main ids=[main, T1] names={T1=Birthday, main=Wishlist} name=Wishlist about=dig
@@ -1407,5 +1407,5 @@ db list main 'Wishlist' about='dig' cats=[Tech, House, Garden] code=null token=n
 db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=LINKCODE token=tok photos=[a.jpg]
   db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
 db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sammy)]
-db history 1 [10.0]
+db history 1 [10.0, 12.5]
 db history 2 [10.0]

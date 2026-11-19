@@ -115,6 +115,9 @@ class DataSameTest {
 
         startApp(); note("first start of the new version")
         Repo.addMine(c, w(4, "Book", "Books")); tick()
+        // A new second: two prices of one wish in the same second are one row in the database (its key is the wish and
+        // the second), so the record would depend on how fast the computer is.
+        Thread.sleep(1000 - System.currentTimeMillis() % 1000 + 20)
         Repo.replace(c, Repo.myWishes.first { it.id == 1L }.copy(title = "Blue teapot", price = 12.5)); note("added and changed (copy follows)")
         Repo.addCat(c, "Garden"); Repo.renameCat(c, "Home", "House"); Repo.addCat(c, "all"); Repo.addCat(c, "tech")
         note("categories")

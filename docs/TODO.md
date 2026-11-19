@@ -125,6 +125,8 @@ Details of each item are in the doc named after it.
    closed test with 12 testers for 14 days, a test channel, maybe a robot test on real phones.
 
 ## Known gaps (small, no date)
+- Two prices of one wish recorded within the same second are one row in the database (its key is the wish and the
+  second): after a restart only one is left (found 19 November 2026; practically never happens).
 - Reports of abuse have no alert yet (owner: find a better way than a failing backup).
 - Photos of a group or exchange deleted with its organiser's profile stay as unreachable files.
 - Collab wishlist pictures stay in Storage when the list is deleted by "Delete my data".
