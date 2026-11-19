@@ -691,3 +691,7 @@ removed. GitHub caught a rare start-up crash (a store made mid-drawing): stores 
 `Styled.kt` (not a screen) split by kind into StyledButtons, StyledBars, AppIcons, StyledPhotos, Styled; a script
 proved all 745 lines moved unchanged. Tests reading Styled.kt updated. 21 files left (next: Themed, Shared, AppScreen).
 GitHub's "Publish the web page" failed 3× (its own artifact error; the APK published): rerun the pages job if needed.
+
+### 19 November 2026, midday: more building blocks (2.243)
+`Themed.kt` (not a screen) split by kind into Themed, ThemedFields, ThemedControls, ThemedSheets; a script proved all
+724 lines moved unchanged. 20 files left (next: Shared, AppScreen, Exchange, Alerts; Data waits for its own plan).

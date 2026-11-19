@@ -28,7 +28,6 @@ class ArchitectureTest {
         "Shared.kt" to 710,
         "Exchange.kt" to 608,
         "Alerts.kt" to 585,
-        "WishCards.kt" to 576,
         "WishForm.kt" to 564,
         "Design.kt" to 556,
         "Import.kt" to 516,

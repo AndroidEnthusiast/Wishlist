@@ -35,7 +35,7 @@ class ReviewFixesTest {
 
     /** Rows: the compact label on the picture (as two per row), not in the words next to it. */
     @Test fun rowsShowTheLabelOnThePicture() {
-        val cards = src("WishCards.kt")
+        val cards = src("RowCard.kt")
         val row = cards.substring(cards.indexOf("fun RowCard("))
         assertTrue(row.contains("StarCorner(w, onStar, small = true, buttonSize = 28.dp)"))
         assertFalse("no label in the words any more", row.contains("MostWantedBadge(true"))
