@@ -118,6 +118,22 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 ## Web pages
 - `web/index.html` + `friends.js`: the friends' page and the invite page (styled with `edit.css` plus `wishlist.css`, same look as the editor and the app). `web/edit.html`, `edit.js`, `edit.css`: the browser editor (its Bin can only restore, by the owner's choice). `web/parse.js`: reads a product page. `web/occasion.js`: a list's occasion line (friends' page and editor). `web/reserve.js`: quantity labels and "How many will you buy?" (friends' page and editor). `web/i18n.js`: `T()` (English only) and the light/dark switch. `web/join/` and `web/list/`: link pages with their own preview pictures for invites and (older) friends' links of shared lists. `web/group.html` + `group.js` + `group.css` (+ `web/group/`, its link preview): a wishlist group for people without the app. `web/exchange.html` + `exchange.js` + `exchange.css` (+ `web/exchange/`, its link preview): a gift exchange for people without the app (organising is app-only). `web/together.js` (+ `web/emoji.js`, loaded only when the picker opens): reactions and "Is it still being bought?" on the friends' page, the group page and the editor (styles in `edit.css`).
 
+## How a screen is built (owner, 19 November 2026; guarded by `ArchitectureTest`)
+- **A layout file that only draws** (like `Home.kt`): it reads what to show from its state holder and calls the
+  holder's functions when you tap. It never changes shared data itself (Repo, Shared, Friends, Groups, Exchanges,
+  ListVisibility, Occasions, MyLists: no set…/add…/delete…/leave… calls); `ArchitectureTest.REBUILT` checks this for
+  every rebuilt screen, and each newly rebuilt screen joins that list.
+- **A state holder** (like `HomeModel.kt`, a plain class remembered by the screen; no new library): what the screen
+  shows, which dialog is open, and the actions (rename, delete, …). Decisions in small plain functions the checks test
+  on their own (like `homeActions`).
+- **Small files**, each about one thing, every file under 400 lines (`ArchitectureTest.everyFileStaysSmall`). Files
+  that were bigger on 19 November 2026 are in `ArchitectureTest.ALLOWED` with their size then: they may only shrink,
+  leave the list once under the limit, and nothing is ever added to it.
+- **Proof it looks the same** when rebuilding: screenshots before and after (`-Pwl.screens`, Quiet and Gen Z chaos,
+  light, dark, large text) compared pixel by pixel; all identical, or the difference is explained.
+- **A check-up every three months** (`.github/workflows/checkup.yml`): a GitHub issue with the biggest files and how
+  many are still on the allowed list, so drift is fixed while small.
+
 ## Server script versions (owner, 18 November 2026)
 - Every `supabase-*.sql` ends with a version stamp: it records its name and number in the locked table `wl_versions`
   (read only through `wl_script_versions()`: names and numbers, nothing about people). Raise the number with every
@@ -147,6 +163,9 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - Earlier sessions also ran local Kotlin harnesses (real `Shared.kt`, delete/undo, sorting, categories) with stand-ins for Android; they are not in this repo.
 
 ## What can and can't be checked, in full
+- Can: the real Supabase, read-only. Can't (say so, never claim it works): writing to it, the database, real shops,
+  iPhone/Safari, how screens feel on a phone, App Links, real notifications. Full lists: MAP.
+  (Moved here from CLAUDE.md on 19 November 2026 for its size limit.)
 ### Can be checked here (since 8 November 2026)
 - The real Supabase, read-only: the environment "Wishlist" allows `aspnmvmsvwbezdltykgx.supabase.co` (owner offered it). Use only the public key, and only GET calls to `/rest/v1/rpc/...` (they run read-only, so a write is refused) or functions with a wrong key. Checked on 8 November 2026: every `supabase-*.sql` script is installed (only trigger functions don't show, by design) and the helper `fetch-page` is deployed with its JWT check off (it answers `bad_request` itself).
 

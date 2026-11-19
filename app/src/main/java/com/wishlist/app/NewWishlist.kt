@@ -166,12 +166,7 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit, top: (@Compo
                 if (name.isBlank()) missing = true
                 else if (!Occasions.complete(occ)) occMissing = true
                 else {
-                    val id = Repo.createMine(ctx, name, notes)
-                    occ?.let { Occasions.setMine(ctx, id, it) }
-                    Repo.copyInto(ctx, id, picked)
-                    // New lists start on the choice in App settings (owner, 7 November 2026; default: anyone with the link).
-                    ListVisibility.startShared(ctx, id)
-                    onCreated(id)
+                    onCreated(createOwnWishlist(ctx, name, notes, occ, picked))
                 }
             }) { Text(tr("Create")) }
         },

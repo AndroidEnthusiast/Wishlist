@@ -113,3 +113,17 @@ internal fun homeActions(shared: Boolean, creator: Boolean, online: Boolean): Li
 
 /** Nothing on any of your lists and nothing shared: Home offers to import a list from elsewhere (owner, 18 November 2026). */
 internal fun homeIsEmpty(mine: List<MineData>, shared: List<SharedList>): Boolean = mine.all { it.wishes.isEmpty() } && shared.isEmpty()
+
+/**
+ * A new wishlist of your own (the New wishlist form, NewWishlist.kt): made with its name and description, its occasion,
+ * the wishes copied in from your other lists, and the visibility chosen in App settings (owner, 7 November 2026;
+ * default: anyone with the link). Its id.
+ */
+internal fun createOwnWishlist(c: Context, name: String, notes: String, occ: Occasion?, picked: List<Wish>): String {
+    val id = Repo.createMine(c, name, notes)
+    occ?.let { Occasions.setMine(c, id, it) }
+    Repo.copyInto(c, id, picked)
+    ListVisibility.startShared(c, id)
+    return id
+}
+

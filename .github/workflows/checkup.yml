@@ -1,0 +1,30 @@
+name: Quarterly check-up
+# Every three months (owner, 19 November 2026; MAP "How a screen is built"): measures how clean the app is (file
+# sizes, how many big files are left, how many screens are rebuilt) and opens a GitHub issue with it, so the owner is
+# reminded to fix drift while it's small. Only reads; free on GitHub; no Claude tokens until the owner starts a session.
+on:
+  schedule:
+    - cron: '37 7 1 1,4,7,10 *'
+  workflow_dispatch:
+
+jobs:
+  checkup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Measure the app
+        run: node tests/tools/checkup.js
+      - name: Open the check-up issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const d = new Date();
+            const title = `Quarterly check-up ${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+            await github.rest.issues.create({ owner: context.repo.owner, repo: context.repo.repo, title, body: fs.readFileSync('checkup.md', 'utf8') });

@@ -196,4 +196,10 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
   **Bug fixes only during the rebuild** (each rebuilt version looks exactly the same). Asked whether it makes building
   faster: working on the app yes (smaller files, fewer side effects); GitHub's build time hardly (splitting into Gradle
   modules would, a bigger project not chosen now).
+- **Guards so the rebuild never has to be repeated** (owner, 19 November 2026: "I don't want to repeat this exercise
+  over and over again as the app grows"; all four chosen, in now before the next screen): a file size limit (400 lines;
+  the 29 files bigger on that day are frozen at their size and may only shrink), "rebuilt screens only draw" (no
+  shared data changed outside a state holder), the recipe in the notes (CLAUDE.md, MAP "How a screen is built"), and a
+  check-up issue every three months. All in `ArchitectureTest` and `.github/workflows/checkup.yml`. Honest scope told to
+  the owner: the guards enforce structure, not good taste.
 

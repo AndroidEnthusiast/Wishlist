@@ -9,7 +9,9 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
   every script + `server-check.yml` (owner ran all 17; issue closed). Point 1: **Home done in 2.233** (7 small files,
   `HomeModel`, pixel-identical). Ask whether Home behaves the same after a day or two; then the next screen (ask which:
   Friends / Profile `FriendsUi.kt` 1,370 lines, or the open list `ListScreen.kt`), same method: before/after
-  screenshots compared pixel by pixel, a state holder, bug fixes only.
+  screenshots compared pixel by pixel, a state holder, bug fixes only. **2.234: guards** (`ArchitectureTest`: files
+  under 400 lines, 29 frozen in ALLOWED; REBUILT screens only draw; `checkup.yml` quarterly). Each rebuilt screen
+  joins REBUILT and leaves ALLOWED.
 - **2.231–2.232 (18 November 2026).** Home's numbers on a card; card buttons in one order (Reserve left, ⋮ last). **Next, owner's choice:** fix the review points, 1 and 2
   first (split the big files and move screen state out of the shared objects; a version record of the server scripts).
   Interview on the plan before starting (big build, one screen at a time).

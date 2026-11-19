@@ -68,9 +68,10 @@ The rules for every session; details are in other docs, read only the part you n
   a changed `supabase-*.sql`: `bash tests/sql/run.sh` with a local PostgreSQL. All must pass.
 - After pushing, check the GitHub build yourself. Details: MAP "Testing, in full".
 
-## What can and can't be checked here
-- Can: the real Supabase, read-only. Can't (say so, never claim it works): writing to it, the database, real shops,
-  iPhone/Safari, how screens feel on a phone, App Links, real notifications. Full lists: MAP.
+- What can and can't be checked here: MAP "What can and can't be checked, in full".
+
+## Building cleanly (owner, 19 November 2026; `ArchitectureTest`)
+- A screen = a layout that only draws + a state holder + checks (MAP "How a screen is built"); files under 400 lines.
 
 ## Keeping the notes small (owner, 12 November 2026; checked by the stop hook, `tests/notes/limits.sh`)
 - `CLAUDE.md` stays under 150 lines and 12,000 characters: move details into `docs/MAP.md` or another doc, never
