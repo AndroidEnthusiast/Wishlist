@@ -1,0 +1,308 @@
+## groups saved by an older version, read at a start
+group Group(id=G1, link=LINKG1, name=Family, pv=0, organiser=me1, inviteAll=false, members=[GroupMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, list=GroupList(code=MINECODE, name=List MINECODE, count=2, image=))], invited=[])
+photos={OLD=file://<FILES>/groups/OLD_1.jpg} faces={} unsent={}
+pref gr_state={"groups":[{"id":"G1","link":"LINKG1","name":"Family","pv":0,"organiser":"me1","invite_all":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"list":{"code":"MINECODE","name":"List MINECODE","count":2,"image":""}}],"invited":[]}],"invites":[]}
+pref sh_me=Ann
+groups on the phone=[OLD_1.jpg]
+groupfaces on the phone=[]
+list main 'My wishlist' about='' code=MINECODE token=minetok wishes=[] friends=false groups=[G1]
+## refresh: an invite and a No thanks, on screen
+sent wl_gr_face p_id=me1,p_other=m2,p_token=tok1
+sent wl_gr_news_seen p_id=me1,p_token=tok1,p_upto=5
+sent wl_gr_photo p_group=G1,p_id=me1,p_token=tok1
+sent wl_gr_photo p_group=G1,p_id=me1,p_token=tok1
+sent wl_gr_state p_id=me1,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+group Group(id=G1, link=LINKG1, name=Family, pv=1, organiser=me1, inviteAll=false, members=[GroupMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, list=GroupList(code=MINECODE, name=List MINECODE, count=2, image=)), GroupMember(id=m2, name=Kim, pv=2, web=false, code=, friend=false, list=null), GroupMember(id=m3, name=Sam, pv=1, web=false, code=, friend=true, list=null)], invited=[])
+invite GroupInvite(group=G7, name=Book club, link=LINKG7, by=id-Bob, byName=Bob, pv=0, count=3)
+photos={G1=file://<FILES>/groups/G1_1.jpg} faces={m2=file://<FILES>/groupfaces/m2_2.jpg} unsent={}
+pref gr_inv_told=[G7]
+pref gr_state={"groups":[{"id":"G1","link":"LINKG1","name":"Family","pv":1,"organiser":"me1","invite_all":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"list":{"code":"MINECODE","name":"List MINECODE","count":2,"image":""}},{"id":"m2","name":"Kim","pv":2,"web":false,"code":"","friend":false},{"id":"m3","name":"Sam","pv":1,"web":false,"code":"","friend":true}],"invited":[]}],"invites":[{"group":"G7","name":"Book club","link":"LINKG7","by":"id-Bob","by_name":"Bob","pv":0,"count":3}],"news":[{"id":5,"group":"G1","name":"Family","kind":"declined","who":"Lee"}]}
+pref sh_me=Ann
+note group_declined g:G1 'Lee' extra='Family' read=true
+note group_invite g:G7 'Book club' extra='Bob' read=true
+groups on the phone=[G1_1.jpg]
+groupfaces on the phone=[m2_2.jpg]
+list main 'My wishlist' about='' code=MINECODE token=minetok wishes=[] friends=false groups=[G1]
+## background check: a new invite and being removed
+sent wl_gr_news_seen p_id=me1,p_token=tok1,p_upto=6
+sent wl_gr_state p_id=me1,p_token=tok1
+group Group(id=G1, link=LINKG1, name=Family, pv=1, organiser=me1, inviteAll=false, members=[GroupMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, list=GroupList(code=MINECODE, name=List MINECODE, count=2, image=)), GroupMember(id=m2, name=Kim, pv=2, web=false, code=, friend=false, list=null)], invited=[])
+invite GroupInvite(group=G7, name=Book club, link=LINKG7, by=id-Bob, byName=Bob, pv=0, count=3)
+invite GroupInvite(group=G8, name=Work, link=LINKG8, by=id-Jo, byName=Jo, pv=0, count=3)
+photos={G1=file://<FILES>/groups/G1_1.jpg} faces={m2=file://<FILES>/groupfaces/m2_2.jpg} unsent={}
+pref gr_inv_told=[G7, G8]
+pref gr_state={"groups":[{"id":"G1","link":"LINKG1","name":"Family","pv":1,"organiser":"me1","invite_all":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"list":{"code":"MINECODE","name":"List MINECODE","count":2,"image":""}},{"id":"m2","name":"Kim","pv":2,"web":false,"code":"","friend":false}],"invited":[]}],"invites":[{"group":"G7","name":"Book club","link":"LINKG7","by":"id-Bob","by_name":"Bob","pv":0,"count":3},{"group":"G8","name":"Work","link":"LINKG8","by":"id-Jo","by_name":"Jo","pv":0,"count":3}],"news":[{"id":6,"group":"G9","name":"Old friends","kind":"removed"}]}
+pref sh_me=Ann
+note group_removed x:G9 'Old friends' extra='' read=false
+note group_invite g:G8 'Work' extra='Jo' read=false
+note group_declined g:G1 'Lee' extra='Family' read=true
+note group_invite g:G7 'Book club' extra='Bob' read=true
+buzz '2 updates about your wishlist groups' 'You are removed from “Old friends”'
+groups on the phone=[G1_1.jpg]
+groupfaces on the phone=[m2_2.jpg]
+list main 'My wishlist' about='' code=MINECODE token=minetok wishes=[] friends=false groups=[G1]
+## background check again: nothing told twice
+sent wl_gr_state p_id=me1,p_token=tok1
+group Group(id=G1, link=LINKG1, name=Family, pv=1, organiser=me1, inviteAll=false, members=[GroupMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, list=GroupList(code=MINECODE, name=List MINECODE, count=2, image=)), GroupMember(id=m2, name=Kim, pv=2, web=false, code=, friend=false, list=null)], invited=[])
+invite GroupInvite(group=G7, name=Book club, link=LINKG7, by=id-Bob, byName=Bob, pv=0, count=3)
+invite GroupInvite(group=G8, name=Work, link=LINKG8, by=id-Jo, byName=Jo, pv=0, count=3)
+photos={G1=file://<FILES>/groups/G1_1.jpg} faces={m2=file://<FILES>/groupfaces/m2_2.jpg} unsent={}
+pref gr_inv_told=[G7, G8]
+pref gr_state={"groups":[{"id":"G1","link":"LINKG1","name":"Family","pv":1,"organiser":"me1","invite_all":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"list":{"code":"MINECODE","name":"List MINECODE","count":2,"image":""}},{"id":"m2","name":"Kim","pv":2,"web":false,"code":"","friend":false}],"invited":[]}],"invites":[{"group":"G7","name":"Book club","link":"LINKG7","by":"id-Bob","by_name":"Bob","pv":0,"count":3},{"group":"G8","name":"Work","link":"LINKG8","by":"id-Jo","by_name":"Jo","pv":0,"count":3}],"news":[]}
+pref sh_me=Ann
+note group_removed x:G9 'Old friends' extra='' read=false
+note group_invite g:G8 'Work' extra='Jo' read=false
+note group_declined g:G1 'Lee' extra='Family' read=true
+note group_invite g:G7 'Book club' extra='Bob' read=true
+buzz '2 updates about your wishlist groups' 'You are removed from “Old friends”'
+groups on the phone=[G1_1.jpg]
+groupfaces on the phone=[m2_2.jpg]
+list main 'My wishlist' about='' code=MINECODE token=minetok wishes=[] friends=false groups=[G1]
+made 20 long
+## a group made with an Only me list: online for the group only
+sent wl_create_list p_code=<R1>,p_name=Secret,p_token=<R2>
+sent wl_gr_create p_group=<R3>,p_id=me1,p_link=<R4>,p_list=<R1>,p_list_token=<R2>,p_name=Family two,p_token=tok1
+sent wl_gr_photo p_group=G1,p_id=me1,p_token=tok1
+sent wl_gr_state p_id=me1,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_set_link p_code=<R1>,p_on=false,p_token=<R2>
+sent wl_set_owner p_code=<R1>,p_name=Ann,p_token=<R2>
+sent wl_sync_list p_cats=["Tech","Home","Fashion","Books"],p_code=<R1>,p_items=[{"id":61,"url":"https:\/\/shop.example\/61","title":"Pen","desc":"","image":"","price":3,"old":null,"cur":"EUR","cat":"","got":false}],p_name=Secret,p_token=<R2>
+group Group(id=G1, link=LINKG1, name=Family, pv=1, organiser=me1, inviteAll=false, members=[GroupMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, list=GroupList(code=MINECODE, name=List MINECODE, count=2, image=)), GroupMember(id=m2, name=Kim, pv=2, web=false, code=, friend=false, list=null)], invited=[])
+invite GroupInvite(group=G7, name=Book club, link=LINKG7, by=id-Bob, byName=Bob, pv=0, count=3)
+invite GroupInvite(group=G8, name=Work, link=LINKG8, by=id-Jo, byName=Jo, pv=0, count=3)
+photos={G1=file://<FILES>/groups/G1_1.jpg} faces={m2=file://<FILES>/groupfaces/m2_2.jpg} unsent={}
+pref gr_inv_told=[G7, G8]
+pref gr_state={"groups":[{"id":"G1","link":"LINKG1","name":"Family","pv":1,"organiser":"me1","invite_all":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"list":{"code":"MINECODE","name":"List MINECODE","count":2,"image":""}},{"id":"m2","name":"Kim","pv":2,"web":false,"code":"","friend":false}],"invited":[]}],"invites":[{"group":"G7","name":"Book club","link":"LINKG7","by":"id-Bob","by_name":"Bob","pv":0,"count":3},{"group":"G8","name":"Work","link":"LINKG8","by":"id-Jo","by_name":"Jo","pv":0,"count":3}],"news":[]}
+pref link_off=[T1]
+pref sh_me=Ann
+note group_removed x:G9 'Old friends' extra='' read=false
+note group_invite g:G8 'Work' extra='Jo' read=false
+note group_declined g:G1 'Lee' extra='Family' read=true
+note group_invite g:G7 'Book club' extra='Bob' read=true
+buzz '2 updates about your wishlist groups' 'You are removed from “Old friends”'
+groups on the phone=[G1_1.jpg]
+groupfaces on the phone=[m2_2.jpg]
+list main 'My wishlist' about='' code=MINECODE token=minetok wishes=[] friends=false groups=[G1]
+list T1 'Secret' about='' code=<R1> token=<R2> wishes=[61] friends=false groups=[]
+preview=GroupPreview(id=G1, name=Family, organiser=Ann, count=3, photo=) dead=null
+join=G2 dead=null
+join offline=offline
+refresh offline=offline
+## preview and join, also dead and offline
+sent wl_gr_info p_link=LINKG1
+sent wl_gr_info p_link=NOPE
+sent wl_gr_join p_group=,p_id=me1,p_link=DEADLINK,p_list=MINECODE,p_list_token=minetok,p_token=tok1
+sent wl_gr_join p_group=,p_id=me1,p_link=LINKG2,p_list=MINECODE,p_list_token=minetok,p_token=tok1
+sent wl_gr_photo p_group=G1,p_id=me1,p_token=tok1
+sent wl_gr_state p_id=me1,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+group Group(id=G1, link=LINKG1, name=Family, pv=1, organiser=me1, inviteAll=false, members=[GroupMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, list=GroupList(code=MINECODE, name=List MINECODE, count=2, image=)), GroupMember(id=m2, name=Kim, pv=2, web=false, code=, friend=false, list=null)], invited=[])
+invite GroupInvite(group=G7, name=Book club, link=LINKG7, by=id-Bob, byName=Bob, pv=0, count=3)
+invite GroupInvite(group=G8, name=Work, link=LINKG8, by=id-Jo, byName=Jo, pv=0, count=3)
+photos={G1=file://<FILES>/groups/G1_1.jpg} faces={m2=file://<FILES>/groupfaces/m2_2.jpg} unsent={}
+pref gr_inv_told=[G7, G8]
+pref gr_state={"groups":[{"id":"G1","link":"LINKG1","name":"Family","pv":1,"organiser":"me1","invite_all":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"list":{"code":"MINECODE","name":"List MINECODE","count":2,"image":""}},{"id":"m2","name":"Kim","pv":2,"web":false,"code":"","friend":false}],"invited":[]}],"invites":[{"group":"G7","name":"Book club","link":"LINKG7","by":"id-Bob","by_name":"Bob","pv":0,"count":3},{"group":"G8","name":"Work","link":"LINKG8","by":"id-Jo","by_name":"Jo","pv":0,"count":3}],"news":[]}
+pref link_off=[T1]
+pref sh_me=Ann
+note group_removed x:G9 'Old friends' extra='' read=false
+note group_invite g:G8 'Work' extra='Jo' read=false
+note group_declined g:G1 'Lee' extra='Family' read=true
+note group_invite g:G7 'Book club' extra='Bob' read=true
+buzz '2 updates about your wishlist groups' 'You are removed from “Old friends”'
+groups on the phone=[G1_1.jpg]
+groupfaces on the phone=[m2_2.jpg]
+list main 'My wishlist' about='' code=MINECODE token=minetok wishes=[] friends=false groups=[G1]
+list T1 'Secret' about='' code=<R1> token=<R2> wishes=[61] friends=false groups=[]
+## change list, No thanks, leave, remove, settings, new link
+sent wl_gr_decline p_group=G7,p_id=me1,p_token=tok1
+sent wl_gr_leave p_group=G1,p_id=me1,p_next=m2,p_token=tok1
+sent wl_gr_new_link p_group=G1,p_id=me1,p_link=<R5>,p_token=tok1
+sent wl_gr_photo p_group=G1,p_id=me1,p_token=tok1
+sent wl_gr_photo p_group=G1,p_id=me1,p_token=tok1
+sent wl_gr_photo p_group=G1,p_id=me1,p_token=tok1
+sent wl_gr_photo p_group=G1,p_id=me1,p_token=tok1
+sent wl_gr_photo p_group=G1,p_id=me1,p_token=tok1
+sent wl_gr_photo p_group=G1,p_id=me1,p_token=tok1
+sent wl_gr_remove p_group=G1,p_id=me1,p_member=m2,p_token=tok1
+sent wl_gr_set_list p_group=G1,p_id=me1,p_list=<R1>,p_list_token=<R2>,p_token=tok1
+sent wl_gr_settings p_group=G1,p_id=me1,p_invite_all=true,p_name=Fam,p_token=tok1
+sent wl_gr_state p_id=me1,p_token=tok1
+sent wl_gr_state p_id=me1,p_token=tok1
+sent wl_gr_state p_id=me1,p_token=tok1
+sent wl_gr_state p_id=me1,p_token=tok1
+sent wl_gr_state p_id=me1,p_token=tok1
+sent wl_gr_state p_id=me1,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+group Group(id=G1, link=LINKG1, name=Family, pv=1, organiser=me1, inviteAll=false, members=[GroupMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, list=GroupList(code=MINECODE, name=List MINECODE, count=2, image=)), GroupMember(id=m2, name=Kim, pv=2, web=false, code=, friend=false, list=null)], invited=[])
+invite GroupInvite(group=G7, name=Book club, link=LINKG7, by=id-Bob, byName=Bob, pv=0, count=3)
+invite GroupInvite(group=G8, name=Work, link=LINKG8, by=id-Jo, byName=Jo, pv=0, count=3)
+photos={G1=file://<FILES>/groups/G1_1.jpg} faces={m2=file://<FILES>/groupfaces/m2_2.jpg} unsent={}
+pref gr_inv_told=[G7, G8]
+pref gr_state={"groups":[{"id":"G1","link":"LINKG1","name":"Family","pv":1,"organiser":"me1","invite_all":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"list":{"code":"MINECODE","name":"List MINECODE","count":2,"image":""}},{"id":"m2","name":"Kim","pv":2,"web":false,"code":"","friend":false}],"invited":[]}],"invites":[{"group":"G7","name":"Book club","link":"LINKG7","by":"id-Bob","by_name":"Bob","pv":0,"count":3},{"group":"G8","name":"Work","link":"LINKG8","by":"id-Jo","by_name":"Jo","pv":0,"count":3}],"news":[]}
+pref link_off=[T1]
+pref sh_me=Ann
+note group_removed x:G9 'Old friends' extra='' read=false
+note group_invite g:G8 'Work' extra='Jo' read=false
+note group_declined g:G1 'Lee' extra='Family' read=true
+note group_invite g:G7 'Book club' extra='Bob' read=true
+buzz '2 updates about your wishlist groups' 'You are removed from “Old friends”'
+groups on the phone=[G1_1.jpg]
+groupfaces on the phone=[m2_2.jpg]
+list main 'My wishlist' about='' code=MINECODE token=minetok wishes=[] friends=false groups=[G1]
+list T1 'Secret' about='' code=<R1> token=<R2> wishes=[61] friends=false groups=[]
+unsent=1 missing=2
+list=null
+## invites (one fails), a brought list, deleted
+sent wl_chat_key p_id=me1,p_other=f1,p_token=tok1
+sent wl_chat_key p_id=me1,p_other=f1,p_token=tok1
+sent wl_gr_delete p_group=G1,p_id=me1,p_token=tok1
+sent wl_gr_invite p_friend=bad,p_group=G1,p_id=me1,p_token=tok1
+sent wl_gr_invite p_friend=f1,p_group=G1,p_id=me1,p_token=tok1
+sent wl_gr_invite p_friend=f1,p_group=G1,p_id=me1,p_token=tok1
+sent wl_gr_list p_code=X,p_group=G1,p_id=me1,p_token=tok1
+sent wl_gr_photo p_group=G1,p_id=me1,p_token=tok1
+sent wl_gr_photo p_group=G1,p_id=me1,p_token=tok1
+sent wl_gr_photo p_group=G1,p_id=me1,p_token=tok1
+sent wl_gr_state p_id=me1,p_token=tok1
+sent wl_gr_state p_id=me1,p_token=tok1
+sent wl_gr_state p_id=me1,p_token=tok1
+sent wl_pf_key p_id=me1,p_key=<CHAT KEY>,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+group Group(id=G1, link=LINKG1, name=Family, pv=1, organiser=me1, inviteAll=false, members=[GroupMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, list=GroupList(code=MINECODE, name=List MINECODE, count=2, image=)), GroupMember(id=m2, name=Kim, pv=2, web=false, code=, friend=false, list=null)], invited=[])
+invite GroupInvite(group=G7, name=Book club, link=LINKG7, by=id-Bob, byName=Bob, pv=0, count=3)
+invite GroupInvite(group=G8, name=Work, link=LINKG8, by=id-Jo, byName=Jo, pv=0, count=3)
+photos={G1=file://<FILES>/groups/G1_1.jpg} faces={m2=file://<FILES>/groupfaces/m2_2.jpg} unsent={G1=1}
+pref gr_inv_told=[G7, G8]
+pref gr_state={"groups":[{"id":"G1","link":"LINKG1","name":"Family","pv":1,"organiser":"me1","invite_all":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"list":{"code":"MINECODE","name":"List MINECODE","count":2,"image":""}},{"id":"m2","name":"Kim","pv":2,"web":false,"code":"","friend":false}],"invited":[]}],"invites":[{"group":"G7","name":"Book club","link":"LINKG7","by":"id-Bob","by_name":"Bob","pv":0,"count":3},{"group":"G8","name":"Work","link":"LINKG8","by":"id-Jo","by_name":"Jo","pv":0,"count":3}],"news":[]}
+pref link_off=[T1]
+pref sh_me=Ann
+note group_removed x:G9 'Old friends' extra='' read=false
+note group_invite g:G8 'Work' extra='Jo' read=false
+note group_declined g:G1 'Lee' extra='Family' read=true
+note group_invite g:G7 'Book club' extra='Bob' read=true
+buzz '2 updates about your wishlist groups' 'You are removed from “Old friends”'
+groups on the phone=[G1_1.jpg]
+groupfaces on the phone=[m2_2.jpg]
+list main 'My wishlist' about='' code=MINECODE token=minetok wishes=[] friends=false groups=[G1]
+list T1 'Secret' about='' code=<R1> token=<R2> wishes=[61] friends=false groups=[]
+organiser=true invite=true mine=main
+link https://x.example/group/?g=abcdefghjkmnpqrstuvw -> ABCDEFGHJKMNPQRSTUVW
+link wishlist://group?G=ABCDEFGHJKMNPQRSTUVW -> ABCDEFGHJKMNPQRSTUVW
+link g=SHORT -> null
+link nothing -> null
+me https://x/#me=ABCDEFGHJKMNPQRSTUVW.ABCDEFGHJKMNPQRSTUV2.dev-1 -> (ABCDEFGHJKMNPQRSTUVW, ABCDEFGHJKMNPQRSTUV2, dev-1)
+me #me=ABCDEFGHJKMNPQRSTUVW.ABCDEFGHJKMNPQRSTUV2 -> (ABCDEFGHJKMNPQRSTUVW, ABCDEFGHJKMNPQRSTUV2, )
+me #me=bad -> null
+share link https://androidenthusiast.github.io/Wishlist/group/?g=ABC
+face me1 -> null
+face m2 -> file://<FILES>/groupfaces/m2_2.jpg
+## links and faces
+group Group(id=G1, link=LINKG1, name=Family, pv=1, organiser=me1, inviteAll=false, members=[GroupMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, list=GroupList(code=MINECODE, name=List MINECODE, count=2, image=)), GroupMember(id=m2, name=Kim, pv=2, web=false, code=, friend=false, list=null)], invited=[])
+invite GroupInvite(group=G7, name=Book club, link=LINKG7, by=id-Bob, byName=Bob, pv=0, count=3)
+invite GroupInvite(group=G8, name=Work, link=LINKG8, by=id-Jo, byName=Jo, pv=0, count=3)
+photos={G1=file://<FILES>/groups/G1_1.jpg} faces={m2=file://<FILES>/groupfaces/m2_2.jpg} unsent={G1=1}
+pref gr_inv_told=[G7, G8]
+pref gr_state={"groups":[{"id":"G1","link":"LINKG1","name":"Family","pv":1,"organiser":"me1","invite_all":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"list":{"code":"MINECODE","name":"List MINECODE","count":2,"image":""}},{"id":"m2","name":"Kim","pv":2,"web":false,"code":"","friend":false}],"invited":[]}],"invites":[{"group":"G7","name":"Book club","link":"LINKG7","by":"id-Bob","by_name":"Bob","pv":0,"count":3},{"group":"G8","name":"Work","link":"LINKG8","by":"id-Jo","by_name":"Jo","pv":0,"count":3}],"news":[]}
+pref link_off=[T1]
+pref sh_me=Ann
+note group_removed x:G9 'Old friends' extra='' read=false
+note group_invite g:G8 'Work' extra='Jo' read=false
+note group_declined g:G1 'Lee' extra='Family' read=true
+note group_invite g:G7 'Book club' extra='Bob' read=true
+buzz '2 updates about your wishlist groups' 'You are removed from “Old friends”'
+groups on the phone=[G1_1.jpg]
+groupfaces on the phone=[m2_2.jpg]
+list main 'My wishlist' about='' code=MINECODE token=minetok wishes=[] friends=false groups=[G1]
+list T1 'Secret' about='' code=<R1> token=<R2> wishes=[61] friends=false groups=[]
+wrong link=not a browser profile
+moved in as list
+## a browser member moves into the app
+sent wl_get_list p_code=WEBLIST1
+sent wl_gr_photo p_group=G1,p_id=me1,p_token=tok1
+sent wl_gr_state p_id=me1,p_token=tok1
+sent wl_gr_takeover p_device=device-1,p_id=me1,p_token=tok1,p_web=WEBID,p_web_device=webdev,p_web_token=WEBTOKEN
+sent wl_gr_web_me p_id=NOTWEB,p_token=t
+sent wl_gr_web_me p_id=WEBID,p_token=WEBTOKEN
+sent wl_gx_takeover p_id=me1,p_token=tok1,p_web=WEBID,p_web_token=WEBTOKEN
+sent wl_pf_save p_id=me1,p_name=,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Ann,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Webby,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Webby,p_token=tok1
+sent wl_set_link p_code=WEBLIST1,p_on=false,p_token=wtok
+sent wl_set_owner p_code=WEBLIST1,p_name=Webby,p_token=wtok
+sent wl_sync_list p_cats=["Tech","Home","Fashion","Books"],p_code=WEBLIST1,p_items=[{"id":71,"url":"https:\/\/shop.example\/71","title":"Lamp","desc":"","image":"","price":5,"old":null,"cur":"EUR","cat":"","got":false},{"id":0,"kind":"about","about":"from the browser","url":"","title":""}],p_name=Web list,p_token=wtok
+group Group(id=G1, link=LINKG1, name=Family, pv=1, organiser=me1, inviteAll=false, members=[GroupMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, list=GroupList(code=MINECODE, name=List MINECODE, count=2, image=)), GroupMember(id=m2, name=Kim, pv=2, web=false, code=, friend=false, list=null)], invited=[])
+invite GroupInvite(group=G7, name=Book club, link=LINKG7, by=id-Bob, byName=Bob, pv=0, count=3)
+invite GroupInvite(group=G8, name=Work, link=LINKG8, by=id-Jo, byName=Jo, pv=0, count=3)
+photos={G1=file://<FILES>/groups/G1_1.jpg} faces={m2=file://<FILES>/groupfaces/m2_2.jpg} unsent={G1=1}
+pref gr_inv_told=[G7, G8]
+pref gr_state={"groups":[{"id":"G1","link":"LINKG1","name":"Family","pv":1,"organiser":"me1","invite_all":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"list":{"code":"MINECODE","name":"List MINECODE","count":2,"image":""}},{"id":"m2","name":"Kim","pv":2,"web":false,"code":"","friend":false}],"invited":[]}],"invites":[{"group":"G7","name":"Book club","link":"LINKG7","by":"id-Bob","by_name":"Bob","pv":0,"count":3},{"group":"G8","name":"Work","link":"LINKG8","by":"id-Jo","by_name":"Jo","pv":0,"count":3}],"news":[]}
+pref link_off=[T1, T2]
+pref sh_me=Webby
+note group_removed x:G9 'Old friends' extra='' read=false
+note group_invite g:G8 'Work' extra='Jo' read=false
+note group_declined g:G1 'Lee' extra='Family' read=true
+note group_invite g:G7 'Book club' extra='Bob' read=true
+buzz '2 updates about your wishlist groups' 'You are removed from “Old friends”'
+groups on the phone=[G1_1.jpg]
+groupfaces on the phone=[m2_2.jpg]
+list main 'My wishlist' about='' code=MINECODE token=minetok wishes=[] friends=false groups=[G1]
+list T1 'Secret' about='' code=<R1> token=<R2> wishes=[61] friends=false groups=[]
+list T2 'Web list' about='from the browser' code=WEBLIST1 token=wtok wishes=[71] friends=false groups=[]
+## group photo removed
+sent wl_gr_photo p_group=G1,p_id=me1,p_token=tok1
+sent wl_gr_photo_url p_group=G1,p_id=me1,p_token=tok1,p_url=
+sent wl_gr_state p_id=me1,p_token=tok1
+sent wl_pf_save p_id=me1,p_name=Webby,p_token=tok1
+group Group(id=G1, link=LINKG1, name=Family, pv=1, organiser=me1, inviteAll=false, members=[GroupMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, list=GroupList(code=MINECODE, name=List MINECODE, count=2, image=)), GroupMember(id=m2, name=Kim, pv=2, web=false, code=, friend=false, list=null)], invited=[])
+invite GroupInvite(group=G7, name=Book club, link=LINKG7, by=id-Bob, byName=Bob, pv=0, count=3)
+invite GroupInvite(group=G8, name=Work, link=LINKG8, by=id-Jo, byName=Jo, pv=0, count=3)
+photos={G1=file://<FILES>/groups/G1_1.jpg} faces={m2=file://<FILES>/groupfaces/m2_2.jpg} unsent={G1=1}
+pref gr_inv_told=[G7, G8]
+pref gr_state={"groups":[{"id":"G1","link":"LINKG1","name":"Family","pv":1,"organiser":"me1","invite_all":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"list":{"code":"MINECODE","name":"List MINECODE","count":2,"image":""}},{"id":"m2","name":"Kim","pv":2,"web":false,"code":"","friend":false}],"invited":[]}],"invites":[{"group":"G7","name":"Book club","link":"LINKG7","by":"id-Bob","by_name":"Bob","pv":0,"count":3},{"group":"G8","name":"Work","link":"LINKG8","by":"id-Jo","by_name":"Jo","pv":0,"count":3}],"news":[]}
+pref link_off=[T1, T2]
+pref sh_me=Webby
+note group_removed x:G9 'Old friends' extra='' read=false
+note group_invite g:G8 'Work' extra='Jo' read=false
+note group_declined g:G1 'Lee' extra='Family' read=true
+note group_invite g:G7 'Book club' extra='Bob' read=true
+buzz '2 updates about your wishlist groups' 'You are removed from “Old friends”'
+groups on the phone=[G1_1.jpg]
+groupfaces on the phone=[m2_2.jpg]
+list main 'My wishlist' about='' code=MINECODE token=minetok wishes=[] friends=false groups=[G1]
+list T1 'Secret' about='' code=<R1> token=<R2> wishes=[61] friends=false groups=[]
+list T2 'Web list' about='from the browser' code=WEBLIST1 token=wtok wishes=[71] friends=false groups=[]
+## started again
+group Group(id=G1, link=LINKG1, name=Family, pv=1, organiser=me1, inviteAll=false, members=[GroupMember(id=me1, name=Ann, pv=0, web=false, code=, friend=false, list=GroupList(code=MINECODE, name=List MINECODE, count=2, image=)), GroupMember(id=m2, name=Kim, pv=2, web=false, code=, friend=false, list=null)], invited=[])
+invite GroupInvite(group=G7, name=Book club, link=LINKG7, by=id-Bob, byName=Bob, pv=0, count=3)
+invite GroupInvite(group=G8, name=Work, link=LINKG8, by=id-Jo, byName=Jo, pv=0, count=3)
+photos={G1=file://<FILES>/groups/G1_1.jpg} faces={m2=file://<FILES>/groupfaces/m2_2.jpg} unsent={G1=1}
+pref gr_inv_told=[G7, G8]
+pref gr_state={"groups":[{"id":"G1","link":"LINKG1","name":"Family","pv":1,"organiser":"me1","invite_all":false,"members":[{"id":"me1","name":"Ann","pv":0,"web":false,"code":"","friend":false,"list":{"code":"MINECODE","name":"List MINECODE","count":2,"image":""}},{"id":"m2","name":"Kim","pv":2,"web":false,"code":"","friend":false}],"invited":[]}],"invites":[{"group":"G7","name":"Book club","link":"LINKG7","by":"id-Bob","by_name":"Bob","pv":0,"count":3},{"group":"G8","name":"Work","link":"LINKG8","by":"id-Jo","by_name":"Jo","pv":0,"count":3}],"news":[]}
+pref link_off=[T1, T2]
+pref sh_me=Webby
+note group_removed x:G9 'Old friends' extra='' read=false
+note group_invite g:G8 'Work' extra='Jo' read=false
+note group_declined g:G1 'Lee' extra='Family' read=true
+note group_invite g:G7 'Book club' extra='Bob' read=true
+buzz '2 updates about your wishlist groups' 'You are removed from “Old friends”'
+groups on the phone=[G1_1.jpg]
+groupfaces on the phone=[m2_2.jpg]
+list main 'My wishlist' about='' code=MINECODE token=minetok wishes=[] friends=false groups=[G1]
+list T1 'Secret' about='' code=<R1> token=<R2> wishes=[61] friends=false groups=[]
+list T2 'Web list' about='from the browser' code=WEBLIST1 token=wtok wishes=[71] friends=false groups=[]
