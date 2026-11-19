@@ -1,0 +1,191 @@
+## the saved pages
+page 'price in the page's own tags, with its currency' https://shop.example/p/1 200
+  meta=Meta(title=Teapot, desc=, image=, price=34.95, currency=EUR, blocked=false, product=true, currencySure=true)
+  product=null shown=null
+  foreign=0
+page 'product data with its currency, a related product is skipped' https://www.rituals.com/p/1 200
+  meta=Meta(title=Gift set, desc=, image=, price=39.9, currency=EUR, blocked=false, product=true, currencySure=true)
+  product=LdProduct(name=Gift set, image=, price=39.9, currency=EUR) shown=null
+  foreign=0
+page 'product data without a currency: the currency is a guess' https://shop.nl/p/1 200
+  meta=Meta(title=Mug, desc=, image=, price=12.5, currency=EUR, blocked=false, product=true, currencySure=false)
+  product=LdProduct(name=Mug, image=, price=12.5, currency=) shown=null
+  foreign=0
+page 'a 'not found' page: the suggestions' prices are not this product's' https://shop.example/p/1 404
+  meta=Meta(title=Page not found, desc=, image=, price=null, currency=USD, blocked=false, product=false, currencySure=false)
+  product=null shown=(19.99, EUR)
+  foreign=0
+page 'a product that is gone (410) with product data left on the page' https://shop.example/p/1 410
+  meta=Meta(title=No longer available, desc=, image=, price=null, currency=USD, blocked=false, product=true, currencySure=false)
+  product=LdProduct(name=Old, image=, price=59.0, currency=EUR) shown=null
+  foreign=0
+page 'the price shown on the page, next to its symbol' https://shop.com/p/1 200
+  meta=Meta(title=Lamp, desc=, image=, price=39.9, currency=EUR, blocked=false, product=true, currencySure=true)
+  product=null shown=(39.9, EUR)
+  foreign=0
+page 'an old (crossed-out) price is never the price' https://shop.com/p/1 200
+  meta=Meta(title=Lamp, desc=, image=, price=39.9, currency=EUR, blocked=false, product=true, currencySure=true)
+  product=null shown=(39.9, EUR)
+  foreign=0
+page 'a sponsored tile above the product is skipped' https://www.zalando.nl/p/1 200
+  meta=Meta(title=Jacket, desc=, image=, price=89.95, currency=EUR, blocked=false, product=true, currencySure=true)
+  product=null shown=(89.95, EUR)
+  foreign=1
+page 'a price inside a link to another product is skipped' https://shop.example/p/1 200
+  meta=Meta(title=Jacket, desc=, image=, price=20.0, currency=EUR, blocked=false, product=true, currencySure=true)
+  product=null shown=(20.0, EUR)
+  foreign=1
+page 'Amazon: the price to pay, with its symbol' https://www.amazon.de/dp/B0ABCDEFGH 200
+  meta=Meta(title=Gadget, desc=, image=, price=1299.0, currency=EUR, blocked=false, product=true, currencySure=true)
+  product=null shown=(1499.0, EUR)
+  foreign=0
+page 'sizes and colours: the variant of this page' https://shop.example/jacket?size=m 200
+  meta=Meta(title=Jacket, desc=, image=, price=110.0, currency=EUR, blocked=false, product=true, currencySure=true)
+  product=LdProduct(name=Jacket, image=, price=110.0, currency=EUR) shown=null
+  foreign=0
+page 'several sellers: the lowest price (AggregateOffer)' https://shop.co.uk/p/1 200
+  meta=Meta(title=Book, desc=, image=, price=12.5, currency=GBP, blocked=false, product=true, currencySure=true)
+  product=LdProduct(name=Book, image=, price=12.5, currency=GBP) shown=null
+  foreign=0
+page 'a price in words with its symbol' https://shop.example/p/1 200
+  meta=Meta(title=Mug, desc=, image=, price=19.99, currency=USD, blocked=false, product=true, currencySure=true)
+  product=null shown=null
+  foreign=0
+page 'a page without any price' https://shop.example/p/1 200
+  meta=Meta(title=Mug, desc=, image=, price=null, currency=USD, blocked=false, product=false, currencySure=false)
+  product=null shown=null
+  foreign=0
+page 'Shopify picture as http:// (Baracuta, 16 November 2026): the https one is used' https://www.baracuta.com/products/g9 200
+  meta=Meta(title=Mackinaw Wool G9, desc=, image=https://www.baracuta.com/cdn/shop/files/g9.jpg?v=1, price=470.0, currency=EUR, blocked=false, product=true, currencySure=true)
+  product=null shown=null
+  foreign=0
+page 'only an http:// picture: upgraded to https://' https://shop.example/lamp 200
+  meta=Meta(title=Lamp, desc=, image=https://cdn.shop.example/lamp.jpg, price=40.0, currency=EUR, blocked=false, product=true, currencySure=true)
+  product=null shown=null
+  foreign=0
+## extra pages
+page 'robot check' https://www.amazon.nl/dp/B01 200
+  meta=Meta(title=, desc=, image=, price=null, currency=USD, blocked=true, product=false, currencySure=false)
+  product=null shown=null
+  foreign=0
+page 'captcha with a price' https://shop.example/p 200
+  meta=Meta(title=, desc=, image=, price=null, currency=USD, blocked=true, product=false, currencySure=false)
+  product=null shown=null
+  foreign=0
+page 'not found' https://shop.example/x 404
+  meta=Meta(title=Page not found, desc=, image=, price=null, currency=USD, blocked=false, product=false, currencySure=false)
+  product=null shown=null
+  foreign=1
+page 'amazon deal' https://www.amazon.nl/dp/B0ABC12345 200
+  meta=Meta(title=Lamp, desc=, image=https://m.media-amazon.com/images/I/x.jpg, price=24.99, currency=EUR, blocked=false, product=true, currencySure=true)
+  product=null shown=(24.99, EUR)
+  foreign=0
+page 'price in words' https://www.funda.nl/koop/x/ 200
+  meta=Meta(title=House, desc=, image=, price=725000.0, currency=EUR, blocked=false, product=true, currencySure=true)
+  product=null shown=null
+  foreign=0
+page 'euro thousands' https://www.funda.nl/koop/y/ 200
+  meta=Meta(title=Flat, desc=, image=, price=1250000.0, currency=EUR, blocked=false, product=true, currencySure=true)
+  product=null shown=null
+  foreign=0
+page 'name with shop and number' https://link.marktplaats.nl/m2434550716 200
+  meta=Meta(title=Fiets, desc=, image=https://img.example/f.jpg, price=null, currency=EUR, blocked=false, product=false, currencySure=false)
+  product=null shown=null
+  foreign=0
+page 'bol name first' https://www.bol.com/nl/nl/p/lamp/1/ 200
+  meta=Meta(title=Mooie lamp, desc=, image=, price=39.0, currency=USD, blocked=false, product=true, currencySure=false)
+  product=null shown=null
+  foreign=0
+page 'kronor' https://shop.se/p/1 200
+  meta=Meta(title=Ljus, desc=, image=, price=null, currency=USD, blocked=false, product=false, currencySure=false)
+  product=null shown=null
+  foreign=0
+page 'zloty' https://shop.pl/p/1 200
+  meta=Meta(title=Świeca, desc=, image=, price=null, currency=USD, blocked=false, product=false, currencySure=false)
+  product=null shown=null
+  foreign=0
+page 'empty' https://shop.example/empty 200
+  meta=null
+  product=null shown=null
+  foreign=0
+## links
+cleanUrl 'https://www.amazon.nl/Some-Name/dp/B0ABC12345/ref=sr_1_1?tag=x&th=1' -> https://www.amazon.nl/dp/B0ABC12345
+cleanUrl 'https://www.amazon.com/gp/product/B0ABC12345?psc=1' -> https://www.amazon.com/dp/B0ABC12345
+cleanUrl 'https://amazon.de/dp/B0ABC12345' -> https://amazon.de/dp/B0ABC12345
+cleanUrl 'https://www.etsy.com/listing/123456/a-nice-mug?ref=shop&ga=1' -> https://www.etsy.com/listing/123456
+cleanUrl 'https://www.etsy.com/nl/listing/9/x' -> https://www.etsy.com/listing/9
+cleanUrl 'https://shop.example/p?x=1' -> https://shop.example/p?x=1
+cleanUrl 'http://shop.example/p' -> http://shop.example/p
+cleanUrl 'ftp://x' -> null
+cleanUrl '' -> null
+cleanUrl '  https://shop.example/a  ' -> https://shop.example/a
+cleanUrl 'javascript:alert(1)' -> null
+secure 'http://img.example/a.jpg' -> https://img.example/a.jpg
+secure 'https://img.example/a.jpg' -> https://img.example/a.jpg
+secure 'HTTP://x/y' -> https://x/y
+secure 'data:x' -> data:x
+## numbers and currencies
+toNum '12' -> 12.0
+toNum '12,50' -> 12.5
+toNum '12.50' -> 12.5
+toNum '1.299,00' -> 1299.0
+toNum '1,299.00' -> 1299.0
+toNum '1 299,00' -> 1299.0
+toNum '€ 39,99' -> 39.99
+toNum '1.250.000' -> 1250000.0
+toNum '0,99' -> 0.99
+toNum 'abc' -> null
+toNum '' -> null
+toNum '.' -> null
+toNum '12,5' -> 125.0
+toNum '1.2.3' -> null
+toNum '99,-' -> 99.0
+toNum '1'299.50' -> 1299.5
+namesCurrency '€ 1' -> true
+namesCurrency 'EUR 2' -> true
+namesCurrency '3 kr' -> false
+namesCurrency '£' -> true
+namesCurrency 'SEK 4' -> true
+namesCurrency 'zł 5' -> false
+namesCurrency '¥6' -> true
+namesCurrency 'plain 7' -> false
+currencyOf '12' shop.co.uk -> GBP
+currencyOf '12' shop.de -> EUR
+currencyOf '12' shop.se -> USD
+currencyOf '12' shop.pl -> USD
+currencyOf '12' shop.ch -> USD
+currencyOf '12' amazon.com -> USD
+currencyOf '12' amazon.co.jp -> JPY
+currencyOf '$12' shop.ca -> CAD
+currencyOf '12 kr' shop.no -> USD
+currencyOf '€12' shop.com -> EUR
+currencyOf '12'  -> USD
+currencyOf 'CHF 1' x.de -> EUR
+phone en_US: country=USD local=USD accept=en-US,en;q=0.9
+phone en_GB: country=GBP local=GBP accept=en-GB,en;q=0.9
+phone nl_NL: country=EUR local=EUR accept=nl-NL,nl;q=0.9,en;q=0.8
+phone sv_SE: country=SEK local=SEK accept=sv-SE,sv;q=0.9,en;q=0.8
+phone pl_PL: country=PLN local=PLN accept=pl-PL,pl;q=0.9,en;q=0.8
+phone de_CH: country=CHF local=CHF accept=de-CH,de;q=0.9,en;q=0.8
+phone ja_JP: country=JPY local=JPY accept=ja-JP,ja;q=0.9,en;q=0.8
+phone xx_ZZ: country=EUR local=EUR accept=xx-ZZ,xx;q=0.9,en;q=0.8
+chosen SEK: local=SEK saved=SEK
+automatic: local=USD all=[EUR, GBP, USD, CHF, SEK, NOK, DKK, PLN, CAD, AUD, NZD, JPY, CNY, KRW, INR, MXN, BRL]
+## names
+cleanTitle 'Lamp : Amazon.nl: Wonen' www.amazon.nl -> 'Lamp' word=amazon
+cleanTitle 'bol.com | Mooie lamp' www.bol.com -> 'Mooie lamp' word=bol
+cleanTitle 'Fiets (m2434550716) — Marktplaats' link.marktplaats.nl -> 'Fiets' word=marktplaats
+cleanTitle 'Mug - Etsy' www.etsy.com -> 'Mug' word=etsy
+cleanTitle 'Plain name' shop.example -> 'Plain name' word=shop
+cleanTitle 'Coolblue - alles voor een glimlach' www.coolblue.nl -> 'alles voor een glimlach' word=coolblue
+cleanTitle 'X | Y | Shop' shop.example -> 'X | Y' word=shop
+cleanTitle ''  -> '' word=
+blocked 'Robot Check' -> true
+blocked 'Just a moment...' -> true
+blocked 'Access Denied' -> true
+blocked 'Pardon Our Interruption' -> true
+blocked 'Are you a human?' -> true
+blocked 'Teapot' -> false
+## the reader upgrade
+quiet old=true new=false
+after done old=false saved=[T1]
