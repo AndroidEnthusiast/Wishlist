@@ -6,9 +6,10 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Next session
 - **The data rebuild (owner, 19 November 2026; `docs/decisions/roadmap.md`, last section), read first.** 2.256 Data,
-  2.257 Friends, 2.258 Shared, 2.259 Groups (nothing on screen changed). Ask how they and the screen rebuild behave on
-  the phone (TODO "Try 2.259" … "Try the rebuild"). Then the next area, **Exchange.kt** (gift exchanges and the draw),
-  then Alerts, Import, Fetch, the same way: interview on the plan and its risks first; record a before/after check with
+  2.257 Friends, 2.258 Shared, 2.259 Groups, 2.260 Exchange (nothing on screen changed). Ask how they and the screen
+  rebuild behave on the phone (TODO "Try 2.260" … "Try the rebuild"). Then **Alerts.kt** (background price checks and
+  notifications; Rule 8), then Import, Fetch (Fetch stays in step with `web/parse.js`, Rule 2), the same way: interview
+  on the plan and its risks first; record a before/after check with (never write today's date into a record)
   the OLD code in its own commit (`SharedSameTest` shows how: a pretend server with its own state; let each background
   save finish before the next so the record is stable), then split by moving code word for word.
 - **The rebuild (owner, 18 November 2026; `docs/decisions/roadmap.md`, last section).** Point 2 done: version stamps in
@@ -81,6 +82,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 19 November 2026, late night: the data rebuild, Exchange (2.260)
+Four parts + data shapes, four risks checked (owner). `ExchangeSameTest` recorded with the old code first (dates
+relative to today); split word for word: identical. Found and fixed: `FriendsSameTest` wrote today+10 into its record
+(would fail from 20 November). Exchange notifications are gathered into one: checks compare them, not count titles.
+
 ### 19 November 2026, late night: the data rebuild, Groups (2.259)
 Four parts, four risks checked (owner). `GroupsSameTest` recorded with the old code first; to be stable it waits for
 Sync's background sends, sorts the calls within a step and blanks the chat key. Split word for word: identical.
@@ -90,8 +96,3 @@ Sync's background sends, sorts the calls within a step and blanks the chat key. 
 Owner: ship now, "make sure everything works". `SharedSameTest` with `PretendSharedServer` (writes only fields sent,
 offline, late answers) recorded with the old code first, then Shared.kt split word for word: identical (stable over
 runs once saves in one step waited for each other). `SharedPartsTest` for the four risks; guard for Shared's insides.
-
-### 19 November 2026, late night: the data rebuild, Friends (2.257)
-Owner chose: build and ship now (not wait for testing), a pretend server for the checks, five parts, all four risks
-checked. `FriendsSameTest` recorded with the old code first (own commit), then Friends.kt split word for word:
-identical. `FriendsPartsTest`; the guard covers Friends' parts. Cloud.kt hit 401 lines: the guard caught it.

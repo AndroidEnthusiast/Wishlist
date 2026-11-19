@@ -22,7 +22,7 @@ internal object GroupPhotos {
         internal set
 }
 
-// ---- what you can do with it (callers keep writing Friends.…, as before the rebuild) ----
+// ---- what you can do with it (callers keep writing Groups.…, as before the rebuild) ----
 
 // ---- photos ----
 

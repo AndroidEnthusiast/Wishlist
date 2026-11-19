@@ -117,6 +117,12 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
   Checks: `GroupsSameTest` (pretend server, word for word against `groups-same.txt`, recorded before the split),
   `GroupsPartsTest` (Only me stays private, told once, offline, a wrong My link).
 - `Groups.kt` + the screens (rebuilt in 2.238 from `GroupsUi.kt`): `GroupsParts.kt` (Home's invitation cards and group blocks, shared bits), `GroupListPick.kt` (the list you bring, also for exchanges), `GroupNew.kt`, `GroupJoin.kt` (join, browser member moves to the app), `GroupScreen.kt`, `GroupMembers.kt`, `GroupSettings.kt` (settings, delete, leave); state holder `GroupModel.kt` (wishlist groups: people who each bring one wishlist; `supabase-groups.sql`); screenshots `GroupScreenshotTest`
+- Gift exchanges' data (split in 2.260, the data rebuild; nothing on screen, on the server or on `web/exchange`
+  changed): `Exchange.kt` (front door: loading, dates and budget helpers), `ExchangeTypes.kt` (data shapes),
+  `ExchangeNews.kt` (news, messages, reminders, told once), `ExchangeMembership.kt` (make, join, settings, invites,
+  photo: `ExchangePhotos`), `ExchangeDraw.kt` (rules, draw, reveal, chats, links). Checks: `ExchangeSameTest`
+  (pretend server; dates written relative to today), `ExchangePartsTest` (only your own pair, told once, offline,
+  anonymous chats); the draw's secrecy itself: `tests/sql/exchange_test.sql`.
 - `Exchange.kt` + the screens (rebuilt in 2.237 from `ExchangeUi.kt`): `ExchangesList.kt`, `ExchangeNew.kt` (start / join), `ExchangeScreen.kt` + `ExchangeDialogs.kt`, `ExchangeRows.kt`, `ExchangeSettings.kt`, `ExchangeChat.kt`, `ExchangeParts.kt`; state holder `ExchangeModel.kt` (Gift exchange / Secret Santa: draw on the server, rules, anonymous chats; `supabase-exchange.sql`); screenshots `ExchangeScreenshotTest`
 - `Reactions.kt` (reactions on wishes, `LocalWishDeco`; emoji names in `assets/emoji.txt`) + `ReactionViews.kt` (`ReactionBar`, the emoji picker; rebuilt in 2.254) + state holder `ReactionModel.kt` (`ReactionBarState`); checks `ReactionModelTest`, screenshots `ReactionScreenshotTest`
 

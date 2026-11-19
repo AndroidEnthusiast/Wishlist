@@ -21,8 +21,8 @@ Details of each item are in the doc named after it.
      I reserved, 2.248), Friends and Profile (2.233–2.236), and the
      look of buttons, dialogs, fields and cards in every view (2.242, 2.243, 2.245, 2.247).
 - **The rebuild (owner, 18–19 November 2026; `docs/decisions/roadmap.md`):** Home done (2.233), guards in (2.234), Friends/Profile (2.235), the open list (2.236), gift exchange (2.237), wishlist groups (2.238), Messages (2.239), the photo editor (2.240), My shops (2.241), the building blocks (Styled, 2.242; Themed, 2.243), the app's frame (AppScreen, 2.244), the wish cards (2.245), the wish form (2.246), the styles (Design, 2.247), a friend's list (2.248), App settings (2.249), covers (2.250), the price page (2.251), gift invitations (2.252), shared wishlist dialogs (2.253), reactions (2.254), Overview (2.255): **every screen is done.** Left:
-  the files left on `ArchitectureTest.ALLOWED` (4): Exchange, Alerts, Import, Fetch: the data rebuild (below;
-  Data.kt left the list in 2.256, Friends in 2.257, Shared in 2.258, Groups in 2.259).
+  the files left on `ArchitectureTest.ALLOWED` (3): Alerts, Import, Fetch: the data rebuild (below; Data.kt left the
+  list in 2.256, Friends in 2.257, Shared in 2.258, Groups in 2.259, Exchange in 2.260).
 - **Try 2.256 on the phone (the data rebuild, nothing should look or work differently):** add, edit and delete a wish
   and tap Undo; a wish on two lists (edit one, both change); move a wish; empty the bin; "I have it" and Received
   gifts; add, rename and remove a category; change theme, view and sort, close the app fully and open it again (all
@@ -38,8 +38,11 @@ Details of each item are in the doc named after it.
 - **Try 2.259 on the phone (wishlist groups rebuilt inside, nothing should differ):** open a group, invite a friend,
   change the list you bring, change the group's name or photo, open a group link, and (if you have one) a browser
   member's "My link"; a group invitation should notify once.
+- **Try 2.260 on the phone (gift exchanges rebuilt inside, nothing should differ):** open a gift exchange, open your
+  name, write in "Your giftee" / "Your Secret Santa", (as organiser) change the budget or date, add a rule, invite
+  someone; a message or the day's reminder should notify once.
 - **The data rebuild (owner, 19 November 2026; `docs/decisions/roadmap.md`, last section): Data.kt done in 2.256,
-  Friends in 2.257, Shared in 2.258, Groups in 2.259.** Next, one per version, each with a before/after check first
+  Friends in 2.257, Shared in 2.258, Groups in 2.259, Exchange in 2.260.** Next, one per version, each with a before/after check first
   (pretend servers ready: `Cloud.pretendServer`, `PretendSharedServer` in the checks):
   Exchange, Alerts, Import, Fetch. After that, what a team would still do: checks on a few real phones (P23), and fewer
   copies of app logic in `web/` (e.g. `parse.js` beside `Fetch.kt`). Interview first on each.

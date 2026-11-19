@@ -1,21 +1,14 @@
 package com.wishlist.app
 
 import android.content.Context
-import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
-import android.util.Base64
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.File
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -30,72 +23,25 @@ import java.time.temporal.ChronoUnit
  *  - News told once (notification + Notifications page): invited, names drawn, your name changed, removed, cancelled,
  *    budget or date changed, you're the organiser now, someone said no thanks, someone waits to be added, a rule
  *    couldn't be kept. Plus the reminder 7 days before the exchange day and a notification on the day.
+ *
+ * Since the data rebuild (owner, 19 November 2026) this file is the front door (loading, dates and budget helpers);
+ * the rest is in parts while callers keep writing Exchanges.…: ExchangeTypes.kt (the data shapes), ExchangeNews.kt
+ * (news, messages, reminders), ExchangeMembership.kt (making, joining, settings, invites, photo; [ExchangePhotos]),
+ * ExchangeDraw.kt (rules, the draw, reveal, chats, links). ExchangeSameTest proves it all does what it did before.
  */
 
-data class GxGiftee(val id: String, val name: String, val pv: Long, val web: Boolean, val list: GroupList?)
-
-data class GxMe(
-    val list: GroupList?, val seen: Boolean, val waiting: Boolean, val hasSanta: Boolean, val giftee: GxGiftee?,
-    val unreadGiftee: Int, val unreadSanta: Int
-)
-
-data class GxMember(
-    val id: String, val name: String, val pv: Long, val web: Boolean, val code: String, val friend: Boolean,
-    /** The draw check (organiser only): opened their name. Null for everyone else. */
-    val seen: Boolean?,
-    val waiting: Boolean,
-    /** After the reveal: whom they had. */
-    val gaveTo: String?
-)
-
-/** A draw that the rules make impossible: these people would only have [left] others to draw between them. */
-data class GxStuck(val names: List<String>, val left: Int)
-
-data class Exchange(
-    val id: String, val link: String, val name: String, val organiser: String, val organiserName: String,
-    val budget: Double?, val currency: String, val day: LocalDate?, val theme: String, val message: String, val pv: Long,
-    val drawn: Boolean, val revealed: Boolean, val members: List<GxMember>,
-    /** Open invites: profile id to name. */
-    val invited: List<Pair<String, String>>,
-    /** The rules (organiser only): giver may not draw receiver. */
-    val excl: List<Pair<String, String>>,
-    val blocked: GxStuck?, val me: GxMe
-) {
-    fun nameOf(id: String) = members.firstOrNull { it.id == id }?.name?.ifBlank { null } ?: tr("Someone")
-}
-
-data class GxInvite(
-    val gx: String, val name: String, val link: String, val by: String, val byName: String, val theme: String,
-    val budget: Double?, val currency: String, val day: LocalDate?, val count: Int
-)
-
-data class GxPreview(
-    val id: String, val name: String, val organiser: String, val count: Int, val theme: String, val budget: Double?,
-    val currency: String, val day: LocalDate?, val drawn: Boolean
-)
-
-data class GxMsg(val id: Long, val mine: Boolean, val body: String, val at: String, val read: Boolean)
-
-/** The themes: their emoji and the words for the countdown. */
-object GxThemes {
-    val all = listOf("xmas", "sint", "bday", "office", "plain")
-    fun label(t: String) = when (t) {
-        "sint" -> tr("Sinterklaas"); "bday" -> tr("Birthday"); "office" -> tr("Office"); "plain" -> tr("Plain"); else -> tr("Christmas")
-    }
-    fun emoji(t: String) = when (t) { "sint" -> "🎁"; "bday" -> "🎈"; "office" -> "☕"; "plain" -> "✨"; else -> "🎄" }
-}
-
 object Exchanges {
-    private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
+    internal fun prefs(c: Context) = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
     private val lock = Mutex()
 
     var list by mutableStateOf<List<Exchange>>(emptyList())
         internal set
     var invites by mutableStateOf<List<GxInvite>>(emptyList())
         internal set
-    /** Exchange photos on this phone, by id (a file address). */
-    var photos by mutableStateOf<Map<String, String>>(emptyMap())
-        private set
+
+    // Photos (ExchangeMembership.kt), read as before.
+    val photos: Map<String, String> get() = ExchangePhotos.photos
+
     private var loaded = false
 
     /** Something new: an invite, or an unread anonymous message (the red dot on the menu item). */
@@ -105,13 +51,13 @@ object Exchanges {
         if (loaded) return
         loaded = true
         prefs(c).getString("gx_state", null)?.let { parse(it) }?.let { (x, i) -> list = x; invites = i }
-        photos = (dir(c).listFiles() ?: emptyArray()).filter { it.name.endsWith(".jpg") }
+        ExchangePhotos.photos = (dir(c).listFiles() ?: emptyArray()).filter { it.name.endsWith(".jpg") }
             .associate { it.name.substringBefore('_') to Uri.fromFile(it).toString() }
     }
 
     fun myId(c: Context): String = prefs(c).getString("pf_id", "") ?: ""
 
-    private fun base(c: Context): JSONObject {
+    internal fun base(c: Context): JSONObject {
         val p = prefs(c)
         return JSONObject().put("p_id", p.getString("pf_id", "")).put("p_token", p.getString("pf_token", ""))
     }
@@ -150,15 +96,15 @@ object Exchanges {
 
     // ---- loading ----
 
-    private fun day(s: String?): LocalDate? = try {
+    internal fun day(s: String?): LocalDate? = try {
         if (s.isNullOrBlank() || s == "null") null else LocalDate.parse(s.take(10))
     } catch (e: Exception) {
         null
     }
 
-    private fun num(o: JSONObject, k: String): Double? = if (o.isNull(k)) null else o.optDouble(k).takeIf { !it.isNaN() && it > 0 }
+    internal fun num(o: JSONObject, k: String): Double? = if (o.isNull(k)) null else o.optDouble(k).takeIf { !it.isNaN() && it > 0 }
 
-    private fun card(o: JSONObject?): GroupList? =
+    internal fun card(o: JSONObject?): GroupList? =
         o?.let { GroupList(it.optString("code"), it.optString("name"), it.optInt("count"), it.optString("image")) }
 
     fun parseOne(g: JSONObject): Exchange {
@@ -194,7 +140,7 @@ object Exchanges {
         )
     }
 
-    private fun parse(t: String): Pair<List<Exchange>, List<GxInvite>>? = try {
+    internal fun parse(t: String): Pair<List<Exchange>, List<GxInvite>>? = try {
         val o = JSONObject(t)
         val xa = o.optJSONArray("exchanges") ?: JSONArray()
         val xs = (0 until xa.length()).mapNotNull { i -> xa.optJSONObject(i)?.let { parseOne(it) } }
@@ -225,7 +171,7 @@ object Exchanges {
         lock.withLock { fetchLocked(c, onScreen = false) }
     }
 
-    private suspend fun fetchLocked(c: Context, onScreen: Boolean) {
+    internal suspend fun fetchLocked(c: Context, onScreen: Boolean) {
         val t = Cloud.rpc("wl_gx_state", base(c))
         val (x, i) = parse(t) ?: return
         val before = list
@@ -244,365 +190,6 @@ object Exchanges {
         }
     }
 
-    private fun notify(c: Context, gx: String, title: String, text: String, kind: String, onScreen: Boolean) {
-        if (!onScreen) Alerts.notifyExchange(c, gx, title, text, kind, "e:$gx")
-    }
-
-    /** Invites and news are told once: a notification (only in the background) and a line on the Notifications page. */
-    private suspend fun news(c: Context, news: JSONArray, ins: List<GxInvite>, onScreen: Boolean) {
-        val p = prefs(c)
-        val told = p.getStringSet("gx_inv_told", null)?.toSet() ?: emptySet()
-        for (v in ins) if (v.gx !in told) {
-            val who = v.byName.ifBlank { tr("Someone") }
-            notify(c, v.gx, tr("%1\$s invited you to “%2\$s”", who, v.name), tr("A gift exchange. Pick a wishlist and join."), "gx_invite", onScreen)
-            Notifications.add(c, "gx_invite", "e:" + v.gx, v.name, extra = who, read = onScreen)
-        }
-        p.edit().putStringSet("gx_inv_told", ins.map { it.gx }.toSet()).apply()
-        var upto = 0L
-        for (i in 0 until news.length()) {
-            val n = news.getJSONObject(i)
-            upto = maxOf(upto, n.optLong("id"))
-            val gx = n.optString("gx")
-            val name = n.optString("name")
-            val who = n.optString("who").ifBlank { tr("Someone") }
-            val pair: Pair<String, String> = when (n.optString("kind")) {
-                "drawn" -> tr("Names are drawn in “%s”", name) to tr("Open yours to see who you’re buying for.")
-                "changed" -> tr("Your name changed in “%s”", name) to tr("Someone left or joined. Open your new name.")
-                "removed" -> tr("You are removed from “%s”", name) to tr("The organiser removed you from this gift exchange.")
-                "cancelled" -> tr("“%s” was cancelled", name) to tr("The organiser cancelled this gift exchange.")
-                "settings" -> tr("“%s” changed", name) to tr("The budget or the date changed. Take a look.")
-                "organiser" -> tr("You organise “%s” now", name) to tr("You can draw names, set rules and invite people.")
-                "declined" -> tr("%s said no thanks", who) to tr("To “%s”.", name)
-                "waiting" -> tr("%1\$s joined “%2\$s”", who, name) to tr("Everyone has seen their name. Add them to the draw?")
-                "rules" -> tr("A rule couldn’t be kept in “%s”", name) to tr("Someone left, so one rule had to give way. Nobody has themselves.")
-                else -> null
-            } ?: continue
-            val title = pair.first
-            val text = pair.second
-            val kind = "gx_" + n.optString("kind")
-            // "Removed" and "cancelled" go to the list of exchanges: the exchange itself is gone.
-            val key = if (kind == "gx_removed" || kind == "gx_cancelled") "e:" else "e:$gx"
-            if (!onScreen) Alerts.notifyExchange(c, if (key == "e:") "" else gx, title, text, kind, key)
-            Notifications.add(c, kind, key, title, extra = text, read = onScreen)
-        }
-        if (upto > 0) Cloud.rpc("wl_gx_news_seen", base(c).put("p_upto", upto))
-    }
-
-    /** A new anonymous message (when the phone wasn't looking): one notification per chat. */
-    private fun messages(c: Context, before: List<Exchange>, now: List<Exchange>, onScreen: Boolean) {
-        if (onScreen) return
-        for (x in now) {
-            val old = before.firstOrNull { it.id == x.id }?.me
-            if (x.me.unreadSanta > (old?.unreadSanta ?: 0) && !ChatOnScreen.quiet(x.id + ":santa", GxChatNav.open, Live.inFront))
-                Alerts.notifyExchange(c, x.id, tr("Your Secret Santa wrote"), tr("In “%s”. Open to read and answer.", x.name), "gx_msg", "e:${x.id}", msg = true)
-            if (x.me.unreadGiftee > (old?.unreadGiftee ?: 0) && !ChatOnScreen.quiet(x.id + ":giftee", GxChatNav.open, Live.inFront))
-                Alerts.notifyExchange(c, x.id, tr("%s answered", x.me.giftee?.name ?: tr("Your giftee")), tr("In “%s”. Open to read.", x.name), "gx_msg", "e:${x.id}", msg = true)
-        }
-    }
-
-    /** 7 days before the exchange day, and on the day itself: once each. */
-    private fun days(c: Context, now: List<Exchange>) {
-        val p = prefs(c)
-        val today = LocalDate.now()
-        for (x in now) {
-            val d = x.day ?: continue
-            val n = ChronoUnit.DAYS.between(today, d)
-            val key = when {
-                n == 0L -> "gx_day_${x.id}_$d"
-                n in 4L..7L && x.drawn -> "gx_week_${x.id}_$d"
-                else -> null
-            } ?: continue
-            if (p.getBoolean(key, false)) continue
-            p.edit().putBoolean(key, true).apply()
-            val e = GxThemes.emoji(x.theme)
-            if (n == 0L) Alerts.notifyExchange(c, x.id, tr("Today is the exchange! %s", e), tr("Enjoy “%s”.", x.name), "gx_day", "e:${x.id}")
-            else Alerts.notifyExchange(
-                c, x.id, tr("%1\$d days to “%2\$s” %3\$s", n.toInt(), x.name, e),
-                x.me.giftee?.let { tr("Got something for %s yet?", it.name) } ?: tr("Open your name to see who you’re buying for."),
-                "gx_week", "e:${x.id}"
-            )
-        }
-    }
-
-    // ---- photos ----
-
-    private fun dir(c: Context) = File(c.filesDir, "exchanges").apply { mkdirs() }
-
-    private suspend fun loadPhotos(c: Context) {
-        val d = dir(c)
-        val want = list.filter { it.pv > 0 }.associate { it.id to "${it.id}_${it.pv}.jpg" }
-        val out = HashMap<String, String>()
-        for ((id, name) in want) {
-            val f = File(d, name)
-            if (!f.exists()) try {
-                val bytes = PeoplePhotos.bytes(Cloud.rpc("wl_gx_photo", base(c).put("p_gx", id))) ?: continue
-                withContext(Dispatchers.IO) { f.writeBytes(bytes) }
-            } catch (e: Exception) {
-                continue
-            }
-            out[id] = Uri.fromFile(f).toString()
-        }
-        (d.listFiles() ?: emptyArray()).filter { it.name !in want.values }.forEach { it.delete() }
-        photos = out
-    }
-
-    /**
-     * The organiser's own photo instead of the drawn cover, after the same editor as a wishlist's cover (owner, 2.130):
-     * [src] cut as [edit] in the frame [fa], sent as a small JPEG. Null [src]: back to the theme's cover.
-     */
-    suspend fun setPhoto(c: Context, gx: String, src: String?, edit: HeroEdit, fa: Float) {
-        val jpeg: ByteArray? = if (src == null) null else {
-            val cut = renderCover(c, src, edit, fa) ?: throw CloudException("photo")
-            withContext(Dispatchers.IO) {
-                val f = File(Uri.parse(cut).path ?: throw CloudException("photo"))
-                val bmp = BitmapFactory.decodeFile(f.path) ?: throw CloudException("photo")
-                f.delete()
-                val w = minOf(900, bmp.width)
-                val small = Bitmap.createScaledBitmap(bmp, w, (bmp.height * w / bmp.width.toFloat()).toInt().coerceAtLeast(1), true)
-                val out = java.io.ByteArrayOutputStream()
-                small.compress(Bitmap.CompressFormat.JPEG, 80, out)
-                out.toByteArray()
-            }
-        }
-        // As a file (2.185, PeoplePhotos), or the old way before the scripts are run.
-        if (!PeoplePhotos.save("x/" + gx, base(c), "wl_gx_photo_url", base(c).put("p_gx", gx), jpeg)) {
-            Cloud.rpc("wl_gx_set_photo", base(c).put("p_gx", gx).put("p_photo", jpeg?.let { Base64.encodeToString(it, Base64.NO_WRAP) } ?: ""))
-        }
-        refresh(c)
-    }
-
-    // ---- your list ----
-
-    /** Your list [listId] online for an exchange: its code and owner token ("Only me" stays "Only me" for friends). */
-    private suspend fun listOnline(c: Context, listId: String): Pair<String, String> {
-        if (Repo.mine(c, listId).code == null) {
-            Sync.publishFor(c, listId)
-            ListLink.set(c, listId, false)
-        }
-        val d = Repo.mine(c, listId)
-        return (d.code ?: throw CloudException("no code")) to (d.token ?: throw CloudException("no token"))
-    }
-
-    // ---- making, joining, leaving ----
-
-    private fun JSONObject.settings(budget: Double?, currency: String, day: LocalDate?, theme: String, message: String) =
-        put("p_budget", budget ?: JSONObject.NULL).put("p_currency", currency).put("p_day", day?.toString() ?: JSONObject.NULL)
-            .put("p_theme", theme).put("p_message", message.trim())
-
-    /** A new exchange: you organise it and join with your list [listId]. Returns its id. */
-    suspend fun create(
-        c: Context, name: String, listId: String, budget: Double?, currency: String, day: LocalDate?, theme: String, message: String
-    ): String {
-        Friends.ensure(c)
-        val (code, token) = listOnline(c, listId)
-        val id = Sync.newKey()
-        Cloud.rpc(
-            "wl_gx_create", base(c).put("p_gx", id).put("p_link", Sync.newKey()).put("p_name", name.trim())
-                .put("p_list", code).put("p_list_token", token).settings(budget, currency, day, theme, message)
-        )
-        refresh(c)
-        return id
-    }
-
-    suspend fun preview(link: String): GxPreview? {
-        val t = Cloud.rpc("wl_gx_info", JSONObject().put("p_link", link)).trim()
-        if (t.isEmpty() || t == "null") return null
-        val o = JSONObject(t)
-        return GxPreview(
-            o.optString("id"), o.optString("name"), o.optString("organiser"), o.optInt("count"), o.optString("theme", "xmas"),
-            num(o, "budget"), o.optString("currency"), day(o.optString("day")), o.optBoolean("drawn")
-        )
-    }
-
-    /** Join with link [link] or invite [gx], with your list [listId]. The exchange's id, or null when it doesn't work any more. */
-    suspend fun join(c: Context, link: String?, gx: String?, listId: String): String? {
-        Friends.ensure(c)
-        val (code, token) = listOnline(c, listId)
-        val t = Cloud.rpc(
-            "wl_gx_join", base(c).put("p_link", link ?: "").put("p_gx", gx ?: "").put("p_list", code).put("p_list_token", token)
-        ).trim()
-        if (t.isEmpty() || t == "null") return null
-        val id = JSONObject(t).optString("id")
-        refresh(c)
-        return id
-    }
-
-    suspend fun setList(c: Context, gx: String, listId: String) {
-        val (code, token) = listOnline(c, listId)
-        Cloud.rpc("wl_gx_set_list", base(c).put("p_gx", gx).put("p_list", code).put("p_list_token", token))
-        refresh(c)
-    }
-
-    suspend fun decline(c: Context, gx: String) {
-        Cloud.rpc("wl_gx_decline", base(c).put("p_gx", gx))
-        invites = invites.filter { it.gx != gx }
-        refresh(c)
-    }
-
-    suspend fun leave(c: Context, gx: String, next: String?) {
-        Cloud.rpc("wl_gx_leave", base(c).put("p_gx", gx).put("p_next", next ?: ""))
-        list = list.filter { it.id != gx }
-        // Done online: a reload that fails now doesn't make it look as if leaving failed (owner, 2.133).
-        try { refresh(c) } catch (e: Exception) {}
-    }
-
-    suspend fun remove(c: Context, gx: String, member: String) {
-        Cloud.rpc("wl_gx_remove", base(c).put("p_gx", gx).put("p_member", member))
-        refresh(c)
-    }
-
-    suspend fun handover(c: Context, gx: String, next: String) {
-        Cloud.rpc("wl_gx_handover", base(c).put("p_gx", gx).put("p_next", next))
-        refresh(c)
-    }
-
-    suspend fun saveSettings(
-        c: Context, gx: String, name: String, budget: Double?, currency: String, day: LocalDate?, theme: String, message: String
-    ) {
-        Cloud.rpc("wl_gx_settings", base(c).put("p_gx", gx).put("p_name", name.trim()).settings(budget, currency, day, theme, message))
-        refresh(c)
-    }
-
-    suspend fun cancel(c: Context, gx: String) {
-        Cloud.rpc("wl_gx_cancel", base(c).put("p_gx", gx))
-        list = list.filter { it.id != gx }
-        // Done online: a reload that fails now doesn't make it look as if cancelling failed (owner, 2.133: the page
-        // said "Couldn't do that" and stayed on the cancelled exchange).
-        try { refresh(c) } catch (e: Exception) {}
-    }
-
-    /** Invites friends [ids] (organiser): online, plus a chat message with the link. Returns how many failed. */
-    suspend fun invite(c: Context, x: Exchange, ids: List<String>): Int {
-        var failed = 0
-        for (id in ids) {
-            try {
-                Cloud.rpc("wl_gx_invite", base(c).put("p_gx", x.id).put("p_friend", id))
-            } catch (e: Exception) {
-                failed++
-                continue
-            }
-            try {
-                Chat.send(c, id, ChatContent(true, "exchange", x.id, x.name, url = link(x.link)))
-            } catch (e: Exception) {
-            }
-        }
-        try { refresh(c) } catch (e: Exception) {}
-        return failed
-    }
-
-    suspend fun uninvite(c: Context, gx: String, id: String) {
-        Cloud.rpc("wl_gx_uninvite", base(c).put("p_gx", gx).put("p_friend", id))
-        refresh(c)
-    }
-
-    suspend fun addLate(c: Context, gx: String, member: String) {
-        Cloud.rpc("wl_gx_add_late", base(c).put("p_gx", gx).put("p_member", member))
-        refresh(c)
-    }
-
-    // ---- rules and the draw ----
-
-    /** Adds a rule. Null when saved; otherwise who would be stuck (the rule is not saved). */
-    suspend fun addRule(c: Context, gx: String, giver: String, receiver: String, both: Boolean): GxStuck? {
-        val o = JSONObject(Cloud.rpc("wl_gx_excl_add", base(c).put("p_gx", gx).put("p_giver", giver).put("p_receiver", receiver).put("p_both", both)))
-        refresh(c)
-        if (o.optBoolean("ok")) return null
-        val s = o.optJSONArray("stuck") ?: JSONArray()
-        return GxStuck((0 until s.length()).map { s.getString(it) }, o.optInt("left"))
-    }
-
-    suspend fun removeRule(c: Context, gx: String, giver: String, receiver: String, both: Boolean) {
-        Cloud.rpc("wl_gx_excl_del", base(c).put("p_gx", gx).put("p_giver", giver).put("p_receiver", receiver).put("p_both", both))
-        refresh(c)
-    }
-
     /** The server's answer to Draw: ok, too few people, people still invited, or stuck (rules). */
     data class DrawResult(val ok: Boolean, val few: Boolean = false, val pending: List<String> = emptyList(), val stuck: GxStuck? = null)
-
-    suspend fun draw(c: Context, gx: String, without: Boolean): DrawResult {
-        val o = JSONObject(Cloud.rpc("wl_gx_draw", base(c).put("p_gx", gx).put("p_without", without)))
-        refresh(c)
-        val pend = o.optJSONArray("pending")
-        val stuck = o.optJSONArray("stuck")
-        return DrawResult(
-            o.optBoolean("ok"), o.optBoolean("few"),
-            pend?.let { a -> (0 until a.length()).map { a.getString(it) } } ?: emptyList(),
-            stuck?.let { a -> GxStuck((0 until a.length()).map { a.getString(it) }, o.optInt("left")) }
-        )
-    }
-
-    /** You open your name (the reveal moment). */
-    suspend fun open(c: Context, gx: String): Exchange? {
-        val t = Cloud.rpc("wl_gx_open", base(c).put("p_gx", gx)).trim()
-        refresh(c)
-        return if (t.isEmpty() || t == "null") null else parseOne(JSONObject(t))
-    }
-
-    /** Your giftee's wishlist (null before you opened your name, or when they have none). */
-    suspend fun gifteeList(c: Context, gx: String): RemoteList? {
-        val t = Cloud.rpc("wl_gx_list", base(c).put("p_gx", gx)).trim()
-        if (t.isEmpty() || t == "null") return null
-        return Cloud.parseRemote(JSONObject(t))
-    }
-
-    suspend fun reveal(c: Context, gx: String): Boolean {
-        val ok = Cloud.rpc("wl_gx_reveal", base(c).put("p_gx", gx)).trim() == "true"
-        refresh(c)
-        return ok
-    }
-
-    // ---- the anonymous chats ("giftee" or "santa") ----
-
-    suspend fun chat(c: Context, gx: String, side: String, after: Long): List<GxMsg> {
-        val a = JSONArray(Cloud.rpc("wl_gx_chat", base(c).put("p_gx", gx).put("p_side", side).put("p_after", after)))
-        return (0 until a.length()).map { i ->
-            val o = a.getJSONObject(i)
-            GxMsg(o.getLong("id"), o.optBoolean("mine"), o.optString("body"), o.optString("at"), o.optBoolean("read"))
-        }
-    }
-
-    /** Sends a message. False when that chat isn't open (any more). */
-    suspend fun send(c: Context, gx: String, side: String, body: String): Boolean =
-        (Cloud.rpc("wl_gx_send", base(c).put("p_gx", gx).put("p_side", side).put("p_body", body)).trim().toLongOrNull() ?: 0L) > 0L
-
-    suspend fun seen(c: Context, gx: String, side: String, upto: Long) {
-        Cloud.rpc("wl_gx_chat_seen", base(c).put("p_gx", gx).put("p_side", side).put("p_upto", upto))
-    }
-
-    /** Before a browser member's profile is taken over by the app (Groups.takeover): their exchanges move too. */
-    suspend fun takeover(c: Context, webId: String, webToken: String) {
-        val p = prefs(c)
-        try {
-            Cloud.rpc(
-                "wl_gx_takeover", JSONObject().put("p_web", webId).put("p_web_token", webToken)
-                    .put("p_id", p.getString("pf_id", "")).put("p_token", p.getString("pf_token", ""))
-            )
-        } catch (e: CloudException) {
-            // Before supabase-exchange.sql there is nothing to move.
-        }
-    }
-
-    // ---- links ----
-
-    /** The exchange link, through the page exchange/ (its link preview), which opens the exchange page. */
-    fun link(key: String): String = Config.SHARE_URL.trimEnd('/') + "/exchange/?x=" + key
-
-    fun share(c: Context, x: Exchange) {
-        // A name first (owner, 2.135): friends see who shares it.
-        if (!NameGate.hasName()) { NameGate.ensure { share(c, x) }; return }
-        val text = tr("Join my gift exchange “%1\$s”: %2\$s", x.name, link(x.link))
-        val i = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
-        c.startActivity(Intent.createChooser(i, tr("Share exchange link")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-    }
-
-    private val LINK = Regex("[?&]X=([A-HJ-NP-Z2-9]{20})(?![A-Z0-9])")
-
-    /** The exchange link key in text (a web link or wishlist://exchange?x=…), or null. */
-    fun parseLink(s: String): String? = LINK.find(s.uppercase())?.groupValues?.get(1)
-}
-
-/** Which anonymous chat is on screen ("<id>:santa" or "<id>:giftee"), so no notification comes for it. */
-object GxChatNav {
-    @Volatile
-    var open: String? = null
 }

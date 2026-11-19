@@ -20,6 +20,7 @@ import java.io.File
  *     Friends: its parts (FriendPhotos, FriendAbout, FriendVisibility) only in Friends.kt and FriendsPhotos, -About,
  *     -Visible, -Links. And Shared: its save engine and SharedReservations only in Shared.kt and its four part files.
  *     And Groups: GroupPhotos only in Groups.kt, GroupsMembership, GroupsPhotos, GroupsLinks.
+ *     And gift exchanges: ExchangePhotos only in Exchange.kt and ExchangeNews, -Membership, -Draw, -Types.
  */
 class ArchitectureTest {
     private val dir = File("src/main/java/com/wishlist/app")
@@ -30,7 +31,6 @@ class ArchitectureTest {
 
         /** Over the limit on 19 November 2026, with their size then. Only shrinks. */
         val ALLOWED: Map<String, Int> = mapOf(
-        "Exchange.kt" to 608,
         "Alerts.kt" to 585,
         "Import.kt" to 516,
         "Fetch.kt" to 473
@@ -127,6 +127,11 @@ class ArchitectureTest {
         val groupHits = dir.listFiles()!!.filter { it.name.endsWith(".kt") && it.name !in groupFiles }
             .flatMap { f -> f.readLines().mapIndexedNotNull { i, l -> Regex("\\bGroupPhotos\\.").find(l)?.let { "${f.name}:${i + 1} ${l.trim()}" } } }
         assertTrue("Use Groups' doors (Groups.photos, Groups.setPhoto, …), not its parts: $groupHits", groupHits.isEmpty())
+        // Gift exchanges (2.260): its photo part only inside its own files.
+        val gxFiles = setOf("Exchange.kt", "ExchangeNews.kt", "ExchangeMembership.kt", "ExchangeDraw.kt", "ExchangeTypes.kt")
+        val gxHits = dir.listFiles()!!.filter { it.name.endsWith(".kt") && it.name !in gxFiles }
+            .flatMap { f -> f.readLines().mapIndexedNotNull { i, l -> Regex("\\bExchangePhotos\\.").find(l)?.let { "${f.name}:${i + 1} ${l.trim()}" } } }
+        assertTrue("Use Exchanges' doors (Exchanges.photos, Exchanges.setPhoto, …), not its parts: $gxHits", gxHits.isEmpty())
         assertFalse(part.containsMatchIn("MyOwnLists.x"))
     }
 

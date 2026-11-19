@@ -257,4 +257,8 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
   everything works"). **Four parts** (groups and invites; photos; making/joining/leaving/settings/invites; links and
   the browser member moving in). **All four risks checked:** an "Only me" list stays private outside the group, news
   told once, offline and old saved state, a browser member moving in (and a wrong link changing nothing).
+- **Gift exchanges next** (owner, 19 November 2026): four parts (loading and helpers; news and reminders; making,
+  joining, settings, invites, photo; rules, draw, reveal, chats, links) plus the data shapes in their own file. **All
+  four risks checked:** only your own pair is kept (the draw's secrecy itself is the server's, `exchange_test.sql`),
+  news and reminders told once, offline and old saved state, anonymous chats.
 
