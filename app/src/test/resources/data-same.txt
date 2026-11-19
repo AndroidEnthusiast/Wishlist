@@ -1,0 +1,1411 @@
+## first start of the new version
+open=main ids=[main, L2] names={L2=Garden, main=Mine} name=Mine about=Sizes: M
+cats=[Tech, Home, Garden] code=null token=null photos=[]
+look=quiet/dark/indigo/ font=google_sans view=list sort=low
+instant=true drops=true rises=true interval=3 last=1234 saveTo=private
+friends=[Friend(code=FRIENDAA, name=Sam)] device=device-1 recent={m:L2=5000}
+hero= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) cut=
+list main 'Mine' about='Sizes: M' cats=[Tech, Home, Garden] code=null photos=[]
+  wish cat=Home,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=10.0,title=Teapot,url=https://shop.example/p/1
+  wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,priv=true,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  copies 1=true lists=[main, L2] original=main
+  copies 2=false lists=[main] original=main
+list L2 'Garden' about='for the garden' cats=[Tech, Home, Garden] code=null photos=[]
+  wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=10.0,title=Teapot,url=https://shop.example/p/1
+  wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  copies 1=true lists=[main, L2] original=main
+  copies 3=false lists=[L2] original=L2
+bin L2 'Garden' gone=null bin=999,cat=Home,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+sync=[1]
+pref about=Sizes: M
+pref bin=[{"id":9,"url":"https:\/\/shop.example\/p\/9","title":"Old mug","desc":"about Old mug","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"bin":999}]
+pref bin_owner={"9":"L2"}
+pref cats=Tech
+Home
+pref cats_merged=true
+pref db_only=true
+pref device=device-1
+pref font=google_sans
+pref friends=[{"code":"FRIENDAA","name":"Sam"}]
+pref hero=
+pref hero_cut=
+pref hero_edit={"scale":1,"x":0,"y":0,"text":"","tx":0.5,"ty":0.75,"rot":0,"bright":0,"color":4294967295,"box":false,"tsize":0.1599999964237213,"cl":-1,"ct":-1,"cw":-1,"ch":-1}
+pref instant_delete=true
+pref interval=3
+pref lastCheck=1234
+pref last_save_to=private
+pref look_v2=true
+pref mine_L2={"name":"Garden","about":"for the garden","cats":["Garden"],"wishes":[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Garden","got":false},{"id":3,"url":"https:\/\/shop.example\/p\/3","title":"Spade","desc":"about Spade","image":"","price":null,"old":null,"cur":"EUR","cat":"Garden","got":false}],"code":"","token":"","photos":[]}
+pref mine_copies={"L2":[1]}
+pref mine_gone={}
+pref mine_ids=["main","L2"]
+pref mine_open=main
+pref name=Mine
+pref notify_drops=true
+pref notify_rises=true
+pref palette=indigo
+pref recent={"m:L2":5000}
+pref sort=low
+pref style=quiet
+pref style_colours=
+pref theme=dark
+pref view=list
+pref wishes=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+pref wishes_backup=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+db list main 'Mine' about='Sizes: M' cats=[Tech, Home, Garden] code=null token=null photos=[]
+  db wish cat=Home,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=10.0,title=Teapot,url=https://shop.example/p/1
+  db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,priv=true,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+db list L2 'Garden' about='for the garden' cats=[Tech, Home, Garden] code=null token=null photos=[]
+  db wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=10.0,title=Teapot,url=https://shop.example/p/1
+  db wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+db bin L2 bin=999,cat=Home,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+db cats=[Tech, Home, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
+## added and changed (copy follows)
+open=main ids=[main, L2] names={L2=Garden, main=Mine} name=Mine about=Sizes: M
+cats=[Tech, Home, Garden] code=null token=null photos=[]
+look=quiet/dark/indigo/ font=google_sans view=list sort=low
+instant=true drops=true rises=true interval=3 last=1234 saveTo=private
+friends=[Friend(code=FRIENDAA, name=Sam)] device=device-1 recent={m:L2=5000}
+hero= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) cut=
+list main 'Mine' about='Sizes: M' cats=[Tech, Home, Garden] code=null photos=[]
+  wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+  wish cat=Home,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,priv=true,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  copies 4=false lists=[main] original=main
+  copies 1=true lists=[main, L2] original=main
+  copies 2=false lists=[main] original=main
+list L2 'Garden' about='for the garden' cats=[Tech, Home, Garden] code=null photos=[]
+  wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  copies 1=true lists=[main, L2] original=main
+  copies 3=false lists=[L2] original=L2
+bin L2 'Garden' gone=null bin=999,cat=Home,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+sync=[4, 1]
+pref about=Sizes: M
+pref bin=[{"id":9,"url":"https:\/\/shop.example\/p\/9","title":"Old mug","desc":"about Old mug","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"bin":999}]
+pref bin_owner={"9":"L2"}
+pref cats=Tech
+Home
+pref cats_merged=true
+pref db_only=true
+pref device=device-1
+pref font=google_sans
+pref friends=[{"code":"FRIENDAA","name":"Sam"}]
+pref hero=
+pref hero_cut=
+pref hero_edit={"scale":1,"x":0,"y":0,"text":"","tx":0.5,"ty":0.75,"rot":0,"bright":0,"color":4294967295,"box":false,"tsize":0.1599999964237213,"cl":-1,"ct":-1,"cw":-1,"ch":-1}
+pref instant_delete=true
+pref interval=3
+pref lastCheck=1234
+pref last_save_to=private
+pref look_v2=true
+pref mine_L2={"name":"Garden","about":"for the garden","cats":["Garden"],"wishes":[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Garden","got":false},{"id":3,"url":"https:\/\/shop.example\/p\/3","title":"Spade","desc":"about Spade","image":"","price":null,"old":null,"cur":"EUR","cat":"Garden","got":false}],"code":"","token":"","photos":[]}
+pref mine_copies={"L2":[1]}
+pref mine_gone={}
+pref mine_ids=["main","L2"]
+pref mine_open=main
+pref name=Mine
+pref notify_drops=true
+pref notify_rises=true
+pref palette=indigo
+pref recent={"m:L2":5000}
+pref sort=low
+pref style=quiet
+pref style_colours=
+pref theme=dark
+pref view=list
+pref wishes=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+pref wishes_backup=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+db list main 'Mine' about='Sizes: M' cats=[Tech, Home, Garden] code=null token=null photos=[]
+  db wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+  db wish cat=Home,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,priv=true,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+db list L2 'Garden' about='for the garden' cats=[Tech, Home, Garden] code=null token=null photos=[]
+  db wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  db wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+db bin L2 bin=999,cat=Home,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+db cats=[Tech, Home, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
+db history 1 [10.0]
+db history 2 [10.0]
+db history 4 [10.0]
+## categories
+open=main ids=[main, L2] names={L2=Garden, main=Mine} name=Mine about=Sizes: M
+cats=[Tech, House, Garden] code=null token=null photos=[]
+look=quiet/dark/indigo/ font=google_sans view=list sort=low
+instant=true drops=true rises=true interval=3 last=1234 saveTo=private
+friends=[Friend(code=FRIENDAA, name=Sam)] device=device-1 recent={m:L2=5000}
+hero= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) cut=
+list main 'Mine' about='Sizes: M' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+  wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,priv=true,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  copies 4=false lists=[main] original=main
+  copies 1=true lists=[main, L2] original=main
+  copies 2=false lists=[main] original=main
+list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  copies 1=true lists=[main, L2] original=main
+  copies 3=false lists=[L2] original=L2
+bin L2 'Garden' gone=null bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+sync=[4, 1]
+pref about=Sizes: M
+pref bin=[{"id":9,"url":"https:\/\/shop.example\/p\/9","title":"Old mug","desc":"about Old mug","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"bin":999}]
+pref bin_owner={"9":"L2"}
+pref cats=Tech
+Home
+pref cats_merged=true
+pref db_only=true
+pref device=device-1
+pref font=google_sans
+pref friends=[{"code":"FRIENDAA","name":"Sam"}]
+pref hero=
+pref hero_cut=
+pref hero_edit={"scale":1,"x":0,"y":0,"text":"","tx":0.5,"ty":0.75,"rot":0,"bright":0,"color":4294967295,"box":false,"tsize":0.1599999964237213,"cl":-1,"ct":-1,"cw":-1,"ch":-1}
+pref instant_delete=true
+pref interval=3
+pref lastCheck=1234
+pref last_save_to=private
+pref look_v2=true
+pref mine_L2={"name":"Garden","about":"for the garden","cats":["Garden"],"wishes":[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Garden","got":false},{"id":3,"url":"https:\/\/shop.example\/p\/3","title":"Spade","desc":"about Spade","image":"","price":null,"old":null,"cur":"EUR","cat":"Garden","got":false}],"code":"","token":"","photos":[]}
+pref mine_copies={"L2":[1]}
+pref mine_gone={}
+pref mine_ids=["main","L2"]
+pref mine_open=main
+pref name=Mine
+pref notify_drops=true
+pref notify_rises=true
+pref palette=indigo
+pref recent={"m:L2":5000}
+pref sort=low
+pref style=quiet
+pref style_colours=
+pref theme=dark
+pref view=list
+pref wishes=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+pref wishes_backup=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+db list main 'Mine' about='Sizes: M' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+  db wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,priv=true,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+db list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  db wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
+db history 1 [10.0]
+db history 2 [10.0]
+db history 4 [10.0]
+## new list with a copy
+open=main ids=[main, L2, T1] names={T1=Birthday, L2=Garden, main=Mine} name=Mine about=Sizes: M
+cats=[Tech, House, Garden] code=null token=null photos=[]
+look=quiet/dark/indigo/ font=google_sans view=list sort=low
+instant=true drops=true rises=true interval=3 last=1234 saveTo=private
+friends=[Friend(code=FRIENDAA, name=Sam)] device=device-1 recent={m:L2=5000}
+hero= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) cut=
+list main 'Mine' about='Sizes: M' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+  wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,priv=true,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  copies 4=true lists=[main, T1] original=main
+  copies 1=true lists=[main, L2] original=main
+  copies 2=false lists=[main] original=main
+list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  copies 1=true lists=[main, L2] original=main
+  copies 3=false lists=[L2] original=L2
+list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+  copies 4=true lists=[main, T1] original=main
+bin L2 'Garden' gone=null bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+sync=[4, 1]
+pref about=Sizes: M
+pref bin=[{"id":9,"url":"https:\/\/shop.example\/p\/9","title":"Old mug","desc":"about Old mug","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"bin":999}]
+pref bin_owner={"9":"L2"}
+pref cats=Tech
+Home
+pref cats_merged=true
+pref db_only=true
+pref device=device-1
+pref font=google_sans
+pref friends=[{"code":"FRIENDAA","name":"Sam"}]
+pref hero=
+pref hero_cut=
+pref hero_edit={"scale":1,"x":0,"y":0,"text":"","tx":0.5,"ty":0.75,"rot":0,"bright":0,"color":4294967295,"box":false,"tsize":0.1599999964237213,"cl":-1,"ct":-1,"cw":-1,"ch":-1}
+pref instant_delete=true
+pref interval=3
+pref lastCheck=1234
+pref last_save_to=private
+pref look_v2=true
+pref mine_L2={"name":"Garden","about":"for the garden","cats":["Garden"],"wishes":[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Garden","got":false},{"id":3,"url":"https:\/\/shop.example\/p\/3","title":"Spade","desc":"about Spade","image":"","price":null,"old":null,"cur":"EUR","cat":"Garden","got":false}],"code":"","token":"","photos":[]}
+pref mine_copies={"L2":[1],"T1":[4]}
+pref mine_gone={}
+pref mine_ids=["main","L2"]
+pref mine_open=main
+pref name=Mine
+pref notify_drops=true
+pref notify_rises=true
+pref palette=indigo
+pref recent={"m:L2":5000}
+pref sort=low
+pref style=quiet
+pref style_colours=
+pref theme=dark
+pref view=list
+pref wishes=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+pref wishes_backup=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+db list main 'Mine' about='Sizes: M' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+  db wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,priv=true,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+db list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  db wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
+db history 1 [10.0]
+db history 2 [10.0]
+db history 4 [10.0]
+## original in the bin takes its copy
+open=main ids=[main, L2, T1] names={T1=Birthday, L2=Garden, main=Mine} name=Mine about=Sizes: M
+cats=[Tech, House, Garden] code=null token=null photos=[]
+look=quiet/dark/indigo/ font=google_sans view=list sort=low
+instant=true drops=true rises=true interval=3 last=1234 saveTo=private
+friends=[Friend(code=FRIENDAA, name=Sam)] device=device-1 recent={m:L2=5000}
+hero= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) cut=
+list main 'Mine' about='Sizes: M' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,priv=true,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  copies 1=true lists=[main, L2] original=main
+  copies 2=false lists=[main] original=main
+list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  copies 1=true lists=[main, L2] original=main
+  copies 3=false lists=[L2] original=L2
+list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null photos=[]
+bin main 'Mine' gone=null bin=T2,cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+bin L2 'Garden' gone=null bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+sync=[1, 4]
+pref about=Sizes: M
+pref bin=[{"id":9,"url":"https:\/\/shop.example\/p\/9","title":"Old mug","desc":"about Old mug","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"bin":999}]
+pref bin_owner={"9":"L2"}
+pref cats=Tech
+Home
+pref cats_merged=true
+pref db_only=true
+pref device=device-1
+pref font=google_sans
+pref friends=[{"code":"FRIENDAA","name":"Sam"}]
+pref hero=
+pref hero_cut=
+pref hero_edit={"scale":1,"x":0,"y":0,"text":"","tx":0.5,"ty":0.75,"rot":0,"bright":0,"color":4294967295,"box":false,"tsize":0.1599999964237213,"cl":-1,"ct":-1,"cw":-1,"ch":-1}
+pref instant_delete=true
+pref interval=3
+pref lastCheck=1234
+pref last_save_to=private
+pref look_v2=true
+pref mine_L2={"name":"Garden","about":"for the garden","cats":["Garden"],"wishes":[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Garden","got":false},{"id":3,"url":"https:\/\/shop.example\/p\/3","title":"Spade","desc":"about Spade","image":"","price":null,"old":null,"cur":"EUR","cat":"Garden","got":false}],"code":"","token":"","photos":[]}
+pref mine_copies={"L2":[1]}
+pref mine_gone={}
+pref mine_ids=["main","L2"]
+pref mine_open=main
+pref name=Mine
+pref notify_drops=true
+pref notify_rises=true
+pref palette=indigo
+pref recent={"m:L2":5000}
+pref sort=low
+pref style=quiet
+pref style_colours=
+pref theme=dark
+pref view=list
+pref wishes=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+pref wishes_backup=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+db list main 'Mine' about='Sizes: M' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,priv=true,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+db list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  db wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=null photos=[]
+db bin main bin=T2,cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
+db history 1 [10.0]
+db history 2 [10.0]
+db history 4 [10.0]
+## undo brings both back
+open=main ids=[main, L2, T1] names={T1=Birthday, L2=Garden, main=Mine} name=Mine about=Sizes: M
+cats=[Tech, House, Garden] code=null token=null photos=[]
+look=quiet/dark/indigo/ font=google_sans view=list sort=low
+instant=true drops=true rises=true interval=3 last=1234 saveTo=private
+friends=[Friend(code=FRIENDAA, name=Sam)] device=device-1 recent={m:L2=5000}
+hero= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) cut=
+list main 'Mine' about='Sizes: M' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+  wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,priv=true,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  copies 4=true lists=[main, T1] original=main
+  copies 1=true lists=[main, L2] original=main
+  copies 2=false lists=[main] original=main
+list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  copies 1=true lists=[main, L2] original=main
+  copies 3=false lists=[L2] original=L2
+list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+  copies 4=true lists=[main, T1] original=main
+bin L2 'Garden' gone=null bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+sync=[4, 1]
+pref about=Sizes: M
+pref bin=[{"id":9,"url":"https:\/\/shop.example\/p\/9","title":"Old mug","desc":"about Old mug","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"bin":999}]
+pref bin_owner={"9":"L2"}
+pref cats=Tech
+Home
+pref cats_merged=true
+pref db_only=true
+pref device=device-1
+pref font=google_sans
+pref friends=[{"code":"FRIENDAA","name":"Sam"}]
+pref hero=
+pref hero_cut=
+pref hero_edit={"scale":1,"x":0,"y":0,"text":"","tx":0.5,"ty":0.75,"rot":0,"bright":0,"color":4294967295,"box":false,"tsize":0.1599999964237213,"cl":-1,"ct":-1,"cw":-1,"ch":-1}
+pref instant_delete=true
+pref interval=3
+pref lastCheck=1234
+pref last_save_to=private
+pref look_v2=true
+pref mine_L2={"name":"Garden","about":"for the garden","cats":["Garden"],"wishes":[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Garden","got":false},{"id":3,"url":"https:\/\/shop.example\/p\/3","title":"Spade","desc":"about Spade","image":"","price":null,"old":null,"cur":"EUR","cat":"Garden","got":false}],"code":"","token":"","photos":[]}
+pref mine_copies={"L2":[1],"T1":[4]}
+pref mine_gone={}
+pref mine_ids=["main","L2"]
+pref mine_open=main
+pref name=Mine
+pref notify_drops=true
+pref notify_rises=true
+pref palette=indigo
+pref recent={"m:L2":5000}
+pref sort=low
+pref style=quiet
+pref style_colours=
+pref theme=dark
+pref view=list
+pref wishes=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+pref wishes_backup=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+db list main 'Mine' about='Sizes: M' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+  db wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,priv=true,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+db list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  db wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
+db history 1 [10.0]
+db history 2 [10.0]
+db history 4 [10.0]
+## private wish in the bin
+open=main ids=[main, L2, T1] names={T1=Birthday, L2=Garden, main=Mine} name=Mine about=Sizes: M
+cats=[Tech, House, Garden] code=null token=null photos=[]
+look=quiet/dark/indigo/ font=google_sans view=list sort=low
+instant=true drops=true rises=true interval=3 last=1234 saveTo=private
+friends=[Friend(code=FRIENDAA, name=Sam)] device=device-1 recent={m:L2=5000}
+hero= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) cut=
+list main 'Mine' about='Sizes: M' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+  wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  copies 4=true lists=[main, T1] original=main
+  copies 1=true lists=[main, L2] original=main
+list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  copies 1=true lists=[main, L2] original=main
+  copies 3=false lists=[L2] original=L2
+list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+  copies 4=true lists=[main, T1] original=main
+bin main 'Mine' gone=null bin=T3,cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,priv=true,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+bin L2 'Garden' gone=null bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+sync=[4, 1]
+pref about=Sizes: M
+pref bin=[{"id":9,"url":"https:\/\/shop.example\/p\/9","title":"Old mug","desc":"about Old mug","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"bin":999}]
+pref bin_owner={"9":"L2"}
+pref cats=Tech
+Home
+pref cats_merged=true
+pref db_only=true
+pref device=device-1
+pref font=google_sans
+pref friends=[{"code":"FRIENDAA","name":"Sam"}]
+pref hero=
+pref hero_cut=
+pref hero_edit={"scale":1,"x":0,"y":0,"text":"","tx":0.5,"ty":0.75,"rot":0,"bright":0,"color":4294967295,"box":false,"tsize":0.1599999964237213,"cl":-1,"ct":-1,"cw":-1,"ch":-1}
+pref instant_delete=true
+pref interval=3
+pref lastCheck=1234
+pref last_save_to=private
+pref look_v2=true
+pref mine_L2={"name":"Garden","about":"for the garden","cats":["Garden"],"wishes":[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Garden","got":false},{"id":3,"url":"https:\/\/shop.example\/p\/3","title":"Spade","desc":"about Spade","image":"","price":null,"old":null,"cur":"EUR","cat":"Garden","got":false}],"code":"","token":"","photos":[]}
+pref mine_copies={"L2":[1],"T1":[4]}
+pref mine_gone={}
+pref mine_ids=["main","L2"]
+pref mine_open=main
+pref name=Mine
+pref notify_drops=true
+pref notify_rises=true
+pref palette=indigo
+pref recent={"m:L2":5000}
+pref sort=low
+pref style=quiet
+pref style_colours=
+pref theme=dark
+pref view=list
+pref wishes=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+pref wishes_backup=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+db list main 'Mine' about='Sizes: M' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+  db wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  db wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+db bin main bin=T3,cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,priv=true,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
+db history 1 [10.0]
+db history 2 [10.0]
+db history 4 [10.0]
+## restored and no longer private
+open=main ids=[main, L2, T1] names={T1=Birthday, L2=Garden, main=Mine} name=Mine about=Sizes: M
+cats=[Tech, House, Garden] code=null token=null photos=[]
+look=quiet/dark/indigo/ font=google_sans view=list sort=low
+instant=true drops=true rises=true interval=3 last=1234 saveTo=private
+friends=[Friend(code=FRIENDAA, name=Sam)] device=device-1 recent={m:L2=5000}
+hero= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) cut=
+list main 'Mine' about='Sizes: M' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+  wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  copies 2=false lists=[main] original=main
+  copies 4=true lists=[main, T1] original=main
+  copies 1=true lists=[main, L2] original=main
+list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  copies 1=true lists=[main, L2] original=main
+  copies 3=false lists=[L2] original=L2
+list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+  copies 4=true lists=[main, T1] original=main
+bin L2 'Garden' gone=null bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+sync=[2, 4, 1]
+pref about=Sizes: M
+pref bin=[{"id":9,"url":"https:\/\/shop.example\/p\/9","title":"Old mug","desc":"about Old mug","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"bin":999}]
+pref bin_owner={"9":"L2"}
+pref cats=Tech
+Home
+pref cats_merged=true
+pref db_only=true
+pref device=device-1
+pref font=google_sans
+pref friends=[{"code":"FRIENDAA","name":"Sam"}]
+pref hero=
+pref hero_cut=
+pref hero_edit={"scale":1,"x":0,"y":0,"text":"","tx":0.5,"ty":0.75,"rot":0,"bright":0,"color":4294967295,"box":false,"tsize":0.1599999964237213,"cl":-1,"ct":-1,"cw":-1,"ch":-1}
+pref instant_delete=true
+pref interval=3
+pref lastCheck=1234
+pref last_save_to=private
+pref look_v2=true
+pref mine_L2={"name":"Garden","about":"for the garden","cats":["Garden"],"wishes":[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Garden","got":false},{"id":3,"url":"https:\/\/shop.example\/p\/3","title":"Spade","desc":"about Spade","image":"","price":null,"old":null,"cur":"EUR","cat":"Garden","got":false}],"code":"","token":"","photos":[]}
+pref mine_copies={"L2":[1],"T1":[4]}
+pref mine_gone={}
+pref mine_ids=["main","L2"]
+pref mine_open=main
+pref name=Mine
+pref notify_drops=true
+pref notify_rises=true
+pref palette=indigo
+pref recent={"m:L2":5000}
+pref sort=low
+pref style=quiet
+pref style_colours=
+pref theme=dark
+pref view=list
+pref wishes=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+pref wishes_backup=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+db list main 'Mine' about='Sizes: M' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  db wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+  db wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  db wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
+db history 1 [10.0]
+db history 2 [10.0]
+db history 4 [10.0]
+## received on a list that isn't open
+open=main ids=[main, L2, T1] names={T1=Birthday, L2=Garden, main=Mine} name=Mine about=Sizes: M
+cats=[Tech, House, Garden] code=null token=null photos=[]
+look=quiet/dark/indigo/ font=google_sans view=list sort=low
+instant=true drops=true rises=true interval=3 last=1234 saveTo=private
+friends=[Friend(code=FRIENDAA, name=Sam)] device=device-1 recent={m:L2=5000}
+hero= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) cut=
+list main 'Mine' about='Sizes: M' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+  wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  copies 2=false lists=[main] original=main
+  copies 4=true lists=[main, T1] original=main
+  copies 1=true lists=[main, L2] original=main
+list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  copies 1=true lists=[main, L2] original=main
+list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+  copies 4=true lists=[main, T1] original=main
+bin L2 'Garden' gone=null bin=T4,cat=Garden,cur=EUR,desc=about Spade,got=true,id=3,image=,old=null,price=null,recv=T4,title=Spade,url=https://shop.example/p/3
+bin L2 'Garden' gone=null bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+sync=[2, 4, 1]
+pref about=Sizes: M
+pref bin=[{"id":9,"url":"https:\/\/shop.example\/p\/9","title":"Old mug","desc":"about Old mug","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"bin":999}]
+pref bin_owner={"9":"L2"}
+pref cats=Tech
+Home
+pref cats_merged=true
+pref db_only=true
+pref device=device-1
+pref font=google_sans
+pref friends=[{"code":"FRIENDAA","name":"Sam"}]
+pref hero=
+pref hero_cut=
+pref hero_edit={"scale":1,"x":0,"y":0,"text":"","tx":0.5,"ty":0.75,"rot":0,"bright":0,"color":4294967295,"box":false,"tsize":0.1599999964237213,"cl":-1,"ct":-1,"cw":-1,"ch":-1}
+pref instant_delete=true
+pref interval=3
+pref lastCheck=1234
+pref last_save_to=private
+pref look_v2=true
+pref mine_L2={"name":"Garden","about":"for the garden","cats":["Garden"],"wishes":[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Garden","got":false},{"id":3,"url":"https:\/\/shop.example\/p\/3","title":"Spade","desc":"about Spade","image":"","price":null,"old":null,"cur":"EUR","cat":"Garden","got":false}],"code":"","token":"","photos":[]}
+pref mine_copies={"L2":[1],"T1":[4]}
+pref mine_gone={}
+pref mine_ids=["main","L2"]
+pref mine_open=main
+pref name=Mine
+pref notify_drops=true
+pref notify_rises=true
+pref palette=indigo
+pref recent={"m:L2":5000}
+pref sort=low
+pref style=quiet
+pref style_colours=
+pref theme=dark
+pref view=list
+pref wishes=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+pref wishes_backup=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+db list main 'Mine' about='Sizes: M' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  db wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+  db wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+db bin L2 bin=T4,cat=Garden,cur=EUR,desc=about Spade,got=true,id=3,image=,old=null,price=null,recv=T4,title=Spade,url=https://shop.example/p/3
+db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
+db history 1 [10.0]
+db history 2 [10.0]
+db history 4 [10.0]
+## received gift back
+open=main ids=[main, L2, T1] names={T1=Birthday, L2=Garden, main=Mine} name=Mine about=Sizes: M
+cats=[Tech, House, Garden] code=null token=null photos=[]
+look=quiet/dark/indigo/ font=google_sans view=list sort=low
+instant=true drops=true rises=true interval=3 last=1234 saveTo=private
+friends=[Friend(code=FRIENDAA, name=Sam)] device=device-1 recent={m:L2=5000}
+hero= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) cut=
+list main 'Mine' about='Sizes: M' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+  wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  copies 2=false lists=[main] original=main
+  copies 4=true lists=[main, T1] original=main
+  copies 1=true lists=[main, L2] original=main
+list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  copies 3=false lists=[L2] original=L2
+  copies 1=true lists=[main, L2] original=main
+list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+  copies 4=true lists=[main, T1] original=main
+bin L2 'Garden' gone=null bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+sync=[2, 4, 1]
+pref about=Sizes: M
+pref bin=[{"id":9,"url":"https:\/\/shop.example\/p\/9","title":"Old mug","desc":"about Old mug","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"bin":999}]
+pref bin_owner={"9":"L2"}
+pref cats=Tech
+Home
+pref cats_merged=true
+pref db_only=true
+pref device=device-1
+pref font=google_sans
+pref friends=[{"code":"FRIENDAA","name":"Sam"}]
+pref hero=
+pref hero_cut=
+pref hero_edit={"scale":1,"x":0,"y":0,"text":"","tx":0.5,"ty":0.75,"rot":0,"bright":0,"color":4294967295,"box":false,"tsize":0.1599999964237213,"cl":-1,"ct":-1,"cw":-1,"ch":-1}
+pref instant_delete=true
+pref interval=3
+pref lastCheck=1234
+pref last_save_to=private
+pref look_v2=true
+pref mine_L2={"name":"Garden","about":"for the garden","cats":["Garden"],"wishes":[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Garden","got":false},{"id":3,"url":"https:\/\/shop.example\/p\/3","title":"Spade","desc":"about Spade","image":"","price":null,"old":null,"cur":"EUR","cat":"Garden","got":false}],"code":"","token":"","photos":[]}
+pref mine_copies={"L2":[1],"T1":[4]}
+pref mine_gone={}
+pref mine_ids=["main","L2"]
+pref mine_open=main
+pref name=Mine
+pref notify_drops=true
+pref notify_rises=true
+pref palette=indigo
+pref recent={"m:L2":5000}
+pref sort=low
+pref style=quiet
+pref style_colours=
+pref theme=dark
+pref view=list
+pref wishes=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+pref wishes_backup=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+db list main 'Mine' about='Sizes: M' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  db wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+  db wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  db wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Books,cur=EUR,desc=about Book,got=false,id=4,image=,old=null,price=10.0,title=Book,url=https://shop.example/p/4
+db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
+db history 1 [10.0]
+db history 2 [10.0]
+db history 4 [10.0]
+## I have it on every list
+open=main ids=[main, L2, T1] names={T1=Birthday, L2=Garden, main=Mine} name=Mine about=Sizes: M
+cats=[Tech, House, Garden] code=null token=null photos=[]
+look=quiet/dark/indigo/ font=google_sans view=list sort=low
+instant=true drops=true rises=true interval=3 last=1234 saveTo=private
+friends=[Friend(code=FRIENDAA, name=Sam)] device=device-1 recent={m:L2=5000}
+hero= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) cut=
+list main 'Mine' about='Sizes: M' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  copies 2=false lists=[main] original=main
+  copies 1=true lists=[main, L2] original=main
+list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  copies 3=false lists=[L2] original=L2
+  copies 1=true lists=[main, L2] original=main
+list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null photos=[]
+bin main 'Mine' gone=null bin=T5,cat=Books,cur=EUR,desc=about Book,got=true,id=4,image=,old=null,price=10.0,recv=T5,star=true,title=Book,url=https://shop.example/p/4
+bin L2 'Garden' gone=null bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+sync=[2, 1, 4]
+pref about=Sizes: M
+pref bin=[{"id":9,"url":"https:\/\/shop.example\/p\/9","title":"Old mug","desc":"about Old mug","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"bin":999}]
+pref bin_owner={"9":"L2"}
+pref cats=Tech
+Home
+pref cats_merged=true
+pref db_only=true
+pref device=device-1
+pref font=google_sans
+pref friends=[{"code":"FRIENDAA","name":"Sam"}]
+pref hero=
+pref hero_cut=
+pref hero_edit={"scale":1,"x":0,"y":0,"text":"","tx":0.5,"ty":0.75,"rot":0,"bright":0,"color":4294967295,"box":false,"tsize":0.1599999964237213,"cl":-1,"ct":-1,"cw":-1,"ch":-1}
+pref instant_delete=true
+pref interval=3
+pref lastCheck=1234
+pref last_save_to=private
+pref look_v2=true
+pref mine_L2={"name":"Garden","about":"for the garden","cats":["Garden"],"wishes":[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Garden","got":false},{"id":3,"url":"https:\/\/shop.example\/p\/3","title":"Spade","desc":"about Spade","image":"","price":null,"old":null,"cur":"EUR","cat":"Garden","got":false}],"code":"","token":"","photos":[]}
+pref mine_copies={"L2":[1]}
+pref mine_gone={}
+pref mine_ids=["main","L2"]
+pref mine_open=main
+pref name=Mine
+pref notify_drops=true
+pref notify_rises=true
+pref palette=indigo
+pref recent={"m:L2":5000}
+pref sort=low
+pref style=quiet
+pref style_colours=
+pref theme=dark
+pref view=list
+pref wishes=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+pref wishes_backup=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+db list main 'Mine' about='Sizes: M' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  db wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  db wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=null photos=[]
+db bin main bin=T5,cat=Books,cur=EUR,desc=about Book,got=true,id=4,image=,old=null,price=10.0,recv=T5,star=true,title=Book,url=https://shop.example/p/4
+db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
+db history 1 [10.0]
+db history 2 [10.0]
+db history 4 [10.0]
+## moved
+open=main ids=[main, L2, T1] names={T1=Birthday, L2=Garden, main=Mine} name=Mine about=Sizes: M
+cats=[Tech, House, Garden] code=null token=null photos=[]
+look=quiet/dark/indigo/ font=google_sans view=list sort=low
+instant=true drops=true rises=true interval=3 last=1234 saveTo=private
+friends=[Friend(code=FRIENDAA, name=Sam)] device=device-1 recent={m:L2=5000}
+hero= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) cut=
+list main 'Mine' about='Sizes: M' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  copies 1=true lists=[main, L2] original=main
+list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  copies 3=false lists=[L2] original=L2
+  copies 1=true lists=[main, L2] original=main
+list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  copies 2=false lists=[T1] original=T1
+bin main 'Mine' gone=null bin=T5,cat=Books,cur=EUR,desc=about Book,got=true,id=4,image=,old=null,price=10.0,recv=T5,star=true,title=Book,url=https://shop.example/p/4
+bin L2 'Garden' gone=null bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+sync=[1, 4]
+pref about=Sizes: M
+pref bin=[{"id":9,"url":"https:\/\/shop.example\/p\/9","title":"Old mug","desc":"about Old mug","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"bin":999}]
+pref bin_owner={"9":"L2"}
+pref cats=Tech
+Home
+pref cats_merged=true
+pref db_only=true
+pref device=device-1
+pref font=google_sans
+pref friends=[{"code":"FRIENDAA","name":"Sam"}]
+pref hero=
+pref hero_cut=
+pref hero_edit={"scale":1,"x":0,"y":0,"text":"","tx":0.5,"ty":0.75,"rot":0,"bright":0,"color":4294967295,"box":false,"tsize":0.1599999964237213,"cl":-1,"ct":-1,"cw":-1,"ch":-1}
+pref instant_delete=true
+pref interval=3
+pref lastCheck=1234
+pref last_save_to=private
+pref look_v2=true
+pref mine_L2={"name":"Garden","about":"for the garden","cats":["Garden"],"wishes":[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Garden","got":false},{"id":3,"url":"https:\/\/shop.example\/p\/3","title":"Spade","desc":"about Spade","image":"","price":null,"old":null,"cur":"EUR","cat":"Garden","got":false}],"code":"","token":"","photos":[]}
+pref mine_copies={"L2":[1]}
+pref mine_gone={}
+pref mine_ids=["main","L2"]
+pref mine_open=main
+pref name=Mine
+pref notify_drops=true
+pref notify_rises=true
+pref palette=indigo
+pref recent={"m:L2":5000}
+pref sort=low
+pref style=quiet
+pref style_colours=
+pref theme=dark
+pref view=list
+pref wishes=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+pref wishes_backup=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+db list main 'Mine' about='Sizes: M' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  db wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+db bin main bin=T5,cat=Books,cur=EUR,desc=about Book,got=true,id=4,image=,old=null,price=10.0,recv=T5,star=true,title=Book,url=https://shop.example/p/4
+db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
+db history 1 [10.0]
+db history 2 [10.0]
+db history 4 [10.0]
+## another list open
+open=L2 ids=[main, L2, T1] names={T1=Birthday, L2=Garden, main=Mine} name=Garden about=for the garden
+cats=[Tech, House, Garden] code=null token=null photos=[]
+look=quiet/dark/indigo/ font=google_sans view=list sort=low
+instant=true drops=true rises=true interval=3 last=1234 saveTo=private
+friends=[Friend(code=FRIENDAA, name=Sam)] device=device-1 recent={m:L2=5000}
+hero= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) cut=
+list main 'Mine' about='Sizes: M' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  copies 1=true lists=[main, L2] original=main
+list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  copies 3=false lists=[L2] original=L2
+  copies 1=true lists=[main, L2] original=main
+list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  copies 2=false lists=[T1] original=T1
+bin main 'Mine' gone=null bin=T5,cat=Books,cur=EUR,desc=about Book,got=true,id=4,image=,old=null,price=10.0,recv=T5,star=true,title=Book,url=https://shop.example/p/4
+bin L2 'Garden' gone=null bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+sync=[3, 1, 9]
+pref about=Sizes: M
+pref bin=[{"id":9,"url":"https:\/\/shop.example\/p\/9","title":"Old mug","desc":"about Old mug","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"bin":999}]
+pref bin_owner={"9":"L2"}
+pref cats=Tech
+Home
+pref cats_merged=true
+pref db_only=true
+pref device=device-1
+pref font=google_sans
+pref friends=[{"code":"FRIENDAA","name":"Sam"}]
+pref hero=
+pref hero_cut=
+pref hero_edit={"scale":1,"x":0,"y":0,"text":"","tx":0.5,"ty":0.75,"rot":0,"bright":0,"color":4294967295,"box":false,"tsize":0.1599999964237213,"cl":-1,"ct":-1,"cw":-1,"ch":-1}
+pref instant_delete=true
+pref interval=3
+pref lastCheck=1234
+pref last_save_to=private
+pref look_v2=true
+pref mine_L2={"name":"Garden","about":"for the garden","cats":["Garden"],"wishes":[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Garden","got":false},{"id":3,"url":"https:\/\/shop.example\/p\/3","title":"Spade","desc":"about Spade","image":"","price":null,"old":null,"cur":"EUR","cat":"Garden","got":false}],"code":"","token":"","photos":[]}
+pref mine_copies={"L2":[1]}
+pref mine_gone={}
+pref mine_ids=["main","L2"]
+pref mine_open=L2
+pref name=Mine
+pref notify_drops=true
+pref notify_rises=true
+pref palette=indigo
+pref recent={"m:L2":5000}
+pref sort=low
+pref style=quiet
+pref style_colours=
+pref theme=dark
+pref view=list
+pref wishes=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+pref wishes_backup=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+db list main 'Mine' about='Sizes: M' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db list L2 'Garden' about='for the garden' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  db wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+db bin main bin=T5,cat=Books,cur=EUR,desc=about Book,got=true,id=4,image=,old=null,price=10.0,recv=T5,star=true,title=Book,url=https://shop.example/p/4
+db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
+db history 1 [10.0]
+db history 2 [10.0]
+db history 4 [10.0]
+## renamed
+open=L2 ids=[main, L2, T1] names={T1=Birthday, L2=Wishlist, main=Main list} name=Wishlist about=dig
+cats=[Tech, House, Garden] code=null token=null photos=[]
+look=quiet/dark/indigo/ font=google_sans view=list sort=low
+instant=true drops=true rises=true interval=3 last=1234 saveTo=private
+friends=[Friend(code=FRIENDAA, name=Sam)] device=device-1 recent={m:L2=5000}
+hero= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) cut=
+list main 'Main list' about='Sizes: M' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  copies 1=true lists=[main, L2] original=main
+list L2 'Wishlist' about='dig' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  copies 3=false lists=[L2] original=L2
+  copies 1=true lists=[main, L2] original=main
+list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  copies 2=false lists=[T1] original=T1
+bin main 'Main list' gone=null bin=T5,cat=Books,cur=EUR,desc=about Book,got=true,id=4,image=,old=null,price=10.0,recv=T5,star=true,title=Book,url=https://shop.example/p/4
+bin L2 'Wishlist' gone=null bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+sync=[3, 1, 9]
+pref about=Sizes: M
+pref bin=[{"id":9,"url":"https:\/\/shop.example\/p\/9","title":"Old mug","desc":"about Old mug","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"bin":999}]
+pref bin_owner={"9":"L2"}
+pref cats=Tech
+Home
+pref cats_merged=true
+pref db_only=true
+pref device=device-1
+pref font=google_sans
+pref friends=[{"code":"FRIENDAA","name":"Sam"}]
+pref hero=
+pref hero_cut=
+pref hero_edit={"scale":1,"x":0,"y":0,"text":"","tx":0.5,"ty":0.75,"rot":0,"bright":0,"color":4294967295,"box":false,"tsize":0.1599999964237213,"cl":-1,"ct":-1,"cw":-1,"ch":-1}
+pref instant_delete=true
+pref interval=3
+pref lastCheck=1234
+pref last_save_to=private
+pref look_v2=true
+pref mine_L2={"name":"Garden","about":"for the garden","cats":["Garden"],"wishes":[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Garden","got":false},{"id":3,"url":"https:\/\/shop.example\/p\/3","title":"Spade","desc":"about Spade","image":"","price":null,"old":null,"cur":"EUR","cat":"Garden","got":false}],"code":"","token":"","photos":[]}
+pref mine_copies={"L2":[1]}
+pref mine_gone={}
+pref mine_ids=["main","L2"]
+pref mine_open=L2
+pref name=Mine
+pref notify_drops=true
+pref notify_rises=true
+pref palette=indigo
+pref recent={"m:L2":5000}
+pref sort=low
+pref style=quiet
+pref style_colours=
+pref theme=dark
+pref view=list
+pref wishes=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+pref wishes_backup=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+db list main 'Main list' about='Sizes: M' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db list L2 'Wishlist' about='dig' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  db wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+db bin main bin=T5,cat=Books,cur=EUR,desc=about Book,got=true,id=4,image=,old=null,price=10.0,recv=T5,star=true,title=Book,url=https://shop.example/p/4
+db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sam)]
+db history 1 [10.0]
+db history 2 [10.0]
+db history 4 [10.0]
+## settings and friends
+open=L2 ids=[main, L2, T1] names={T1=Birthday, L2=Wishlist, main=Main list} name=Wishlist about=dig
+cats=[Tech, House, Garden] code=null token=null photos=[]
+look=chaos/light/teal/ font=google_sans view=grid sort=az
+instant=false drops=false rises=false interval=12 last=777 saveTo=mine
+friends=[Friend(code=FRIENDAA, name=Sammy)] device=device-1 recent={m:T1=T6, s:SHARED11=T7}
+hero= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) cut=
+list main 'Main list' about='Sizes: M' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  copies 1=true lists=[main, L2] original=main
+list L2 'Wishlist' about='dig' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  copies 3=false lists=[L2] original=L2
+  copies 1=true lists=[main, L2] original=main
+list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  copies 2=false lists=[T1] original=T1
+bin main 'Main list' gone=null bin=T5,cat=Books,cur=EUR,desc=about Book,got=true,id=4,image=,old=null,price=10.0,recv=T5,star=true,title=Book,url=https://shop.example/p/4
+bin L2 'Wishlist' gone=null bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+sync=[3, 1, 9]
+pref about=Sizes: M
+pref bin=[{"id":9,"url":"https:\/\/shop.example\/p\/9","title":"Old mug","desc":"about Old mug","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"bin":999}]
+pref bin_owner={"9":"L2"}
+pref cats=Tech
+Home
+pref cats_merged=true
+pref db_only=true
+pref device=device-1
+pref font=google_sans
+pref friends=[{"code":"FRIENDAA","name":"Sam"}]
+pref hero=
+pref hero_cut=
+pref hero_edit={"scale":1,"x":0,"y":0,"text":"","tx":0.5,"ty":0.75,"rot":0,"bright":0,"color":4294967295,"box":false,"tsize":0.1599999964237213,"cl":-1,"ct":-1,"cw":-1,"ch":-1}
+pref instant_delete=false
+pref interval=12
+pref lastCheck=777
+pref last_save_to=mine
+pref look_v2=true
+pref mine_L2={"name":"Garden","about":"for the garden","cats":["Garden"],"wishes":[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Garden","got":false},{"id":3,"url":"https:\/\/shop.example\/p\/3","title":"Spade","desc":"about Spade","image":"","price":null,"old":null,"cur":"EUR","cat":"Garden","got":false}],"code":"","token":"","photos":[]}
+pref mine_copies={"L2":[1]}
+pref mine_gone={}
+pref mine_ids=["main","L2"]
+pref mine_open=L2
+pref name=Mine
+pref notify_drops=false
+pref notify_rises=false
+pref palette=teal
+pref recent={"s:SHARED11":T7,"m:T1":T6}
+pref sort=az
+pref style=chaos
+pref style_colours=
+pref theme=light
+pref view=grid
+pref wishes=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+pref wishes_backup=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+db list main 'Main list' about='Sizes: M' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db list L2 'Wishlist' about='dig' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  db wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+db bin main bin=T5,cat=Books,cur=EUR,desc=about Book,got=true,id=4,image=,old=null,price=10.0,recv=T5,star=true,title=Book,url=https://shop.example/p/4
+db bin L2 bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sammy)]
+db history 1 [10.0]
+db history 2 [10.0]
+db history 4 [10.0]
+## the original list deleted: the next takes its place
+open=main ids=[main, T1] names={T1=Birthday, main=Wishlist} name=Wishlist about=dig
+cats=[Tech, House, Garden] code=null token=null photos=[]
+look=chaos/light/teal/ font=google_sans view=grid sort=az
+instant=false drops=false rises=false interval=12 last=777 saveTo=mine
+friends=[Friend(code=FRIENDAA, name=Sammy)] device=device-1 recent={m:T1=T6, s:SHARED11=T7}
+hero= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) cut=
+list main 'Wishlist' about='dig' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  copies 3=false lists=[main] original=main
+  copies 1=true lists=[main] original=main
+list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  copies 2=false lists=[T1] original=T1
+bin main 'Main list' gone=Main list bin=T8,cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+bin main 'Wishlist' gone=null bin=T5,cat=Books,cur=EUR,desc=about Book,got=true,id=4,image=,old=null,price=10.0,recv=T5,star=true,title=Book,url=https://shop.example/p/4
+bin main 'Wishlist' gone=null bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+sync=[3, 1, 1, 4, 9]
+pref about=Sizes: M
+pref bin=[{"id":9,"url":"https:\/\/shop.example\/p\/9","title":"Old mug","desc":"about Old mug","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"bin":999}]
+pref bin_owner={"9":"L2"}
+pref cats=Tech
+Home
+pref cats_merged=true
+pref db_only=true
+pref device=device-1
+pref font=google_sans
+pref friends=[{"code":"FRIENDAA","name":"Sam"}]
+pref hero=
+pref hero_cut=
+pref hero_edit={"scale":1,"x":0,"y":0,"text":"","tx":0.5,"ty":0.75,"rot":0,"bright":0,"color":4294967295,"box":false,"tsize":0.1599999964237213,"cl":-1,"ct":-1,"cw":-1,"ch":-1}
+pref instant_delete=false
+pref interval=12
+pref lastCheck=777
+pref last_save_to=mine
+pref look_v2=true
+pref mine_copies={"main":[1]}
+pref mine_gone={"gone_T8":"Main list"}
+pref mine_ids=["main","L2"]
+pref mine_open=main
+pref name=Mine
+pref notify_drops=false
+pref notify_rises=false
+pref palette=teal
+pref recent={"s:SHARED11":T7,"m:T1":T6}
+pref sort=az
+pref style=chaos
+pref style_colours=
+pref theme=light
+pref view=grid
+pref wishes=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+pref wishes_backup=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+db list main 'Wishlist' about='dig' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  db wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+db bin gone_T8 bin=T8,cat=House,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db bin main bin=T5,cat=Books,cur=EUR,desc=about Book,got=true,id=4,image=,old=null,price=10.0,recv=T5,star=true,title=Book,url=https://shop.example/p/4
+db bin main bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sammy)]
+db history 1 [10.0]
+db history 2 [10.0]
+db history 4 [10.0]
+## restored to another list
+open=main ids=[main, T1] names={T1=Birthday, main=Wishlist} name=Wishlist about=dig
+cats=[Tech, House, Garden] code=null token=null photos=[]
+look=chaos/light/teal/ font=google_sans view=grid sort=az
+instant=false drops=false rises=false interval=12 last=777 saveTo=mine
+friends=[Friend(code=FRIENDAA, name=Sammy)] device=device-1 recent={m:T1=T6, s:SHARED11=T7}
+hero= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) cut=
+list main 'Wishlist' about='dig' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  copies 3=false lists=[main] original=main
+  copies 1=true lists=[main] original=main
+list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  copies 2=false lists=[T1] original=T1
+bin main 'Wishlist' gone=null bin=T5,cat=Books,cur=EUR,desc=about Book,got=true,id=4,image=,old=null,price=10.0,recv=T5,star=true,title=Book,url=https://shop.example/p/4
+bin main 'Wishlist' gone=null bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+sync=[3, 1, 4, 9]
+pref about=Sizes: M
+pref bin=[{"id":9,"url":"https:\/\/shop.example\/p\/9","title":"Old mug","desc":"about Old mug","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"bin":999}]
+pref bin_owner={"9":"L2"}
+pref cats=Tech
+Home
+pref cats_merged=true
+pref db_only=true
+pref device=device-1
+pref font=google_sans
+pref friends=[{"code":"FRIENDAA","name":"Sam"}]
+pref hero=
+pref hero_cut=
+pref hero_edit={"scale":1,"x":0,"y":0,"text":"","tx":0.5,"ty":0.75,"rot":0,"bright":0,"color":4294967295,"box":false,"tsize":0.1599999964237213,"cl":-1,"ct":-1,"cw":-1,"ch":-1}
+pref instant_delete=false
+pref interval=12
+pref lastCheck=777
+pref last_save_to=mine
+pref look_v2=true
+pref mine_copies={"main":[1]}
+pref mine_gone={"gone_T8":"Main list"}
+pref mine_ids=["main","L2"]
+pref mine_open=main
+pref name=Mine
+pref notify_drops=false
+pref notify_rises=false
+pref palette=teal
+pref recent={"s:SHARED11":T7,"m:T1":T6}
+pref sort=az
+pref style=chaos
+pref style_colours=
+pref theme=light
+pref view=grid
+pref wishes=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+pref wishes_backup=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+db list main 'Wishlist' about='dig' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  db wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+db bin main bin=T5,cat=Books,cur=EUR,desc=about Book,got=true,id=4,image=,old=null,price=10.0,recv=T5,star=true,title=Book,url=https://shop.example/p/4
+db bin main bin=999,cat=House,cur=EUR,desc=about Old mug,got=false,id=9,image=,old=null,price=10.0,title=Old mug,url=https://shop.example/p/9
+db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sammy)]
+db history 1 [10.0]
+db history 2 [10.0]
+db history 4 [10.0]
+## category removed, bin emptied
+open=main ids=[main, T1] names={T1=Birthday, main=Wishlist} name=Wishlist about=dig
+cats=[Tech, House, Garden] code=null token=null photos=[]
+look=chaos/light/teal/ font=google_sans view=grid sort=az
+instant=false drops=false rises=false interval=12 last=777 saveTo=mine
+friends=[Friend(code=FRIENDAA, name=Sammy)] device=device-1 recent={m:T1=T6, s:SHARED11=T7}
+hero= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) cut=
+list main 'Wishlist' about='dig' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  copies 3=false lists=[main] original=main
+  copies 1=true lists=[main] original=main
+list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  copies 2=false lists=[T1] original=T1
+sync=[3, 1]
+pref about=Sizes: M
+pref bin=[{"id":9,"url":"https:\/\/shop.example\/p\/9","title":"Old mug","desc":"about Old mug","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"bin":999}]
+pref bin_owner={"9":"L2"}
+pref cats=Tech
+Home
+pref cats_merged=true
+pref db_only=true
+pref device=device-1
+pref font=google_sans
+pref friends=[{"code":"FRIENDAA","name":"Sam"}]
+pref hero=
+pref hero_cut=
+pref hero_edit={"scale":1,"x":0,"y":0,"text":"","tx":0.5,"ty":0.75,"rot":0,"bright":0,"color":4294967295,"box":false,"tsize":0.1599999964237213,"cl":-1,"ct":-1,"cw":-1,"ch":-1}
+pref instant_delete=false
+pref interval=12
+pref lastCheck=777
+pref last_save_to=mine
+pref look_v2=true
+pref mine_copies={"main":[1]}
+pref mine_gone={"gone_T8":"Main list"}
+pref mine_ids=["main","L2"]
+pref mine_open=main
+pref name=Mine
+pref notify_drops=false
+pref notify_rises=false
+pref palette=teal
+pref recent={"s:SHARED11":T7,"m:T1":T6}
+pref sort=az
+pref style=chaos
+pref style_colours=
+pref theme=light
+pref view=grid
+pref wishes=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+pref wishes_backup=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+db list main 'Wishlist' about='dig' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  db wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sammy)]
+db history 1 [10.0]
+db history 2 [10.0]
+## names cleaned once
+open=main ids=[main, T1] names={T1=Birthday, main=Wishlist} name=Wishlist about=dig
+cats=[Tech, House, Garden] code=null token=null photos=[]
+look=chaos/light/teal/ font=google_sans view=grid sort=az
+instant=false drops=false rises=false interval=12 last=777 saveTo=mine
+friends=[Friend(code=FRIENDAA, name=Sammy)] device=device-1 recent={m:T1=T6, s:SHARED11=T7}
+hero= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) cut=
+list main 'Wishlist' about='dig' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  copies 3=false lists=[main] original=main
+  copies 1=true lists=[main] original=main
+list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  copies 2=false lists=[T1] original=T1
+sync=[3, 1]
+pref about=Sizes: M
+pref bin=[{"id":9,"url":"https:\/\/shop.example\/p\/9","title":"Old mug","desc":"about Old mug","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"bin":999}]
+pref bin_owner={"9":"L2"}
+pref cats=Tech
+Home
+pref cats_merged=true
+pref db_only=true
+pref device=device-1
+pref font=google_sans
+pref friends=[{"code":"FRIENDAA","name":"Sam"}]
+pref hero=
+pref hero_cut=
+pref hero_edit={"scale":1,"x":0,"y":0,"text":"","tx":0.5,"ty":0.75,"rot":0,"bright":0,"color":4294967295,"box":false,"tsize":0.1599999964237213,"cl":-1,"ct":-1,"cw":-1,"ch":-1}
+pref instant_delete=false
+pref interval=12
+pref lastCheck=777
+pref last_save_to=mine
+pref look_v2=true
+pref mine_copies={"main":[1]}
+pref mine_gone={"gone_T8":"Main list"}
+pref mine_ids=["main","L2"]
+pref mine_open=main
+pref name=Mine
+pref notify_drops=false
+pref notify_rises=false
+pref palette=teal
+pref recent={"s:SHARED11":T7,"m:T1":T6}
+pref sort=az
+pref style=chaos
+pref style_colours=
+pref theme=light
+pref titles_clean_2135=true
+pref view=grid
+pref wishes=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+pref wishes_backup=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+db list main 'Wishlist' about='dig' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  db wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sammy)]
+db history 1 [10.0]
+db history 2 [10.0]
+## a link for a list that isn't open
+open=main ids=[main, T1] names={T1=Birthday, main=Wishlist} name=Wishlist about=dig
+cats=[Tech, House, Garden] code=null token=null photos=[]
+look=chaos/light/teal/ font=google_sans view=grid sort=az
+instant=false drops=false rises=false interval=12 last=777 saveTo=mine
+friends=[Friend(code=FRIENDAA, name=Sammy)] device=device-1 recent={m:T1=T6, s:SHARED11=T7}
+hero= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) cut=
+list main 'Wishlist' about='dig' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  copies 3=false lists=[main] original=main
+  copies 1=true lists=[main] original=main
+list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=LINKCODE photos=[a.jpg]
+  wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  copies 2=false lists=[T1] original=T1
+sync=[3, 1]
+pref about=Sizes: M
+pref bin=[{"id":9,"url":"https:\/\/shop.example\/p\/9","title":"Old mug","desc":"about Old mug","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"bin":999}]
+pref bin_owner={"9":"L2"}
+pref cats=Tech
+Home
+pref cats_merged=true
+pref db_only=true
+pref device=device-1
+pref font=google_sans
+pref friends=[{"code":"FRIENDAA","name":"Sam"}]
+pref hero=
+pref hero_cut=
+pref hero_edit={"scale":1,"x":0,"y":0,"text":"","tx":0.5,"ty":0.75,"rot":0,"bright":0,"color":4294967295,"box":false,"tsize":0.1599999964237213,"cl":-1,"ct":-1,"cw":-1,"ch":-1}
+pref instant_delete=false
+pref interval=12
+pref lastCheck=777
+pref last_save_to=mine
+pref look_v2=true
+pref mine_copies={"main":[1]}
+pref mine_gone={"gone_T8":"Main list"}
+pref mine_ids=["main","L2"]
+pref mine_open=main
+pref name=Mine
+pref notify_drops=false
+pref notify_rises=false
+pref palette=teal
+pref recent={"s:SHARED11":T7,"m:T1":T6}
+pref sort=az
+pref style=chaos
+pref style_colours=
+pref theme=light
+pref titles_clean_2135=true
+pref view=grid
+pref wishes=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+pref wishes_backup=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+db list main 'Wishlist' about='dig' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  db wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=LINKCODE token=tok photos=[a.jpg]
+  db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sammy)]
+db history 1 [10.0]
+db history 2 [10.0]
+## started again: everything the same
+open=main ids=[main, T1] names={T1=Birthday, main=Wishlist} name=Wishlist about=dig
+cats=[Tech, House, Garden] code=null token=null photos=[]
+look=chaos/light/teal/ font=google_sans view=grid sort=new
+instant=false drops=false rises=false interval=12 last=777 saveTo=mine
+friends=[Friend(code=FRIENDAA, name=Sammy)] device=device-1 recent={m:T1=T6, s:SHARED11=T7}
+hero= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) cut=
+list main 'Wishlist' about='dig' cats=[Tech, House, Garden] code=null photos=[]
+  wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+  copies 3=false lists=[main] original=main
+  copies 1=true lists=[main] original=main
+list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=LINKCODE photos=[a.jpg]
+  wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+  copies 2=false lists=[T1] original=T1
+sync=[3, 1]
+pref about=Sizes: M
+pref bin=[{"id":9,"url":"https:\/\/shop.example\/p\/9","title":"Old mug","desc":"about Old mug","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false,"bin":999}]
+pref bin_owner={"9":"L2"}
+pref cats=Tech
+Home
+pref cats_merged=true
+pref db_only=true
+pref device=device-1
+pref font=google_sans
+pref friends=[{"code":"FRIENDAA","name":"Sam"}]
+pref hero=
+pref hero_cut=
+pref hero_edit={"scale":1,"x":0,"y":0,"text":"","tx":0.5,"ty":0.75,"rot":0,"bright":0,"color":4294967295,"box":false,"tsize":0.1599999964237213,"cl":-1,"ct":-1,"cw":-1,"ch":-1}
+pref instant_delete=false
+pref interval=12
+pref lastCheck=777
+pref last_save_to=mine
+pref look_v2=true
+pref mine_copies={"main":[1]}
+pref mine_gone={"gone_T8":"Main list"}
+pref mine_ids=["main","L2"]
+pref mine_open=main
+pref name=Mine
+pref notify_drops=false
+pref notify_rises=false
+pref palette=teal
+pref recent={"s:SHARED11":T7,"m:T1":T6}
+pref sort=az
+pref style=chaos
+pref style_colours=
+pref theme=light
+pref titles_clean_2135=true
+pref view=grid
+pref wishes=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+pref wishes_backup=[{"id":1,"url":"https:\/\/shop.example\/p\/1","title":"Teapot","desc":"about Teapot","image":"","price":10,"old":null,"cur":"EUR","cat":"Home","got":false},{"id":2,"url":"https:\/\/shop.example\/p\/2","title":"Lamp ABC123","desc":"about Lamp ABC123","image":"","price":10,"old":null,"cur":"EUR","cat":"Tech","got":false,"star":true,"note":"blue","priv":true,"qty":2,"exact":"similar"}]
+db list main 'Wishlist' about='dig' cats=[Tech, House, Garden] code=null token=null photos=[]
+  db wish cat=Garden,cur=EUR,desc=about Spade,got=false,id=3,image=,old=null,price=null,title=Spade,url=https://shop.example/p/3
+  db wish cat=Garden,cur=EUR,desc=about Teapot,got=false,id=1,image=,old=null,price=12.5,title=Blue teapot,url=https://shop.example/p/1
+db list T1 'Birthday' about='my day' cats=[Tech, House, Garden] code=LINKCODE token=tok photos=[a.jpg]
+  db wish cat=Tech,cur=EUR,desc=about Lamp ABC123,exact=similar,got=false,id=2,image=,note=blue,old=null,price=10.0,qty=2,star=true,title=Lamp ABC123,url=https://shop.example/p/2
+db cats=[Tech, House, Garden] friends=[Friend(code=FRIENDAA, name=Sammy)]
+db history 1 [10.0]
+db history 2 [10.0]
