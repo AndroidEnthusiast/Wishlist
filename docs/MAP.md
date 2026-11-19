@@ -62,7 +62,7 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 ### Prices and shops
 - `SharedPrices.kt` (price checks for shared lists)
 - `Fetch.kt` + `Browser.kt` (reading product pages)
-- `History.kt` + `PriceHistory.kt` + `ChartMath.kt`
+- `History.kt` + `PriceHistory.kt` (a wish's price page; rebuilt in 2.251) + `PriceChart.kt` + state holders `PriceModel.kt` (`PriceDialogState`, `TargetState`, `targetError`) + `ChartMath.kt`; checks `PriceModelTest`
 - `PriceWorker.kt` + `Alerts.kt` + `Background.kt` (background checks)
 - `PriceReport.kt` ("Price is wrong?" on a wish's price page: the shop's page as the phone reads it, saved to a file for the share sheet; a file the owner uploads goes into `tests/shared/same-answers.json` → `pages` with the fix in both readers)
 - `PriceWatch.kt` (when a price check believes what it read, 2.178: two readings that agree, a quiet first look, typed prices stay; its notes per wish are the database table `price_watch`)

@@ -716,3 +716,7 @@ rebuild"), ask for results first. `Design.kt` split into Design, DesignType, Des
 ### 19 November 2026, evening: a friend's list (2.248), the 8 screens begin
 Owner: the 8 screens get the full rebuild, then they test. `Friend.kt` + `FriendListState`; 3 screenshots identical;
 fixed: a 2× reservation wasn't remembered (missing from Gifts I reserved). Next: Overview, Reactions, SharedUi, …
+
+### 19 November 2026, evening: App settings (2.249)
+`Settings.kt` split into Settings, SettingsPages + `SettingsModel`; 12 screenshots identical but for the version
+number. Guard watches Show and CurrencyChoice. 14 left; 6 screens to go (Overview, Reactions, SharedUi, …).
