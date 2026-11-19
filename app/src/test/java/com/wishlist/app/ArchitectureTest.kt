@@ -25,7 +25,6 @@ class ArchitectureTest {
         /** Over the limit on 19 November 2026, with their size then. Only shrinks. */
         val ALLOWED: Map<String, Int> = mapOf(
         "Data.kt" to 1110,
-        "Shops.kt" to 869,
         "Styled.kt" to 849,
         "Themed.kt" to 826,
         "Shared.kt" to 710,
@@ -64,14 +63,16 @@ class ArchitectureTest {
             // Messages (19 November 2026): one chat's state holder is ChatModel.kt.
             "MessagesList.kt", "ChatScreen.kt", "ChatBubbles.kt", "ChatParts.kt",
             // The photo editor (19 November 2026): its state holder is HeroEditorState.kt.
-            "HeroEditor.kt", "HeroEditorParts.kt", "HeroPicture.kt"
+            "HeroEditor.kt", "HeroEditorParts.kt", "HeroPicture.kt",
+            // My shops (19 November 2026): its state holders are in ShopsModel.kt.
+            "ShopsScreen.kt", "ShopBrowser.kt"
         )
 
         /** A store's data set straight away ("Exchanges.list = …"; only the checks' pretend data may). */
         val STORE_SET = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|Chat)\\.[a-z][A-Za-z]*(\\[[^\\]]*])? = ")
 
         /** A call that changes shared data: Store.set…(), .delete…(), .leave(), … */
-        val WRITES = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|ListVisibility|Occasions|MyLists|Chat|ChatPhotos)\\.(set|add|delete|remove|rename|create|leave|put|update|replace|trash|reserve|move|copy|open|hide|join|answer|new|cancel|invite|decline|send|seen|save|reveal|handover|draw|settings|takeover|react|upload|forget)[A-Za-z]*\\(")
+        val WRITES = Regex("\\b(Repo|Shared|Friends|Groups|Exchanges|ListVisibility|Occasions|MyLists|Chat|ChatPhotos|Shops)\\.(set|add|delete|remove|rename|create|leave|put|update|replace|trash|reserve|move|copy|open|hide|join|answer|new|cancel|invite|decline|send|seen|save|reveal|handover|draw|settings|takeover|react|upload|forget|mark|restore)[A-Za-z]*\\(")
     }
 
     @Test fun everyFileStaysSmall() {
@@ -113,6 +114,9 @@ class ArchitectureTest {
         assertTrue(WRITES.containsMatchIn("ChatPhotos.upload(ctx, peer, image)"))
         assertFalse(WRITES.containsMatchIn("Chat.preview(r.content)"))
         assertTrue(STORE_SET.containsMatchIn("Chat.opened[peer] = msgs"))
+        assertTrue(WRITES.containsMatchIn("Shops.opened(ctx, s)"))
+        assertTrue(WRITES.containsMatchIn("Shops.markOffered(ctx, h)"))
+        assertFalse(WRITES.containsMatchIn("Shops.has(ctx, host)"))
         assertTrue(STORE_SET.containsMatchIn("Groups.unsent = Groups.unsent - g.id"))
     }
 }

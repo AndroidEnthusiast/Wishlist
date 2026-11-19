@@ -671,3 +671,8 @@ New `ExchangeScreenshotTest` (pretend exchanges) for the comparison; `ExchangeUi
 `ExchangeModel`/`ExchangeScreenState`; 16 screenshots identical. The size guard caught a test hook growing
 `Exchange.kt`: replaced by `internal set`; the guard now also forbids `Store.x = ` in screens. 26 left.
 
+
+### 19 November 2026, late night: Messages (2.239)
+New `ChatScreenshotTest` (pretend chats at fixed dates; `Chat.conversations`, `Friends.state` now `internal set`);
+`Messages.kt` split into MessagesList, ChatScreen, ChatBubbles, ChatParts + `ChatModel`; 9 screenshots identical.
+The guard now also watches Chat/ChatPhotos. 24 files left on ALLOWED (biggest next: Data, HeroEditor, Shops).

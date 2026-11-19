@@ -93,7 +93,7 @@ class NoColouredButtonLabelsTest {
     private val allowed = setOf(
         "HomeShare.kt:Copied",     // green "Copied" on the page, not in a dialog
         "ChatParts.kt:Cancel",     // white on the photo being sent (always dark)
-        "Shops.kt:Add anyway"      // on the dark message bar (inverse colours)
+        "ShopBrowser.kt:Add anyway" // on the dark message bar (inverse colours)
     )
 
     private fun close(s: String, from: Int, open: Char, shut: Char): Int {

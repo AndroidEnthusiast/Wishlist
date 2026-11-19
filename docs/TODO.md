@@ -7,9 +7,9 @@ it**, grouped as below, with a recommendation. Add every new open item here the 
 Details of each item are in the doc named after it.
 
 ## Now
-- **The rebuild (owner, 18–19 November 2026; `docs/decisions/roadmap.md`):** Home done (2.233), guards in (2.234), Friends/Profile (2.235), the open list (2.236), gift exchange (2.237), wishlist groups (2.238), Messages (2.239), the photo editor (2.240). Left:
-  the files left on `ArchitectureTest.ALLOWED` (23) (biggest: Data (waits for its own plan, owner: `docs/decisions/roadmap.md`),
-  Shops, Styled, Themed, Shared). One screen per version, bug fixes only; ask the owner which next.
+- **The rebuild (owner, 18–19 November 2026; `docs/decisions/roadmap.md`):** Home done (2.233), guards in (2.234), Friends/Profile (2.235), the open list (2.236), gift exchange (2.237), wishlist groups (2.238), Messages (2.239), the photo editor (2.240), My shops (2.241). Left:
+  the files left on `ArchitectureTest.ALLOWED` (22) (biggest: Data (waits for its own plan, owner: `docs/decisions/roadmap.md`),
+  Styled, Themed, Shared, AppScreen). One screen per version, bug fixes only; ask the owner which next.
 - **AliExpress shows its logo instead of the product photo** (owner, 18 November 2026): needs the real page. Owner: open
   that wish's price page, tap "Price is wrong?", share the file; then fix `Fetch.kt` + `web/parse.js` together and add
   the page to `tests/shared/same-answers.json` → `pages`.
