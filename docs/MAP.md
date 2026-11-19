@@ -71,7 +71,11 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 
 ### Prices and shops
 - `SharedPrices.kt` (price checks for shared lists)
-- `Fetch.kt` + `Browser.kt` (reading product pages)
+- `Fetch.kt` + `Browser.kt` (reading product pages). Split in 2.263 (the data rebuild, moved as they were): `Fetch.kt`
+  (fetching, `Meta`, `ReaderUpgrade`), `FetchPage.kt` (`parsePage`), `FetchProduct.kt` (the shop's product data, the
+  shown price, other products left out), `FetchText.kt` (links, numbers, currencies, `CurrencyChoice`, names). Rule 2
+  covers all four. Checks: `FetchSameTest` (every saved page and rule against `fetch-same.txt`, recorded before),
+  `FetchPartsTest`, `SameAnswersTest` + `tests/shared/test.js` (app and web agree)
 - `History.kt` + `PriceHistory.kt` (a wish's price page; rebuilt in 2.251) + `PriceChart.kt` + state holders `PriceModel.kt` (`PriceDialogState`, `TargetState`, `targetError`) + `ChartMath.kt`; checks `PriceModelTest`
 - `PriceWorker.kt` + `Alerts.kt` + `Background.kt` (background checks). Notifications (split in 2.261, the data
   rebuild; none changed): `Alerts.kt` (front door: channels, whose ids carry the owner's Android settings; schedule;

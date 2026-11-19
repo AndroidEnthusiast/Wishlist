@@ -268,4 +268,8 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
 - **Import next** (owner, 19 November 2026): three files, its three objects moved whole (the least change). **All four
   risks checked:** same result for the same input, the fill-in never overwrites (Rule 8), reader updates still arrive
   (a broken download falls back), an older version's waiting list is finished. Shop pages are not fetched in the check.
+- **Fetch last** (owner, 19 November 2026): four files with every name kept, `web/parse.js` untouched. **All four risks
+  checked:** same answers on every saved page, app and web stay in step, links and currencies, blocked pages. **The two
+  findings** (kr/zł prices get the phone's currency; Amazon …/Name/dp/…/ref= keeps ref): fixed **right after, as their
+  own version**, in the app and on the web pages together (owner's choice), so the split itself stays proven identical.
 

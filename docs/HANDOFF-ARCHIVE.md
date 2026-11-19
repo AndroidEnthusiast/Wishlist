@@ -818,3 +818,18 @@ The "Next session" plan after 2.261 (done in 2.262), word for word:
   on the plan and its risks first; record a before/after check with (never write today's date into a record)
   the OLD code in its own commit (`SharedSameTest` shows how: a pretend server with its own state; let each background
   save finish before the next so the record is stable), then split by moving code word for word.
+
+### 19 November 2026, late night: the data rebuild, Exchange (2.260)
+Four parts + data shapes, four risks checked (owner). `ExchangeSameTest` recorded with the old code first (dates
+relative to today); split word for word: identical. Found and fixed: `FriendsSameTest` wrote today+10 into its record
+(would fail from 20 November). Exchange notifications are gathered into one: checks compare them, not count titles.
+
+The "Next session" plan after 2.262 (done in 2.263), word for word:
+- **The data rebuild (owner, 19 November 2026; `docs/decisions/roadmap.md`, last section), read first.** 2.256 Data,
+  2.257 Friends, 2.258 Shared, 2.259 Groups, 2.260 Exchange, 2.261 Alerts, 2.262 Import (nothing on screen changed).
+  Ask how they and the screen rebuild behave on the phone (TODO "Try 2.262" … "Try the rebuild"), and about the two
+  Import findings (TODO). Then **Fetch.kt**, the last one (in step with `web/parse.js`, Rule 2; its checks:
+  `tests/parse`, `SameAnswersTest`), the same way: interview
+  on the plan and its risks first; record a before/after check with (never write today's date into a record)
+  the OLD code in its own commit (`SharedSameTest` shows how: a pretend server with its own state; let each background
+  save finish before the next so the record is stable), then split by moving code word for word.

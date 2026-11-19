@@ -32,7 +32,7 @@ class ArchitectureTest {
 
         /** Over the limit on 19 November 2026, with their size then. Only shrinks. */
         val ALLOWED: Map<String, Int> = mapOf(
-        "Fetch.kt" to 473
+        // Empty since 2.263 (the data rebuild, owner 19 November 2026): every app file is under the limit.
         )
 
         /** Screens rebuilt to "layout + state holder": they only draw. Every newly rebuilt screen joins this list. */

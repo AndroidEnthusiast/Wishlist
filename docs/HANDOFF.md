@@ -5,14 +5,12 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
-- **The data rebuild (owner, 19 November 2026; `docs/decisions/roadmap.md`, last section), read first.** 2.256 Data,
-  2.257 Friends, 2.258 Shared, 2.259 Groups, 2.260 Exchange, 2.261 Alerts, 2.262 Import (nothing on screen changed).
-  Ask how they and the screen rebuild behave on the phone (TODO "Try 2.262" … "Try the rebuild"), and about the two
-  Import findings (TODO). Then **Fetch.kt**, the last one (in step with `web/parse.js`, Rule 2; its checks:
-  `tests/parse`, `SameAnswersTest`), the same way: interview
-  on the plan and its risks first; record a before/after check with (never write today's date into a record)
-  the OLD code in its own commit (`SharedSameTest` shows how: a pretend server with its own state; let each background
-  save finish before the next so the record is stable), then split by moving code word for word.
+- **The data rebuild is done (owner, 19 November 2026; 2.256–2.263; `docs/decisions/roadmap.md`, last section).** Ask
+  how 2.256–2.263 and the screen rebuild behave on the phone (TODO "Try …"). **Next (owner's choice): the two price
+  reading findings as their own version** (TODO "Found while checking Import"): kr/zł on .se/.pl shops get kronor/złoty,
+  Amazon …/Name/dp/…/ref=… trimmed to /dp/…; in `FetchText.kt` and `web/parse.js` together, a case each in
+  `tests/shared/same-answers.json`; then `FetchSameTest`'s record changes in exactly those lines (re-record, read the
+  difference). Then what a team would still do (TODO): real-phone checks, fewer web copies.
 - **The rebuild (owner, 18 November 2026; `docs/decisions/roadmap.md`, last section).** Point 2 done: version stamps in
   every script + `server-check.yml` (owner ran all 17; issue closed). Point 1: **Home done in 2.233** (7 small files,
   `HomeModel`, pixel-identical). Ask whether Home behaves the same after a day or two; then the next screen (ask which:
@@ -83,6 +81,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 19 November 2026, late night: the data rebuild, Fetch (2.263): done
+Four files, every name kept (owner); `FetchSameTest` recorded first; moved line for line; ALLOWED is empty. 2.262's
+GitHub build failed on `DataSameTest` (two prices in one second = one DB row, speed-dependent): fixed, re-recorded with
+the old Data.kt in a separate copy. Next: the two price-reading findings as their own version (owner).
+
 ### 19 November 2026, late night: the data rebuild, Import (2.262)
 Three objects moved whole (owner), proven line by line; `ImportSameTest` recorded first (no shop page fetched) and
 `ImportPartsTest`. Found, not fixed (TODO): kr/zł prices get the phone's currency; Amazon …/Name/dp/…/ref= keeps ref.
@@ -92,8 +95,3 @@ A timestamp collision made the record flaky once: a 5 ms pause after making the 
 Notifications, four parts, four risks checked (owner). `AlertsSameTest` records every notification's details (read
 from Android's list of shown notifications, by id) with the old code first; split word for word: identical.
 `AlertsPartsTest`; the guard covers `PriceAlertQueue`. Left: Import, Fetch.
-
-### 19 November 2026, late night: the data rebuild, Exchange (2.260)
-Four parts + data shapes, four risks checked (owner). `ExchangeSameTest` recorded with the old code first (dates
-relative to today); split word for word: identical. Found and fixed: `FriendsSameTest` wrote today+10 into its record
-(would fail from 20 November). Exchange notifications are gathered into one: checks compare them, not count titles.
