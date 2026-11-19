@@ -273,3 +273,5 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
   findings** (kr/zł prices get the phone's currency; Amazon …/Name/dp/…/ref= keeps ref): fixed **right after, as their
   own version**, in the app and on the web pages together (owner's choice), so the split itself stays proven identical.
 
+- **Rule 2 names `Fetch*.kt` since 2.263** (price reading is in four files now). Its wording before, word for word:
+2. `Fetch.kt` and `web/parse.js` do the same job with the same logic (prices, currencies, Amazon, Funda). Change both together and extend `tests/parse/parse_test.js`.
