@@ -724,3 +724,7 @@ number. Guard watches Show and CurrencyChoice. 14 left; 6 screens to go (Overvie
 ### 19 November 2026, evening: covers (2.250)
 `Covers.kt` split into Covers + CoverViews + `CoverModel` (one shared photo picker instead of two); 5 screenshots
 identical. Owner: remind them later of the data part (TODO). 5 screens to go: Overview, Reactions, SharedUi, …
+
+### 19 November 2026, evening: the price page (2.251)
+`PriceHistory.kt` split into PriceHistory, PriceChart + `PriceDialogState`/`TargetState`; screenshots identical (the
+light chart moves with the clock: proven by running the old code at the same time). 4 screens to go.

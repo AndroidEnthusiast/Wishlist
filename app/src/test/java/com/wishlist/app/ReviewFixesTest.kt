@@ -337,7 +337,7 @@ class OneNewWishlistTest {
         assertTrue(app.contains("\"mine\", \"collab\" -> NewWishlistSheet("))
         val hub = File("src/main/java/com/wishlist/app").listFiles()!!.filter { it.name.startsWith("Home") && it.name.endsWith(".kt") || it.name == "NewWishlist.kt" }.sortedBy { it.name }.joinToString("\n") { it.readText() }
         assertTrue(hub.contains("FormSheetHost(onClose) {") && hub.contains("WhoIsItFor(others) { others = it }"))
-        val shared = File("src/main/java/com/wishlist/app/SharedUi.kt").readText()
+        val shared = listOf("SharedUi.kt", "SharedManage.kt", "SharedListModel.kt").joinToString("\n") { File("src/main/java/com/wishlist/app/$it").readText() }
         assertTrue(shared.contains("Shared.setForName(ctx, l.code, forWho)"))
         assertTrue(shared.contains("tr(\"Don’t send it to %s: it’s a surprise.\", forWho)"))
         val inv = File("src/main/java/com/wishlist/app/GiftInviteViews.kt").readText()

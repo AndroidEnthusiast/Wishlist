@@ -33,7 +33,6 @@ class ArchitectureTest {
         "Overview.kt" to 511,
         "Groups.kt" to 506,
         "Reactions.kt" to 495,
-        "SharedUi.kt" to 486,
         "Fetch.kt" to 473
         )
 
@@ -68,7 +67,9 @@ class ArchitectureTest {
             // A wish's price page (19 November 2026): its state holders are in PriceModel.kt.
             "PriceHistory.kt", "PriceChart.kt",
             // Gift list invitations (19 November 2026): their state holders are in GiftInviteModel.kt.
-            "GiftInviteViews.kt"
+            "GiftInviteViews.kt",
+            // A shared wishlist's dialogs (19 November 2026): their state holder is SharedListModel.kt.
+            "SharedUi.kt", "SharedManage.kt"
         )
 
         /** A store's data set straight away ("Exchanges.list = …"; only the checks' pretend data may). */

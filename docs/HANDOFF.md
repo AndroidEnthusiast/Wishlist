@@ -8,7 +8,7 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 - **The rebuild (owner, 18 November 2026; `docs/decisions/roadmap.md`, last section).** Point 2 done: version stamps in
   every script + `server-check.yml` (owner ran all 17; issue closed). Point 1: **Home done in 2.233** (7 small files,
   `HomeModel`, pixel-identical). Ask whether Home behaves the same after a day or two; then the next screen (ask which:
-  Friends / Profile (done in 2.235), the open list (done in 2.236), gift exchange (done in 2.237), wishlist groups (done in 2.238), Messages (done in 2.239), the photo editor (done in 2.240; Data.kt waits for its own plan, owner), My shops (done in 2.241), the building blocks (`Styled.kt`, done in 2.242), `Themed.kt` (done in 2.243), the frame (`AppScreen.kt`, done in 2.244), the wish cards (done in 2.245), the wish form (done in 2.246), the styles (`Design.kt`, done in 2.247), a friend's list (done in 2.248), App settings (done in 2.249), covers (done in 2.250), the price page (done in 2.251), gift invitations (done in 2.252), or `ListScreen.kt`), same method: before/after
+  Friends / Profile (done in 2.235), the open list (done in 2.236), gift exchange (done in 2.237), wishlist groups (done in 2.238), Messages (done in 2.239), the photo editor (done in 2.240; Data.kt waits for its own plan, owner), My shops (done in 2.241), the building blocks (`Styled.kt`, done in 2.242), `Themed.kt` (done in 2.243), the frame (`AppScreen.kt`, done in 2.244), the wish cards (done in 2.245), the wish form (done in 2.246), the styles (`Design.kt`, done in 2.247), a friend's list (done in 2.248), App settings (done in 2.249), covers (done in 2.250), the price page (done in 2.251), gift invitations (done in 2.252), shared list dialogs (done in 2.253), or `ListScreen.kt`), same method: before/after
   screenshots compared pixel by pixel, a state holder, bug fixes only. **2.234: guards** (`ArchitectureTest`: files
   under 400 lines, 29 frozen in ALLOWED; REBUILT screens only draw; `checkup.yml` quarterly). Each rebuilt screen
   joins REBUILT and leaves ALLOWED.
@@ -75,13 +75,14 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 19 November 2026, night: shared list dialogs (2.253)
+`SharedUi.kt` split into SharedUi + SharedManage + `SharedListModel`; screenshots found Leave/Delete not red: fixed.
+2 screens to go: Overview, Reactions; then the owner tests (TODO "Try the rebuild").
+
 ### 19 November 2026, night: gift invitations (2.252)
 `GiftInvites.kt` split into GiftInvites + GiftInviteViews + `GiftInviteModel`; screenshots found and fixed black-on-
 black headings in dark. 3 screens to go: Overview, Reactions, SharedUi.
 
-### 19 November 2026, evening: the price page (2.251)
-`PriceHistory.kt` split into PriceHistory, PriceChart + `PriceDialogState`/`TargetState`; screenshots identical (the
-light chart moves with the clock: proven by running the old code at the same time). 4 screens to go.
 
 
 

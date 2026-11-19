@@ -45,11 +45,11 @@ data class SharedContent(
  */
 object Shared {
     var lists by mutableStateOf(listOf<SharedList>())
-        private set
+        internal set
 
     /** Code of the shared wishlist that is open on screen, or null when My wishlist is. */
     var active by mutableStateOf<String?>(null)
-        private set
+        internal set
     var content by mutableStateOf(SharedContent())
         private set
 

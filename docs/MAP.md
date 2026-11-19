@@ -69,7 +69,7 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `Shops.kt` (Find a gift: your shops and their icons; rebuilt in 2.241) + `ShopsScreen.kt` (My shops page, Add shop, `ShopIcon`) + `ShopBrowser.kt` (a shop inside the app with Add to wishlist) + state holders `ShopsModel.kt` (`ShopsModel`, `ShopBrowserState`); checks `ShopsModelTest`, screenshots `ShopsScreenshotTest`; `CONSENT_JS` refuses cookie questions
 
 ### Collab wishlists (gift lists in the code; on screen since 2.220 "wishlists for someone else", made from "New wishlist")
-- `Shared.kt` + `SharedUi.kt` (shared lists, online saving)
+- `Shared.kt` + `SharedUi.kt` (shared lists, online saving; the dialogs rebuilt in 2.253: `SharedUi.kt` make and join, `SharedManage.kt` share, new link, leave, delete, gone, new owner; state holder `SharedListModel.kt`; checks `SharedListModelTest`, screenshots `SharedListScreenshotTest`)
 - `ShareCard.kt` (share picture)
 - `Members.kt` (gift list members and a new owner)
 - `CollabPeople.kt` (the people circles on a collab wishlist's block; `supabase-collab.sql`)
