@@ -21,13 +21,16 @@ Details of each item are in the doc named after it.
      I reserved, 2.248), Friends and Profile (2.233–2.236), and the
      look of buttons, dialogs, fields and cards in every view (2.242, 2.243, 2.245, 2.247).
 - **The rebuild (owner, 18–19 November 2026; `docs/decisions/roadmap.md`):** Home done (2.233), guards in (2.234), Friends/Profile (2.235), the open list (2.236), gift exchange (2.237), wishlist groups (2.238), Messages (2.239), the photo editor (2.240), My shops (2.241), the building blocks (Styled, 2.242; Themed, 2.243), the app's frame (AppScreen, 2.244), the wish cards (2.245), the wish form (2.246), the styles (Design, 2.247), a friend's list (2.248), App settings (2.249), covers (2.250), the price page (2.251), gift invitations (2.252), shared wishlist dialogs (2.253), reactions (2.254), Overview (2.255): **every screen is done.** Left:
-  the files left on `ArchitectureTest.ALLOWED` (8) (biggest: Data (waits for its own plan, owner: `docs/decisions/roadmap.md`),
-  Shared, Exchange, Alerts, Friends (these four wait with Data, owner; Groups, Import, Fetch proposed to wait too). Next: the owner tests (above),
-  then the data part (below, "Later, remind the owner").
-- **Later, remind the owner (owner, 19 November 2026: "remind me later"): the data part, built like a team would.**
-  After the 8 screens and the owner's test: Data, Shared, Exchange, Alerts, Friends (and Groups, Import, Fetch) behind
-  cleaner "repositories" with their own checks (saving and loading give back exactly the same lists); then checks on a
-  few real phones, and fewer copies of app logic in `web/` (e.g. `parse.js` beside `Fetch.kt`). Interview first.
+  the files left on `ArchitectureTest.ALLOWED` (7): Shared, Exchange, Alerts, Friends, Groups, Import, Fetch: the data
+  rebuild (below; Data.kt left the list in 2.256).
+- **Try 2.256 on the phone (the data rebuild, nothing should look or work differently):** add, edit and delete a wish
+  and tap Undo; a wish on two lists (edit one, both change); move a wish; empty the bin; "I have it" and Received
+  gifts; add, rename and remove a category; change theme, view and sort, close the app fully and open it again (all
+  kept); delete a list and restore its wish from the bin.
+- **The data rebuild (owner, 19 November 2026; `docs/decisions/roadmap.md`, last section): Data.kt done in 2.256.**
+  Next, one per version, each with a before/after check like `DataSameTest` first: Friends, then Shared, then Groups,
+  Exchange, Alerts, Import, Fetch. After that, what a team would still do: checks on a few real phones (P23), and fewer
+  copies of app logic in `web/` (e.g. `parse.js` beside `Fetch.kt`). Interview first on each.
 - **GitHub's "Publish the web page" step fails now and then (19 November 2026: 2.242, 2.249, 2.255; rerunning didn't
   always help):** "No artifacts named github-pages were found" right after it was uploaded. The APK always published;
   the web pages kept their previous version (no web file had changed). Before the next change to `web/`: look at the

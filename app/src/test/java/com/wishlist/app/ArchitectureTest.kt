@@ -14,6 +14,9 @@ import java.io.File
  *     their size then: they may shrink, never grow, and leave the list once under the limit. Never add a file to it.
  *  2. Rebuilt screens only draw ([REBUILT]): they never change shared data themselves (your lists, shared lists,
  *     friends, groups, exchanges, visibility, occasions); that goes through their state holder.
+ *  3. Your own data has one front door (the data rebuild, owner 19 November 2026): the parts of Repo (OwnLists, OwnBin,
+ *     OwnCopies, AppPrefs, FriendLists) are only touched in Data.kt and the Repo*.kt files; everything else reads and
+ *     changes them through Repo (Repo.myWishes, Repo.trash, …), so saving always goes through Repo.persist.
  */
 class ArchitectureTest {
     private val dir = File("src/main/java/com/wishlist/app")
@@ -24,7 +27,6 @@ class ArchitectureTest {
 
         /** Over the limit on 19 November 2026, with their size then. Only shrinks. */
         val ALLOWED: Map<String, Int> = mapOf(
-        "Data.kt" to 1110,
         "Shared.kt" to 710,
         "Exchange.kt" to 608,
         "Alerts.kt" to 585,
@@ -102,6 +104,15 @@ class ArchitectureTest {
             val hits = File(dir, f).readLines().mapIndexedNotNull { i, l -> (WRITES.find(l) ?: STORE_SET.find(l))?.let { "$f:${i + 1} ${it.value}" } }
             assertTrue("A rebuilt screen changes shared data itself; move it into its state holder: $hits", hits.isEmpty())
         }
+    }
+
+    @Test fun ownDataOnlyThroughRepo() {
+        val part = Regex("\\b(OwnLists|OwnBin|OwnCopies|AppPrefs|FriendLists)\\.")
+        val hits = dir.listFiles()!!.filter { it.name.endsWith(".kt") && it.name != "Data.kt" && !it.name.startsWith("Repo") }
+            .flatMap { f -> f.readLines().mapIndexedNotNull { i, l -> part.find(l)?.let { "${f.name}:${i + 1} ${l.trim()}" } } }
+        assertTrue("Use Repo's doors (Repo.trash, Repo.myWishes, …), not its parts directly: $hits", hits.isEmpty())
+        assertTrue(part.containsMatchIn("OwnLists.myWishes = x"))
+        assertFalse(part.containsMatchIn("MyOwnLists.x"))
     }
 
     @Test fun theGuardSeesWrites() {

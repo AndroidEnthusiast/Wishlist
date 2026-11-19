@@ -226,3 +226,19 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
   (one screen recipe, guards that fail the build, the recipe in the notes, checks, the quarterly check-up) and what a
   team would still do (repositories for the data, real-phone checks, fewer web copies). The owner asked to be reminded
   of that later (TODO, "Later, remind the owner").
+
+## The data rebuild (owner, 19 November 2026, after the screens)
+- **Started now, before the owner tested the screen rebuild** (asked with options; recommended: only the safety net
+  now, test first). The owner chose to start moving Data.kt straight away; told that if both turn out to have a
+  problem it is harder to tell which caused it.
+- **"Split inside, same doors"** (owner asked which is better; recommendation accepted): Repo stays the front door that
+  every screen uses; inside it becomes small parts with their own checks (your lists, copies, the bin and Undo,
+  categories, App settings, friends' lists). Not "full layers" (rewriting 79 screen files): the rebuilt screens already
+  change data only through their state holders, so that would add risk for little gain.
+- **Order:** Data.kt first, then Friends, then Shared, then the rest (Groups, Exchange, Alerts, Import, Fetch), one
+  area per version, each tried by the owner for a day or two.
+- **Data safety, both chosen:** the way things are stored (phone and online) does not change, so older versions still
+  read it; and a before/after check (`DataSameTest`) that compares a whole phone's saved data word for word with a
+  record made with the old code. ("Remind me to back up" was not chosen.)
+- **Data.kt ships as one version** (2.256), built one part at a time with every check after each.
+

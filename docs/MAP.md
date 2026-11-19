@@ -37,7 +37,14 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `Overview.kt` (`WishFocus`: a wish opened from elsewhere scrolls into view and glows, `GlowBox`, `placedWishes`, `ProfileSummary`) + `OverviewScreen.kt` (All your wishes / Wishes you love, rebuilt in 2.255) + state holder `OverviewModel.kt` (`OverviewState`); checks `OverviewModelTest`, screenshots `OverviewScreenshotTest`
 - `WishCards.kt` (wish cards; split in 2.245: `CompactCard.kt` Two per row, `WishCard.kt` Large cards, `RowCard.kt` Rows, `WishCardParts.kt` (`CardButtons`, `cardIcon`), `WishPriceLine.kt`; `WishCards.kt` keeps the shared bits: `Reserving`, `reserveButton`, `priceRose`)
 - `WishForm.kt` (Add/Edit wish; rebuilt in 2.246) + `WishFormParts.kt` (photo block, Take or Choose photo, More details) + state holder `WishFormModel.kt` (`WishFormState`: the fields, reading a link, the photo, the list, saving); checks `WishFormModelTest`, screenshots `WishFormScreenshotTest`
-- `Data.kt` (`Wish`, `Repo`)
+- Your own data (`Repo`; split into parts in 2.256, the data rebuild, owner 19 November 2026; nothing on screen changed):
+  `Wish.kt` (`Wish`, `wishToJson`/`wishFromJson`, `money`), `Data.kt` (`Repo`: the front door; `load`, `persist`,
+  `memory`), `RepoLists.kt` (`OwnLists`: your lists), `RepoCopies.kt` (`OwnCopies`: one wish on several lists),
+  `RepoBin.kt` (`OwnBin`: bin, Undo, Received gifts), `RepoCats.kt` (categories), `RepoPrefs.kt` (`AppPrefs`: App
+  settings, the look, cover picture, recently opened), `RepoFriendLists.kt` (`FriendLists`). Everything else goes
+  through `Repo.…` (guard: `ArchitectureTest.ownDataOnlyThroughRepo`). Checks: `DataSameTest` (a whole phone saved and
+  loaded, compared word for word with `app/src/test/resources/data-same.txt`, recorded before the rebuild; re-record
+  only for a meant change to saved data, and read the difference), `RepoPartsTest`, `CopiesTest`, `LookTest`.
 - `Db.kt` + `DbMove.kt` + `ListStore.kt` (the Room database: since 2.171 the only source of your lists, wishes, bin, price history, friends' lists and notifications; the settings store keeps an untouched old copy and is written again only if the database can't be read; ROADMAP Stage 2)
 - A list's cover photo: `Covers.kt` (`ListCovers`, kept on the phone, own lists also online) + `CoverViews.kt` (the cover with its ⋮, `ListSummaryCard`, `CoverSection`, `CoverPreview`; rebuilt in 2.250) + state holder `CoverModel.kt` (with `rememberCoverPickers`); checks `CoverModelTest`, screenshots `CoverScreenshotTest`
 - `ListSettings.kt` (list settings) + App settings: `Settings.kt` (main page, rows; rebuilt in 2.249) + `SettingsPages.kt` (Notifications, Prices, About, currency) + state holder `SettingsModel.kt`; checks `SettingsModelTest`

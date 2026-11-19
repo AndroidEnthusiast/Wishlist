@@ -736,3 +736,8 @@ black headings in dark. 3 screens to go: Overview, Reactions, SharedUi.
 ### 19 November 2026, night: shared list dialogs (2.253)
 `SharedUi.kt` split into SharedUi + SharedManage + `SharedListModel`; screenshots found Leave/Delete not red: fixed.
 2 screens to go: Overview, Reactions; then the owner tests (TODO "Try the rebuild").
+
+### 19 November 2026, night: wishlist groups (2.238)
+New `GroupScreenshotTest` (pretend groups; `Groups.groups`/`invites` now `internal set`) for the comparison;
+`GroupsUi.kt` split into 7 files + `GroupModel`/`GroupScreenState`; 10 screenshots identical. The guard's verbs
+gained `settings` and `takeover`. 25 files left on ALLOWED (biggest next: Data, Messages, HeroEditor).

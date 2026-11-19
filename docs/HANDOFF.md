@@ -5,6 +5,11 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **The data rebuild (owner, 19 November 2026; `docs/decisions/roadmap.md`, last section), read first.** 2.256 split
+  Data.kt (nothing on screen changed). Ask how 2.256 and the screen rebuild behave on the phone (TODO "Try 2.256",
+  "Try the rebuild"). Then the next area, **Friends.kt**, the same way: interview on the plan and its risks first;
+  record a before/after check with the OLD code in its own commit (like `DataSameTest`: friends, requests, notes,
+  online answers faked), then split by moving code word for word, same storage format; one version. Then Shared.
 - **The rebuild (owner, 18 November 2026; `docs/decisions/roadmap.md`, last section).** Point 2 done: version stamps in
   every script + `server-check.yml` (owner ran all 17; issue closed). Point 1: **Home done in 2.233** (7 small files,
   `HomeModel`, pixel-identical). Ask whether Home behaves the same after a day or two; then the next screen (ask which:
@@ -75,6 +80,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 19 November 2026, late night: the data rebuild, Data.kt (2.256)
+Owner chose (interview): start now, "split inside, same doors", Data → Friends → Shared → rest, same storage format +
+a before/after check. `DataSameTest` recorded with the old code first (own commit), then Data.kt split into `Wish.kt`
++ `Repo*.kt` parts by moving code word for word: identical. Guard `ownDataOnlyThroughRepo`; `RepoPartsTest`.
+
 ### 19 November 2026, night: Overview (2.255), the screens are done
 `Overview.kt` split into Overview + OverviewScreen + `OverviewState`; full 151-picture rerun: 141 identical, rest
 explained (version number, chart clock, fixed test). Next: owner tests (TODO), then plan the data part with them.
@@ -82,23 +92,3 @@ explained (version number, chart clock, fixed test). Next: owner tests (TODO), t
 ### 19 November 2026, night: reactions (2.254)
 `Reactions.kt` split into Reactions + ReactionViews + `ReactionBarState`; screenshots identical. Last screen to go:
 Overview; then the owner tests (TODO "Try the rebuild").
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-### 19 November 2026, night: wishlist groups (2.238)
-New `GroupScreenshotTest` (pretend groups; `Groups.groups`/`invites` now `internal set`) for the comparison;
-`GroupsUi.kt` split into 7 files + `GroupModel`/`GroupScreenState`; 10 screenshots identical. The guard's verbs
-gained `settings` and `takeover`. 25 files left on ALLOWED (biggest next: Data, Messages, HeroEditor).
