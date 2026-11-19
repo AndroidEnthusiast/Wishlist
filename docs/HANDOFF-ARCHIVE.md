@@ -645,3 +645,8 @@ two switches and the theme block removed with their code. Checks: `AppSettingsTe
 ### 18 November 2026, night: friends' wishes (2.229)
 Reserve pills compact (`LocalCardButton`, 36 dp); "Add to my wishlist" in the ⋮ of others' wishes (list picker, Undo,
 `AddToMine.kt`); "+ React" hides once you reacted (app and web); Import last in the + menu. Checks: `FriendWishesTest`.
+
+### 18 November 2026, late night: Profile, Home, shared links (2.230)
+Profile: rows with small edit sheets and a Keep your lists safe page (backups kept there on advice). Home: photo left
+with three blocks, a divider, My wishlists | Shared pager, switches in Display. One-link shares → Add a wish. A GitHub
+"look at a page" tool was refused (it would reach shops this computer may not): AliExpress waits on the owner's page file.

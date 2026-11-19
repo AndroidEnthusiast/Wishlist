@@ -95,43 +95,32 @@ fun HomeScreen(
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
+    // What the screen shows besides the wishes, and what a tap changes (ListModel.kt, the rebuild of 19 November 2026).
+    val model = remember { ListModel(ctx) }
     // "+ New category" from the category menu (ROADMAP S1.4: only this screen opens it, so it lives here).
-    var catDlg by remember { mutableStateOf(false) }
-    if (catDlg) CategoryDialog { catDlg = false }
-    var cat by remember { mutableStateOf("All") }
-    var catMenu by remember { mutableStateOf(false) }
-    var searching by remember { mutableStateOf(false) }
-    var query by remember { mutableStateOf("") }
-    BackHandler(enabled = searching) { searching = false; query = "" }
-    var editing by remember { mutableStateOf<Wish?>(null) }
-    var historyId by remember { mutableStateOf<Long?>(null) }
+    if (model.catDlg) CategoryDialog { model.catDlg = false }
+    BackHandler(enabled = model.searching) { model.stopSearch() }
     val haptic = LocalHapticFeedback.current
     // Selecting several wishes (owner, 7 November 2026; on every list you can change since 12 November 2026): a long
     // press ticks that wish, in every view; then taps tick more, and the top bar offers Move to… and Delete. Back or ✕
     // stops. (Collab wishlists had a long-press menu until then; its Edit and Move to… are in the ⋮ sheet now.)
-    var picked by remember(Repo.openMine, Shared.active) { mutableStateOf(setOf<Long>()) }
+    // Another list opened: nothing selected.
+    LaunchedEffect(Repo.openMine, Shared.active) { model.picked = emptySet() }
     val startSelect: (Wish) -> Unit = { w ->
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-        picked = setOf(w.id)
+        model.picked = setOf(w.id)
     }
-    val selecting = picked.isNotEmpty()
-    // Drag to reorder (owner, 16 November 2026): hold a wish and move your finger to drag it, or hold and let go to
-    // select it as before. While held, [holding] waits for one or the other; [dragId] is the wish being dragged and
-    // [dragIds] the order on screen while dragging.
-    var holding by remember { mutableStateOf<Wish?>(null) }
-    var dragId by remember { mutableStateOf<Long?>(null) }
-    var dragIds by remember(Repo.openMine, Shared.active) { mutableStateOf<List<Long>?>(null) }
-    var dragArmed by remember { mutableStateOf(false) }
-    var dragPointer by remember { mutableStateOf(androidx.compose.ui.geometry.Offset.Zero) }
-    var dragGrab by remember { mutableStateOf(androidx.compose.ui.geometry.Offset.Zero) }
-    val cardBounds = remember { androidx.compose.runtime.mutableStateMapOf<Long, androidx.compose.ui.geometry.Rect>() }
+    val selecting = model.selecting
+    // Drag to reorder (owner, 16 November 2026; ListDrag.kt): hold a wish and move your finger to drag it, or hold and
+    // let go to select it as before.
+    val drag = remember { DragState() }
+    LaunchedEffect(Repo.openMine, Shared.active) { drag.dragIds = null }
     val holdSelect: (Wish) -> Unit = { w ->
         if (selecting) startSelect(w)
-        else { haptic.performHapticFeedback(HapticFeedbackType.LongPress); holding = w }
+        else { haptic.performHapticFeedback(HapticFeedbackType.LongPress); drag.holding = w }
     }
-    BackHandler(enabled = selecting) { picked = emptySet() }
+    BackHandler(enabled = selecting) { model.picked = emptySet() }
     SelectingFlag(selecting)
-    fun toggle(w: Wish) { picked = if (w.id in picked) picked - w.id else picked + w.id }
     // A collab wishlist updates live while it is open (ROADMAP S3.2, Live.kt): someone else's change shows within a
     // second or two. Without the live connection: every 20 seconds, as before. Nothing while the app is in the background.
     LiveRefresh(Shared.active?.let { Live.listTopic(it) }, Shared.active != null, 20_000) {
@@ -177,11 +166,11 @@ fun HomeScreen(
     val res = if (inShared) Shared.reserved else emptyMap()
     val source = if (inShared) Repo.wishes.map { it.copy(star = false, got = false) } else Repo.wishes
 
-    val sel = if (cat == "All" || cat in Repo.cats) cat else "All"
-    val shownWishes = source.filter { (sel == "All" || it.category == sel) && matchesQuery(it, query) }
-    val sorted = if (sortMode == ListOrder.MINE) sortByOrder(shownWishes, ListOrder.order(ctx, listKey)) else sortWishes(shownWishes, sortMode)
+    val sel = shownCategory(model.cat, Repo.cats)
+    val query = model.query
+    val sorted = shownWishes(source, sel, query, sortMode, ListOrder.order(ctx, listKey))
     // While dragging, the order on screen; wishes that arrive meanwhile go after it.
-    val list = dragIds?.let { ids ->
+    val list = drag.dragIds?.let { ids ->
         val byId = sorted.associateBy { it.id }
         ids.mapNotNull { byId[it] } + sorted.filter { it.id !in ids }
     } ?: sorted
@@ -204,7 +193,7 @@ fun HomeScreen(
         val i = list.indexOfFirst { it.id == t }
         if (i < 0) {
             if (sel != "All" || query.isNotEmpty()) {
-                cat = "All"; query = ""; searching = false
+                model.cat = "All"; model.stopSearch()
             } else WishFocus.target = null
             return@LaunchedEffect
         }
@@ -228,14 +217,14 @@ fun HomeScreen(
         containerColor = cs.background,
         topBar = {
             if (selecting) TopAppBar(
-                title = { ScreenTitle(if (picked.size == 1) tr("1 selected") else tr("%d selected", picked.size)) }, large = false,
-                navigationIcon = { IconButton(onClick = { picked = emptySet() }) { Icon(AppIcons.Close, tr("Stop selecting")) } },
+                title = { ScreenTitle(if (model.picked.size == 1) tr("1 selected") else tr("%d selected", model.picked.size)) }, large = false,
+                navigationIcon = { IconButton(onClick = { model.picked = emptySet() }) { Icon(AppIcons.Close, tr("Stop selecting")) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
                 actions = {
                     MoveBusy(Modifier.padding(end = 8.dp))
                     // Move to… and Delete are in the action bar at the bottom (2.209, Selecting.kt).
                     val all = list.map { it.id }.toSet()
-                    if (!picked.containsAll(all)) TextButton(onClick = { picked = all }) { Text(tr("Select all")) }
+                    if (!model.picked.containsAll(all)) TextButton(onClick = { model.picked = all }) { Text(tr("Select all")) }
                 }
             ) else TopAppBar(
                 title = {
@@ -247,8 +236,8 @@ fun HomeScreen(
                 navigationIcon = { IconButton(onClick = onBack) { Icon(AppIcons.ArrowBack, tr("Back to Home")) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
                 actions = {
-                    IconButton(onClick = { if (searching) { searching = false; query = "" } else searching = true }) {
-                        Icon(AppIcons.Search, if (searching) tr("Close search") else tr("Search"))
+                    IconButton(onClick = { if (model.searching) model.stopSearch() else model.searching = true }) {
+                        Icon(AppIcons.Search, if (model.searching) tr("Close search") else tr("Search"))
                     }
                     // The settings of this list. Refreshing is pulling down on the list.
                     IconButton(onClick = onListSettings) { Icon(AppIcons.Settings, tr("Wishlist settings")) }
@@ -261,10 +250,10 @@ fun HomeScreen(
         // No floating "Add wish" button any more (owner, 2.112): the + in the bottom bar does the same.
         bottomBar = {
             if (selecting) SelectionBar(
-                onMove = { MoveFlow.ask(picked); picked = emptySet() },
+                onMove = { MoveFlow.ask(model.picked); model.picked = emptySet() },
                 onDelete = {
-                    val ws = Repo.wishes.filter { it.id in picked }
-                    picked = emptySet()
+                    val ws = Repo.wishes.filter { it.id in model.picked }
+                    model.picked = emptySet()
                     DeleteFlow.requestMany(ctx, ws)
                 }
             )
@@ -274,7 +263,7 @@ fun HomeScreen(
         // Behind the list: the blobs, glows or dots of the design (nothing in Material 3).
         Column(Modifier.padding(pad)) {
             if (inShared && Shared.gone) SharedGoneNotice()
-            if (searching) SearchField(query, { query = it }) { searching = false; query = "" }
+            if (model.searching) SearchField(query, { model.query = it }) { model.stopSearch() }
             // The category and sort choices and the view buttons. Since 2.89 they scroll with the list, under the
             // cover photo (when chosen) and the summary card.
             // [live]: this copy may open the category menu (the list's own copy is hidden under the pinned one while
@@ -282,11 +271,11 @@ fun HomeScreen(
             val filters: @Composable (Boolean) -> Unit = { live ->
                 // The same row on every list (ListTools.kt, owner 12 November 2026).
                 ListTools(
-                    sel, Repo.cats, { c -> if (c == "All") Repo.wishes.size else Repo.wishes.count { it.category == c } }, { cat = it },
-                    catMenu && live, { catMenu = it },
-                    sortMode, !inShared, { ListOrder.setSort(ctx, listKey, it) },
-                    view, { Repo.setView(ctx, it) },
-                    onNewCategory = { catDlg = true },
+                    sel, Repo.cats, { c -> if (c == "All") Repo.wishes.size else Repo.wishes.count { it.category == c } }, { model.cat = it },
+                    model.catMenu && live, { model.catMenu = it },
+                    sortMode, !inShared, { model.setSort(listKey, it) },
+                    view, { model.setView(it) },
+                    onNewCategory = { model.catDlg = true },
                     withMine = true
                 )
             }
@@ -297,18 +286,16 @@ fun HomeScreen(
             // wl_view_count stay, unused, so old app versions keep working.
             // Reactions (2.142): your own lists show them (no reacting), gift lists let every giver react. On a gift list a
             // tapped "Reserved" label of someone else asks "Is it still being bought?" (2.142).
-            var askBought by remember { mutableStateOf<Wish?>(null) }
-            var reserveNow by remember { mutableStateOf<Wish?>(null) }
             val listCode = if (inShared) Shared.active else Repo.mine(ctx, Repo.openMine).code
             ReactionsLoader(listCode)
             val listDeco = listCode?.let { code ->
                 WishDeco(code, canReact = inShared, onBadge = if (!inShared) null else ({ w ->
                     val c = ResCounts.of(code, w.id)
-                    if (res[w.id] == false || (w.qty > 1 && c != null && c.full && c.my == 0)) askBought = w
+                    if (res[w.id] == false || (w.qty > 1 && c != null && c.full && c.my == 0)) model.askBought = w
                 }))
             }
-            askBought?.let { w ->
-                AskDialog(Shared.active.orEmpty(), w, Occasions.ofOpen(ctx), onClose = { askBought = null }) { m -> scope.launch { snack.showToast(m) } }
+            model.askBought?.let { w ->
+                AskDialog(Shared.active.orEmpty(), w, Occasions.ofOpen(ctx), onClose = { model.askBought = null }) { m -> scope.launch { snack.showToast(m) } }
             }
             // A tapped "X is free" or "Your reservation of X has ended" on a gift list (2.142): it opens on that wish.
             LaunchedEffect(places.askFocus, Shared.active, res) {
@@ -317,9 +304,9 @@ fun HomeScreen(
                 val w = Repo.wishes.firstOrNull { it.id == id && it.bin == 0L } ?: return@LaunchedEffect
                 places.askFocus = null
                 WishFocus.target = id
-                if (reserve && res[id] == null) reserveNow = w
+                if (reserve && res[id] == null) model.reserveNow = w
             }
-            reserveNow?.let { w -> ReserveNowDialog(w, onReserve = { Shared.reserve(w, true) }, onClose = { reserveNow = null }) }
+            model.reserveNow?.let { w -> ReserveNowDialog(w, onReserve = { model.reserve(w, true) }, onClose = { model.reserveNow = null }) }
             val stickyTop: @Composable (Boolean) -> Unit = { live ->
                 // More room between the summary and the choices (owner, 2.130: calmer, without making things smaller).
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -353,76 +340,17 @@ fun HomeScreen(
                 // The end of a hold: moved = the new order is kept (the list becomes "My order"), else the wish is
                 // selected as before. The whole list order is saved, so wishes hidden by a category keep their place.
                 fun endHold(moved: Boolean) {
-                    val ids = dragIds
-                    if (moved && dragArmed && ids != null) {
-                        val shown = ids.toSet()
-                        val rest = sorted.map { it.id }.filter { it !in shown }
-                        val all = sortWishes(source, sortMode).map { it.id }
-                        // Hidden wishes (another category, a search) keep their place around the dragged ones.
-                        val merged = if (shown.size + rest.size == all.size) ids + rest else {
-                            val queue = ids.iterator()
-                            all.map { if (it in shown) queue.next() else it }
-                        }
-                        ListOrder.save(ctx, listKey, merged)
-                    } else holding?.let { startSelect(it) }
-                    holding = null; dragId = null; dragIds = null; dragArmed = false
+                    val ids = drag.dragIds
+                    if (moved && drag.dragArmed && ids != null) {
+                        ListOrder.save(ctx, listKey, keptOrder(ids, sorted.map { it.id }, sortWishes(source, sortMode).map { it.id }))
+                    } else drag.holding?.let { startSelect(it) }
+                    drag.reset()
                 }
-                var gridBox by remember { mutableStateOf<androidx.compose.ui.layout.LayoutCoordinates?>(null) }
                 LazyVerticalGrid(
                     state = gridState,
                     columns = if (view == "grid") GridCells.Fixed(2) else GridCells.Adaptive(300.dp),
-                    modifier = Modifier.onGloballyPositioned { gridBox = it }
-                        .pointerInput(listKey, view, selecting) {
-                            if (selecting) return@pointerInput
-                            // Read before the cards (Initial pass): a card's own long press takes every later move for
-                            // itself, so the list would never see the drag. Until the finger really moves nothing is
-                            // taken here, so taps, the card's long press and scrolling work as before.
-                            awaitEachGesture {
-                                val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-                                val early = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
-                                    var ended = false
-                                    while (!ended) {
-                                        val c = awaitPointerEvent(PointerEventPass.Initial).changes.firstOrNull { it.id == down.id }
-                                        ended = c == null || !c.pressed || (c.position - down.position).getDistance() > viewConfiguration.touchSlop
-                                    }
-                                    true
-                                }
-                                // A tap, a scroll or a lifted finger before the hold: not ours.
-                                if (early != null) return@awaitEachGesture
-                                val root = gridBox?.localToRoot(down.position) ?: return@awaitEachGesture
-                                val hit = cardBounds.entries.firstOrNull { it.value.contains(root) && list.any { w -> w.id == it.key } }
-                                    ?: return@awaitEachGesture
-                                dragId = hit.key; dragIds = list.map { it.id }
-                                dragPointer = root; dragGrab = root - hit.value.topLeft
-                                var lifted = false
-                                while (true) {
-                                    val c = awaitPointerEvent(PointerEventPass.Initial).changes.firstOrNull { it.id == down.id } ?: break
-                                    if (!c.pressed) { lifted = true; if (dragArmed) c.consume(); break }
-                                    dragPointer += c.position - c.previousPosition
-                                    val id = hit.key
-                                    // A real move, not a trembling finger: from now on it is a drag, not a selection.
-                                    if (!dragArmed && (dragPointer - root).getDistance() > 12.dp.toPx()) dragArmed = true
-                                    if (!dragArmed) continue
-                                    c.consume()
-                                    val size = cardBounds[id]?.size ?: continue
-                                    val centre = dragPointer - dragGrab + androidx.compose.ui.geometry.Offset(size.width / 2, size.height / 2)
-                                    val target = cardBounds.entries.firstOrNull { it.key != id && it.value.contains(centre) && dragIds?.contains(it.key) == true }
-                                    if (target != null) dragIds = dragIds?.let { moveInOrder(it, id, target.key) }
-                                    // Near the top or bottom edge the list scrolls along.
-                                    gridBox?.let { g ->
-                                        val y = dragPointer.y - g.positionInRoot().y
-                                        val edge = 64.dp.toPx()
-                                        val speed = when {
-                                            y < edge -> -(edge - y) / 4f
-                                            y > g.size.height - edge -> (y - (g.size.height - edge)) / 4f
-                                            else -> 0f
-                                        }
-                                        if (speed != 0f) scope.launch { gridState.scrollBy(speed) }
-                                    }
-                                }
-                                endHold(lifted)
-                            }
-                        },
+                    modifier = Modifier.onGloballyPositioned { drag.gridBox = it }
+                        .reorderGesture(drag, arrayOf(listKey, view, selecting), !selecting, { list }, gridState, scope) { endHold(it) },
                     contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 24.dp), // no floating button to keep clear of any more (2.112)
                     horizontalArrangement = Arrangement.spacedBy(gap),
                     verticalArrangement = Arrangement.spacedBy(gap)
@@ -433,101 +361,7 @@ fun HomeScreen(
                     if (!inShared && LoveTip.shows(ctx, Repo.wishes)) item(key = "lovetip", span = { GridItemSpan(maxLineSpan) }) {
                         LoveTipCard(ctx, Repo.wishes)
                     }
-                    gridItems(list, key = { it.id }) { w ->
-                        val r = res[w.id]
-                        val dragged = w.id == dragId && dragArmed
-                        // Where each card is (for the drag), then the dragged one follows the finger, lifted a little.
-                        Box(
-                            Modifier.zIndex(if (dragged) 1f else 0f)
-                                .then(if (dragged) Modifier else Modifier.animateItem())
-                                .onGloballyPositioned { cardBounds[w.id] = androidx.compose.ui.geometry.Rect(it.positionInRoot(), it.size.toSize()) }
-                                .graphicsLayer {
-                                    if (dragged) {
-                                        val at = cardBounds[w.id]?.topLeft ?: dragPointer
-                                        val to = dragPointer - dragGrab - at
-                                        translationX = to.x; translationY = to.y
-                                        scaleX = 1.03f; scaleY = 1.03f
-                                        shadowElevation = 12.dp.toPx()
-                                    }
-                                }
-                        ) {
-                        // A wish opened from "All your wishes" glows softly twice (WishFocus).
-                        GlowBox(w.id, small = view == "grid") {
-                        Selectable(selecting, w.id in picked, { toggle(w) }) {
-                        when (view) {
-                            "grid" -> CompactCard(
-                                // Two per row: the ⋮ holds everything; a long press starts selecting (every list).
-                                w, onLongPress = { holdSelect(w) },
-                                onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
-                                reserve = if (inShared) Reserving(r, reserveLabel(Shared.active.orEmpty(), w, r)) { on -> Shared.reserve(w, on) } else null,
-                                onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) }),
-                                onMove = { MoveFlow.ask(setOf(w.id)) },
-                                onHistory = if (inShared || w.url.isBlank()) null else ({ historyId = w.id })
-                            ) { editing = w }
-                            // The buttons of Rows and Large cards: Share, the eye (or Reserve on a gift list), Delete.
-                            else -> {
-                            // Rows has smaller icons than the large cards (owner, 2.127: bigger than the private badge,
-                            // smaller than before); the tap area stays the same.
-                            // Quiet (2.207): 20 dp in every view, so the buttons stay quieter than the wish.
-                            val ico = cardIcon(view)
-                            // Reserve left, then share, the bin and the ⋮ last (owner, 18 November 2026; CardButtons).
-                            val actions: @Composable RowScope.() -> Unit = { Row(Modifier.hiddenWhileSelecting().then(if (view == "rows" && inShared) Modifier.weight(1f) else Modifier), verticalAlignment = Alignment.CenterVertically) {
-                                CardButtons(
-                                    spread = view == "rows",
-                                    // Reserving takes the place of "got it" on a shared list.
-                                    reserve = if (!inShared || r == false) null else ({
-                                        if (r == true) OutlinedButton(onClick = { Shared.reserve(w, false) }) { Text(tr("Unreserve"), maxLines = 1) }
-                                        else Button(onClick = { Shared.reserve(w, true) }) { Text(tr("Reserve"), maxLines = 1) }
-                                    }),
-                                    icons = {
-                                        // Share as its own button too (owner, 12 November 2026: sharing a wish should be one tap).
-                                        // On a shared wishlist with Reserve showing, Reserve + share + bin + ⋮ don't fit:
-                                        // Share is then only in the ⋮ (owner, 18 November 2026).
-                                        if (!(inShared && r != false)) IconButton(onClick = { shareItem(ctx, w, idea = inShared) }) {
-                                            Icon(AppIcons.CardShare, tr("Share"), tint = look.cardMuted(w.id), modifier = Modifier.size(ico))
-                                        }
-                                        IconButton(onClick = { DeleteFlow.request(ctx, w) }) {
-                                            Icon(AppIcons.CardDelete, tr("Delete"), tint = look.cardMuted(w.id), modifier = Modifier.size(ico))
-                                        }
-                                    }
-                                ) {
-                                    // The bin stays, the rest is in one ⋮ (owner, 2.135: calmer rows), the same sheet as Two
-                                    // per row on every list (12 November 2026; a collab wishlist had only Share here).
-                                    WishMoreButton(
-                                        w, look.cardMuted(w.id), ico,
-                                        if (inShared) WishActions(
-                                            reserve = Reserving(r, reserveLabel(Shared.active.orEmpty(), w, r)) { on -> Shared.reserve(w, on) },
-                                            onEdit = { editing = w }, onMove = { MoveFlow.ask(setOf(w.id)) }, shareAsIdea = true
-                                        ) else WishActions(
-                                            onEdit = { editing = w }, onMove = { MoveFlow.ask(setOf(w.id)) }, own = true,
-                                            onHistory = if (w.url.isBlank()) null else ({ historyId = w.id })
-                                        )
-                                    )
-                                }
-                            } }
-                            if (view == "rows") RowCard(
-                                w,
-                                badge = if (inShared) reserveLabel(Shared.active.orEmpty(), w, r) else if (w.got) tr("Owned") else null,
-                                dim = if (inShared) r == false else w.got,
-                                onLongPress = { holdSelect(w) },
-                                onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
-                                onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) }),
-                                actions = actions
-                            ) else WishCard(
-                                w,
-                                badge = if (inShared) reserveLabel(Shared.active.orEmpty(), w, r) else if (w.got) tr("Owned") else null,
-                                dim = if (inShared) r == false else w.got,
-                                onLongPress = { holdSelect(w) },
-                                onStar = if (inShared) null else ({ Repo.replace(ctx, w.copy(star = !w.star)) }),
-                                onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) }),
-                                actions = actions
-                            )
-                            }
-                        }
-                        }
-                        }
-                        }
-                    }
+                    gridItems(list, key = { it.id }) { w -> ListWishItem(w, res[w.id], view, inShared, model, drag, holdSelect) }
                 }
                 }
             }
@@ -544,84 +378,9 @@ fun HomeScreen(
         }
     }
 
-    editing?.let { w -> key(w.id) { WishDialog(w, "") { editing = null } } }
-    historyId?.let { id -> Repo.wishes.firstOrNull { it.id == id } }?.let { w ->
-        PriceHistoryDialog(w) { historyId = null }
+    model.editing?.let { w -> key(w.id) { WishDialog(w, "") { model.editing = null } } }
+    model.historyId?.let { id -> Repo.wishes.firstOrNull { it.id == id } }?.let { w ->
+        PriceHistoryDialog(w) { model.historyId = null }
     }
 }
 
-/** One of the three view buttons in the row above the wishes. */
-@Composable
-fun ViewButton(kind: String, label: String, selected: Boolean, onClick: () -> Unit) {
-    val look = LocalLook.current
-    // The classic themes show only the chosen one filled (as before); the designs frame both, as buttons.
-    val framed = true
-    Box(
-        Modifier.size(40.dp)
-            .then(if (framed) Modifier.lookChip(look, on = selected) else Modifier.clip(look.chipShape))
-            .semantics { contentDescription = label }
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        ViewIcon(kind, look.chipContent(selected))
-    }
-}
-
-/**
- * ⋮ on a wish in Rows and Large cards (owner, 2.135; a sheet since 12 November 2026, WishSheet.kt): the same sheet as
- * in Two per row. The bin stays next to it.
- */
-@Composable
-fun WishMoreButton(w: Wish, tint: Color, ico: androidx.compose.ui.unit.Dp, actions: WishActions) {
-    var menu by remember { mutableStateOf(false) }
-    IconButton(onClick = { menu = true }) { Icon(AppIcons.MoreVert, tr("More"), tint = tint, modifier = Modifier.size(ico)) }
-    if (menu) WishSheet(w, actions) { menu = false }
-}
-
-/** The view in use as one icon; tapping it opens the three views with their names (owner, 2.130). */
-@Composable
-fun ViewMenuButton(view: String, onPick: (String) -> Unit) {
-    val cs = MaterialTheme.colorScheme
-    var open by remember { mutableStateOf(false) }
-    val names = listOf("rows" to tr("Rows"), "grid" to tr("Two per row"), "list" to tr("Large cards"))
-    Box {
-        Box(
-            Modifier.size(44.dp).clip(CircleShape)
-                .semantics { contentDescription = tr("View: %s", names.firstOrNull { it.first == view }?.second ?: "") }
-                .clickable { open = true },
-            contentAlignment = Alignment.Center
-        ) { ViewIcon(view, cs.onSurfaceVariant) }
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            names.forEach { (k, label) ->
-                DropdownMenuItem(
-                    text = { Text(label, fontWeight = if (k == view) FontWeight.Bold else FontWeight.Normal) },
-                    leadingIcon = { ViewIcon(k, if (k == view) cs.primary else cs.onSurfaceVariant) },
-                    trailingIcon = if (k == view) ({ Icon(AppIcons.Check, null) }) else null,
-                    onClick = { open = false; onPick(k) }
-                )
-            }
-        }
-    }
-}
-
-/** Tiny drawn icons that look like each view: Rows, Two per row (a 2x2 grid) and Large cards. */
-@Composable
-fun ViewIcon(kind: String, tint: Color) {
-    Canvas(Modifier.size(22.dp)) {
-        val u = size.width / 24f
-        fun box(x: Float, y: Float, w: Float, h: Float) = drawRoundRect(
-            color = tint, topLeft = Offset(x * u, y * u), size = Size(w * u, h * u),
-            cornerRadius = CornerRadius(1.6f * u, 1.6f * u)
-        )
-        when (kind) {
-            // Large cards: one big picture with a line of text under it.
-            "list" -> { box(3f, 3f, 18f, 12f); box(3f, 17f, 18f, 2.5f); box(3f, 20.5f, 11f, 2.5f) }
-            // Rows: a small square with two lines next to it, twice.
-            "rows" -> {
-                box(3f, 3f, 8f, 8f); box(13f, 4f, 8f, 2.5f); box(13f, 7.5f, 5f, 2.5f)
-                box(3f, 13f, 8f, 8f); box(13f, 14f, 8f, 2.5f); box(13f, 17.5f, 5f, 2.5f)
-            }
-            else -> { box(3f, 3f, 8f, 8f); box(13f, 3f, 8f, 8f); box(3f, 13f, 8f, 8f); box(13f, 13f, 8f, 8f) }
-        }
-    }
-}

@@ -33,7 +33,7 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `KeepPlaces.kt` (an open chat, a friend's page, a gift exchange and Home's page come back after Android closed the app; new screen state goes in the route or `rememberSaveable`, never in a new global object) *(Removed in 2.193: where you are inside a tab now lives in `Places.kt`, owned by the screen; moving between screens goes through `LocalGo` in `Deep.kt`, 2.192.)*
 
 ### Your lists and wishes
-- `ListScreen.kt` (the open list)
+- `ListScreen.kt` (the open list; rebuilt in 2.236: layout only) + `ListModel.kt` (its state holder: category, search, selection, open dialog, Reserve, Love, view, sort; `shownWishes`, `keptOrder`) + `ListWishItem.kt` (one wish's card and buttons) + `ListDrag.kt` (drag to reorder) + `ListViewButtons.kt` (view switch, a wish's ⋮); checks `ListModelTest`
 - `WishCards.kt` (wish cards)
 - `WishForm.kt` (Add/Edit wish)
 - `Data.kt` (`Wish`, `Repo`)

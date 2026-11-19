@@ -34,7 +34,6 @@ class ArchitectureTest {
         "Themed.kt" to 826,
         "Shared.kt" to 710,
         "AppScreen.kt" to 628,
-        "ListScreen.kt" to 627,
         "Exchange.kt" to 608,
         "Alerts.kt" to 585,
         "WishCards.kt" to 576,
@@ -58,7 +57,9 @@ class ArchitectureTest {
         val REBUILT = listOf(
             "Home.kt", "HomeHero.kt", "HomeBlocks.kt", "HomeMenus.kt", "HomeCards.kt", "NewWishlist.kt",
             // Friends and Profile (19 November 2026): their state holder is PeopleModel.kt.
-            "PeopleParts.kt", "FriendsTab.kt", "FriendsRows.kt", "FriendPage.kt", "AddFriend.kt", "Profile.kt", "ProfileEdit.kt", "DayMonthPicker.kt"
+            "PeopleParts.kt", "FriendsTab.kt", "FriendsRows.kt", "FriendPage.kt", "AddFriend.kt", "Profile.kt", "ProfileEdit.kt", "DayMonthPicker.kt",
+            // The open list (19 November 2026): its state holder is ListModel.kt.
+            "ListScreen.kt", "ListWishItem.kt", "ListViewButtons.kt", "ListDrag.kt"
         )
 
         /** A call that changes shared data: Store.set…(), .delete…(), .leave(), … */
