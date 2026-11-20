@@ -264,7 +264,8 @@ fun FriendScreen(
                                 when (Repo.view) {
                                     "grid" -> CompactCard(
                                         w, readOnly = true,
-                                        reserve = if (w.got) null else Reserving(r, label) { on -> st.toggle(w, on) }
+                                        reserve = if (w.got) null else Reserving(r, label) { on -> st.toggle(w, on) },
+                                        chatAbout = chatWith?.let { p -> { go(Deep.Chat(p, ChatWish.of(w, f.code))) } }
                                     ) {}
                                     "rows" -> RowCard(w, badge = label, dim = w.got || r == false, actions = actions)
                                     else -> WishCard(w, badge = label, dim = w.got || r == false, actions = actions)

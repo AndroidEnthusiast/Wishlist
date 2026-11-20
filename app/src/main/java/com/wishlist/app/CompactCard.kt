@@ -57,6 +57,8 @@ fun CompactCard(
     onMove: (() -> Unit)? = null,
     // "Price history" in the ⋮ sheet (your own lists).
     onHistory: (() -> Unit)? = null,
+    // "Chat about this wish" (a friend's list, owner 20 November 2026; Two per row was missing it in 2.266).
+    chatAbout: (() -> Unit)? = null,
     onEdit: () -> Unit
 ) {
     val ctx = LocalContext.current
@@ -174,7 +176,7 @@ fun CompactCard(
                     w, WishActions(
                         reserve = reserve, onEdit = if (readOnly) null else onEdit, onMove = onMove,
                         own = reserve == null && !readOnly, onHistory = onHistory,
-                        shareAsIdea = readOnly || reserve != null
+                        shareAsIdea = readOnly || reserve != null, chatAbout = chatAbout
                     )
                 ) { menu = false }
             }

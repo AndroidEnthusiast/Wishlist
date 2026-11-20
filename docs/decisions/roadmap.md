@@ -275,3 +275,9 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
 
 - **Rule 2 names `Fetch*.kt` since 2.263** (price reading is in four files now). Its wording before, word for word:
 2. `Fetch.kt` and `web/parse.js` do the same job with the same logic (prices, currencies, Amazon, Funda). Change both together and extend `tests/parse/parse_test.js`.
+
+## Faster builds (owner, 20 November 2026: "builds feel very slow")
+- The app's checks run **four at a time** (measured here 6 min 17 s → 3 min 49 s; each class still in its own process).
+- **No build for a notes-only push** (`docs/`, `CLAUDE.md`, `.claude/`, `tests/notes/`): nothing in the app or the pages
+  changes. Not chosen: building the APK on a second computer while the checks run (about 1 minute more, a third job).
+

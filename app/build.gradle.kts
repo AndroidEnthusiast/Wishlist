@@ -15,8 +15,8 @@ android {
         applicationId = "com.wishlist.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 267
-        versionName = "2.266"
+        versionCode = 268
+        versionName = "2.267"
         // Crash reports (Crash.kt): Crashlytics wants a build id, which its Gradle plugin would normally add. The app
         // isn't shrunk or renamed (isMinifyEnabled = false), so there is no mapping file to upload; one id per version.
         resValue("string", "com.google.firebase.crashlytics.mapping_file_id", "wishlist-$versionCode")
@@ -58,12 +58,17 @@ android {
             if (!screens) it.filter.excludeTestsMatching("*Screenshot*")
             it.systemProperty("roborazzi.test.record", "true")
             it.systemProperty("robolectric.graphicsMode", "NATIVE")
-            it.maxHeapSize = "3g"
+            // 2 GB each when four run at once (four × 3 GB was too close to GitHub's 16 GB); the screenshots keep 3 GB.
+            it.maxHeapSize = if (screens) "3g" else "2g"
             // Robolectric opens files through Android's file descriptors (BackupTest writes a real Export file).
             it.jvmArgs("--add-opens=java.base/java.io=ALL-UNNAMED")
             // Each test class in a fresh Java process: the app keeps its state in objects (Repo, ...), and a class
             // could leave the next unable to settle (screenshots: dark then light; ListNavigationTest, 2.156).
             it.forkEvery = 1
+            // Four classes at a time (owner, 20 November 2026: builds felt slow; measured 6 min 17 s → 3 min 49 s): each
+            // still in its own process, so they can't disturb each other. -Pwl.forks=1 runs them one by one again.
+            it.maxParallelForks = (project.findProperty("wl.forks") as String?)?.toIntOrNull()
+                ?: Runtime.getRuntime().availableProcessors().coerceIn(1, 4)
             // The shop checks need the internet; they only run with -Pwl.shops (tests/README.md).
             it.systemProperty("wl.shops", if (project.hasProperty("wl.shops")) "1" else "")
             // The screenshots in one style (Design.kt STYLES), e.g. -Pwl.style=chaos; Quiet when left out.

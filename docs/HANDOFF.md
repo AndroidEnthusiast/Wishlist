@@ -88,11 +88,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
-### 20 November 2026: chat about a wish, Home swipe, notifications reviewed (2.266)
+### 20 November 2026: chat about a wish, Home swipe, notifications reviewed (2.266–2.267)
 Owner interviewed (`wish-cards.md`, `notifications.md`): "Chat about this wish" (friends, groups; not exchanges: would
 reveal the Santa), wish cards open the wish in its list, Home swipes anywhere under the divider, no notification dead
 ends (`NoteCheck`). Review fixed: push for a new profile, offline daily check, "in 1 days", shared price-drop taps.
-Not checkable here: real pushes and taps on a phone.
+2.267: chat also in Two per row (owner found it missing); checks four at a time, no build for notes-only pushes.
 
 ### 20 November 2026: Screenshot to wish (2.265)
 Owner interviewed (`docs/decisions/screenshots.md`): share 1–10 pictures → pick screen → photo editor → Add a wish, one

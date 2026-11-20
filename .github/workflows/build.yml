@@ -1,6 +1,13 @@
 name: Build APK and publish page
 on:
   push:
+    # Notes only (the docs, CLAUDE.md, the session's settings, the notes checks): no new app and no new pages, so no
+    # build (owner, 20 November 2026: every notes push made a 9-minute build). A push that also changes anything else builds.
+    paths-ignore:
+      - 'docs/**'
+      - 'CLAUDE.md'
+      - '.claude/**'
+      - 'tests/notes/**'
   workflow_dispatch:
 
 jobs:
