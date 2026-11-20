@@ -30,3 +30,16 @@ Moved here from `people.md` on 18 November 2026 (its size limit); newest at the 
 - **Tapping a wish card in a chat opens the wish in its list**, glowing, for both people (the list's owner sees it in
   their own list); the shop is one tap further. This goes for every wish card in chats, also the ones sent with the gift
   button. Wish gone: "This wish is no longer on the list" and the list opens; the whole list gone: only the message.
+
+## Labels on cards, and "I have it" (owner, 20 November 2026, after screenshots of overlapping labels)
+- The owner's screenshots: the price label and "Reserved by you" weren't lined up (Large cards), overlapped (Two per
+  row) and "Reserved by you" didn't fit its chip (Rows). Owner: "I need to trust that whatever you build is perfect and
+  not just done": fix these and any other poorly made UI; check every view, both styles, light and dark, a narrow
+  phone and large phone text before pushing.
+- **Reservations are no longer on the photo.** "Reserved by you" (or "Reserved" for someone else, "You reserved 2", …)
+  is a small line in the card, right above the Reserve / Unreserve button, in every view. The photo keeps the price
+  label (and the Love label), on one line that can't overlap. ("✓ You", "Yours", "You're buying", "Your gift" were
+  turned down as too vague.)
+- **"I have it" goes straight to Received gifts**: no question; the wish leaves the list at once (the total goes
+  down) with "Moved to Received gifts" and Undo; whoever reserved it gets the thank-you as before. "Keep it on my list,
+  marked Owned" is gone. The page keeps its name "Received gifts".
