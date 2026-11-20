@@ -132,7 +132,7 @@ fun FriendsScreen(snack: SnackbarHostState, onProfile: () -> Unit, onOpenLink: (
                 // Coming back from the list returns to where you were: their page or their wishes page.
                 FriendScreen(
                     Friend(l.code, l.name), snack, onRemoved = {},
-                    fetch = { Friends.fetchList(ctx, p.id, l.code) }, ownerName = p.name,
+                    fetch = { Friends.fetchList(ctx, p.id, l.code) }, ownerName = p.name, chatWith = p.id,
                     onBack = { places.friendList = null }
                 )
             }

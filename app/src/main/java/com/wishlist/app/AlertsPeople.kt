@@ -39,6 +39,10 @@ fun Alerts.notifyFriend(c: Context, id: String, name: String, request: Boolean) 
     ))
 }
 
+/** "Sam’s birthday is in 5 days"; "is tomorrow" for 1 day (the review of 20 November 2026 found "in 1 days"). */
+internal fun Alerts.birthdayTitle(who: String, days: Int): String =
+    if (days == 1) tr("%s’s birthday is tomorrow", who) else tr("%1\$s’s birthday is in %2\$d days", who, days)
+
 /** A friend's birthday is in [days] days (2.95). Tapping opens that friend's page. */
 fun Alerts.notifyBirthday(c: Context, id: String, name: String, days: Int) {
     if (!Show.on(c, "nt_bday")) return
@@ -46,7 +50,7 @@ fun Alerts.notifyBirthday(c: Context, id: String, name: String, days: Int) {
     val nm = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     val nid = 7_000_205
     val who = name.ifBlank { tr("Someone") }
-    val title = tr("%1\$s’s birthday is in %2\$d days", who, days)
+    val title = birthdayTitle(who, days)
     val text = tr("Have a look at %s’s wishlist for a gift they’ll love.", who)
     val open = Intent(c, MainActivity::class.java).putExtra(MainActivity.OPEN_FRIEND, id).note("birthday", "p:$id")
         .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)

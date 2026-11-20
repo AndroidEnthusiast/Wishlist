@@ -21,6 +21,8 @@ import androidx.compose.runtime.staticCompositionLocalOf
 class Places {
     /** The conversation open in Messages, or null (the list of conversations). */
     var chat by mutableStateOf<String?>(null)
+    // "Chat about this wish" (owner, 20 November 2026): the wish the chat that opens attaches to what you type.
+    var chatAbout by mutableStateOf<ChatWish?>(null)
 
     /** Friends: the friend whose page is open. */
     var person by mutableStateOf<String?>(null)

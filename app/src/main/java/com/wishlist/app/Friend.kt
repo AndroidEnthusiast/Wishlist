@@ -67,8 +67,12 @@ fun FriendScreen(
     // A gift exchange's budget (2.129): wishes that cost more get "Over budget" on your giftee's list.
     overBudget: ((Wish) -> Boolean)? = null,
     // Reactions on wishes (2.142): everywhere except in a gift exchange (owner).
-    reactions: Boolean = true
+    reactions: Boolean = true,
+    // The list's owner when they are your friend: "Chat about this wish" in a wish's ⋮ (owner, 20 November 2026).
+    // Null on a gift exchange giftee's list (it would show you are their Secret Santa, owner) and for strangers.
+    chatWith: String? = null
 ) {
+    val go = LocalGo.current
     val places = LocalPlaces.current
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -249,7 +253,10 @@ fun FriendScreen(
                                         // Share this gift idea (its shop link, owner 7 November 2026).
                                         WishMoreButton(
                                             w, LocalLook.current.cardMuted(w.id), ico,
-                                            WishActions(reserve = if (w.got) null else Reserving(r, label) { on -> st.toggle(w, on) }, shareAsIdea = true)
+                                            WishActions(
+                                                reserve = if (w.got) null else Reserving(r, label) { on -> st.toggle(w, on) }, shareAsIdea = true,
+                                                chatAbout = chatWith?.let { p -> { go(Deep.Chat(p, ChatWish.of(w, f.code))) } }
+                                            )
                                         )
                                     }
                                 }
@@ -288,7 +295,14 @@ fun FriendScreen(
     LaunchedEffect(places.askFocus, st.remote, st.res) {
         val (code, id, reserve) = places.askFocus ?: return@LaunchedEffect
         if (code != f.code) return@LaunchedEffect
-        val w = st.remote?.wishes?.firstOrNull { it.id == id && it.bin == 0L } ?: return@LaunchedEffect
+        val remote = st.remote ?: return@LaunchedEffect
+        val w = remote.wishes.firstOrNull { it.id == id && it.bin == 0L }
+        if (w == null) {
+            // Gone from the list (owner, 20 November 2026: no dead ends): the list stays open and says so.
+            places.askFocus = null
+            snack.showToast(tr("This wish is no longer on the list"))
+            return@LaunchedEffect
+        }
         places.askFocus = null
         WishFocus.target = id
         if (reserve && st.res[id] == null && !w.got) st.reserveNow = w

@@ -172,4 +172,6 @@ fun Repo.dropFromBin(c: Context, ids: Set<Long>): Unit = synchronized(this) {
         if (inUse.none { it.image == g.image } && myBin.none { it.image == g.image }) ImageStore.delete(c, g.image)
         if (inUse.none { it.id == g.id }) History.remove(c, g.id)
     }
+    // Their price notifications go too: tapping one would lead nowhere (owner, 20 November 2026).
+    NoteCheck.forgetGone(c)
 }

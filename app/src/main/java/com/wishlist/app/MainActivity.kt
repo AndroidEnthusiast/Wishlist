@@ -22,7 +22,7 @@ import androidx.compose.ui.draw.clip
 
 class MainActivity : ComponentActivity() {
     /** Where a notification, a link or something shared asks the app to open (Deep.kt); App opens it and clears it. */
-    private var deep by mutableStateOf<Deep?>(null)
+    internal var deep by mutableStateOf<Deep?>(null)
 
     companion object {
         const val BIN_CODE = "bin_code"

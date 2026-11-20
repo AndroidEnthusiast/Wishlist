@@ -185,6 +185,8 @@ object Bin {
                 Shared.dropPhoto(l, e.wish.image)
             }
             removed(e.listCode, e.wish.id)
+            // Its price notifications go too (owner, 20 November 2026: no dead ends).
+            Notifications.forget(c) { n -> n.listKey == "s:" + e.listCode && n.wishId == e.wish.id && (n.kind == "price" || n.kind == "target") }
         }
     }
 

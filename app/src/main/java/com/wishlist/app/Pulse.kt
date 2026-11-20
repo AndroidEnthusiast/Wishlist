@@ -24,7 +24,9 @@ class PulsePlan(
     private val fresh: Map<String, String>,
     private val old: Map<String, String>,
     /** Collab lists that were handed to you (to claim). */
-    val claims: Set<String>
+    val claims: Set<String>,
+    /** The server answered the pulse (false: offline, or the script not run). */
+    val answered: Boolean = true
 ) {
     private val done = HashMap<String, String>()
 
@@ -36,6 +38,13 @@ class PulsePlan(
 
     /** [part] was handled: its fingerprint is remembered, so it isn't asked about again until it changes. */
     fun ok(part: String) { fresh[part]?.let { done[part] = it } }
+
+    /**
+     * Everything asked was answered (the pulse came, and every part it named was handled). Only then a full check counts
+     * as today's: before 20 November 2026 an offline first check of the day used it up, and the date-based news
+     * (birthdays, occasion reminders, the exchange countdown) waited until the next day.
+     */
+    val complete: Boolean get() = answered && fresh.keys.all { it in done }
 
     /** What to remember: earlier fingerprints, with the ones handled now replaced; parts no longer asked about drop out. */
     fun remembered(): Map<String, String> = if (fresh.isEmpty()) old else (old + done).filterKeys { it in fresh }
@@ -84,14 +93,14 @@ object Pulse {
             val (fresh, claims) = PulsePlan.parse(JSONObject(Cloud.rpc("wl_pulse", body))) { k -> Shared.lists.firstOrNull { it.key == k }?.code }
             PulsePlan(newDay, fresh, old, claims)
         } catch (e: Exception) {
-            PulsePlan(true, emptyMap(), old, emptySet())
+            PulsePlan(true, emptyMap(), old, emptySet(), answered = false)
         }
     }
 
     /** After the check: remember the parts handled; a full check also counts as today's. */
     fun finish(c: Context, plan: PulsePlan) {
         val e = prefs(c).edit().putString("fps", JSONObject(plan.remembered() as Map<*, *>).toString())
-        if (plan.all) e.putString("full_day", LocalDate.now().toString())
+        if (plan.all && plan.complete) e.putString("full_day", LocalDate.now().toString())
         e.apply()
     }
 }

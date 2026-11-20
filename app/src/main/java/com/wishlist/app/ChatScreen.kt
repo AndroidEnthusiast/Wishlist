@@ -79,6 +79,8 @@ internal fun ChatScreen(peer: String, snack: SnackbarHostState) {
     val canSend = friend != null
     // The chat's messages and what is open (ChatModel); the chat is keyed by the friend.
     val chat = remember(peer) { ChatModel(ctx, peer, scope, snack) }
+    // Opened with "Chat about this wish": the wish is attached to what you type (once).
+    LaunchedEffect(peer, places.chatAbout) { places.chatAbout?.let { chat.about = it; places.chatAbout = null } }
     val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) scope.launch {
             ImageStore.import(ctx, uri)?.let { chat.preview = it } ?: snack.showToast(tr("Couldn’t open that photo."))
@@ -217,8 +219,19 @@ internal fun ChatScreen(peer: String, snack: SnackbarHostState) {
                     IconButton(onClick = { chat.replying = null }) { Icon(AppIcons.Close, tr("Cancel reply")) }
                 }
             }
+            // "Chat about this wish" (owner, 20 November 2026): the wish above the text box, ✕ takes it off.
+            if (canSend) chat.about?.let { a ->
+                Row(
+                    Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 6.dp).lookSurface(look, MaterialTheme.shapes.small, cs.surfaceVariant, raised = false)
+                        .padding(start = 8.dp, top = 6.dp, bottom = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(Modifier.weight(1f)) { ChatWishRow(a.title, a.price, a.cur, a.img, cs.onSurface, hint = tr("Sent with your message")) }
+                    IconButton(onClick = { chat.about = null }) { Icon(AppIcons.Close, tr("Remove the wish")) }
+                }
+            }
             if (canSend) InputBar(
-                chat.text, { chat.text = it }, chat.sending,
+                chat.text, { chat.text = it }, chat.sending, attached = chat.about != null,
                 onSend = { chat.sendText() },
                 onWish = { chat.wishPick = true },
                 onGallery = { pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
@@ -269,9 +282,9 @@ internal fun ChatScreen(peer: String, snack: SnackbarHostState) {
             dismissButton = { TextButton(onClick = { chat.deleting = null }) { Text(tr("Cancel")) } }
         )
     }
-    if (chat.wishPick) WishPicker(onPick = { w ->
+    if (chat.wishPick) WishPicker(onPick = { w, code ->
         chat.wishPick = false
-        chat.sendWish(w)
+        chat.sendWish(w, code)
     }, onClose = { chat.wishPick = false })
     chat.preview?.let { img ->
         PhotoPreview(img, onCancel = { chat.preview = null; ImageStore.delete(ctx, img) }, onSend = { chat.preview = null; chat.sendPhoto(img) })

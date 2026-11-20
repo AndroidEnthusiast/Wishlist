@@ -2,6 +2,7 @@ package com.wishlist.app
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -159,7 +160,12 @@ private fun Bubble(
             Modifier.widthIn(max = 300.dp).lookSurface(look, shape, fill, depth = 3.dp)
                 .combinedClickable(
                     onClick = {
-                        if (m.content.kind == "wish" && m.content.url.isNotBlank()) try { uri.openUri(m.content.url) } catch (e: Exception) {}
+                        // A wish card opens the wish in its list (owner, 20 November 2026); an older card without its
+                        // list still opens the shop (only an http(s) link: it comes from another phone).
+                        if (m.content.kind == "wish") {
+                            if (m.content.code.isNotEmpty() && m.content.wishId > 0L) go(Deep.WishIn(m.content.code, m.content.wishId))
+                            else ChatWish.safeLink(m.content.url).takeIf { it.isNotEmpty() }?.let { u -> try { uri.openUri(u) } catch (e: Exception) {} }
+                        }
                         // A group invitation (2.108): the join screen, or the group when you are in it already.
                         if (m.content.kind == "group") go(Deep.Group(m.content.text, Groups.parseLink(m.content.url)))
                         // A gift exchange invitation (2.129).
@@ -193,20 +199,11 @@ private fun Bubble(
                     tr("This message can’t be read on this phone"), color = ink.copy(alpha = 0.75f),
                     style = MaterialTheme.typography.bodyMedium, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                 )
-                m.content.kind == "wish" -> Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        Modifier.size(52.dp).clip(RoundedCornerShape(10.dp)).background(Color.White),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (m.content.img.isNotBlank()) WishImage(m.content.img, Modifier.fillMaxSize().padding(3.dp))
-                        else GiftIcon(Color(0xFF8A8A92), 26.dp)
-                    }
-                    Column(Modifier.padding(start = 10.dp).widthIn(max = 200.dp)) {
-                        Text(m.content.title, color = ink, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                        m.content.price?.let { Text(money(it, m.content.cur), color = ink, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold) }
-                        if (m.content.url.isNotBlank()) Text(tr("View in shop"), color = ink.copy(alpha = 0.8f), style = MaterialTheme.typography.labelSmall)
-                    }
-                }
+                m.content.kind == "wish" -> ChatWishRow(
+                    m.content.title, m.content.price, m.content.cur, m.content.img, ink,
+                    hint = if (m.content.code.isNotEmpty() && m.content.wishId > 0L) tr("See it on the list")
+                    else if (m.content.url.isNotBlank()) tr("View in shop") else null
+                )
                 m.content.kind == "giftlist" -> GiftListChatCard(m.content.title, m.mine, ink)
                 m.content.kind == "group" || m.content.kind == "exchange" -> Row(verticalAlignment = Alignment.CenterVertically) {
                     val gx = m.content.kind == "exchange"
@@ -241,7 +238,16 @@ private fun Bubble(
                         }
                     }
                 }
-                else -> Text(m.content.text, color = ink, style = MaterialTheme.typography.bodyLarge)
+                else -> {
+                    // "Chat about this wish" (owner, 20 November 2026): the wish above the text; a tap opens it in its list.
+                    m.content.about?.let { a ->
+                        Box(
+                            Modifier.padding(bottom = 6.dp).clip(RoundedCornerShape(10.dp)).background(ink.copy(alpha = 0.12f))
+                                .clickable(onClickLabel = tr("See it on the list")) { go(Deep.WishIn(a.code, a.id)) }.padding(6.dp)
+                        ) { ChatWishRow(a.title, a.price, a.cur, a.img, ink, hint = tr("See it on the list")) }
+                    }
+                    Text(m.content.text, color = ink, style = MaterialTheme.typography.bodyLarge)
+                }
             }
             Row(Modifier.align(Alignment.End).padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(SimpleDateFormat("HH:mm", Locale.UK).format(Date(m.at)), color = ink.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
@@ -254,5 +260,20 @@ private fun Bubble(
             }
         }
         if (!m.mine) Spacer(Modifier.widthIn(min = 48.dp))
+    }
+}
+
+/** A wish in a chat: its photo on white, name, price, and a small line saying what a tap does. */
+@Composable
+internal fun ChatWishRow(title: String, price: Double?, cur: String, img: String, ink: Color, hint: String?) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.size(52.dp).clip(RoundedCornerShape(10.dp)).background(Color.White), contentAlignment = Alignment.Center) {
+            if (img.isNotBlank()) WishImage(img, Modifier.fillMaxSize().padding(3.dp)) else GiftIcon(Color(0xFF8A8A92), 26.dp)
+        }
+        Column(Modifier.padding(start = 10.dp).widthIn(max = 200.dp)) {
+            Text(title, color = ink, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            price?.let { Text(money(it, cur), color = ink, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold) }
+            if (hint != null) Text(hint, color = ink.copy(alpha = 0.8f), style = MaterialTheme.typography.labelSmall)
+        }
     }
 }

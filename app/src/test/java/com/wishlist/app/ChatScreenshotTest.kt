@@ -105,4 +105,18 @@ class ChatScreenshotTest : NavigationBase() {
         }).onFirst().performClick()
         shot("wish")
     }
+
+    // "Chat about this wish" (owner, 20 November 2026): the wish above the text box, and a sent message about a wish.
+    @Test fun chatAboutAWish() {
+        compose.mainClock.autoAdvance = false
+        pretend()
+        val about = ChatWish("Blue teapot, large", 39.0, "EUR", "", "https://example.com/teapot", "FRIEND01", 42L)
+        compose.runOnUiThread {
+            Chat.opened["p2"] = Chat.opened["p2"].orEmpty() +
+                ChatMessage(10, false, ChatContent(true, "text", "Is it the large one you want?", about = about), at(6, 10, 0), true)
+            compose.activity.deep = Deep.Chat("p2", about)
+        }
+        settle(); settle()
+        shot("about")
+    }
 }

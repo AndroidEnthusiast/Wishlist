@@ -29,7 +29,11 @@ data class ChatContent(
     val w: Int = 0, val h: Int = 0,
     // A reply (owner, 2.128): the quoted message's id, a short copy of its text and who wrote it (profile id). Travels
     // inside the text message, so older apps just show the message without the quote.
-    val replyTo: Long = 0L, val replyText: String = "", val replyBy: String = ""
+    val replyTo: Long = 0L, val replyText: String = "", val replyBy: String = "",
+    // The wish a message is about (owner, 20 November 2026: "Chat about this wish"), sent with the text; and for a
+    // wish card, which list it is on ([code], the list's friends' code) and its id, so a tap opens it in that list.
+    // Older apps ignore both: they show the text, or open the shop.
+    val about: ChatWish? = null, val code: String = "", val wishId: Long = 0L
 )
 
 /** [react] / [reactTheirs]: the emoji you and your friend put on this message (owner, 2.128), or "". */
@@ -115,7 +119,28 @@ object Chat {
         return ChatMessage(o.optLong("id"), mine, content, time(o.optString("at")), o.optBoolean("read"))
     }
 
-    private fun parse(s: String): ChatContent = try {
+    /** What is locked and sent for [content]: small JSON, with a plain line ("x") for older apps where needed. */
+    internal fun plain(content: ChatContent): String {
+        return if (content.kind == "group") JSONObject().put("t", "group").put("gid", content.text)
+            .put("name", content.title).put("link", content.url).toString()
+        else if (content.kind == "exchange") JSONObject().put("t", "exchange").put("gid", content.text)
+            .put("name", content.title).put("link", content.url)
+            .put("x", tr("Join my gift exchange “%1\$s”: %2\$s", content.title, content.url)).toString()
+        else if (content.kind == "giftlist") JSONObject().put("t", "giftlist").put("code", content.text)
+            .put("name", content.title).put("x", tr("I invited you to plan gifts together for “%s”. Update the app to join.", content.title)).toString()
+        else if (content.kind == "photo") JSONObject().put("t", "photo").put("f", content.text).put("k", content.img)
+            .put("w", content.w).put("h", content.h).toString()
+        else if (content.kind == "wish") JSONObject().put("t", "wish").put("title", content.title)
+            .put("price", content.price ?: JSONObject.NULL).put("cur", content.cur).put("img", content.img).put("url", content.url)
+            .apply { if (content.code.isNotEmpty() && content.wishId > 0L) { put("code", content.code); put("id", content.wishId) } }.toString()
+        else JSONObject().put("t", "text").put("x", content.text).apply {
+            if (content.replyTo > 0L) put("re", JSONObject().put("id", content.replyTo).put("x", content.replyText.take(120)).put("by", content.replyBy))
+            content.about?.let { put("w", it.toJson()) }
+        }.toString()
+    }
+
+    /** A message's plain JSON back into what the chat shows (what [plain] made, also from older and newer apps). */
+    internal fun parse(s: String): ChatContent = try {
         val j = JSONObject(s)
         if (j.optString("t") == "group") ChatContent(true, "group", j.optString("gid"), j.optString("name"), url = j.optString("link"))
         // A gift exchange invitation (2.129); "x" holds a plain line with the link for older apps.
@@ -125,11 +150,12 @@ object Chat {
         else if (j.optString("t") == "photo") ChatContent(true, "photo", j.optString("f"), img = j.optString("k"), w = j.optInt("w"), h = j.optInt("h"))
         else if (j.optString("t") == "wish") ChatContent(
             true, "wish", "", j.optString("title"), if (j.has("price") && !j.isNull("price")) j.optDouble("price") else null,
-            j.optString("cur"), j.optString("img"), j.optString("url")
+            j.optString("cur"), j.optString("img"), j.optString("url"), code = j.optString("code"), wishId = j.optLong("id")
         ) else j.optJSONObject("re").let { re ->
             ChatContent(
                 true, "text", j.optString("x"),
-                replyTo = re?.optLong("id") ?: 0L, replyText = re?.optString("x").orEmpty(), replyBy = re?.optString("by").orEmpty()
+                replyTo = re?.optLong("id") ?: 0L, replyText = re?.optString("x").orEmpty(), replyBy = re?.optString("by").orEmpty(),
+                about = j.optJSONObject("w")?.let { ChatWish.fromJson(it) }
             )
         }
     } catch (e: Exception) {
@@ -217,20 +243,7 @@ object Chat {
             ?: Cloud.rpc("wl_chat_key", base(c).put("p_other", other)).trim().removeSurrounding("\"")
         if (theirPub.isEmpty()) throw IllegalStateException("no key")
         val me = myId(c)
-        val plain = if (content.kind == "group") JSONObject().put("t", "group").put("gid", content.text)
-            .put("name", content.title).put("link", content.url).toString()
-        else if (content.kind == "exchange") JSONObject().put("t", "exchange").put("gid", content.text)
-            .put("name", content.title).put("link", content.url)
-            .put("x", tr("Join my gift exchange “%1\$s”: %2\$s", content.title, content.url)).toString()
-        else if (content.kind == "giftlist") JSONObject().put("t", "giftlist").put("code", content.text)
-            .put("name", content.title).put("x", tr("I invited you to plan gifts together for “%s”. Update the app to join.", content.title)).toString()
-        else if (content.kind == "photo") JSONObject().put("t", "photo").put("f", content.text).put("k", content.img)
-            .put("w", content.w).put("h", content.h).toString()
-        else if (content.kind == "wish") JSONObject().put("t", "wish").put("title", content.title)
-            .put("price", content.price ?: JSONObject.NULL).put("cur", content.cur).put("img", content.img).put("url", content.url).toString()
-        else JSONObject().put("t", "text").put("x", content.text).apply {
-            if (content.replyTo > 0L) put("re", JSONObject().put("id", content.replyTo).put("x", content.replyText.take(120)).put("by", content.replyBy))
-        }.toString()
+        val plain = plain(content)
         val body = ChatCrypto.lock(keyWith(c, theirPub, other), plain, me, other)
         val args = base(c).put("p_other", other).put("p_body", body).put("p_spk", myPublic(c)).put("p_rpk", theirPub)
         val r = JSONObject(
@@ -318,3 +331,29 @@ object Chat {
     }
 }
 
+
+/**
+ * A wish a chat message is about (owner, 20 November 2026): what the card shows, and where it lives ([code]: the list's
+ * friends' code; [id]: the wish), so tapping the card opens it in its list. Only what friends already see on the list.
+ */
+data class ChatWish(
+    val title: String, val price: Double?, val cur: String, val img: String, val url: String, val code: String, val id: Long
+) {
+    fun toJson(): JSONObject = JSONObject().put("title", title).put("price", price ?: JSONObject.NULL).put("cur", cur)
+        .put("img", img).put("url", url).put("code", code).put("id", id)
+
+    companion object {
+        /** Wish [w] on the list with friends' code [code]; a photo only on this phone is left out. */
+        fun of(w: Wish, code: String) = ChatWish(
+            w.label, w.price, w.currency, if (ImageStore.isLocal(w.image)) "" else w.image, w.url, code, w.id
+        )
+
+        fun fromJson(o: JSONObject) = ChatWish(
+            o.optString("title"), if (o.has("price") && !o.isNull("price")) o.optDouble("price") else null,
+            o.optString("cur"), o.optString("img"), safeLink(o.optString("url")), o.optString("code"), o.optLong("id")
+        )
+
+        /** Only http(s) links go through (they come from someone else's phone). */
+        internal fun safeLink(u: String): String = if (u.startsWith("https://") || u.startsWith("http://")) u else ""
+    }
+}

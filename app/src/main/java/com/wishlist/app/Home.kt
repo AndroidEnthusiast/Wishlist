@@ -56,6 +56,9 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -144,8 +147,13 @@ fun HubScreen(
             },
             snackbarHost = { AppSnackbarHost(snack) }
         ) { pad ->
+            // The screen's height, so the swipe area under the divider can reach the bottom of the screen.
+            androidx.compose.foundation.layout.BoxWithConstraints(Modifier.padding(pad).fillMaxSize()) {
+            val screenH = maxHeight
+            val density = androidx.compose.ui.platform.LocalDensity.current
+            var belowTop by remember { mutableStateOf(0f) }
             Column(
-                Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState())
+                Modifier.fillMaxSize().verticalScroll(rememberScrollState())
                     .padding(bottom = 32.dp)
             ) {
                 // "A new version is ready" (owner, 10 November 2026; AppInfo.kt): only when there is one.
@@ -162,11 +170,20 @@ fun HubScreen(
                 val acts: (HubItem) -> List<Triple<String, Boolean, () -> Unit>> = { item -> if (item.key.startsWith("g:")) emptyList() else actionsOf(item) }
                 // A divider between you and your wishlists (owner, 18 November 2026); only what is below it swipes.
                 HorizontalDivider(Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 12.dp))
-                if (Show["home_swipe"]) {
+                // Everything under the divider: with the swipe on, a swipe anywhere here (down to the bottom of the screen,
+                // also under the shorter side) switches My wishlists | Shared (owner, 20 November 2026).
+                var tab by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableIntStateOf(0) }
+                val pager = androidx.compose.foundation.pager.rememberPagerState(initialPage = tab) { 2 }
+                val swipe = Show["home_swipe"]
+                Column(
+                    Modifier.fillMaxWidth()
+                        .onGloballyPositioned { belowTop = it.positionInParent().y }
+                        .then(if (swipe) Modifier.heightIn(min = with(density) { (screenH.toPx() - belowTop - 32.dp.toPx()).coerceAtLeast(0f).toDp() })
+                            .swipesPager(pager, scope).testTag("home_below") else Modifier)
+                ) {
+                if (swipe) {
                     // My wishlists | Shared (your wishlists with others and your wishlist groups): swipe or tap the tabs.
                     // App settings > Display can switch it off (then everything stands one under the other).
-                    var tab by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableIntStateOf(0) }
-                    val pager = androidx.compose.foundation.pager.rememberPagerState(initialPage = tab) { 2 }
                     androidx.compose.runtime.LaunchedEffect(pager.currentPage) { tab = pager.currentPage }
                     SegmentedTabs(
                         listOf(tr("My wishlists"), tr("Shared")), pager.currentPage,
@@ -199,6 +216,8 @@ fun HubScreen(
                 if (Config.enabled && Exchanges.list.isNotEmpty()) ExchangesSection(onNewExchange, withNew = false)
     
                 // No "Price changes" here any more (owner, 2.95): price news is on Price watch and in Notifications.
+                }
+            }
             }
         }
     }

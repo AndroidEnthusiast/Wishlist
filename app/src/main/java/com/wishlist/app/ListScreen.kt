@@ -194,7 +194,12 @@ fun HomeScreen(
         if (i < 0) {
             if (sel != "All" || query.isNotEmpty()) {
                 model.cat = "All"; model.stopSearch()
-            } else WishFocus.target = null
+            } else {
+                WishFocus.target = null
+                // Not on this list (any more): say so rather than leave you looking (owner, 20 November 2026). A
+                // shared list may still be loading, so only on your own lists, which are on the phone.
+                if (Shared.active == null) scope.launch { snack.showToast(tr("This wish is no longer on the list")) }
+            }
             return@LaunchedEffect
         }
         // The target is cleared only at the end: clearing it is a change of this effect's key, which would stop it

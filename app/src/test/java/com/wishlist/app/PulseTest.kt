@@ -50,8 +50,26 @@ class PulseTest {
         assertEquals(fresh, none.remembered())
     }
 
+    // The review of 20 November 2026: an offline first check of the day used up the day's full check, so birthdays,
+    // occasion reminders and the exchange countdown waited a day. Only a check where everything was answered counts.
+    @Test fun aFullCheckCountsOnlyWhenEverythingWasAnswered() {
+        val (fresh, claims) = PulsePlan.parse(answer) { codes[it] }
+        assertFalse("offline: not done", PulsePlan(true, emptyMap(), fresh, emptySet(), answered = false).complete)
+        val daily = PulsePlan(true, fresh, fresh, claims)
+        fresh.keys.filter { it != "fr" }.forEach { daily.ok(it) }
+        assertFalse("friends (birthdays) failed: not done", daily.complete)
+        daily.ok("fr")
+        assertTrue(daily.complete)
+        assertTrue("nothing to ask (no profile, no lists) is done", PulsePlan(true, emptyMap(), emptyMap(), emptySet()).complete)
+    }
+
     @Test fun listsNoLongerFollowedAreForgotten() {
         val plan = PulsePlan(false, mapOf("fr" to "a"), mapOf("fr" to "a", "l:OLD" to "x"), emptySet())
         assertEquals(mapOf("fr" to "a"), plan.remembered())
+    }
+
+    @Test fun aBirthdayTomorrowSaysTomorrow() {
+        assertEquals("Sam’s birthday is tomorrow", Alerts.birthdayTitle("Sam", 1))
+        assertEquals("Sam’s birthday is in 5 days", Alerts.birthdayTitle("Sam", 5))
     }
 }

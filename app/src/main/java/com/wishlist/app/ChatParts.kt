@@ -57,9 +57,12 @@ import java.io.File
 @Composable
 internal fun InputBar(
     text: String, onText: (String) -> Unit, sending: Boolean, onSend: () -> Unit, onWish: () -> Unit,
-    onGallery: () -> Unit, onCamera: () -> Unit
+    onGallery: () -> Unit, onCamera: () -> Unit,
+    // A wish is attached ("Chat about this wish"): it can be sent without words too.
+    attached: Boolean = false
 ) {
     val look = LocalLook.current
+    val ready = (text.isNotBlank() || attached) && !sending
     val cs = MaterialTheme.colorScheme
     Row(
         Modifier.fillMaxWidth().navigationBarsPadding().padding(start = 8.dp, end = 8.dp, top = 6.dp, bottom = 8.dp),
@@ -94,8 +97,8 @@ internal fun InputBar(
             modifier = Modifier.weight(1f).lookSurface(look, shape, cs.surfaceVariant, raised = false)
         )
         Box(
-            Modifier.padding(start = 8.dp, bottom = 4.dp).size(48.dp).lookSurface(look, look.fabShape, if (text.isBlank() || sending) cs.outline else look.accent)
-                .clickable(enabled = text.isNotBlank() && !sending, onClick = onSend),
+            Modifier.padding(start = 8.dp, bottom = 4.dp).size(48.dp).lookSurface(look, look.fabShape, if (!ready) cs.outline else look.accent)
+                .clickable(enabled = ready, onClick = onSend),
             contentAlignment = Alignment.Center
         ) {
             if (sending) CircularProgressIndicator(Modifier.size(20.dp), color = look.onAccent, strokeWidth = 2.dp)
@@ -106,7 +109,7 @@ internal fun InputBar(
 
 /** Pick a wish from your own lists to send. */
 @Composable
-internal fun WishPicker(onPick: (Wish) -> Unit, onClose: () -> Unit) {
+internal fun WishPicker(onPick: (Wish, String?) -> Unit, onClose: () -> Unit) {
     val ctx = LocalContext.current
     val lists = remember { Repo.allMine(ctx) }
     AlertDialog(
@@ -115,7 +118,7 @@ internal fun WishPicker(onPick: (Wish) -> Unit, onClose: () -> Unit) {
         text = {
             LazyColumn(Modifier.heightIn(max = 420.dp)) {
                 lists.forEach { d ->
-                    val ws = d.wishes.filter { !it.priv }
+                    val ws = d.wishes.filter { !it.priv && it.bin == 0L }
                     if (ws.isNotEmpty()) {
                         item(key = "h" + d.id) {
                             Text(
@@ -125,7 +128,7 @@ internal fun WishPicker(onPick: (Wish) -> Unit, onClose: () -> Unit) {
                         }
                         items(ws, key = { d.id + "/" + it.id }) { w ->
                             Row(
-                                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { onPick(w) }.padding(6.dp),
+                                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { onPick(w, d.code) }.padding(6.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Box(Modifier.size(40.dp).clip(RoundedCornerShape(8.dp)).background(Color.White), contentAlignment = Alignment.Center) {

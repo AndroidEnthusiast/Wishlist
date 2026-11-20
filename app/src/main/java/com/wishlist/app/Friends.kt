@@ -121,6 +121,9 @@ object Friends {
             if (myPhoto.isNotEmpty()) uploadPhoto(c)
             pushLists(c)
             if (myBirthday.isNotEmpty() || myBio.isNotEmpty()) pushAbout(c)
+            // Instant notifications start now, not after the app is next opened (the review of 20 November 2026:
+            // a first friend's messages came only with the half-hourly check until then).
+            Push.start(c)
         } else if (p.getBoolean("pf_about_dirty", false)) pushAbout(c)
         if (p.getBoolean("pf_sizes_dirty", false)) try { clearSizes(c) } catch (e: Exception) {}
     }

@@ -37,6 +37,8 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `Overview.kt` (`WishFocus`: a wish opened from elsewhere scrolls into view and glows, `GlowBox`, `placedWishes`, `ProfileSummary`) + `OverviewScreen.kt` (All your wishes / Wishes you love, rebuilt in 2.255) + state holder `OverviewModel.kt` (`OverviewState`); checks `OverviewModelTest`, screenshots `OverviewScreenshotTest`
 - `WishCards.kt` (wish cards; split in 2.245: `CompactCard.kt` Two per row, `WishCard.kt` Large cards, `RowCard.kt` Rows, `WishCardParts.kt` (`CardButtons`, `cardIcon`), `WishPriceLine.kt`; `WishCards.kt` keeps the shared bits: `Reserving`, `reserveButton`, `priceRose`)
 - `WishForm.kt` (Add/Edit wish; rebuilt in 2.246) + `WishFormParts.kt` (photo block, Take or Choose photo, More details) + state holder `WishFormModel.kt` (`WishFormState`: the fields, reading a link, the photo, the list, saving); checks `WishFormModelTest`, screenshots `WishFormScreenshotTest`
+- Chat about this wish (2.266): `ChatWish` in `Chat.kt` (the wish inside a text message, `"w"`; wish cards carry `code` and `id`), `Deep.WishIn` → `AppState.openWishIn`, the ⋮ row "chat" in `WishSheet.kt` (`FriendScreen(chatWith = …)`); checks `ChatAboutTest`
+- Home's swipe under the divider: `HomeSwipe.kt` (`swipesPager`); checks `HomeSwipeTest`
 - Screenshot to wish (2.265, `docs/decisions/screenshots.md`): `Deep.Shots` (pictures shared in, at most 10) → `ShotsFlow.kt` (pick screen, then `HeroEditor` and `WishDialog` with `step`/`onSkip`) + state holder `ShotsModel.kt` (`ShotsState`); the editor's live mini cards and "added" note in `HeroEditorPreview.kt`; checks `ShotsModelTest`, `ShareEntryTest`, screenshots `ShotsScreenshotTest`
 - Your own data (`Repo`; split into parts in 2.256, the data rebuild, owner 19 November 2026; nothing on screen changed):
   `Wish.kt` (`Wish`, `wishToJson`/`wishFromJson`, `money`), `Data.kt` (`Repo`: the front door; `load`, `persist`,
@@ -140,6 +142,7 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 
 ### Notifications, reminders and background work
 - `NotifyPace.kt` (every notification goes through it: bundles, one buzz per 3 minutes, stacked)
+- `NoteCheck.kt` (2.266: before a notification opens a wish or list, is it still there? gone / in the bin with Restore / moved; deleted-for-good wishes take their notifications along); checks `NoteCheckTest`
 - `Reminders.kt` (the givers' 7-day reminder, "What did you get?", Received gifts)
 
 ### Look, text and fonts

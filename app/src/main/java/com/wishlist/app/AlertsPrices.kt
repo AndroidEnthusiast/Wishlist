@@ -11,7 +11,7 @@ import androidx.core.app.NotificationCompat
 /** Price changes found during a check, told together afterwards (see [collectPrices]). */
 internal object PriceAlertQueue {
     /** One price change waiting to be told (see [collectPrices]). */
-    class PriceAlert(val drop: Boolean, val id: Int, val item: String, val old: Double, val now: Double, val currency: String, val heading: String, val wishId: Long = 0L)
+    class PriceAlert(val drop: Boolean, val id: Int, val item: String, val old: Double, val now: Double, val currency: String, val heading: String, val wishId: Long = 0L, val listKey: String = "")
     val pending = ArrayList<PriceAlert>()
     var collecting = 0
 }
@@ -33,7 +33,7 @@ suspend fun <T> Alerts.collectPrices(c: Context, check: suspend () -> T): T {
             for (drop in listOf(true, false)) {
                 val l = now.filter { it.drop == drop }
                 when {
-                    l.size == 1 -> l[0].let { if (drop) postDrop(c, it.id, it.item, it.old, it.now, it.currency, it.heading, it.wishId) else postRise(c, it.id, it.item, it.old, it.now, it.currency, it.heading, it.wishId) }
+                    l.size == 1 -> l[0].let { if (drop) postDrop(c, it.id, it.item, it.old, it.now, it.currency, it.heading, it.wishId, it.listKey) else postRise(c, it.id, it.item, it.old, it.now, it.currency, it.heading, it.wishId, it.listKey) }
                     l.size > 1 -> postSummary(c, drop, l)
                 }
             }
@@ -69,24 +69,29 @@ internal fun Alerts.postSummary(c: Context, drop: Boolean, l: List<PriceAlertQue
 }
 
 /** Title says a price dropped, the text says which item and by how much. During a check: told afterwards. */
-fun Alerts.notifyDrop(c: Context, id: Int, item: String, old: Double, now: Double, currency: String, heading: String = tr("Price drop on your wishlist"), wishId: Long = 0L) {
-    synchronized(PriceAlertQueue.pending) { if (PriceAlertQueue.collecting > 0) { PriceAlertQueue.pending.add(PriceAlertQueue.PriceAlert(true, id, item, old, now, currency, heading, wishId)); return } }
-    postDrop(c, id, item, old, now, currency, heading, wishId)
+fun Alerts.notifyDrop(c: Context, id: Int, item: String, old: Double, now: Double, currency: String, heading: String = tr("Price drop on your wishlist"), wishId: Long = 0L, listKey: String = "") {
+    synchronized(PriceAlertQueue.pending) { if (PriceAlertQueue.collecting > 0) { PriceAlertQueue.pending.add(PriceAlertQueue.PriceAlert(true, id, item, old, now, currency, heading, wishId, listKey)); return } }
+    postDrop(c, id, item, old, now, currency, heading, wishId, listKey)
 }
 
-/** Tapping one price change of your own wish opens its price page (owner, 7 November 2026); others open the app. */
-internal fun Alerts.priceIntent(c: Context, wishId: Long): Intent {
+/**
+ * Tapping one price change of your own wish opens its price page (owner, 7 November 2026); one of a shared wishlist
+ * ([listKey] "s:<code>") opens that list on the wish (the review of 20 November 2026: it only opened the app).
+ */
+internal fun Alerts.priceIntent(c: Context, wishId: Long, listKey: String = ""): Intent {
+    if (listKey.startsWith("s:") && wishId != 0L)
+        return Intent(c, MainActivity::class.java).note("price", listKey, wishId).putExtra(MainActivity.OPEN_NOTE, listKey)
     val open = Intent(c, MainActivity::class.java).note("price")
     if (wishId != 0L) open.putExtra(MainActivity.HISTORY_ID, wishId)
     return open
 }
 
-internal fun Alerts.postDrop(c: Context, id: Int, item: String, old: Double, now: Double, currency: String, heading: String, wishId: Long = 0L) {
+internal fun Alerts.postDrop(c: Context, id: Int, item: String, old: Double, now: Double, currency: String, heading: String, wishId: Long = 0L, listKey: String = "") {
     ensureChannel(c)
     val pct = if (old > 0) Math.round((1 - now / old) * 100) else 0L
     val text = tr("%1\$s is now %2\$s (was %3\$s, -%4\$d%%)", item, money(now, currency), money(old, currency), pct)
     val pi = PendingIntent.getActivity(
-        c, id, priceIntent(c, wishId), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        c, id, priceIntent(c, wishId, listKey), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
     )
     val n = NotificationCompat.Builder(c, CHANNEL)
         .setSmallIcon(R.drawable.ic_stat)
@@ -100,17 +105,17 @@ internal fun Alerts.postDrop(c: Context, id: Int, item: String, old: Double, now
 }
 
 /** A price went up (only when switched on in Settings). Title and text like [notifyDrop]. */
-fun Alerts.notifyRise(c: Context, id: Int, item: String, old: Double, now: Double, currency: String, heading: String = tr("Price increase on your wishlist"), wishId: Long = 0L) {
-    synchronized(PriceAlertQueue.pending) { if (PriceAlertQueue.collecting > 0) { PriceAlertQueue.pending.add(PriceAlertQueue.PriceAlert(false, id, item, old, now, currency, heading, wishId)); return } }
-    postRise(c, id, item, old, now, currency, heading, wishId)
+fun Alerts.notifyRise(c: Context, id: Int, item: String, old: Double, now: Double, currency: String, heading: String = tr("Price increase on your wishlist"), wishId: Long = 0L, listKey: String = "") {
+    synchronized(PriceAlertQueue.pending) { if (PriceAlertQueue.collecting > 0) { PriceAlertQueue.pending.add(PriceAlertQueue.PriceAlert(false, id, item, old, now, currency, heading, wishId, listKey)); return } }
+    postRise(c, id, item, old, now, currency, heading, wishId, listKey)
 }
 
-internal fun Alerts.postRise(c: Context, id: Int, item: String, old: Double, now: Double, currency: String, heading: String, wishId: Long = 0L) {
+internal fun Alerts.postRise(c: Context, id: Int, item: String, old: Double, now: Double, currency: String, heading: String, wishId: Long = 0L, listKey: String = "") {
     ensureChannel(c)
     val pct = if (old > 0) Math.round((now / old - 1) * 100) else 0L
     val text = tr("%1\$s is now %2\$s (was %3\$s, +%4\$d%%)", item, money(now, currency), money(old, currency), pct)
     val pi = PendingIntent.getActivity(
-        c, id, priceIntent(c, wishId), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        c, id, priceIntent(c, wishId, listKey), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
     )
     val n = NotificationCompat.Builder(c, CHANNEL)
         .setSmallIcon(R.drawable.ic_stat)

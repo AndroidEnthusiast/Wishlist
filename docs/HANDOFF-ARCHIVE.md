@@ -843,3 +843,13 @@ from Android's list of shown notifications, by id) with the old code first; spli
 Three objects moved whole (owner), proven line by line; `ImportSameTest` recorded first (no shop page fetched) and
 `ImportPartsTest`. Found, not fixed (TODO): kr/zł prices get the phone's currency; Amazon …/Name/dp/…/ref= keeps ref.
 A timestamp collision made the record flaky once: a 5 ms pause after making the list.
+
+### 20 November 2026: one tap on your reaction removes it (2.264)
+The owner's first small fix (asked before the price-reading findings): app `ReactionModel` + `web/together.js`; checked
+with a pretend server, and `tests/together` against a local PostgreSQL (all web suites pass but the two Deno ones,
+Deno isn't installed here). Owner tests 2.233–2.264 over the next days.
+
+### 19 November 2026, late night: the data rebuild, Fetch (2.263): done
+Four files, every name kept (owner); `FetchSameTest` recorded first; moved line for line; ALLOWED is empty. 2.262's
+GitHub build failed on `DataSameTest` (two prices in one second = one DB row, speed-dependent): fixed, re-recorded with
+the old Data.kt in a separate copy. Next: the two price-reading findings as their own version (owner).

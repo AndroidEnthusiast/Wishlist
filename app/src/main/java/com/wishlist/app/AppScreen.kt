@@ -201,7 +201,8 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
             val code = entry.arguments?.getString("code").orEmpty()
             val fr = Repo.friends.firstOrNull { it.code == code }
             if (fr == null) LaunchedEffect(code) { nav.popBackStack() }
-            else RouteBox { key(code) { FriendScreen(fr, snack, onRemoved = { nav.popBackStack() }) } }
+            // The list of a friend (opened from its link): "Chat about this wish" with them (owner, 20 November 2026).
+            else RouteBox { key(code) { FriendScreen(fr, snack, onRemoved = { nav.popBackStack() }, chatWith = Friends.state?.friends?.firstOrNull { p -> p.lists.any { it.code == code } }?.id) } }
         }
         composable(Route.PRICES) { RouteBox { PricesScreen(snack, onBack = { nav.popBackStack() }) } }
         // The list open on the main route underneath (Shared.active or Repo.openMine). After Android closed the app in

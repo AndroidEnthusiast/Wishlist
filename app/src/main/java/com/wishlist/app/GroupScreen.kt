@@ -73,6 +73,12 @@ fun GroupScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, onOpe
         if (places.inviteNow == gid) { places.inviteNow = null; st.inviting = true }
     }
 
+    // A wish card in a chat, or a notification, about a member's wish: that member's list opens (it then finds the wish).
+    LaunchedEffect(g, places.askFocus) {
+        val code = places.askFocus?.code ?: return@LaunchedEffect
+        g?.members?.firstOrNull { it.list?.code == code }?.let { if (st.member?.list?.code != code) st.member = it }
+    }
+
     val m = st.member
     if (m != null && g != null) {
         BackHandler { st.member = null }
@@ -80,6 +86,8 @@ fun GroupScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, onOpe
         FriendScreen(
             Friend(code, m.list?.name ?: ""), snack, onRemoved = {},
             fetch = { Groups.fetchList(ctx, gid, code) }, onBack = { st.member = null }, ownerName = m.name,
+            // "Chat about this wish" only with a member who is your friend (owner, 20 November 2026).
+            chatWith = if (m.friend && !m.web) m.id else null,
             extraAction = if (!m.friend && !m.web && m.code.isNotEmpty()) ({ AddFriendButton(m, snack) }) else null
         )
         return

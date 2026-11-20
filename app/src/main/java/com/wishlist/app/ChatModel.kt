@@ -112,13 +112,17 @@ internal class ChatModel(
         }
     }
 
+    // "Chat about this wish": the wish attached to what you type; and the card sent for it without words.
+    var about by mutableStateOf<ChatWish?>(null)
+    private var aboutSent: ChatContent? = null
+
     fun send(content: ChatContent) {
         sending = true
         scope.launch {
             try {
                 val m = Chat.send(ctx, peer, content)
                 msgs = (msgs + m).distinctBy { it.id }
-                if (content.kind == "text") { text = ""; replying = null }
+                if (content.kind == "text" || content.about != null || content === aboutSent) { text = ""; replying = null; about = null }
             } catch (e: Exception) {
                 snack.showToast(tr("Couldn’t send. Check your connection."))
             }
@@ -126,22 +130,36 @@ internal class ChatModel(
         }
     }
 
-    /** The text you typed, as an answer to [replying] when you chose Reply. */
+    /**
+     * The text you typed, as an answer to [replying] when you chose Reply, with the wish [about] when one is attached
+     * (owner, 20 November 2026). A wish without words goes as a wish card.
+     */
     fun sendText() {
-        if (text.isBlank()) return
+        val a = about
+        if (text.isBlank()) {
+            if (a == null) return
+            val card = ChatContent(true, "wish", "", a.title, a.price, a.cur, a.img, a.url, code = a.code, wishId = a.id)
+            aboutSent = card
+            send(card)
+            return
+        }
         val r = replying
         send(
-            if (r == null) ChatContent(true, "text", text.trim())
+            if (r == null) ChatContent(true, "text", text.trim(), about = a)
             else ChatContent(
                 true, "text", text.trim(), replyTo = r.id, replyText = Chat.preview(r.content),
-                replyBy = if (r.mine) Chat.me(ctx) else peer
+                replyBy = if (r.mine) Chat.me(ctx) else peer, about = a
             )
         )
     }
 
     /** One of your wishes as a card (a photo only kept on this phone isn't sent). */
-    fun sendWish(w: Wish) =
-        send(ChatContent(true, "wish", "", w.label, w.price, w.currency, if (ImageStore.isLocal(w.image)) "" else w.image, w.url))
+    /** A wish from your own list [code] (the gift button): its card opens it in that list (owner, 20 November 2026). */
+    fun sendWish(w: Wish, code: String? = null) =
+        send(ChatContent(
+            true, "wish", "", w.label, w.price, w.currency, if (ImageStore.isLocal(w.image)) "" else w.image, w.url,
+            code = code.orEmpty(), wishId = if (code.isNullOrEmpty()) 0L else w.id
+        ))
 
     /** Delete your own message for both of you. */
     fun delete(m: ChatMessage) {

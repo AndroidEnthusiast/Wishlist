@@ -166,6 +166,44 @@ internal class AppState(
     }
 
     /**
+     * Before a notification opens its wish (owner, 20 November 2026: no dead ends): false when it is gone (said) or in
+     * the bin (said, with Restore); a wish moved to another of your lists opens there.
+     */
+    private fun stillThere(key: String, wishId: Long?, kind: String = "price"): Boolean {
+        if (wishId == null || wishId <= 0L) return true
+        if (kind == "price" && !key.startsWith("m:") && !key.startsWith("s:")) return true
+        return when (val w = NoteCheck.where(ctx, kind, key, wishId)) {
+            NoteWhere.Open -> true
+            is NoteWhere.Moved -> if (kind == "target") true else { openMine(w.listId); false }
+            is NoteWhere.Gone -> { WishFocus.target = null; scope.launch { snack.showToast(w.message) }; false }
+            is NoteWhere.InBin -> {
+                WishFocus.target = null
+                scope.launch {
+                    if (snack.showToast(tr("This wish is in the bin"), tr("Restore")) == androidx.compose.material3.SnackbarResult.ActionPerformed &&
+                        Repo.restoreMine(ctx, w.wishId)) snack.showToast(tr("Restored"))
+                }
+                false
+            }
+        }
+    }
+
+    /**
+     * A wish card in a chat (owner, 20 November 2026): the wish in its list, glowing. Your own list opens on it; someone
+     * else's list (a friend's, a group member's) opens and then finds it (Friend.kt says so when it is gone).
+     */
+    fun openWishIn(code: String, id: Long) {
+        val own = Repo.allMine(ctx).firstOrNull { it.code == code }
+        if (own != null) {
+            if (own.wishes.any { it.id == id && it.bin == 0L }) WishFocus.target = id
+            else scope.launch { snack.showToast(tr("This wish is no longer on the list")) }
+            openMine(own.id)
+            return
+        }
+        places.askFocus = AskFocus(code, id, false)
+        openListByCode(code)
+    }
+
+    /**
      * A list someone else owns, from its code (a notification): a group member's list or a giftee's list opens where it
      * lives, otherwise as a friend's list (2.142, as Gifts I reserved does).
      */
@@ -213,14 +251,20 @@ internal class AppState(
      */
     fun go(d: Deep) {
         when (d) {
-            is Deep.Note -> { if (d.ask != null) places.askFocus = d.ask; openNote(d.key) }
+            is Deep.Note -> {
+                // A tapped price notification about a wish that is gone or in the bin says so (owner, 20 November 2026).
+                if (!stillThere(d.key, WishFocus.target)) return
+                if (d.ask != null) places.askFocus = d.ask; openNote(d.key)
+            }
             Deep.Account -> account = true
             is Deep.ShareCard -> shareCard = d.listId
             Deep.Notes -> nav.openOnTop(Route.NOTES)
             Deep.Prices -> nav.openOnTop(Route.PRICES)
             // The price page is a pop-up over whatever is on screen.
-            is Deep.History -> history = d.wishId
+            is Deep.History -> if (stillThere("", d.wishId, kind = "target")) history = d.wishId
+            is Deep.WishIn -> openWishIn(d.code, d.id)
             is Deep.Chat -> {
+                places.chatAbout = d.about
                 places.chat = d.peer
                 closeAll(); nav.openTab(Route.MESSAGES)
                 if (places.fromChat != null) places.resetFriends()

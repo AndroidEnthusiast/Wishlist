@@ -16,8 +16,10 @@ sealed interface Deep {
     object Prices : Deep
     /** One price change (or a target price) of your own wish: its price page. */
     data class History(val wishId: Long) : Deep
-    /** A new message: Messages, at that conversation. */
-    data class Chat(val peer: String) : Deep
+    /** A new message: Messages, at that conversation ([about]: "Chat about this wish", the wish attached to what you type). */
+    data class Chat(val peer: String, val about: ChatWish? = null) : Deep
+    /** A wish card in a chat: the wish in its list ([code]: the list's friends' code), glowing (owner, 20 November 2026). */
+    data class WishIn(val code: String, val id: Long) : Deep
     /** A birthday: that friend's page on Friends ([fromChat]: their name at the top of your chat with them, so Back returns there). */
     data class Person(val id: String, val fromChat: Boolean = false) : Deep
     /** A friend request or an approval: the Friends tab, at its first page. */

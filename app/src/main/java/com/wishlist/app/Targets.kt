@@ -92,7 +92,7 @@ object Targets {
             .putExtra(Alerts.NOTE_KIND, "target").putExtra(Alerts.NOTE_ID, w.id)
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val pi = PendingIntent.getActivity(c, id, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-        val text = tr("%1\$s is now %2\$s. Your price alert was %3\$s.", w.title, money(now, w.currency), money(target, w.currency))
+        val text = tr("%1\$s is now %2\$s. Your price alert was %3\$s.", w.label, money(now, w.currency), money(target, w.currency))
         val n = NotificationCompat.Builder(c, Alerts.CHANNEL)
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle(tr("Price alert: it’s cheaper now"))

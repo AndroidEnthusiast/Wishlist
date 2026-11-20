@@ -5,6 +5,9 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.266 (20 November 2026), read first.** Ask how "Chat about this wish" feels (the card above the typing bar, tapping
+  a card in the chat), the Home swipe, and the notifications (no more dead ends). The owner has the list of every
+  notification (given in the chat): ask which to change or drop, and build that (`docs/decisions/notifications.md`).
 - **2.265 (20 November 2026), read first: Screenshot to wish** (`docs/decisions/screenshots.md`). Ask how it feels:
   share one screenshot, then several (from the gallery, Instagram, a shop app), the mini cards under the photo, Skip,
   "Stop adding?", the "added" notes, and that every wish now needs a name. Open: a link shared with several pictures
@@ -85,18 +88,14 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 20 November 2026: chat about a wish, Home swipe, notifications reviewed (2.266)
+Owner interviewed (`wish-cards.md`, `notifications.md`): "Chat about this wish" (friends, groups; not exchanges: would
+reveal the Santa), wish cards open the wish in its list, Home swipes anywhere under the divider, no notification dead
+ends (`NoteCheck`). Review fixed: push for a new profile, offline daily check, "in 1 days", shared price-drop taps.
+Not checkable here: real pushes and taps on a phone.
+
 ### 20 November 2026: Screenshot to wish (2.265)
 Owner interviewed (`docs/decisions/screenshots.md`): share 1–10 pictures → pick screen → photo editor → Add a wish, one
 by one with Skip, a note per saved wish, "Stop adding?", an end message; the editor shows live mini cards; every wish
 needs a name (app + both web editors). Checks: `ShotsModelTest`, `ShareEntryTest`, web e2e t2/t5. Screenshots looked
 at; sharing from a real app (Instagram, gallery) can't be tried here.
-
-### 20 November 2026: one tap on your reaction removes it (2.264)
-The owner's first small fix (asked before the price-reading findings): app `ReactionModel` + `web/together.js`; checked
-with a pretend server, and `tests/together` against a local PostgreSQL (all web suites pass but the two Deno ones,
-Deno isn't installed here). Owner tests 2.233–2.264 over the next days.
-
-### 19 November 2026, late night: the data rebuild, Fetch (2.263): done
-Four files, every name kept (owner); `FetchSameTest` recorded first; moved line for line; ALLOWED is empty. 2.262's
-GitHub build failed on `DataSameTest` (two prices in one second = one DB row, speed-dependent): fixed, re-recorded with
-the old Data.kt in a separate copy. Next: the two price-reading findings as their own version (owner).

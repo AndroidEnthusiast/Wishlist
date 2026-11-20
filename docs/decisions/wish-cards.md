@@ -22,7 +22,8 @@ Moved here from `people.md` on 18 November 2026 (its size limit); newest at the 
 
 ## Chat about this wish (owner, 20 November 2026)
 - **"Chat about this wish"** in the ⋮ of someone else's wish, **wherever the list's owner is your friend**: a friend's
-  lists, and wishlist group and gift exchange lists when that person is a friend. Hidden when they aren't a friend, and
+  lists, and wishlist group lists when that person is a friend. **Not on a gift exchange giftee's list** (owner, after
+  Claude pointed out it would show you are their Secret Santa). Hidden when they aren't a friend, and
   on shared (collab) lists (they belong to several people).
 - It opens your chat with them, the wish **attached above the typing bar** (photo, name, price, ✕ to remove), like
   Reply. Your text and the wish go as **one message**; an older app version shows only the text.

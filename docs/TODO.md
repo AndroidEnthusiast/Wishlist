@@ -7,6 +7,12 @@ it**, grouped as below, with a recommendation. Add every new open item here the 
 Details of each item are in the doc named after it.
 
 ## Now
+- **Try 2.266 on the phone:** on a friend's list, ⋮ on a wish > Chat about this wish (the wish sits above where you
+  type; ✕ removes it; send with words); tap the card in the chat (the wish opens in its list, glowing; on the other
+  phone it opens in their own list). Home: swipe left and right on the empty space under the shorter side. A price
+  notification of a deleted wish now says so instead of opening an empty list.
+- **The notification list (owner, 20 November 2026):** the owner got every notification listed in the chat; ask which
+  to change, drop or add, then build it (`docs/decisions/notifications.md`).
 - **Try 2.265 on the phone (Screenshot to wish, `docs/decisions/screenshots.md`):** share one screenshot from the
   gallery (the editor opens first, then Add a wish); one from Instagram or a shop app with a link (the link fills in,
   your picture stays); then 3–5 at once (pick screen, Skip, "Photo 2 of 5", the "added" note, Back asks "Stop
