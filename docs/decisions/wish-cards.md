@@ -19,3 +19,13 @@ Moved here from `people.md` on 18 November 2026 (its size limit); newest at the 
 - Two per row keeps its bin next to the price, under the ⋮ (owner).
 - On a shared wishlist with Reserve showing, Reserve + share + bin + ⋮ don't fit a phone's Rows card: Share is then only
   in the ⋮ (owner chose this over moving Delete or smaller tap areas).
+
+## Chat about this wish (owner, 20 November 2026)
+- **"Chat about this wish"** in the ⋮ of someone else's wish, **wherever the list's owner is your friend**: a friend's
+  lists, and wishlist group and gift exchange lists when that person is a friend. Hidden when they aren't a friend, and
+  on shared (collab) lists (they belong to several people).
+- It opens your chat with them, the wish **attached above the typing bar** (photo, name, price, ✕ to remove), like
+  Reply. Your text and the wish go as **one message**; an older app version shows only the text.
+- **Tapping a wish card in a chat opens the wish in its list**, glowing, for both people (the list's owner sees it in
+  their own list); the shop is one tap further. This goes for every wish card in chats, also the ones sent with the gift
+  button. Wish gone: "This wish is no longer on the list" and the list opens; the whole list gone: only the message.

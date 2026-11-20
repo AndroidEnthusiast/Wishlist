@@ -38,3 +38,8 @@ Moved here from `screens.md` on 18 November 2026 (its size limit); newest at the
   them (Gen Z chaos: white with its thick edge and shadow, as it had before).
 - **The Import card on an empty Home sits under your lists** (2.233, found in the rebuild: it never showed since 2.226;
   above the lists it pushed your own list down behind the bottom bar, so it goes under them).
+
+## Home: swipe anywhere under the divider (owner, 20 November 2026, a bug)
+- My wishlists | Shared switches with a swipe **anywhere under the divider**, down to the bottom of the screen, not
+  only over the lists (with 2 lists on one side and 1 on the other, the empty space under the short side didn't swipe).
+
