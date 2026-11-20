@@ -14,6 +14,7 @@ decided something. Every decision was moved word for word, nothing was dropped.
 - `docs/decisions/wish-cards.md`: the buttons on a wish card, Reserve, Add to my wishlist and reactions (18 November 2026).
 - `docs/decisions/settings-profile.md`: App settings, Profile, Home's summary blocks and the Mine / Shared swipe (18 November 2026).
 - `docs/decisions/import.md`: Import from GoWish, Giftful, Amazon, other sites and notes (18 November 2026).
+- `docs/decisions/screenshots.md`: Screenshot to wish, a name for every wish, several screenshots at once (20 November 2026).
 - `docs/decisions/ideas.md`: Open ideas (not decided) (Open ideas).
 
 ## Notes tidy-up (owner, 12 November 2026)

@@ -28,7 +28,7 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
 - **Sold out / back in stock** (chosen): a grey "Sold out" label on the picture and a "Back in stock" notification,
   through the same two-readings rule as prices (`PriceWatch.judge`), own lists. Not per size.
 - **Screenshot to wish** (chosen): share a screenshot (Instagram, TikTok…) to Wishlist: Add a wish opens with that
-  picture. Video links as ideas, cropping and a "Find in a shop" search were not chosen.
+  picture. *(Planned in detail on 20 November 2026: `docs/decisions/screenshots.md`.)* Video links as ideas, cropping and a "Find in a shop" search were not chosen.
 - **Cheaper alternatives from the internet:** wanted, but left for now (a free version would be janky; a real one
   needs a paid shopping search). Owner asked how people save finds on TikTok: mostly the platform's own Save, screenshots
   and shared links.

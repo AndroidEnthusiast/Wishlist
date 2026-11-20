@@ -7,6 +7,8 @@ it**, grouped as below, with a recommendation. Add every new open item here the 
 Details of each item are in the doc named after it.
 
 ## Now
+- **Screenshot to wish (owner's choice, 20 November 2026; `docs/decisions/screenshots.md`): being built.** One or up
+  to 10 screenshots shared to Wishlist, the photo editor with live mini cards, a name for every wish (app and web).
 - **Try the rebuild on the phone (owner, 19 November 2026: nothing of 2.233–2.255 tried yet; the owner tests after the 8 screens).** Everything should look
   and work exactly as before; say what doesn't. In order of risk:
   1. Notifications and links open the right place (a price alert, a message, a friend's list link, a group or gift
