@@ -69,6 +69,27 @@ android {
             // still in its own process, so they can't disturb each other. -Pwl.forks=1 runs them one by one again.
             it.maxParallelForks = (project.findProperty("wl.forks") as String?)?.toIntOrNull()
                 ?: Runtime.getRuntime().availableProcessors().coerceIn(1, 4)
+            // One of several GitHub computers (owner, 20 November 2026: builds took too long): -Pwl.shard=2/4 runs the
+            // second quarter of the checks. Quarters are made equal with each class's time in app/test-times.txt
+            // (the slowest first, each to the least busy computer); a class not listed yet goes by its name.
+            (project.findProperty("wl.shard") as String?)?.split("/")?.let { sh ->
+                val k = sh[0].toInt() - 1
+                val n = sh[1].toInt()
+                val times = project.file("test-times.txt").takeIf { f -> f.exists() }?.readLines().orEmpty()
+                    .mapNotNull { l -> l.trim().split(" ").takeIf { p -> p.size == 2 }?.let { p -> p[0] to (p[1].toDoubleOrNull() ?: 0.0) } }
+                val load = DoubleArray(n)
+                val home = HashMap<String, Int>()
+                for ((c, t) in times.sortedByDescending { x -> x.second }) {
+                    val i = load.indices.minByOrNull { x -> load[x] } ?: 0
+                    home[c] = i; load[i] += t
+                }
+                it.include(org.gradle.api.specs.Spec<org.gradle.api.file.FileTreeElement> { e ->
+                    if (e.isDirectory) true else {
+                        val c = e.name.substringBefore('$').removeSuffix(".class")
+                        (home[c] ?: Math.floorMod(c.hashCode(), n)) == k
+                    }
+                })
+            }
             // The shop checks need the internet; they only run with -Pwl.shops (tests/README.md).
             it.systemProperty("wl.shops", if (project.hasProperty("wl.shops")) "1" else "")
             // The layout inspector (LayoutGuard.kt): -Pwl.guardReport writes every problem to build/layout-report.txt

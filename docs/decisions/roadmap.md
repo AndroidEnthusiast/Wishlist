@@ -281,3 +281,6 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
 - **No build for a notes-only push** (`docs/`, `CLAUDE.md`, `.claude/`, `tests/notes/`): nothing in the app or the pages
   changes. Not chosen: building the APK on a second computer while the checks run (about 1 minute more, a third job).
 
+- **Checks shared over 4 computers** (owner, 20 November 2026: "building takes too long … can't it be done in a minute
+  or 2"): the app's checks and the layout inspector are split over 4 GitHub computers at once (free for a public
+  project); nothing is skipped and a broken update is still never published. Not chosen: publishing before the checks.
