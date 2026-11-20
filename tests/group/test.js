@@ -212,6 +212,10 @@ const A = "AAAAAAAAAAAAAAAAAAAA", AT = "tokA_tokA_tokA_tokA_", LINK = "LNKABCDEF
   await w.page.getByRole("button", { name: "Edit" }).click();
   await w.page.locator(".dlg input[type=file]").setInputFiles(path.join(__dirname, "..", "e2e", "big.jpg"));
   await w.page.waitForSelector(".dlg .picbox img[src^='blob:']");
+  // Every wish needs a name (owner, 20 November 2026): a photo alone is refused.
+  await w.page.getByLabel("Title*").fill("");
+  await w.page.locator(".dlg").getByRole("button", { name: "Save" }).click();
+  check("a photo without a name is refused", /Give the wish a name/.test(await w.page.locator(".dlg").innerText()));
   await w.page.getByLabel("Title*").fill("Blue teapot, large");
   await w.page.locator(".dlg").getByRole("button", { name: "Save" }).click();
   await w.page.waitForFunction(() => [...document.querySelectorAll(".card .title")].some(t => t.textContent === "Blue teapot, large"));

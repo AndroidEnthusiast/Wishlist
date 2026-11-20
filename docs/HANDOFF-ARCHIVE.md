@@ -838,3 +838,8 @@ The "Next session" plan after 2.262 (done in 2.263), word for word:
 Notifications, four parts, four risks checked (owner). `AlertsSameTest` records every notification's details (read
 from Android's list of shown notifications, by id) with the old code first; split word for word: identical.
 `AlertsPartsTest`; the guard covers `PriceAlertQueue`. Left: Import, Fetch.
+
+### 19 November 2026, late night: the data rebuild, Import (2.262)
+Three objects moved whole (owner), proven line by line; `ImportSameTest` recorded first (no shop page fetched) and
+`ImportPartsTest`. Found, not fixed (TODO): kr/zł prices get the phone's currency; Amazon …/Name/dp/…/ref= keeps ref.
+A timestamp collision made the record flaky once: a 5 ms pause after making the list.

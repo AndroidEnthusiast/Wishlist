@@ -1490,9 +1490,9 @@
 
     function save() {
       var title = f.title.trim();
-      // A name is only needed for a wish with a link (owner, 7 November 2026); otherwise a name, a photo or a link.
-      if (!title && (f.url.trim() || !f.image)) {
-        setErr(f.url.trim() ? T("Give the wish a title.") : T("Add a name, a photo or a link."));
+      // Every wish needs a name (owner, 20 November 2026, as in the app; before, a photo alone was enough).
+      if (!title) {
+        setErr(T("Give the wish a name."));
         els.title.focus(); return false;
       }
       var priceText = f.price.trim().replace(",", ".");
@@ -1586,7 +1586,7 @@
 
         els.title = textInput(f.title, "", 120);
         els.title.addEventListener("input", function () { f.title = els.title.value; });
-        b.appendChild(field(T("Title"), els.title));
+        b.appendChild(field(T("Title*"), els.title));
         els.desc = el("textarea");
         els.desc.rows = 2; els.desc.maxLength = 300; els.desc.value = f.desc;
         els.desc.addEventListener("input", function () { f.desc = els.desc.value; });

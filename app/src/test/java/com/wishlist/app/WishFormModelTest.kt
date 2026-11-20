@@ -23,6 +23,15 @@ class WishFormModelTest {
         assertFalse(empty.save()); assertTrue(empty.nameErr)
     }
 
+    // Every wish needs a name, also one with only a photo (owner, 20 November 2026: Screenshot to wish).
+    @Test fun aPhotoAloneIsNotEnough() {
+        val f = form()
+        f.image = "file:///nowhere/wish_1.jpg"
+        assertFalse(f.save()); assertTrue(f.nameErr)
+        f.title = "Shoes"
+        assertTrue(f.save())
+    }
+
     @Test fun savingAddsTheWish() {
         val f = form()
         f.title = "  Socks  "; f.price = "12,50"; f.star = true

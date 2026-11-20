@@ -5,6 +5,10 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.265 (20 November 2026), read first: Screenshot to wish** (`docs/decisions/screenshots.md`). Ask how it feels:
+  share one screenshot, then several (from the gallery, Instagram, a shop app), the mini cards under the photo, Skip,
+  "Stop adding?", the "added" notes, and that every wish now needs a name. Open: a link shared with several pictures
+  (owner skipped it; ask if it comes up). Then the price-reading findings below.
 - **The data rebuild is done (owner, 19 November 2026; 2.256–2.263; `docs/decisions/roadmap.md`, last section).** Ask
   how 2.256–2.263 and the screen rebuild behave on the phone (TODO "Try …"). **Next (owner's choice): the two price
   reading findings as their own version** (TODO "Found while checking Import"): kr/zł on .se/.pl shops get kronor/złoty,
@@ -81,6 +85,12 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 20 November 2026: Screenshot to wish (2.265)
+Owner interviewed (`docs/decisions/screenshots.md`): share 1–10 pictures → pick screen → photo editor → Add a wish, one
+by one with Skip, a note per saved wish, "Stop adding?", an end message; the editor shows live mini cards; every wish
+needs a name (app + both web editors). Checks: `ShotsModelTest`, `ShareEntryTest`, web e2e t2/t5. Screenshots looked
+at; sharing from a real app (Instagram, gallery) can't be tried here.
+
 ### 20 November 2026: one tap on your reaction removes it (2.264)
 The owner's first small fix (asked before the price-reading findings): app `ReactionModel` + `web/together.js`; checked
 with a pretend server, and `tests/together` against a local PostgreSQL (all web suites pass but the two Deno ones,
@@ -90,8 +100,3 @@ Deno isn't installed here). Owner tests 2.233–2.264 over the next days.
 Four files, every name kept (owner); `FetchSameTest` recorded first; moved line for line; ALLOWED is empty. 2.262's
 GitHub build failed on `DataSameTest` (two prices in one second = one DB row, speed-dependent): fixed, re-recorded with
 the old Data.kt in a separate copy. Next: the two price-reading findings as their own version (owner).
-
-### 19 November 2026, late night: the data rebuild, Import (2.262)
-Three objects moved whole (owner), proven line by line; `ImportSameTest` recorded first (no shop page fetched) and
-`ImportPartsTest`. Found, not fixed (TODO): kr/zł prices get the phone's currency; Amazon …/Name/dp/…/ref= keeps ref.
-A timestamp collision made the record flaky once: a 5 ms pause after making the list.

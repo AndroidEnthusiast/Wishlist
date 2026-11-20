@@ -217,4 +217,23 @@ class ShareEntryTest {
         org.junit.Assert.assertEquals(Deep.GroupLink("ABCDEFGHJKLMNPQRSTUV"), send("https://androidenthusiast.github.io/Wishlist/group/?g=ABCDEFGHJKLMNPQRSTUV"))
         org.junit.Assert.assertNull(send("just some words"))
     }
+
+    // Screenshot to wish (owner, 20 November 2026): one picture with its link, or several (at most 10, no link).
+    @Test fun sharedPicturesBecomeShots() {
+        val one = Intent(Intent.ACTION_SEND).setType("image/png")
+            .putExtra(Intent.EXTRA_STREAM, android.net.Uri.parse("content://media/1"))
+            .putExtra(Intent.EXTRA_TEXT, "Look at this https://www.example.com/p/teapot-123")
+        org.junit.Assert.assertEquals(Deep.Shots(listOf("content://media/1"), "https://www.example.com/p/teapot-123"), deepOf(one))
+        org.junit.Assert.assertNull("handled once", deepOf(one))
+        val plain = Intent(Intent.ACTION_SEND).setType("image/jpeg").putExtra(Intent.EXTRA_STREAM, android.net.Uri.parse("content://media/2"))
+        org.junit.Assert.assertEquals(Deep.Shots(listOf("content://media/2")), deepOf(plain))
+        val uris = ArrayList((1..12).map { android.net.Uri.parse("content://media/s$it") })
+        val many = Intent(Intent.ACTION_SEND_MULTIPLE).setType("image/*").putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+            .putExtra(Intent.EXTRA_TEXT, "https://www.example.com/p/x")
+        val d = deepOf(many) as Deep.Shots
+        org.junit.Assert.assertEquals(10, d.pictures.size)
+        org.junit.Assert.assertTrue(d.more)
+        org.junit.Assert.assertNull("no link with several pictures", d.link)
+        org.junit.Assert.assertNull("no picture: not a screenshot", deepOf(Intent(Intent.ACTION_SEND).setType("image/png")))
+    }
 }

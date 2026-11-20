@@ -49,13 +49,20 @@ fun WishDialog(
     initialMeta: Meta? = null,
     // Opened from a shop in Find a gift: saving tells the shop, which stays open (2.116).
     fromShop: Boolean = false,
+    // Screenshot to wish (owner, 20 November 2026; ShotsFlow.kt): the cut screenshot as the photo; with several,
+    // "Wish 2 of 5", Skip, "Save and next", and Cancel asks first ([onCancelAsk]). [onSaved] gets the wish's name.
+    initialImage: String = "",
+    step: Pair<Int, Int>? = null,
+    onSkip: (() -> Unit)? = null,
+    onCancelAsk: (() -> Unit)? = null,
+    onSaved: ((String) -> Unit)? = null,
     onClose: () -> Unit
 ) {
     val places = LocalPlaces.current
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     // What is typed and chosen, reading a link, the photo and saving (WishFormState in WishFormModel.kt).
-    val st = remember { WishFormState(ctx, edit, chooseList, fromShop, places, scope, initialUrl) }
+    val st = remember { WishFormState(ctx, edit, chooseList, fromShop, places, scope, initialUrl, initialImage) }
     val targets = saveTargets(Repo.mineIds.map { it to (Repo.mineNames[it] ?: "My wishlist") }, Shared.lists)
     val starFx = rememberStarFx()
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -71,8 +78,13 @@ fun WishDialog(
     fun takePhoto() = try { camera.launch(cameraUriLazy.value) } catch (e: Exception) { st.err = tr("Couldn’t open the camera.") }
 
     fun close() {
+        if (onCancelAsk != null) { onCancelAsk(); return }
         st.leave()
         onClose()
+    }
+    fun saveNow() {
+        val name = st.title.trim()
+        if (st.save()) { onSaved?.invoke(name); onClose() }
     }
 
     // The same product already on one of your lists (owner, 2.137): said under the link; saving still works.
@@ -101,7 +113,7 @@ fun WishDialog(
         onDismissRequest = { close() },
         properties = DialogProperties(dismissOnClickOutside = false),
         title = {
-            val heading = if (edit == null) tr("Add a wish") else tr("Edit wish")
+            val heading = if (step != null) tr("Wish %d of %d", step.first, step.second) else if (edit == null) tr("Add a wish") else tr("Edit wish")
             // Quiet's dialogs centre their title (2.210): the ✕ sits at the left edge, the title in the middle.
             if (quiet) Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 IconButton(onClick = { close() }, modifier = Modifier.align(Alignment.CenterStart).offset(x = (-12).dp)) {
@@ -180,15 +192,13 @@ fun WishDialog(
                 // Name and price side by side: the price only needs room for "€9999,99", the name gets the rest and
                 // stays on one line (a long name scrolls inside the field instead of taking three lines).
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
-                    // A name is needed only for a wish with a link (owner, 7 November 2026); without a link a name, a
-                    // photo or the link itself is enough. Saving with too little marks the field red.
+                    // Every wish needs a name (owner, 20 November 2026; before, a photo alone was enough). Saving without
+                    // one marks the field red.
                     OutlinedTextField(
                         st.title, { st.title = it; if (it.isNotBlank()) st.nameErr = false },
-                        label = { Text(if (st.url.isNotBlank()) tr("Name*") else tr("Name")) }, singleLine = true,
+                        label = { Text(tr("Name*")) }, singleLine = true,
                         isError = st.nameErr,
-                        supportingText = if (st.nameErr) ({
-                            Text(if (st.url.isNotBlank()) tr("What are you wishing for?") else tr("Add a name, a photo or a link."))
-                        }) else null,
+                        supportingText = if (st.nameErr) ({ Text(tr("What are you wishing for?")) }) else null,
                         modifier = Modifier.weight(1f), keyboardOptions = Capitalised)
                     OutlinedTextField(
                         // Narrow, sized for "9999,99"; any amount can be typed, a longer one scrolls inside the field.
@@ -220,10 +230,16 @@ fun WishDialog(
             }
         },
         confirmButton = {
-            if (quiet) Button(onClick = { if (st.save()) onClose() }, modifier = Modifier.fillMaxWidth()) { Text(tr("Save wish")) }
-            else TextButton(onClick = { if (st.save()) onClose() }) { Text(tr("Save")) }
+            // With more screenshots to come: "Save and next" (each wish is saved at once, owner 20 November 2026).
+            val more = step != null && step.first < step.second
+            if (quiet) Button(onClick = { saveNow() }, modifier = Modifier.fillMaxWidth()) { Text(if (more) tr("Save and next") else tr("Save wish")) }
+            else TextButton(onClick = { saveNow() }) { Text(if (more) tr("Save and next") else tr("Save")) }
         },
-        dismissButton = if (quiet) null else ({ TextButton(onClick = { close() }) { Text(tr("Cancel")) } })
+        dismissButton = when {
+            onSkip != null -> ({ TextButton(onClick = onSkip) { Text(tr("Skip")) } })
+            quiet -> null
+            else -> ({ TextButton(onClick = { close() }) { Text(tr("Cancel")) } })
+        }
     )
 
     // Take photo or Choose photo (2.212): a small bottom sheet like every other menu, not a drop-down.

@@ -49,6 +49,18 @@ internal fun AppPopups(a: AppState, snack: SnackbarHostState, goStable: (Deep) -
         onImport = { a.plusMenu = false; a.importing = "" }
     )
     a.importing?.let { start -> key(start) { ImportSheet(start, onOpen = { a.openMine(it) }, onClose = { a.importing = null }) } }
+    // Screenshot to wish: at the end one message, with "Open the list" when the wishes went to one list.
+    a.shots?.let { d ->
+        key(d) {
+            ShotsFlow(d) { msg, route ->
+                a.shots = null
+                if (msg != null) scope.launch {
+                    val r = snack.showToast(msg, if (route != null) tr("Open the list") else null)
+                    if (r == androidx.compose.material3.SnackbarResult.ActionPerformed && route != null) { if (a.openList(route)) { a.closeAll(); a.nav.openTab(Route.list(route)) } }
+                }
+            }
+        }
+    }
     // Photos and prices of imported wishes that are still waiting fill in (Import.kt), also after a restart.
     LaunchedEffect(Unit) { ImportFill.start(ctx) }
     when (a.plusNew) {

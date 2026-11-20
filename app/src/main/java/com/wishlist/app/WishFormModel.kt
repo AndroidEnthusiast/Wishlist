@@ -17,7 +17,9 @@ import java.util.Locale
 @Stable
 internal class WishFormState(
     private val ctx: Context, private val edit: Wish?, private val chooseList: Boolean, private val fromShop: Boolean,
-    private val places: Places, private val scope: CoroutineScope, initialUrl: String
+    private val places: Places, private val scope: CoroutineScope, initialUrl: String,
+    // A screenshot's photo, already cut in the photo editor (Screenshot to wish, owner 20 November 2026).
+    initialImage: String = ""
 ) {
     // Which wishlist was open when this dialog started. A wish shared in from the browser can be saved to another one.
     private val startList = Shared.active
@@ -25,7 +27,7 @@ internal class WishFormState(
     var title by mutableStateOf(edit?.title ?: "")
     var price by mutableStateOf(edit?.price?.let { "%.2f".format(Locale.US, it) } ?: "")
     var desc by mutableStateOf(edit?.desc ?: "")
-    var image by mutableStateOf(edit?.image ?: "")
+    var image by mutableStateOf(edit?.image ?: initialImage)
     var cur by mutableStateOf(edit?.currency ?: localCurrency())
     // A new wish starts without a category: you pick one yourself if you want (2.64).
     var cat by mutableStateOf(edit?.category ?: "")
@@ -131,16 +133,16 @@ internal class WishFormState(
             if (out != chosen) ImageStore.delete(ctx, chosen)
             if (src != chosen && src != out) ImageStore.delete(ctx, src)
             if (picked.isNotEmpty() && picked != out) ImageStore.delete(ctx, picked)
-            picked = out; image = out; if (title.isBlank()) nameErr = false
+            picked = out; image = out
         }
     }
 
     /** The photo editor's back arrow: the new photo goes (the wish keeps the picture it had). */
     fun dropCrop(src: String) { cropping = null; ImageStore.delete(ctx, src) }
 
-    /** Saving the wish (the Save button). False when something is missing (the name turns red). */
+    /** Saving the wish (the Save button). False without a name: every wish needs one (owner, 20 November 2026). */
     fun save(): Boolean {
-        if (title.isBlank() && (url.isNotBlank() || image.isBlank())) { nameErr = true; return false }
+        if (title.isBlank()) { nameErr = true; return false }
         val p = price.replace(',', '.').toDoubleOrNull()
         val u = cleanUrl(url) ?: url.trim()
         // A picture that was replaced or removed in this dialog is no longer needed.

@@ -77,7 +77,12 @@ fun HeroEditor(
     // the frame on white). The result is cut out with [renderWishPhoto].
     wish: Boolean = false,
     // A wishlist's cover (2.89): a Preview button shows the list with the photo as it is in the frame now.
-    preview: (@Composable (String, HeroEdit, () -> Unit) -> Unit)? = null
+    preview: (@Composable (String, HeroEdit, () -> Unit) -> Unit)? = null,
+    // Several screenshots shared at once (owner, 20 November 2026): "2 of 5" as the title, a Skip button, and a short
+    // note that the wish before was added.
+    step: Pair<Int, Int>? = null,
+    onSkip: (() -> Unit)? = null,
+    notice: String? = null
 ) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -102,7 +107,9 @@ fun HeroEditor(
                 Row(Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = { cancel() }) { Icon(AppIcons.ArrowBack, tr("Cancel"), tint = onDark) }
                     Text(
-                        if (round) tr("Edit profile photo") else if (wish) tr("Edit photo") else tr("Edit cover photo"), style = MaterialTheme.typography.titleLarge, color = onDark,
+                        if (step != null) tr("Photo %d of %d", step.first, step.second)
+                        else if (round) tr("Edit profile photo") else if (wish) tr("Edit photo") else tr("Edit cover photo"),
+                        style = MaterialTheme.typography.titleLarge, color = onDark, maxLines = 1,
                         modifier = Modifier.weight(1f).padding(start = 8.dp)
                     )
                     if (preview != null) {
@@ -111,11 +118,18 @@ fun HeroEditor(
                             modifier = Modifier.clip(CircleShape).clickable { st.previewing = true }.padding(horizontal = 12.dp, vertical = 8.dp)
                         )
                     }
+                    if (onSkip != null) {
+                        Text(
+                            tr("Skip"), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = onDark,
+                            modifier = Modifier.clip(CircleShape).clickable { st.dropPicked(); onSkip() }.padding(horizontal = 12.dp, vertical = 14.dp)
+                        )
+                    }
                     IconButton(onClick = {
                         st.dropUnused()
                         onSave(st.img, st.edit)
                     }) { Icon(AppIcons.Check, tr("Save"), tint = onDark) }
                 }
+                notice?.let { SavedNotice(it, onDark) }
                 // The cover frame stands still in the middle; the photo is behind it. One finger moves the photo, two
                 // fingers zoom it (around the fingers), at any zoom. The photo always fills the frame. What is in the
                 // frame is exactly what is saved: the crop (edit.cropL/T/W/H) is worked out from the same numbers that
@@ -130,6 +144,8 @@ fun HeroEditor(
                 // The photo's zoom (1 = it just fills the frame) and where its middle is on screen; null: not placed yet.
                 var zoomS by remember(st.img, st.edit.rotation) { mutableStateOf<Float?>(null) }
                 var midS by remember(st.img, st.edit.rotation) { mutableStateOf<Offset?>(null) }
+                // What the frame shows now, for the small cards under a wish photo (HeroEditorPreview.kt).
+                var live by remember { mutableStateOf<LiveCut?>(null) }
                 BoxWithConstraints(Modifier.weight(1f).fillMaxWidth().clipToBounds()) {
                     val aw = constraints.maxWidth.toFloat()
                     val ah = constraints.maxHeight.toFloat()
@@ -190,6 +206,7 @@ fun HeroEditor(
                         }
                         val pr = photo()
                         val filter = brightness(st.edit.bright)
+                        if (wish) androidx.compose.runtime.SideEffect { live = LiveCut(frame, pr, st.edit.rotation, filter) }
                         // The photo, drawn straight onto the screen, and the frame over it (the rest dimmed).
                         Canvas(Modifier.matchParentSize()) {
                             // A wish photo is saved on white: what shows around a fitted photo.
@@ -247,6 +264,8 @@ fun HeroEditor(
                         }
                     }
                 }
+                // Always there for a wish photo (empty until the photo is placed), so the frame above never moves.
+                if (wish) WishPhotoPreviews(painter, live, onDark)
                 // The tool that is open.
                 Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
                     when (st.tool) {

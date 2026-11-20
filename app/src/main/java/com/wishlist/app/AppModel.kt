@@ -55,6 +55,8 @@ internal class AppState(
     var plusMenu by mutableStateOf(false)
     // The Import sheet (owner, 18 November 2026): null = closed, else what to start with (a shared link or text).
     var importing by mutableStateOf<String?>(null)
+    // Screenshot to wish (owner, 20 November 2026): pictures shared into the app, being turned into wishes (ShotsFlow.kt).
+    var shots by mutableStateOf<Deep.Shots?>(null)
     var plusNew by mutableStateOf<String?>(null)
     // "Add wish" from the bottom bar: the form with "Save to", starting at the list on screen (or the last one used).
     var addTarget by mutableStateOf<String?>(null)
@@ -249,6 +251,7 @@ internal class AppState(
             is Deep.Invite -> { closeAll(); joinDlg = d.key }
             is Deep.AddLink -> { closeAll(); addTarget = null; prefill = d.url; adding = true }
             is Deep.Import -> { closeAll(); importing = d.text }
+            is Deep.Shots -> { closeAll(); adding = false; shots = d }
         }
     }
 

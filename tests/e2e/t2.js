@@ -14,7 +14,7 @@ const CHAIR = `<html><head><title>Chair - Shop</title><meta property="og:title" 
   await t.page.waitForFunction(() => document.querySelector(".dlg input[placeholder='']") || true);
   await t.page.waitForFunction(() => { const i = [...document.querySelectorAll(".dlg input")].find(x => x.value === "Ergonomic chair"); return !!i; });
   const get = async (label) => t.page.locator(".dlg").getByLabel(label, { exact: true }).inputValue();
-  check("title filled", (await get("Title")) === "Ergonomic chair");
+  check("title filled", (await get("Title*")) === "Ergonomic chair");
   // 2.137 (owner): the shop's sales text no longer fills Description; it stays free for your own words.
   check("description not filled by the shop", (await get("Description")) === "");
   check("no Note for givers field any more (2.137)", (await t.page.locator(".dlg").getByLabel("Note for givers", { exact: false }).count()) === 0);
@@ -58,13 +58,13 @@ const CHAIR = `<html><head><title>Chair - Shop</title><meta property="og:title" 
   check("blocked message", /Couldn’t read this shop’s page/.test(await t.page.locator(".dlg .err").innerText()));
   await t.page.evaluate(() => { const i = document.querySelector(".dlg input[type=url]"); i.value = "https://www.shop.example/p/noprice"; i.dispatchEvent(new ClipboardEvent("paste")); });
   await t.page.waitForFunction(() => /No price found/.test(document.querySelector(".dlg .err").textContent));
-  check("title still filled with no price", (await get("Title")) === "Plain thing" && (await get("Price")) === "");
+  check("title still filled with no price", (await get("Title*")) === "Plain thing" && (await get("Price")) === "");
   t.fake.helperUp = false;
   await t.page.evaluate(() => { const i = document.querySelector(".dlg input[type=url]"); i.value = "https://www.shop.example/p/other"; i.dispatchEvent(new ClipboardEvent("paste")); });
   await t.page.waitForFunction(() => /Couldn’t read/.test(document.querySelector(".dlg .err").textContent));
   check("helper missing: friendly message", /Fill in the details yourself/.test(await t.page.locator(".dlg .err").innerText()));
   check("typing is still possible", true);
-  await t.page.locator(".dlg").getByLabel("Title", { exact: true }).fill("My own thing");
+  await t.page.locator(".dlg").getByLabel("Title*", { exact: true }).fill("My own thing");
   await t.page.locator(".dlg").getByLabel("Price", { exact: true }).fill("12,50");
   await t.page.locator(".dlg").getByLabel("Currency", { exact: true }).selectOption("GBP");
   await t.page.getByRole("button", { name: "Save" }).click();
@@ -74,8 +74,8 @@ const CHAIR = `<html><head><title>Chair - Shop</title><meta property="og:title" 
   // save needs a title
   await t.page.locator("#fab").click();
   await t.page.getByRole("button", { name: "Save" }).click();
-  // (7 November 2026) an empty form asks for a name, a photo or a link; a link still needs a name.
-  check("empty wish refused", /name, a photo or a link/i.test(await t.page.locator(".dlg .err").innerText()) && (await t.page.locator(".dlg").count()) === 1);
+  // Every wish needs a name (owner, 20 November 2026; before, a photo or a link was enough).
+  check("empty wish refused: it asks for a name", /Give the wish a name/.test(await t.page.locator(".dlg .err").innerText()) && (await t.page.locator(".dlg").count()) === 1);
   await t.page.getByRole("button", { name: "Cancel" }).click();
   check("cancel closes, nothing saved", (await t.page.locator(".dlg").count()) === 0);
   check("bad link text", true);
@@ -84,7 +84,7 @@ const CHAIR = `<html><head><title>Chair - Shop</title><meta property="og:title" 
   await t.page.getByRole("button", { name: "Fetch details" }).click();
   check("not a link message", /full product link/.test(await t.page.locator(".dlg .err").innerText()));
   await t.page.getByRole("button", { name: "Save" }).click();
-  check("a link without a name still needs a title", /title/i.test(await t.page.locator(".dlg .err").innerText()) && (await t.page.locator(".dlg").count()) === 1);
+  check("a link without a name still needs a name", /Give the wish a name/.test(await t.page.locator(".dlg .err").innerText()) && (await t.page.locator(".dlg").count()) === 1);
   check("click outside does not close", await (async () => { await t.page.mouse.click(5, 5); return (await t.page.locator(".dlg").count()) === 1; })());
   await t.page.getByRole("button", { name: "Cancel" }).click();
   check("no js errors 2", t.errors.length === 0, t.errors);
@@ -96,7 +96,7 @@ const CHAIR = `<html><head><title>Chair - Shop</title><meta property="og:title" 
   const shirt = t.page.locator(".card", { hasText: "Blue shirt" });
   await shirt.getByLabel("Edit", { exact: true }).click();
   check("edit title", (await t.page.locator(".dlg h2").innerText()) === "Edit wish");
-  check("prefilled", (await t.page.locator(".dlg").getByLabel("Title", { exact: true }).inputValue()) === "Blue shirt" && (await t.page.locator(".dlg").getByLabel("Size", { exact: true }).inputValue()) === "M");
+  check("prefilled", (await t.page.locator(".dlg").getByLabel("Title*", { exact: true }).inputValue()) === "Blue shirt" && (await t.page.locator(".dlg").getByLabel("Size", { exact: true }).inputValue()) === "M");
   await t.page.locator(".dlg").getByLabel("Price", { exact: true }).fill("27.5");
   await t.page.getByRole("button", { name: "Save" }).click();
   await t.page.waitForFunction(() => window.__wl.pending() === 0);

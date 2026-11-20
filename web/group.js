@@ -839,9 +839,9 @@
     d.foot.appendChild(btn(T("Cancel"), "outline", d.close));
     var save = btn(T("Save"), "", async function () {
       var t = title.value.trim();
-      // A name is only needed for a wish with a link (owner, 7 November 2026).
-      if (!t && (url.value.trim() || (!f.image && !blob))) {
-        setErr(url.value.trim() ? T("Give the wish a title.") : T("Add a name, a photo or a link.")); title.focus(); return;
+      // Every wish needs a name (owner, 20 November 2026, as in the app; before, a photo alone was enough).
+      if (!t) {
+        setErr(T("Give the wish a name.")); title.focus(); return;
       }
       var pt = price.value.trim().replace(",", ".");
       var p = pt === "" ? null : Number(pt);

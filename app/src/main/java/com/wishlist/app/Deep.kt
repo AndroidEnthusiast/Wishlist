@@ -56,6 +56,13 @@ sealed interface Deep {
     data class AddLink(val url: String) : Deep
     /** A wish list link (GoWish, Giftful, Amazon, …) or a list of wishes as text shared into the app: Import with it. */
     data class Import(val text: String) : Deep
+    /**
+     * Screenshot to wish (owner, 20 November 2026; `docs/decisions/screenshots.md`): pictures shared into the app, at
+     * most [Shots.MAX] ([more]: there were more), and a shop link that came with a single picture.
+     */
+    data class Shots(val pictures: List<String>, val link: String? = null, val more: Boolean = false) : Deep {
+        companion object { const val MAX = 10 }
+    }
 }
 
 /**
@@ -119,6 +126,7 @@ internal fun deepOf(i: Intent): Deep? {
         if (d.startsWith("wishlist://friend")) Friends.parseFriendLink(d)?.let { (c, n) -> return Deep.FriendLink(c, n) }
         return Sync.parseInvite(d)?.let { Deep.Invite(it) }
     }
+    shotsOf(i)?.let { return it }
     if (i.action == Intent.ACTION_SEND) {
         val t = i.getStringExtra(Intent.EXTRA_TEXT).orEmpty()
         i.action = null
@@ -136,4 +144,24 @@ internal fun deepOf(i: Intent): Deep? {
         return cleanUrl(t)?.let { Deep.AddLink(it) }
     }
     return null
+}
+
+/**
+ * Pictures shared into the app (Screenshot to wish): one picture (with a shop link if the app sent one along, e.g.
+ * Instagram or a shop app), or several at once (the first [Deep.Shots.MAX]; a link is not used then, owner). Null when
+ * the Intent carries no picture. Taken off the Intent, like everything else here.
+ */
+@Suppress("DEPRECATION")
+private fun shotsOf(i: Intent): Deep.Shots? {
+    val type = i.type.orEmpty()
+    if (!type.startsWith("image/")) return null
+    val all: List<String> = when (i.action) {
+        Intent.ACTION_SEND -> listOfNotNull(i.getParcelableExtra<android.net.Uri>(Intent.EXTRA_STREAM)?.toString())
+        Intent.ACTION_SEND_MULTIPLE -> i.getParcelableArrayListExtra<android.net.Uri>(Intent.EXTRA_STREAM).orEmpty().map { it.toString() }
+        else -> return null
+    }.filter { it.isNotBlank() }.distinct()
+    if (all.isEmpty()) return null
+    val link = if (all.size == 1) i.getStringExtra(Intent.EXTRA_TEXT)?.let { t -> Regex("https?://\\S+").find(t)?.value }?.let { cleanUrl(it) } else null
+    i.action = null
+    return Deep.Shots(all.take(Deep.Shots.MAX), link, more = all.size > Deep.Shots.MAX)
 }

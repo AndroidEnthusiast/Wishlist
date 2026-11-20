@@ -72,7 +72,9 @@ class ArchitectureTest {
             // Reactions on wishes (19 November 2026): the row's state holder is ReactionModel.kt.
             "ReactionViews.kt",
             // The pages behind Home's numbers (19 November 2026): their state holder is OverviewModel.kt.
-            "OverviewScreen.kt"
+            "OverviewScreen.kt",
+            // Screenshot to wish (20 November 2026): its state holder is ShotsModel.kt; the editor's mini cards.
+            "ShotsFlow.kt", "HeroEditorPreview.kt"
         )
 
         /** A store's data set straight away ("Exchanges.list = …"; only the checks' pretend data may). */

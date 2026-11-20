@@ -7,8 +7,12 @@ it**, grouped as below, with a recommendation. Add every new open item here the 
 Details of each item are in the doc named after it.
 
 ## Now
-- **Screenshot to wish (owner's choice, 20 November 2026; `docs/decisions/screenshots.md`): being built.** One or up
-  to 10 screenshots shared to Wishlist, the photo editor with live mini cards, a name for every wish (app and web).
+- **Try 2.265 on the phone (Screenshot to wish, `docs/decisions/screenshots.md`):** share one screenshot from the
+  gallery (the editor opens first, then Add a wish); one from Instagram or a shop app with a link (the link fills in,
+  your picture stays); then 3–5 at once (pick screen, Skip, "Photo 2 of 5", the "added" note, Back asks "Stop
+  adding?", the message at the end with Open the list). Under the photo: do the three small cards match your list?
+  Saving a wish without a name now asks for one (also in the browser editor).
+- **Screenshot to wish, open:** a link shared together with several pictures is not used (owner skipped the question).
 - **Try the rebuild on the phone (owner, 19 November 2026: nothing of 2.233–2.255 tried yet; the owner tests after the 8 screens).** Everything should look
   and work exactly as before; say what doesn't. In order of risk:
   1. Notifications and links open the right place (a price alert, a message, a friend's list link, a group or gift
@@ -78,8 +82,8 @@ Details of each item are in the doc named after it.
   cards, opening a chat and going back. Dragging can't be felt here: say how it feels.
 - **A wish's own page** (owner, 16 November 2026: "yes, plan it"; `docs/decisions/screens.md`, last section): interview
   on the details first (what goes on it, own vs friends vs gift lists, the web pages), then build in its own session.
-- **Next features, chosen 16 November 2026** (`docs/decisions/ideas.md`, "Solo use"): Sold out / back in stock, then
-  Screenshot to wish. Interview on risks before building each.
+- **Next features, chosen 16 November 2026** (`docs/decisions/ideas.md`, "Solo use"): Sold out / back in stock
+  (Screenshot to wish was built first, 2.265, owner's choice). Interview on risks before building each.
 - **Choose the next design style** (owner, 14 November 2026), when you want one: it is made one at a time, to a
   professional standard, following `docs/DESIGN-STYLES.md` (your references and three words for the feeling first;
   a style brief and a specification with mock-ups for you to approve before anything is built).

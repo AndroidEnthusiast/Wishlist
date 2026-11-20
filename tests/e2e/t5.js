@@ -34,7 +34,7 @@ const delayPuts = (fake, ms) => { fake.hooks.wl_sh_put_item = async () => { awai
   await a.page.waitForSelector(".card"); await b.page.waitForSelector(".card");
   delayPuts(a.fake, 300);
   await a.page.locator("#fab").click();
-  await lab(a, "Title").fill("Robot");
+  await lab(a, "Title*").fill("Robot");
   await a.page.getByRole("button", { name: "Save", exact: true }).click();
   // B turns on instant delete and deletes the novel
   await drawerItem(b, "#meBtn");
@@ -51,7 +51,7 @@ const delayPuts = (fake, ms) => { fake.hooks.wl_sh_put_item = async () => { awai
   delayPuts(a.fake, 300);
   await card(a, 1002).getByLabel("Edit", { exact: true }).click();
   await card(b, 1002).getByLabel("Edit", { exact: true }).click();
-  await lab(a, "Title").fill("Green shirt");
+  await lab(a, "Title*").fill("Green shirt");
   await dlg(b).getByLabel("Description", { exact: true }).fill("Cotton");
   await a.page.getByRole("button", { name: "Save", exact: true }).click();
   await b.page.getByRole("button", { name: "Save", exact: true }).click();
@@ -70,7 +70,7 @@ const delayPuts = (fake, ms) => { fake.hooks.wl_sh_put_item = async () => { awai
   t.page.evaluate(() => window.__wl.refresh());
   await sleep(150);
   await card(t, 1002).getByLabel("Edit", { exact: true }).click();
-  await lab(t, "Title").fill("Plain shirt");
+  await lab(t, "Title*").fill("Plain shirt");
   await t.page.getByRole("button", { name: "Save", exact: true }).click();
   await settle(t);
   await sleep(1000);
@@ -99,9 +99,12 @@ const delayPuts = (fake, ms) => { fake.hooks.wl_sh_put_item = async () => { awai
   t = await boot();
   await t.page.waitForSelector(".card");
   await t.page.locator("#fab").click();
-  await lab(t, "Title").fill("Poster");
   await dlg(t).locator("input[type=file]").setInputFiles(path.join(__dirname, "big.jpg"));
   await t.page.waitForFunction(() => document.querySelector(".dlg .picbox img"));
+  // A photo alone is not enough: every wish needs a name (owner, 20 November 2026).
+  await t.page.getByRole("button", { name: "Save", exact: true }).click();
+  check("a photo without a name is refused", /Give the wish a name/.test(await dlg(t).locator(".err").innerText()) && t.fake.log.filter(x => x.kind === "storage").length === 0);
+  await lab(t, "Title*").fill("Poster");
   await t.page.getByRole("button", { name: "Save", exact: true }).click();
   await settle(t);
   let up = t.fake.log.filter(x => x.kind === "storage" && x.fn === "POST");
@@ -138,7 +141,7 @@ const delayPuts = (fake, ms) => { fake.hooks.wl_sh_put_item = async () => { awai
   // cancel after choosing: nothing uploaded
   const before = t.fake.log.filter(x => x.fn === "POST").length;
   await t.page.locator("#fab").click();
-  await lab(t, "Title").fill("Never saved");
+  await lab(t, "Title*").fill("Never saved");
   await dlg(t).locator("input[type=file]").setInputFiles(path.join(__dirname, "big.jpg"));
   await t.page.waitForFunction(() => document.querySelector(".dlg .picbox img"));
   await dlg(t).getByRole("button", { name: "Cancel", exact: true }).click();
@@ -162,7 +165,7 @@ const delayPuts = (fake, ms) => { fake.hooks.wl_sh_put_item = async () => { awai
   t.fake.storageCors = false;
   await t.page.waitForSelector(".card");
   await t.page.locator("#fab").click();
-  await lab(t, "Title").fill("Rug");
+  await lab(t, "Title*").fill("Rug");
   await dlg(t).locator("input[type=file]").setInputFiles(path.join(__dirname, "big.jpg"));
   await t.page.waitForFunction(() => document.querySelector(".dlg .picbox img"));
   await t.page.getByRole("button", { name: "Save", exact: true }).click();
@@ -226,7 +229,7 @@ const delayPuts = (fake, ms) => { fake.hooks.wl_sh_put_item = async () => { awai
   await lab(t, "Your name").fill("Jo");
   await t.page.getByRole("button", { name: "Save", exact: true }).click();
   await t.page.locator("#fab").click();
-  await lab(t, "Title").fill("Mug");
+  await lab(t, "Title*").fill("Mug");
   await t.page.getByRole("button", { name: "Save", exact: true }).click();
   await settle(t);
   check("new wishes carry the new name", t.fake.items(CODE).find(i => i.title === "Mug").by === "Jo");

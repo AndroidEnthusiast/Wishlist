@@ -3,6 +3,8 @@ package com.wishlist.app
 import androidx.activity.compose.setContent
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import org.junit.Test
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 
 /**
  * Pictures of the Add / Edit wish form (added for the rebuild, 19 November 2026, so the before/after comparison covers
@@ -28,4 +30,24 @@ class WishFormScreenshotTest : NavigationBase() {
     @Test fun editDetailed() { show("light", detailed); shot("edit_details") }
 
     @Test fun editDetailedDark() { show("dark", detailed); shot("edit_details_dark") }
+
+    // Screenshot to wish (20 November 2026): "Wish 2 of 5" with Skip and "Save and next"; Save without a name asks
+    // for one, also with only a photo.
+    @Test fun severalScreenshots() {
+        compose.mainClock.autoAdvance = false
+        compose.runOnUiThread { compose.activity.setContent {
+            LookTheme(lookFor("chaos", "berry", "light")) { WishDialog(null, "", step = 2 to 5, onSkip = {}, onCancelAsk = {}) {} }
+        } }
+        settle(); shot("steps_chaos")
+        compose.onNodeWithText("Save and next").performClick()
+        shot("steps_no_name")
+    }
+
+    @Test fun severalScreenshotsQuiet() {
+        compose.mainClock.autoAdvance = false
+        compose.runOnUiThread { compose.activity.setContent {
+            LookTheme(lookFor("quiet", "berry", "light")) { WishDialog(null, "", step = 5 to 5, onSkip = {}, onCancelAsk = {}) {} }
+        } }
+        settle(); shot("steps_quiet_last")
+    }
 }
