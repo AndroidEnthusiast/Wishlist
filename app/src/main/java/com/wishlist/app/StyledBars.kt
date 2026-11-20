@@ -1,6 +1,7 @@
 package com.wishlist.app
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
@@ -210,13 +211,21 @@ fun StatusBadge(text: String, small: Boolean, modifier: Modifier = Modifier) {
 private fun StyleBadge(text: String, bg: Color, fg: Color, small: Boolean, lineColor: Color?, modifier: Modifier = Modifier) {
     val look = LocalLook.current
     val shape = look.badgeShape(small)
-    // The line drawn with edgeLine (2.202: Modifier.border was slow on irregular shapes in lists).
-    Surface(color = bg, shape = shape, modifier = modifier.edgeLine(if (look.edge > 0.dp) minOf(look.edge, 2.dp) else 0.dp, lineColor ?: look.line, shape)) {
+    // The line drawn with edgeLine (2.202: Modifier.border was slow on irregular shapes in lists). One height for every
+    // label on a photo, its text in the middle (owner, 20 November 2026: the price and Love labels didn't line up).
+    androidx.compose.foundation.layout.Box(
+        modifier.heightIn(min = badgeHeight(small)).clip(shape).background(bg)
+            .edgeLine(if (look.edge > 0.dp) minOf(look.edge, 2.dp) else 0.dp, lineColor ?: look.line, shape),
+        contentAlignment = Alignment.Center
+    ) {
         Text(
-            text, color = fg,
+            text, color = fg, maxLines = 1,
             style = if (small) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(horizontal = if (small) 6.dp else 10.dp, vertical = if (small) 2.dp else 4.dp)
         )
     }
 }
+
+/** The height of every label on a photo (the price change, Love, a status): small on Two per row and Rows. */
+fun badgeHeight(small: Boolean): androidx.compose.ui.unit.Dp = if (small) 22.dp else 28.dp

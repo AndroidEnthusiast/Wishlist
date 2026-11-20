@@ -14,7 +14,7 @@ import org.junit.Test
  */
 class SharedListScreenshotTest : NavigationBase() {
     private fun settle() = repeat(12) { Thread.sleep(20); compose.mainClock.advanceTimeBy(250); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
-    private fun shot(name: String) { settle(); captureScreenRoboImage("build/outputs/roborazzi/sharedlist_$name.png") }
+    private fun shot(name: String) { settle(); compose.guard("build/outputs/roborazzi/sharedlist_$name.png"); captureScreenRoboImage("build/outputs/roborazzi/sharedlist_$name.png") }
 
     private fun show(mode: String = "light", content: @androidx.compose.runtime.Composable () -> Unit) {
         compose.mainClock.autoAdvance = false

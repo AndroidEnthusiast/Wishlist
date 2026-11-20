@@ -853,3 +853,9 @@ Deno isn't installed here). Owner tests 2.233–2.264 over the next days.
 Four files, every name kept (owner); `FetchSameTest` recorded first; moved line for line; ALLOWED is empty. 2.262's
 GitHub build failed on `DataSameTest` (two prices in one second = one DB row, speed-dependent): fixed, re-recorded with
 the old Data.kt in a separate copy. Next: the two price-reading findings as their own version (owner).
+
+### 20 November 2026: Screenshot to wish (2.265)
+Owner interviewed (`docs/decisions/screenshots.md`): share 1–10 pictures → pick screen → photo editor → Add a wish, one
+by one with Skip, a note per saved wish, "Stop adding?", an end message; the editor shows live mini cards; every wish
+needs a name (app + both web editors). Checks: `ShotsModelTest`, `ShareEntryTest`, web e2e t2/t5. Screenshots looked
+at; sharing from a real app (Instagram, gallery) can't be tried here.

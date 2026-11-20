@@ -18,7 +18,7 @@ import java.time.LocalDate
  */
 class ExchangeScreenshotTest : NavigationBase() {
     private fun settle() = repeat(8) { compose.mainClock.advanceTimeBy(250); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
-    private fun shot(name: String) { settle(); compose.onRoot().captureRoboImage("build/outputs/roborazzi/exchange_$name.png") }
+    private fun shot(name: String) { settle(); compose.guard("build/outputs/roborazzi/exchange_$name.png"); compose.onRoot().captureRoboImage("build/outputs/roborazzi/exchange_$name.png") }
 
     private fun member(id: String, name: String, seen: Boolean? = null) = GxMember(id, name, 0L, false, "C$id", true, seen, false, null)
 

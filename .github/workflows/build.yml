@@ -56,6 +56,57 @@ jobs:
         with:
           name: wishlist-apk
           path: app/build/outputs/apk/release/app-release.apk
+
+  # The layout inspector (owner, 20 November 2026; LayoutGuard.kt): every screen, on a narrow phone and with large
+  # text, both styles, light and dark, every list view; it fails when text is cut off, a word or price breaks over two
+  # lines, texts overlap or something sticks out. Runs at the same time as the app's checks, on its own computer, and
+  # the app is only published when both passed (owner chose this over publishing first).
+  layout:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+      - name: Inspect every screen's layout
+        run: gradle testDebugUnitTest -Pwl.screens -Pwl.guardReport --tests '*Screenshot*' --no-daemon
+      - name: Say what the inspector found
+        if: always()
+        run: |
+          if [ -s app/build/layout-report.txt ]; then
+            echo "::error::Layout problems were found (cut-off text, broken words or prices, overlapping labels). Details below and in the layout-report file."
+            cat app/build/layout-report.txt
+            exit 1
+          fi
+      - name: Keep the report and the pictures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: layout-report
+          path: |
+            app/build/layout-report.txt
+            app/build/outputs/roborazzi/
+            app/build/reports/tests/
+          if-no-files-found: ignore
+
+  # The new app goes out only when the app's checks and the layout inspector both passed.
+  publish:
+    needs: [build, layout]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: wishlist-apk
+          path: app/build/outputs/apk/release/
       - name: Publish APK to Releases
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

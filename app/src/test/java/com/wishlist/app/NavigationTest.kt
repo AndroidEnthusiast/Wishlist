@@ -422,21 +422,28 @@ class WishlistSheetTest : NavigationBase() {
 // TopWishTest and AllWishesTest were retired on 17 November 2026: the owner dropped Home's "All your wishes" and
 // "Loved" pages together with the chips that opened them (docs/decisions/screens.md).
 
-/** "I have it" asks once where the wish goes (owner, 12 November 2026: it replaces Owned and Received). */
+/**
+ * "I have it" (owner, 12 November 2026: it replaces Owned and Received). Since 20 November 2026 (owner) it goes
+ * straight to Received gifts with no question: off the list at once, the total down, "Moved to Received gifts" + Undo.
+ */
 class HaveItTest : NavigationBase() {
     @Test fun movesToReceivedGifts() {
         val app = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()
-        compose.runOnUiThread { Repo.addMine(app, Wish(41, "https://example.com/v", "Vase", "", "", 25.0, null, "EUR", "Home")) }
+        compose.runOnUiThread {
+            Repo.addMine(app, Wish(41, "https://example.com/v", "Vase", "", "", 25.0, null, "EUR", "Home"))
+            Repo.addMine(app, Wish(42, "https://example.com/m", "Mug", "", "", 10.0, null, "EUR", "Home"))
+        }
+        org.junit.Assert.assertEquals("€35.00", totalValue(Repo.myWishes))
         send(open(MainActivity.OPEN_NOTE, "m:" + Repo.mineIds.first()))
         compose.waitForIdle()
         compose.onAllNodes(hasContentDescription("More") and hasClickAction()).onFirst().performClick()
         compose.waitForIdle()
         tap("I have it")
-        shows("You have it!")
-        tap("Move it to Received gifts")
         compose.waitForIdle()
-        org.junit.Assert.assertFalse(Repo.myWishes.any { it.id == 41L })
-        org.junit.Assert.assertTrue(Repo.myBin.any { it.id == 41L && it.recv > 0L })
+        org.junit.Assert.assertTrue("no question", compose.onAllNodes(hasText("You have it!")).fetchSemanticsNodes().isEmpty())
+        org.junit.Assert.assertEquals(1, Repo.myWishes.size)
+        org.junit.Assert.assertTrue(Repo.myBin.any { it.recv > 0L })
+        org.junit.Assert.assertEquals("the total went down", 1, Repo.myWishes.count { it.price != null })
         shows("Moved to Received gifts")
     }
 }

@@ -12,7 +12,7 @@ import org.junit.Test
  */
 class FriendListScreenshotTest : NavigationBase() {
     private fun settle() = repeat(12) { Thread.sleep(20); compose.mainClock.advanceTimeBy(250); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
-    private fun shot(name: String) { settle(); captureScreenRoboImage("build/outputs/roborazzi/friendlist_$name.png") }
+    private fun shot(name: String) { settle(); compose.guard("build/outputs/roborazzi/friendlist_$name.png"); captureScreenRoboImage("build/outputs/roborazzi/friendlist_$name.png") }
 
     private fun show(mode: String, fetch: suspend () -> RemoteList?) {
         compose.mainClock.autoAdvance = false

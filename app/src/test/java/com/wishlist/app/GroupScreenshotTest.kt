@@ -17,7 +17,7 @@ import org.junit.Test
  */
 class GroupScreenshotTest : NavigationBase() {
     private fun settle() = repeat(8) { compose.mainClock.advanceTimeBy(250); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
-    private fun shot(name: String) { settle(); compose.onRoot().captureRoboImage("build/outputs/roborazzi/group_$name.png") }
+    private fun shot(name: String) { settle(); compose.guard("build/outputs/roborazzi/group_$name.png"); compose.onRoot().captureRoboImage("build/outputs/roborazzi/group_$name.png") }
 
     private fun pretend() {
         val app = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()

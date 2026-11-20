@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -146,10 +147,11 @@ fun DiscoverScreen(snack: androidx.compose.material3.SnackbarHostState, onProfil
                                 ) {
                                     // A tile like the shops' (owner, 2.121), with a frame so it reads as a button.
                                     Box(
-                                        Modifier.size(60.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xFFEDEDF0))
-                                            .border(1.5.dp, Color(0xFFB9B9C3), RoundedCornerShape(14.dp)),
+                                        // The theme's colours (it was a light tile in dark mode too, the review of 20 November 2026).
+                                        Modifier.size(60.dp).clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceVariant)
+                                            .border(1.5.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(14.dp)),
                                         contentAlignment = Alignment.Center
-                                    ) { Icon(AppIcons.Add, null, tint = Color(0xFF44444C)) }
+                                    ) { Icon(AppIcons.Add, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }
                                     Text(tr("Add shop"), style = MaterialTheme.typography.labelMedium, maxLines = 1, modifier = Modifier.padding(top = 6.dp))
                                 }
                             } else {
@@ -177,10 +179,9 @@ fun DiscoverScreen(snack: androidx.compose.material3.SnackbarHostState, onProfil
                                             ) { Icon(AppIcons.Close, null, tint = Color.White, modifier = Modifier.size(14.dp)) }
                                         }
                                     }
-                                    Text(
-                                        s.name, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                                        textAlign = TextAlign.Center, modifier = Modifier.padding(top = 6.dp)
-                                    )
+                                        // With large phone text the name shrinks a little to fit ("de Bijenkorf" was cut, the review of
+                                        // 20 November 2026; two lines broke names in half).
+                                        FitText(s.name, MaterialTheme.typography.labelMedium, LocalContentColor.current, Modifier.padding(top = 6.dp))
                                 }
                             }
                         }

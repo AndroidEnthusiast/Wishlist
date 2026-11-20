@@ -58,6 +58,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
@@ -130,7 +131,9 @@ fun GxCover(theme: String, photo: String?, modifier: Modifier, title: String? = 
                 .forEach { (fx, fy, r) ->
                     androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
                         Text(
+                            // Decoration only: not read aloud, and not text the layout checks should measure.
                             e, fontSize = 26.sp, modifier = Modifier.padding(start = maxWidth * fx, top = maxHeight * fy).rotate(r)
+                                .clearAndSetSemantics {}
                         )
                     }
                 }

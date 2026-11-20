@@ -7,6 +7,9 @@ it**, grouped as below, with a recommendation. Add every new open item here the 
 Details of each item are in the doc named after it.
 
 ## Now
+- **Try 2.268 on the phone:** a friend's list in all three views (Rows, Two per row, Large cards): the price label and
+  Love on one line, "Reserved by you" under the photo, prices never broken; "I have it" on your own wish (it leaves the
+  list at once, the total goes down, Undo brings it back).
 - **Try 2.266 on the phone:** on a friend's list, ⋮ on a wish > Chat about this wish (the wish sits above where you
   type; ✕ removes it; send with words); tap the card in the chat (the wish opens in its list, glowing; on the other
   phone it opens in their own list). Home: swipe left and right on the empty space under the shorter side. A price

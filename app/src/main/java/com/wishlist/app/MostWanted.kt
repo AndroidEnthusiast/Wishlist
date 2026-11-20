@@ -8,6 +8,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -186,7 +187,8 @@ fun loveWords(lover: String?, small: Boolean): String {
 fun MostWantedBadge(showLabel: Boolean, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null, small: Boolean = false) {
     val shape = RoundedCornerShape(if (small) 6.dp else 8.dp)
     val words = loveWords(LocalLover.current, small)
-    var m = modifier.clip(shape).background(StarGold)
+    // The same height as the price label beside it (owner, 20 November 2026: they didn't line up).
+    var m = modifier.heightIn(min = badgeHeight(small)).clip(shape).background(StarGold)
     m = if (onClick != null) {
         m.clickable(onClickLabel = tr("Remove from wishes you love"), role = Role.Button, onClick = onClick)
     } else if (!showLabel) {
@@ -235,15 +237,16 @@ fun MarkMostWantedButton(onClick: () -> Unit, modifier: Modifier = Modifier, siz
  * Wishes you already got show nothing. Marking a wish plays the pulse and sparkles.
  */
 @Composable
-fun StarCorner(w: Wish, onToggle: (() -> Unit)?, small: Boolean = false, buttonSize: Dp = 34.dp) {
+fun StarCorner(w: Wish, onToggle: (() -> Unit)?, small: Boolean = false, buttonSize: Dp = 34.dp, compact: Boolean = false) {
     if (!w.got) {
         val fx = rememberStarFx()
         val toggle: (() -> Unit)? = onToggle?.let { go -> { if (!w.star) fx.play(); go() } }
         // The sparkles start 17 dp from the right edge: that is where the round button was, so where the finger is.
         Box(Modifier.starSparkles(fx, buttonSize / 2)) {
             if (w.star) {
+                // [compact]: no room next to the price label (CardLabels.kt): the heart alone.
                 MostWantedBadge(
-                    showLabel = true, modifier = Modifier.starPulse(fx, TransformOrigin(1f, 0.5f)), onClick = toggle, small = small
+                    showLabel = !compact, modifier = Modifier.starPulse(fx, TransformOrigin(1f, 0.5f)), onClick = if (compact) null else toggle, small = small
                 )
             } else if (toggle != null) MarkMostWantedButton(toggle, size = buttonSize)
         }

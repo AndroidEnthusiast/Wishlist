@@ -36,6 +36,7 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - `ListScreen.kt` (the open list; rebuilt in 2.236: layout only) + `ListModel.kt` (its state holder: category, search, selection, open dialog, Reserve, Love, view, sort; `shownWishes`, `keptOrder`) + `ListWishItem.kt` (one wish's card and buttons) + `ListDrag.kt` (drag to reorder) + `ListViewButtons.kt` (view switch, a wish's ⋮); checks `ListModelTest`
 - `Overview.kt` (`WishFocus`: a wish opened from elsewhere scrolls into view and glows, `GlowBox`, `placedWishes`, `ProfileSummary`) + `OverviewScreen.kt` (All your wishes / Wishes you love, rebuilt in 2.255) + state holder `OverviewModel.kt` (`OverviewState`); checks `OverviewModelTest`, screenshots `OverviewScreenshotTest`
 - `WishCards.kt` (wish cards; split in 2.245: `CompactCard.kt` Two per row, `WishCard.kt` Large cards, `RowCard.kt` Rows, `WishCardParts.kt` (`CardButtons`, `cardIcon`), `WishPriceLine.kt`; `WishCards.kt` keeps the shared bits: `Reserving`, `reserveButton`, `priceRose`)
+- `CardLabels.kt` (2.268: the labels of every wish card: `PictureTopRow`, `StatusLine`, `PriceAndOld`, `PriceThenButtons`); checks `CardLayoutTest`
 - `WishForm.kt` (Add/Edit wish; rebuilt in 2.246) + `WishFormParts.kt` (photo block, Take or Choose photo, More details) + state holder `WishFormModel.kt` (`WishFormState`: the fields, reading a link, the photo, the list, saving); checks `WishFormModelTest`, screenshots `WishFormScreenshotTest`
 - Chat about this wish (2.266): `ChatWish` in `Chat.kt` (the wish inside a text message, `"w"`; wish cards carry `code` and `id`), `Deep.WishIn` → `AppState.openWishIn`, the ⋮ row "chat" in `WishSheet.kt` (`FriendScreen(chatWith = …)`); checks `ChatAboutTest`
 - Home's swipe under the divider: `HomeSwipe.kt` (`swipesPager`); checks `HomeSwipeTest`
@@ -211,6 +212,7 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 ## Testing, in full
 - GitHub runs `tests/run-all.sh` too (job `web-checks`, owner 10 November 2026), with a throw-away PostgreSQL so the database checks (`tests/sql/run.sh`) and the page suites that need the real scripts run as well, and only publishes the web pages when it passes; if that job is red, fix it before anything else. A changed `supabase-*.sql` script: run `bash tests/sql/run.sh` here with `WL_PG` first (start a PostgreSQL as the user `postgres` in a folder under `/tmp`, see `tests/README.md`).
 - Run before every push that touches `web/` or the helper: `cd tests && npm install && rm -rf node_modules/playwright node_modules/playwright-core && bash run-all.sh` (in Claude Code on the web, use the Playwright and Chromium already installed; elsewhere use `npx playwright install chromium` instead of the `rm`). All suites must say passed. Add or update checks together with changes. Details in `tests/README.md`.
+- **The layout inspector** (2.268, owner): `app/src/test/…/LayoutGuard.kt` (`compose.guard(name)` before every screen picture; `-Pwl.guardReport` lists everything in `app/build/layout-report.txt` instead of stopping); its own check `LayoutGuardTest`; the hardest cases in `CardStressScreenshotTest.kt` (friends' and own lists, every view, narrow + 130 % text). On GitHub the `layout` job runs it (`testDebugUnitTest -Pwl.screens`) and `publish` waits for it. A new screen gets a screenshot test with `compose.guard(...)`, so the inspector sees it.
 - The app's checks run four test classes at a time (2.267, owner); `-Pwl.forks=1` runs them one by one (to find a check that disturbs another). A notes-only push starts no GitHub build (`paths-ignore` in `build.yml`).
 - Android (owner, D1, 8 November 2026: on for the rebuild, Stages 1–3): the session environment "Wishlist" allows `dl.google.com`. Run `bash tests/android-setup.sh` (about 1 minute), then `gradle testReleaseUnitTest` before every push that changes app code (it also compiles the app), and `gradle assembleDebug` when resources or libraries change. The GitHub build runs the same checks before making the APK. Screenshot tests only with `-Pwl.screens` when the owner asks. Still check the build result yourself after pushing (a red cross means: open the failed job, or ask the owner to paste the error lines).
 - Earlier sessions also ran local Kotlin harnesses (real `Shared.kt`, delete/undo, sorting, categories) with stand-ins for Android; they are not in this repo.
@@ -228,27 +230,6 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - App Links: Android only opens our links in the app after it has checked `https://androidenthusiast.github.io/.well-known/assetlinks.json` (repository AndroidEnthusiast.github.io, a copy is in `docs/app-links/`). This sandbox can't reach github.io, so check it in a browser. The fingerprint is the release key's (read from the published APK); never change the key.
 - The helper function must be deployed and have its JWT check switched off (function Settings, "Verify JWT with legacy secret" off, then Save). Without it, link auto-fill in the browser editor shows "Couldn't read that page".
 
-## The reading order before the tidy-up (kept word for word)
-Until 12 November 2026 `CLAUDE.md` began with this line. Its rules still hold and are in `CLAUDE.md` in short ("Every
-session"); only the reading changed: read the parts of these docs that matter to the task, not all of them (owner).
-
-Read this first, then **`docs/ROADMAP.md` (the plan to turn the app into a real, scalable app: follow it stage by stage before building new features, and end every session with a concrete summary of what improved; owner, 8 November 2026; its "Second review" of 10 November 2026 adds Stage R, which comes before Stage 4, and a checklist to go through with every new feature)**, then `docs/STYLE.md` (the style guide: every screen, dialog and feature follows it; owner, 7 November 2026), then `docs/DECISIONS.md` (what the owner has decided and why: follow it, and add to it whenever the owner decides something new). The long history, a short summary of every session, the open to-do list and **what the owner wants to do next** ("Next session") are in `docs/HANDOFF.md`: read it at the start of a session, and before a session ends add a short summary of it and update "Next session". Every version's technical notes are in `README.md`.
-
-## Undoing the notes tidy-up
-The notes were tidied on 12 November 2026 (owner): `CLAUDE.md` slimmed, details moved here, the handoff archived
-(`docs/HANDOFF-ARCHIVE.md`), the decisions split by topic (`docs/decisions/`), the finished roadmap stages archived
-(`docs/ROADMAP-ARCHIVE.md`). The last commit before the tidy-up is `ef02546`. If the owner says "put back the notes
-from before the tidy-up": `git checkout ef02546 -- CLAUDE.md docs/`, remove the files the tidy-up added
-(`docs/MAP.md`, `docs/HANDOFF-ARCHIVE.md`, `docs/ROADMAP-ARCHIVE.md`, `docs/decisions/`), commit and push to `main`.
-The stop hook's limits would then block, so also remove the Stop hook from `.claude/settings.json` (or ask the owner).
-
-## Earlier short wording in CLAUDE.md (kept word for word, 12 November 2026)
-- Before 14 November 2026 ("(big builds above all)" was added, owner):
-- **Interview the owner before building** (owner's standing instruction, 1 November 2026): for every design or implementation choice that isn't already decided in `docs/DECISIONS.md`, ask first with pop-up questions (the AskUserQuestion tool, a recommended option first), and push back when an idea has a weak spot. Don't just agree, and don't fill gaps with your own choices: things built on guesses had to be redone. A skipped question means "none of these": build nothing from it (owner, 5 November 2026). Re-read the owner's earlier messages and check every point was built; say plainly if something was left out.
-Replaced by shorter lines when `docs/TODO.md` was added; the full versions are above in this file.
-- Before every push that touches `web/` or the helper: `bash tests/run-all.sh` (setup in MAP "Testing, in full");
-- Can: the real Supabase, read-only (public key, GET calls to `/rest/v1/rpc/...`, functions with a wrong key).
-- Can't (say so, never claim it works): writing to the real Supabase, the database, real shops, iPhone/Safari, how
-  screens feel on a phone, App Links, real notifications. Details: MAP.
-- **Lists, wishes, Home, anything on screen:** MAP "Your lists and wishes" + `docs/decisions/screens.md` +
-- `docs/decisions/screens.md`: Screens, look, wishes and prices (Look and feel; Private wishes; Top wish; Wishes on screen and the wish form; Prices; App review; Premium identity; Owner's list of 3 November 2026; Settings review; Home tiles, Collab wishlists, moving wishes, notifications and web search).
+## Older wording, kept word for word
+The reading order before the tidy-up, how to undo the tidy-up, and the earlier short wording of CLAUDE.md moved to
+`docs/MAP-ARCHIVE.md` on 20 November 2026 (this file's size limit).

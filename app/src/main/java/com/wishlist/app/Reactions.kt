@@ -164,6 +164,10 @@ object Reactions {
         val out = ArrayList<EmojiGroup>()
         var name = ""
         var cur = ArrayList<Emoji>()
+        // Only emoji this phone can draw as one picture (the layout inspector, 20 November 2026: newer combined emoji
+        // showed as two broken halves on phones that don't know them yet).
+        val paint = android.graphics.Paint()
+        fun drawable(e: String) = try { paint.hasGlyph(e) } catch (ex: Exception) { true }
         try {
             c.assets.open("emoji.txt").bufferedReader(Charsets.UTF_8).useLines { lines ->
                 lines.forEach { l ->
@@ -172,7 +176,7 @@ object Reactions {
                         name = l.substring(1); cur = ArrayList()
                     } else if (l.isNotBlank()) {
                         val i = l.indexOf(' ')
-                        if (i > 0) cur += Emoji(l.substring(0, i), l.substring(i + 1))
+                        if (i > 0 && drawable(l.substring(0, i))) cur += Emoji(l.substring(0, i), l.substring(i + 1))
                     }
                 }
             }

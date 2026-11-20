@@ -106,7 +106,7 @@ abstract class ScreenshotBase(private val mode: String, private val tag: String 
         // In steps, letting Android's own main thread run in between (a tap's screen change is posted there).
         repeat(10) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
         val st = System.getProperty("wl.style").orEmpty().ifEmpty { "quiet" }
-        captureScreenRoboImage("build/outputs/roborazzi/${st}_${name}_$mode$tag.png")
+        compose.guard("build/outputs/roborazzi/${st}_${name}_$mode$tag.png"); captureScreenRoboImage("build/outputs/roborazzi/${st}_${name}_$mode$tag.png")
     }
 
     /** Taps the button or card that holds this text (or has it as its label). */

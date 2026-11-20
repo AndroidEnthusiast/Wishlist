@@ -21,7 +21,7 @@ import java.util.Calendar
  */
 class ChatScreenshotTest : NavigationBase() {
     private fun settle() = repeat(8) { compose.mainClock.advanceTimeBy(250); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
-    private fun shot(name: String) { settle(); compose.onRoot().captureRoboImage("build/outputs/roborazzi/chat_$name.png") }
+    private fun shot(name: String) { settle(); compose.guard("build/outputs/roborazzi/chat_$name.png"); compose.onRoot().captureRoboImage("build/outputs/roborazzi/chat_$name.png") }
 
     private fun at(day: Int, h: Int, m: Int) = Calendar.getInstance().apply { clear(); set(2026, Calendar.JANUARY, day, h, m) }.timeInMillis
     private fun text(id: Long, mine: Boolean, s: String, t: Long, read: Boolean = true, react: String = "", theirs: String = "") =

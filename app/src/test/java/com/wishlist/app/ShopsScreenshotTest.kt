@@ -21,8 +21,8 @@ import org.junit.Test
  */
 class ShopsScreenshotTest : NavigationBase() {
     private fun settle() = repeat(10) { Thread.sleep(30); compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
-    private fun shot(name: String) { settle(); compose.onRoot().captureRoboImage("build/outputs/roborazzi/shops_$name.png") }
-    private fun screen(name: String) { settle(); captureScreenRoboImage("build/outputs/roborazzi/shops_$name.png") }
+    private fun shot(name: String) { settle(); compose.guard("build/outputs/roborazzi/shops_$name.png"); compose.onRoot().captureRoboImage("build/outputs/roborazzi/shops_$name.png") }
+    private fun screen(name: String) { settle(); compose.guard("build/outputs/roborazzi/shops_$name.png"); captureScreenRoboImage("build/outputs/roborazzi/shops_$name.png") }
     private fun press(text: String) { compose.onAllNodes(hasText(text) and hasClickAction()).onFirst().performClick(); settle() }
 
     private fun shops() {

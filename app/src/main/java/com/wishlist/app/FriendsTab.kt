@@ -227,8 +227,12 @@ internal fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpen
                 Notice(tr("Add your name and photo so friends recognise you."), tr("Go to profile"), onProfile)
             }
             item { CodeCard(s?.code.orEmpty(), problem && s == null, onAdd = { adding = true }, onRetry = { tick++ }, small = s?.friends?.isNotEmpty() == true) }
+            // With a way on (the review of 20 November 2026: the message stood there without one).
             if (problem && s != null) item {
-                Text(tr("Couldn’t reach the server. Check your connection."), color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(tr("Couldn’t reach the server. Check your connection."), color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+                    TextButton(onClick = { tick++ }) { Text(tr("Try again")) }
+                }
             }
             if (s != null && s.incoming.isNotEmpty()) {
                 item { FriendsTitle(tr("Waiting for your approval")) }

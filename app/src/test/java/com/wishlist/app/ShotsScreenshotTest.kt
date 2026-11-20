@@ -12,7 +12,7 @@ import java.io.File
  */
 class ShotsScreenshotTest : NavigationBase() {
     private fun settle() = repeat(10) { Thread.sleep(60); compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
-    private fun shot(name: String) { settle(); captureScreenRoboImage("build/outputs/roborazzi/shots_$name.png") }
+    private fun shot(name: String) { settle(); compose.guard("build/outputs/roborazzi/shots_$name.png"); captureScreenRoboImage("build/outputs/roborazzi/shots_$name.png") }
 
     private fun picture(i: Int): String {
         val app = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()

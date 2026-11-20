@@ -20,7 +20,7 @@ import java.io.File
  */
 class CoverScreenshotTest : NavigationBase() {
     private fun settle() = repeat(12) { Thread.sleep(40); compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
-    private fun shot(name: String) { settle(); captureScreenRoboImage("build/outputs/roborazzi/cover_$name.png") }
+    private fun shot(name: String) { settle(); compose.guard("build/outputs/roborazzi/cover_$name.png"); captureScreenRoboImage("build/outputs/roborazzi/cover_$name.png") }
     private val app get() = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()
 
     private fun photo(): String {

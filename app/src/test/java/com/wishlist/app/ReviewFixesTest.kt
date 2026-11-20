@@ -37,7 +37,7 @@ class ReviewFixesTest {
     @Test fun rowsShowTheLabelOnThePicture() {
         val cards = src("RowCard.kt")
         val row = cards.substring(cards.indexOf("fun RowCard("))
-        assertTrue(row.contains("StarCorner(w, onStar, small = true, buttonSize = 28.dp)"))
+        assertTrue(row.contains("StarCorner(w, onStar, small = true, buttonSize = 28.dp, compact = compact)"))
         assertFalse("no label in the words any more", row.contains("MostWantedBadge(true"))
     }
 

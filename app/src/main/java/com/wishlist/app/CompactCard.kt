@@ -103,33 +103,21 @@ fun CompactCard(
             if (w.image.isNotEmpty()) {
                 PhotoStage(w.image, w.label, small = true)
             } else PlaceholderIcon("gift", 36.dp, look.photoInk)
-            // Top left: the price change.
-            Row(
-                Modifier.align(Alignment.TopStart).padding(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically
-            ) {
-                if ((drop || rise) && newP != null && oldP != null) {
+            // One row on the photo (CardLabels.kt, owner 20 November 2026): the price change at the left, Love at the
+            // right, never overlapping; the reservation is under the photo.
+            PictureTopRow(
+                8.dp,
+                left = if ((drop || rise) && newP != null && oldP != null) ({
                     PriceBadge(
                         if (rise) "+${Math.round((newP / oldP - 1) * 100)}%" else "−${Math.round((1 - newP / oldP) * 100)}%",
                         rise, small = true
                     )
-                }
-            }
+                }) else null,
+                right = { compact -> StarCorner(w, onStar, small = true, compact = compact) },
+                modifier = Modifier.align(Alignment.TopStart)
+            )
             // Bottom left: the eye of a private wish (the price change has the top left to itself).
             if (w.priv) PrivateBadge(Modifier.align(Alignment.BottomStart).padding(8.dp), size = 14.dp, onClick = onPrivate)
-            // Top right: "Top wish" as on the large cards (owner, 15 November 2026: the star alone was hard to read), the
-            // status under it; "Reserved by you" arrives with a pulse.
-            val status = if (w.got) tr("Owned") else reserve?.label ?: reservedLabel(reserve?.state)
-            val mine = rememberAppearPulse(reservedByMe(status))
-            Column(
-                Modifier.align(Alignment.TopEnd).padding(8.dp),
-                horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                StarCorner(w, onStar, small = true)
-                if (status != null) {
-                    TappableBadge(w, status, small = true, modifier = Modifier.starPulse(mine, TransformOrigin(1f, 0.5f)))
-                }
-            }
         }
         if (look.pictureLine > 0.dp) Box(Modifier.fillMaxWidth().height(look.pictureLine).background(look.line))
         Row(Modifier.padding(start = 12.dp, bottom = 4.dp), verticalAlignment = Alignment.Top) {
@@ -142,8 +130,9 @@ fun CompactCard(
                     onLongClick = onLongPress
                 )
             ) {
+                // Always two lines tall, so the prices and buttons of two cards side by side line up (owner, 20 November 2026).
                 Text(
-                    w.label, style = MaterialTheme.typography.titleSmall,
+                    w.label, style = MaterialTheme.typography.titleSmall, minLines = 2,
                     maxLines = 2, overflow = TextOverflow.Ellipsis, color = if (w.title.isBlank()) ink.copy(alpha = 0.55f) else ink
                 )
                     // "2×" and "Exactly this" / "Similar is fine" (owner, 2.128).
@@ -188,6 +177,9 @@ fun CompactCard(
         // Reserve as a button on the card, as in the other views (owner, 12 November 2026: it was only in the ⋮ here).
         // Reserved by someone else: nothing (the badge says so); reserved by you: Unreserve.
         // A compact pill (owner, 18 November 2026: the regular size was out of proportion with the card).
+        // The reservation or status, under the photo and above the button (owner, 20 November 2026).
+        val status = if (w.got) tr("Owned") else reserve?.label ?: reservedLabel(reserve?.state)
+        if (status != null) StatusLine(w, status, Modifier.padding(start = 12.dp, end = 10.dp))
         if (!inert) CompositionLocalProvider(LocalCardButton provides true) {
             when (reserveButton(w, reserve)) {
                 "reserve" -> Button(onClick = { reserve?.set?.invoke(true) }, modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp)) {

@@ -13,7 +13,7 @@ import org.junit.Test
  */
 class OverviewScreenshotTest : NavigationBase() {
     private fun settle() = repeat(10) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
-    private fun shot(name: String) { settle(); captureScreenRoboImage("build/outputs/roborazzi/overview_$name.png") }
+    private fun shot(name: String) { settle(); compose.guard("build/outputs/roborazzi/overview_$name.png"); captureScreenRoboImage("build/outputs/roborazzi/overview_$name.png") }
     private val app get() = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()
 
     private fun wishes() = compose.runOnUiThread {

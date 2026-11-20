@@ -115,17 +115,6 @@ fun WishSheet(w: Wish, a: WishActions, onClose: () -> Unit) {
     // Private was "very annoying"); tapping it again is the undo.
     fun then(f: () -> Unit): () -> Unit = { onClose(); f() }
     fun keep(row: String, f: () -> Unit): () -> Unit = if (sheetRowCloses(row, w)) then(f) else f
-    // "I have it" on a wish you don't have yet asks where it goes; the sheet steps aside for the question.
-    var asking by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
-    if (asking) {
-        HaveItDialog(
-            1,
-            onKeep = { onClose(); a.everywhere?.setOwned?.invoke(true) ?: OwnedFlow.toggle(ctx, w) },
-            onReceived = { onClose(); a.everywhere?.received?.invoke() ?: ReceivedFlow.receive(ctx, w) },
-            onClose = onClose
-        )
-        return
-    }
     ModalBottomSheet(
         onDismissRequest = onClose,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -177,12 +166,15 @@ fun WishSheet(w: Wish, a: WishActions, onClose: () -> Unit) {
                     keep("private") { a.everywhere?.setPrivate?.invoke(!w.priv) ?: togglePrivate(ctx, w) },
                     checked = w.priv
                 )
-                // One action for "I have it" (owner, 12 November 2026; it replaces "Owned" and "Received"): ticked, a
-                // tap takes it back (with Undo); not ticked, it asks where the wish goes.
+                // "I have it" (owner, 20 November 2026): straight to Received gifts, no question; the list's total goes
+                // down at once and "Moved to Received gifts" offers Undo. A wish marked "Owned" before (the old choice)
+                // can still be un-ticked here.
                 "have" -> SheetRow(
                     { Icon(AppIcons.Check, null, tint = cs.onSurfaceVariant) }, tr("I have it"),
-                    if (w.got) keep("have") { a.everywhere?.setOwned?.invoke(false) ?: OwnedFlow.toggle(ctx, w) } else ({ asking = true }),
-                    checked = w.got
+                    if (w.got) keep("have") { a.everywhere?.setOwned?.invoke(false) ?: OwnedFlow.toggle(ctx, w) }
+                    else then { a.everywhere?.received?.invoke() ?: ReceivedFlow.receive(ctx, w) },
+                    // An action now (it moves the wish), so no switch, unless it was marked "Owned" before.
+                    checked = if (w.got) true else null
                 )
                 "history" -> SheetRow({ HistoryIcon(cs.onSurfaceVariant) }, tr("Price history"), then { a.onHistory?.invoke() })
                 else -> {}
@@ -260,34 +252,6 @@ fun SheetGroup(rows: List<@Composable () -> Unit>) {
             }
         }
     }
-}
-
-/**
- * "I have it" (owner, 12 November 2026): keep the wish on the list, marked "Owned", or move it to Received gifts
- * (it leaves the list; people who gave it get a thank-you). [count] wishes at once ("What did you get?").
- */
-@Composable
-fun HaveItDialog(count: Int, onKeep: () -> Unit, onReceived: () -> Unit, onClose: () -> Unit) {
-    val cs = MaterialTheme.colorScheme
-    AlertDialog(
-        onDismissRequest = onClose,
-        title = { Text(if (count == 1) tr("You have it!") else tr("You have %d of them!", count)) },
-        text = {
-            Column {
-                Text(tr("Where should it go?"), style = MaterialTheme.typography.bodyMedium)
-                SheetGroup(listOf(
-                    { SheetRow({ Icon(AppIcons.Check, null, tint = cs.onSurfaceVariant) }, tr("Keep it on my list, marked “Owned”"), onKeep) },
-                    { SheetRow({ Icon(AppIcons.Gift, null, tint = cs.onSurfaceVariant) }, tr("Move it to Received gifts"), onReceived) }
-                ))
-                Text(
-                    tr("Received gifts leave your wishlist. Whoever gave it gets a thank-you."),
-                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp)
-                )
-            }
-        },
-        confirmButton = {},
-        dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
-    )
 }
 
 /** One row of a [PopMenu]: its icon, its word, red when it removes, and an optional second line (the current choice). */

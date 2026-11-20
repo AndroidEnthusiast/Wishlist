@@ -148,11 +148,13 @@ private fun HomeStat(value: String, label: String, modifier: Modifier, onClick: 
     val look = LocalLook.current
     Column(
         modifier.clip(RoundedCornerShape(10.dp)).then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .padding(horizontal = 2.dp, vertical = 6.dp),
+            .padding(horizontal = 4.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // The card's own ink (dark on the bright cards of Gen Z chaos).
         FitText(value, MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontFamily = look.display), look.cardInk(5L))
-        Text(label, style = MaterialTheme.typography.bodySmall, color = look.cardMuted(5L), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        // With large phone text the word shrinks a little to fit, like the number (the review of 20 November 2026:
+        // it crowded the next block; two lines broke words in half).
+        FitText(label, MaterialTheme.typography.bodySmall, look.cardMuted(5L))
     }
 }

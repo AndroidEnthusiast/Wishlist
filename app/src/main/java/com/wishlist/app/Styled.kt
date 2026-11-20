@@ -1,5 +1,10 @@
 package com.wishlist.app
 
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.semantics.getTextLayoutResult
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.text
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -130,16 +135,61 @@ fun FitText(
     text: String, style: androidx.compose.ui.text.TextStyle, color: Color, modifier: Modifier = Modifier,
     align: androidx.compose.ui.text.style.TextAlign = androidx.compose.ui.text.style.TextAlign.Center
 ) {
-    // Measured as it is laid out: too wide, it is laid out again a step smaller (5 %), and only drawn once it fits, so
-    // nobody sees the steps. (Not with BoxWithConstraints: it crashes inside rows that ask for their height, 2.209.)
-    var scale by remember(text, style) { mutableStateOf(1f) }
-    var ready by remember(text, style) { mutableStateOf(false) }
-    Text(
-        text, style = style.copy(fontSize = style.fontSize * scale), color = color, maxLines = 1, softWrap = false,
-        textAlign = align,
-        modifier = modifier.drawWithContent { if (ready) drawContent() },
-        onTextLayout = { r ->
-            if (r.didOverflowWidth && scale > 0.6f) scale = (scale - 0.05f).coerceAtLeast(0.6f) else ready = true
+    // Measured once, in the space it gets, and drawn at once at the size that fits (the layout inspector, 20 November
+    // 2026: the old way shrank in invisible steps, and an amount on Home stayed invisible when they didn't finish).
+    // It answers questions about its height too, so it works inside rows that ask (BoxWithConstraints crashed there,
+    // 2.209). Below 60 % it ends in "…" rather than being cut.
+    val measurer = androidx.compose.ui.text.rememberTextMeasurer()
+    val dir = androidx.compose.ui.platform.LocalLayoutDirection.current
+    val holder = remember { arrayOfNulls<androidx.compose.ui.text.TextLayoutResult>(1) }
+    fun fit(maxW: Int): androidx.compose.ui.text.TextLayoutResult {
+        val loose = androidx.compose.ui.unit.Constraints()
+        val full = measurer.measure(text, style, maxLines = 1, softWrap = false, constraints = loose)
+        val s = if (full.size.width <= maxW || maxW == androidx.compose.ui.unit.Constraints.Infinity) 1f
+            else (maxW.toFloat() / full.size.width).coerceIn(0.6f, 1f)
+        return measurer.measure(
+            text, style.copy(fontSize = style.fontSize * s, color = color, textAlign = align), maxLines = 1, softWrap = false,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            constraints = androidx.compose.ui.unit.Constraints(maxWidth = maxW), layoutDirection = dir
+        )
+    }
+    val policy = remember(text, style, color, align) {
+        object : androidx.compose.ui.layout.MeasurePolicy {
+            override fun androidx.compose.ui.layout.MeasureScope.measure(
+                measurables: List<androidx.compose.ui.layout.Measurable>, constraints: androidx.compose.ui.unit.Constraints
+            ): androidx.compose.ui.layout.MeasureResult {
+                val r = fit(constraints.maxWidth)
+                holder[0] = r
+                val w = r.size.width.coerceIn(constraints.minWidth, constraints.maxWidth)
+                return layout(w, r.size.height.coerceIn(constraints.minHeight, constraints.maxHeight)) {}
+            }
+            override fun androidx.compose.ui.layout.IntrinsicMeasureScope.maxIntrinsicWidth(measurables: List<androidx.compose.ui.layout.IntrinsicMeasurable>, height: Int) =
+                measurer.measure(text, style, maxLines = 1, softWrap = false).size.width
+            override fun androidx.compose.ui.layout.IntrinsicMeasureScope.minIntrinsicWidth(measurables: List<androidx.compose.ui.layout.IntrinsicMeasurable>, height: Int) =
+                (measurer.measure(text, style, maxLines = 1, softWrap = false).size.width * 0.6f).toInt()
+            override fun androidx.compose.ui.layout.IntrinsicMeasureScope.maxIntrinsicHeight(measurables: List<androidx.compose.ui.layout.IntrinsicMeasurable>, width: Int) =
+                measurer.measure(text, style, maxLines = 1, softWrap = false).size.height
+            override fun androidx.compose.ui.layout.IntrinsicMeasureScope.minIntrinsicHeight(measurables: List<androidx.compose.ui.layout.IntrinsicMeasurable>, width: Int) =
+                measurer.measure(text, style, maxLines = 1, softWrap = false).size.height
         }
+    }
+    androidx.compose.ui.layout.Layout(
+        content = {},
+        modifier = modifier
+            .semantics {
+                this.text = androidx.compose.ui.text.AnnotatedString(text)
+                getTextLayoutResult { out -> holder[0]?.let { out.add(it) } != null }
+            }
+            .drawBehind {
+                val r = holder[0] ?: return@drawBehind
+                // Centred (or as [align] says) in the width it was given.
+                val x = when (align) {
+                    androidx.compose.ui.text.style.TextAlign.Center -> (size.width - r.size.width) / 2f
+                    androidx.compose.ui.text.style.TextAlign.End, androidx.compose.ui.text.style.TextAlign.Right -> size.width - r.size.width
+                    else -> 0f
+                }
+                drawText(r, topLeft = androidx.compose.ui.geometry.Offset(x, 0f))
+            },
+        measurePolicy = policy
     )
 }

@@ -247,3 +247,12 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
 - **No jump on the Theme screen** (owner's recording): switching between Quiet and Gen Z chaos must not move the blocks;
   the Theme screen keeps the same header height in every style.
 
+
+## A layout inspector on every build (owner, 20 November 2026: "make absolutely sure mistakes like these aren't anywhere else … I'm tired of finding out afterwards")
+- The owner kept finding cut-off text, labels on top of each other and prices broken over two lines after updates.
+  From now on an automatic inspector opens the app's screens on a narrow phone, a normal phone and with large text, in
+  both styles, light and dark, every list view, with long names and prices, and fails the build when text is cut off,
+  a word or number is broken over two lines, two texts overlap, or something sticks out of the screen. Everything it
+  finds is fixed before an update goes out. It can't judge taste (balance, spacing): the pictures are still looked at.
+- **On GitHub, side by side, and it blocks** (owner): the inspector runs on a second GitHub computer at the same time
+  as the app's checks; the new app is only published when both passed (a build takes about 8 minutes instead of 6).

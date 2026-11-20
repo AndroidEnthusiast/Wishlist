@@ -53,7 +53,9 @@ fun QuietSwitch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifie
         if (off) tween(0) else spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMedium), label = "knob"
     )
     val track by animateColorAsState(
-        if (checked) look.accent else look.line,
+        // Off: the line colour; in dark a lighter grey, so the track shows on a sheet's raised cards too (the review of
+        // 20 November 2026: only the white knob was visible there).
+        if (checked) look.accent else if (look.dark) look.scheme.onSurface.copy(alpha = 0.34f) else look.line,
         if (off) tween(0) else tween(180), label = "track"
     )
     val tap = if (onCheckedChange != null) Modifier.toggleable(checked, enabled = enabled, role = Role.Switch, onValueChange = onCheckedChange)

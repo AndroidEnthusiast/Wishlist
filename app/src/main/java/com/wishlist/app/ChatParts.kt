@@ -116,7 +116,11 @@ internal fun WishPicker(onPick: (Wish, String?) -> Unit, onClose: () -> Unit) {
         onDismissRequest = onClose,
         title = { Text(tr("Send a wish")) },
         text = {
-            LazyColumn(Modifier.heightIn(max = 420.dp)) {
+            // No wishes yet: say so and how to add one (the review of 20 November 2026: the picker stood empty).
+            if (lists.none { d -> d.wishes.any { !it.priv && it.bin == 0L } }) Text(
+                tr("You have no wishes to send yet. Add one with the + at the bottom, then send it here."),
+                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant
+            ) else LazyColumn(Modifier.heightIn(max = 420.dp)) {
                 lists.forEach { d ->
                     val ws = d.wishes.filter { !it.priv && it.bin == 0L }
                     if (ws.isNotEmpty()) {

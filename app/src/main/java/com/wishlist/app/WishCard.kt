@@ -88,32 +88,21 @@ fun WishCard(
             if (w.image.isNotEmpty()) {
                 PhotoStage(w.image, w.label, small = false)
             } else PlaceholderIcon("gift", 48.dp, look.photoInk)
-            // Top left: the price change.
-            Row(
-                Modifier.align(Alignment.TopStart).padding(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically
-            ) {
-                if ((drop || rise) && newP != null && oldP != null) {
+            // One row on the photo (CardLabels.kt, owner 20 November 2026): the price change left, Love right, one height.
+            PictureTopRow(
+                12.dp,
+                left = if ((drop || rise) && newP != null && oldP != null) ({
                     PriceBadge(
                         if (rise) "+${Math.round((newP / oldP - 1) * 100)}%" else "−${Math.round((1 - newP / oldP) * 100)}%",
                         rise, small = false
                     )
-                }
-            }
+                }) else null,
+                right = { compact -> StarCorner(w, onStar, compact = compact) },
+                modifier = Modifier.align(Alignment.TopStart)
+            )
             // Bottom left: the eye of a private wish (the price change has the top left to itself).
             if (w.priv) PrivateBadge(Modifier.align(Alignment.BottomStart).padding(12.dp), onClick = onPrivate)
-            // Top right: the star (the owner can tap it), and below it the status such as "Got it".
-            Column(
-                Modifier.align(Alignment.TopEnd).padding(12.dp),
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                StarCorner(w, onStar)
-                val mine = rememberAppearPulse(reservedByMe(badge))
-                if (badge != null) {
-                    TappableBadge(w, badge, small = false, modifier = Modifier.starPulse(mine, TransformOrigin(1f, 0.5f)))
-                }
-            }
+
         }
         if (look.pictureLine > 0.dp) Box(Modifier.fillMaxWidth().height(look.pictureLine).background(look.line))
         Column(Modifier.padding(16.dp)) {
@@ -155,24 +144,27 @@ fun WishCard(
                 // No "Added on" here (owner, 2.100): too busy on a list; it stays in Price watch.
             }
             if (w.size.isNotBlank()) Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) { SizeTag(w.size) }
-            Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Row(Modifier.weight(1f), verticalAlignment = Alignment.Bottom) {
+            // The reservation or status, above the price and its button (owner, 20 November 2026: not on the photo).
+            if (badge != null) StatusLine(w, badge, Modifier.padding(top = 4.dp))
+            // The price and its buttons on one line, or the buttons under the price when they don't fit (CardLabels.kt).
+            PriceThenButtons(
+                price = {
                     Text(
                         if (newP != null) money(newP, w.currency) else tr("No price"),
                         // The style's display font, as on Rows and Two per row (owner, 7 November 2026).
                         style = MaterialTheme.typography.titleLarge, fontWeight = look.priceWeight, fontFamily = look.display,
-                        color = if (drop) look.drop else if (rise) look.rise else ink
+                        color = if (drop) look.drop else if (rise) look.rise else ink, maxLines = 1, softWrap = false
                     )
-                    if ((drop || rise) && oldP != null) {
-                        Text(
-                            money(oldP, w.currency), style = MaterialTheme.typography.bodyMedium,
-                            textDecoration = TextDecoration.LineThrough, color = muted,
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
-                    }
-                }
-                actions()
-            }
+                },
+                old = if ((drop || rise) && oldP != null) ({
+                    Text(
+                        money(oldP, w.currency), style = MaterialTheme.typography.bodyMedium,
+                        textDecoration = TextDecoration.LineThrough, color = muted, maxLines = 1, softWrap = false
+                    )
+                }) else null,
+                buttons = { actions() },
+                modifier = Modifier.padding(top = 8.dp)
+            )
             // The reactions on their own line under the price (owner, 7 November 2026): 3 at most, then "+N".
             ReactionBar(w, max = 3)
         }

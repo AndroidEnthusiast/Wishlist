@@ -5,6 +5,9 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.268 (20 November 2026), read first.** Every new or changed screen needs a screenshot test with
+  `compose.guard(...)` (MAP), so the layout inspector covers it. Ask how the cards look now (all views) and whether "I
+  have it" feels right. If GitHub's `layout` job fails, read its report (the job's log) before anything else.
 - **2.266 (20 November 2026), read first.** Ask how "Chat about this wish" feels (the card above the typing bar, tapping
   a card in the chat), the Home swipe, and the notifications (no more dead ends). The owner has the list of every
   notification (given in the chat): ask which to change or drop, and build that (`docs/decisions/notifications.md`).
@@ -88,14 +91,14 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 20 November 2026: card labels, "I have it", the layout inspector (2.268)
+Owner's screenshots (labels overlapping, cut, prices broken) → labels redesigned (`CardLabels.kt`, owner chose the
+reservation under the photo), "I have it" straight to Received gifts, and a layout inspector (`LayoutGuard.kt`) on every
+screen picture that blocks publishing on GitHub (owner). It found 6 more problems, all fixed; on the old code it flags
+exactly the owner's screenshots. Not checkable here: how it feels on a phone.
+
 ### 20 November 2026: chat about a wish, Home swipe, notifications reviewed (2.266–2.267)
 Owner interviewed (`wish-cards.md`, `notifications.md`): "Chat about this wish" (friends, groups; not exchanges: would
 reveal the Santa), wish cards open the wish in its list, Home swipes anywhere under the divider, no notification dead
 ends (`NoteCheck`). Review fixed: push for a new profile, offline daily check, "in 1 days", shared price-drop taps.
 2.267: chat also in Two per row (owner found it missing); checks four at a time, no build for notes-only pushes.
-
-### 20 November 2026: Screenshot to wish (2.265)
-Owner interviewed (`docs/decisions/screenshots.md`): share 1–10 pictures → pick screen → photo editor → Add a wish, one
-by one with Skip, a note per saved wish, "Stop adding?", an end message; the editor shows live mini cards; every wish
-needs a name (app + both web editors). Checks: `ShotsModelTest`, `ShareEntryTest`, web e2e t2/t5. Screenshots looked
-at; sharing from a real app (Instagram, gallery) can't be tried here.

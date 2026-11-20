@@ -86,15 +86,9 @@ fun RowCard(
             ) {
                 if (w.image.isNotEmpty()) PhotoStage(w.image, w.label, small = true) else PlaceholderIcon("gift", 32.dp, look.photoInk)
                 if (w.priv) PrivateBadge(Modifier.align(Alignment.BottomStart).padding(6.dp), size = 12.dp, onClick = onPrivate)
-                Column(
-                    Modifier.align(Alignment.TopEnd).padding(6.dp),
-                    horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    // The compact label on the picture, as on two per row (owner, 16 November 2026: not in the words).
-                    StarCorner(w, onStar, small = true, buttonSize = 28.dp)
-                    val mine = rememberAppearPulse(reservedByMe(badge))
-                    if (badge != null) TappableBadge(w, badge, small = true, modifier = Modifier.starPulse(mine, TransformOrigin(1f, 0.5f)))
-                }
+                // The Love label on the picture (owner, 16 November 2026: not in the words); the reservation is under the
+                // words now, above the buttons (owner, 20 November 2026: it didn't fit on the picture).
+                PictureTopRow(6.dp, left = null, right = { compact -> StarCorner(w, onStar, small = true, buttonSize = 28.dp, compact = compact) }, modifier = Modifier.align(Alignment.TopStart))
             }
     }
     // The words and buttons next to the picture.
@@ -131,12 +125,15 @@ fun RowCard(
                 // react too, they keep their own line above Reserve.
                 val deco = LocalWishDeco.current
                 if (deco != null && !deco.canReact) {
+                    if (badge != null) StatusLine(w, badge)
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.weight(1f)) { ReactionBar(w, max = 2, compact = true) }
                         actions()
                     }
                 } else {
                     ReactionBar(w)
+                    // The reservation, above the buttons (owner, 20 November 2026).
+                    if (badge != null) StatusLine(w, badge)
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
                         actions()
                     }

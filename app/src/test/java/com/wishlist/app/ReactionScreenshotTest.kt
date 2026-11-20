@@ -18,7 +18,7 @@ import org.junit.Test
  */
 class ReactionScreenshotTest : NavigationBase() {
     private fun settle() = repeat(10) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
-    private fun shot(name: String) { settle(); captureScreenRoboImage("build/outputs/roborazzi/reaction_$name.png") }
+    private fun shot(name: String) { settle(); compose.guard("build/outputs/roborazzi/reaction_$name.png"); captureScreenRoboImage("build/outputs/roborazzi/reaction_$name.png") }
     private fun w(id: Long) = Wish(id, "", "Wish $id", "", "", null, null, "EUR", "")
 
     private fun bars(mode: String) {

@@ -20,10 +20,10 @@ class ThemeScreenshotTest : NavigationBase() {
             settle()
             compose.onAllNodes(androidx.compose.ui.test.hasContentDescription("Profile and settings")).onFirst().performClick()
             settle()
-            captureScreenRoboImage("build/outputs/roborazzi/theme_sheet_$m.png")
+            compose.guard("build/outputs/roborazzi/theme_sheet_$m.png"); captureScreenRoboImage("build/outputs/roborazzi/theme_sheet_$m.png")
             compose.onAllNodes(androidx.compose.ui.test.hasText("Theme")).onFirst().performClick()
             settle()
-            captureScreenRoboImage("build/outputs/roborazzi/theme_screen_$m.png")
+            compose.guard("build/outputs/roborazzi/theme_screen_$m.png"); captureScreenRoboImage("build/outputs/roborazzi/theme_screen_$m.png")
             org.robolectric.shadows.ShadowLooper.idleMainLooper()
             compose.activity.onBackPressedDispatcher.onBackPressed(); settle()
             compose.activity.onBackPressedDispatcher.onBackPressed(); settle()
@@ -31,7 +31,7 @@ class ThemeScreenshotTest : NavigationBase() {
         for (ac in ACCENTS.map { it.key }) {
             compose.runOnUiThread { Repo.setLook(app, "quiet", "dark", ac) }
             settle()
-            captureScreenRoboImage("build/outputs/roborazzi/theme_home_${ac}_dark.png")
+            compose.guard("build/outputs/roborazzi/theme_home_${ac}_dark.png"); captureScreenRoboImage("build/outputs/roborazzi/theme_home_${ac}_dark.png")
         }
     }
 }

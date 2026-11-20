@@ -47,7 +47,7 @@ class HeroEditorScreenshotTest : NavigationBase() {
         settle()
     }
 
-    private fun shot(name: String) { settle(); captureScreenRoboImage("build/outputs/roborazzi/hero_$name.png") }
+    private fun shot(name: String) { settle(); compose.guard("build/outputs/roborazzi/hero_$name.png"); captureScreenRoboImage("build/outputs/roborazzi/hero_$name.png") }
     private fun tool(label: String) {
         // The tool buttons are icons named by their click label.
         compose.onAllNodes(hasClickAction() and androidx.compose.ui.test.SemanticsMatcher(label) {

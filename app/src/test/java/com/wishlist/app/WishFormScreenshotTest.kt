@@ -14,7 +14,7 @@ import androidx.compose.ui.test.performClick
  */
 class WishFormScreenshotTest : NavigationBase() {
     private fun settle() = repeat(10) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
-    private fun shot(name: String) { settle(); captureScreenRoboImage("build/outputs/roborazzi/wishform_$name.png") }
+    private fun shot(name: String) { settle(); compose.guard("build/outputs/roborazzi/wishform_$name.png"); captureScreenRoboImage("build/outputs/roborazzi/wishform_$name.png") }
 
     private val detailed = Wish(
         77L, "https://example.com/blanket", "Cosy wool blanket", "In forest green, please", "", 49.95, null, "EUR", "Home",

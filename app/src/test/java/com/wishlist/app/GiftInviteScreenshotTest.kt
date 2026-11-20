@@ -16,7 +16,7 @@ import org.junit.Test
  */
 class GiftInviteScreenshotTest : NavigationBase() {
     private fun settle() = repeat(12) { Thread.sleep(20); compose.mainClock.advanceTimeBy(250); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
-    private fun shot(name: String) { settle(); captureScreenRoboImage("build/outputs/roborazzi/giftinvite_$name.png") }
+    private fun shot(name: String) { settle(); compose.guard("build/outputs/roborazzi/giftinvite_$name.png"); captureScreenRoboImage("build/outputs/roborazzi/giftinvite_$name.png") }
 
     private fun show(mode: String, content: @androidx.compose.runtime.Composable () -> Unit) {
         compose.mainClock.autoAdvance = false

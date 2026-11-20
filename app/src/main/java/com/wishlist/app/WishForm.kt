@@ -203,7 +203,8 @@ fun WishDialog(
                     OutlinedTextField(
                         // Narrow, sized for "9999,99"; any amount can be typed, a longer one scrolls inside the field.
                         st.price, { st.price = it },
-                        label = { Text(tr("Price (%s)", st.cur), maxLines = 1) }, singleLine = true,
+                        // Shrinks a little to fit the narrow field rather than being cut ("Price (US", the inspector).
+                        label = { FitText(tr("Price (%s)", st.cur), androidx.compose.material3.LocalTextStyle.current, androidx.compose.material3.LocalContentColor.current, align = androidx.compose.ui.text.style.TextAlign.Start) }, singleLine = true,
                         // The symbol of the currency in the label: € for EUR, $ for USD, £ for GBP, …
                         prefix = { Text(currencySymbol(st.cur)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),

@@ -38,7 +38,7 @@ class DialogButtonsScreenshotTest : NavigationBase() {
                 }
             } }
             compose.waitForIdle()
-            captureScreenRoboImage("build/outputs/roborazzi/dialog_buttons_$m.png")
+            compose.guard("build/outputs/roborazzi/dialog_buttons_$m.png"); captureScreenRoboImage("build/outputs/roborazzi/dialog_buttons_$m.png")
         }
     }
 
@@ -49,6 +49,6 @@ class DialogButtonsScreenshotTest : NavigationBase() {
             LookTheme(lookFor("quiet", "blue", "dark")) { NewWishlistSheet(withOthers = true, onCreatedMine = {}, onCreatedShared = {}, onClose = {}) }
         } }
         repeat(10) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
-        captureScreenRoboImage("build/outputs/roborazzi/new_wishlist_with_others.png")
+        compose.guard("build/outputs/roborazzi/new_wishlist_with_others.png"); captureScreenRoboImage("build/outputs/roborazzi/new_wishlist_with_others.png")
     }
 }
