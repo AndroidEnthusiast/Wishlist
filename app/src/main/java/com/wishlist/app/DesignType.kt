@@ -93,6 +93,14 @@ private fun quietType(): Typography {
 val Look.titleWeight: FontWeight
     get() = if (design == "chaos") FontWeight.Normal else FontWeight.SemiBold
 
+/**
+ * A number or amount in a big style (owner, 21 November 2026: "the font needs to be the same throughout the whole
+ * app"): titles keep the heading font (Fraunces in Quiet), but every number and price is in the style's number font
+ * ([Look.display]: Plus Jakarta Sans in Quiet, Bungee in Gen Z chaos), with figures of equal width, as on Home and
+ * the wish cards. `FontRulesTest` fails when a number uses a title style without it.
+ */
+fun TextStyle.number(look: Look): TextStyle = copy(fontFamily = look.display ?: fontFamily, fontFeatureSettings = "tnum")
+
 /** The weight of prices. */
 val Look.priceWeight: FontWeight
     get() = if (design == "chaos") FontWeight.Normal else FontWeight.Bold

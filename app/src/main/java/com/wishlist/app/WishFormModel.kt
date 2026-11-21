@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -40,6 +41,13 @@ internal class WishFormState(
     // "Private wish": only on this phone, friends never see it (My wishlist only). Off unless chosen.
     var priv by mutableStateOf(edit?.priv ?: false)
     var busy by mutableStateOf(false)
+    // The name and photo are in, the hidden browser is still looking for the price (owner, 21 November 2026).
+    var lookingForPrice by mutableStateOf(false)
+    // Save was tapped while the page was still being read: it saves once the reading is done (owner, 21 November 2026).
+    var saveWaiting by mutableStateOf(false)
+    private var reading: Job? = null
+    // The price field when the quick read filled the form: another price there later was typed while waiting.
+    private var priceBefore = ""
     var err by mutableStateOf("")
     // True after Save was tapped without a name: the name field turns red with a short message.
     var nameErr by mutableStateOf(false)
@@ -63,6 +71,7 @@ internal class WishFormState(
 
     /** Cancel: a picture picked here goes, and the wishlist that was open before is open again. */
     fun leave() {
+        reading?.cancel()
         if (picked.isNotEmpty()) ImageStore.delete(ctx, picked)
         // Cancelled after choosing another wishlist: go back to the one that was open.
         if (Shared.active != startList) {
@@ -70,8 +79,31 @@ internal class WishFormState(
         }
     }
 
-    // Fills the form from what was read from a page (a link, or the shop page on screen in Find a gift).
-    fun useMeta(m: Meta?) {
+    /** What the first, quick read found (name, photo) while the price is still being looked for. */
+    fun useFirst(m: Meta) {
+        title = m.title; cur = m.currency
+        if (!ImageStore.isLocal(image)) image = if (m.image.isNotEmpty() || edit == null) m.image else image
+        priceBefore = price
+        lookingForPrice = true
+    }
+
+    /**
+     * Fills the form from what was read from a page (a link, or the shop page on screen in Find a gift). [shown]: what
+     * the quick read already put in the form; whatever was typed over it since is kept.
+     */
+    fun useMeta(m: Meta?, shown: Meta? = null) {
+        lookingForPrice = false
+        if (shown != null && m != null && !m.blocked) {
+            title = keepTyped(title, shown.title, m.title)
+            if (!ImageStore.isLocal(image)) image = keepTyped(image, shown.image, m.image)
+            // A price typed while waiting stays; the currency goes with the price.
+            if (price == priceBefore && (m.price != null || edit == null)) {
+                cur = m.currency
+                price = m.price?.let { "%.2f".format(Locale.US, it) }.orEmpty(); readPrice = price
+            }
+            if (m.price == null && price.isBlank()) err = tr("No price found on that page. Add it to track price drops.")
+            return
+        }
         if (m == null) {
             err = tr("Couldn’t read that page. Fill in the details yourself.")
         } else if (m.blocked) {
@@ -90,11 +122,13 @@ internal class WishFormState(
     fun go(raw: String) {
         val u = cleanUrl(raw)
         if (u == null) { err = tr("Enter a full product link"); return }
-        url = u; busy = true; err = ""
-        scope.launch {
-            val m = fetchMeta(u, ctx)
+        url = u; busy = true; err = ""; lookingForPrice = false
+        reading?.cancel()
+        reading = scope.launch {
+            var shown: Meta? = null
+            val m = fetchMeta(u, ctx, quick = true, onFirst = { shown = it; useFirst(it) })
+            useMeta(m, shown)
             busy = false
-            useMeta(m)
         }
     }
 
@@ -180,3 +214,10 @@ internal class WishFormState(
         return true
     }
 }
+
+/**
+ * A field filled twice from a page (the quick read, then the hidden browser): the second value replaces the first
+ * only when nobody typed over it ([current] is still what was [shown], or empty) and the second has something.
+ */
+internal fun keepTyped(current: String, shown: String, found: String): String =
+    if ((current == shown || current.isBlank()) && found.isNotBlank()) found else current

@@ -61,7 +61,7 @@ internal fun HistoryBody(points: List<PricePoint>, currency: String, nowSec: Lon
         val atTarget = gold != null && now
         Text(
             money(shown, currency),
-            style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum"), fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.headlineMedium.number(look), fontWeight = FontWeight.Bold,
             color = if (atTarget) gold!! else cs.onSurface
         )
         val ch = changeSince(points)

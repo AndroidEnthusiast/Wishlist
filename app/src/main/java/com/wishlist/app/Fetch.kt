@@ -2,6 +2,8 @@ package com.wishlist.app
 
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 
@@ -34,36 +36,102 @@ private const val UA =
  */
 fun secureImage(url: String): String = if (url.startsWith("http://", ignoreCase = true)) "https://" + url.substring(7) else url
 
-/** The plain request to a shop, the same for reading a product (fetchMeta) and for a price report (PriceReport.kt). */
-internal fun shopRequest(url: String): org.jsoup.Connection.Response = Jsoup.connect(url).userAgent(UA)
+/**
+ * The plain request to a shop, the same for reading a product (fetchMeta) and for a price report (PriceReport.kt).
+ * [waitMs]: how long to wait for the shop; a link shared into the form waits [QUICK_WAIT_MS] (owner, 21 November 2026).
+ */
+internal fun shopRequest(url: String, waitMs: Int = 15000): org.jsoup.Connection.Response = Jsoup.connect(url).userAgent(UA)
     .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
     .header("Accept-Language", acceptLanguage())
-    .timeout(15000).followRedirects(true).ignoreHttpErrors(true).execute()
+    .timeout(waitMs).followRedirects(true).ignoreHttpErrors(true).execute()
+
+/** The plain read's wait when a person is waiting for the form (owner, 21 November 2026: 8 s instead of 15 s). */
+const val QUICK_WAIT_MS = 8000
+
+/** The plain read found everything: a real page with a price. Otherwise the hidden browser has a go. */
+internal fun complete(m: Meta?): Boolean = m != null && !m.blocked && m.price != null
+
+/** The hidden browser can stop early: the page's own product data has a price (owner, 21 November 2026). */
+internal fun hasProductPrice(html: String, url: String): Boolean =
+    html.contains("ld+json") && try { ldProduct(Jsoup.parse(html, url), url)?.price != null } catch (e: Exception) { false }
+
+internal fun shopHost(url: String): String = try { java.net.URI(url).host.orEmpty().removePrefix("www.") } catch (e: Exception) { "" }
 
 /**
  * Reads title, image, description and price from a product page. Returns blocked=true if the store refused.
  * If a plain request is blocked or finds no price and [ctx] is given, the page is loaded in a hidden browser
  * (which runs JavaScript like Chrome) and read again. Pass browser=false to skip that slower step.
+ *
+ * Faster (owner, 21 November 2026): [quick] waits at most 8 s for the plain read; [onFirst] gets what the plain read
+ * found (a name, a photo) while the hidden browser is still looking for the price; the hidden browser stops as soon as
+ * the page's product data has a price; and a shop that needed the hidden browser before ([SlowShops], on the phone
+ * only) gets both reads at the same time.
  */
-suspend fun fetchMeta(url: String, ctx: Context? = null, browser: Boolean = true): Meta? =
-    withContext(Dispatchers.IO) {
-        var first: Meta? = null
+suspend fun fetchMeta(
+    url: String, ctx: Context? = null, browser: Boolean = true, quick: Boolean = false, onFirst: (suspend (Meta) -> Unit)? = null
+): Meta? = coroutineScope {
+    val host = shopHost(url)
+    val c = if (browser) ctx else null
+    val known = c != null && SlowShops.has(c, host)
+    // A shop known to need the hidden browser: it starts at once, next to the plain read.
+    val early = if (c != null && known) async { rendered(c, url) } else null
+    val first = withContext(Dispatchers.IO) {
         try {
-            val res = shopRequest(url)
-            first = parsePage(res.parse(), res.url().host.orEmpty(), res.statusCode())
-        } catch (e: Exception) {
-        }
-        val f = first
-        if (ctx != null && browser && (f == null || f.blocked || f.price == null)) {
-            val html = try { renderHtml(ctx, url) } catch (e: Exception) { null }
-            if (html != null) {
-                val host = try { java.net.URI(url).host.orEmpty() } catch (e: Exception) { "" }
-                val second = try { parsePage(Jsoup.parse(html, url), host, 200) } catch (e: Exception) { null }
-                if (second != null && !second.blocked) return@withContext second
-            }
-        }
-        f
+            val res = shopRequest(url, if (quick) QUICK_WAIT_MS else 15000)
+            parsePage(res.parse(), res.url().host.orEmpty(), res.statusCode())
+        } catch (e: Exception) { null }
     }
+    if (c == null || complete(first)) {
+        early?.cancel()
+        // The shop reads plainly again: no need to start the hidden browser for it next time.
+        if (c != null && known) SlowShops.forget(c, host)
+        return@coroutineScope first
+    }
+    if (first != null && !first.blocked && onFirst != null) onFirst(first)
+    val second = early?.await() ?: rendered(c, url)
+    if (second != null) {
+        if (second.price != null) SlowShops.remember(c, host)
+        return@coroutineScope second
+    }
+    first
+}
+
+/** The page read in the hidden browser, or null when it never showed a real page. */
+private suspend fun rendered(ctx: Context, url: String): Meta? {
+    val html = try {
+        renderHtml(ctx, url, done = { withContext(Dispatchers.Default) { hasProductPrice(it, url) } })
+    } catch (e: Exception) { null } ?: return null
+    val host = try { java.net.URI(url).host.orEmpty() } catch (e: Exception) { "" }
+    val m = withContext(Dispatchers.Default) { try { parsePage(Jsoup.parse(html, url), host, 200) } catch (e: Exception) { null } }
+    return m?.takeIf { !it.blocked }
+}
+
+/**
+ * Shops whose plain read was blocked or had no price, so the hidden browser was needed (owner, 21 November 2026:
+ * "remember slow shops"). Next time both reads start together. Only the shop's address, kept on this phone; a shop
+ * that reads plainly again is forgotten.
+ */
+object SlowShops {
+    private const val KEY = "slow_shops"
+    private const val MAX = 100
+    private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("wishlist", Context.MODE_PRIVATE)
+    private fun all(c: Context): Set<String> = prefs(c).getStringSet(KEY, null) ?: emptySet()
+
+    fun has(c: Context, host: String) = host.isNotEmpty() && host in all(c)
+
+    @Synchronized fun remember(c: Context, host: String) = save(c, added(all(c), host))
+
+    @Synchronized fun forget(c: Context, host: String) = save(c, all(c) - host)
+
+    private fun save(c: Context, s: Set<String>) { prefs(c).edit().putStringSet(KEY, s).apply() }
+
+    /** [s] with [host] added; past [MAX] shops the list starts again, so it never grows without end. */
+    internal fun added(s: Set<String>, host: String): Set<String> = when {
+        host.isEmpty() || host in s -> s
+        s.size >= MAX -> setOf(host)
+        else -> s + host
+    }
+}
 
 /**
  * The better product reader of 2.145 can read a different price than before, only because it now reads the right one

@@ -5,6 +5,9 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.269 (21 November 2026), read first.** Ask how sharing a link feels now (name and photo first, "Looking for the
+  price…", Save waiting with "Getting the price…"), above all on a slow shop shared twice (the second time should be
+  faster), and whether the list summary's numbers now match Home (`look.md`, `screens.md`, last sections).
 - **2.268 (20 November 2026), read first.** Every new or changed screen needs a screenshot test with
   `compose.guard(...)` (MAP), so the layout inspector covers it. Ask how the cards look now (all views) and whether "I
   have it" feels right. If GitHub's `layout` job fails, read its report (the job's log) before anything else.
@@ -90,6 +93,12 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 - **Everything open** (the complete to-do list, owner): `docs/TODO.md`. Owner wants a new feature built first.
 
 ## Last sessions
+
+### 21 November 2026: one font for numbers, faster link reading (2.269)
+Owner's screenshots (list summary in the title font, Home in the text font) → shown the three choices drawn with the
+real fonts; chose numbers in the text font everywhere (`TextStyle.number`, `FontRulesTest`). Shared links: name and
+photo first, hidden browser stops at the price, slow shops remembered, 8 s first wait, Save waits (`FasterReadTest`).
+Not checkable here: real shops' timing on a phone.
 
 ### 20 November 2026: card labels, "I have it", the layout inspector (2.268)
 Owner's screenshots (labels overlapping, cut, prices broken) → labels redesigned (`CardLabels.kt`, owner chose the

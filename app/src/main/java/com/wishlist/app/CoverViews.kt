@@ -92,7 +92,7 @@ fun ListSummaryCard(wishes: List<Wish>, modifier: Modifier = Modifier, occasion:
         if (counts) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(0.38f), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    count.toString(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = look.cardInk(id),
+                    count.toString(), style = MaterialTheme.typography.titleLarge.number(look), fontWeight = FontWeight.Bold, color = look.cardInk(id),
                     modifier = Modifier.graphicsLayer { scaleX = pulse.value; scaleY = pulse.value }
                 )
                 Text(if (count == 1) tr("Wish") else tr("Wishes"), style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id))
@@ -100,7 +100,7 @@ fun ListSummaryCard(wishes: List<Wish>, modifier: Modifier = Modifier, occasion:
             Box(Modifier.width(1.dp).height(32.dp).background(look.cardMuted(id).copy(alpha = 0.3f)))
             Column(Modifier.weight(0.62f), horizontalAlignment = Alignment.CenterHorizontally) {
                 // Never cut off (2.209): a little smaller instead.
-                FitText(total ?: "–", MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), look.cardInk(id), Modifier.fillMaxWidth())
+                FitText(total ?: "–", MaterialTheme.typography.titleLarge.number(look).copy(fontWeight = FontWeight.Bold), look.cardInk(id), Modifier.fillMaxWidth())
                 Text(tr("Total value"), style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id))
             }
         }

@@ -83,9 +83,12 @@ fun WishDialog(
         onClose()
     }
     fun saveNow() {
+        // Still reading the page: Save waits for it, then saves with the price found (owner, 21 November 2026).
+        if (st.busy) { st.saveWaiting = true; return }
         val name = st.title.trim()
         if (st.save()) { onSaved?.invoke(name); onClose() }
     }
+    LaunchedEffect(st.busy) { if (!st.busy && st.saveWaiting) { st.saveWaiting = false; saveNow() } }
 
     // The same product already on one of your lists (owner, 2.137): said under the link; saving still works.
     val dupOf = remember(st.url) {
@@ -211,6 +214,10 @@ fun WishDialog(
                         modifier = Modifier.width(104.dp)
                     )
                 }
+                // The name and photo came in first; the price follows (owner, 21 November 2026). Save still works and waits.
+                if (st.lookingForPrice) Text(
+                    tr("Looking for the price…"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 // "More details" (owner, 16 November 2026): category, how many, size and description folded away; open
                 // by itself when editing a wish that has one of them, so nothing is changed unseen. Folded, it says what
                 // is set.
@@ -233,8 +240,16 @@ fun WishDialog(
         confirmButton = {
             // With more screenshots to come: "Save and next" (each wish is saved at once, owner 20 November 2026).
             val more = step != null && step.first < step.second
-            if (quiet) Button(onClick = { saveNow() }, modifier = Modifier.fillMaxWidth()) { Text(if (more) tr("Save and next") else tr("Save wish")) }
-            else TextButton(onClick = { saveNow() }) { Text(if (more) tr("Save and next") else tr("Save")) }
+            val label = if (more) tr("Save and next") else if (quiet) tr("Save wish") else tr("Save")
+            // Waiting for the page: a small circle in the button, which says what it is doing (owner, 21 November 2026).
+            val inside: @Composable () -> Unit = {
+                if (st.saveWaiting) {
+                    CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = androidx.compose.material3.LocalContentColor.current)
+                    Text(tr("Getting the price…"), Modifier.padding(start = 8.dp))
+                } else Text(label)
+            }
+            if (quiet) Button(onClick = { saveNow() }, modifier = Modifier.fillMaxWidth()) { inside() }
+            else TextButton(onClick = { saveNow() }) { inside() }
         },
         dismissButton = when {
             onSkip != null -> ({ TextButton(onClick = onSkip) { Text(tr("Skip")) } })

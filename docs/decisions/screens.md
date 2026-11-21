@@ -249,3 +249,14 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here. Look and f
   elsewhere. Quiet's error colour is a real red. `NoColouredButtonLabelsTest` scans every button (3 allowed exceptions).
 
 - App settings redone, Profile redone, Home blocks and swipe (18 November 2026): moved to `docs/decisions/settings-profile.md`.
+
+## A shared link fills the wish form faster (owner, 21 November 2026: "sometimes it takes quite some time")
+- Before: a plain read (up to 15 s), then, without a price, a hidden browser (up to 20 s, stopping only after two
+  identical looks 1.2 s apart); the form stayed empty all that time.
+- The owner chose all four: **show what's found at once** (name, photo; "Looking for the price…" under the price
+  until the hidden browser is done); **stop as soon as the price is found** (every 0.5 s; only when the page's own
+  product data has a price, otherwise it waits for the page to settle as before); **remember slow shops** (on the phone
+  only, `SlowShops`: both reads start together next time; forgotten when the shop reads plainly again); **shorter first
+  wait** (8 s in the form; background price checks keep 15 s).
+- **Save while the price is still being looked up: Save waits** (owner) and shows "Getting the price…"; a name or price
+  typed while waiting is kept (`keepTyped`). Checks: `FasterReadTest`.

@@ -256,3 +256,10 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   finds is fixed before an update goes out. It can't judge taste (balance, spacing): the pictures are still looked at.
 - **On GitHub, side by side, and it blocks** (owner): the inspector runs on a second GitHub computer at the same time
   as the app's checks; the new app is only published when both passed (a build takes about 8 minutes instead of 6).
+
+## One font for numbers (owner, 21 November 2026: "the font needs to be the same throughout the whole app")
+- The list summary showed "€470.00" in the title font (Fraunces) while Home showed it in the text font. The owner was
+  shown the three choices drawn with the real fonts and chose: **titles keep the heading font; every number and price,
+  everywhere, is in the text font** (Plus Jakarta Sans in Quiet; Gen Z chaos keeps Bungee for both), with figures of
+  equal width. In code: `TextStyle.number(look)` (`DesignType.kt`); `FontRulesTest` fails when a number uses a title
+  style without it.
