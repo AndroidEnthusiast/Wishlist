@@ -31,7 +31,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -101,9 +100,7 @@ internal fun ListMenuSheet(item: HubItem, actions: List<Triple<String, Boolean, 
                     Text(item.name, style = MaterialTheme.typography.titleLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Text(item.sub ?: wishesLabel(item.count), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
                 }
-                androidx.compose.runtime.CompositionLocalProvider(LocalInTopBar provides true) {
-                    IconButton(onClick = onClose) { Icon(AppIcons.Close, tr("Close")) }
-                }
+                // No ✕ on a menu (owner, 21 November 2026): swipe it down or tap outside.
             }
             Spacer(Modifier.height(8.dp))
             val visibility = remember(code, ListVisibility.version, Repo.mineVersion) {
@@ -117,7 +114,7 @@ internal fun ListMenuSheet(item: HubItem, actions: List<Triple<String, Boolean, 
                     tr("Share") -> AppIcons.Share
                     tr("Edit name") -> AppIcons.Edit
                     tr("Privacy") -> AppIcons.Lock
-                    tr("Leave wishlist") -> AppIcons.Close
+                    tr("Leave wishlist") -> AppIcons.Leave
                     else -> AppIcons.Delete
                 }
                 SheetRow(

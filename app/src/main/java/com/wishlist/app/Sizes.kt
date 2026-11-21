@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -43,10 +42,10 @@ fun SizeField(size: String, onPick: (String) -> Unit, modifier: Modifier = Modif
                 .clickable(role = Role.DropdownList, onClickLabel = tr("Choose a size")) { open = true }
         )
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            DropdownMenuItem(text = { Text(tr("No size")) }, onClick = { open = false; onPick("") })
+            DropdownMenuItem(text = { Text(tr("No size")) }, selected = size.isEmpty(), onClick = { open = false; onPick("") })
             SIZES.forEach { s ->
                 DropdownMenuItem(
-                    text = { Text(s, fontWeight = if (s == size) FontWeight.Bold else FontWeight.Normal) },
+                    text = { Text(s) }, selected = s == size,
                     onClick = { open = false; onPick(s) }
                 )
             }

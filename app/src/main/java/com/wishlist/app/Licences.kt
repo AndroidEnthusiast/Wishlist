@@ -69,13 +69,13 @@ fun LicencesDialog(onClose: () -> Unit) {
                     tr("Our own icons: the app's icon set (bars, menus and buttons), view buttons, prices, wishlist, gift, crop, light, new photo and the colour ball."),
                     style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
                 )
-                TextButton(onClick = { full = if (full == R.raw.license_apache) null else R.raw.license_apache }) {
+                LinkButton(onClick = { full = if (full == R.raw.license_apache) null else R.raw.license_apache }) {
                     Text(tr("Apache License 2.0 (full text)"))
                 }
-                TextButton(onClick = { full = if (full == R.raw.license_ofl) null else R.raw.license_ofl }) {
+                LinkButton(onClick = { full = if (full == R.raw.license_ofl) null else R.raw.license_ofl }) {
                     Text(tr("SIL Open Font License 1.1 (full text)"))
                 }
-                TextButton(onClick = { full = if (full == R.raw.license_unicode) null else R.raw.license_unicode }) {
+                LinkButton(onClick = { full = if (full == R.raw.license_unicode) null else R.raw.license_unicode }) {
                     Text(tr("Unicode License V3 and MIT License (full text)"))
                 }
                 full?.let { res ->

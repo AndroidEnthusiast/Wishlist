@@ -117,13 +117,14 @@ fun WishDialog(
         properties = DialogProperties(dismissOnClickOutside = false),
         title = {
             val heading = if (step != null) tr("Wish %d of %d", step.first, step.second) else if (edit == null) tr("Add a wish") else tr("Edit wish")
-            // Quiet's dialogs centre their title (2.210): the ✕ sits at the left edge, the title in the middle.
-            if (quiet) Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                IconButton(onClick = { close() }, modifier = Modifier.align(Alignment.CenterStart).offset(x = (-12).dp)) {
+            // Forms have their ✕ top right, in every style (owner, 21 November 2026; it was top left in Quiet and a
+            // Cancel button in Gen Z chaos). The title in the middle.
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Text(heading, modifier = Modifier.padding(horizontal = 40.dp))
+                IconButton(onClick = { close() }, modifier = Modifier.align(Alignment.CenterEnd).offset(x = 12.dp)) {
                     Icon(AppIcons.Close, tr("Cancel"))
                 }
-                Text(heading, modifier = Modifier.padding(horizontal = 40.dp))
-            } else Text(heading)
+            }
         },
         text = {
             // The form trimmed (owner, 16 November 2026: "it feels very full"): no headings; adding starts with the link
@@ -149,7 +150,7 @@ fun WishDialog(
                     // typing or changing one. A small circle shows while the page is being read.
                     trailingIcon = when {
                         st.busy -> ({ CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp) })
-                        canPaste -> ({ TextButton(onClick = { clip?.let { st.go(it) } }) { Text(tr("Paste")) } })
+                        canPaste -> ({ LinkButton(onClick = { clip?.let { st.go(it) } }) { Text(tr("Paste")) } })
                         else -> null
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
@@ -240,7 +241,7 @@ fun WishDialog(
         confirmButton = {
             // With more screenshots to come: "Save and next" (each wish is saved at once, owner 20 November 2026).
             val more = step != null && step.first < step.second
-            val label = if (more) tr("Save and next") else if (quiet) tr("Save wish") else tr("Save")
+            val label = if (more) tr("Save and next") else tr("Save wish")
             // Waiting for the page: a small circle in the button, which says what it is doing (owner, 21 November 2026).
             val inside: @Composable () -> Unit = {
                 if (st.saveWaiting) {
@@ -248,14 +249,10 @@ fun WishDialog(
                     Text(tr("Getting the price…"), Modifier.padding(start = 8.dp))
                 } else Text(label)
             }
-            if (quiet) Button(onClick = { saveNow() }, modifier = Modifier.fillMaxWidth()) { inside() }
-            else TextButton(onClick = { saveNow() }) { inside() }
+            Button(onClick = { saveNow() }, modifier = Modifier.fillMaxWidth()) { inside() }
         },
-        dismissButton = when {
-            onSkip != null -> ({ TextButton(onClick = onSkip) { Text(tr("Skip")) } })
-            quiet -> null
-            else -> ({ TextButton(onClick = { close() }) { Text(tr("Cancel")) } })
-        }
+        // The ✕ closes it; Skip only while going through screenshots.
+        dismissButton = if (onSkip != null) ({ TextButton(onClick = onSkip) { Text(tr("Skip")) } }) else null
     )
 
     // Take photo or Choose photo (2.212): a small bottom sheet like every other menu, not a drop-down.

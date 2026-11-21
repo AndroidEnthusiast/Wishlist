@@ -49,6 +49,10 @@ object AppIcons {
     val Swap: ImageVector @Composable get() = set.swap
     val Move: ImageVector @Composable get() = set.moveOut
     val Copy: ImageVector @Composable get() = set.copy
+    val Camera: ImageVector @Composable get() = set.camera
+    val Flag: ImageVector @Composable get() = set.flag
+    val Block: ImageVector @Composable get() = set.block
+    val Leave: ImageVector @Composable get() = set.leave
     /** Gift exchange in the side menu (owner, 7 November 2026): two gifts with an arrow from each to the other, our own drawing. */
     val Exchange: ImageVector get() = exchangeIcon
     val Store: ImageVector @Composable get() = set.store

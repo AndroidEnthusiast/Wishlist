@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -87,8 +86,7 @@ fun SortButton(mode: String, withStar: Boolean = true, quiet: Boolean = false, w
             // "My order" (owner, 16 November 2026) on the lists you can drag in: the order you made by holding and moving.
             ((if (withMine) listOf(ListOrder.MINE to "My order") else emptyList()) + SORT_OPTIONS.filter { withStar || it.first != "star" }).forEach { (key, label) ->
                 DropdownMenuItem(
-                    text = { Text(tr(label), fontWeight = if (key == mode) FontWeight.Bold else FontWeight.Normal) },
-                    trailingIcon = if (key == mode) ({ Icon(AppIcons.Check, null) }) else null,
+                    text = { Text(tr(label)) }, selected = key == mode,
                     onClick = { open = false; onPick(key) }
                 )
             }

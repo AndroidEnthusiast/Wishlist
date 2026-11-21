@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
@@ -103,29 +102,12 @@ internal fun PricesPage() {
             TextButton(onClick = { Background.request(ctx) }) { Text(tr("Allow")) }
         }
     }
-    if (picking) AlertDialog(
-        onDismissRequest = { picking = false },
-        title = { Text(tr("Check prices")) },
-        text = {
-            Column {
-                listOf(1, 3, 6, 12, 24).forEach { h ->
-                    val on = Repo.intervalHours == h
-                    Row(
-                        Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(RoundedCornerShape(12.dp))
-                            .selectable(selected = on, role = Role.RadioButton) {
-                                model.setInterval(h)
-                                picking = false
-                            }.padding(horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(intervalLabel(h), style = MaterialTheme.typography.bodyLarge, color = cs.onSurface, modifier = Modifier.weight(1f))
-                        if (on) Icon(AppIcons.Check, tr("Chosen"), tint = cs.primary, modifier = Modifier.size(22.dp))
-                    }
-                }
-            }
-        },
-        confirmButton = { TextButton(onClick = { picking = false }) { Text(tr("Close")) } }
-    )
+    // A pick-one list is a sheet with a tick (owner, 21 November 2026; was a dialog with Close).
+    DropdownMenu(expanded = picking, onDismissRequest = { picking = false }) {
+        listOf(1, 3, 6, 12, 24).forEach { h ->
+            DropdownMenuItem(text = { Text(intervalLabel(h)) }, selected = Repo.intervalHours == h, onClick = { model.setInterval(h); picking = false })
+        }
+    }
 }
 
 /** A setting's name with its value in grey and ›; tapping it opens its choices. */
@@ -220,9 +202,9 @@ private fun CurrencySetting() {
         Box {
             Icon(AppIcons.Chevron, null, tint = cs.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp).size(20.dp))
             DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-                DropdownMenuItem(text = { Text(tr("Automatic (%s)", countryCurrency())) }, onClick = { open = false; model.setCurrency("") })
+                DropdownMenuItem(text = { Text(tr("Automatic (%s)", countryCurrency())) }, selected = chosen.isEmpty(), onClick = { open = false; model.setCurrency("") })
                 CurrencyChoice.all.forEach { cur ->
-                    DropdownMenuItem(text = { Text("${currencySymbol(cur)}  $cur") }, onClick = { open = false; model.setCurrency(cur) })
+                    DropdownMenuItem(text = { Text("${currencySymbol(cur)}  $cur") }, selected = cur == chosen, onClick = { open = false; model.setCurrency(cur) })
                 }
             }
         }

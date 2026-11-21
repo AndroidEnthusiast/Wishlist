@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -105,14 +104,14 @@ fun GroupScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, onOpe
                         IconButton(onClick = { st.menu = true }) { Icon(AppIcons.MoreVert, tr("More")) }
                         DropdownMenu(expanded = st.menu, onDismissRequest = { st.menu = false }) {
                             if (Groups.canInvite(ctx, g)) {
-                                DropdownMenuItem(text = { Text(tr("Invite friends")) }, onClick = { st.menu = false; st.inviting = true })
-                                DropdownMenuItem(text = { Text(tr("Share group link")) }, onClick = { st.menu = false; Groups.share(ctx, g) })
+                                DropdownMenuItem(text = { Text(tr("Invite friends")) }, leadingIcon = { Icon(AppIcons.Friends, null) }, onClick = { st.menu = false; st.inviting = true })
+                                DropdownMenuItem(text = { Text(tr("Share group link")) }, leadingIcon = { Icon(AppIcons.Share, null) }, onClick = { st.menu = false; Groups.share(ctx, g) })
                             }
-                            DropdownMenuItem(text = { Text(tr("Change my wishlist")) }, onClick = { st.menu = false; st.changing = true })
+                            DropdownMenuItem(text = { Text(tr("Change my wishlist")) }, leadingIcon = { Icon(AppIcons.Swap, null) }, onClick = { st.menu = false; st.changing = true })
                             if (Groups.isOrganiser(ctx, g)) {
-                                DropdownMenuItem(text = { Text(tr("Group settings")) }, onClick = { st.menu = false; st.settings = true })
+                                DropdownMenuItem(text = { Text(tr("Group settings")) }, leadingIcon = { Icon(AppIcons.Settings, null) }, onClick = { st.menu = false; st.settings = true })
                             }
-                            DropdownMenuItem(text = { Text(tr("Leave group"), color = cs.error) }, onClick = { st.menu = false; st.leaving = true })
+                            DropdownMenuItem(text = { Text(tr("Leave group")) }, leadingIcon = { Icon(AppIcons.Leave, null) }, danger = true, onClick = { st.menu = false; st.leaving = true })
                         }
                     }
                 }
@@ -121,8 +120,8 @@ fun GroupScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, onOpe
         snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
         if (g == null) {
-            Box(Modifier.padding(pad).fillMaxSize().padding(32.dp), Alignment.Center) {
-                Text(tr("This group isn’t available any more."), color = cs.onSurfaceVariant)
+            Box(Modifier.padding(pad).fillMaxSize(), Alignment.Center) {
+                EmptyState(AppIcons.Group, tr("This group isn’t available any more."), tr("Back"), onBack)
             }
             return@Scaffold
         }

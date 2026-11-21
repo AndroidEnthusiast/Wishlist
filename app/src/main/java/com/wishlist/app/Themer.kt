@@ -112,10 +112,9 @@ fun ThemerScreen(onBack: () -> Unit) {
             TopAppBar(
                 title = { ScreenTitle(tr("Theme")) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(AppIcons.ArrowBack, tr("Back")) } },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
-                // The same one-line bar in every style, so switching to Gen Z chaos never moves the blocks (owner's
-                // recording, 18 November 2026: Quiet's large title made the screen jump).
-                large = false
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
+                // The big title like every screen (owner, 21 November 2026); every style has it now, so switching to Gen
+                // Z chaos doesn't move the blocks (the jump of 18 November came from Quiet alone having it).
             )
         }
     ) { pad ->

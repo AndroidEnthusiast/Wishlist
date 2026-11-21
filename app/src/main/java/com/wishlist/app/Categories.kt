@@ -57,13 +57,15 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CatMenuRow(text: String, bold: Boolean, onClick: () -> Unit, onLongClick: (() -> Unit)? = null) {
-    Box(
-        Modifier.fillMaxWidth().widthIn(min = 112.dp).defaultMinSize(minHeight = 48.dp)
+    // A row of the menu sheet with a tick on the chosen one (owner, 21 November 2026: pick-one lists are sheets).
+    Row(
+        Modifier.fillMaxWidth().widthIn(min = 112.dp).defaultMinSize(minHeight = 52.dp)
             .combinedClickable(onLongClickLabel = tr("Edit or delete"), onLongClick = onLongClick, onClick = onClick)
-            .padding(horizontal = 12.dp),
-        contentAlignment = Alignment.CenterStart
+            .padding(horizontal = 18.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text, fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        if (bold) Icon(AppIcons.Check, tr("Chosen"), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
     }
 }
 

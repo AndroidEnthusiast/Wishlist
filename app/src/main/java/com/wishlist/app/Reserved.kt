@@ -116,13 +116,11 @@ fun ReservedScreen(onClose: () -> Unit, onOpen: (ReservedGroup) -> Unit) {
                 }
                 // Every empty page says what to do next (owner, 7 November 2026).
                 if (groups.isEmpty() && asks.isEmpty() && !loading) {
-                    Text(
+                    EmptyState(
+                        AppIcons.Gift,
                         tr("Nothing reserved yet. Open a friend’s wishlist, tap Reserve on a gift you’ll buy, and it shows here. They never see who reserved it."),
-                        color = cs.onSurfaceVariant, modifier = Modifier.padding(16.dp)
+                        tr("Go to Friends"), { onClose(); go(Deep.FriendsAsLeft) }
                     )
-                    Button(onClick = { onClose(); go(Deep.FriendsAsLeft) }, modifier = Modifier.padding(horizontal = 16.dp)) {
-                        Text(tr("Go to Friends"))
-                    }
                 }
                 groups.forEach { g ->
                     Column(

@@ -5,6 +5,9 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.276 (21 November 2026), read first.** One style guide for the whole app (`docs/STYLE.md`, the owner's page
+  https://claude.ai/artifact/CfZBnhRcVPydi8YVtjfV2H, `look.md` last section). Ask how menus as sheets, the ✕ rule,
+  buttons sized to their words, empty pages and big titles in Gen Z chaos feel. Every new screen follows the guide.
 - **2.275 (21 November 2026), read first.** The owner's style guide page: https://claude.ai/artifact/CfZBnhRcVPydi8YVtjfV2H
   (rules in `docs/STYLE.md`). Ask how Move or copy feels (action first, the wish on top) and how dialogs look in both
   styles now (Gen Z chaos changed most). New screens follow the guide; `DialogRulesTest` guards the dialog rule.

@@ -38,7 +38,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -163,12 +162,12 @@ fun ExchangeScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, on
                         DropdownMenu(expanded = st.menu, onDismissRequest = { st.menu = false }) {
                             val org = Exchanges.isOrganiser(ctx, x)
                             if (org) {
-                                DropdownMenuItem(text = { Text(tr("Invite friends")) }, onClick = { st.menu = false; st.inviting = true })
-                                DropdownMenuItem(text = { Text(tr("Share exchange link")) }, onClick = { st.menu = false; Exchanges.share(ctx, x) })
+                                DropdownMenuItem(text = { Text(tr("Invite friends")) }, leadingIcon = { Icon(AppIcons.Friends, null) }, onClick = { st.menu = false; st.inviting = true })
+                                DropdownMenuItem(text = { Text(tr("Share exchange link")) }, leadingIcon = { Icon(AppIcons.Share, null) }, onClick = { st.menu = false; Exchanges.share(ctx, x) })
                             }
-                            DropdownMenuItem(text = { Text(tr("Change my wishlist")) }, onClick = { st.menu = false; st.changing = true })
-                            if (org) DropdownMenuItem(text = { Text(tr("Exchange settings")) }, onClick = { st.menu = false; st.settings = true })
-                            DropdownMenuItem(text = { Text(tr("Leave exchange"), color = cs.error) }, onClick = { st.menu = false; st.leaving = true })
+                            DropdownMenuItem(text = { Text(tr("Change my wishlist")) }, leadingIcon = { Icon(AppIcons.Swap, null) }, onClick = { st.menu = false; st.changing = true })
+                            if (org) DropdownMenuItem(text = { Text(tr("Exchange settings")) }, leadingIcon = { Icon(AppIcons.Settings, null) }, onClick = { st.menu = false; st.settings = true })
+                            DropdownMenuItem(text = { Text(tr("Leave exchange")) }, leadingIcon = { Icon(AppIcons.Leave, null) }, danger = true, onClick = { st.menu = false; st.leaving = true })
                         }
                     }
                 }
@@ -179,9 +178,8 @@ fun ExchangeScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, on
         if (x == null) {
             // Cancelled, left or removed: back to the list of exchanges by itself (owner, 2.133: no dead end).
             LaunchedEffect(gid) { delay(1500); onBack() }
-            Column(Modifier.padding(pad).fillMaxSize().padding(32.dp), Arrangement.Center, Alignment.CenterHorizontally) {
-                Text(tr("This gift exchange isn’t available any more."), color = cs.onSurfaceVariant)
-                TextButton(onClick = onBack, modifier = Modifier.padding(top = 8.dp)) { Text(tr("Back to gift exchanges")) }
+            Box(Modifier.padding(pad).fillMaxSize(), Alignment.Center) {
+                EmptyState(AppIcons.Exchange, tr("This gift exchange isn’t available any more."), tr("Back to gift exchanges"), onBack)
             }
             return@Scaffold
         }

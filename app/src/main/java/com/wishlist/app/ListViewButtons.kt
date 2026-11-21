@@ -23,7 +23,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.Canvas
@@ -131,9 +130,8 @@ fun ViewMenuButton(view: String, onPick: (String) -> Unit) {
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             names.forEach { (k, label) ->
                 DropdownMenuItem(
-                    text = { Text(label, fontWeight = if (k == view) FontWeight.Bold else FontWeight.Normal) },
-                    leadingIcon = { ViewIcon(k, if (k == view) cs.primary else cs.onSurfaceVariant) },
-                    trailingIcon = if (k == view) ({ Icon(AppIcons.Check, null) }) else null,
+                    text = { Text(label) }, selected = k == view,
+                    leadingIcon = { ViewIcon(k, androidx.compose.material3.LocalContentColor.current) },
                     onClick = { open = false; onPick(k) }
                 )
             }

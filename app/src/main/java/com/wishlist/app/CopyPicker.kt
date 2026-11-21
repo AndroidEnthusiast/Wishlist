@@ -99,7 +99,7 @@ fun CopyWishesDialog(
                         fontWeight = LocalLook.current.titleWeight, maxLines = 2,
                         modifier = Modifier.weight(1f).padding(start = 12.dp)
                     )
-                    TextButton(onClick = onClose) { Text(tr("Cancel")) }
+                    LinkButton(onClick = onClose) { Text(tr("Cancel")) }
                 }
                 Text(
                     tr("Choose wishes from your other lists to copy here."),

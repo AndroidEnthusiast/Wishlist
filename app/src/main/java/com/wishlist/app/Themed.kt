@@ -55,8 +55,9 @@ fun Scaffold(
     content: @Composable (PaddingValues) -> Unit
 ) {
     val look = LocalLook.current
-    // Quiet (2.210): the large title of the top bar shrinks into the bar as the page scrolls (TopAppBar).
-    val behavior = if (look.design == "quiet") TopAppBarDefaults.exitUntilCollapsedScrollBehavior() else null
+    // The large title of the top bar shrinks into the bar as the page scrolls (TopAppBar): Quiet since 2.210, every
+    // style since 21 November 2026 (owner: "big title everywhere").
+    val behavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scroll = remember(behavior) { behavior?.let { TopBarScroll(it) } }
     CompositionLocalProvider(LocalTopBarScroll provides scroll) {
         M3Scaffold(

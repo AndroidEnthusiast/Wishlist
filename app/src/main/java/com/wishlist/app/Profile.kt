@@ -35,7 +35,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -169,22 +168,22 @@ internal fun ProfileMain(snack: SnackbarHostState, onSafe: () -> Unit) {
                         Icon(AppIcons.Edit, tr("Change photo"), tint = look.chipContent(true), modifier = Modifier.size(18.dp))
                     }
                     DropdownMenu(expanded = photoMenu, onDismissRequest = { photoMenu = false }) {
-                        DropdownMenuItem(text = { Text(tr("Choose a photo")) }, onClick = {
+                        DropdownMenuItem(text = { Text(tr("Choose a photo")) }, leadingIcon = { Icon(AppIcons.Gallery, null) }, onClick = {
                             photoMenu = false
                             pick.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                         })
-                        DropdownMenuItem(text = { Text(tr("Take a photo")) }, onClick = {
+                        DropdownMenuItem(text = { Text(tr("Take a photo")) }, leadingIcon = { Icon(AppIcons.Camera, null) }, onClick = {
                             photoMenu = false
                             try {
                                 camera.launch(cameraUriLazy.value)
                             } catch (e: Exception) {
                             }
                         })
-                        if (Friends.photoSrc.isNotEmpty()) DropdownMenuItem(text = { Text(tr("Edit profile photo")) }, onClick = {
+                        if (Friends.photoSrc.isNotEmpty()) DropdownMenuItem(text = { Text(tr("Edit profile photo")) }, leadingIcon = { Icon(AppIcons.Edit, null) }, onClick = {
                             photoMenu = false
                             adjusting = true
                         })
-                        if (Friends.myPhoto.isNotEmpty()) DropdownMenuItem(text = { Text(tr("Remove photo")) }, onClick = {
+                        if (Friends.myPhoto.isNotEmpty()) DropdownMenuItem(text = { Text(tr("Remove photo")) }, leadingIcon = { Icon(AppIcons.Delete, null) }, danger = true, onClick = {
                             photoMenu = false
                             scope.launch {
                                 try {

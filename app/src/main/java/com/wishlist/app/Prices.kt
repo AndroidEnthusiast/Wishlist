@@ -78,10 +78,11 @@ fun PricesScreen(snack: SnackbarHostState, onBack: () -> Unit) {
     ) { pad ->
         Column(Modifier.padding(pad).fillMaxSize()) {
         if (rows.isEmpty()) {
-            Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-                Text(
-                    tr("No prices yet. Wishes with a price show up here, with how much they changed since you added them."),
-                    color = cs.onSurfaceVariant, textAlign = TextAlign.Center
+            val back = androidx.activity.compose.LocalOnBackPressedDispatcherOwner.current
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                EmptyState(
+                    AppIcons.Bag, tr("No prices yet. Wishes with a price show up here, with how much they changed since you added them."),
+                    tr("Back"), { back?.onBackPressedDispatcher?.onBackPressed() }
                 )
             }
         } else {

@@ -38,7 +38,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -134,13 +133,10 @@ internal fun ExchangesList(snack: SnackbarHostState, onOpenMine: (String) -> Uni
                 "missing" -> Text(
                     tr("Gift exchange needs an update in Supabase first."), color = cs.onSurfaceVariant, modifier = Modifier.padding(24.dp)
                 )
-                "offline" -> Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(tr("Couldn’t reach the server. Check your connection."), color = cs.onSurfaceVariant)
-                    Button(onClick = {
-                        state = "loading"
-                        scope.launch { state = try { Exchanges.refresh(ctx); "ok" } catch (e: Exception) { if (gxMissing(e)) "missing" else "offline" } }
-                    }) { Text(tr("Try again")) }
-                }
+                "offline" -> EmptyState(AppIcons.Refresh, tr("Couldn’t reach the server. Check your connection."), tr("Try again"), {
+                    state = "loading"
+                    scope.launch { state = try { Exchanges.refresh(ctx); "ok" } catch (e: Exception) { if (gxMissing(e)) "missing" else "offline" } }
+                })
                 else -> {
                     Exchanges.invites.forEach { v -> GxInviteCard(v, snack) }
                     if (Exchanges.list.isEmpty() && Exchanges.invites.isEmpty()) {

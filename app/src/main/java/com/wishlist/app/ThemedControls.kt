@@ -29,7 +29,6 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator as M3CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu as M3DropdownMenu
 import androidx.compose.material3.HorizontalDivider as M3HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator as M3LinearProgressIndicator
 import androidx.compose.material3.LocalTextStyle
@@ -68,31 +67,7 @@ import androidx.compose.ui.window.PopupProperties
 
 /* The style's menus, tick boxes, choice circles, chips, tabs, spinners, progress bars, dividers and sliders (see Themed.kt). */
 
-/** A menu (⋮ and the pick-one lists) in the style: its corners, its line instead of a soft shadow, its card colour. */
-@Composable
-fun DropdownMenu(
-    expanded: Boolean,
-    onDismissRequest: () -> Unit,
-    modifier: Modifier = Modifier,
-    scrollState: ScrollState = rememberScrollState(),
-    properties: PopupProperties = PopupProperties(focusable = true),
-    content: @Composable ColumnScope.() -> Unit
-) {
-    val look = LocalLook.current
-    val cs = MaterialTheme.colorScheme
-    val line = if (look.edge > 0.dp) BorderStroke(minOf(look.edge, 2.5.dp), look.line) else null
-    M3DropdownMenu(
-        expanded, onDismissRequest, modifier, androidx.compose.ui.unit.DpOffset(0.dp, 0.dp), scrollState, properties,
-        shape = MaterialTheme.shapes.medium,
-        containerColor = cs.surfaceContainer,
-        tonalElevation = 0.dp,
-        // A soft shadow only where the style has soft shadows (Quiet, Y2K); the others are framed by their line, Flat
-        // by a slightly deeper colour.
-        shadowElevation = if (look.design in setOf("quiet")) 6.dp else 0.dp,
-        border = line,
-        content = content
-    )
-}
+/* The menu (⋮ and the pick-one lists) is a bottom sheet since 21 November 2026: MenuSheet.kt. */
 
 /** The size and shape of a tick box in the style. */
 private fun Look.boxShape(): Shape = when (design) {

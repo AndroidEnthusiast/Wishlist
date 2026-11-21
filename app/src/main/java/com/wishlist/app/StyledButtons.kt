@@ -153,7 +153,6 @@ fun TextButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Bool
     val cs = MaterialTheme.colorScheme
     // Chaos: ink text (its accent is for blocks); the others: the style's readable text colour (its primary; in Quiet
     // that is the accent).
-    val col = if (danger) cs.error else if (look.design == "chaos") cs.onSurface else cs.primary
     // In Quiet's own dialogs (2.210): the confirm button is the filled main action, the other a full-width plain one.
     // A form sheet's main button is the filled full-width one in every style (owner, 17 November 2026).
     // Every style since 21 November 2026 (owner: one rule for every dialog): main filled, second outlined, Cancel and a
@@ -169,6 +168,23 @@ fun TextButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Bool
             return
         }
     }
+    // In a top bar ("Select all", "Done"): plain words, as top bars do.
+    if (LocalInTopBar.current) { LinkButton(onClick, modifier, enabled, danger, content); return }
+    // On a screen or card (owner, 21 November 2026: "buttons do, words go"): something that DOES something is a
+    // button, the secondary one, only as big as its words (the compact size). Going somewhere is a [LinkButton].
+    CompositionLocalProvider(LocalInDialog provides true) { OutlinedButton(onClick, modifier, enabled, danger, content) }
+}
+
+/**
+ * Plain coloured words (owner, 21 November 2026): only for going somewhere ("All price changes ›", a licence's full
+ * text, "Select all" in a top bar) and for a way out (Close, Skip, Cancel) outside a dialog's own buttons. Anything
+ * that does something is a button ([TextButton] on a screen is a small secondary button).
+ */
+@Composable
+fun LinkButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, danger: Boolean = false, content: @Composable RowScope.() -> Unit) {
+    val look = LocalLook.current
+    val cs = MaterialTheme.colorScheme
+    val col = if (danger) cs.error else if (look.design == "chaos") cs.onSurface else cs.primary
     M3TextButton(
         onClick, modifier.pressScale(), enabled, shape = look.buttonShape,
         colors = ButtonDefaults.textButtonColors(contentColor = col), content = ownInk(content)

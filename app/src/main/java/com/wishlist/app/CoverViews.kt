@@ -23,7 +23,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
@@ -149,17 +148,17 @@ private fun CoverMenu(cover: ListCover, snack: SnackbarHostState, modifier: Modi
         ) { Icon(AppIcons.MoreVert, tr("Cover photo options"), tint = Color.White, modifier = Modifier.size(22.dp)) }
         DropdownMenu(expanded = m.menu, onDismissRequest = { m.menu = false }) {
             DropdownMenuItem(text = { Text(tr("Change")) }, leadingIcon = { Icon(AppIcons.Edit, null) }, onClick = { m.menu = false; m.change = true })
-            DropdownMenuItem(text = { Text(tr("Delete")) }, leadingIcon = { Icon(AppIcons.Delete, null) }, onClick = { m.menu = false; m.delete() })
+            DropdownMenuItem(text = { Text(tr("Delete")) }, leadingIcon = { Icon(AppIcons.Delete, null) }, danger = true, onClick = { m.menu = false; m.delete() })
         }
         DropdownMenu(expanded = m.change, onDismissRequest = { m.change = false }) {
-            DropdownMenuItem(text = { Text(tr("Choose a photo")) }, onClick = {
+            DropdownMenuItem(text = { Text(tr("Choose a photo")) }, leadingIcon = { Icon(AppIcons.Gallery, null) }, onClick = {
                 m.change = false; pickers.choose()
             })
-            DropdownMenuItem(text = { Text(tr("Take a photo")) }, onClick = {
+            DropdownMenuItem(text = { Text(tr("Take a photo")) }, leadingIcon = { Icon(AppIcons.Camera, null) }, onClick = {
                 m.change = false
                 pickers.take()
             })
-            DropdownMenuItem(text = { Text(tr("Adjust this photo")) }, onClick = { m.change = false; m.adjusting = true })
+            DropdownMenuItem(text = { Text(tr("Adjust this photo")) }, leadingIcon = { Icon(AppIcons.Edit, null) }, onClick = { m.change = false; m.adjusting = true })
         }
     }
 

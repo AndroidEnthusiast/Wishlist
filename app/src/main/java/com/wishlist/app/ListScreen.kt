@@ -23,7 +23,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.Canvas
@@ -334,12 +333,14 @@ fun HomeScreen(
                     ListHeader(Repo.wishes, snack)
                     if (hasCover) Spacer(Modifier.height(10.dp))
                     stickyTop(true)
-                    Text(
-                        if (query.isNotBlank()) {
-                            if (sel != "All") tr("No wishes match “%1\$s” in %2\$s.", query.trim(), catLabel(sel))
-                            else tr("No wishes match “%s”.", query.trim())
-                        } else tr("Nothing here yet. Tap +, or share something you love from any shop to Wishlist."),
-                        color = cs.onSurfaceVariant, modifier = Modifier.padding(16.dp)
+                    // Icon, line, one button (owner, 21 November 2026; EmptyState.kt).
+                    if (query.isNotBlank()) EmptyState(
+                        AppIcons.Search,
+                        if (sel != "All") tr("No wishes match “%1\$s” in %2\$s.", query.trim(), catLabel(sel)) else tr("No wishes match “%s”.", query.trim()),
+                        tr("Clear search"), { model.stopSearch() }
+                    ) else EmptyState(
+                        AppIcons.Gift, tr("Nothing here yet. Tap +, or share something you love from any shop to Wishlist."),
+                        tr("Add a wish"), onAdd
                     )
                 }
             } else {

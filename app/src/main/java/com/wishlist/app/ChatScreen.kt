@@ -22,7 +22,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -169,8 +168,8 @@ internal fun ChatScreen(peer: String, snack: SnackbarHostState) {
                     Box {
                         IconButton(onClick = { chat.chatMenu = true }) { Icon(AppIcons.MoreVert, tr("More")) }
                         DropdownMenu(expanded = chat.chatMenu, onDismissRequest = { chat.chatMenu = false }) {
-                            DropdownMenuItem(text = { Text(tr("Report")) }, onClick = { chat.chatMenu = false; chat.reporting = true })
-                            DropdownMenuItem(text = { Text(tr("Block"), color = cs.error) }, onClick = { chat.chatMenu = false; chat.blocking = true })
+                            DropdownMenuItem(text = { Text(tr("Report")) }, leadingIcon = { Icon(AppIcons.Flag, null) }, onClick = { chat.chatMenu = false; chat.reporting = true })
+                            DropdownMenuItem(text = { Text(tr("Block")) }, leadingIcon = { Icon(AppIcons.Block, null) }, danger = true, onClick = { chat.chatMenu = false; chat.blocking = true })
                         }
                     }
                 },
@@ -247,26 +246,22 @@ internal fun ChatScreen(peer: String, snack: SnackbarHostState) {
     // Long press (owner, 2.128): five reactions, Reply, and Delete for your own messages.
     chat.menuFor?.let { m ->
         val mineNow = chat.reacts[m.id]?.first.orEmpty()
-        AlertDialog(
-            onDismissRequest = { chat.menuFor = null },
-            text = {
-                Column {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                        listOf("❤️", "👍", "😂", "😮", "🎉").forEach { e ->
-                            Box(
-                                Modifier.size(48.dp).clip(CircleShape)
-                                    .background(if (e == mineNow) look.accent.copy(alpha = 0.25f) else Color.Transparent)
-                                    .clickable(onClickLabel = tr("React with %s", e)) { chat.menuFor = null; chat.react(m, e) },
-                                contentAlignment = Alignment.Center
-                            ) { Text(e, fontSize = 26.sp) }
-                        }
-                    }
-                    if (canSend) TextButton(onClick = { chat.menuFor = null; chat.replying = m }, modifier = Modifier.padding(top = 8.dp)) { Text(tr("Reply")) }
-                    if (m.mine) TextButton(danger = true, onClick = { chat.menuFor = null; chat.deleting = m }) { Text(tr("Delete")) }
+        // A sheet like every menu (owner, 21 November 2026): the reactions on top, then Reply and Delete as rows with
+        // their icons (Delete red); no Close: swipe down or tap outside.
+        DropdownMenu(expanded = true, onDismissRequest = { chat.menuFor = null }) {
+            Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+                listOf("❤️", "👍", "😂", "😮", "🎉").forEach { e ->
+                    Box(
+                        Modifier.size(48.dp).clip(CircleShape)
+                            .background(if (e == mineNow) look.accent.copy(alpha = 0.25f) else Color.Transparent)
+                            .clickable(onClickLabel = tr("React with %s", e)) { chat.menuFor = null; chat.react(m, e) },
+                        contentAlignment = Alignment.Center
+                    ) { Text(e, fontSize = 26.sp) }
                 }
-            },
-            confirmButton = { TextButton(onClick = { chat.menuFor = null }) { Text(tr("Close")) } }
-        )
+            }
+            if (canSend) DropdownMenuItem(text = { Text(tr("Reply")) }, leadingIcon = { Icon(AppIcons.Chat, null) }, onClick = { chat.menuFor = null; chat.replying = m })
+            if (m.mine) DropdownMenuItem(text = { Text(tr("Delete")) }, leadingIcon = { Icon(AppIcons.Delete, null) }, danger = true, onClick = { chat.menuFor = null; chat.deleting = m })
+        }
     }
     chat.deleting?.let { m ->
         AlertDialog(

@@ -108,7 +108,7 @@ fun WelcomeFlow(onDone: () -> Unit) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(tr("Step %1\$d of %2\$d", step, 4), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
                     // Skip only once your name is there (owner, 2.135: everyone has a name, friends see it).
-                    if (step > 1 || Shared.lastName.isNotBlank()) TextButton(onClick = { finish() }) { Text(tr("Skip")) }
+                    if (step > 1 || Shared.lastName.isNotBlank()) LinkButton(onClick = { finish() }) { Text(tr("Skip")) }
                 }
                 Column(
                     Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
@@ -136,9 +136,9 @@ fun WelcomeFlow(onDone: () -> Unit) {
                                 keyboardOptions = Capitalised, modifier = Modifier.fillMaxWidth()
                             )
                             // A new phone: everything back with the recovery key (Restore.kt, 2.188).
-                            TextButton(onClick = { restoring = true }, modifier = Modifier.padding(top = 8.dp)) { Text(tr("I already have lists")) }
+                            LinkButton(onClick = { restoring = true }, modifier = Modifier.padding(top = 8.dp)) { Text(tr("I already have lists")) }
                             // The privacy page (ROADMAP S4.6).
-                            TextButton(onClick = { openPrivacy(ctx) }) { Text(tr("Privacy")) }
+                            LinkButton(onClick = { openPrivacy(ctx) }) { Text(tr("Privacy")) }
                         }
                         2 -> {
                             PlaceholderIcon("gift", 56.dp, LocalLook.current.textAccent)
@@ -153,7 +153,7 @@ fun WelcomeFlow(onDone: () -> Unit) {
                                 keyboardOptions = Capitalised, modifier = Modifier.fillMaxWidth()
                             )
                             // Import (owner, 18 November 2026): coming from GoWish, Giftful, Amazon or a notes app.
-                            TextButton(onClick = { importAfter = true; next() }, modifier = Modifier.padding(top = 8.dp)) {
+                            LinkButton(onClick = { importAfter = true; next() }, modifier = Modifier.padding(top = 8.dp)) {
                                 Text(tr("Already have a list somewhere? Import it after this"), textAlign = TextAlign.Center)
                             }
                         }

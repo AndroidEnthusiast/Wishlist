@@ -281,3 +281,18 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   it on both lists"), then "Move to…" / "Copy to…"; the wish (or several as photos + "3 wishes") on top of both.
   Move is greyed with the reason when someone reserved the co-op wish. Fixed with it: Your friend code ("Make a new
   code" was in the Cancel spot) and Price alert ("Remove" in the Cancel spot, now "Remove alert" as the second choice).
+
+## The whole-app style guide (owner, 21 November 2026: "make one for the whole app; fix what confuses you first")
+- Claude looked at every screen (both styles) and asked about each inconsistency; the owner chose (rules in
+  `docs/STYLE.md`, drawn on the style guide page, checked by `StyleRulesTest` and `DialogRulesTest`):
+  - **Every ⋮ menu is a bottom sheet** (chat, group, gift exchange, friend, photo menus too; replaces "up to 4 actions
+    = a small pop-up", `screens.md` 16 November). Icon tiles, red rows for leave/remove/block, no ✕.
+  - **✕: forms top right, in every style (Edit wish moved from the left; its Gen Z chaos Cancel went); menus and
+    pickers have none** (a list's ⋮ and the profile sheet lost theirs; the profile sheet closes like a menu).
+  - **Buttons do, words go**, and buttons on screens are as wide as their words ("not unnecessarily huge"); plain
+    coloured words only for going somewhere, a way out, a top bar; red only for removing or leaving.
+  - **Empty and error states: icon, line, one button** (never a line alone; `EmptyState`).
+  - **Pick-one lists are sheets with a tick** (Check prices was a dialog with Close).
+  - **Big titles everywhere, in both styles** (Gen Z chaos got the shrinking title too, so the Theme screen has it
+    without the jump of 18 November).
+  - **A chat message's long press is a sheet like the others** (Reply and Delete as icon rows, no Close).

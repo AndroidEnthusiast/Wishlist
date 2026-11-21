@@ -21,7 +21,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -81,8 +80,8 @@ internal fun InputBar(
                 contentAlignment = Alignment.Center
             ) { PhotoIcon(cs.onSurfaceVariant) }
             DropdownMenu(expanded = photoMenu, onDismissRequest = { photoMenu = false }) {
-                DropdownMenuItem(text = { Text(tr("Take a photo")) }, onClick = { photoMenu = false; onCamera() })
-                DropdownMenuItem(text = { Text(tr("Choose from gallery")) }, onClick = { photoMenu = false; onGallery() })
+                DropdownMenuItem(text = { Text(tr("Take a photo")) }, leadingIcon = { Icon(AppIcons.Camera, null) }, onClick = { photoMenu = false; onCamera() })
+                DropdownMenuItem(text = { Text(tr("Choose from gallery")) }, leadingIcon = { Icon(AppIcons.Gallery, null) }, onClick = { photoMenu = false; onGallery() })
             }
         }
         val shape = RoundedCornerShape(24.dp)
@@ -163,7 +162,7 @@ internal fun PhotoPreview(image: String, onCancel: () -> Unit, onSend: () -> Uni
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = onCancel) { Text(tr("Cancel"), color = Color.White) }
+                LinkButton(onClick = onCancel) { Text(tr("Cancel"), color = Color.White) }
                 Row(
                     Modifier.lookSurface(look, look.fabShape, look.accent).clickable(onClick = onSend).padding(horizontal = 20.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically

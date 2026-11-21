@@ -99,11 +99,12 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
         },
         snackbarHost = { AppSnackbarHost(snack) }
     ) { pad ->
+        val back = androidx.activity.compose.LocalOnBackPressedDispatcherOwner.current
         if (notes.isEmpty()) {
-            Box(Modifier.padding(pad).fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-                Text(
-                    tr("Nothing new yet. Price drops, friend requests and invitations show up here."),
-                    color = cs.onSurfaceVariant, textAlign = TextAlign.Center
+            Box(Modifier.padding(pad).fillMaxSize(), contentAlignment = Alignment.Center) {
+                EmptyState(
+                    AppIcons.Notifications, tr("Nothing new yet. Price drops, friend requests and invitations show up here."),
+                    tr("Back"), { back?.onBackPressedDispatcher?.onBackPressed() }
                 )
             }
             return@Scaffold

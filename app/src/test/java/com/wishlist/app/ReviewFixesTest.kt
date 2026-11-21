@@ -318,9 +318,10 @@ class HomeAsProfileTest {
         // 17 November 2026 (owner: the pop-up "looks cheap"): a list's ⋮ is always the full-width sheet, X and icon tiles.
         val menu = hub.substring(hub.indexOf("internal fun ListMenuSheet("), hub.indexOf("internal fun VisibilitySheet("))
         assertFalse(menu.contains("PopMenu(") || menu.contains("actions.size <= 4"))
-        assertTrue(menu.contains("AppIcons.Close"))
-        val pop = File("src/main/java/com/wishlist/app/WishSheet.kt").readText()
-        assertTrue("red last, after a line", pop.contains("removing.forEach { item(it) }"))
+        // Since 21 November 2026 (owner's style guide): every menu is a sheet and menus have no ✕ (swipe down or tap
+        // outside); the small pop-up menu is gone altogether.
+        assertFalse(menu.contains("AppIcons.Close"))
+        assertFalse(File("src/main/java/com/wishlist/app/WishSheet.kt").readText().contains("fun PopMenu("))
     }
 }
 
@@ -375,7 +376,8 @@ class SettingsSheetTest {
         val f = File("src/main/java/com/wishlist/app/Account.kt").readText()
         for (t in listOf("Gifts I reserved", "Received gifts", "Notifications", "Bin", "Theme", "App settings", "Share"))
             assertTrue(t, f.contains("tr(\"$t\")"))
-        assertTrue(f.contains("onProfile") && f.contains("FormSheetHost(onClose)") && f.contains("AppIcons.Close"))
+        // A menu since 21 November 2026: it closes like every menu (swipe down, tap outside), so no ✕.
+        assertTrue(f.contains("onProfile") && f.contains("FormSheetHost(onClose, menu = true)") && !f.contains("AppIcons.Close"))
         assertTrue(QuietIcons.palette in QuietIcons.all && QuietIcons.palette.root.size > 0)
     }
 }

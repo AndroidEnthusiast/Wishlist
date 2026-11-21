@@ -18,7 +18,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -52,7 +51,7 @@ internal fun MemberBlock(g: Group, m: GroupMember, isMe: Boolean, modifier: Modi
         Box {
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                 if (onRemove != null) DropdownMenuItem(
-                    text = { Text(tr("Remove from group"), color = MaterialTheme.colorScheme.error) },
+                    text = { Text(tr("Remove from group")) }, leadingIcon = { androidx.compose.material3.Icon(AppIcons.Close, null) }, danger = true,
                     onClick = { menu = false; onRemove() }
                 )
             }

@@ -274,7 +274,7 @@ internal fun CheckPart(
                     style = MaterialTheme.typography.titleMedium, color = cs.onSurface, modifier = Modifier.weight(1f)
                 )
                 val all = picked.size == r.wishes.size
-                TextButton(onClick = { onAll(!all) }) { Text(if (all) tr("Select none") else tr("Select all")) }
+                LinkButton(onClick = { onAll(!all) }) { Text(if (all) tr("Select none") else tr("Select all")) }
             }
             Text(
                 tr("Missing photos and prices fill in afterwards. It can take a minute before everything shows."),

@@ -263,17 +263,10 @@ private fun Empty(text: String, extra: @Composable () -> Unit = {}) {
     }
 }
 
-/** The one thing to do on an empty page: a filled button in Quiet (2.207), the style's chip elsewhere. */
+/** The one thing to do on an empty page: a filled button in every style (owner, 21 November 2026; EmptyState.kt). */
 @Composable
 private fun EmptyAction(label: String, onClick: () -> Unit) {
-    val look = LocalLook.current
-    if (look.design == "quiet") Button(onClick = onClick, modifier = Modifier.padding(top = 16.dp)) { Text(label) }
-    else Text(
-        label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
-        color = look.chipContent(true),
-        modifier = Modifier.padding(top = 16.dp).lookChip(look, on = true).clickable(onClick = onClick)
-            .padding(horizontal = 18.dp, vertical = 10.dp)
-    )
+    Button(onClick = onClick, modifier = Modifier.padding(top = 16.dp)) { Text(label) }
 }
 
 /** One conversation: picture, name, last message, time and the unread bubble. */

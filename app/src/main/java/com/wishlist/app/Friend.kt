@@ -137,11 +137,8 @@ fun FriendScreen(
         Column(Modifier.padding(pad)) {
             if (st.searching && r0 != null) SearchField(st.query, { st.query = it }) { st.stopSearch() }
             when {
-                st.state == "gone" -> Box(Modifier.fillMaxSize().padding(32.dp), Alignment.Center) {
-                    Text(
-                        tr("This list isn’t shared any more."),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                st.state == "gone" -> Box(Modifier.fillMaxSize(), Alignment.Center) {
+                    EmptyState(AppIcons.ListIcon, tr("This list isn’t shared any more."), tr("Back"), { (onBack ?: onRemoved)() })
                 }
                 r0 != null -> {
                     // The list's cover photo, as its owner made it (2.105).
@@ -178,10 +175,9 @@ fun FriendScreen(
                         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                             if (hasCover) cover(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp))
                             catRow(PaddingValues(horizontal = 16.dp), true)
-                            Text(
-                                if (st.query.isNotBlank()) tr("No wishes match “%s”.", st.query.trim()) else tr("Nothing here yet."), color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.fillMaxWidth().padding(32.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                            )
+                            if (st.query.isNotBlank()) EmptyState(AppIcons.Search, tr("No wishes match “%s”.", st.query.trim()), tr("Clear search"), { st.stopSearch() })
+                            else if (chatWith != null) EmptyState(AppIcons.Gift, tr("Nothing here yet."), tr("Send a message"), { go(Deep.Chat(chatWith)) })
+                            else EmptyState(AppIcons.Gift, tr("Nothing here yet."), tr("Back"), { (onBack ?: onRemoved)() })
                         }
                     } else {
                         // Before the wishes in the grid: the cover (when there is one) and the categories (when used).
@@ -289,11 +285,8 @@ fun FriendScreen(
                         }
                     }
                 }
-                st.state == "offline" -> Box(Modifier.fillMaxSize().padding(32.dp), Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text(tr("Couldn’t load the list. Check your connection."), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Button(onClick = { st.tick++ }) { Text(tr("Try again")) }
-                    }
+                st.state == "offline" -> Box(Modifier.fillMaxSize(), Alignment.Center) {
+                    EmptyState(AppIcons.Refresh, tr("Couldn’t load the list. Check your connection."), tr("Try again"), { st.tick++ })
                 }
                 else -> Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
             }

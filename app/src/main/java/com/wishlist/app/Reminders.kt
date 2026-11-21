@@ -140,9 +140,10 @@ fun ReceivedList(modifier: Modifier = Modifier) {
     val cs = MaterialTheme.colorScheme
     val items = Repo.myBin.filter { it.recv > 0L }.sortedByDescending { it.recv }
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (items.isEmpty()) Text(
-            tr("No received gifts yet. After a wishlist’s occasion you can mark the wishes you got, and they show up here."),
-            color = cs.onSurfaceVariant, modifier = Modifier.padding(16.dp)
+        val back = androidx.activity.compose.LocalOnBackPressedDispatcherOwner.current
+        if (items.isEmpty()) EmptyState(
+            AppIcons.Gift, tr("No received gifts yet. After a wishlist’s occasion you can mark the wishes you got, and they show up here."),
+            tr("Back"), { back?.onBackPressedDispatcher?.onBackPressed() }
         )
         items.forEach { w ->
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {

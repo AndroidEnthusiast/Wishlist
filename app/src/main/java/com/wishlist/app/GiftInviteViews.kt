@@ -183,16 +183,16 @@ fun GiftInviteDialog(code: String, onJoined: (String) -> Unit, onClose: () -> Un
                         st.state == "gone" -> {
                             Text(tr("This invitation is no longer open."), style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
                             Text(tr("Ask for a new invitation or the invite link."), color = cs.onSurfaceVariant, textAlign = TextAlign.Center)
-                            TextButton(onClick = onClose) { Text(tr("Close")) }
+                            LinkButton(onClick = onClose) { Text(tr("Close")) }
                         }
                         st.state == "missing" -> {
                             Text(tr("Invitations need an update in Supabase first."), color = cs.onSurfaceVariant, textAlign = TextAlign.Center)
-                            TextButton(onClick = onClose) { Text(tr("Close")) }
+                            LinkButton(onClick = onClose) { Text(tr("Close")) }
                         }
                         st.state == "offline" || i == null -> {
                             Text(tr("Couldn’t reach the server. Check your connection."), color = cs.onSurfaceVariant, textAlign = TextAlign.Center)
                             Row {
-                                TextButton(onClick = onClose) { Text(tr("Close")) }
+                                LinkButton(onClick = onClose) { Text(tr("Close")) }
                                 Button(onClick = { st.attempt++ }) { Text(tr("Try again")) }
                             }
                         }

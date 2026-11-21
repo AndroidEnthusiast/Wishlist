@@ -52,14 +52,12 @@ fun AccountSheet(
     // The theme's own colour a step up from the sheet (owner, 18 November 2026: no plain grey tiles on a tinted theme).
     val tile = if (look.design == "quiet") look.groupFill() else androidx.compose.ui.graphics.lerp(sheetColor(look, cs.surface), cs.onSurface, 0.08f)
     val shape = if (look.design == "quiet") Squircle(20.dp) else RoundedCornerShape(16.dp)
-    FormSheetHost(onClose) {
+    FormSheetHost(onClose, menu = true) {
         val host = LocalFormHost.current!!
         val tall = (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp * 0.92f).dp
         Column(Modifier.fillMaxWidth().height(tall)) {
             Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-                androidx.compose.runtime.CompositionLocalProvider(LocalInTopBar provides true) {
-                    IconButton(onClick = host.close, modifier = Modifier.align(Alignment.CenterEnd)) { Icon(AppIcons.Close, tr("Close")) }
-                }
+                // A menu: no ✕ (owner, 21 November 2026); swipe it down or tap outside.
             }
             Column(
                 Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).navigationBarsPadding(),

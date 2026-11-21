@@ -35,7 +35,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -198,7 +197,7 @@ internal fun KeepSafePage(snack: SnackbarHostState, onBack: () -> Unit) {
             ProfileGroup {
                 Text(tr("With your recovery key, everything comes back on a new phone."), style = MaterialTheme.typography.bodyMedium, color = cs.onSurface)
                 Button(onClick = { showKey = true }, modifier = Modifier.fillMaxWidth()) { Text(tr("Show and save your key")) }
-                TextButton(onClick = { restoring = true }) { Text(tr("Restore with a recovery key")) }
+                LinkButton(onClick = { restoring = true }) { Text(tr("Restore with a recovery key")) }
             }
             ProfileGroup {
                 ProfileRow(tr("Backup file"), if (file) "" else tr("Optional")) { file = !file }

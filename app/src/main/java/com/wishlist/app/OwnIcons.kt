@@ -134,6 +134,17 @@ class OwnIcons(private val stroke: Float) {
         icon("Copy", line("M9.5,8.5h8A1.5,1.5 0 0,1 19,10v8.5A1.5,1.5 0 0,1 17.5,20h-8A1.5,1.5 0 0,1 8,18.5V10A1.5,1.5 0 0,1 9.5,8.5z"),
             line("M16,8.5V6A1.5,1.5 0 0,0 14.5,4.5h-8A1.5,1.5 0 0,0 5,6v8.5A1.5,1.5 0 0,0 6.5,16H8"))
     }
+    // For the menus as sheets (owner, 21 November 2026): a camera, a flag (report), a circle with a line (block) and a
+    // door with an arrow out (leave).
+    val camera by lazy {
+        icon("Camera", line("M4.5,8.5A1.5,1.5 0 0,1 6,7h2.5l1.5,-2h4l1.5,2H18a1.5,1.5 0 0,1 1.5,1.5v9A1.5,1.5 0 0,1 18,19H6a1.5,1.5 0 0,1 -1.5,-1.5z"),
+            line("M9,13a3,3 0 1,0 6,0a3,3 0 1,0 -6,0z"))
+    }
+    val flag by lazy { icon("Flag", line("M6,20.5V4.5"), line("M6,5h10.5l-2,3.5l2,3.5H6")) }
+    val block by lazy { icon("Block", line("M4.5,12a7.5,7.5 0 1,0 15,0a7.5,7.5 0 1,0 -15,0z"), line("M6.7,6.7l10.6,10.6")) }
+    val leave by lazy {
+        icon("Leave", line("M13,4.5H7A1.5,1.5 0 0,0 5.5,6v12A1.5,1.5 0 0,0 7,19.5h6"), line("M10,12h10"), line("M16.5,8.5L20,12l-3.5,3.5"))
+    }
     private val awning = "M4.5,9.5L6,5h12l1.5,4.5a2.5,2.5 0 0,1 -5,0a2.5,2.5 0 0,1 -5,0a2.5,2.5 0 0,1 -5,0z"
     private val shopBody = "M6,12.5v6A1.5,1.5 0 0,0 7.5,20h9a1.5,1.5 0 0,0 1.5,-1.5v-6"
     val store by lazy { icon("Store", line(awning), line(shopBody), line("M10,20v-4h4v4")) }
@@ -160,7 +171,7 @@ class OwnIcons(private val stroke: Float) {
     val all: List<ImageVector> get() = listOf(
         add, close, check, back, chevron, palette, dropDown, bin, edit, heart, heartFilled, home, homeFilled, lock, list, bell, more,
         person, personFilled, friends, friendsFilled, refresh, search, gear, share, group, gift, bag, swap, store, storeFilled, chat, chatFilled, eye, eyeOff, gallery,
-        moveOut, copy
+        moveOut, copy, camera, flag, block, leave
     )
 }
 

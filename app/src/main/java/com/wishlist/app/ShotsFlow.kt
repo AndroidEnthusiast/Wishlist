@@ -142,7 +142,7 @@ private fun PickSheet(s: ShotsState, loading: Boolean, onClose: () -> Unit) {
                             if (!loading && s.usable.size > 1) Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(tr("%d picked", s.pickedCount), style = MaterialTheme.typography.titleSmall, color = cs.onSurface, modifier = Modifier.weight(1f))
                                 val all = s.pickedCount == s.usable.size
-                                TextButton(onClick = { s.pickAll(!all) }) { Text(if (all) tr("Select none") else tr("Select all")) }
+                                LinkButton(onClick = { s.pickAll(!all) }) { Text(if (all) tr("Select none") else tr("Select all")) }
                             }
                         }
                     }

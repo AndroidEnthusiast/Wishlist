@@ -117,11 +117,13 @@ fun OverviewScreen(
             )
         }
         if (shown.isEmpty()) {
-            Box(Modifier.fillMaxSize().padding(32.dp), Alignment.Center) {
-                Text(
-                    if (page == "top") tr("Nothing here yet. Tap the heart on the wishes you’d love most.")
-                    else tr("Nothing here yet. Tap + to add the first thing you’d love."),
-                    color = cs.onSurfaceVariant, textAlign = TextAlign.Center
+            Box(Modifier.fillMaxSize(), Alignment.Center) {
+                if (page == "top") EmptyState(
+                    AppIcons.FavoriteLine, tr("Nothing here yet. Tap the heart on the wishes you’d love most."),
+                    tr("Show all wishes"), { places.homePage = "wishes" }
+                ) else EmptyState(
+                    AppIcons.Gift, tr("Nothing here yet. Tap + to add the first thing you’d love."),
+                    tr("Open my wishlist"), { onOpenMine(Repo.mineIds.first()) }
                 )
             }
             return@Column

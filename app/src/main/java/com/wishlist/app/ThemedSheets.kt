@@ -188,8 +188,14 @@ internal fun backAsks(unsaved: Boolean): Boolean = unsaved
  */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-fun FormSheetHost(onClose: () -> Unit, content: @Composable () -> Unit) {
-    var allowed by androidx.compose.runtime.remember { mutableStateOf(false) }
+fun FormSheetHost(
+    onClose: () -> Unit,
+    // A tall menu, not a form (You and your settings): it closes like every menu, by a swipe down or a tap outside,
+    // and has no ✕ (owner, 21 November 2026).
+    menu: Boolean = false,
+    content: @Composable () -> Unit
+) {
+    var allowed by androidx.compose.runtime.remember { mutableStateOf(menu) }
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = { formSheetMayHide(it, allowed) })
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     val latest = androidx.compose.runtime.rememberUpdatedState(onClose)
@@ -218,8 +224,8 @@ fun FormSheetHost(onClose: () -> Unit, content: @Composable () -> Unit) {
         properties = androidx.compose.material3.ModalBottomSheetProperties(shouldDismissOnBackPress = false)
     ) {
         androidx.activity.compose.BackHandler { if (backAsks(host.unsaved)) asking = true else host.close() }
-        // Swipes on the form never reach the sheet (only the pull tab moves it).
-        Box(Modifier.nestedScroll(KeepFormOpen).pointerInput(Unit) { detectVerticalDragGestures { change, _ -> change.consume() } }) {
+        // Swipes on the form never reach the sheet (only the pull tab moves it); a menu moves as any sheet.
+        Box(if (menu) Modifier else Modifier.nestedScroll(KeepFormOpen).pointerInput(Unit) { detectVerticalDragGestures { change, _ -> change.consume() } }) {
             androidx.compose.runtime.CompositionLocalProvider(LocalFormHost provides host) { content() }
         }
     }

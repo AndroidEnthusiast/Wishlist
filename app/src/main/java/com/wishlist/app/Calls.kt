@@ -122,7 +122,7 @@ fun ServerCallsRow() {
             style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
             modifier = Modifier.weight(1f).padding(end = 12.dp)
         )
-        TextButton(onClick = { open = true }) { Text(tr("Details")) }
+        LinkButton(onClick = { open = true }) { Text(tr("Details")) }
     }
     if (open) ServerCallsDialog { open = false }
 }

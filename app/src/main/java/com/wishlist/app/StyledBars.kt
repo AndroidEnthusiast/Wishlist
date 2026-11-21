@@ -125,10 +125,12 @@ fun TopAppBar(
     val nav: @Composable () -> Unit = { CompositionLocalProvider(LocalInTopBar provides true) { navigationIcon() } }
     val acts: @Composable RowScope.() -> Unit = { CompositionLocalProvider(LocalInTopBar provides true) { actions() } }
     val scroll = LocalTopBarScroll.current
-    if (look.design == "quiet" && large && scroll != null) {
+    // The big title that shrinks as you scroll, in every style (owner, 21 November 2026: "big title everywhere"; before,
+    // only Quiet, which made the Theme screen jump when switching styles).
+    if (large && scroll != null) {
         androidx.compose.runtime.DisposableEffect(scroll) { scroll.active = true; onDispose { scroll.active = false } }
         androidx.compose.material3.LargeTopAppBar(
-            { CompositionLocalProvider(LocalInLargeBar provides true) { title() } }, modifier, nav, acts,
+            { CompositionLocalProvider(LocalInLargeBar provides true) { title() } }, modifier.then(line), nav, acts,
             colors = colors.copy(scrolledContainerColor = colors.containerColor), scrollBehavior = scroll.behavior
         )
     } else M3TopAppBar(title, modifier.then(line), nav, acts, colors = colors)

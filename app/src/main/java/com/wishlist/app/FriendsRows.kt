@@ -35,7 +35,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -248,9 +247,9 @@ internal fun FriendRow(f: Person, onOpen: () -> Unit, onUnfriend: () -> Unit, on
         }
         Box(Modifier.align(Alignment.TopEnd)) {
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                DropdownMenuItem(text = { Text(tr("Unfriend"), color = cs.error) }, onClick = { menu = false; onUnfriend() })
-                DropdownMenuItem(text = { Text(tr("Block"), color = cs.error) }, onClick = { menu = false; onBlock() })
-                DropdownMenuItem(text = { Text(tr("Report")) }, onClick = { menu = false; onReport() })
+                DropdownMenuItem(text = { Text(tr("Unfriend")) }, leadingIcon = { Icon(AppIcons.Close, null) }, danger = true, onClick = { menu = false; onUnfriend() })
+                DropdownMenuItem(text = { Text(tr("Block")) }, leadingIcon = { Icon(AppIcons.Block, null) }, danger = true, onClick = { menu = false; onBlock() })
+                DropdownMenuItem(text = { Text(tr("Report")) }, leadingIcon = { Icon(AppIcons.Flag, null) }, onClick = { menu = false; onReport() })
             }
         }
     }

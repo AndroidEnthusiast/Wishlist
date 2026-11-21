@@ -34,6 +34,12 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
 - One main action per screen or dialog (`Button`, filled); a second choice is `OutlinedButton`; the way out is plain
   words. In dialogs: see "Dialogs" (the rules of 21 November 2026; the earlier wording is in `docs/STYLE-ARCHIVE.md`).
 - Labels are short verbs in sentence case ("Send invite", "Invite Friends"), never all capitals.
+- **Buttons do, words go** (owner, 21 November 2026; `StyleRulesTest`): anything that does something is a button. On
+  a screen or card it is **as wide as its words** (`TextButton` there is a small secondary button; `Button` the main
+  one), two side by side when they belong together; full width only for a dialog's or form's own bottom buttons.
+  **Plain coloured words** (`LinkButton`) only for going somewhere ("All price changes ›", a licence's text, "I
+  already have lists"), a way out outside a dialog (Close, Skip, Cancel) and in a top bar ("Select all", "Done").
+  **Red** only for removing, leaving, blocking and deleting.
 
 ## Touch and spacing
 - Quiet's own rules (2.207, `docs/styles/quiet.md`): labels sit above text fields (the field wrappers do it, pass
@@ -68,11 +74,29 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
 - **Picking from a list** (a wishlist, a person): plain rows, tap = pick; "+ New …" last, in your colour.
 - **Show what it's about:** a dialog or picker that acts on a wish shows it on top (photo, name, price; several: their
   photos and "3 wishes").
-- **Sheets** (a ⋮): rows in groups with icon tiles; a tap does it and closes the sheet (switches stay open).
-- **Forms** (New wishlist, settings): the full-width form sheet, the main button filled at the bottom, closed only by
-  the X or the pull tab, Back asks when something is typed (`docs/decisions/screens.md`).
+- **Every menu is a bottom sheet** (owner, 21 November 2026; `MenuSheet.kt`, `StyleRulesTest`): every ⋮ (a wish, a
+  list, a chat, a group, a gift exchange, a friend), the + menu, a chat message's long press, a photo's "Take a photo /
+  Choose a photo". Rows in one group, each with its icon in a tinted tile (`DropdownMenuItem(leadingIcon = …)`), red
+  rows (`danger = true`) for leaving, removing and blocking. A tap does it and closes the sheet (switches stay open).
+  **No ✕**: swipe it down or tap outside. (The small pop-up menus of 16 November 2026 are gone.)
+- **Pick one from a list** (Check prices every…, Currency, Category, Size, Sort, View): the same sheet, the options as
+  rows with **a tick on the current one** (`selected = true`); a tap chooses and closes. Choice circles only inside a
+  form that is confirmed with a button (Leave: who organises after you; New wishlist's Privacy).
+- **Forms** (New wishlist, Edit wish, settings, Import, Screenshot to wish): the full-width form sheet, the main button
+  filled at the bottom, **the ✕ top right** (in every style), closed only by the ✕ or the pull tab, Back asks when
+  something is typed (`docs/decisions/screens.md`).
 - **A card that opens something** ("Add wishes from other wishlists"): an icon tile, a title, a detail line and ›.
 - The picture version of these rules: the owner's style guide page (link in `docs/HANDOFF.md`).
+
+## Empty and error states (owner, 21 November 2026; `EmptyState.kt`, `StyleRulesTest`)
+- Every empty or error page: a **soft icon** in a circle of your colour, **one kind line** saying what happened, and
+  **one button** for the next step (Try again, Add a wish, Back, Go to Friends). Never a line alone. `EmptyState(icon,
+  text, action, onAction)`.
+
+## Screen titles (owner, 21 November 2026)
+- Every screen you open has the **big title that shrinks into the bar** as you scroll, in every style. A one-line bar
+  only where the bar shows a person or a second line (a chat, a friend's list, a list's settings), a main tab (Home's
+  wordmark, Messages, Friends, My shops: big one-line titles) and while selecting ("2 selected").
 
 ## Motion
 - Animations are short and calm. When the phone's animations are switched off (Settings > Accessibility > Remove
@@ -93,7 +117,7 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
 - Icons only through `AppIcons` (our own `OwnIcons.kt`); never Google's icon set (`OwnIconsTest` fails).
 - Surfaces in Quiet use `Squircle(…)`, not `RoundedCornerShape`; buttons and chips stay fully round.
 - Dialogs: one rule in every style, see "Dialogs" above (21 November 2026; the earlier rule is in `docs/STYLE-ARCHIVE.md`).
-- Menus: rows in `SheetGroup`s, icons in their tinted tiles (`SheetRow`).
+- Menus: rows in `SheetGroup`s, icons in their tinted tiles (`SheetRow`); every menu is a sheet (see "Dialogs" above).
 - Vibration only at a few relevant moments (now: start selecting, reserving). Celebrations only on reserving and on
   a price drop.
 - Voice: a warm friend, short and kind, never silly or long ("Nothing here yet. Tap + to add the first thing you’d love.").
