@@ -178,10 +178,10 @@ internal fun CodeDialog(code: String, onClose: () -> Unit) {
             }) { Text(tr("Make a new code")) }
             else TextButton(onClick = { clip.setText(AnnotatedString(Friends.pretty(code))); onClose() }) { Text(tr("Copy")) }
         },
-        dismissButton = {
-            if (sure) TextButton(onClick = onClose) { Text(tr("Cancel")) }
-            else TextButton(onClick = { sure = true }) { Text(tr("Make a new code")) }
-        }
+        // The dialog rule (docs/STYLE.md, owner 21 November 2026): a second choice is the outlined button, the way out
+        // plain words at the bottom.
+        secondButton = if (sure) null else ({ TextButton(onClick = { sure = true }) { Text(tr("Make a new code")) } }),
+        dismissButton = { TextButton(onClick = onClose) { Text(if (sure) tr("Cancel") else tr("Close")) } }
     )
 }
 

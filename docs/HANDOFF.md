@@ -5,6 +5,9 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.275 (21 November 2026), read first.** The owner's style guide page: https://claude.ai/artifact/CfZBnhRcVPydi8YVtjfV2H
+  (rules in `docs/STYLE.md`). Ask how Move or copy feels (action first, the wish on top) and how dialogs look in both
+  styles now (Gen Z chaos changed most). New screens follow the guide; `DialogRulesTest` guards the dialog rule.
 - **2.274 (21 November 2026).** Ask whether tapping a price-drop notification or a chat card now shows the whole wish
   in every view. Open: bol.com refuses the app's built-in browser (Chrome works); options given, owner chose none yet.
 - **2.273 (21 November 2026), read first.** Ask how Personal / Co-op reads, Home's tabs (they appear with a second

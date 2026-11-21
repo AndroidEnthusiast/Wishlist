@@ -31,8 +31,8 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
 - Two sizes (`StyledButtons.kt`): **regular** on screens, at least 46 dp tall; **compact** inside a dialog's text, 40 dp tall
   with a smaller shadow and 6 dp room above and below, so a scrolling dialog never cuts the shadow off. The compact
   size is automatic inside `AlertDialog` (`LocalInDialog`); don't set button heights or paddings by hand.
-- One main action per screen or dialog (`Button`); others are `OutlinedButton` or `TextButton`. A dialog's own
-  Close / Cancel / Done are `TextButton`s in its `confirmButton` / `dismissButton` slots.
+- One main action per screen or dialog (`Button`, filled); a second choice is `OutlinedButton`; the way out is plain
+  words. In dialogs: see "Dialogs" (the rules of 21 November 2026; the earlier wording is in `docs/STYLE-ARCHIVE.md`).
 - Labels are short verbs in sentence case ("Send invite", "Invite Friends"), never all capitals.
 
 ## Touch and spacing
@@ -57,8 +57,22 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
   change wishes. Never put an action only behind a long press.
 
 ## Dialogs
-- Title, then `bodyMedium` text, then the content, then the actions at the bottom right. A long dialog scrolls in its
-  text slot. Taps outside close it unless something would be lost (then `dismissOnClickOutside = false`).
+- **One rule in every style (owner, 21 November 2026; checked by `DialogRulesTest`):** title, then `bodyMedium` text,
+  then the content, then the buttons **stacked and full width**: the main action **filled** (`confirmButton`), a
+  second choice **outlined** (`secondButton`), and the way out **plain words at the bottom** (`dismissButton`: only
+  Cancel, Close, Not now, Keep editing, Back, Skip, …). A lone button closes the dialog, so it is plain words too.
+  **Never two buttons in one slot** (that made Move invisible). A long dialog scrolls in its text slot. Taps outside
+  close it unless something would be lost (then `dismissOnClickOutside = false`).
+- **Choosing between actions** (Move or Copy): **choice rows**, not buttons under a paragraph: an icon in its tile, the
+  word, and one line on what it does; tap = choose. One that isn't possible stays, greyed, its line saying why.
+- **Picking from a list** (a wishlist, a person): plain rows, tap = pick; "+ New …" last, in your colour.
+- **Show what it's about:** a dialog or picker that acts on a wish shows it on top (photo, name, price; several: their
+  photos and "3 wishes").
+- **Sheets** (a ⋮): rows in groups with icon tiles; a tap does it and closes the sheet (switches stay open).
+- **Forms** (New wishlist, settings): the full-width form sheet, the main button filled at the bottom, closed only by
+  the X or the pull tab, Back asks when something is typed (`docs/decisions/screens.md`).
+- **A card that opens something** ("Add wishes from other wishlists"): an icon tile, a title, a detail line and ›.
+- The picture version of these rules: the owner's style guide page (link in `docs/HANDOFF.md`).
 
 ## Motion
 - Animations are short and calm. When the phone's animations are switched off (Settings > Accessibility > Remove
@@ -78,7 +92,7 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
 ## The app's own parts (2.210, owner 15 November 2026; `docs/styles/identity.md`)
 - Icons only through `AppIcons` (our own `OwnIcons.kt`); never Google's icon set (`OwnIconsTest` fails).
 - Surfaces in Quiet use `Squircle(…)`, not `RoundedCornerShape`; buttons and chips stay fully round.
-- Dialogs: the confirm button is the main action (filled) only with a dismiss button; a lone button is tonal.
+- Dialogs: one rule in every style, see "Dialogs" above (21 November 2026; the earlier rule is in `docs/STYLE-ARCHIVE.md`).
 - Menus: rows in `SheetGroup`s, icons in their tinted tiles (`SheetRow`).
 - Vibration only at a few relevant moments (now: start selecting, reserving). Celebrations only on reserving and on
   a price drop.

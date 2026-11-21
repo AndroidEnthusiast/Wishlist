@@ -184,9 +184,11 @@ class DragOrderTest : NavigationBase() {
         compose.waitForIdle()
         compose.onAllNodes(hasContentDescription("More") and hasClickAction()).onFirst().performClick()
         tap("Move or copy…")
-        tap("Household $b")
+        // The action first, then the wishlist (owner, 21 November 2026).
         shows("Move or copy?")
         tap("Copy")
+        shows("Copy to…")
+        tap("Household $b")
         compose.waitForIdle()
         val household = Repo.mineIds.first { Repo.mineName(it) == "Household $b" }
         assertTrue("copied there", Repo.mine(app, household).wishes.any { it.id == lamp })

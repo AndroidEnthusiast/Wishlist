@@ -66,8 +66,12 @@ object MoveFlow {
         val copied: Boolean = false, val undoer: (suspend () -> String?)? = null
     )
 
-    /** Leaving a collab wishlist asks each time (owner, 11 November 2026): the wishes and where they go, waiting for "Move" or "Copy". */
-    var choosing by mutableStateOf<Pair<Set<Long>, String>?>(null)
+    /**
+     * Step 1, "Move or copy?" (owner, 21 November 2026: choose the action first, then the wishlist; MoveChoose.kt): the
+     * wishes waiting for Move or Copy. Then [picking] asks where, with [copying] saying which.
+     */
+    var choosing by mutableStateOf<Set<Long>?>(null)
+    var copying by mutableStateOf(false)
 
     /** The list that is open: one of your own (its id) or a collab wishlist (MoveAcross's key). */
     fun sourceKey(): String = Shared.active?.let { MoveAcross.collabKey(it) } ?: Repo.openMine
@@ -81,7 +85,13 @@ object MoveFlow {
         private set
 
     fun ask(ids: Set<Long>) {
-        if (ids.isNotEmpty()) picking = ids
+        if (ids.isNotEmpty()) choosing = ids
+    }
+
+    /** Move or Copy was chosen: now the wishlist. */
+    fun choose(copy: Boolean) {
+        val ids = choosing ?: return
+        copying = copy; choosing = null; picking = ids
     }
 
     /**
@@ -119,12 +129,12 @@ object MoveFlow {
     }
 
     /**
-     * After the list is picked: "Move or copy?" every time (owner, 16 November 2026: "Move to…" became "Move or
-     * copy…", and copying works between all your lists, not only to and from collab wishlists).
+     * The wishlist is picked: move or copy as chosen first (owner, 21 November 2026; before, "Move or copy?" came after
+     * the list, 16 November 2026). Copying works between all your lists and co-op wishlists.
      */
     fun start(c: Context, to: String, ids: Set<Long>, scope: kotlinx.coroutines.CoroutineScope) {
         picking = null
-        choosing = ids to to
+        go(c, to, ids, copying, scope)
     }
 
     /** Moves (or with [copy], copies) [ids] from the open list to [to], after "Move or copy?". */
@@ -191,33 +201,9 @@ object MoveFlow {
 fun MoveHost(snack: SnackbarHostState) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
-    MoveFlow.picking?.let { ids -> MoveToDialog(ids, onPick = { to -> MoveFlow.start(ctx, to, ids, scope) }, onClose = { MoveFlow.picking = null }) }
-    // Leaving a collab wishlist: Move or Copy? (owner, 11 November 2026)
-    MoveFlow.choosing?.let { (ids, to) ->
-        val here = shortName(MoveFlow.nameOf(MoveFlow.sourceKey()))
-        val fromCollab = MoveAcross.isCollab(MoveFlow.sourceKey())
-        val blocked = fromCollab && ids.any { !MoveAcross.mayLeave(Shared.reserved[it]) }
-        AlertDialog(
-            onDismissRequest = { MoveFlow.choosing = null },
-            title = { Text(tr("Move or copy?")) },
-            text = {
-                Text(
-                    when {
-                        !fromCollab -> tr("Move takes it off “%1\$s”. Copy keeps it on both lists, so “%2\$s” has it too.", here, shortName(MoveFlow.nameOf(to)))
-                        blocked -> tr("Someone reserved this wish, so it stays on “%s”. You can still copy it.", here)
-                        else -> tr("Move takes it off “%s” for everyone on it. It stays in that list’s bin for 30 days. Copy leaves it there.", here)
-                    }
-                )
-            },
-            confirmButton = {
-                Row {
-                    TextButton(onClick = { MoveFlow.go(ctx, to, ids, copy = true, scope = scope) }) { Text(tr("Copy")) }
-                    TextButton(onClick = { MoveFlow.go(ctx, to, ids, copy = false, scope = scope) }, enabled = !blocked) { Text(tr("Move")) }
-                }
-            },
-            dismissButton = { TextButton(onClick = { MoveFlow.choosing = null }) { Text(tr("Cancel")) } }
-        )
-    }
+    // Step 1: Move or Copy (MoveChoose.kt), step 2: which wishlist; the wish shows in both (owner, 21 November 2026).
+    MoveFlow.choosing?.let { ids -> MoveOrCopyDialog(ids, onChoose = { MoveFlow.choose(it) }, onClose = { MoveFlow.choosing = null }) }
+    MoveFlow.picking?.let { ids -> MoveToDialog(ids, copy = MoveFlow.copying, onPick = { to -> MoveFlow.start(ctx, to, ids, scope) }, onClose = { MoveFlow.picking = null }) }
     val d = MoveFlow.done
     LaunchedEffect(d) {
         if (d == null) return@LaunchedEffect
@@ -240,11 +226,11 @@ fun MoveHost(snack: SnackbarHostState) {
     }
 }
 
-private fun shortName(s: String): String = if (s.length <= 30) s else s.take(29).trimEnd() + "…"
+internal fun shortName(s: String): String = if (s.length <= 30) s else s.take(29).trimEnd() + "…"
 
 /** "Move to…": your other wishlists, then "+ New wishlist" (the usual form; the wishes go to the new list). */
 @Composable
-fun MoveToDialog(ids: Set<Long>, onPick: (String) -> Unit, onClose: () -> Unit) {
+fun MoveToDialog(ids: Set<Long>, copy: Boolean, onPick: (String) -> Unit, onClose: () -> Unit) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     // Your other wishlists (all of them when a collab wishlist is open), then the other collab wishlists.
@@ -254,11 +240,13 @@ fun MoveToDialog(ids: Set<Long>, onPick: (String) -> Unit, onClose: () -> Unit) 
     var newList by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text(if (ids.size == 1) tr("Move or copy to…") else tr("Move or copy %d wishes to…", ids.size)) },
+        // The title says what will happen (owner, 21 November 2026); the wish stays in sight.
+        title = { Text(if (copy) tr("Copy to…") else tr("Move to…")) },
         text = {
             Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                MovingWishes(ids)
                 if (others.isEmpty() && collabs.isEmpty()) Text(
-                    tr("You have one wishlist. Make a new one to move or copy wishes to."),
+                    if (copy) tr("You have one wishlist. Make a new one to copy wishes to.") else tr("You have one wishlist. Make a new one to move wishes to."),
                     style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(bottom = 4.dp)
                 )
                 others.forEach { d ->

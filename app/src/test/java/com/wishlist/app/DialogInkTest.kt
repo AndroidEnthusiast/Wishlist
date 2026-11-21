@@ -31,6 +31,9 @@ class DialogInkTest : NavigationBase() {
         compose.waitForIdle()
         compose.onAllNodes(hasText("Move or copy…") and hasClickAction()).onFirst().performClick()
         compose.waitForIdle()
+        // Move or Copy first (21 November 2026), then the wishlists.
+        compose.onAllNodes(hasText("Move") and hasClickAction()).onFirst().performClick()
+        compose.waitForIdle()
         val node = compose.onAllNodes(hasText("Household")).onFirst().fetchSemanticsNode()
         val layouts = mutableListOf<TextLayoutResult>()
         node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)

@@ -83,7 +83,8 @@ fun QuietDialog(
     dismissButton: (@Composable () -> Unit)?,
     title: (@Composable () -> Unit)?,
     text: (@Composable () -> Unit)?,
-    properties: DialogProperties
+    properties: DialogProperties,
+    secondButton: (@Composable () -> Unit)? = null
 ) {
     val look = LocalLook.current
     val off = animationsOff(LocalContext.current)
@@ -102,7 +103,10 @@ fun QuietDialog(
         CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides look.scheme.onSurface) {
         Column(
             modifier.widthIn(max = 420.dp).fillMaxWidth().scale(grow.value).alpha(show.value)
-                .clip(look.dialogShape).background(quietRaised(look, look.scheme.surface)).padding(24.dp),
+                // Gen Z chaos keeps its own surface (thick line, hard shadow); Quiet its raised white / lifted grey.
+                .then(if (look.design == "quiet") Modifier.clip(look.dialogShape).background(quietRaised(look, look.scheme.surface))
+                    else Modifier.padding(6.dp).lookSurface(look, look.dialogShape, look.scheme.surfaceContainerHigh, depth = 10.dp))
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (title != null) ProvideTextStyle(MaterialTheme.typography.titleLarge.copy(textAlign = TextAlign.Center, color = look.scheme.onSurface)) {
@@ -116,7 +120,10 @@ fun QuietDialog(
             Column(Modifier.fillMaxWidth().padding(top = 20.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 // The filled main action only when there is a choice; a lone button ("Cancel", "Close", "Got it") is the
                 // calm tonal one, never a loud Berry "Cancel" (found in the screenshots, 15 November 2026).
-                CompositionLocalProvider(LocalDialogSlot provides if (dismissButton != null) "confirm" else "only") { confirmButton() }
+                // One button alone closes the dialog ("Close", "Got it", "Cancel"): plain words, like every Cancel
+                // (owner, 21 November 2026; before, a tonal pill).
+                CompositionLocalProvider(LocalDialogSlot provides if (dismissButton != null || secondButton != null) "confirm" else "only") { confirmButton() }
+                if (secondButton != null) CompositionLocalProvider(LocalDialogSlot provides "second") { secondButton() }
                 if (dismissButton != null) CompositionLocalProvider(LocalDialogSlot provides "dismiss") { dismissButton() }
             }
         }

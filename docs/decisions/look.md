@@ -266,3 +266,18 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
 - **People's big names in the title font too** (owner, 21 November 2026: "one of the major titles where a different
   app unique font would fit"): your name on Home and Profile, and a friend's name at the top of their page, like a
   wishlist's name. Small names in rows, chats and cards stay in the text font. `FontRulesTest` checks it.
+
+## One rule for buttons and taps, and Move or copy action-first (owner, 21 November 2026)
+- The owner's recording: in Quiet, "Move or copy?" showed Copy and Cancel with an empty gap: Move was there but
+  invisible (two buttons in one full-width slot). His friend's Gen Z chaos showed plain words in a row. Owner: one
+  style guide, uniform buttons and clicks.
+- **Every dialog, every style: buttons stacked and full width; main filled, a second choice outlined
+  (`secondButton`), the way out plain words at the bottom; a lone button is the way out, so plain words** (owner chose
+  this over words in a row). Gen Z chaos dialogs changed to this too. Choosing between actions = choice rows (icon
+  tile, word, one line); pickers show the wish on top. Written in `docs/STYLE.md` ("Dialogs"), drawn on the owner's
+  style guide page (https://claude.ai/artifact/CfZBnhRcVPydi8YVtjfV2H), checked by `DialogRulesTest`.
+- **Move or copy: the action first, then the wishlist** (owner chose "choose first" of three drawn options, "but make
+  sure the wish it's about is visible"): "Move or copy?" with two choice rows (Move: "Takes it off …"; Copy: "Keeps
+  it on both lists"), then "Move to…" / "Copy to…"; the wish (or several as photos + "3 wishes") on top of both.
+  Move is greyed with the reason when someone reserved the co-op wish. Fixed with it: Your friend code ("Make a new
+  code" was in the Cancel spot) and Price alert ("Remove" in the Cancel spot, now "Remove alert" as the second choice).

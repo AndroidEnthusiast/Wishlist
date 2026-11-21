@@ -126,6 +126,14 @@ class OwnIcons(private val stroke: Float) {
     val swap by lazy {
         icon("Swap", line("M5,9h13"), line("M15,5.5L18.5,9L15,12.5"), line("M19,15H6"), line("M9,11.5L5.5,15L9,18.5"))
     }
+    // Move or copy (owner, 21 November 2026): an arrow out of a box, and two overlapping sheets.
+    val moveOut by lazy {
+        icon("Move", line("M13,5.5H7A2,2 0 0,0 5,7.5v9a2,2 0 0,0 2,2h9a2,2 0 0,0 2,-2V14"), line("M11,13L19.5,4.5"), line("M14.5,4.5h5v5"))
+    }
+    val copy by lazy {
+        icon("Copy", line("M9.5,8.5h8A1.5,1.5 0 0,1 19,10v8.5A1.5,1.5 0 0,1 17.5,20h-8A1.5,1.5 0 0,1 8,18.5V10A1.5,1.5 0 0,1 9.5,8.5z"),
+            line("M16,8.5V6A1.5,1.5 0 0,0 14.5,4.5h-8A1.5,1.5 0 0,0 5,6v8.5A1.5,1.5 0 0,0 6.5,16H8"))
+    }
     private val awning = "M4.5,9.5L6,5h12l1.5,4.5a2.5,2.5 0 0,1 -5,0a2.5,2.5 0 0,1 -5,0a2.5,2.5 0 0,1 -5,0z"
     private val shopBody = "M6,12.5v6A1.5,1.5 0 0,0 7.5,20h9a1.5,1.5 0 0,0 1.5,-1.5v-6"
     val store by lazy { icon("Store", line(awning), line(shopBody), line("M10,20v-4h4v4")) }
@@ -151,7 +159,8 @@ class OwnIcons(private val stroke: Float) {
     /** Every icon, for the checks (all drawn, none empty). */
     val all: List<ImageVector> get() = listOf(
         add, close, check, back, chevron, palette, dropDown, bin, edit, heart, heartFilled, home, homeFilled, lock, list, bell, more,
-        person, personFilled, friends, friendsFilled, refresh, search, gear, share, group, gift, bag, swap, store, storeFilled, chat, chatFilled, eye, eyeOff, gallery
+        person, personFilled, friends, friendsFilled, refresh, search, gear, share, group, gift, bag, swap, store, storeFilled, chat, chatFilled, eye, eyeOff, gallery,
+        moveOut, copy
     )
 }
 
