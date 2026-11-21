@@ -67,7 +67,8 @@ internal fun AppPopups(a: AppState, snack: SnackbarHostState, goStable: (Deep) -
         // One "New wishlist" sheet (owner, 17 November 2026): My own / With others swap inside it.
         "mine", "collab" -> NewWishlistSheet(
             withOthers = a.plusNew == "collab",
-            onCreatedMine = { id -> a.plusNew = null; scope.launch { snack.showToast(tr("“%s” is ready", Repo.mineName(id))) } },
+            // The new wishlist opens at once (owner, 21 November 2026): no "is ready" message, the open list says it.
+            onCreatedMine = { id -> a.plusNew = null; a.openMine(id) },
             onCreatedShared = { code -> a.sharedMade(code) },
             onClose = { a.plusNew = null }
         )

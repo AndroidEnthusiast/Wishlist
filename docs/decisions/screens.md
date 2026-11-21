@@ -260,3 +260,12 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here. Look and f
   wait** (8 s in the form; background price checks keep 15 s).
 - **Save while the price is still being looked up: Save waits** (owner) and shows "Getting the price…"; a name or price
   typed while waiting is kept (`keepTyped`). Checks: `FasterReadTest`.
+
+## New wishlist: who can see it, and it opens (owner, 21 November 2026)
+- **"Who can see it" is in the New wishlist form** (every place it appears: + / Home, and when making a list while
+  moving, saving or restoring a wish, or from screenshots): the same three choices as list settings, shown in full,
+  **starting on App settings' "New wishlists are visible to"**. A different pick is **for that wishlist only**; the
+  default stays. Shown only with online sharing set up. (`WhoPicker`, `ListVisibility.startShared(…, to)`.)
+- **A wishlist made from + or Home opens at once**, without the "“X” is ready" message (the open list is the
+  confirmation). Made halfway through another task (moving or saving a wish, the bin, screenshots): you stay in that
+  task. Checks: `NewListChoicesTest`, `DialogButtonsScreenshotTest.newWishlistOfMyOwn`.

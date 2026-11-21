@@ -143,17 +143,22 @@ object ListVisibility {
         prefs(c).edit().putString("new_vis", when (w) { Who.ME -> "me"; Who.FRIENDS -> "friends"; Who.LINK -> "link" }).apply()
     }
 
-    /** A new list: the choice in App settings (now, or at a later start when offline). "Only me" stays offline. */
-    fun startShared(c: Context, id: String) {
+    /**
+     * A new list: [to] as chosen in the New wishlist form (owner, 21 November 2026; it starts on App settings' choice),
+     * now, or at a later start when offline. "Only me" stays offline.
+     */
+    fun startShared(c: Context, id: String, to: Who? = null) {
         if (!Config.enabled) return
         loadDefault(c)
-        val to = newDefault
-        if (to == Who.ME) return
+        val v = pendingValue(to ?: newDefault) ?: return
         val p = prefs(c)
         p.edit().putStringSet("vis_pending", (p.getStringSet("vis_pending", null).orEmpty() + id).toSet())
-            .putString("vis_to_$id", if (to == Who.LINK) "link" else "friends").apply()
+            .putString("vis_to_$id", v).apply()
         Sync.later { trySwitch(c) }
     }
+
+    /** What a new list is switched to ("link" or "friends"), or null for "Only me" (nothing goes online). */
+    internal fun pendingValue(w: Who): String? = when (w) { Who.ME -> null; Who.LINK -> "link"; Who.FRIENDS -> "friends" }
 
     private fun dropPending(c: Context, id: String) {
         val p = prefs(c)
@@ -319,6 +324,18 @@ fun WhoChoices(id: String, snack: SnackbarHostState, sheet: Boolean = false, onC
         )
     }
     return now
+}
+
+/**
+ * "Who can see it" in the New wishlist form (owner, 21 November 2026): the same three choices as in list settings,
+ * starting on App settings' choice; nothing changes online until Create. Picking here is for this wishlist only.
+ */
+@Composable
+fun WhoPicker(value: Who, onPick: (Who) -> Unit) {
+    Text(tr("Who can see it"), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Choice(tr("Only me"), tr("Nobody else sees this wishlist."), value == Who.ME, true) { onPick(Who.ME) }
+    Choice(tr("My friends"), tr("Friends you added in the app."), value == Who.FRIENDS, true) { onPick(Who.FRIENDS) }
+    Choice(tr("Friends + anyone with the link"), tr("Also people without the app, in their browser."), value == Who.LINK, true) { onPick(Who.LINK) }
 }
 
 @Composable

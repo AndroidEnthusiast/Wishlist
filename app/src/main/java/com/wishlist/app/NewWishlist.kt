@@ -117,6 +117,8 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit, top: (@Compo
     var picked by remember { mutableStateOf(listOf<Wish>()) }
     var picking by remember { mutableStateOf(false) }
     val canCopy = remember { canCopyFromOthers(ctx, null) }
+    // Who can see it (owner, 21 November 2026): starts on App settings' choice; changing it is for this list only.
+    var who by remember { ListVisibility.loadDefault(ctx); mutableStateOf(ListVisibility.newDefault) }
     FormSheet(
         onDismissRequest = onClose,
         properties = DialogProperties(dismissOnClickOutside = false),
@@ -142,6 +144,8 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit, top: (@Compo
                     if (occ?.kind == "own" && occ?.name.isNullOrBlank()) tr("Give it a name and a date.") else tr("Choose the date."),
                     color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall
                 )
+                // Only with online sharing set up: without it every list stays on the phone.
+                if (Config.enabled) WhoPicker(who) { who = it }
                 if (canCopy) {
                     Row(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { picking = true }
@@ -166,7 +170,7 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit, top: (@Compo
                 if (name.isBlank()) missing = true
                 else if (!Occasions.complete(occ)) occMissing = true
                 else {
-                    onCreated(createOwnWishlist(ctx, name, notes, occ, picked))
+                    onCreated(createOwnWishlist(ctx, name, notes, occ, picked, if (Config.enabled) who else null))
                 }
             }) { Text(tr("Create")) }
         },

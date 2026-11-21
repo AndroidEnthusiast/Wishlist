@@ -51,4 +51,17 @@ class DialogButtonsScreenshotTest : NavigationBase() {
         repeat(10) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
         compose.guard("build/outputs/roborazzi/new_wishlist_with_others.png"); captureScreenRoboImage("build/outputs/roborazzi/new_wishlist_with_others.png")
     }
+
+    /** "New wishlist" of your own with "Who can see it" (owner, 21 November 2026), light and dark, Quiet and chaos. */
+    @Test fun newWishlistOfMyOwn() {
+        compose.mainClock.autoAdvance = false
+        for (st in listOf("quiet", "chaos")) for (m in listOf("light", "dark")) {
+            compose.runOnUiThread { compose.activity.setContent {
+                LookTheme(lookFor(st, "blue", m)) { NewWishlistSheet(withOthers = false, onCreatedMine = {}, onCreatedShared = {}, onClose = {}) }
+            } }
+            repeat(10) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
+            val path = "build/outputs/roborazzi/new_wishlist_mine_${st}_$m.png"
+            compose.guard(path); captureScreenRoboImage(path)
+        }
+    }
 }

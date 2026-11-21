@@ -119,11 +119,12 @@ internal fun homeIsEmpty(mine: List<MineData>, shared: List<SharedList>): Boolea
  * the wishes copied in from your other lists, and the visibility chosen in App settings (owner, 7 November 2026;
  * default: anyone with the link). Its id.
  */
-internal fun createOwnWishlist(c: Context, name: String, notes: String, occ: Occasion?, picked: List<Wish>): String {
+internal fun createOwnWishlist(c: Context, name: String, notes: String, occ: Occasion?, picked: List<Wish>, who: Who? = null): String {
     val id = Repo.createMine(c, name, notes)
     occ?.let { Occasions.setMine(c, id, it) }
     Repo.copyInto(c, id, picked)
-    ListVisibility.startShared(c, id)
+    // Who can see it, as chosen in the form (owner, 21 November 2026).
+    ListVisibility.startShared(c, id, who)
     return id
 }
 
