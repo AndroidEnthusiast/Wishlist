@@ -873,3 +873,11 @@ wishlists with a people picker (new server functions `wl_sh_people`, `wl_sh_befr
 - **2.271 (21 November 2026).** Ask how the New wishlist form feels with "Who can see it", and the list opening after
   Create (`screens.md`, last section).
 form; a list made from + or Home opens. Not checkable here: real shops' timing, real chats between two phones.
+
+## The 21 November 2026 summary as it was after 2.272 (moved when 2.273 was added)
+### 21 November 2026: fonts, faster link reading, chat on shared lists, new-list visibility (2.269–2.271)
+(The first, longer summary of this session is in HANDOFF-ARCHIVE.md.)
+2.269: numbers in the text font everywhere (`FontRulesTest`); shared links fill the form faster (`FasterReadTest`).
+2.270: big names in the title font; "Chat about this wish" on shared wishlists with a people picker (server
+`wl_sh_people`, `wl_sh_befriend`; owner runs `supabase-features.sql` v2). 2.271: "Who can see it" in the New wishlist
+form; a list made from + or Home opens. 2.272: one-page form, form sheets close only by X / pull tab. Not checkable: phone.

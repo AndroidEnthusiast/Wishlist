@@ -5,6 +5,9 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.273 (21 November 2026), read first.** Ask how Personal / Co-op reads, Home's tabs (they appear with a second
+  kind), and taking chosen wishes out (✕, or untick in the picker) (`home-and-kinds.md`). Lesson from the owner:
+  before reporting a feature done, also try changing your mind (undo, remove, go back) and say what's missing.
 - **2.271–2.272 (21 November 2026).** Ask how New wishlist feels now (one page, Personal / Shared, the card, Privacy)
   and whether form sheets stay open as wanted (X, pull tab, Back asks). Other forms could also report "something
   typed" for Back (group, exchange, settings, profile): ask (`screens.md`, last section).
@@ -100,12 +103,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
-### 21 November 2026: fonts, faster link reading, chat on shared lists, new-list visibility (2.269–2.271)
-(The first, longer summary of this session is in HANDOFF-ARCHIVE.md.)
-2.269: numbers in the text font everywhere (`FontRulesTest`); shared links fill the form faster (`FasterReadTest`).
-2.270: big names in the title font; "Chat about this wish" on shared wishlists with a people picker (server
-`wl_sh_people`, `wl_sh_befriend`; owner runs `supabase-features.sql` v2). 2.271: "Who can see it" in the New wishlist
-form; a list made from + or Home opens. 2.272: one-page form, form sheets close only by X / pull tab. Not checkable: phone.
+### 21 November 2026: fonts, link reading, chat on co-op lists, New wishlist, Home's tabs (2.269–2.273)
+(Earlier wordings of this summary are in HANDOFF-ARCHIVE.md.) 2.269: numbers in the text font; faster link reading.
+2.270: big names in the title font; chat about a wish on co-op lists (owner runs `supabase-features.sql` v2). 2.271–2.272:
+Privacy in New wishlist, it opens; one page; form sheets close only by X / pull tab. 2.273: "Shared" → Co-op everywhere,
+Home's tabs per kind, chosen wishes can be taken out (a flaw Claude missed). Not checkable here: the real phone.
 
 ### 20 November 2026: card labels, "I have it", the layout inspector (2.268)
 Owner's screenshots (labels overlapping, cut, prices broken) → labels redesigned (`CardLabels.kt`, owner chose the

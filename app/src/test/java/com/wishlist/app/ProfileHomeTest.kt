@@ -2,6 +2,7 @@ package com.wishlist.app
 
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasText
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -25,12 +26,28 @@ class ProfileHomeTest : NavigationBase() {
         shows("Export everything")
     }
 
-    @Test fun homeShowsTheBlocksAndTheTwoPages() {
+    @Test fun homeShowsTheBlocksAndTabsOnlyForKindsYouHave() {
         tabOn("Home")
         shows("Wishes"); shows("Wishlist"); shows("Total value")
-        shows("My wishlists"); shows("Shared")
-        tap("Shared")
-        shows("Nothing shared yet. Tap + to make a wishlist with others or start a wishlist group.")
+        // Only Personal wishlists: no tab bar (owner, 21 November 2026).
+        compose.onAllNodes(androidx.compose.ui.test.hasText("Personal")).assertCountEquals(0)
+        compose.onAllNodes(androidx.compose.ui.test.hasText("Shared")).assertCountEquals(0)
+        // A co-op wishlist: Personal | Co-op.
+        compose.runOnUiThread { Shared.lists = listOf(SharedList("COOP1", "coopkey_coopkey_coopkey", "Gifts for Mum")) }
+        compose.waitForIdle()
+        shows("Personal"); shows("Co-op")
+        compose.onAllNodes(androidx.compose.ui.test.hasText("Groups")).assertCountEquals(0)
+        compose.onAllNodes(androidx.compose.ui.test.hasText("Exchanges")).assertCountEquals(0)
+        tap("Co-op")
+        shows("Gifts for Mum")
+        compose.runOnUiThread { Shared.lists = emptyList() }
+    }
+
+    @Test fun theTabsAreInOrderAndOnlyWhenThereIsOne() {
+        assertEquals(listOf("personal"), homeTabs(coop = false, groups = false, exchanges = false))
+        assertEquals(listOf("personal", "groups", "exchanges"), homeTabs(coop = false, groups = true, exchanges = true))
+        assertEquals(listOf("personal", "coop", "groups", "exchanges"), homeTabs(coop = true, groups = true, exchanges = true))
+        assertEquals(listOf("Personal", "Co-op", "Groups", "Exchanges"), homeTabs(true, true, true).map { homeTabLabel(it) })
     }
 
     @Test fun bothHomePartsHaveASwitchAndAreOnByDefault() {

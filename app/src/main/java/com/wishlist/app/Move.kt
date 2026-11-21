@@ -274,7 +274,7 @@ fun MoveToDialog(ids: Set<Long>, onPick: (String) -> Unit, onClose: () -> Unit) 
                     }
                 }
                 if (collabs.isNotEmpty()) Text(
-                    tr("Shared wishlists"), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant,
+                    tr("Co-op wishlists"), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant,
                     modifier = Modifier.padding(start = 8.dp, top = 8.dp)
                 )
                 collabs.forEach { l ->

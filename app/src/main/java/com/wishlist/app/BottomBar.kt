@@ -219,7 +219,7 @@ fun PlusMenuSheet(onWish: () -> Unit, onNew: (String) -> Unit, onClose: () -> Un
                 SheetRow({ Icon(AppIcons.Add, null, tint = cs.onSurfaceVariant) }, tr("Add a wish"), onWish, detail = tr("From a link, a photo or just a name."))
             })
             val more = mutableListOf<@Composable () -> Unit>(
-                { SheetRow({ Icon(AppIcons.ListIcon, null, tint = cs.onSurfaceVariant) }, tr("New wishlist"), { onNew("mine") }, detail = tr("Your own, or one you make with others.")) }
+                { SheetRow({ Icon(AppIcons.ListIcon, null, tint = cs.onSurfaceVariant) }, tr("New wishlist"), { onNew("mine") }, detail = tr("Personal, or a co-op wishlist with others.")) }
             )
             if (Config.enabled) {
                 more += { SheetRow({ Icon(AppIcons.Group, null, tint = cs.onSurfaceVariant) }, tr("New wishlist group"), { onNew("group") }, detail = tr("A circle of people who can see each other’s wishlists.")) }

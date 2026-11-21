@@ -15,6 +15,7 @@ decided something. Every decision was moved word for word, nothing was dropped.
 - `docs/decisions/settings-profile.md`: App settings, Profile, Home's summary blocks and the Mine / Shared swipe (18 November 2026).
 - `docs/decisions/import.md`: Import from GoWish, Giftful, Amazon, other sites and notes (18 November 2026).
 - `docs/decisions/notifications.md`: Notifications: no dead ends, the review of 20 November 2026.
+- `docs/decisions/home-and-kinds.md`: Personal / Co-op ("shared" only means shared with someone), Home's tabs per kind, taking chosen wishes out (21 November 2026).
 - `docs/decisions/screenshots.md`: Screenshot to wish, a name for every wish, several screenshots at once (20 November 2026).
 - `docs/decisions/ideas.md`: Open ideas (not decided) (Open ideas).
 

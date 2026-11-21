@@ -163,7 +163,7 @@ fun BinScreen(snack: SnackbarHostState) {
                             )
                             if (Shared.lists.isNotEmpty()) {
                                 Text(
-                                    tr("On a wishlist you make with others, everyone can restore its deleted wishes."),
+                                    tr("On a co-op wishlist, everyone can restore its deleted wishes."),
                                     style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
                                 )
                             }
@@ -259,7 +259,7 @@ fun BinScreen(snack: SnackbarHostState) {
             text = {
                 Text(
                     (if (n == 1) tr("1 wish will be deleted for good.") else tr("%d wishes will be deleted for good.", n)) +
-                        (if (entries.any { it.listCode != null }) " " + tr("Wishes from wishlists you make with others are gone for everyone on them.") else "") +
+                        (if (entries.any { it.listCode != null }) " " + tr("Wishes from co-op wishlists are gone for everyone on them.") else "") +
                         " " + tr("This can’t be undone.")
                 )
             },

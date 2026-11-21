@@ -358,7 +358,8 @@ class OneNewWishlistTest {
 
     @Test fun collabIsNoLongerSaid() {
         File("src/main/java/com/wishlist/app").listFiles()!!.filter { it.name.endsWith(".kt") }.forEach { f ->
-            assertFalse(f.name, Regex("tr\\(\"[^\"]*[Cc]ollab").containsMatchIn(f.readText()))
+            // "Collaborate" is the owner's own word for what a co-op wishlist is (21 November 2026); "collab" as a name isn't.
+            assertFalse(f.name, Regex("tr\\(\"[^\"]*[Cc]ollab(?!orat)").containsMatchIn(f.readText()))
         }
     }
 }

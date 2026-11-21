@@ -2,6 +2,7 @@ package com.wishlist.app
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -81,20 +82,9 @@ fun ListPickDialog(
                         supportingText = if (missing) ({ Text(tr("What is this wishlist called?")) }) else null,
                         modifier = Modifier.fillMaxWidth().padding(top = 4.dp), keyboardOptions = Capitalised
                     )
-                    if (canCopy) Row(
-                        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { picking = true }
-                            .padding(vertical = 10.dp, horizontal = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(AppIcons.Add, null, tint = cs.primary, modifier = Modifier.size(20.dp))
-                        Column(Modifier.weight(1f).padding(start = 10.dp)) {
-                            Text(tr("Add wishes from your other lists"), style = MaterialTheme.typography.bodyMedium, color = cs.primary)
-                            // No "Optional" (owner, 2.125: it suggested the rest isn't optional).
-                            if (picked.isNotEmpty()) Text(
-                                if (picked.size == 1) tr("1 wish chosen") else tr("%d wishes chosen", picked.size),
-                                style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
-                            )
-                        }
+                    // The same card as New wishlist (owner, 21 November 2026): photos, and ✕ to take one out.
+                    if (canCopy) Box(Modifier.padding(top = 4.dp)) {
+                        CopyWishesCard(picked, onRemove = { w -> picked = picked - w }) { picking = true }
                     }
                 }
                 Text(
@@ -134,5 +124,5 @@ fun ListPickDialog(
             }
         }
     )
-    if (picking) CopyWishesDialog(null, onDone = { picked = it; picking = false }, onClose = { picking = false })
+    if (picking) CopyWishesDialog(null, onDone = { picked = it; picking = false }, onClose = { picking = false }, chosen = picked)
 }

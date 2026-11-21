@@ -128,3 +128,17 @@ internal fun createOwnWishlist(c: Context, name: String, notes: String, occ: Occ
     return id
 }
 
+/**
+ * Home's tabs (owner, 21 November 2026): Personal always, then Co-op, Groups and Exchanges, each only while you have
+ * one. One tab alone means no tab bar.
+ */
+internal fun homeTabs(coop: Boolean, groups: Boolean, exchanges: Boolean): List<String> =
+    listOf("personal") + listOfNotNull(if (coop) "coop" else null, if (groups) "groups" else null, if (exchanges) "exchanges" else null)
+
+/** A tab's short name (owner, 21 November 2026: short labels so four fit side by side). */
+internal fun homeTabLabel(key: String): String = when (key) {
+    "coop" -> tr("Co-op")
+    "groups" -> tr("Groups")
+    "exchanges" -> tr("Exchanges")
+    else -> tr("Personal")
+}

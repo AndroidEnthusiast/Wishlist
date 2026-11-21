@@ -10,15 +10,16 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Home's My wishlists | Shared (owner, 20 November 2026, a bug): a swipe anywhere under the divider switches sides,
+ * Home's tabs (owner, 20 November 2026, a bug; Personal | Co-op since 21 November 2026): a swipe anywhere under the divider switches sides,
  * also on the empty space under the shorter side, down to the bottom of the screen, and back again from there.
  */
 class HomeSwipeTest : NavigationBase() {
-    private val nothingShared = "Nothing shared yet. Tap + to make a wishlist with others or start a wishlist group."
+    // Since 21 November 2026 the tabs only show with a second kind of list: a co-op wishlist makes Personal | Co-op.
+    private val coop = "Gifts for Mum"
 
-    private fun sharedShows(): Boolean {
+    private fun coopShows(): Boolean {
         compose.waitForIdle()
-        return compose.onAllNodes(hasText(nothingShared)).fetchSemanticsNodes().any { n ->
+        return compose.onAllNodes(hasText(coop)).fetchSemanticsNodes().any { n ->
             val b = n.boundsInRoot; b.left >= 0f && b.right <= compose.onRoot().fetchSemanticsNode().size.width.toFloat() + 1f
         }
     }
@@ -27,13 +28,15 @@ class HomeSwipeTest : NavigationBase() {
         onAllNodes(androidx.compose.ui.test.isRoot()).onFirst()
 
     @Test fun swipingTheEmptySpaceSwitchesBothWays() {
+        compose.runOnUiThread { Shared.lists = listOf(SharedList("COOP1", "coopkey_coopkey_coopkey", coop)) }
         compose.waitForIdle()
         val below = compose.onNodeWithTag("home_below")
         // Near the bottom of the area, far below the one list: empty space on both sides.
         below.performTouchInput { swipe(androidx.compose.ui.geometry.Offset(right - 20f, bottom - 40f), androidx.compose.ui.geometry.Offset(left + 20f, bottom - 40f), 300) }
-        assertTrue("swiped to Shared from the empty space", sharedShows())
+        assertTrue("swiped to Co-op from the empty space", coopShows())
         below.performTouchInput { swipe(androidx.compose.ui.geometry.Offset(left + 20f, bottom - 40f), androidx.compose.ui.geometry.Offset(right - 20f, bottom - 40f), 300) }
-        assertTrue("and back to My wishlists from the same place", !sharedShows())
+        assertTrue("and back to Personal from the same place", !coopShows())
+        compose.runOnUiThread { Shared.lists = emptyList() }
     }
 
     @Test fun whereASwipeEnds() {

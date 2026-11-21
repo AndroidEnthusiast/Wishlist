@@ -265,3 +265,5 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here. Look and f
   wishlist, New group, New gift exchange, Import, Screenshot to wish, Wishlist settings, your profile. (Only the two
   New wishlist forms report "something typed" so far; the others close on Back as before.) Checks:
   `FormSheetCloseTest` (fails on the old rules), `NewListChoicesTest`.
+- (21 November 2026, later) "Personal / Shared" became **Personal / Co-op**, and Home got a tab per kind:
+  `docs/decisions/home-and-kinds.md`.

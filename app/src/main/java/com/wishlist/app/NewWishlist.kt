@@ -11,6 +11,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -74,22 +75,22 @@ import java.io.File
  */
 
 /**
- * "Personal / Shared" at the top of a new wishlist (owner, 21 November 2026; was "Whose wishlist? My own / With
- * others", which didn't read well): one person and two people, and one line under them about the chosen one.
- * Shared = a wishlist made together with others, where everyone on it sees reservations.
+ * "Personal / Co-op" at the top of a new wishlist (owner, 21 November 2026; was "Whose wishlist? My own / With
+ * others", then "Personal / Shared", which read as "a list I shared"): one person and two people, and one line under
+ * them about the chosen one. Co-op = a wishlist made together with others (in the code: a shared or collab list).
  */
 @Composable
 fun WhoIsItFor(someoneElse: Boolean, onChange: (Boolean) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         FilterChip(!someoneElse, { if (someoneElse) onChange(false) }, { Text(tr("Personal")) },
             leadingIcon = { Icon(AppIcons.Person, null, Modifier.size(18.dp)) })
-        FilterChip(someoneElse, { if (!someoneElse) onChange(true) }, { Text(tr("Shared")) },
+        FilterChip(someoneElse, { if (!someoneElse) onChange(true) }, { Text(tr("Co-op")) },
             leadingIcon = { Icon(AppIcons.Group, null, Modifier.size(18.dp)) })
     }
-    Text(
-        if (someoneElse) tr("Make it with others: everyone adds wishes and sees what’s reserved.")
-        else tr("Friends reserve gifts; you never see what."),
-        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
+    // What it is, on one line (owner, 21 November 2026: nothing about reserving; it shrinks a little rather than wrap).
+    FitText(
+        if (someoneElse) tr("Collaborate: everyone you invite adds wishes.") else tr("Only you add wishes to it."),
+        MaterialTheme.typography.bodySmall, MaterialTheme.colorScheme.onSurfaceVariant, Modifier.fillMaxWidth(), androidx.compose.ui.text.style.TextAlign.Start
     )
 }
 
@@ -98,14 +99,14 @@ fun WhoIsItFor(someoneElse: Boolean, onChange: (Boolean) -> Unit) {
  * card like the settings rows, with how many are chosen and their photos.
  */
 @Composable
-internal fun CopyWishesCard(picked: List<Wish>, onClick: () -> Unit) {
+internal fun CopyWishesCard(picked: List<Wish>, onRemove: (Wish) -> Unit = {}, onClick: () -> Unit) {
     val look = LocalLook.current
     val cs = MaterialTheme.colorScheme
     val quiet = look.design == "quiet"
     val fill = if (quiet) look.groupFill() else androidx.compose.ui.graphics.lerp(sheetColor(look, cs.surface), cs.onSurface, 0.08f)
     val shape = if (quiet) Squircle(18.dp) else RoundedCornerShape(16.dp)
-    Column(Modifier.fillMaxWidth().clip(shape).background(fill).clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 12.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+    Column(Modifier.fillMaxWidth().clip(shape).background(fill)) {
+        Row(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(36.dp).clip(if (quiet) Squircle(10.dp) else RoundedCornerShape(10.dp)).background(cs.primaryContainer), contentAlignment = Alignment.Center) {
                 Icon(AppIcons.Gift, null, tint = cs.onPrimaryContainer, modifier = Modifier.size(20.dp))
             }
@@ -118,15 +119,29 @@ internal fun CopyWishesCard(picked: List<Wish>, onClick: () -> Unit) {
             }
             Icon(AppIcons.Chevron, null, tint = cs.onSurfaceVariant, modifier = Modifier.size(20.dp))
         }
-        if (picked.isNotEmpty()) Row(Modifier.padding(start = 48.dp, top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-            val shown = picked.take(5)
-            shown.forEach { w ->
-                Box(Modifier.size(36.dp).clip(RoundedCornerShape(8.dp)).background(look.photoSurface(w.id)), contentAlignment = Alignment.Center) {
-                    if (w.image.isNotBlank()) WishImage(w.image, Modifier.size(36.dp), ContentScale.Crop)
-                    else PlaceholderIcon("gift", 20.dp)
+        // The chosen wishes, each with a ✕ to take it out again (owner, 21 November 2026). All of them, in one row
+        // that scrolls sideways, so the card never grows taller.
+        if (picked.isNotEmpty()) Row(
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(start = 10.dp, end = 10.dp, top = 2.dp, bottom = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            picked.forEach { w ->
+                // The ✕ sits inside the 52 dp tap area (it was clipped at the top in 2.273's first pictures).
+                Box(
+                    Modifier.size(52.dp).clip(RoundedCornerShape(12.dp))
+                        .clickable(onClickLabel = tr("Take out %s", w.label)) { onRemove(w) },
+                    contentAlignment = Alignment.BottomStart
+                ) {
+                    Box(Modifier.padding(bottom = 1.dp).size(44.dp).clip(RoundedCornerShape(10.dp)).background(look.photoSurface(w.id)), contentAlignment = Alignment.Center) {
+                        if (w.image.isNotBlank()) WishImage(w.image, Modifier.size(44.dp), ContentScale.Crop)
+                        else PlaceholderIcon("gift", 22.dp)
+                    }
+                    Box(
+                        Modifier.align(Alignment.TopEnd).padding(top = 1.dp, end = 1.dp).size(18.dp).clip(CircleShape).background(cs.inverseSurface),
+                        contentAlignment = Alignment.Center
+                    ) { Icon(AppIcons.Close, null, tint = cs.inverseOnSurface, modifier = Modifier.size(12.dp)) }
                 }
             }
-            if (picked.size > shown.size) Text("+${picked.size - shown.size}", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
         }
     }
 }
@@ -182,7 +197,7 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit, top: (@Compo
                     maxLines = 4, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 // No occasion here (owner, 21 November 2026: everything on one page; it is in Wishlist settings).
                 // Wishes from other lists, above Privacy (owner, 21 November 2026).
-                if (canCopy) CopyWishesCard(picked) { picking = true }
+                if (canCopy) CopyWishesCard(picked, onRemove = { w -> picked = picked - w }) { picking = true }
                 // Only with online sharing set up: without it every list stays on the phone.
                 if (Config.enabled) WhoPicker(who) { who = it }
             }
@@ -197,6 +212,6 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit, top: (@Compo
         unsaved = name.isNotBlank() || notes.isNotBlank() || picked.isNotEmpty()
     )
     if (picking) {
-        CopyWishesDialog(null, onDone = { picked = it; picking = false }, onClose = { picking = false })
+        CopyWishesDialog(null, onDone = { picked = it; picking = false }, onClose = { picking = false }, chosen = picked)
     }
 }

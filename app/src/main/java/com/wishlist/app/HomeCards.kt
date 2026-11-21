@@ -201,24 +201,43 @@ internal fun ExchangesSection(onNew: () -> Unit, withNew: Boolean = true) {
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(list.size, key = { list[it].id }) { i ->
-            val x = list[i]
-            Column(Modifier.width(w).clip(RoundedCornerShape(16.dp)).clickable { go(Deep.ExchangePage(x.id)) }) {
-                Box {
-                    GxCover(x.theme, Exchanges.photos[x.id], Modifier.fillMaxWidth().aspectRatio(1f).clip(look.cardShape(x.id.hashCode().toLong(), small = true)))
-                    if (x.me.unreadGiftee + x.me.unreadSanta > 0) RedDot(Modifier.align(Alignment.TopEnd).padding(8.dp))
-                }
-                Text(
-                    x.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = cs.onBackground,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp, start = 2.dp, end = 2.dp)
-                )
-                Text(
-                    Exchanges.countdown(x) ?: if (!x.drawn) tr("Names not drawn yet") else tr("Names drawn"),
-                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 2.dp)
-                )
+        items(list.size, key = { list[it].id }) { i -> ExchangeTile(list[i], Modifier.width(w)) }
+        if (withNew) item(key = "new") { NewBlock(tr("New gift exchange"), onNew, Modifier.width(w)) }
+    }
+}
+
+/** One gift exchange as a block: its cover, name and countdown (Home's row and the Exchanges tab). */
+@Composable
+internal fun ExchangeTile(x: Exchange, modifier: Modifier) {
+    val go = LocalGo.current
+    val cs = MaterialTheme.colorScheme
+    val look = LocalLook.current
+    Column(modifier.clip(RoundedCornerShape(16.dp)).clickable { go(Deep.ExchangePage(x.id)) }) {
+        Box {
+            GxCover(x.theme, Exchanges.photos[x.id], Modifier.fillMaxWidth().aspectRatio(1f).clip(look.cardShape(x.id.hashCode().toLong(), small = true)))
+            if (x.me.unreadGiftee + x.me.unreadSanta > 0) RedDot(Modifier.align(Alignment.TopEnd).padding(8.dp))
+        }
+        Text(
+            x.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = cs.onBackground,
+            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp, start = 2.dp, end = 2.dp)
+        )
+        Text(
+            Exchanges.countdown(x) ?: if (!x.drawn) tr("Names not drawn yet") else tr("Names drawn"),
+            style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
+            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 2.dp)
+        )
+    }
+}
+
+/** Home's Exchanges tab (owner, 21 November 2026): your gift exchanges, two per row like the other tabs. */
+@Composable
+internal fun ExchangeGrid() {
+    Column(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Exchanges.list.chunked(2).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                row.forEach { x -> ExchangeTile(x, Modifier.weight(1f)) }
+                if (row.size == 1) Spacer(Modifier.weight(1f))
             }
         }
-        if (withNew) item(key = "new") { NewBlock(tr("New gift exchange"), onNew, Modifier.width(w)) }
     }
 }

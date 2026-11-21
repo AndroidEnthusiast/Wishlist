@@ -123,7 +123,7 @@ fun HubScreen(
         HubBlocks(byRecent(mineItems), false, ::actionsOf, onAddTo, tr("Create list"), null, dots = true)
         GroupsHomeSection(false, onOpenWishGroup, {})
         if (groupItems.isNotEmpty()) {
-            HubTitle(tr("Shared wishlists"), onMore = null)
+            HubTitle(tr("Co-op wishlists"), onMore = null)
             HubBlocks(byRecent(groupItems), false, ::actionsOf, onAddTo, tr("New wishlist"), null, dots = true)
         }
     }
@@ -171,10 +171,14 @@ fun HubScreen(
                 // A divider between you and your wishlists (owner, 18 November 2026); only what is below it swipes.
                 HorizontalDivider(Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 12.dp))
                 // Everything under the divider: with the swipe on, a swipe anywhere here (down to the bottom of the screen,
-                // also under the shorter side) switches My wishlists | Shared (owner, 20 November 2026).
+                // also under the shorter side) switches the tabs (owner, 20 November 2026).
+                // A tab per kind of list (owner, 21 November 2026): Personal | Co-op | Groups | Exchanges, each only while
+                // you have one; with only one kind, no tab bar at all.
+                val hasExchanges = Config.enabled && Exchanges.list.isNotEmpty()
+                val tabs = homeTabs(coop = groupItems.isNotEmpty(), groups = groupsOfMine.isNotEmpty(), exchanges = hasExchanges)
                 var tab by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableIntStateOf(0) }
-                val pager = androidx.compose.foundation.pager.rememberPagerState(initialPage = tab) { 2 }
-                val swipe = Show["home_swipe"]
+                val pager = androidx.compose.foundation.pager.rememberPagerState(initialPage = tab.coerceIn(0, tabs.size - 1)) { tabs.size }
+                val swipe = Show["home_swipe"] && tabs.size > 1
                 Column(
                     Modifier.fillMaxWidth()
                         .onGloballyPositioned { belowTop = it.positionInParent().y }
@@ -182,38 +186,33 @@ fun HubScreen(
                             .swipesPager(pager, scope).testTag("home_below") else Modifier)
                 ) {
                 if (swipe) {
-                    // My wishlists | Shared (your wishlists with others and your wishlist groups): swipe or tap the tabs.
-                    // App settings > Display can switch it off (then everything stands one under the other).
                     androidx.compose.runtime.LaunchedEffect(pager.currentPage) { tab = pager.currentPage }
                     SegmentedTabs(
-                        listOf(tr("My wishlists"), tr("Shared")), pager.currentPage,
+                        tabs.map { homeTabLabel(it) }, pager.currentPage.coerceIn(0, tabs.size - 1),
                         { i -> scope.launch { pager.animateScrollToPage(i) } },
                         Modifier.padding(horizontal = 16.dp)
                     )
                     androidx.compose.foundation.pager.HorizontalPager(pager, verticalAlignment = Alignment.Top, modifier = Modifier.padding(top = 12.dp)) { p ->
-                        if (p == 0) Column {
-                            BlockGrid(byRecent(mineItems), true, acts, onAddTo, dots = true)
-                            emptyImport()
-                        }
-                        else {
-                            val shared = byRecent(groupItems) + byRecent(groupsOfMine)
-                            if (shared.isEmpty()) Text(
-                                tr("Nothing shared yet. Tap + to make a wishlist with others or start a wishlist group."),
-                                style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant,
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 32.dp)
-                            )
-                            else BlockGrid(shared, true, acts, onAddTo, dots = true)
+                        when (tabs.getOrNull(p)) {
+                            "coop" -> BlockGrid(byRecent(groupItems), true, acts, onAddTo, dots = true)
+                            "groups" -> BlockGrid(byRecent(groupsOfMine), true, acts, onAddTo, dots = true)
+                            "exchanges" -> ExchangeGrid()
+                            else -> Column {
+                                BlockGrid(byRecent(mineItems), true, acts, onAddTo, dots = true)
+                                emptyImport()
+                            }
                         }
                     }
                 } else {
+                    // No tabs (only one kind, or App settings > Display > Tabs on Home off): everything under each other.
                     BlockGrid(byRecent(mineItems) + byRecent(groupItems) + byRecent(groupsOfMine), true, acts, onAddTo, dots = true)
                     emptyImport()
+                    if (hasExchanges) ExchangesSection(onNewExchange, withNew = false)
                 }
 
-                // Gift exchange in its season (owner, 7 November 2026).
+                // Gift exchange in its season (owner, 7 November 2026): 1 November to 20 December, until you have or are
+                // invited to one, or close it; back the next year by itself.
                 SeasonCard(onNewExchange)
-                // Your gift exchanges as blocks (only when you have one; "New gift exchange" is in the + menu, 16 November 2026).
-                if (Config.enabled && Exchanges.list.isNotEmpty()) ExchangesSection(onNewExchange, withNew = false)
     
                 // No "Price changes" here any more (owner, 2.95): price news is on Price watch and in Notifications.
                 }

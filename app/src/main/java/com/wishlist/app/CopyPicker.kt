@@ -67,7 +67,12 @@ fun canCopyFromOthers(c: android.content.Context, exceptId: String?): Boolean =
  * gift ideas for someone else). Wishes the target already has are left out.
  */
 @Composable
-fun CopyWishesDialog(targetId: String?, onDone: (List<Wish>) -> Unit, onClose: () -> Unit) {
+fun CopyWishesDialog(
+    targetId: String?, onDone: (List<Wish>) -> Unit, onClose: () -> Unit,
+    // What was chosen before (a list being made): ticked again, so you can change your mind and untick
+    // (owner, 21 November 2026: once chosen, wishes couldn't be taken out).
+    chosen: List<Wish> = emptyList()
+) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     val lists = remember { Repo.allMine(ctx) }
@@ -75,7 +80,7 @@ fun CopyWishesDialog(targetId: String?, onDone: (List<Wish>) -> Unit, onClose: (
     val sources = lists.filter { it.id != targetId }
         .map { d -> d to d.wishes.filter { it.id !in have } }
         .filter { it.second.isNotEmpty() }
-    var picked by remember { mutableStateOf(setOf<Long>()) }
+    var picked by remember { mutableStateOf(chosen.map { it.id }.toSet()) }
     val byId = sources.flatMap { it.second }.associateBy { it.id }
     fun toggle(id: Long) {
         picked = if (id in picked) picked - id else picked + id
@@ -151,12 +156,20 @@ fun CopyWishesDialog(targetId: String?, onDone: (List<Wish>) -> Unit, onClose: (
                     }
                 }
                 Button(
-                    onClick = { onDone(picked.mapNotNull { byId[it] }) }, enabled = picked.isNotEmpty(),
+                    // With wishes chosen before, Done also works with none left (they are all taken out again).
+                    onClick = { onDone(picked.mapNotNull { byId[it] }) }, enabled = picked.isNotEmpty() || chosen.isNotEmpty(),
                     modifier = Modifier.fillMaxWidth().padding(16.dp)
                 ) {
-                    Text(if (picked.size == 1) tr("Add 1 wish") else tr("Add %d wishes", picked.size))
+                    Text(copyButtonLabel(picked.size, chosen.isNotEmpty()))
                 }
             }
         }
     }
+}
+
+/** The picker's button: "Add 3 wishes"; with wishes chosen before and none ticked now, "Done" (takes them all out). */
+internal fun copyButtonLabel(n: Int, hadChosen: Boolean): String = when {
+    n == 0 && hadChosen -> tr("Done")
+    n == 1 -> tr("Add 1 wish")
+    else -> tr("Add %d wishes", n)
 }

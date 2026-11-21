@@ -209,9 +209,9 @@ private fun SettingsPage(page: String, snack: SnackbarHostState, onBack: () -> U
                     // The only "What you see" switch left (owner, 18 November 2026): price labels on photos and the
                     // descriptions on the large cards are always shown now.
                     SettingSwitch(tr("List summary"), tr("Wishes and total value at the top of a list."), Show["show_summary"]) { model.setShown("show_summary", it) }
-                    // Home (owner, 18 November 2026): the three blocks next to your photo, and My wishlists | Shared.
+                    // Home (owner, 18 November 2026): the three blocks next to your photo, and the tabs (Personal | Co-op | Groups | Exchanges since 21 November 2026).
                     SettingSwitch(tr("Home summary"), tr("Wishes, wishlists and total value next to your photo."), Show["home_summary"]) { model.setShown("home_summary", it) }
-                    SettingSwitch(tr("My wishlists and Shared"), tr("Swipe between them on Home."), Show["home_swipe"]) { model.setShown("home_swipe", it) }
+                    SettingSwitch(tr("Tabs on Home"), tr("Personal, Co-op, Groups and Exchanges: swipe between them."), Show["home_swipe"]) { model.setShown("home_swipe", it) }
                 }
                 else -> AboutPage(snack)
             }

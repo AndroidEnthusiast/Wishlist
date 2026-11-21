@@ -60,9 +60,29 @@ class NewListChoicesTest {
         val ownForm = own.substring(own.indexOf("fun NewListDialog("))
         val sharedForm = shared.substring(shared.indexOf("fun NewSharedDialog("), shared.indexOf("fun JoinDialog("))
         assertTrue(!ownForm.contains("OccasionPicker(") && !sharedForm.contains("OccasionPicker("))
-        assertTrue(own.contains("tr(\"Personal\")") && own.contains("tr(\"Shared\")") && !own.contains("tr(\"Whose wishlist?\")"))
-        assertTrue(ownForm.indexOf("CopyWishesCard(picked)") in 0 until ownForm.indexOf("WhoPicker(who)"))
+        assertTrue(own.contains("tr(\"Personal\")") && own.contains("tr(\"Co-op\")") && !own.contains("tr(\"Whose wishlist?\")"))
+        // "Shared" means "shared with someone" only (owner, 21 November 2026): the made-together kind is "Co-op".
+        assertTrue(!own.contains("tr(\"Shared\")"))
+        assertTrue(ownForm.indexOf("CopyWishesCard(picked") in 0 until ownForm.indexOf("WhoPicker(who)"))
         assertTrue(File(dir, "ListSharing.kt").readText().contains("Text(tr(\"Privacy\")"))
         assertTrue(!File(dir, "HomeMenus.kt").readText().contains("tr(\"Visibility\")"))
+    }
+
+    /** Chosen wishes can be taken out again (owner, 21 November 2026: "if I change my mind I can't remove it"). */
+    @Test fun chosenWishesCanBeTakenOut() {
+        // The picker opens with what was chosen ticked; with none left, its button says Done and takes them all out.
+        assertEquals("Done", copyButtonLabel(0, hadChosen = true))
+        assertEquals("Add 1 wish", copyButtonLabel(1, hadChosen = true))
+        assertEquals("Add 3 wishes", copyButtonLabel(3, hadChosen = false))
+        val dir = File("src/main/java/com/wishlist/app")
+        val picker = File(dir, "CopyPicker.kt").readText()
+        assertTrue(picker.contains("mutableStateOf(chosen.map { it.id }.toSet())"))
+        assertTrue(picker.contains("enabled = picked.isNotEmpty() || chosen.isNotEmpty()"))
+        // Both forms that choose wishes for a new list pass what was chosen, and their card has a ✕ per wish.
+        for (f in listOf("NewWishlist.kt", "GroupListPick.kt")) {
+            val src = File(dir, f).readText()
+            assertTrue("$f passes what was chosen", src.contains("chosen = picked)"))
+            assertTrue("$f can take one out", src.contains("onRemove = { w -> picked = picked - w }"))
+        }
     }
 }

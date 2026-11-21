@@ -145,8 +145,11 @@ fun FitText(
     fun fit(maxW: Int): androidx.compose.ui.text.TextLayoutResult {
         val loose = androidx.compose.ui.unit.Constraints()
         val full = measurer.measure(text, style, maxLines = 1, softWrap = false, constraints = loose)
-        val s = if (full.size.width <= maxW || maxW == androidx.compose.ui.unit.Constraints.Infinity) 1f
-            else (maxW.toFloat() / full.size.width).coerceIn(0.6f, 1f)
+        // A few per cent to spare (owner's tabs, 21 November 2026): measured right at the edge, the drawn text was a
+        // fraction wider and ended in "…" ("Perso…") although it fitted.
+        val room = maxW * 0.96f
+        val s = if (full.size.width <= room || maxW == androidx.compose.ui.unit.Constraints.Infinity) 1f
+            else (room / full.size.width).coerceIn(0.6f, 1f)
         return measurer.measure(
             text, style.copy(fontSize = style.fontSize * s, color = color, textAlign = align), maxLines = 1, softWrap = false,
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,

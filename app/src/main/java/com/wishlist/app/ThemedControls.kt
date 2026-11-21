@@ -225,10 +225,8 @@ fun SegmentedTabs(labels: List<String>, selected: Int, onSelect: (Int) -> Unit, 
                         .selectable(on, role = Role.Tab, onClick = { onSelect(i) }),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        label, style = MaterialTheme.typography.labelLarge, maxLines = 1,
-                        color = if (on) look.scheme.onSurface else look.scheme.onSurfaceVariant
-                    )
+                    // A little smaller rather than cut when four tabs share a narrow phone (owner, 21 November 2026).
+                    FitText(label, MaterialTheme.typography.labelLarge, if (on) look.scheme.onSurface else look.scheme.onSurfaceVariant, Modifier.padding(horizontal = 4.dp))
                 }
             }
         }
@@ -240,7 +238,7 @@ fun SegmentedTabs(labels: List<String>, selected: Int, onSelect: (Int) -> Unit, 
                     .semantics { this.selected = on }.padding(vertical = 9.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = look.chipContent(on))
+                FitText(label, MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold), look.chipContent(on), Modifier.padding(horizontal = 4.dp))
             }
         }
     }
