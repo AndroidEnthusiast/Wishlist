@@ -41,4 +41,23 @@ class FontRulesTest {
         )
         assertTrue(offenders("CoverViews.kt", after).isEmpty())
     }
+
+    /**
+     * A person's big name (Home, Profile, the top of a friend's page) is in the title font, like a wishlist's name
+     * (owner, 21 November 2026): it must not be switched to the text font (`look.display`) again.
+     */
+    @Test fun bigNamesUseTheTitleFont() {
+        val places = mapOf(
+            "HomeHero.kt" to "name, style = MaterialTheme.typography.titleLarge",
+            "Profile.kt" to "Shared.lastName.ifBlank { tr(\"Add your name\") }, style = MaterialTheme.typography.headlineSmall",
+            "PeopleParts.kt" to "name, style = MaterialTheme.typography.headlineSmall"
+        )
+        for ((file, start) in places) {
+            val code = File(dir, file).readLines()
+            val i = code.indexOfFirst { it.contains(start) }
+            assertTrue("$file: the big name wasn't found", i >= 0)
+            val call = code.subList(i, minOf(code.size, i + 3)).joinToString("\n")
+            assertTrue("$file: the big name must use the title font, not look.display", !call.contains("look.display"))
+        }
+    }
 }

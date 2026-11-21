@@ -130,8 +130,9 @@ internal fun HomeHero(onProfile: () -> Unit) {
                 HomeStat(homeTotal(all), tr("Total value"), Modifier.weight(1.4f), null)
             }
         }
+        // A person's big name in the title font, like a wishlist's name (owner, 21 November 2026).
         Text(
-            name, style = MaterialTheme.typography.titleLarge, fontWeight = look.titleWeight, fontFamily = look.display,
+            name, style = MaterialTheme.typography.titleLarge, fontWeight = look.titleWeight,
             color = cs.onBackground, maxLines = 1, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = 12.dp).clip(RoundedCornerShape(8.dp)).clickable(onClick = onProfile)
         )

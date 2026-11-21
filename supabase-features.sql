@@ -172,6 +172,40 @@ $$;
 
 grant execute on function wl_view(text, text), wl_view_count(text, text) to anon;
 
+-- ---------- "Chat about this wish" on a shared wishlist (owner, 21 November 2026) ----------
+-- The other people on a shared list, for anyone who has its edit key (everyone on it): id, name and whether they are
+-- your friend ('yes'; 'asked' while a friend request between you waits; 'no'). Only people whose app joined the list's
+-- members (wl_sh_member, app 2.128 and later). Chats stay between friends (wl_chat_ok).
+create or replace function wl_sh_people(p_id text, p_token text, p_key text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare v_code text; v jsonb;
+begin
+  perform wl_pf_check(p_id, p_token);
+  v_code := wl_sh_code(p_key);
+  select coalesce(jsonb_agg(jsonb_build_object('id', p.id, 'name', p.name, 'friend',
+      case when f.accepted then 'yes' when f.a is not null then 'asked' else 'no' end) order by m.joined_at), '[]'::jsonb) into v
+    from wl_sh_members m join wl_profiles p on p.id = m.profile
+    left join wl_friends f on (f.a = p_id and f.b = p.id) or (f.a = p.id and f.b = p_id)
+    where m.list_code = v_code and m.profile <> p_id;
+  return v;
+end $$;
+
+-- "Add friend" for someone on the same shared list: the normal friend request (wl_fr_add, with approval), without
+-- their friend code ever reaching your phone.
+create or replace function wl_sh_befriend(p_id text, p_token text, p_key text, p_other text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare v_code text; v_fc text;
+begin
+  perform wl_pf_check(p_id, p_token);
+  v_code := wl_sh_code(p_key);
+  select p.code into v_fc from wl_sh_members m join wl_profiles p on p.id = m.profile
+    where m.list_code = v_code and m.profile = p_other;
+  if v_fc is null then raise exception 'not a member'; end if;
+  return wl_fr_add(p_id, p_token, v_fc);
+end $$;
+
+grant execute on function wl_sh_people(text, text, text), wl_sh_befriend(text, text, text, text) to anon;
+
 grant execute on function
   wl_chat_react(text, text, bigint, text),
   wl_chat_reacts(text, text, text),
@@ -195,5 +229,5 @@ create or replace function public.wl_script_versions() returns jsonb
   language sql stable security definer set search_path = public
   as $$ select coalesce(jsonb_object_agg(script, version), '{}'::jsonb) from public.wl_versions $$;
 grant execute on function public.wl_script_versions() to anon;
-insert into public.wl_versions (script, version, run_at) values ('supabase-features.sql', 1, now())
+insert into public.wl_versions (script, version, run_at) values ('supabase-features.sql', 2, now())
   on conflict (script) do update set version = excluded.version, run_at = now();

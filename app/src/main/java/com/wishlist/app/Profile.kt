@@ -200,9 +200,10 @@ internal fun ProfileMain(snack: SnackbarHostState, onSafe: () -> Unit) {
             }
 
             // Your name under the photo, big; tap to change (owner, 18 November 2026: Profile like App settings).
+            // In the title font, like a wishlist's name (owner, 21 November 2026).
             Text(
                 Shared.lastName.ifBlank { tr("Add your name") }, style = MaterialTheme.typography.headlineSmall,
-                fontWeight = look.titleWeight, fontFamily = look.display, color = cs.onBackground, maxLines = 2,
+                fontWeight = look.titleWeight, color = cs.onBackground, maxLines = 2,
                 overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).clickable(onClickLabel = tr("Edit name")) { editing = "name" }
             )

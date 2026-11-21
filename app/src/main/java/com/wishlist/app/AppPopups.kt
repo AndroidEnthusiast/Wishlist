@@ -162,6 +162,8 @@ internal fun AppPopups(a: AppState, snack: SnackbarHostState, goStable: (Deep) -
     NameGate.Host()
     DeleteHost(snack)
     MoveHost(snack)
+    // "Chat about this wish" on a shared wishlist: who to chat with (owner, 21 November 2026; ChatPeople.kt).
+    ChatAboutHost(snack, goStable)
     AddToMineHost(snack)
     PrivateHost(snack)
     OwnedHost(snack)

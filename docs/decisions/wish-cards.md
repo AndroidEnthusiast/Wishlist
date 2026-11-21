@@ -43,3 +43,18 @@ Moved here from `people.md` on 18 November 2026 (its size limit); newest at the 
 - **"I have it" goes straight to Received gifts**: no question; the wish leaves the list at once (the total goes
   down) with "Moved to Received gifts" and Undo; whoever reserved it gets the thank-you as before. "Keep it on my list,
   marked Owned" is gone. The page keeps its name "Received gifts".
+
+## Chat about a wish on a shared wishlist (owner, 21 November 2026; replaces "hidden on shared (collab) lists" above)
+- **"Chat about this wish" is also in the ⋮ of every wish on a shared (collab) wishlist.** It asks who to chat with:
+  "Chat about this wish with…" lists everyone else on the list (friends first). **Friends can be tapped** (their chat
+  opens with the wish attached); **the others are greyed, "Not your friend yet", with Add friend** (the normal request
+  with approval; their friend code never reaches your phone); "Friend request waiting" when one is open.
+- **The picker always shows, except when there is exactly one other person on the list and they are your friend**:
+  then that chat opens at once (owner's own answer).
+- **Offline:** the last answer is kept per list on the phone, so the picker opens offline too; the first time ever
+  offline: "Can't see who's on this list right now" with Try again. Before the server script is run: "This needs an
+  update of the app's server first".
+- Only people whose app joined the list's members (2.128 and later) show; nobody yet: a line that says why.
+- A wish card from a shared list in a chat opens that shared list on the wish. Server: `wl_sh_people` and
+  `wl_sh_befriend` (`supabase-features.sql`, version 2); app: `SharedPeople.kt`, `ChatPeople.kt`; checks:
+  `ChatPeopleTest`, `ChatPeopleScreenshotTest`, `tests/sql/features_test.sql` part 4.

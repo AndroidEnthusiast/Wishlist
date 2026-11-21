@@ -177,8 +177,9 @@ internal fun PersonHero(
         Box(Modifier.clip(CircleShape).then(if (onPhoto != null) Modifier.clickable(onClickLabel = tr("Profile"), onClick = onPhoto) else Modifier)) {
             Avatar(photo, name, 112.dp)
         }
+        // A person's big name in the title font, like a wishlist's name (owner, 21 November 2026).
         Text(
-            name, style = MaterialTheme.typography.headlineSmall, fontWeight = look.titleWeight, fontFamily = look.display,
+            name, style = MaterialTheme.typography.headlineSmall, fontWeight = look.titleWeight,
             color = cs.onBackground, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 12.dp).clip(RoundedCornerShape(8.dp))
                 .then(if (onPhoto != null) Modifier.clickable(onClick = onPhoto) else Modifier).padding(horizontal = 4.dp)

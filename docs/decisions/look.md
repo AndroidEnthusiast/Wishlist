@@ -263,3 +263,6 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   everywhere, is in the text font** (Plus Jakarta Sans in Quiet; Gen Z chaos keeps Bungee for both), with figures of
   equal width. In code: `TextStyle.number(look)` (`DesignType.kt`); `FontRulesTest` fails when a number uses a title
   style without it.
+- **People's big names in the title font too** (owner, 21 November 2026: "one of the major titles where a different
+  app unique font would fit"): your name on Home and Profile, and a friend's name at the top of their page, like a
+  wishlist's name. Small names in rows, chats and cards stay in the text font. `FontRulesTest` checks it.

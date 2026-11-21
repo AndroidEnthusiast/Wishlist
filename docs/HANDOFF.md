@@ -5,6 +5,9 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.270 (21 November 2026), read first.** Did the owner run `supabase-features.sql` (version 2)? Ask how "Chat
+  about this wish" feels on a shared wishlist (the picker, Add friend, one person straight to the chat, offline) and
+  whether the names in the title font look right (`wish-cards.md`, `look.md`, last sections).
 - **2.269 (21 November 2026), read first.** Ask how sharing a link feels now (name and photo first, "Looking for the
   price…", Save waiting with "Getting the price…"), above all on a slow shop shared twice (the second time should be
   faster), and whether the list summary's numbers now match Home (`look.md`, `screens.md`, last sections).
@@ -98,7 +101,8 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 Owner's screenshots (list summary in the title font, Home in the text font) → shown the three choices drawn with the
 real fonts; chose numbers in the text font everywhere (`TextStyle.number`, `FontRulesTest`). Shared links: name and
 photo first, hidden browser stops at the price, slow shops remembered, 8 s first wait, Save waits (`FasterReadTest`).
-Not checkable here: real shops' timing on a phone.
+Not checkable here: real shops' timing on a phone. 2.270: big names in the title font; "Chat about this wish" on shared
+wishlists with a people picker (new server functions `wl_sh_people`, `wl_sh_befriend`; owner runs the script).
 
 ### 20 November 2026: card labels, "I have it", the layout inspector (2.268)
 Owner's screenshots (labels overlapping, cut, prices broken) → labels redesigned (`CardLabels.kt`, owner chose the

@@ -199,6 +199,15 @@ internal class AppState(
             openMine(own.id)
             return
         }
+        // A shared wishlist you're on (owner, 21 November 2026: chat about its wishes): it opens on the wish.
+        if (Shared.lists.any { it.code == code }) {
+            openGroup(code)
+            // Not in the copy on this phone yet (just added): the list opens without the glow, never with a wrong message.
+            val kept = Shared.content.wishes.firstOrNull { it.id == id }
+            if (kept == null || kept.bin == 0L) WishFocus.target = id
+            else scope.launch { snack.showToast(tr("This wish is no longer on the list")) }
+            return
+        }
         places.askFocus = AskFocus(code, id, false)
         openListByCode(code)
     }

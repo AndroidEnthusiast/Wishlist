@@ -121,6 +121,7 @@ internal fun androidx.compose.foundation.lazy.grid.LazyGridItemScope.ListWishIte
             reserve = if (inShared) Reserving(r, reserveLabel(Shared.active.orEmpty(), w, r)) { on -> model.reserve(w, on) } else null,
             onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) }),
             onMove = { MoveFlow.ask(setOf(w.id)) },
+            chatAbout = if (inShared) chatOnShared(w) else null,
             onHistory = if (inShared || w.url.isBlank()) null else ({ model.historyId = w.id })
         ) { model.editing = w }
         // The buttons of Rows and Large cards: Share, the eye (or Reserve on a gift list), Delete.
@@ -156,7 +157,8 @@ internal fun androidx.compose.foundation.lazy.grid.LazyGridItemScope.ListWishIte
                     w, look.cardMuted(w.id), ico,
                     if (inShared) WishActions(
                         reserve = Reserving(r, reserveLabel(Shared.active.orEmpty(), w, r)) { on -> model.reserve(w, on) },
-                        onEdit = { model.editing = w }, onMove = { MoveFlow.ask(setOf(w.id)) }, shareAsIdea = true
+                        onEdit = { model.editing = w }, onMove = { MoveFlow.ask(setOf(w.id)) }, shareAsIdea = true,
+                        chatAbout = chatOnShared(w)
                     ) else WishActions(
                         onEdit = { model.editing = w }, onMove = { MoveFlow.ask(setOf(w.id)) }, own = true,
                         onHistory = if (w.url.isBlank()) null else ({ model.historyId = w.id })
@@ -186,4 +188,14 @@ internal fun androidx.compose.foundation.lazy.grid.LazyGridItemScope.ListWishIte
     }
     }
     }
+}
+
+/**
+ * "Chat about this wish" on the open shared wishlist (owner, 21 November 2026): who to chat with is asked next
+ * (ChatPeople.kt). Not without the server, or on a list that isn't open as a shared one.
+ */
+internal fun chatOnShared(w: Wish): (() -> Unit)? {
+    val code = Shared.active ?: return null
+    if (!Config.enabled) return null
+    return { ChatAboutFlow.ask(code, w) }
 }

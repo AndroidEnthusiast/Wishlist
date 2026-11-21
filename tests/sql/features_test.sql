@@ -54,5 +54,23 @@ select pg_temp.ok(wl_sh_owner_claim('BBBBBBBBBBBBBBBBBBBB','tokB_tokB_tokB_tokB_
 select pg_temp.ok(jsonb_array_length(wl_sh_members('GIFTMEM1', :'newtok')) = 1, 'the new owner token works');
 select wl_sh_reset_key('GIFTMEM1', :'newtok', 'newkey_newkey_newkey_ne');
 select pg_temp.ok(wl_sh_info('newkey_newkey_newkey_ne')->>'name' = 'Mum', 'the new owner can renew the link');
+-- 4. the people on a shared list, for "Chat about this wish" (owner, 21 November 2026). A and B are friends, C isn't.
+select wl_sh_create('GIFTPPL1', 'pplkey_pplkey_pplkey_pp', 'pmaker_pmaker_pmaker', 'Dad');
+select wl_sh_member('AAAAAAAAAAAAAAAAAAAA','tokA_tokA_tokA_tokA_','pplkey_pplkey_pplkey_pp');
+select wl_sh_member('BBBBBBBBBBBBBBBBBBBB','tokB_tokB_tokB_tokB_','pplkey_pplkey_pplkey_pp');
+select wl_sh_member('CCCCCCCCCCCCCCCCCCCC','tokC_tokC_tokC_tokC_','pplkey_pplkey_pplkey_pp');
+select wl_sh_people('AAAAAAAAAAAAAAAAAAAA','tokA_tokA_tokA_tokA_','pplkey_pplkey_pplkey_pp') as ppl \gset
+select pg_temp.ok(jsonb_array_length(:'ppl'::jsonb) = 2, 'the others, not me');
+select pg_temp.ok((select e->>'friend' from jsonb_array_elements(:'ppl'::jsonb) e where e->>'id' = 'BBBBBBBBBBBBBBBBBBBB') = 'yes', 'a friend');
+select pg_temp.ok((select e->>'friend' from jsonb_array_elements(:'ppl'::jsonb) e where e->>'id' = 'CCCCCCCCCCCCCCCCCCCC') = 'no', 'not a friend');
+select pg_temp.ok(not (:'ppl'::jsonb)::text like '%' || :'code_c' || '%', 'no friend codes given out');
+do $$ begin perform wl_sh_people('AAAAAAAAAAAAAAAAAAAA','tokA_tokA_tokA_tokA_','wrong_key_wrong_key_wro'); raise exception 'FAIL people with a wrong key';
+exception when others then if sqlerrm like 'FAIL%' then raise; end if; end $$;
+do $$ begin perform wl_sh_people('AAAAAAAAAAAAAAAAAAAA','wrong_wrong_wrong_wr','pplkey_pplkey_pplkey_pp'); raise exception 'FAIL people with a wrong token';
+exception when others then if sqlerrm like 'FAIL%' then raise; end if; end $$;
+select pg_temp.ok(wl_sh_befriend('AAAAAAAAAAAAAAAAAAAA','tokA_tokA_tokA_tokA_','pplkey_pplkey_pplkey_pp','CCCCCCCCCCCCCCCCCCCC')->>'status' = 'sent', 'a friend request to someone on the list');
+select pg_temp.ok((select e->>'friend' from jsonb_array_elements(wl_sh_people('AAAAAAAAAAAAAAAAAAAA','tokA_tokA_tokA_tokA_','pplkey_pplkey_pplkey_pp')) e where e->>'id' = 'CCCCCCCCCCCCCCCCCCCC') = 'asked', 'the request waits');
+do $$ begin perform wl_sh_befriend('AAAAAAAAAAAAAAAAAAAA','tokA_tokA_tokA_tokA_','newkey_newkey_newkey_ne','CCCCCCCCCCCCCCCCCCCC'); raise exception 'FAIL befriend someone not on that list';
+exception when others then if sqlerrm like 'FAIL%' then raise; end if; end $$;
 reset role;
 \echo ALL FEATURE CHECKS OK
