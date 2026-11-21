@@ -5,8 +5,9 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
-- **2.271 (21 November 2026).** Ask how the New wishlist form feels with "Who can see it", and the list opening after
-  Create (`screens.md`, last section).
+- **2.271–2.272 (21 November 2026).** Ask how New wishlist feels now (one page, Personal / Shared, the card, Privacy)
+  and whether form sheets stay open as wanted (X, pull tab, Back asks). Other forms could also report "something
+  typed" for Back (group, exchange, settings, profile): ask (`screens.md`, last section).
 - **2.270 (21 November 2026), read first.** Did the owner run `supabase-features.sql` (version 2)? Ask how "Chat
   about this wish" feels on a shared wishlist (the picker, Add friend, one person straight to the chat, offline) and
   whether the names in the title font look right (`wish-cards.md`, `look.md`, last sections).
@@ -104,7 +105,7 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 2.269: numbers in the text font everywhere (`FontRulesTest`); shared links fill the form faster (`FasterReadTest`).
 2.270: big names in the title font; "Chat about this wish" on shared wishlists with a people picker (server
 `wl_sh_people`, `wl_sh_befriend`; owner runs `supabase-features.sql` v2). 2.271: "Who can see it" in the New wishlist
-form; a list made from + or Home opens. Not checkable here: real shops' timing, real chats between two phones.
+form; a list made from + or Home opens. 2.272: one-page form, form sheets close only by X / pull tab. Not checkable: phone.
 
 ### 20 November 2026: card labels, "I have it", the layout inspector (2.268)
 Owner's screenshots (labels overlapping, cut, prices broken) → labels redesigned (`CardLabels.kt`, owner chose the

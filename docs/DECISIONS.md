@@ -6,7 +6,7 @@ What the owner has decided, and why. Follow these unless the owner changes their
 ## Where the decisions are (by topic, since 12 November 2026)
 Read the topic you work on; search all of them (and `docs/HANDOFF-ARCHIVE.md`) when unsure whether the owner already
 decided something. Every decision was moved word for word, nothing was dropped.
-- `docs/decisions/screens.md`: Screens, wishes and prices (Private wishes; Top wish; Wishes on screen and the wish form; Prices; App review; Owner's list of 3 November 2026; Settings review; Home tiles, Collab wishlists, moving wishes, notifications and web search).
+- `docs/decisions/screens.md`: Screens, wishes and prices (Private wishes; Top wish; Wishes on screen and the wish form; Prices — these four now in `docs/decisions/screens-ARCHIVE.md`; App review; Owner's list of 3 November 2026; Settings review; Home tiles, Collab wishlists, moving wishes, notifications and web search).
 - `docs/decisions/look.md`: Look and feel, the app's identity and screen movement (Look and feel; Screen transitions).
 - `docs/decisions/sharing.md`: Lists, sharing, security and the server (Lists and sharing; Security; Backend).
 - `docs/decisions/people.md`: Friends, chat, groups and gift exchanges (Friends and Groups; Messages; Wishlist groups; Side menu, Gifts I reserved and Gift exchange).

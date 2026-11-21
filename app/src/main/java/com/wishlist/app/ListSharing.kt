@@ -327,12 +327,12 @@ fun WhoChoices(id: String, snack: SnackbarHostState, sheet: Boolean = false, onC
 }
 
 /**
- * "Who can see it" in the New wishlist form (owner, 21 November 2026): the same three choices as in list settings,
+ * "Privacy" (was "Who can see it"; owner, 21 November 2026) in the New wishlist form: the same three choices as in list settings,
  * starting on App settings' choice; nothing changes online until Create. Picking here is for this wishlist only.
  */
 @Composable
 fun WhoPicker(value: Who, onPick: (Who) -> Unit) {
-    Text(tr("Who can see it"), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Text(tr("Privacy"), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
     Choice(tr("Only me"), tr("Nobody else sees this wishlist."), value == Who.ME, true) { onPick(Who.ME) }
     Choice(tr("My friends"), tr("Friends you added in the app."), value == Who.FRIENDS, true) { onPick(Who.FRIENDS) }
     Choice(tr("Friends + anyone with the link"), tr("Also people without the app, in their browser."), value == Who.LINK, true) { onPick(Who.LINK) }

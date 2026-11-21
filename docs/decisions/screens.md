@@ -3,30 +3,9 @@
 Moved here word for word from `docs/DECISIONS.md` on 12 November 2026 (notes tidy-up, owner). Index and the general
 decisions: `docs/DECISIONS.md`. Add new decisions on this topic here. Look and feel, the identity and screen movement: `docs/decisions/look.md`.
 
-## Private wishes
-- **"Private wish" switch on each wish of My wishlist, off by default** (October 2026). A private wish stays on the phone and never goes online, so friends never see it. No separate private list.
-- **Shown with an eye with a line through it** (Google's free Material "visibility off" icon) in the bottom left corner of the wish's picture, in both views (since 2.76; the top left is for the price change). Menu wording: "Make private" / "Visible to friends".
-- **"Save to" lists only real lists** (2.76): the "· Private wish" choices were removed (confusing: there is no private list); the form's "Private wish" switch, or later the menu, makes a wish private. It remembers the last list.
-- **Private wishes keep getting price-drop notifications.**
-- **If a reserved gift is taken off the list** (made private or deleted), the person who reserved it is nudged to pick another gift: a notification on their phone when they use the app, a note on the friends' page when they use the browser. The owner still never learns it was reserved.
-
-## Top wish
-- **"Most wanted" is now "Top wish"** (October 2026): for the wish maker "my number one", for the giver "a safe bet that makes them happy". Gold label with a star, as before, with bolder words. (A heart with "Love it" in pink was tried in 2.38 and dropped.) Sort: "Top wishes first". Still stored as `star`.
-
-## Wishes on screen and the wish form (October 2026)
-- **Tapping a picture opens it full screen** on a dark background (pinch or double-tap to zoom, drag to look around, X or Back to close), with the name and "View in shop" at the bottom. Chosen over an enlarged picture on a blurred screen, which leaves too little room to zoom. Tapping the name and details opens the shop page.
-- **Wish form order**: link, picture, Name (not "Title"), price, Category (one drop-down, not a row of chips), Top wish ("Shows people you *really* like this", since 2.57), Private wish ("Hides this wish from everyone you share your wishlist with"), then "Product information" folded away (description, size, note for givers).
-- **Tapping the eye on a private wish makes it visible**: "Wish is now visible to friends" with Undo, for 5 seconds (also "Wish is now private" from the menus).
-- **Delete question**: "Deleting this wish moves "…" to the bin. After 10 days it's permanently deleted."
-
-- **Tapping "Other information" only turns its arrow** (2.57): no flash on the bar, it distracted from the arrow.
-- **Name and price on one line in the wish form**: the price field is just wide enough for "9999,99" but takes any amount (a longer one scrolls inside the field); the name gets the rest and stays on one line. Opening "Other information" scrolls down so all of it is in sight.
-- **No "(optional)" in the wish form; the name is "Name*"**: saving without a name turns the field red with "What are you wishing for?" (kind, and it leads to the answer; the label stays "Name*").
-- **Wish form, later tweaks**: the folded section is called "Other information" ("Description, size, notes"); the price field shows the currency's symbol (€ for EUR) in front of the amount, label "Price (EUR)"; no "Fetch details" button (pasting a link reads the page; the keyboard's Done key does too).
-
-## Prices
-- **Price changes use + and −, not arrows** (owner, 2.83: "it isn't a stock trade"): "−20%", "+5%", in the app and on the web pages.
-- **Price rises are shown too**: the old price stays visible, with a red ↑ and the percentage. Price drops as before.
+## Older decisions
+- Private wishes, Top wish, wishes on screen and the wish form (October 2026), Prices: moved word for word to
+  `docs/decisions/screens-ARCHIVE.md` (21 November 2026).
 
 ## App review (1 November 2026, owner interviewed; built in 2.95)
 - Side menu keeps everything (lists included).
@@ -269,3 +248,20 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here. Look and f
 - **A wishlist made from + or Home opens at once**, without the "“X” is ready" message (the open list is the
   confirmation). Made halfway through another task (moving or saving a wish, the bin, screenshots): you stay in that
   task. Checks: `NewListChoicesTest`, `DialogButtonsScreenshotTest.newWishlistOfMyOwn`.
+
+## New wishlist on one page, form sheets that don't close by accident (owner, 21 November 2026, after 2.271)
+- **No Occasion in either New wishlist form** (Personal and Shared): everything fits on one page; people name the list
+  after the occasion anyway. It stays in Wishlist settings.
+- **"Whose wishlist? My own / With others" → "Personal" (one person) / "Shared" (two people)** with one short line
+  under them about the chosen one ("Friends reserve gifts; you never see what." / "Make it with others: everyone adds
+  wishes and sees what's reserved."). The Shared form's own intro line went (the same said under the choice).
+- **"Add wishes from other wishlists" is a card** like the settings rows (icon tile, "None chosen yet" / "3 wishes
+  chosen", ›, the chosen wishes' photos), **right above Privacy**.
+- **"Who can see it" / "Visibility" are called "Privacy" everywhere** (the form, Wishlist settings, Home's ⋮ and its
+  sheet).
+- **Form sheets close only with the X or by pulling the tab at the top** (replaces "Swipe down, tap outside or the X:
+  closes at once" of 17 November): a swipe anywhere else or a tap outside does nothing. **Back** closes when nothing
+  is typed, otherwise asks "Discard what you typed?" (Discard / Keep editing). This goes for every form sheet: New
+  wishlist, New group, New gift exchange, Import, Screenshot to wish, Wishlist settings, your profile. (Only the two
+  New wishlist forms report "something typed" so far; the others close on Back as before.) Checks:
+  `FormSheetCloseTest` (fails on the old rules), `NewListChoicesTest`.

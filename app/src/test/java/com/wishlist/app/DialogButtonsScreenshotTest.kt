@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Text
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import org.junit.Test
 
@@ -61,6 +64,25 @@ class DialogButtonsScreenshotTest : NavigationBase() {
             } }
             repeat(10) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
             val path = "build/outputs/roborazzi/new_wishlist_mine_${st}_$m.png"
+            compose.guard(path); captureScreenRoboImage(path)
+        }
+    }
+
+    /** "Add wishes from other wishlists" as a card (owner, 21 November 2026): none chosen, and 7 chosen with photos. */
+    @Test fun copyWishesCard() {
+        compose.mainClock.autoAdvance = false
+        val ws = (1..7).map { Wish(it.toLong(), "", "Wish $it", "", "", null, null, "EUR", "") }
+        for (st in listOf("quiet", "chaos")) for (m in listOf("light", "dark")) {
+            compose.runOnUiThread { compose.activity.setContent {
+                LookTheme(lookFor(st, "blue", m)) {
+                    androidx.compose.foundation.layout.Column(
+                        androidx.compose.ui.Modifier.fillMaxSize().background(androidx.compose.material3.MaterialTheme.colorScheme.surface).padding(24.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) { CopyWishesCard(emptyList()) {}; CopyWishesCard(ws) {} }
+                }
+            } }
+            repeat(6) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
+            val path = "build/outputs/roborazzi/copy_card_${st}_$m.png"
             compose.guard(path); captureScreenRoboImage(path)
         }
     }

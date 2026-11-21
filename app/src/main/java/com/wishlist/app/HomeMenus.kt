@@ -116,13 +116,13 @@ internal fun ListMenuSheet(item: HubItem, actions: List<Triple<String, Boolean, 
                 val icon = when (label) {
                     tr("Share") -> AppIcons.Share
                     tr("Edit name") -> AppIcons.Edit
-                    tr("Visibility") -> AppIcons.Lock
+                    tr("Privacy") -> AppIcons.Lock
                     tr("Leave wishlist") -> AppIcons.Close
                     else -> AppIcons.Delete
                 }
                 SheetRow(
                     { Icon(icon, null, tint = cs.onSurfaceVariant) }, label, { onClose(); act() }, danger = danger,
-                    detail = if (label == tr("Visibility")) visibility else null
+                    detail = if (label == tr("Privacy")) visibility else null
                 )
             }
             val (removing, doing) = actions.partition { it.second }
@@ -140,7 +140,7 @@ internal fun VisibilitySheet(item: HubItem, snack: SnackbarHostState, onClose: (
     ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp)) {
             Text(
-                tr("Visibility"), style = MaterialTheme.typography.titleLarge, fontWeight = LocalLook.current.titleWeight,
+                tr("Privacy"), style = MaterialTheme.typography.titleLarge, fontWeight = LocalLook.current.titleWeight,
                 modifier = Modifier.padding(horizontal = 24.dp)
             )
             Text(

@@ -40,7 +40,7 @@ class NewListChoicesTest {
     @Test fun theFormShowsTheChoicesAndPassesThem() {
         val src = File("src/main/java/com/wishlist/app/NewWishlist.kt").readText()
         assertTrue(src.contains("WhoPicker(who)"))
-        assertTrue(src.contains("createOwnWishlist(ctx, name, notes, occ, picked, if (Config.enabled) who else null)"))
+        assertTrue(src.contains("createOwnWishlist(ctx, name, notes, null, picked, if (Config.enabled) who else null)"))
         assertTrue(src.contains("mutableStateOf(ListVisibility.newDefault)"))
     }
 
@@ -50,5 +50,19 @@ class NewListChoicesTest {
         val line = src.substring(at, src.indexOf('\n', at))
         assertTrue(line.contains("a.openMine(id)"))
         assertTrue(!line.contains("is ready"))
+    }
+
+    /** The owner's review of 2.271 (21 November 2026): no occasion, Personal / Shared, the card above Privacy. */
+    @Test fun theFormFitsOnOnePage() {
+        val dir = File("src/main/java/com/wishlist/app")
+        val own = File(dir, "NewWishlist.kt").readText()
+        val shared = File(dir, "SharedUi.kt").readText()
+        val ownForm = own.substring(own.indexOf("fun NewListDialog("))
+        val sharedForm = shared.substring(shared.indexOf("fun NewSharedDialog("), shared.indexOf("fun JoinDialog("))
+        assertTrue(!ownForm.contains("OccasionPicker(") && !sharedForm.contains("OccasionPicker("))
+        assertTrue(own.contains("tr(\"Personal\")") && own.contains("tr(\"Shared\")") && !own.contains("tr(\"Whose wishlist?\")"))
+        assertTrue(ownForm.indexOf("CopyWishesCard(picked)") in 0 until ownForm.indexOf("WhoPicker(who)"))
+        assertTrue(File(dir, "ListSharing.kt").readText().contains("Text(tr(\"Privacy\")"))
+        assertTrue(!File(dir, "HomeMenus.kt").readText().contains("tr(\"Visibility\")"))
     }
 }

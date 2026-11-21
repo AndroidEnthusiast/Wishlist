@@ -868,3 +868,8 @@ photo first, hidden browser stops at the price, slow shops remembered, 8 s first
 Not checkable here: real shops' timing on a phone. 2.270: big names in the title font; "Chat about this wish" on shared
 wishlists with a people picker (new server functions `wl_sh_people`, `wl_sh_befriend`; owner runs the script).
 
+
+## Earlier wording of the 21 November 2026 handoff lines (moved when 2.272 was added)
+- **2.271 (21 November 2026).** Ask how the New wishlist form feels with "Who can see it", and the list opening after
+  Create (`screens.md`, last section).
+form; a list made from + or Home opens. Not checkable here: real shops' timing, real chats between two phones.

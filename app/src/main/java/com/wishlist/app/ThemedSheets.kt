@@ -26,6 +26,13 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,6 +57,9 @@ fun ModalBottomSheet(
     modifier: Modifier = Modifier,
     sheetState: SheetState = rememberModalBottomSheetState(),
     containerColor: Color = MaterialTheme.colorScheme.surface,
+    // A form sheet's own handle and Back (FormSheetHost, owner 21 November 2026); other panels keep the defaults.
+    dragHandle: (@Composable () -> Unit)? = null,
+    properties: androidx.compose.material3.ModalBottomSheetProperties = androidx.compose.material3.ModalBottomSheetDefaults.properties,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val look = LocalLook.current
@@ -66,7 +76,8 @@ fun ModalBottomSheet(
         // sheet fell back to black on dark grey (owner's screenshot of the profile sheet, 15 November 2026).
         contentColor = sheetContent(look, container),
         tonalElevation = 0.dp,
-        dragHandle = { SheetHandle(look) },
+        dragHandle = dragHandle ?: { SheetHandle(look) },
+        properties = properties,
         content = content
     )
 }
@@ -100,11 +111,11 @@ internal fun sheetContent(look: Look, bg: Color): Color {
     }
 }
 
-/** The handle at the top of a bottom panel. */
+/** The handle at the top of a bottom panel. [modifier]: a form sheet's own pull (FormSheetHost). */
 @Composable
-private fun SheetHandle(look: Look) {
+internal fun SheetHandle(look: Look, modifier: Modifier = Modifier) {
     val cs = MaterialTheme.colorScheme
-    Box(Modifier.padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
+    Box(modifier.padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
         when (look.design) {
             "chaos" -> Box(Modifier.size(width = 44.dp, height = 6.dp).clip(CircleShape).background(look.line))
             else -> Box(Modifier.size(width = 32.dp, height = 4.dp).clip(CircleShape).background(cs.onSurfaceVariant.copy(alpha = 0.4f)))
@@ -142,36 +153,97 @@ fun ThemedSnackbar(data: SnackbarData) {
 
 // ---------- the form sheet (owner, 17 November 2026; docs/designs/plan-2026-11-17.md, step 3) ----------
 
-/** The sheet a form sits in: [close] slides it down, then closes it. */
-class FormHost(val close: () -> Unit)
+/**
+ * The sheet a form sits in: [close] slides it down, then closes it. [unsaved]: the form has something typed, so the
+ * phone's Back asks first (set by [FormSheet]).
+ */
+class FormHost(val close: () -> Unit) {
+    var unsaved by mutableStateOf(false)
+}
 
 /** Set inside a [FormSheetHost]: a [FormSheet] then draws itself in that sheet instead of opening its own. */
 val LocalFormHost = androidx.compose.runtime.compositionLocalOf<FormHost?> { null }
 
+/** How far the pull tab has to be pulled down to close a form sheet. */
+internal val PULL_TO_CLOSE = 24.dp
+
 /**
- * A full-width sheet that slides up from the bottom, for forms (New wishlist, New group, New gift exchange …). Several
- * forms can take turns inside one host (My own / With others) without the sheet moving. Swipe down, tap outside or
- * the X: it slides down and closes at once, without asking (owner).
+ * Whether the form sheet may go: only when one of its own ways out asked for it ([allowed]: the X, the pull tab,
+ * Back, Discard). A swipe anywhere else or a tap outside never closes it (owner, 21 November 2026: "all my details
+ * are gone").
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+internal fun formSheetMayHide(target: androidx.compose.material3.SheetValue, allowed: Boolean): Boolean =
+    target != androidx.compose.material3.SheetValue.Hidden || allowed
+
+/** Back in a form sheet: with something typed it asks first (owner, 21 November 2026); otherwise it closes. */
+internal fun backAsks(unsaved: Boolean): Boolean = unsaved
+
+/**
+ * A full-width sheet that slides up from the bottom, for forms (New wishlist, New group, New gift exchange, Import,
+ * Screenshot to wish, Wishlist settings, your profile). Several forms can take turns inside one host (Personal /
+ * Shared) without the sheet moving. It closes only with the X or by pulling its tab down; swiping elsewhere and taps
+ * outside do nothing; Back closes, or with something typed asks "Discard what you typed?" first (owner, 21 November
+ * 2026; before, a swipe anywhere closed it and lost what was typed).
  */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun FormSheetHost(onClose: () -> Unit, content: @Composable () -> Unit) {
-    val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var allowed by androidx.compose.runtime.remember { mutableStateOf(false) }
+    val state = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = { formSheetMayHide(it, allowed) })
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     val latest = androidx.compose.runtime.rememberUpdatedState(onClose)
     val host = androidx.compose.runtime.remember {
-        FormHost { scope.launch { state.hide() }.invokeOnCompletion { latest.value() } }
+        FormHost { allowed = true; scope.launch { state.hide() }.invokeOnCompletion { latest.value() } }
     }
-    ModalBottomSheet(onDismissRequest = { latest.value() }, sheetState = state) {
-        androidx.compose.runtime.CompositionLocalProvider(LocalFormHost provides host) { content() }
+    var asking by androidx.compose.runtime.remember { mutableStateOf(false) }
+    val look = LocalLook.current
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    ModalBottomSheet(
+        onDismissRequest = { if (allowed) latest.value() },
+        sheetState = state,
+        // The pull tab closes it: pulled down past PULL_TO_CLOSE (it takes the drag, so the sheet itself never moves).
+        dragHandle = {
+            var pulled by androidx.compose.runtime.remember { mutableStateOf(0f) }
+            SheetHandle(look, Modifier.fillMaxWidth()
+                .semantics { onClick(label = tr("Close")) { host.close(); true } }
+                .pointerInput(Unit) {
+                    detectVerticalDragGestures(
+                        onDragStart = { pulled = 0f },
+                        onDragEnd = { if (pulled > with(density) { PULL_TO_CLOSE.toPx() }) host.close() },
+                        onDragCancel = { pulled = 0f }
+                    ) { change, dy -> change.consume(); pulled += dy }
+                })
+        },
+        properties = androidx.compose.material3.ModalBottomSheetProperties(shouldDismissOnBackPress = false)
+    ) {
+        androidx.activity.compose.BackHandler { if (backAsks(host.unsaved)) asking = true else host.close() }
+        // Swipes on the form never reach the sheet (only the pull tab moves it).
+        Box(Modifier.nestedScroll(KeepFormOpen).pointerInput(Unit) { detectVerticalDragGestures { change, _ -> change.consume() } }) {
+            androidx.compose.runtime.CompositionLocalProvider(LocalFormHost provides host) { content() }
+        }
     }
+    if (asking) AlertDialog(
+        onDismissRequest = { asking = false },
+        title = { Text(tr("Discard what you typed?")) },
+        confirmButton = { TextButton(onClick = { asking = false; host.close() }) { Text(tr("Discard")) } },
+        dismissButton = { TextButton(onClick = { asking = false }) { Text(tr("Keep editing")) } }
+    )
+}
+
+/** Takes what a scrolling form leaves over, so pulling past its top never drags the sheet down. */
+private object KeepFormOpen : androidx.compose.ui.input.nestedscroll.NestedScrollConnection {
+    override fun onPostScroll(consumed: androidx.compose.ui.geometry.Offset, available: androidx.compose.ui.geometry.Offset, source: androidx.compose.ui.input.nestedscroll.NestedScrollSource) =
+        androidx.compose.ui.geometry.Offset(0f, available.y)
+    override suspend fun onPostFling(consumed: androidx.compose.ui.unit.Velocity, available: androidx.compose.ui.unit.Velocity) =
+        androidx.compose.ui.unit.Velocity(0f, available.y)
 }
 
 /**
  * A form in the full-width sheet, with the same parts as [AlertDialog] so a dialog becomes a sheet by its name alone:
  * the [title] centred with a round X top right, the [text] (the fields, scrolling inside when long) and the
- * [confirmButton] full width at the bottom. There is no Cancel ([dismissButton] is not shown: the X, a swipe down or a
- * tap outside close it). The sheet has one fixed height, so changing what's in it never makes it jump.
+ * [confirmButton] full width at the bottom. There is no Cancel ([dismissButton] is not shown: the X or the pull tab
+ * close it, see [FormSheetHost]). The sheet has one fixed height, so changing what's in it never makes it jump.
  */
 @Composable
 fun FormSheet(
@@ -180,13 +252,16 @@ fun FormSheet(
     @Suppress("UNUSED_PARAMETER") dismissButton: (@Composable () -> Unit)? = null,
     title: (@Composable () -> Unit)? = null,
     text: (@Composable () -> Unit)? = null,
-    @Suppress("UNUSED_PARAMETER") properties: androidx.compose.ui.window.DialogProperties? = null
+    @Suppress("UNUSED_PARAMETER") properties: androidx.compose.ui.window.DialogProperties? = null,
+    // Something is typed: Back asks before closing (owner, 21 November 2026).
+    unsaved: Boolean = false
 ) {
     val host = LocalFormHost.current
     if (host == null) {
-        FormSheetHost(onDismissRequest) { FormSheet(onDismissRequest, confirmButton, null, title, text) }
+        FormSheetHost(onDismissRequest) { FormSheet(onDismissRequest, confirmButton, null, title, text, unsaved = unsaved) }
         return
     }
+    androidx.compose.runtime.SideEffect { host.unsaved = unsaved }
     val tall = (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp * 0.88f).dp
     androidx.compose.foundation.layout.Column(
         Modifier.fillMaxWidth().height(tall).imePadding()

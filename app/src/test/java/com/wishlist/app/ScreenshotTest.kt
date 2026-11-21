@@ -161,7 +161,7 @@ abstract class ScreenshotBase(private val mode: String, private val tag: String 
             .performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick)
         repeat(10) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
         shot("listmenu")
-        tap("Visibility"); shot("visible")
+        tap("Privacy"); shot("visible")
     }
     @Test fun priceHistory() {
         // The first wish (the board game) with a real history: 49.95, then 44.95, now 39.95.

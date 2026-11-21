@@ -30,8 +30,8 @@ fun toast(c: Context, message: String) {
 
 /**
  * A new wishlist "With others" (was "Create a collab wishlist"; owner, 17 November 2026): a name, optionally who the
- * gifts are for (kept on this phone, to keep the surprise: [Shared.forName]), a description and the occasion.
- * [top]: the My own / With others chips of [NewWishlistSheet].
+ * gifts are for (kept on this phone, to keep the surprise: [Shared.forName]) and a description. [top]: the Personal /
+ * Shared choice of [NewWishlistSheet].
  */
 @Composable
 fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit, top: (@Composable () -> Unit)? = null) {
@@ -43,8 +43,6 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit, top: (@Com
     var name by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var missing by remember { mutableStateOf(false) }
-    var occ by remember { mutableStateOf<Occasion?>(null) }
-    var occMissing by remember { mutableStateOf(false) }
     // "Added by" uses your profile name (owner, 2.102): not asked here.
     val me = Shared.lastName
     var busy by remember { mutableStateOf(false) }
@@ -56,11 +54,8 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit, top: (@Com
         title = { Text(tr("New wishlist")) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // What Shared means is said under the Personal / Shared choice (owner, 21 November 2026).
                 top?.invoke()
-                Text(
-                    tr("Invite people to add ideas with you. Everyone on it sees what’s reserved, so nobody buys it twice."),
-                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
                 OutlinedTextField(
                     name, { name = it.take(60); nameTyped = true; if (it.isNotBlank()) missing = false }, label = { Text(tr("Wishlist name*")) },
                     placeholder = { Text(tr("Our wedding, Gifts for Mum…")) }, singleLine = true, isError = missing,
@@ -80,13 +75,7 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit, top: (@Com
                     label = { Text(tr("Description")) }, placeholder = { Text(tr("What is this wishlist for?")) },
                     supportingText = { Text(tr("Shown at the top of the list.")) },
                     maxLines = 4, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
-                // The occasion (owner, 2.124): pick one first; only then its date is asked.
-                Text(tr("Occasion"), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                OccasionPicker(gift = true, value = occ) { occ = it; occMissing = false }
-                if (occMissing) Text(
-                    if (occ?.kind == "own" && occ?.name.isNullOrBlank()) tr("Give it a name and a date.") else tr("Choose the date."),
-                    color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall
-                )
+                // No occasion here (owner, 21 November 2026: everything on one page; it is in Wishlist settings).
                 if (err.isNotEmpty()) {
                     Text(err, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 }
@@ -100,14 +89,10 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit, top: (@Com
                         missing = true
                         return@TextButton
                     }
-                    if (!Occasions.complete(occ)) {
-                        occMissing = true
-                        return@TextButton
-                    }
                     busy = true; err = ""
                     scope.launch {
                         try {
-                            onCreated(model.create(name, me, forWho, notes, occ))
+                            onCreated(model.create(name, me, forWho, notes, null))
                         } catch (e: Exception) {
                             busy = false
                             err = tr("Couldn’t create it. Check your connection and try again.", (e.message ?: tr("no details")).take(90))
@@ -116,7 +101,8 @@ fun NewSharedDialog(onCreated: (String) -> Unit, onClose: () -> Unit, top: (@Com
                 }
             ) { Text(if (busy) tr("Creating…") else tr("Create")) }
         },
-        dismissButton = { TextButton(enabled = !busy, onClick = onClose) { Text(tr("Cancel")) } }
+        dismissButton = { TextButton(enabled = !busy, onClick = onClose) { Text(tr("Cancel")) } },
+        unsaved = name.isNotBlank() || forWho.isNotBlank() || notes.isNotBlank()
     )
 }
 

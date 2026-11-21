@@ -57,7 +57,7 @@ internal class HomeModel(
                 })
                 "edit" -> Triple(tr("Edit name"), false, { renaming = item })
                 // "Visibility" (owner, 15 November 2026: "Visible to" was too long and unclear).
-                "visibility" -> Triple(tr("Visibility"), false, { visibleOf = item })
+                "visibility" -> Triple(tr("Privacy"), false, { visibleOf = item })
                 "leave" -> Triple(tr("Leave wishlist"), true, { leaving = item })
                 else -> Triple(tr("Delete wishlist"), true, {
                     if (!shared && Repo.mineIds.size < 2) onlyList() else deleting = item

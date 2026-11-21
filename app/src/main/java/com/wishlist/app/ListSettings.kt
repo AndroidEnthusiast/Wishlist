@@ -169,7 +169,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
             }
             }
 
-            ReadingCard(heading = { GroupTitle(tr("Visibility")) }) {
+            ReadingCard(heading = { GroupTitle(tr("Privacy")) }) {
             if (shared != null) {
                 val title = Repo.listName
                 val invite = inviteLink(shared.key)

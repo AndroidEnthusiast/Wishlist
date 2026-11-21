@@ -74,15 +74,60 @@ import java.io.File
  */
 
 /**
- * "My own / With others" at the top of a new wishlist (owner, 17 November 2026: collab wishlists folded into "New
- * wishlist"). With others = a wishlist made together with others, where everyone on it sees reservations.
+ * "Personal / Shared" at the top of a new wishlist (owner, 21 November 2026; was "Whose wishlist? My own / With
+ * others", which didn't read well): one person and two people, and one line under them about the chosen one.
+ * Shared = a wishlist made together with others, where everyone on it sees reservations.
  */
 @Composable
 fun WhoIsItFor(someoneElse: Boolean, onChange: (Boolean) -> Unit) {
-    Text(tr("Whose wishlist?"), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilterChip(!someoneElse, { if (someoneElse) onChange(false) }, { Text(tr("My own")) })
-        FilterChip(someoneElse, { if (!someoneElse) onChange(true) }, { Text(tr("With others")) })
+        FilterChip(!someoneElse, { if (someoneElse) onChange(false) }, { Text(tr("Personal")) },
+            leadingIcon = { Icon(AppIcons.Person, null, Modifier.size(18.dp)) })
+        FilterChip(someoneElse, { if (!someoneElse) onChange(true) }, { Text(tr("Shared")) },
+            leadingIcon = { Icon(AppIcons.Group, null, Modifier.size(18.dp)) })
+    }
+    Text(
+        if (someoneElse) tr("Make it with others: everyone adds wishes and sees what’s reserved.")
+        else tr("Friends reserve gifts; you never see what."),
+        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+}
+
+/**
+ * "Add wishes from other wishlists" in the New wishlist form (owner, 21 November 2026: not a loose "+ Add" line): a
+ * card like the settings rows, with how many are chosen and their photos.
+ */
+@Composable
+internal fun CopyWishesCard(picked: List<Wish>, onClick: () -> Unit) {
+    val look = LocalLook.current
+    val cs = MaterialTheme.colorScheme
+    val quiet = look.design == "quiet"
+    val fill = if (quiet) look.groupFill() else androidx.compose.ui.graphics.lerp(sheetColor(look, cs.surface), cs.onSurface, 0.08f)
+    val shape = if (quiet) Squircle(18.dp) else RoundedCornerShape(16.dp)
+    Column(Modifier.fillMaxWidth().clip(shape).background(fill).clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 12.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(36.dp).clip(if (quiet) Squircle(10.dp) else RoundedCornerShape(10.dp)).background(cs.primaryContainer), contentAlignment = Alignment.Center) {
+                Icon(AppIcons.Gift, null, tint = cs.onPrimaryContainer, modifier = Modifier.size(20.dp))
+            }
+            Column(Modifier.padding(start = 12.dp).weight(1f)) {
+                Text(tr("Add wishes from other wishlists"), style = MaterialTheme.typography.bodyLarge, color = cs.onSurface)
+                Text(
+                    when (picked.size) { 0 -> tr("None chosen yet"); 1 -> tr("1 wish chosen"); else -> tr("%d wishes chosen", picked.size) },
+                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
+                )
+            }
+            Icon(AppIcons.Chevron, null, tint = cs.onSurfaceVariant, modifier = Modifier.size(20.dp))
+        }
+        if (picked.isNotEmpty()) Row(Modifier.padding(start = 48.dp, top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+            val shown = picked.take(5)
+            shown.forEach { w ->
+                Box(Modifier.size(36.dp).clip(RoundedCornerShape(8.dp)).background(look.photoSurface(w.id)), contentAlignment = Alignment.Center) {
+                    if (w.image.isNotBlank()) WishImage(w.image, Modifier.size(36.dp), ContentScale.Crop)
+                    else PlaceholderIcon("gift", 20.dp)
+                }
+            }
+            if (picked.size > shown.size) Text("+${picked.size - shown.size}", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
+        }
     }
 }
 
@@ -101,8 +146,8 @@ fun NewWishlistSheet(withOthers: Boolean, onCreatedMine: (String) -> Unit, onCre
 }
 
 /**
- * A new wishlist of your own: a name (required) and, optionally, the note for friends shown at the top of the list.
- * In the full-width form sheet (2.223). [top]: what goes above the fields (the My own / With others chips of
+ * A new wishlist of your own: a name (required), optionally the description shown at the top of the list, wishes from
+ * your other lists, and Privacy. In the full-width form sheet (2.223). [top]: what goes above the fields (the My own / With others chips of
  * [NewWishlistSheet]).
  */
 @Composable
@@ -111,8 +156,6 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit, top: (@Compo
     var name by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var missing by remember { mutableStateOf(false) }
-    var occ by remember { mutableStateOf<Occasion?>(null) }
-    var occMissing by remember { mutableStateOf(false) }
     // Optional: wishes from your other lists, copied in when the list is made.
     var picked by remember { mutableStateOf(listOf<Wish>()) }
     var picking by remember { mutableStateOf(false) }
@@ -137,44 +180,21 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit, top: (@Compo
                     label = { Text(tr("Description")) },
                     supportingText = { Text(tr("Shown at the top of your wishlist.")) },
                     maxLines = 4, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
-                // The occasion (owner, 2.124): pick one first; only then its date is asked.
-                Text(tr("Occasion"), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                OccasionPicker(gift = false, value = occ) { occ = it; occMissing = false }
-                if (occMissing) Text(
-                    if (occ?.kind == "own" && occ?.name.isNullOrBlank()) tr("Give it a name and a date.") else tr("Choose the date."),
-                    color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall
-                )
+                // No occasion here (owner, 21 November 2026: everything on one page; it is in Wishlist settings).
+                // Wishes from other lists, above Privacy (owner, 21 November 2026).
+                if (canCopy) CopyWishesCard(picked) { picking = true }
                 // Only with online sharing set up: without it every list stays on the phone.
                 if (Config.enabled) WhoPicker(who) { who = it }
-                if (canCopy) {
-                    Row(
-                        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { picking = true }
-                            .padding(vertical = 10.dp, horizontal = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(AppIcons.Add, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                        Column(Modifier.weight(1f).padding(start = 10.dp)) {
-                            Text(tr("Add wishes from your other lists"), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
-                            // No "Optional" (owner, 2.125: it suggested the rest isn't optional).
-                            if (picked.isNotEmpty()) Text(
-                                if (picked.size == 1) tr("1 wish chosen") else tr("%d wishes chosen", picked.size),
-                                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
             }
         },
         confirmButton = {
             TextButton(onClick = {
                 if (name.isBlank()) missing = true
-                else if (!Occasions.complete(occ)) occMissing = true
-                else {
-                    onCreated(createOwnWishlist(ctx, name, notes, occ, picked, if (Config.enabled) who else null))
-                }
+                else onCreated(createOwnWishlist(ctx, name, notes, null, picked, if (Config.enabled) who else null))
             }) { Text(tr("Create")) }
         },
-        dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
+        dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } },
+        unsaved = name.isNotBlank() || notes.isNotBlank() || picked.isNotEmpty()
     )
     if (picking) {
         CopyWishesDialog(null, onDone = { picked = it; picking = false }, onClose = { picking = false })

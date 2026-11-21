@@ -390,9 +390,9 @@ class WishlistSheetTest : NavigationBase() {
         // The ⋮: the sheet with its rows and the current Visibility under its name.
         compose.onAllNodes(hasContentDescription("More for", substring = true) and hasClickAction()).onFirst().performClick()
         compose.waitForIdle()
-        for (t in listOf("Share", "Edit name", "Visibility", "Delete wishlist")) shows(t)
+        for (t in listOf("Share", "Edit name", "Privacy", "Delete wishlist")) shows(t)
         compose.onAllNodes(hasText("Visible to")).assertCountEquals(0)
-        tap("Visibility")
+        tap("Privacy")
         compose.waitForIdle()
         for (t in listOf("Only me", "My friends", "Friends + anyone with the link")) shows(t)
     }
