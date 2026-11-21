@@ -5,6 +5,8 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.274 (21 November 2026).** Ask whether tapping a price-drop notification or a chat card now shows the whole wish
+  in every view. Open: bol.com refuses the app's built-in browser (Chrome works); options given, owner chose none yet.
 - **2.273 (21 November 2026), read first.** Ask how Personal / Co-op reads, Home's tabs (they appear with a second
   kind), and taking chosen wishes out (✕, or untick in the picker) (`home-and-kinds.md`). Lesson from the owner:
   before reporting a feature done, also try changing your mind (undo, remove, go back) and say what's missing.

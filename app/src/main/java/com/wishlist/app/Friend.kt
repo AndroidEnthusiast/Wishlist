@@ -41,6 +41,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -189,6 +190,9 @@ fun FriendScreen(
                         // A wish tapped on a friend's "Wishes" or "Top wishes" page: scroll to it if it isn't in
                         // sight and let it glow (2.95, like your own lists).
                         val gridState = rememberLazyGridState()
+                        // The pinned categories' height, once shown (to keep a wish that glows clear of them).
+                        var pinnedHeight by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+                        val density = androidx.compose.ui.platform.LocalDensity.current
                         val pinned by remember(catIndex) {
                             derivedStateOf {
                                 (gridState.firstVisibleItemIndex > catIndex ||
@@ -203,11 +207,14 @@ fun FriendScreen(
                                 return@LaunchedEffect
                             }
                             delay(150)
-                            val info = gridState.layoutInfo
-                            val seen = info.visibleItemsInfo.firstOrNull { it.index == i + pre }
-                            val inSight = seen != null && seen.offset.y >= info.viewportStartOffset &&
-                                seen.offset.y + seen.size.height <= info.viewportEndOffset
-                            if (!inSight) gridState.animateScrollToItem(i + pre)
+                            // Fully in sight below the pinned categories, in every view (owner, 21 November 2026, a
+                            // recording: it glowed half under them; FocusScroll.kt). Before the first scroll the pinned
+                            // copy isn't measured yet: the list's own row plus the pinned copy's padding then.
+                            val pad = with(density) { 8.dp.roundToPx() }
+                            gridState.showWhole(i + pre, {
+                                if (pinned && pinnedHeight > 0) pinnedHeight
+                                else gridState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == catIndex }?.size?.height?.plus(pad) ?: 0
+                            }, with(density) { 12.dp.roundToPx() })
                             WishFocus.glow(t)
                             WishFocus.target = null
                         }
@@ -275,7 +282,8 @@ fun FriendScreen(
                         }
                         }
                         // The pinned copy of the categories once the list's own row scrolls away under it.
-                        if (pinned) Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).padding(vertical = 4.dp)) {
+                        if (pinned) Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background)
+                            .onSizeChanged { pinnedHeight = it.height }.padding(vertical = 4.dp)) {
                             catRow(PaddingValues(horizontal = 16.dp), true)
                         }
                         }

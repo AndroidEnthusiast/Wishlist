@@ -58,3 +58,11 @@ Moved here from `people.md` on 18 November 2026 (its size limit); newest at the 
 - A wish card from a shared list in a chat opens that shared list on the wish. Server: `wl_sh_people` and
   `wl_sh_befriend` (`supabase-features.sql`, version 2); app: `SharedPeople.kt`, `ChatPeople.kt`; checks:
   `ChatPeopleTest`, `ChatPeopleScreenshotTest`, `tests/sql/features_test.sql` part 4.
+
+## A wish you're sent to shows whole before it glows (owner, 21 November 2026, a screen recording)
+- Tapping a price-drop notification or a wish card in a chat opened the list and made the wish glow, but half of it
+  sat under the filters pinned at the top. Now every way to a wish (notifications, chat cards, All wishes, group
+  members' and giftees' lists, friends' lists; own and co-op lists) scrolls it **fully into sight below the pinned
+  part, with room for the glow, in every view** (Rows, Two per row, Large cards), then glows. One helper for all:
+  `FocusScroll.kt` (`showWhole`), used by `ListScreen.kt` and `Friend.kt`. Check: `FocusScrollTest` (fails on the old
+  scroll).

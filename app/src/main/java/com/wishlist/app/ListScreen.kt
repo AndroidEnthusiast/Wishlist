@@ -188,6 +188,7 @@ fun HomeScreen(
         }
     }
     var stickyHeight by remember { mutableIntStateOf(0) }
+    val density = androidx.compose.ui.platform.LocalDensity.current
     LaunchedEffect(WishFocus.target, sel, query) {
         val t = WishFocus.target ?: return@LaunchedEffect
         val i = list.indexOfFirst { it.id == t }
@@ -209,11 +210,13 @@ fun HomeScreen(
         // top once scrolled, 2.111: the wish must not hide under them). Only scrolls when the wish isn't fully in sight
         // (2.94: it also scrolled when it was, so the filters jumped away).
         val pre = stickyIndex + 1
-        val info = gridState.layoutInfo
-        val seen = info.visibleItemsInfo.firstOrNull { it.index == i + pre }
-        val inSight = seen != null && seen.offset.y >= info.viewportStartOffset + stickyHeight &&
-            seen.offset.y + seen.size.height <= info.viewportEndOffset
-        if (!inSight) gridState.animateScrollToItem(i + pre, -stickyHeight)
+        // Fully in sight below the pinned filters, in every view (owner, 21 November 2026; FocusScroll.kt). Before the
+        // first scroll the pinned copy isn't measured yet: the list's own copy plus the pinned copy's padding then.
+        val pad = with(density) { 16.dp.roundToPx() }
+        gridState.showWhole(i + pre, {
+            if (stickyHeight > 0) stickyHeight
+            else gridState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == stickyIndex }?.size?.height?.plus(pad) ?: 0
+        }, with(density) { 12.dp.roundToPx() })
         WishFocus.glow(t)
         WishFocus.target = null
     }
