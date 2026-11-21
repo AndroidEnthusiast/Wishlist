@@ -100,6 +100,7 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 ## Last sessions
 
 ### 21 November 2026: fonts, faster link reading, chat on shared lists, new-list visibility (2.269–2.271)
+(The first, longer summary of this session is in HANDOFF-ARCHIVE.md.)
 2.269: numbers in the text font everywhere (`FontRulesTest`); shared links fill the form faster (`FasterReadTest`).
 2.270: big names in the title font; "Chat about this wish" on shared wishlists with a people picker (server
 `wl_sh_people`, `wl_sh_befriend`; owner runs `supabase-features.sql` v2). 2.271: "Who can see it" in the New wishlist

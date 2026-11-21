@@ -859,3 +859,12 @@ Owner interviewed (`docs/decisions/screenshots.md`): share 1–10 pictures → p
 by one with Skip, a note per saved wish, "Stop adding?", an end message; the editor shows live mini cards; every wish
 needs a name (app + both web editors). Checks: `ShotsModelTest`, `ShareEntryTest`, web e2e t2/t5. Screenshots looked
 at; sharing from a real app (Instagram, gallery) can't be tried here.
+
+## The first summary of 21 November 2026 (moved from HANDOFF.md when it was shortened)
+### 21 November 2026: one font for numbers, faster link reading (2.269)
+Owner's screenshots (list summary in the title font, Home in the text font) → shown the three choices drawn with the
+real fonts; chose numbers in the text font everywhere (`TextStyle.number`, `FontRulesTest`). Shared links: name and
+photo first, hidden browser stops at the price, slow shops remembered, 8 s first wait, Save waits (`FasterReadTest`).
+Not checkable here: real shops' timing on a phone. 2.270: big names in the title font; "Chat about this wish" on shared
+wishlists with a people picker (new server functions `wl_sh_people`, `wl_sh_befriend`; owner runs the script).
+
