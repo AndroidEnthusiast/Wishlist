@@ -259,7 +259,10 @@ fun ShopIcon(s: Shop, sizeDp: Int) {
             Text(
                 s.name.take(1).uppercase(), color = cs.onPrimaryContainer, fontWeight = FontWeight.Bold,
                 // A small icon (the search row's 20 dp, 22 November 2026) gets a smaller letter, so it isn't cut off.
-                style = if (sizeDp >= 40) MaterialTheme.typography.titleLarge else MaterialTheme.typography.labelMedium,
+                // Sized to the tile (not the phone's text size), so a large font can't push it out of a 20 dp tile.
+                style = if (sizeDp >= 40) MaterialTheme.typography.titleLarge else with(androidx.compose.ui.platform.LocalDensity.current) {
+                    MaterialTheme.typography.labelMedium.copy(fontSize = (sizeDp * 0.5f).dp.toSp(), lineHeight = (sizeDp * 0.7f).dp.toSp())
+                },
                 maxLines = 1
             )
         }
