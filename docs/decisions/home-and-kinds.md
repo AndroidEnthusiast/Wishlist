@@ -34,7 +34,7 @@
 - **Personal link preview** (owner chose "Supabase link now"): not built, because Supabase functions can't serve web
   pages on their own address (HTML becomes plain text; only with a paid custom domain), so WhatsApp would get no
   preview and the link couldn't send people on. Options given to the owner: wait for the own domain, or a free
-  Cloudflare Worker.
+  Cloudflare Worker. **Owner: drop the idea** (the general preview stays; don't suggest it again unless asked).
 - When a shop reads badly (message at the field, spotting logo photos, asking before saving €0): owner skipped the
   question, so nothing is built (ask again only if the owner brings it up). The real-people test: "not now".
 
