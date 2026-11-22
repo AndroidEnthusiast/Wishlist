@@ -5,6 +5,8 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.281 (22 November 2026).** New + menu lines (`home-and-kinds.md`, last section). Open: the personal link preview
+  can't come from Supabase (no web pages on its address): ask the owner which way (own domain later, or a Worker).
 - **Ask first:** which numbers of the idea list (`ideas.md`, last section) the owner wants to plan; explain gladly.
   Children's lists: later. R7 and the Play Store: "neither yet" (owner, 22 November 2026).
 - **2.280 (22 November 2026).** The owner's review (`look.md`, last section): search starts at the last shop, two pages

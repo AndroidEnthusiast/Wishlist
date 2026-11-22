@@ -166,11 +166,11 @@ fun PlusMenuSheet(onWish: () -> Unit, onNew: (String) -> Unit, onClose: () -> Un
                 SheetRow({ Icon(AppIcons.Add, null, tint = cs.onSurfaceVariant) }, tr("Add a wish"), onWish, detail = tr("From a link, a photo or just a name."))
             })
             val more = mutableListOf<@Composable () -> Unit>(
-                { SheetRow({ Icon(AppIcons.ListIcon, null, tint = cs.onSurfaceVariant) }, tr("New wishlist"), { onNew("mine") }, detail = tr("Personal, or a co-op wishlist with others.")) }
+                { SheetRow({ Icon(AppIcons.ListIcon, null, tint = cs.onSurfaceVariant) }, tr("New wishlist"), { onNew("mine") }, detail = tr("Your own wishes, or a co-op wishlist with others.")) }
             )
             if (Config.enabled) {
-                more += { SheetRow({ Icon(AppIcons.Group, null, tint = cs.onSurfaceVariant) }, tr("New wishlist group"), { onNew("group") }, detail = tr("A circle of people who can see each other’s wishlists.")) }
-                more += { SheetRow({ Icon(AppIcons.Exchange, null, tint = cs.onSurfaceVariant) }, tr("New gift exchange"), { onNew("exchange") }, detail = tr("Draw names, everyone gives one gift.")) }
+                more += { SheetRow({ Icon(AppIcons.Group, null, tint = cs.onSurfaceVariant) }, tr("New wishlist group"), { onNew("group") }, detail = tr("Everyone you invite can see each other’s wishlists.")) }
+                more += { SheetRow({ Icon(AppIcons.Exchange, null, tint = cs.onSurfaceVariant) }, tr("New gift exchange"), { onNew("exchange") }, detail = tr("Link your wishlist, draw names and surprise each other with a thoughtful gift.")) }
             }
             // Import last, under gift exchange (owner, 18 November 2026): a list from another app or your notes.
             more += { SheetRow({ Icon(AppIcons.Swap, null, tint = cs.onSurfaceVariant) }, tr("Import a list"), onImport, detail = tr("From GoWish, Giftful, Amazon, your notes and more.")) }

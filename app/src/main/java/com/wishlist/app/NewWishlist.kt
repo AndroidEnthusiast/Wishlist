@@ -88,7 +88,7 @@ fun WhoIsItFor(someoneElse: Boolean, onChange: (Boolean) -> Unit) {
     }
     // What it is, on one line (owner, 21 November 2026: nothing about reserving; it shrinks a little rather than wrap).
     FitText(
-        if (someoneElse) tr("Collaborate: everyone you invite adds wishes.") else tr("Only you add wishes to it."),
+        if (someoneElse) tr("Collaborate on a wishlist with two or more people.") else tr("Your own wishes."),
         MaterialTheme.typography.bodySmall, MaterialTheme.colorScheme.onSurfaceVariant, Modifier.fillMaxWidth(), androidx.compose.ui.text.style.TextAlign.Start
     )
 }

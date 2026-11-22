@@ -19,3 +19,22 @@
   checked adding but not changing your mind): the picker opens with your choice ticked and "Done" works with none
   left, and **each chosen wish's photo in the card has a ✕**. Also in New group's "New wishlist" (which now uses the
   same card). Checks: `NewListChoicesTest`, `ProfileHomeTest`, `HomeSwipeTest`.
+
+## Clear lines in the + menu (owner, 22 November 2026; built in 2.281)
+- The plan after "what does a wishlist user truly need": the five moments (save fast, one link, a giver knows in five
+  seconds, reserve without duplicates, received gifts) are built; what's missing is quality and proof, not features.
+- Names stay (owner): **Co-op**, **Wishlist group**, **Gift exchange**; everything stays in the **+ menu** (not also
+  offered "where needed"); no "What are you planning?" screen (owner: too vague for a wishlist app).
+- Lines say what each is truly for (owner's own wording, polished, not examples of occasions): + menu: New wishlist
+  "Your own wishes, or a co-op wishlist with others." · New wishlist group "Everyone you invite can see each other's
+  wishlists." · New gift exchange "Link your wishlist, draw names and surprise each other with a thoughtful gift." ·
+  New wishlist form: Personal "Your own wishes." · Co-op "Collaborate on a wishlist with two or more people." (the
+  owner's line as is; Claude warned it invites a couple's own wishlist, where everyone sees the reservations; owner
+  chose it anyway: don't change it without asking).
+- **Personal link preview** (owner chose "Supabase link now"): not built, because Supabase functions can't serve web
+  pages on their own address (HTML becomes plain text; only with a paid custom domain), so WhatsApp would get no
+  preview and the link couldn't send people on. Options given to the owner: wait for the own domain, or a free
+  Cloudflare Worker.
+- When a shop reads badly (message at the field, spotting logo photos, asking before saving €0): owner skipped the
+  question, so nothing is built (ask again only if the owner brings it up). The real-people test: "not now".
+
