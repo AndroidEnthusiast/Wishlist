@@ -70,27 +70,17 @@ fun AddToMineHost(snack: SnackbarHostState) {
     val cs = MaterialTheme.colorScheme
     AddToMine.asking?.let { w ->
         val lists = remember(Repo.mineIds, Repo.mineVersion) { Repo.mineIds }
-        AlertDialog(
-            onDismissRequest = { AddToMine.asking = null },
-            title = { Text(tr("Add to my wishlist")) },
-            text = {
-                Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    lists.forEach { id ->
-                        Text(
-                            Repo.mineName(id), style = MaterialTheme.typography.bodyLarge, color = cs.onSurface,
-                            maxLines = 1, overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(RoundedCornerShape(12.dp))
-                                .clickable {
-                                    AddToMine.asking = null
-                                    AddToMine.done = id to AddToMine.add(ctx, id, w)
-                                }
-                                .padding(horizontal = 8.dp, vertical = 12.dp)
-                        )
-                    }
+        // A bottom sheet like every picker (owner, 22 November 2026; PickSheet.kt), the wish on top.
+        PickSheet(tr("Add to my wishlist"), onClose = { AddToMine.asking = null }, top = { MovingWishes(setOf(w.id), listOf(w)) }) {
+            SheetGroup(lists.map { id ->
+                {
+                    SheetRow({ androidx.compose.material3.Icon(AppIcons.ListIcon, null, tint = cs.onSurfaceVariant) }, Repo.mineName(id), {
+                        AddToMine.asking = null
+                        AddToMine.done = id to AddToMine.add(ctx, id, w)
+                    })
                 }
-            },
-            confirmButton = { TextButton(onClick = { AddToMine.asking = null }) { Text(tr("Cancel")) } }
-        )
+            })
+        }
     }
     val d = AddToMine.done
     LaunchedEffect(d) {

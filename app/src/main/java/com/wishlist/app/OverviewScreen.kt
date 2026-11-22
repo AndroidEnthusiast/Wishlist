@@ -198,23 +198,16 @@ private fun FromWhichListDialog(action: String, ids: Set<Long>, all: List<Placed
     val cs = MaterialTheme.colorScheme
     val chosen = all.filter { it.w.id in ids }
     val lists = chosen.flatMap { it.listIds }.distinct()
-    AlertDialog(
-        onDismissRequest = onClose,
-        title = { Text(if (action == "move") tr("Move from which list?") else tr("Delete from which list?")) },
-        text = {
-            Column {
-                Text(
-                    if (chosen.size == 1) tr("This wish is on %1\$d of your wishlists: %2\$s.", lists.size, lists.joinToString(", ") { Repo.mineName(it) })
-                    else tr("These wishes are on %d of your wishlists.", lists.size),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                SheetGroup(lists.map { l -> { SheetRow({ Icon(AppIcons.Gift, null, tint = cs.onSurfaceVariant) }, Repo.mineName(l), { onPick(l) }) } })
-                if (action == "delete") SheetGroup(listOf { SheetRow({ Icon(AppIcons.Delete, null, tint = cs.error) }, tr("All lists"), { onPick(null) }, danger = true) })
-            }
-        },
-        confirmButton = {},
-        dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
-    )
+    // A bottom sheet like every picker (owner, 22 November 2026; PickSheet.kt).
+    PickSheet(
+        if (action == "move") tr("Move from which list?") else tr("Delete from which list?"), onClose = onClose,
+        top = { MovingWishes(ids, chosen.map { it.w }) },
+        note = if (chosen.size == 1) tr("This wish is on %1\$d of your wishlists: %2\$s.", lists.size, lists.joinToString(", ") { Repo.mineName(it) })
+        else tr("These wishes are on %d of your wishlists.", lists.size)
+    ) {
+        SheetGroup(lists.map { l -> { SheetRow({ Icon(AppIcons.ListIcon, null, tint = cs.onSurfaceVariant) }, Repo.mineName(l), { onPick(l) }) } })
+        if (action == "delete") SheetGroup(listOf { SheetRow({ Icon(AppIcons.Delete, null, tint = cs.error) }, tr("All lists"), { onPick(null) }, danger = true) })
+    }
 }
 
 /**

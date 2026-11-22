@@ -148,60 +148,42 @@ fun InviteFriendsDialog(g: Group, snack: SnackbarHostState, onClose: () -> Unit)
     val friends = (Friends.state?.friends ?: emptyList()).filter { it.id !in members }
     var picked by remember { mutableStateOf(setOf<String>()) }
     var busy by remember { mutableStateOf(false) }
-    AlertDialog(
-        onDismissRequest = { if (!busy) onClose() },
-        title = { Text(tr("Invite friends")) },
-        text = {
-            Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
-                if (friends.isEmpty()) Text(
-                    tr("No friends to invite yet. Share the group link instead."),
-                    color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium
-                )
-                friends.forEach { f ->
-                    val waiting = f.id in g.invited
-                    Row(
-                        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                            .clickable(enabled = !waiting) { picked = if (f.id in picked) picked - f.id else picked + f.id }
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Avatar(Friends.photos[f.id], f.name, 36.dp)
-                        Column(Modifier.weight(1f).padding(start = 10.dp)) {
-                            Text(f.name.ifBlank { tr("Someone") }, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            if (waiting) Text(tr("Invited"), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
-                        }
-                        Checkbox(
-                            checked = waiting || f.id in picked, enabled = !waiting,
-                            onCheckedChange = { on -> picked = if (on) picked + f.id else picked - f.id }
-                        )
-                    }
-                }
-                TextButton(onClick = { Groups.share(ctx, g) }, modifier = Modifier.padding(top = 6.dp)) {
-                    Text(tr("Share group link"))
-                }
-                Text(
-                    tr("Anyone with the link can join, also without the app."),
-                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
-                )
-                if (busy) CircularProgressIndicator(Modifier.padding(top = 8.dp).size(24.dp))
+    fun invite() {
+        busy = true
+        scope.launch {
+            val msg = try {
+                model.invite(g, picked.toList())
+                if (picked.size == 1) tr("Invitation sent") else tr("%d invitations sent", picked.size)
+            } catch (e: Exception) {
+                tr("Couldn’t reach the server. Check your connection.")
             }
-        },
-        confirmButton = {
-            TextButton(enabled = !busy && picked.isNotEmpty(), onClick = {
-                busy = true
-                scope.launch {
-                    val msg = try {
-                        model.invite(g, picked.toList())
-                        if (picked.size == 1) tr("Invitation sent") else tr("%d invitations sent", picked.size)
-                    } catch (e: Exception) {
-                        tr("Couldn’t reach the server. Check your connection.")
-                    }
-                    busy = false
-                    onClose()
-                    snack.toastSoon(msg)
-                }
-            }) { Text(tr("Invite")) }
-        },
-        dismissButton = { TextButton(enabled = !busy, onClick = onClose) { Text(tr("Close")) } }
-    )
+            busy = false
+            onClose()
+            snack.toastSoon(msg)
+        }
+    }
+    // A bottom sheet like every picker (owner, 22 November 2026; PickSheet.kt): tick friends, then Invite.
+    PickSheet(
+        tr("Invite friends"), onClose = onClose, busy = busy,
+        action = if (friends.isNotEmpty()) tr("Invite") else null, actionEnabled = picked.isNotEmpty(), onAction = { invite() }
+    ) {
+        if (friends.isEmpty()) PickNote(tr("No friends to invite yet. Share the group link instead."))
+        else SheetGroup(friends.map { f ->
+            {
+                val waiting = f.id in g.invited
+                SheetRow(
+                    { Avatar(Friends.photos[f.id], f.name, 32.dp) }, f.name.ifBlank { tr("Someone") },
+                    { picked = if (f.id in picked) picked - f.id else picked + f.id },
+                    detail = if (waiting) tr("Invited") else null,
+                    chosen = waiting || f.id in picked, tile = false, enabled = !waiting
+                )
+            }
+        })
+        SheetGroup(listOf {
+            SheetRow(
+                { androidx.compose.material3.Icon(AppIcons.Share, null, tint = cs.onSurfaceVariant) }, tr("Share group link"), { Groups.share(ctx, g) },
+                detail = tr("Anyone with the link can join, also without the app.")
+            )
+        })
+    }
 }

@@ -303,3 +303,18 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   a group's, a gift exchange's, a friend's ⋮) had no line at all. Owner chose **a thin line after the icon** (over a
   full-width line or separate cards), the same everywhere, light and dark. Rule in `docs/STYLE.md`; checks: `LookTest`
   (the line visible in every style, theme and mode).
+
+## Pickers as bottom sheets (owner, 22 November 2026; built in 2.279)
+- Owner, with a screenshot of "Move or copy?": the two rows looked awkward, lots of space around Cancel, the screen
+  "out of place compared to other screens". Claude agreed (block indented further than the wish, a menu's block in a
+  centred pop-up, an empty band around a lone Cancel; it opens from a wish's ⋮ sheet). Owner chose: **a bottom sheet
+  like the ⋮ menu**; after Move or Copy **the same sheet shows "Move to…"** (← back); **all pickers at once, "not one
+  at a time, make sure they are all built and that it looks flawless"**.
+- Made sheets: Move or copy + Move/Copy to…, Move/Delete from which list?, Add to my wishlist, Which wishlist?
+  (Received gifts), What did you get?, Send a wish (chat), Invite Friends (co-op list), Invite friends (group, gift
+  exchange), Add friends (new group). Stayed pop-ups (Claude's reading of the rule, tell the owner): "are you sure?"
+  questions, the Leave forms with "who takes over" (choice circles in a form, `STYLE.md`), the group's join form
+  (typing), How many will you buy?, the emoji picker. An unused category menu (`CategoryActionsDialog`) was removed.
+- Found on the way: every light-mode sheet showed its default text in grey (Quiet light has the same colour for
+  surface and surfaceVariant); fixed in `sheetContent`, checked in `LookTest`.
+

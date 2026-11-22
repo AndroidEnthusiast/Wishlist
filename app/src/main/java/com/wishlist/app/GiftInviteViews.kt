@@ -62,53 +62,37 @@ fun GiftInviteFriendsDialog(l: SharedList, onClose: () -> Unit) {
     // Who is on the list already, who you picked, sending (InviteFriendsState in GiftInviteModel.kt).
     val st = remember(l.code) { InviteFriendsState(ctx, l, scope) }
     LaunchedEffect(st.attempt) { st.load() }
-    AlertDialog(
-        onDismissRequest = { if (!st.busy) onClose() },
-        title = { Text(tr("Invite Friends")) },
-        text = {
-            Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
-                Text(
-                    tr("They get an invitation to join “%s”.", l.name.ifBlank { Repo.listName }),
-                    style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp)
+    // A bottom sheet like every picker (owner, 22 November 2026; PickSheet.kt): tick friends, then Invite.
+    val t = st.taken
+    PickSheet(
+        tr("Invite Friends"), onClose = onClose, busy = st.busy,
+        note = tr("They get an invitation to join “%s”.", l.name.ifBlank { Repo.listName }),
+        action = if (t != null && friends.isNotEmpty() && st.err.isEmpty()) tr("Invite") else null,
+        actionEnabled = st.picked.isNotEmpty(), onAction = { st.send(onClose) }
+    ) {
+        // The surprise (owner, 17 November 2026): the person it's for is left out, or named as a reminder.
+        if (forWho.isNotBlank()) PickNote(
+            if (hidden.isNotEmpty()) tr("%s isn’t shown: this wishlist is a surprise for them.", hidden.joinToString(", ") { it.name })
+            else tr("Don’t invite %s: this wishlist is a surprise for them.", forWho)
+        )
+        if (st.err.isNotEmpty()) {
+            PickNote(st.err, error = true)
+            Box(Modifier.padding(horizontal = 16.dp)) { TextButton(onClick = { st.attempt++ }) { Text(tr("Try again")) } }
+        } else if (t == null) {
+            Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(Modifier.size(24.dp)) }
+        } else if (friends.isEmpty()) {
+            PickNote(tr("No Friends yet. Add Friends on the Friends tab, or send the invite link."))
+        } else SheetGroup(friends.map { f ->
+            {
+                val on = f.id in t
+                SheetRow(
+                    { Avatar(Friends.photos[f.id], f.name, 32.dp) }, f.name.ifBlank { tr("Someone") }, { st.toggle(f.id) },
+                    detail = if (on) tr("On the list or invited") else null,
+                    chosen = on || f.id in st.picked, tile = false, enabled = !on && !st.busy
                 )
-                // The surprise (owner, 17 November 2026): the person it's for is left out, or named as a reminder.
-                if (forWho.isNotBlank()) Text(
-                    if (hidden.isNotEmpty()) tr("%s isn’t shown: this wishlist is a surprise for them.", hidden.joinToString(", ") { it.name })
-                    else tr("Don’t invite %s: this wishlist is a surprise for them.", forWho),
-                    style = MaterialTheme.typography.bodyMedium, color = cs.onSurface, modifier = Modifier.padding(bottom = 6.dp)
-                )
-                val t = st.taken
-                if (st.err.isNotEmpty()) {
-                    Text(st.err, color = cs.error, style = MaterialTheme.typography.bodySmall)
-                    TextButton(onClick = { st.attempt++ }) { Text(tr("Try again")) }
-                } else if (t == null) {
-                    CircularProgressIndicator(Modifier.padding(8.dp).size(24.dp))
-                } else if (friends.isEmpty()) {
-                    Text(tr("No Friends yet. Add Friends on the Friends tab, or send the invite link."), color = cs.onSurfaceVariant)
-                } else friends.forEach { f ->
-                    val on = f.id in t
-                    Row(
-                        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                            .clickable(enabled = !on && !st.busy) { st.toggle(f.id) }
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Avatar(Friends.photos[f.id], f.name, 36.dp)
-                        Column(Modifier.weight(1f).padding(start = 10.dp)) {
-                            Text(f.name.ifBlank { tr("Someone") }, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            if (on) Text(tr("On the list or invited"), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
-                        }
-                        Checkbox(checked = on || f.id in st.picked, enabled = !on && !st.busy, onCheckedChange = { v -> st.picked = if (v) st.picked + f.id else st.picked - f.id })
-                    }
-                }
-                if (st.busy) CircularProgressIndicator(Modifier.padding(top = 8.dp).size(24.dp))
             }
-        },
-        confirmButton = {
-            TextButton(enabled = !st.busy && st.picked.isNotEmpty(), onClick = { st.send(onClose) }) { Text(tr("Invite")) }
-        },
-        dismissButton = { TextButton(enabled = !st.busy, onClick = onClose) { Text(tr("Cancel")) } }
-    )
+        })
+    }
 }
 
 // ---------- the invitation ----------

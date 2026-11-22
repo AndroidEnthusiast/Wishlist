@@ -164,29 +164,6 @@ fun DeleteCategoryDialog(name: String, onDeleted: () -> Unit, onClose: () -> Uni
     )
 }
 
-/** What a long press on a category opens: Edit and Delete. */
-@Composable
-fun CategoryActionsDialog(name: String, onRenamed: (String) -> Unit, onDeleted: () -> Unit, onClose: () -> Unit) {
-    val cs = MaterialTheme.colorScheme
-    var mode by remember { mutableStateOf("menu") }
-    when (mode) {
-        "edit" -> RenameCategoryDialog(name, onRenamed, onClose)
-        "delete" -> DeleteCategoryDialog(name, onDeleted, onClose)
-        else -> AlertDialog(
-            onDismissRequest = onClose,
-            title = { Text(name, maxLines = 2, overflow = TextOverflow.Ellipsis) },
-            text = {
-                Column {
-                    MenuRow(tr("Edit"), { mode = "edit" }) { Icon(AppIcons.Edit, null, tint = cs.onSurfaceVariant) }
-                    MenuRow(tr("Delete"), { mode = "delete" }) { Icon(AppIcons.Delete, null, tint = cs.onSurfaceVariant) }
-                }
-            },
-            confirmButton = {},
-            dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
-        )
-    }
-}
-
 /** How many wishes have category [name]: on all your own lists (they share categories), or on this gift list. */
 fun catCount(c: Context, name: String): Int =
     if (Shared.active == null) Repo.catUse(c, name).first else Repo.wishes.count { it.category == name }

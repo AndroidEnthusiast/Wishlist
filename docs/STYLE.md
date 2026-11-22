@@ -69,6 +69,12 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
   Cancel, Close, Not now, Keep editing, Back, Skip, …). A lone button closes the dialog, so it is plain words too.
   **Never two buttons in one slot** (that made Move invisible). A long dialog scrolls in its text slot. Taps outside
   close it unless something would be lost (then `dismissOnClickOutside = false`).
+- **Pickers are bottom sheets** (owner, 22 November 2026, after "Move or copy?" looked out of place as a centred
+  pop-up; `PickSheet.kt`, `PickSheetRulesTest`): every "choose what to do" and every "pick a list, a wish or a
+  person" is a `PickSheet`: the question as its title, what it's about under it, the rows in a `SheetGroup`, no
+  Cancel (swipe down or tap outside). A second step stays in the same sheet with ← (Move or copy → Move to…).
+  Picking several ends with one filled button (Invite, Done). Centred pop-ups only for "are you sure?", short
+  messages and forms with typing (Leave with "who takes over", the group's join form).
 - **Choosing between actions** (Move or Copy): **choice rows**, not buttons under a paragraph: an icon in its tile, the
   word, and one line on what it does; tap = choose. One that isn't possible stays, greyed, its line saying why.
 - **Picking from a list** (a wishlist, a person): plain rows, tap = pick; "+ New …" last, in your colour.

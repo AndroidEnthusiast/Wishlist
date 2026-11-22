@@ -26,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -189,7 +190,10 @@ fun WishSheet(w: Wish, a: WishActions, onClose: () -> Unit) {
 fun SheetRow(
     icon: @Composable () -> Unit, label: String, onClick: () -> Unit, checked: Boolean? = null, danger: Boolean = false,
     // A line under the label (2.212: the current Visibility, or what a choice means), and a tick on the chosen choice.
-    detail: String? = null, chosen: Boolean? = null
+    detail: String? = null, chosen: Boolean? = null,
+    // A picture of its own (a friend's photo, a wish's picture; owner, 22 November 2026: pickers as sheets) instead
+    // of an icon in a tinted tile: drawn as it is, 32 dp, so the rows' lines still start after it.
+    tile: Boolean = true, enabled: Boolean = true
 ) {
     val look = LocalLook.current
     val quiet = look.design == "quiet"
@@ -197,10 +201,12 @@ fun SheetRow(
     Row(
         Modifier.fillMaxWidth().padding(horizontal = if (inGroup) 0.dp else 12.dp).heightIn(min = 52.dp)
             .clip(if (inGroup) androidx.compose.ui.graphics.RectangleShape else RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick).padding(horizontal = if (inGroup) 14.dp else 12.dp),
+            .clickable(enabled = enabled, onClick = onClick).padding(horizontal = if (inGroup) 14.dp else 12.dp)
+            .then(if (enabled) Modifier else Modifier.alpha(0.5f)),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (quiet) {
+        if (!tile) Box(Modifier.size(32.dp), contentAlignment = Alignment.Center) { icon() }
+        else if (quiet) {
             // Quiet (2.210): the icon in a small squircle tile with a soft tint, recoloured to the tile's ink; red for
             // something that removes.
             val cs = look.scheme

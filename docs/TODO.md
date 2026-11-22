@@ -7,11 +7,9 @@ it**, grouped as below, with a recommendation. Add every new open item here the 
 Details of each item are in the doc named after it.
 
 ## Now
-- **Open question: choices as bottom sheets?** (owner, 22 November 2026, with a screenshot of "Move or copy?": "shouldn't
-  these also be bottom sheets, and the screen after it?"). Claude agreed and recommended: one sheet that changes to
-  "Move to…" (← back), and the rule for the whole app (every "choose what to do" / "pick a list or person" a sheet;
-  centred pop-ups only for "are you sure?" and short messages). The owner skipped both questions, so nothing is built:
-  ask again when the owner brings it up (`docs/STYLE.md` "Dialogs", `docs/decisions/look.md`).
+- **Try 2.279 on the phone:** Move or copy from a wish's ⋮ (then Move to…, ← back, + New wishlist), Add to my wishlist
+  on a friend's wish, Send a wish in a chat, Invite friends (group, gift exchange, co-op list), Received gifts > Mark
+  as received. Do they all look like the ⋮ menus? Are any titles still grey in light mode?
 - **Try 2.277 on the phone (Search the shops, `docs/decisions/shop-search.md`):** My shops > type "lego castle" >
   Search: bol.com's results open with a row of shops under the search field; tap each (Amazon, Coolblue, Wehkamp,
   Zalando, de Bijenkorf, Google): does each show its own results, not an error page? If bol.com refuses, tap "Open

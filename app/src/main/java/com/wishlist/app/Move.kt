@@ -88,6 +88,12 @@ object MoveFlow {
         if (ids.isNotEmpty()) choosing = ids
     }
 
+    /** ← or Back on "Move to…": back to Move or Copy. */
+    fun back() {
+        val ids = picking ?: return
+        picking = null; choosing = ids
+    }
+
     /** Move or Copy was chosen: now the wishlist. */
     fun choose(copy: Boolean) {
         val ids = choosing ?: return
@@ -202,8 +208,15 @@ fun MoveHost(snack: SnackbarHostState) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     // Step 1: Move or Copy (MoveChoose.kt), step 2: which wishlist; the wish shows in both (owner, 21 November 2026).
-    MoveFlow.choosing?.let { ids -> MoveOrCopyDialog(ids, onChoose = { MoveFlow.choose(it) }, onClose = { MoveFlow.choosing = null }) }
-    MoveFlow.picking?.let { ids -> MoveToDialog(ids, copy = MoveFlow.copying, onPick = { to -> MoveFlow.start(ctx, to, ids, scope) }, onClose = { MoveFlow.picking = null }) }
+    // One sheet for both steps (owner, 22 November 2026): it stays up while step 1 turns into step 2.
+    (MoveFlow.choosing ?: MoveFlow.picking)?.let { ids ->
+        MoveSheet(
+            ids, picking = MoveFlow.choosing == null, copy = MoveFlow.copying,
+            onChoose = { MoveFlow.choose(it) }, onBack = { MoveFlow.back() },
+            onPick = { to -> MoveFlow.start(ctx, to, ids, scope) },
+            onClose = { MoveFlow.choosing = null; MoveFlow.picking = null }
+        )
+    }
     val d = MoveFlow.done
     LaunchedEffect(d) {
         if (d == null) return@LaunchedEffect
@@ -227,67 +240,6 @@ fun MoveHost(snack: SnackbarHostState) {
 }
 
 internal fun shortName(s: String): String = if (s.length <= 30) s else s.take(29).trimEnd() + "…"
-
-/** "Move to…": your other wishlists, then "+ New wishlist" (the usual form; the wishes go to the new list). */
-@Composable
-fun MoveToDialog(ids: Set<Long>, copy: Boolean, onPick: (String) -> Unit, onClose: () -> Unit) {
-    val ctx = LocalContext.current
-    val cs = MaterialTheme.colorScheme
-    // Your other wishlists (all of them when a collab wishlist is open), then the other collab wishlists.
-    val here = Shared.active
-    val others = remember(Repo.mineVersion, Repo.mineIds, here) { Repo.allMine(ctx).filter { here != null || it.id != Repo.openMine } }
-    val collabs = Shared.lists.filter { it.code != here }
-    var newList by remember { mutableStateOf(false) }
-    AlertDialog(
-        onDismissRequest = onClose,
-        // The title says what will happen (owner, 21 November 2026); the wish stays in sight.
-        title = { Text(if (copy) tr("Copy to…") else tr("Move to…")) },
-        text = {
-            Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                MovingWishes(ids)
-                if (others.isEmpty() && collabs.isEmpty()) Text(
-                    if (copy) tr("You have one wishlist. Make a new one to copy wishes to.") else tr("You have one wishlist. Make a new one to move wishes to."),
-                    style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(bottom = 4.dp)
-                )
-                others.forEach { d ->
-                    Row(
-                        Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(RoundedCornerShape(12.dp)).clickable { onPick(d.id) }
-                            .padding(horizontal = 8.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(Modifier.weight(1f)) {
-                            Text(Repo.mineName(d.id), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text(wishesLabel(d.wishes.size), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
-                        }
-                    }
-                }
-                if (collabs.isNotEmpty()) Text(
-                    tr("Co-op wishlists"), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 8.dp, top = 8.dp)
-                )
-                collabs.forEach { l ->
-                    Row(
-                        Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(RoundedCornerShape(12.dp)).clickable { onPick(MoveAcross.collabKey(l.code)) }
-                            .padding(horizontal = 8.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(l.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
-                }
-                Row(
-                    Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(RoundedCornerShape(12.dp)).clickable { newList = true }
-                        .padding(horizontal = 8.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(AppIcons.Add, null, tint = cs.primary, modifier = Modifier.size(20.dp))
-                    Text(tr("New wishlist"), style = MaterialTheme.typography.bodyLarge, color = cs.primary, modifier = Modifier.padding(start = 10.dp))
-                }
-            }
-        },
-        confirmButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
-    )
-    if (newList) NewListDialog(onCreated = { id -> newList = false; onPick(id) }, onClose = { newList = false })
-}
 
 /** A small round spinner while a move runs (it can take a moment online). */
 @Composable

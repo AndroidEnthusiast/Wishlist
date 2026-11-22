@@ -234,29 +234,14 @@ internal fun GxInviteDialog(x: Exchange, snack: SnackbarHostState, onClose: () -
     val friends = (Friends.state?.friends ?: emptyList()).filter { it.id !in taken }
     var picked by remember { mutableStateOf(setOf<String>()) }
     var busy by remember { mutableStateOf(false) }
-    AlertDialog(
-        onDismissRequest = { if (!busy) onClose() },
-        title = { Text(tr("Invite friends")) },
-        text = {
-            Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
-                if (friends.isEmpty()) Text(tr("All your friends are in already. Share the link to invite others."))
-                friends.forEach { f ->
-                    Row(
-                        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                            .clickable { picked = if (f.id in picked) picked - f.id else picked + f.id }.padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Avatar(Friends.photos[f.id], f.name, 36.dp)
-                        Text(f.name.ifBlank { tr("Someone") }, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).padding(start = 10.dp))
-                        Checkbox(checked = f.id in picked, onCheckedChange = { on -> picked = if (on) picked + f.id else picked - f.id })
-                    }
-                }
-                if (busy) CircularProgressIndicator(Modifier.padding(top = 8.dp).size(24.dp))
-            }
-        },
-        confirmButton = {
-            if (friends.isEmpty()) TextButton(onClick = { onClose(); Exchanges.share(ctx, x) }) { Text(tr("Share link")) }
-            else TextButton(enabled = !busy && picked.isNotEmpty(), onClick = {
+    // A bottom sheet like every picker (owner, 22 November 2026; PickSheet.kt): tick friends, then Invite.
+    PickSheet(
+        tr("Invite friends"), onClose = onClose, busy = busy,
+        action = if (friends.isEmpty()) tr("Share link") else tr("Invite"),
+        actionEnabled = friends.isEmpty() || picked.isNotEmpty(),
+        onAction = {
+            if (friends.isEmpty()) { onClose(); Exchanges.share(ctx, x) }
+            else {
                 busy = true
                 scope.launch {
                     val failed = ex.invite(x, friends.map { it.id }.filter { it in picked })
@@ -264,8 +249,18 @@ internal fun GxInviteDialog(x: Exchange, snack: SnackbarHostState, onClose: () -
                     onClose()
                     snack.toastSoon(if (failed == 0) tr("Invitations sent") else tr("Couldn’t do that. Check your connection."))
                 }
-            }) { Text(tr("Invite")) }
-        },
-        dismissButton = { TextButton(enabled = !busy, onClick = onClose) { Text(tr("Cancel")) } }
-    )
+            }
+        }
+    ) {
+        if (friends.isEmpty()) PickNote(tr("All your friends are in already. Share the link to invite others."))
+        else SheetGroup(friends.map { f ->
+            {
+                SheetRow(
+                    { Avatar(Friends.photos[f.id], f.name, 32.dp) }, f.name.ifBlank { tr("Someone") },
+                    { picked = if (f.id in picked) picked - f.id else picked + f.id },
+                    chosen = f.id in picked, tile = false
+                )
+            }
+        })
+    }
 }

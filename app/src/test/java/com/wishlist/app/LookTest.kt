@@ -168,4 +168,10 @@ class LookTest {
         val c = contrast(look.groupLine(), look.groupFill())
         assertTrue("$st $m: line between rows only ${"%.2f".format(c)} : 1", c >= 1.25)
     }
+
+    // Owner, 22 November 2026: titles in light sheets came out grey (Quiet light has surface == surfaceVariant, and the
+    // sheet took surfaceVariant's grey text). A plain sheet's text is the full text colour in every style and mode.
+    @Test fun aPlainSheetsTextIsNotGrey() = every { st, m, look ->
+        assertEquals("$st $m", look.scheme.onSurface, sheetContent(look, look.scheme.surface))
+    }
 }

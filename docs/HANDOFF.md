@@ -5,6 +5,9 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.279 (22 November 2026), read first.** Every picker is a bottom sheet (`look.md`, last section; `PickSheet.kt`).
+  Ask how Move or copy (and ← back from "Move to…") and the other pickers feel, and whether the pop-ups that stayed
+  (listed there) are right. Light-mode sheet titles were grey before: ask if any text still looks grey.
 - **2.278 (22 November 2026).** Thin lines between rows in every grouped block (`look.md`, last section). Ask whether
   Move or copy and the menus read as separate rows now in dark mode. Open: choices as sheets (TODO, owner skipped).
 - **2.277 (22 November 2026), read first.** Search the shops (`docs/decisions/shop-search.md`). Ask: does each shop in
@@ -117,12 +120,12 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
-### 22 November 2026: earning money discussed, Search the shops (2.277), lines between rows (2.278)
+### 22 November 2026: earning money, Search the shops, lines between rows, pickers as sheets (2.277–2.279)
 Owner asked how to earn money without ads, sponsored ideas or accounts: advice written down (affiliate links on what the
 user opens, later Plus on the Play Store), nothing decided. Built "Search the shops" after 8 questions: one search
 opens bol.com's own results with a row of the six big shops + Google, "Open in Chrome", an offline message. The layout
 check caught cut-off letters in small shop icons (fixed). 2.278: rows in dark menus looked like one block (line
-almost invisible, some menus none): a thin line after the icon everywhere. Not checkable here: shop pages, the phone.
+almost invisible, some menus none): a thin line after the icon everywhere. 2.279: every picker a bottom sheet.
 
 ### 21 November 2026: fonts, link reading, chat on co-op lists, New wishlist, Home's tabs (2.269–2.273)
 (Earlier wordings of this summary are in HANDOFF-ARCHIVE.md.) 2.269: numbers in the text font; faster link reading.

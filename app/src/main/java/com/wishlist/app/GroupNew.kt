@@ -115,34 +115,19 @@ fun PickFriendsDialog(
     note: String = tr("They get an invitation when the group is made.")
 ) {
     var picked by remember { mutableStateOf(start.toSet()) }
-    AlertDialog(
-        onDismissRequest = onClose,
-        title = { Text(tr("Add friends")) },
-        text = {
-            Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
-                Text(
-                    note,
-                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 6.dp)
+    // A bottom sheet like every picker (owner, 22 November 2026; PickSheet.kt): tick friends, then Done.
+    PickSheet(
+        tr("Add friends"), onClose = onClose, note = note,
+        action = tr("Done"), onAction = { onDone(friends.map { it.id }.filter { it in picked }) }
+    ) {
+        SheetGroup(friends.map { f ->
+            {
+                SheetRow(
+                    { Avatar(Friends.photos[f.id], f.name, 32.dp) }, f.name.ifBlank { tr("Someone") },
+                    { picked = if (f.id in picked) picked - f.id else picked + f.id },
+                    chosen = f.id in picked, tile = false
                 )
-                friends.forEach { f ->
-                    Row(
-                        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                            .clickable { picked = if (f.id in picked) picked - f.id else picked + f.id }
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Avatar(Friends.photos[f.id], f.name, 36.dp)
-                        Text(
-                            f.name.ifBlank { tr("Someone") }, style = MaterialTheme.typography.bodyLarge, maxLines = 1,
-                            overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).padding(start = 10.dp)
-                        )
-                        Checkbox(checked = f.id in picked, onCheckedChange = { on -> picked = if (on) picked + f.id else picked - f.id })
-                    }
-                }
             }
-        },
-        confirmButton = { TextButton(onClick = { onDone(friends.map { it.id }.filter { it in picked }) }) { Text(tr("Done")) } },
-        dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
-    )
+        })
+    }
 }

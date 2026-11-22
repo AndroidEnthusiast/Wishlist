@@ -107,30 +107,22 @@ fun ReceivedDialog(listId: String, onClose: () -> Unit) {
         Repo.receive(ctx, listId, single.toSet())
         onClose()
     }
-    AlertDialog(
-        onDismissRequest = onClose,
-        title = { Text(tr("What did you get?")) },
-        text = {
-            Column(Modifier.heightIn(max = 460.dp).verticalScroll(rememberScrollState())) {
-                Text(tr("Tick the wishes you have. They move to Received gifts, and whoever gave them gets a thank-you."), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
-                if (wishes.isEmpty()) Text(tr("This wishlist has no wishes."), modifier = Modifier.padding(top = 12.dp))
-                wishes.forEach { w ->
-                    Row(
-                        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                            .clickable { picked = if (w.id in picked) picked - w.id else picked + w.id }.padding(vertical = 2.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(checked = w.id in picked, onCheckedChange = { on -> picked = if (on) picked + w.id else picked - w.id })
-                        Text(w.label, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                    }
-                }
+    // A bottom sheet like every picker (owner, 22 November 2026; PickSheet.kt): tick, then Done.
+    PickSheet(
+        tr("What did you get?"), onClose = onClose,
+        note = tr("Tick the wishes you have. They move to Received gifts, and whoever gave them gets a thank-you."),
+        action = tr("Done"), onAction = { if (picked.isEmpty()) onClose() else receiveTicked() }
+    ) {
+        if (wishes.isEmpty()) PickNote(tr("This wishlist has no wishes."))
+        else SheetGroup(wishes.map { w ->
+            {
+                SheetRow(
+                    { PickWishPhoto(w) }, w.label, { picked = if (w.id in picked) picked - w.id else picked + w.id },
+                    chosen = w.id in picked, tile = false
+                )
             }
-        },
-        confirmButton = {
-            TextButton(onClick = { if (picked.isEmpty()) onClose() else receiveTicked() }) { Text(tr("Done")) }
-        },
-        dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
-    )
+        })
+    }
 }
 
 /** "Received gifts" (owner, 2.128): every wish you ticked in "What did you get?", newest first; "Put back" returns one. */
@@ -184,22 +176,11 @@ fun ReceivedScreen(onClose: () -> Unit) {
                 ReceivedList()
             }
         }
-        if (pickList) AlertDialog(
-            onDismissRequest = { pickList = false },
-            title = { Text(tr("Which wishlist?")) },
-            text = {
-                Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
-                    Repo.mineIds.forEach { id ->
-                        Text(
-                            Repo.mineName(id), maxLines = 1, overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                                .clickable { pickList = false; askList = id }.padding(vertical = 12.dp, horizontal = 8.dp)
-                        )
-                    }
-                }
-            },
-            confirmButton = { TextButton(onClick = { pickList = false }) { Text(tr("Cancel")) } }
-        )
+        if (pickList) PickSheet(tr("Which wishlist?"), onClose = { pickList = false }) {
+            SheetGroup(Repo.mineIds.map { id ->
+                { SheetRow({ androidx.compose.material3.Icon(AppIcons.ListIcon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }, Repo.mineName(id), { pickList = false; askList = id }) }
+            })
+        }
         askList?.let { id -> ReceivedDialog(id) { askList = null } }
     }
 }

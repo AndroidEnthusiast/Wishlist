@@ -111,42 +111,18 @@ internal fun InputBar(
 internal fun WishPicker(onPick: (Wish, String?) -> Unit, onClose: () -> Unit) {
     val ctx = LocalContext.current
     val lists = remember { Repo.allMine(ctx) }
-    AlertDialog(
-        onDismissRequest = onClose,
-        title = { Text(tr("Send a wish")) },
-        text = {
-            // No wishes yet: say so and how to add one (the review of 20 November 2026: the picker stood empty).
-            if (lists.none { d -> d.wishes.any { !it.priv && it.bin == 0L } }) Text(
-                tr("You have no wishes to send yet. Add one with the + at the bottom, then send it here."),
-                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant
-            ) else LazyColumn(Modifier.heightIn(max = 420.dp)) {
-                lists.forEach { d ->
-                    val ws = d.wishes.filter { !it.priv && it.bin == 0L }
-                    if (ws.isNotEmpty()) {
-                        item(key = "h" + d.id) {
-                            Text(
-                                if (d.name == "My wishlist") tr(d.name) else d.name, style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 10.dp, bottom = 4.dp)
-                            )
-                        }
-                        items(ws, key = { d.id + "/" + it.id }) { w ->
-                            Row(
-                                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { onPick(w, d.code) }.padding(6.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(Modifier.size(40.dp).clip(RoundedCornerShape(8.dp)).background(Color.White), contentAlignment = Alignment.Center) {
-                                    if (w.image.isNotBlank()) WishImage(w.image, Modifier.fillMaxSize().padding(2.dp))
-                                    else GiftIcon(Color(0xFF8A8A92), 20.dp)
-                                }
-                                Text(w.label, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 10.dp))
-                            }
-                        }
-                    }
-                }
+    // A bottom sheet like every picker (owner, 22 November 2026; PickSheet.kt): each wishlist's wishes in a group.
+    PickSheet(tr("Send a wish"), onClose = onClose) {
+        // No wishes yet: say so and how to add one (the review of 20 November 2026: the picker stood empty).
+        if (lists.none { d -> d.wishes.any { !it.priv && it.bin == 0L } }) PickNote(tr("You have no wishes to send yet. Add one with the + at the bottom, then send it here."))
+        else lists.forEach { d ->
+            val ws = d.wishes.filter { !it.priv && it.bin == 0L }
+            if (ws.isNotEmpty()) {
+                PickHeading(if (d.name == "My wishlist") tr(d.name) else d.name)
+                SheetGroup(ws.map { w -> { SheetRow({ PickWishPhoto(w) }, w.label, { onPick(w, d.code) }, tile = false) } })
             }
-        },
-        confirmButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
-    )
+        }
+    }
 }
 
 /** The photo you are about to send, full screen on black, with Cancel and Send (owner, 2.109: a preview first). */

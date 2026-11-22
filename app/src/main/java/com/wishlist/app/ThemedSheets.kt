@@ -103,6 +103,9 @@ internal fun sheetColor(look: Look, asked: Color): Color =
 internal fun sheetContent(look: Look, bg: Color): Color {
     val cs = look.scheme
     return when (bg) {
+        // First (22 November 2026): Quiet light uses one colour for surface and surfaceVariant, so a plain sheet got
+        // the grey of surfaceVariant's text: titles like "My wishlist" or "Add friends" came out grey.
+        cs.surface -> cs.onSurface
         cs.primary -> cs.onPrimary
         cs.primaryContainer -> cs.onPrimaryContainer
         cs.secondaryContainer -> cs.onSecondaryContainer

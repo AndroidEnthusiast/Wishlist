@@ -60,11 +60,14 @@ class DialogRulesTest {
         assertEquals(null, MoveFlow.choosing)
         assertEquals(setOf(7L), MoveFlow.picking)
         assertTrue(MoveFlow.copying)
-        MoveFlow.picking = null
-        // The wish is shown in both steps.
-        val move = File(dir, "Move.kt").readText()
+        // ← or Back on "Move to…" goes back to Move or Copy (owner, 22 November 2026: one sheet, two steps).
+        MoveFlow.back()
+        assertEquals(setOf(7L), MoveFlow.choosing)
+        assertEquals(null, MoveFlow.picking)
+        MoveFlow.choosing = null
+        // The wish is shown in both steps, which are one bottom sheet (MoveChoose.kt) since 22 November 2026.
         val choose = File(dir, "MoveChoose.kt").readText()
-        assertTrue(move.contains("MovingWishes(ids)") && choose.contains("MovingWishes(ids)"))
-        assertTrue(move.contains("if (copy) tr(\"Copy to…\") else tr(\"Move to…\")"))
+        assertEquals(2, Regex("top = \\{ MovingWishes\\(ids\\) \\}").findAll(choose).count())
+        assertTrue(choose.contains("if (copy) tr(\"Copy to…\") else tr(\"Move to…\")"))
     }
 }

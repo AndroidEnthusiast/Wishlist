@@ -891,3 +891,13 @@ ends (`NoteCheck`). Review fixed: push for a new profile, offline daily check, "
 ### Earlier wording of the 22 November 2026 summary (before 2.278 was added)
 Line replaced in HANDOFF.md: "check caught cut-off letters in small shop icons (fixed). Not checkable here: real shop pages, the phone."
 check caught cut-off letters in small shop icons (fixed). Not checkable here: real shop pages, the phone.
+
+### TODO item done 22 November 2026 (built in 2.279), word for word
+- **Open question: choices as bottom sheets?** (owner, 22 November 2026, with a screenshot of "Move or copy?": "shouldn't
+  these also be bottom sheets, and the screen after it?"). Claude agreed and recommended: one sheet that changes to
+  "Move to…" (← back), and the rule for the whole app (every "choose what to do" / "pick a list or person" a sheet;
+  centred pop-ups only for "are you sure?" and short messages). The owner skipped both questions, so nothing is built:
+  ask again when the owner brings it up (`docs/STYLE.md` "Dialogs", `docs/decisions/look.md`).
+
+### Earlier wording of the 22 November 2026 summary (before 2.279 was added)
+almost invisible, some menus none): a thin line after the icon everywhere. Not checkable here: shop pages, the phone.
