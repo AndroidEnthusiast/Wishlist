@@ -41,19 +41,6 @@ val PrivateIcon: ImageVector get() = QuietIcons.eyeOff
  */
 val VisibleIcon: ImageVector get() = QuietIcons.eye
 
-/** The private-or-visible button on a wish (large cards and Rows): the eye that says how it is now. */
-@Composable
-fun PrivateToggle(w: Wish, tint: Color, iconSize: Dp = 24.dp) {
-    val ctx = androidx.compose.ui.platform.LocalContext.current
-    androidx.compose.material3.IconButton(onClick = { togglePrivate(ctx, w) }) {
-        Icon(
-            if (w.priv) PrivateIcon else VisibleIcon,
-            if (w.priv) tr("Private wish. Make visible to friends") else tr("Visible to friends. Make private"),
-            tint = tint, modifier = Modifier.size(iconSize)
-        )
-    }
-}
-
 /** The round badge in the top left corner of a private wish, in both views. */
 @Composable
 fun PrivateBadge(modifier: Modifier = Modifier, size: Dp = 18.dp, onClick: (() -> Unit)? = null) {

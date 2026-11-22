@@ -206,19 +206,9 @@ fun SheetRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (!tile) Box(Modifier.size(32.dp), contentAlignment = Alignment.Center) { icon() }
-        else if (quiet) {
-            // Quiet (2.210): the icon in a small squircle tile with a soft tint, recoloured to the tile's ink; red for
-            // something that removes.
-            val cs = look.scheme
-            val tile = if (danger) cs.error.copy(alpha = 0.14f) else cs.primaryContainer
-            val ink = if (danger) cs.error else cs.onPrimaryContainer
-            Box(
-                Modifier.size(32.dp).clip(Squircle(9.dp)).background(tile)
-                    .graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
-                    .drawWithContent { drawContent(); drawRect(ink, blendMode = androidx.compose.ui.graphics.BlendMode.SrcAtop) },
-                contentAlignment = Alignment.Center
-            ) { Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) { icon() } }
-        } else icon()
+        // Quiet (2.210): the icon in its tinted tile, recoloured to the tile's ink; red for something that removes.
+        else if (quiet) IconTile(danger = danger, icon = icon)
+        else icon()
         Column(Modifier.padding(start = if (quiet) 14.dp else 16.dp, top = 6.dp, bottom = 6.dp).weight(1f)) {
             Text(
                 label, style = MaterialTheme.typography.bodyLarge.copy(textAlign = androidx.compose.ui.text.style.TextAlign.Start),

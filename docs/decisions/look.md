@@ -318,3 +318,15 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
 - Found on the way: every light-mode sheet showed its default text in grey (Quiet light has the same colour for
   surface and surfaceVariant); fixed in `sheetContent`, checked in `LookTest`.
 
+## The review of 22 November 2026 (built in 2.280)
+- Owner: "Do you see any inefficiencies or illogical things in the app?" Claude's list of 10 (in the session); owner
+  chose: the search starts at the shop you last picked (`shop-search.md`); **Gifts I reserved and Received gifts get
+  the app's frame and big title** (they had their own small header and Android's back button); **the stray Android
+  buttons use the app's own** (How many − / +, Close on the price page; the old Private toggle was unused code);
+  **GitHub builds keep the pretend phone's Android between runs and fetch it from Google's copy of Maven** (a "too
+  many requests" failed a good build); **about 15 unused pieces of code removed**; **rows share their parts**
+  (`Rows.kt`: `IconTile`, `ValueRow`, `RadioRow`, replacing ProfileRow, NavRow, two ValueRows, PickRow, ChoiceRow and
+  four hand-made icon tiles; screens compared picture by picture).
+- Not chosen now (to-do): "Open in Chrome" for every shop, the offline message when tapping a shop tile, whether the
+  last pop-up pickers (How many?, Leave with "who takes over") should become sheets too.
+

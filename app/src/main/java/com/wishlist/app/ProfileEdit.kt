@@ -200,7 +200,7 @@ internal fun KeepSafePage(snack: SnackbarHostState, onBack: () -> Unit) {
                 LinkButton(onClick = { restoring = true }) { Text(tr("Restore with a recovery key")) }
             }
             ProfileGroup {
-                ProfileRow(tr("Backup file"), if (file) "" else tr("Optional")) { file = !file }
+                ValueRow(inset = 4.dp, label = tr("Backup file"), value = if (file) "" else tr("Optional")) { file = !file }
                 if (file) BackupSection(snack)
             }
         }

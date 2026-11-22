@@ -152,59 +152,6 @@ private fun BarLabel(text: String) {
     )
 }
 
-/** A wishlist: a page with a heart and two lines (drawn here, in one colour like the other icons). */
-@Composable
-fun WishlistIcon(tint: Color) {
-    Canvas(Modifier.size(24.dp)) {
-        val u = size.width / 24f
-        val st = Stroke(1.9f * u, cap = StrokeCap.Round, join = StrokeJoin.Round)
-        // The page, with a second edge at the right and bottom, like a little book.
-        drawRoundRect(tint, Offset(3.5f * u, 2.5f * u), Size(14.5f * u, 17.5f * u), androidx.compose.ui.geometry.CornerRadius(2f * u), style = st)
-        val back = Path().apply {
-            moveTo(20.5f * u, 6f * u)
-            lineTo(20.5f * u, 21.5f * u)
-            lineTo(7f * u, 21.5f * u)
-        }
-        drawPath(back, tint, style = st)
-        // The heart.
-        val heart = Path().apply {
-            moveTo(10.75f * u, 12f * u)
-            cubicTo(7.2f * u, 9.6f * u, 7.4f * u, 6.2f * u, 9.4f * u, 6.1f * u)
-            cubicTo(10.2f * u, 6.05f * u, 10.6f * u, 6.6f * u, 10.75f * u, 7.1f * u)
-            cubicTo(10.9f * u, 6.6f * u, 11.3f * u, 6.05f * u, 12.1f * u, 6.1f * u)
-            cubicTo(14.1f * u, 6.2f * u, 14.3f * u, 9.6f * u, 10.75f * u, 12f * u)
-            close()
-        }
-        drawPath(heart, tint, style = Stroke(1.7f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
-        // Two lines: the wishes.
-        drawLine(tint, Offset(7.2f * u, 14.6f * u), Offset(14.3f * u, 14.6f * u), 1.9f * u, StrokeCap.Round)
-        drawLine(tint, Offset(7.2f * u, 17.2f * u), Offset(14.3f * u, 17.2f * u), 1.9f * u, StrokeCap.Round)
-    }
-}
-
-/** A small line chart going down: price history. */
-@Composable
-fun PriceIcon(tint: Color, modifier: Modifier = Modifier.size(24.dp)) {
-    Canvas(modifier) {
-        val u = size.width / 24f
-        val p = Path().apply {
-            moveTo(3f * u, 7f * u)
-            lineTo(9f * u, 13f * u)
-            lineTo(13f * u, 9f * u)
-            lineTo(21f * u, 17f * u)
-        }
-        drawPath(p, tint, style = Stroke(2.2f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
-        // The arrow head at the end.
-        val a = Path().apply {
-            moveTo(15.5f * u, 17f * u)
-            lineTo(21f * u, 17f * u)
-            lineTo(21f * u, 11.5f * u)
-        }
-        drawPath(a, tint, style = Stroke(2.2f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
-        drawLine(tint, Offset(3f * u, 21f * u), Offset(21f * u, 21f * u), 1.2f * u, StrokeCap.Round)
-    }
-}
-
 /**
  * The bottom bar's + outside a list (owner, 16 November 2026: Home has no "Create list" tiles any more): Add a wish
  * first, then a new wishlist, collab wishlist, wishlist group or gift exchange, each with one line that says what it is.

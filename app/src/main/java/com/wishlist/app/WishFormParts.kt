@@ -126,35 +126,6 @@ fun ImageBlock(image: String, onPick: () -> Unit, onRemove: () -> Unit, big: Boo
     }
 }
 
-/**
- * A tile you tap to turn something on (2.212, owner 15 November 2026: Top wish and Private "more visible, near the
- * top"): an icon, the name and one short line; on, it fills with [onColour] and its words take [onInk]. Read out as a
- * switch.
- */
-@Composable
-fun ToggleTile(
-    icon: @Composable (Boolean) -> Unit, title: String, line: String, on: Boolean, onColour: Color, onInk: Color,
-    modifier: Modifier = Modifier, onToggle: () -> Unit
-) {
-    val look = LocalLook.current
-    val cs = MaterialTheme.colorScheme
-    val shape = look.soft(16.dp)
-    val bg = if (on) onColour else cs.surfaceVariant
-    Column(
-        modifier.pressScale().then(if (look.design == "chaos") Modifier.lookSurface(look, shape, bg, raised = on) else Modifier.clip(shape).background(bg)
-            .then(if (on) Modifier else Modifier.border(1.dp, cs.outlineVariant, shape)))
-            .toggleable(on, role = androidx.compose.ui.semantics.Role.Switch, onValueChange = { onToggle() })
-            .heightIn(min = 72.dp).padding(horizontal = 14.dp, vertical = 12.dp)
-    ) {
-        icon(on)
-        Text(
-            title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold,
-            color = if (on) onInk else cs.onSurface, modifier = Modifier.padding(top = 6.dp)
-        )
-        Text(line, style = MaterialTheme.typography.bodySmall, color = if (on) onInk.copy(alpha = 0.85f) else cs.onSurfaceVariant)
-    }
-}
-
 /** Take photo or Choose photo, as a small bottom sheet (2.212). */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
@@ -169,7 +140,6 @@ fun PhotoSourceSheet(onTake: () -> Unit, onChoose: () -> Unit, onClose: () -> Un
         }
     }
 }
-
 
 /** What is set under "More details", in one short line ("Fashion · Size M · 2× · Description"), or "". */
 fun detailsSummary(cat: String, qty: Int, size: String, desc: String): String = listOfNotNull(

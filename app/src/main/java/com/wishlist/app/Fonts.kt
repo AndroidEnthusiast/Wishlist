@@ -54,5 +54,3 @@ val FONTS: List<AppFont> = listOf(
     AppFont("playfair", "Playfair Display", google("Playfair Display"))
 )
 
-/** The chosen font, or Google Sans (the original) when nothing was chosen. */
-fun fontFor(key: String): AppFont = FONTS.firstOrNull { it.key == key } ?: FONTS[0]

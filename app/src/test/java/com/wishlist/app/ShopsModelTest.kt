@@ -33,8 +33,9 @@ class ShopsModelTest {
     @Test fun searchOpensTheFirstShopsResultsAndClosingForgetsIt() {
         m.search("  wool blanket ")
         assertEquals("wool blanket", m.searched)
-        assertEquals("https://www.bol.com/nl/nl/s/?searchtext=wool+blanket", m.open!!.url)
-        assertEquals("bol.com", m.open!!.name)
+        // The first time Amazon (owner, 22 November 2026: bol.com may refuse the app's browser).
+        assertEquals("https://www.amazon.nl/s?k=wool+blanket", m.open!!.url)
+        assertEquals("Amazon", m.open!!.name)
         m.close()
         assertNull(m.open); assertNull(m.searched)
     }
@@ -76,5 +77,13 @@ class ShopsModelTest {
         val s = Shops.list(ctx).first()
         m.removeShop(s)
         assertTrue(Shops.list(ctx).none { it.host == s.host })
+    }
+
+    // After that, the shop you last picked in the row (owner, 22 November 2026).
+    @Test fun searchStartsAtTheShopYouPickedLast() {
+        Shops.pickedSearchShop(ctx, Shops.searchShops.indexOfFirst { it.shop.name == "Coolblue" })
+        m.search("lego")
+        assertEquals("Coolblue", m.open!!.name)
+        assertEquals("https://www.coolblue.nl/zoeken?query=lego", m.open!!.url)
     }
 }

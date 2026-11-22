@@ -91,12 +91,6 @@ internal fun FriendsTitle(t: String) {
     )
 }
 
-internal fun countText(n: Int): String = when (n) {
-    0 -> tr("No wishes yet")
-    1 -> tr("1 wish")
-    else -> tr("%d wishes", n)
-}
-
 /**
  * The Friends tab: your code and "Add a friend", requests waiting for your approval, requests you sent, your friends
  * (tap: their wishlists; long press or ⋮: unfriend) and lists you opened from a link.

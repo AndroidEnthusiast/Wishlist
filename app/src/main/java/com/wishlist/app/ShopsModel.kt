@@ -49,8 +49,8 @@ internal class ShopsModel(
     fun openShop(s: Shop) { open = s; Shops.opened(ctx, s) }
 
     /**
-     * Search the shops (owner, 22 November 2026): the first shop of the search row opens with its own results for
-     * [q]; the row in the browser switches to the others. Offline: a message with Try again instead.
+     * Search the shops (owner, 22 November 2026): the shop you last picked in the row (the first time Amazon) opens
+     * with its own results for [q]; the row in the browser switches to the others. Offline: a message with Try again.
      */
     fun search(q: String) {
         val words = q.trim()
@@ -58,7 +58,7 @@ internal class ShopsModel(
         if (!online()) { offline = true; return }
         offline = false
         searched = words
-        val first = Shops.searchShops.first()
+        val first = Shops.searchShops[Shops.startSearchShop(ctx)]
         open = Shop(first.shop.name, first.url(words))
     }
 
@@ -156,6 +156,7 @@ internal class ShopBrowserState(private val ctx: Context, shop: Shop, search: St
     /** A shop in the search row: its own results for the words in the search field. */
     fun searchIn(i: Int) {
         val words = q.trim().ifEmpty { return }
+        Shops.pickedSearchShop(ctx, i)
         Shops.searchShops.getOrNull(i)?.let { web?.loadUrl(it.url(words)) }
     }
 

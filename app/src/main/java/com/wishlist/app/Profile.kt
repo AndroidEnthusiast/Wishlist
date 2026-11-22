@@ -208,12 +208,12 @@ internal fun ProfileMain(snack: SnackbarHostState, onSafe: () -> Unit) {
             )
             // Short rows with their value in grey and ›; each edits in a small sheet. Gen Z chaos: on a solid card.
             ProfileGroup {
-                ProfileRow(tr("Name"), Shared.lastName.ifBlank { tr("Add") }) { editing = "name" }
-                ProfileRow(tr("Birthday"), birthdayText(Friends.myBirthday).ifBlank { tr("Add") }) { editing = "birthday" }
-                ProfileRow(tr("About me"), Friends.myBio.ifBlank { tr("Add") }) { editing = "bio" }
+                ValueRow(inset = 4.dp, label = tr("Name"), value = Shared.lastName.ifBlank { tr("Add") }) { editing = "name" }
+                ValueRow(inset = 4.dp, label = tr("Birthday"), value = birthdayText(Friends.myBirthday).ifBlank { tr("Add") }) { editing = "birthday" }
+                ValueRow(inset = 4.dp, label = tr("About me"), value = Friends.myBio.ifBlank { tr("Add") }) { editing = "bio" }
             }
             ProfileGroup {
-                ProfileRow(tr("Keep your lists safe"), if (RecoveryKey.saved(ctx)) tr("Key saved") else tr("Not yet"), warn = !RecoveryKey.saved(ctx)) { onSafe() }
+                ValueRow(inset = 4.dp, label = tr("Keep your lists safe"), value = if (RecoveryKey.saved(ctx)) tr("Key saved") else tr("Not yet"), warn = !RecoveryKey.saved(ctx)) { onSafe() }
             }
             // Blocked people, when there are any (Safety.kt), and deleting everything (DeleteMe.kt), at the very bottom.
             BlockedPeople(snack)
@@ -258,20 +258,3 @@ internal fun ProfileGroup(content: @Composable androidx.compose.foundation.layou
     )
 }
 
-/** A row of Profile: its name, its value in grey (one line) and ›. 48 dp or taller. */
-@Composable
-internal fun ProfileRow(label: String, value: String, warn: Boolean = false, onClick: () -> Unit) {
-    val cs = MaterialTheme.colorScheme
-    Row(
-        Modifier.fillMaxWidth().heightIn(min = 52.dp).clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick).padding(horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(label, style = MaterialTheme.typography.bodyLarge, color = cs.onSurface)
-        Text(
-            value, style = MaterialTheme.typography.bodyMedium, color = if (warn) cs.error else cs.onSurfaceVariant,
-            maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.End,
-            modifier = Modifier.weight(1f).padding(start = 16.dp)
-        )
-        Icon(AppIcons.Chevron, null, tint = cs.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp).size(20.dp))
-    }
-}

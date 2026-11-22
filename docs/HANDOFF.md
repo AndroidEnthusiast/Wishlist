@@ -5,6 +5,8 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.280 (22 November 2026).** The owner's review (`look.md`, last section): search starts at the last shop, two pages
+  with the big title, own buttons, unused code gone, shared row parts (`Rows.kt`), GitHub keeps Robolectric's file.
 - **2.279 (22 November 2026), read first.** Every picker is a bottom sheet (`look.md`, last section; `PickSheet.kt`).
   Ask how Move or copy (and ← back from "Move to…") and the other pickers feel, and whether the pop-ups that stayed
   (listed there) are right. Light-mode sheet titles were grey before: ask if any text still looks grey.
@@ -125,7 +127,7 @@ Owner asked how to earn money without ads, sponsored ideas or accounts: advice w
 user opens, later Plus on the Play Store), nothing decided. Built "Search the shops" after 8 questions: one search
 opens bol.com's own results with a row of the six big shops + Google, "Open in Chrome", an offline message. The layout
 check caught cut-off letters in small shop icons (fixed). 2.278: rows in dark menus looked like one block (line
-almost invisible, some menus none): a thin line after the icon everywhere. 2.279: every picker a bottom sheet.
+almost invisible, some menus none): a thin line after the icon everywhere. 2.279: every picker a bottom sheet. 2.280: the review.
 
 ### 21 November 2026: fonts, link reading, chat on co-op lists, New wishlist, Home's tabs (2.269–2.273)
 (Earlier wordings of this summary are in HANDOFF-ARCHIVE.md.) 2.269: numbers in the text font; faster link reading.

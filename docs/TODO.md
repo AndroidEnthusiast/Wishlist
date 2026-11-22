@@ -7,6 +7,12 @@ it**, grouped as below, with a recommendation. Add every new open item here the 
 Details of each item are in the doc named after it.
 
 ## Now
+- **Try 2.280 on the phone:** Search in shops starts at Amazon, then at the shop you last tapped in the row; Gifts I
+  reserved and Received gifts have the big title that shrinks; App settings, Profile and Import look as before.
+- **From the review of 22 November 2026, not chosen yet** (`docs/decisions/look.md`, last section): "Open in Chrome"
+  for every shop (now only in a search; a tapped bol.com tile that refuses is a dead end); the app's offline message
+  when tapping a shop tile (now the browser's own error page); and ask whether "How many will you buy?" and the Leave
+  forms with "who takes over" should become sheets like the other pickers.
 - **Try 2.279 on the phone:** Move or copy from a wish's ⋮ (then Move to…, ← back, + New wishlist), Add to my wishlist
   on a friend's wish, Send a wish in a chat, Invite friends (group, gift exchange, co-op list), Received gifts > Mark
   as received. Do they all look like the ⋮ menus? Are any titles still grey in light mode?

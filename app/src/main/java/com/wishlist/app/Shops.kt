@@ -155,6 +155,19 @@ object Shops {
         SearchShop(Shop("Google", "https://www.google.com/"), "https://www.google.com/search?q=")
     )
 
+    /**
+     * Where "Search in shops" starts (owner, 22 November 2026): the shop you last picked in the search row; the first
+     * time Amazon (bol.com, first in the row, may refuse the app's browser). Kept by its address, so a new order of
+     * the row doesn't change it.
+     */
+    fun startSearchShop(c: Context): Int =
+        searchShopAt(prefs(c).getString("search_shop_last", null) ?: "amazon.nl").takeIf { it >= 0 } ?: 1
+
+    /** A shop was picked in the search row: the next search starts there. */
+    fun pickedSearchShop(c: Context, i: Int) {
+        searchShops.getOrNull(i)?.let { prefs(c).edit().putString("search_shop_last", it.shop.host).apply() }
+    }
+
     /** Which search shop the page on [host] belongs to (-1: none, e.g. a site you went on to from Google). */
     fun searchShopAt(host: String): Int = host.removePrefix("www.").let { h -> searchShops.indexOfFirst { it.shop.host == h } }
 

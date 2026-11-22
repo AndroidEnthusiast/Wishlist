@@ -59,11 +59,12 @@ fun QuantityField(qty: Int, onChange: (Int) -> Unit) {
     val cs = androidx.compose.material3.MaterialTheme.colorScheme
     androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
         Text(tr("How many"), style = androidx.compose.material3.MaterialTheme.typography.bodyLarge, modifier = androidx.compose.ui.Modifier.weight(1f))
-        androidx.compose.material3.IconButton(onClick = { onChange((qty - 1).coerceAtLeast(1)) }, enabled = qty > 1) {
+        // The app's own icon button (its tap feel), not Android's (22 November 2026).
+        IconButton(onClick = { onChange((qty - 1).coerceAtLeast(1)) }, enabled = qty > 1) {
             Text("−", style = androidx.compose.material3.MaterialTheme.typography.titleLarge, color = if (qty > 1) cs.primary else cs.outline)
         }
         Text(qty.toString(), style = androidx.compose.material3.MaterialTheme.typography.titleMedium, modifier = androidx.compose.ui.Modifier.padding(horizontal = 8.dp))
-        androidx.compose.material3.IconButton(onClick = { onChange((qty + 1).coerceAtMost(99)) }, enabled = qty < 99) {
+        IconButton(onClick = { onChange((qty + 1).coerceAtMost(99)) }, enabled = qty < 99) {
             Text("+", style = androidx.compose.material3.MaterialTheme.typography.titleLarge, color = cs.primary)
         }
     }

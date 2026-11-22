@@ -131,6 +131,3 @@ fun QuietDialog(
     }
 }
 
-/** Text in a dialog's body that must stay left-aligned (fields, rows of choices): the start of the line. */
-@Composable
-fun startAligned(): androidx.compose.ui.text.TextStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Start)

@@ -72,9 +72,9 @@ fun ListPickDialog(
                 )
                 lists.forEach { d ->
                     val n = if (d.name == "My wishlist") tr(d.name) else d.name
-                    PickRow(n, if (d.wishes.size == 1) tr("1 wish") else tr("%d wishes", d.wishes.size), chosen == d.id) { chosen = d.id }
+                    RadioRow(n, chosen == d.id, if (d.wishes.size == 1) tr("1 wish") else tr("%d wishes", d.wishes.size)) { chosen = d.id }
                 }
-                PickRow(tr("New wishlist"), tr("Empty, or with wishes from your other lists"), chosen == "new") { chosen = "new" }
+                RadioRow(tr("New wishlist"), chosen == "new", tr("Empty, or with wishes from your other lists")) { chosen = "new" }
                 if (chosen == "new") {
                     OutlinedTextField(
                         name, { name = it.take(60); if (it.isNotBlank()) missing = false },

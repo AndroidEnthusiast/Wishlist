@@ -17,6 +17,9 @@
   **"Open in Chrome"** button at the end of the row that opens the page on screen in the phone's own browser (the
   phone's default browser, usually Chrome). Only in a search; a shop opened from its tile has no extra button (2.122).
 - **Offline:** "You're offline. Search again when you're connected." with **Try again**; your words stay in the box.
+- **Where it starts** (owner, 22 November 2026, 2.280; the review found the first shop was bol.com, the one that may
+  refuse the app's browser): **the shop you last picked in the row**, the first time **Amazon**
+  (`Shops.startSearchShop`, `ShopsModelTest`).
 - The search addresses could not be opened from Claude's computer (shops refuse it): if one shop shows an error page,
   its address in `Shops.searchShops` needs fixing.
 - Checks: `ShopsModelTest` (first shop opens, offline, empty search, the fixed set and its addresses),

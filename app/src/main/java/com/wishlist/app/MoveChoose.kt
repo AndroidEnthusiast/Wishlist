@@ -111,9 +111,7 @@ fun NewRow(label: String, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Like SheetRow: the icon in a tinted tile in Quiet, on its own in the other style.
-        if (quiet) Box(Modifier.size(32.dp).clip(Squircle(9.dp)).background(cs.primaryContainer), contentAlignment = Alignment.Center) {
-            Icon(AppIcons.Add, null, tint = cs.onPrimaryContainer, modifier = Modifier.size(20.dp))
-        } else Icon(AppIcons.Add, null, tint = cs.primary)
+        if (quiet) IconTile { Icon(AppIcons.Add, null, modifier = Modifier.size(20.dp)) } else Icon(AppIcons.Add, null, tint = cs.primary)
         Text(label, style = MaterialTheme.typography.bodyLarge.copy(textAlign = TextAlign.Start), color = cs.primary, modifier = Modifier.padding(start = if (quiet) 14.dp else 16.dp).weight(1f))
     }
 }

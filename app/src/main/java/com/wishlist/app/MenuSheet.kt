@@ -99,16 +99,8 @@ fun DropdownMenuItem(
             .padding(horizontal = 14.dp, vertical = 6.dp).alpha(if (enabled) 1f else 0.45f),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (leadingIcon != null) {
-            Box(
-                Modifier.size(32.dp).clip(Squircle(9.dp)).background(if (danger) cs.error.copy(alpha = 0.14f) else cs.primaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                CompositionLocalProvider(LocalContentColor provides (if (danger) cs.error else cs.onPrimaryContainer)) {
-                    Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) { leadingIcon() }
-                }
-            }
-        }
+        // The icon in its tinted tile (Rows.kt); a menu's icons take the tile's ink as their colour.
+        if (leadingIcon != null) IconTile(danger = danger, recolour = false, icon = leadingIcon)
         Box(Modifier.weight(1f).padding(start = if (leadingIcon != null) 14.dp else 4.dp)) {
             CompositionLocalProvider(LocalContentColor provides ink) {
                 ProvideTextStyle(MaterialTheme.typography.bodyLarge.copy(color = ink, textAlign = TextAlign.Start)) { text() }

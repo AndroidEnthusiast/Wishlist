@@ -83,6 +83,7 @@ object ReservedGifts {
 
 /** The "Gifts I reserved" page (profile sheet): a route (Nav.kt, 2.156), ← or Back returns to where it was opened. */
 @Composable
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 fun ReservedScreen(onClose: () -> Unit, onOpen: (ReservedGroup) -> Unit) {
     val go = LocalGo.current
     val ctx = LocalContext.current
@@ -97,14 +98,20 @@ fun ReservedScreen(onClose: () -> Unit, onOpen: (ReservedGroup) -> Unit) {
         groups = ReservedGifts.load(ctx)
         loading = false
     }
-    androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
-        Surface(Modifier.fillMaxSize().lookPage(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onBackground) {
-            Column(Modifier.statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())) {
-                Row(Modifier.fillMaxWidth().padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onClose) { Icon(AppIcons.ArrowBack, tr("Back")) }
-                    Text(tr("Gifts I reserved"), style = MaterialTheme.typography.titleLarge, fontWeight = LocalLook.current.titleWeight, modifier = Modifier.weight(1f))
-                    if (loading) CircularProgressIndicator(Modifier.padding(end = 16.dp).size(20.dp), strokeWidth = 2.dp)
-                }
+    // The app's own frame and top bar (owner, 22 November 2026): the big title that shrinks as you scroll, like every
+    // screen; it had its own small header before.
+    Scaffold(
+        containerColor = cs.background,
+        topBar = {
+            TopAppBar(
+                title = { ScreenTitle(tr("Gifts I reserved")) },
+                navigationIcon = { IconButton(onClick = onClose) { Icon(AppIcons.ArrowBack, tr("Back")) } },
+                actions = { if (loading) CircularProgressIndicator(Modifier.padding(end = 16.dp).size(20.dp), strokeWidth = 2.dp) },
+                colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
+            )
+        }
+    ) { pad ->
+            Column(Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState())) {
                 asks.forEach { a ->
                     androidx.compose.runtime.key(a.ask) {
                         AskBlock(a) { msg ->
@@ -143,7 +150,6 @@ fun ReservedScreen(onClose: () -> Unit, onOpen: (ReservedGroup) -> Unit) {
                 }
                 Spacer(Modifier.height(24.dp))
             }
-        }
     }
 }
 

@@ -275,15 +275,3 @@ fun AskBlock(a: AskItem, onDone: (String) -> Unit) {
     }
 }
 
-/**
- * A wish's status label ("Reserved", "Owned" …). On a list where someone else's reservation can be asked about
- * ([LocalWishDeco] onBadge), tapping it asks "Is it still being bought?".
- */
-@Composable
-fun TappableBadge(w: Wish, text: String, small: Boolean, modifier: Modifier = Modifier) {
-    val on = LocalWishDeco.current?.onBadge
-    if (on == null) StatusBadge(text, small, modifier)
-    else androidx.compose.foundation.layout.Box(
-        modifier.clip(androidx.compose.foundation.shape.RoundedCornerShape(50)).clickable { on(w) }
-    ) { StatusBadge(text, small) }
-}

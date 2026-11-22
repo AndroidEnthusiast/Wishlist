@@ -125,11 +125,11 @@ private fun SettingsMain(snack: SnackbarHostState, onOpen: (String) -> Unit) {
             val blocked = remember { Alerts.blockedImportant(ctx) }
             ListVisibility.loadDefault(ctx)
             SettingsGroup("") {
-                NavRow({ Icon(AppIcons.Notifications, null) }, tr("Notifications"), if (blocked.isNotEmpty()) tr("Blocked") else null, warn = blocked.isNotEmpty()) { onOpen("notes") }
-                NavRow({ Icon(AppIcons.Bag, null) }, tr("Prices"), intervalLabel(Repo.intervalHours) + " · " + currencySymbol(CurrencyChoice.chosen.ifEmpty { countryCurrency() })) { onOpen("prices") }
-                if (Config.enabled) NavRow({ Icon(AppIcons.Lock, null) }, tr("New wishlists"), whoLabel(ListVisibility.newDefault)) { onOpen("lists") }
-                NavRow({ Icon(AppIcons.ListIcon, null) }, tr("Display"), null) { onOpen("display") }
-                NavRow({ Icon(AppIcons.Gift, null) }, tr("About"), appVersion(ctx)) { onOpen("about") }
+                ValueRow(icon = { Icon(AppIcons.Notifications, null) }, label = tr("Notifications"), value = if (blocked.isNotEmpty()) tr("Blocked") else null, warn = blocked.isNotEmpty()) { onOpen("notes") }
+                ValueRow(icon = { Icon(AppIcons.Bag, null) }, label = tr("Prices"), value = intervalLabel(Repo.intervalHours) + " · " + currencySymbol(CurrencyChoice.chosen.ifEmpty { countryCurrency() })) { onOpen("prices") }
+                if (Config.enabled) ValueRow(icon = { Icon(AppIcons.Lock, null) }, label = tr("New wishlists"), value = whoLabel(ListVisibility.newDefault)) { onOpen("lists") }
+                ValueRow(icon = { Icon(AppIcons.ListIcon, null) }, label = tr("Display"), value = null) { onOpen("display") }
+                ValueRow(icon = { Icon(AppIcons.Gift, null) }, label = tr("About"), value = appVersion(ctx)) { onOpen("about") }
             }
         }
     }
@@ -144,36 +144,6 @@ private fun whoLabel(w: Who): String = when (w) {
 
 internal fun appVersion(c: android.content.Context): String =
     try { c.packageManager.getPackageInfo(c.packageName, 0).versionName.orEmpty() } catch (e: Exception) { "" }
-
-/**
- * A row that opens a page: the icon in a soft tile (like the + menu, [SheetRow]), the name, the current value in grey
- * and ›. 56 dp tall.
- */
-@Composable
-private fun NavRow(icon: @Composable () -> Unit, label: String, value: String?, warn: Boolean = false, onLongClick: (() -> Unit)? = null, onClick: () -> Unit) {
-    val look = LocalLook.current
-    val cs = look.scheme
-    Row(
-        Modifier.fillMaxWidth().heightIn(min = 56.dp).clip(RoundedCornerShape(12.dp))
-            .combinedClickable(onLongClick = onLongClick, onClick = onClick).padding(vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (look.design == "quiet") {
-            Box(
-                Modifier.size(32.dp).clip(Squircle(9.dp)).background(cs.primaryContainer)
-                    .graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
-                    .drawWithContent { drawContent(); drawRect(cs.onPrimaryContainer, blendMode = androidx.compose.ui.graphics.BlendMode.SrcAtop) },
-                contentAlignment = Alignment.Center
-            ) { Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) { icon() } }
-        } else Box(Modifier.size(28.dp), contentAlignment = Alignment.Center) { icon() }
-        Text(label, style = MaterialTheme.typography.bodyLarge, color = cs.onSurface, modifier = Modifier.padding(start = 14.dp).weight(1f))
-        if (value != null) Text(
-            value, style = MaterialTheme.typography.bodyMedium, color = if (warn) cs.error else cs.onSurfaceVariant,
-            maxLines = 1, modifier = Modifier.padding(start = 8.dp)
-        )
-        Icon(AppIcons.Chevron, null, tint = cs.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp).size(20.dp))
-    }
-}
 
 /** One page behind a row of App settings, with its own back arrow (the phone's Back does the same). */
 @OptIn(ExperimentalMaterial3Api::class)

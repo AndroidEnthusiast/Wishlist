@@ -66,23 +66,6 @@ fun shareItem(c: Context, w: Wish, idea: Boolean = Shared.active != null) {
     shareText(c, tr("Share"), text)
 }
 
-@Composable
-fun MenuRow(
-    label: String, onClick: () -> Unit, trailing: (@Composable () -> Unit)? = null, compact: Boolean = false,
-    icon: @Composable () -> Unit
-) {
-    Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = if (compact) 8.dp else 14.dp).heightIn(min = 40.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        icon()
-        Spacer(Modifier.width(16.dp))
-        Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-        trailing?.invoke()
-    }
-}
-
 /** A small line-graph icon. */
 @Composable
 internal fun HistoryIcon(tint: Color) {
@@ -194,10 +177,8 @@ fun PriceHistoryDialog(w: Wish, highlight: Boolean = false, showAll: Boolean = t
                 if (w.url.isNotBlank()) Button(
                     onClick = { try { ui.openUri(w.url) } catch (e: Exception) { } }, modifier = Modifier.fillMaxWidth()
                 ) { Text(tr("View in shop")) }
-                androidx.compose.material3.TextButton(
-                    onClick = onClose, modifier = Modifier.pressScale().fillMaxWidth().heightIn(min = 48.dp),
-                    colors = androidx.compose.material3.ButtonDefaults.textButtonColors(contentColor = cs.onSurface)
-                ) { Text(tr("Close")) }
+                // The way out: plain words, the app's own (docs/STYLE.md; it was Android's own button until 22 November 2026).
+                LinkButton(onClick = onClose, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(tr("Close")) }
             }
         }
     }

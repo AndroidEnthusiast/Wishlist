@@ -76,7 +76,7 @@ internal fun PricesPage() {
     val cs = MaterialTheme.colorScheme
     var picking by remember { mutableStateOf(false) }
     SettingsGroup("") {
-        ValueRow(tr("Check prices"), intervalLabel(Repo.intervalHours)) { picking = true }
+        ValueRow(minHeight = 48.dp, label = tr("Check prices"), value = intervalLabel(Repo.intervalHours)) { picking = true }
         CurrencySetting()
     }
     Text(
@@ -110,20 +110,6 @@ internal fun PricesPage() {
     }
 }
 
-/** A setting's name with its value in grey and ›; tapping it opens its choices. */
-@Composable
-private fun ValueRow(label: String, value: String, onClick: () -> Unit) {
-    val cs = MaterialTheme.colorScheme
-    Row(
-        Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(label, style = MaterialTheme.typography.bodyLarge, color = cs.onSurface, modifier = Modifier.weight(1f))
-        Text(value, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, maxLines = 1)
-        Icon(AppIcons.Chevron, null, tint = cs.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp).size(20.dp))
-    }
-}
-
 /**
  * About (owner, 18 November 2026): the version; Download only when a newer version exists; Share app; Licences;
  * Privacy (the crash reports are explained on the privacy page). A long press on the version shows the server calls
@@ -147,11 +133,11 @@ internal fun AboutPage(snack: SnackbarHostState) {
         if (newer) Button(onClick = {
             if (!AppInfo.download(ctx)) scope.launch { snack.showToast(tr("Couldn’t open the download. Check your connection.")) }
         }, modifier = Modifier.fillMaxWidth()) { Text(tr("Download version %s", AppInfo.info?.name.orEmpty())) }
-        ValueRow(tr("Share app"), "") {
+        ValueRow(minHeight = 48.dp, label = tr("Share app"), value = "") {
             scope.launch { try { shareApk(ctx) } catch (e: Exception) { snack.showToast(tr("Couldn’t share the app")) } }
         }
-        ValueRow(tr("Licences"), "") { licences = true }
-        ValueRow(tr("Privacy"), "") { openPrivacy(ctx) }
+        ValueRow(minHeight = 48.dp, label = tr("Licences"), value = "") { licences = true }
+        ValueRow(minHeight = 48.dp, label = tr("Privacy"), value = "") { openPrivacy(ctx) }
     }
     if (licences) LicencesDialog { licences = false }
     if (calls) AlertDialog(

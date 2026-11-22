@@ -155,17 +155,25 @@ fun ReceivedList(modifier: Modifier = Modifier) {
 
 /** The "Received gifts" page (profile sheet): a route (Nav.kt, 2.156), ← or Back returns to where it was opened. */
 @Composable
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 fun ReceivedScreen(onClose: () -> Unit) {
     // "Mark as received" at any time (owner, 2.129), not only after an occasion: pick a list, then tick.
     var pickList by remember { mutableStateOf(false) }
     var askList by remember { mutableStateOf<String?>(null) }
-    androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
-        androidx.compose.material3.Surface(Modifier.fillMaxSize().lookPage(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = MaterialTheme.colorScheme.onBackground) {
-            Column(Modifier.statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())) {
-                Row(Modifier.fillMaxWidth().padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                    androidx.compose.material3.IconButton(onClick = onClose) { androidx.compose.material3.Icon(AppIcons.ArrowBack, tr("Back")) }
-                    Text(tr("Received gifts"), style = MaterialTheme.typography.titleLarge, fontWeight = LocalLook.current.titleWeight)
-                }
+    val cs = MaterialTheme.colorScheme
+    // The app's own frame and top bar (owner, 22 November 2026): the big title that shrinks as you scroll, like every
+    // screen; it had its own small header with Android's own back button before.
+    Scaffold(
+        containerColor = cs.background,
+        topBar = {
+            TopAppBar(
+                title = { ScreenTitle(tr("Received gifts")) },
+                navigationIcon = { IconButton(onClick = onClose) { androidx.compose.material3.Icon(AppIcons.ArrowBack, tr("Back")) } },
+                colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(containerColor = cs.background)
+            )
+        }
+    ) { pad ->
+            Column(Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState())) {
                 TextButton(
                     onClick = { if (Repo.mineIds.size == 1) askList = Repo.mineIds.first() else pickList = true },
                     modifier = Modifier.padding(horizontal = 8.dp)
@@ -175,12 +183,11 @@ fun ReceivedScreen(onClose: () -> Unit) {
                 }
                 ReceivedList()
             }
-        }
+    }
         if (pickList) PickSheet(tr("Which wishlist?"), onClose = { pickList = false }) {
             SheetGroup(Repo.mineIds.map { id ->
                 { SheetRow({ androidx.compose.material3.Icon(AppIcons.ListIcon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }, Repo.mineName(id), { pickList = false; askList = id }) }
             })
         }
         askList?.let { id -> ReceivedDialog(id) { askList = null } }
-    }
 }

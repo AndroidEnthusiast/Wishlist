@@ -177,20 +177,7 @@ fun Repo.forgetRecent(c: Context, key: String): Unit = synchronized(this) {
     persist(c)
 }
 
-fun Repo.setHero(c: Context, image: String, edit: HeroEdit = HeroEdit(), cut: String = ""): Unit = synchronized(this) {
-    val old = hero
-    val oldCut = heroCut
-    AppPrefs.hero = image
-    AppPrefs.heroEdit = edit
-    AppPrefs.heroCut = cut
-    if (oldCut.isNotEmpty() && oldCut != cut) ImageStore.delete(c, oldCut)
-    persist(c)
-    if (old.isNotEmpty() && old != image) ImageStore.delete(c, old)
-}
-
 fun Repo.setTheme(c: Context, t: String): Unit = synchronized(this) { AppPrefs.theme = t; persist(c) }
-/** The accent colour: one of ACCENTS (Design.kt). Kept as "palette" (it held the old colour sets). */
-fun Repo.setPalette(c: Context, p: String) { AppPrefs.palette = p; persist(c) }
 /** The look (2.97): a style of STYLES, "light" or "dark", and an accent of ACCENTS. */
 fun Repo.setLook(c: Context, style: String, mode: String, accent: String) {
     AppPrefs.design = styleFor(style).key; AppPrefs.theme = mode; AppPrefs.palette = accentFor(accent).key

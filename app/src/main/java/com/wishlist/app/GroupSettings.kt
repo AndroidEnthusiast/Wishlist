@@ -218,7 +218,7 @@ fun LeaveGroupDialog(g: Group, snack: SnackbarHostState, onLeft: () -> Unit, onC
                         modifier = Modifier.padding(top = 10.dp, bottom = 4.dp)
                     )
                     others.forEach { o ->
-                        PickRow(o.name.ifBlank { tr("Someone") }, if (o.web) tr("Uses the browser") else tr("Uses the app"), next == o.id) { next = o.id }
+                        RadioRow(o.name.ifBlank { tr("Someone") }, next == o.id, if (o.web) tr("Uses the browser") else tr("Uses the app")) { next = o.id }
                     }
                 }
             }

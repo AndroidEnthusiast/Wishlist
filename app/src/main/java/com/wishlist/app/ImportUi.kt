@@ -258,14 +258,14 @@ internal fun CheckPart(
             Text(tr("Add to"), style = MaterialTheme.typography.titleMedium, color = cs.onSurface, modifier = Modifier.padding(bottom = 4.dp))
         }
         item {
-            ChoiceRow(target == null, tr("New wishlist")) { onTarget(null) }
+            RadioRow(tr("New wishlist"), target == null) { onTarget(null) }
             if (target == null) OutlinedTextField(
                 newName, onName, singleLine = true, label = { Text(tr("Wishlist name*")) }, isError = nameMissing,
                 supportingText = if (nameMissing) ({ Text(tr("What is this wishlist called?")) }) else null,
                 modifier = Modifier.fillMaxWidth().padding(start = 48.dp, bottom = 4.dp), keyboardOptions = Capitalised
             )
         }
-        items(mine.size) { i -> ChoiceRow(target == mine[i], Repo.mineName(mine[i])) { onTarget(mine[i]) } }
+        items(mine.size) { i -> RadioRow(Repo.mineName(mine[i]), target == mine[i]) { onTarget(mine[i]) } }
         item {
             Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -310,17 +310,6 @@ internal fun CheckPart(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun ChoiceRow(selected: Boolean, label: String, onClick: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = onClick),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        RadioButton(selected, onClick)
-        Text(label, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 4.dp))
     }
 }
 

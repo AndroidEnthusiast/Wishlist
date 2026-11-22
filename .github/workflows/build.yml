@@ -71,8 +71,17 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.14.3'
+      # The pretend phone's Android (a big file Robolectric fetches) is kept between runs, and fetched from Google's copy
+      # of Maven Central: Maven Central itself answered "too many requests" now and then and failed a build that had
+      # nothing wrong (22 November 2026).
+      - name: Keep the pretend phone's Android between runs
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/robolectric
+          key: robolectric-${{ hashFiles('app/build.gradle.kts') }}
+          restore-keys: robolectric-
       - name: Check the app and inspect every screen (quarter ${{ matrix.shard }} of 4)
-        run: gradle testReleaseUnitTest -Pwl.screens -Pwl.guardReport -Pwl.shard=${{ matrix.shard }}/4 --no-daemon
+        run: gradle testReleaseUnitTest -Pwl.screens -Pwl.guardReport -Pwl.shard=${{ matrix.shard }}/4 -Pwl.mavenMirror=https://maven-central.storage-download.googleapis.com/maven2 --no-daemon
       - name: Say what the inspector found
         if: always()
         run: |
