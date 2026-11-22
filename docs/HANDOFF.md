@@ -5,6 +5,8 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **Ask first:** which numbers of the idea list (`ideas.md`, last section) the owner wants to plan; explain gladly.
+  Children's lists: later. R7 and the Play Store: "neither yet" (owner, 22 November 2026).
 - **2.280 (22 November 2026).** The owner's review (`look.md`, last section): search starts at the last shop, two pages
   with the big title, own buttons, unused code gone, shared row parts (`Rows.kt`), GitHub keeps Robolectric's file.
 - **2.279 (22 November 2026), read first.** Every picker is a bottom sheet (`look.md`, last section; `PickSheet.kt`).

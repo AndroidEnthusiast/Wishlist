@@ -44,3 +44,31 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
   compare prices (cheap version: a "Compare prices" row opening a Google Shopping search), adding your own wishes on
   the web page (laptop/Chromebook), importing a whole list (Amazon blocks reading its lists; chosen later, 18 November 2026: `import.md`), a public profile with
   @handle and following without a friend request (big, with safety risks for young users), stickers on a profile.
+
+## The idea list of 22 November 2026 (owner: "I need a vast selection of serious ideas"; none decided)
+- Owner's answers that day: **lists for your children: build later, remember it**; the two-phone test (R7) and the
+  Play Store path: **"neither yet"**; "simplify the concepts" was explained (start from "What are you planning?" in the
+  person's own words; the four kinds stay), not chosen yet. Pop-ups hold at most 4 options: give long lists as text.
+- The list (S small, M medium, L large; "skipped" = passed on before):
+  Saving faster: 1 home-screen widget / quick tile (S, skipped) · 2 barcode scan in a shop, searches your shops (M) ·
+  3 saving from a Chromebook or laptop (extension or web adding, M–L, skipped) · 4 voice "Hey Google" (L).
+  Saying what you want: 5 "No thanks" list shown to givers (S) · 6 options on one wish (S–M) · 7 wishes without a
+  product: an idea, experience, donation (S) · 8 price range (S) · 9 must-have / nice-to-have (S) · 10 several shops
+  per wish (M, skipped).
+  Givers: 11 private gift ideas per person, brought up before their birthday (M) · 12 filter a friend's list by budget
+  (S) · 13 own note on a reservation + arrival reminder (S) · 14 reminder to givers before an occasion, if the wisher
+  allows (M) · 15 chip in (L, planned) · 16 print / picture / PDF of a list (S–M) · 17 "Bought" after "Reserved" (M).
+  Occasions: 18 nudge 3 weeks before your birthday to share (S) · 19 friends' birthdays in the phone's calendar (S) ·
+  20 reuse last year's list (S) · 21 countdown to an occasion (S).
+  For yourself: 22 sold out / back in stock (M, chosen) · 23 savings goal per wish (S) · 24 think-it-over timer (S,
+  skipped) · 25 your year in wishes (S–M).
+  Family: 26 lists for your children (M–L, later) · 27 family overview (L).
+  Ideas on your own terms: 28 search shortcuts in Search in shops (S) · 29 "new wishes from friends", opt-in (M) ·
+  30 "surprise me" search for a budget (S).
+  Trust: 31 export everything (S–M) · 32 automatic backup to your own Google Drive (M) · 33 privacy promise page (S) ·
+  34 accessibility / TalkBack check (M) · 35 Dutch (M).
+- Claude's strongest candidates: 5, 11, 18, 31. Big or upkeep-heavy: 4, 15, 27, 29. Serious issues named the same day:
+  R7 never done (the "no gift twice" promise untested on two phones), APK from GitHub (Play Store needs the final
+  name), too many concepts for a newcomer (co-op wishlist vs wishlist group), a full chat is heavy upkeep next to
+  WhatsApp, inconsistent copy ("Invite Friends" / "Invite friends", "No Friends yet. Add Friends on the Friends tab").
+
