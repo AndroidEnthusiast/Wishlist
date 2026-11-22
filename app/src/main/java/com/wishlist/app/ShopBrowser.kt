@@ -9,6 +9,9 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,6 +34,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -84,7 +89,8 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                 Row(Modifier.fillMaxWidth().height(56.dp).padding(start = 4.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onClose) { Icon(AppIcons.Close, if (search != null) tr("Close browser") else tr("Close shop")) }
                     // The site on screen: its icon (Google's icon service, like the shop tiles).
-                    if (search == null || !Shops.isSearch(st.host)) ShopIcon(if (st.host == shop.host) shop else Shop(st.host, "https://${st.host}/"), 28)
+                    // In a search the row below shows the shop, so no icon here (22 November 2026).
+                    if (search == null) ShopIcon(if (st.host == shop.host) shop else Shop(st.host, "https://${st.host}/"), 28)
                     if (search != null) {
                         // From "Search in browser": what you searched; tap it to search again (owner, 7 November 2026).
                         val focus = androidx.compose.ui.platform.LocalFocusManager.current
@@ -94,13 +100,13 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                             cursorBrush = androidx.compose.ui.graphics.SolidColor(cs.primary),
                             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
                             keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = {
-                                if (st.q.isNotBlank()) { focus.clearFocus(); st.web?.loadUrl(Shops.searchUrl(st.q)) }
+                                if (st.q.isNotBlank()) { focus.clearFocus(); st.searchAgain() }
                             }),
                             modifier = Modifier.weight(1f).padding(start = 8.dp).height(44.dp)
                                 .lookSurface(LocalLook.current, LocalLook.current.chipShape, cs.surfaceVariant, raised = false),
                             decorationBox = { inner ->
                                 Box(Modifier.fillMaxSize().padding(horizontal = 14.dp), contentAlignment = Alignment.CenterStart) {
-                                    if (st.q.isEmpty()) Text(tr("Search in browser"), style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant, maxLines = 1)
+                                    if (st.q.isEmpty()) Text(tr("Search in shops"), style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant, maxLines = 1)
                                     inner()
                                 }
                             }
@@ -117,6 +123,7 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                         else Button(onClick = { st.addSite(st.host) }) { Text("+ " + tr("Add shop"), maxLines = 1) }
                     }
                 }
+                if (search != null) SearchShopRow(st)
                 if (st.progress in 1..99) LinearProgressIndicator(progress = { st.progress / 100f }, modifier = Modifier.fillMaxWidth())
                 // The page fills the screen; "+ Add wish" floats over its bottom-right corner (owner, 2.120).
                 Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -220,5 +227,39 @@ fun ShopBrowser(shop: Shop, onClose: () -> Unit, onFound: (String, Meta?) -> Uni
                 }
             }
         }
+    }
+}
+
+/**
+ * The search row (owner, 22 November 2026; `docs/decisions/shop-search.md`): the six big shops and
+ * Google as chips, the one on screen chosen; a tap shows the same search there. "Open in Chrome" stays at the end
+ * for a shop that refuses the app's browser (bol.com did).
+ */
+@Composable
+private fun SearchShopRow(st: ShopBrowserState) {
+    Row(Modifier.fillMaxWidth().padding(end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            // A soft fade where the row scrolls on under "Open in Chrome", instead of a chip cut off sharply.
+            Modifier.weight(1f)
+                .graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
+                .drawWithContent {
+                    drawContent()
+                    drawRect(
+                        androidx.compose.ui.graphics.Brush.horizontalGradient(0.82f to Color.Black, 1f to Color.Transparent),
+                        blendMode = androidx.compose.ui.graphics.BlendMode.DstIn
+                    )
+                }
+                .horizontalScroll(rememberScrollState()).padding(start = 12.dp, end = 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically
+        ) {
+            Shops.searchShops.forEachIndexed { i, s ->
+                FilterChip(
+                    selected = st.searchAt == i, onClick = { st.searchIn(i) },
+                    label = { Text(s.shop.name, maxLines = 1) },
+                    leadingIcon = { ShopIcon(s.shop, 20) }
+                )
+            }
+        }
+        TextButton(onClick = { st.openOutside() }) { Text(tr("Open in Chrome"), maxLines = 1) }
     }
 }

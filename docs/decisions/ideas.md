@@ -38,6 +38,8 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
 ## Features seen in competitor reviews (owner, 16 November 2026)
 - **Not wanted:** product search inside the app and recommended products (they need a paid product database or
   affiliate links, which clashes with a clean, ad-free app). "Search in browser" in My shops stays.
+  (22 November 2026: the owner chose "Search the shops", each shop's own results, not a product database:
+  `shop-search.md`.)
 - **Seen, not chosen (the owner skipped the question, so nothing is built; ask again only if the owner brings it up):**
   compare prices (cheap version: a "Compare prices" row opening a Google Shopping search), adding your own wishes on
   the web page (laptop/Chromebook), importing a whole list (Amazon blocks reading its lists; chosen later, 18 November 2026: `import.md`), a public profile with

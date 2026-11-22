@@ -108,7 +108,8 @@ fun DiscoverScreen(snack: androidx.compose.material3.SnackbarHostState, onProfil
                 style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant,
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp)
             )
-            // Search the whole web in the app's browser, with "+ Add wish" as in the shops.
+            // Search the shops (owner, 22 November 2026): the big shops' own results, one after another, then Google;
+            // "+ Add wish" as in the shops.
             if (!m.editing) {
                 val focus = androidx.compose.ui.platform.LocalFocusManager.current
                 fun go() {
@@ -118,8 +119,8 @@ fun DiscoverScreen(snack: androidx.compose.material3.SnackbarHostState, onProfil
                     m.search(q)
                 }
                 OutlinedTextField(
-                    m.query, { m.query = it.take(200) }, singleLine = true,
-                    placeholder = { Text(tr("Search in browser")) },
+                    m.query, { m.query = it.take(200); m.offline = false }, singleLine = true,
+                    placeholder = { Text(tr("Search in shops")) },
                     leadingIcon = { Icon(AppIcons.Search, null) },
                     trailingIcon = if (m.query.isNotEmpty()) ({
                         IconButton(onClick = { m.query = "" }) { Icon(AppIcons.Close, tr("Clear search")) }
@@ -129,6 +130,7 @@ fun DiscoverScreen(snack: androidx.compose.material3.SnackbarHostState, onProfil
                     keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { go() }),
                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
                 )
+                if (m.offline) EmptyState(AppIcons.Search, tr("You’re offline. Search again when you’re connected."), tr("Try again"), onAction = { go() })
             }
             // A title above the shops (owner, 7 November 2026).
             Text(
@@ -256,7 +258,9 @@ fun ShopIcon(s: Shop, sizeDp: Int) {
         ) {
             Text(
                 s.name.take(1).uppercase(), color = cs.onPrimaryContainer, fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.titleLarge
+                // A small icon (the search row's 20 dp, 22 November 2026) gets a smaller letter, so it isn't cut off.
+                style = if (sizeDp >= 40) MaterialTheme.typography.titleLarge else MaterialTheme.typography.labelMedium,
+                maxLines = 1
             )
         }
     }

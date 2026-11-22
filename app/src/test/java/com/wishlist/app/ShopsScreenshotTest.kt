@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.hasSetTextAction
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -29,7 +30,7 @@ class ShopsScreenshotTest : NavigationBase() {
         // Shop icons come from the internet and arrive at random moments in a test: none are asked for, so every
         // tile shows its letter, the same every time.
         val app = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()
-        compose.runOnUiThread { (Shops.starters + Shop("x", "https://www.google.com/")).forEach { ShopIcons.reject(app, it.host, ShopIcons.google(it.host)) } }
+        compose.runOnUiThread { (Shops.starters + Shop("x", "https://www.google.com/") + Shop("w", "https://www.wehkamp.nl/")).forEach { ShopIcons.reject(app, it.host, ShopIcons.google(it.host)) } }
         compose.mainClock.autoAdvance = false; settle(); tap("My shops"); settle()
     }
 
@@ -60,5 +61,25 @@ class ShopsScreenshotTest : NavigationBase() {
         shops()
         compose.onAllNodes(hasSetTextAction()).onFirst().performTextInput("wool blanket")
         settle(); shot("search_typed")
+    }
+
+    // Search the shops (22 November 2026): the browser with the shop row and "Open in Chrome".
+    @Test fun searchOpen() {
+        pretendOnline = true
+        shops()
+        compose.onAllNodes(hasSetTextAction()).onFirst().performTextInput("wool blanket")
+        compose.onAllNodes(hasSetTextAction()).onFirst().performImeAction()
+        screen("search_open")
+        pretendOnline = null
+    }
+
+    // Offline (the test phone has no network): the message with Try again under the search box.
+    @Test fun searchOffline() {
+        pretendOnline = false
+        shops()
+        compose.onAllNodes(hasSetTextAction()).onFirst().performTextInput("wool blanket")
+        compose.onAllNodes(hasSetTextAction()).onFirst().performImeAction()
+        shot("search_offline")
+        pretendOnline = null
     }
 }

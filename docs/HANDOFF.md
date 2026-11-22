@@ -5,6 +5,10 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.277 (22 November 2026), read first.** Search the shops (`docs/decisions/shop-search.md`). Ask: does each shop in
+  the row show its own results (the search addresses couldn't be opened from here), does bol.com load or need "Open in
+  Chrome", is the fading row clear? Owner said every earlier version has been tried: the "Try …" to-do items are gone;
+  the owner reports what they notice. Earning money was discussed, nothing decided (same file): ask before building.
 - **2.276 (21 November 2026), read first.** One style guide for the whole app (`docs/STYLE.md`, the owner's page
   https://claude.ai/artifact/CfZBnhRcVPydi8YVtjfV2H, `look.md` last section). Ask how menus as sheets, the ✕ rule,
   buttons sized to their words, empty pages and big titles in Gen Z chaos feel. Every new screen follows the guide.
@@ -111,6 +115,12 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 22 November 2026: earning money discussed, Search the shops (2.277)
+Owner asked how to earn money without ads, sponsored ideas or accounts: advice written down (affiliate links on what the
+user opens, later Plus on the Play Store), nothing decided. Built "Search the shops" after 8 questions: one search
+opens bol.com's own results with a row of the six big shops + Google, "Open in Chrome", an offline message. The layout
+check caught cut-off letters in small shop icons (fixed). Not checkable here: real shop pages, the phone.
+
 ### 21 November 2026: fonts, link reading, chat on co-op lists, New wishlist, Home's tabs (2.269–2.273)
 (Earlier wordings of this summary are in HANDOFF-ARCHIVE.md.) 2.269: numbers in the text font; faster link reading.
 2.270: big names in the title font; chat about a wish on co-op lists (owner runs `supabase-features.sql` v2). 2.271–2.272:
@@ -122,9 +132,3 @@ Owner's screenshots (labels overlapping, cut, prices broken) → labels redesign
 reservation under the photo), "I have it" straight to Received gifts, and a layout inspector (`LayoutGuard.kt`) on every
 screen picture that blocks publishing on GitHub (owner). It found 6 more problems, all fixed; on the old code it flags
 exactly the owner's screenshots. Not checkable here: how it feels on a phone.
-
-### 20 November 2026: chat about a wish, Home swipe, notifications reviewed (2.266–2.267)
-Owner interviewed (`wish-cards.md`, `notifications.md`): "Chat about this wish" (friends, groups; not exchanges: would
-reveal the Santa), wish cards open the wish in its list, Home swipes anywhere under the divider, no notification dead
-ends (`NoteCheck`). Review fixed: push for a new profile, offline daily check, "in 1 days", shared price-drop taps.
-2.267: chat also in Two per row (owner found it missing); checks four at a time, no build for notes-only pushes.

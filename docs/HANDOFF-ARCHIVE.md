@@ -881,3 +881,9 @@ form; a list made from + or Home opens. Not checkable here: real shops' timing, 
 2.270: big names in the title font; "Chat about this wish" on shared wishlists with a people picker (server
 `wl_sh_people`, `wl_sh_befriend`; owner runs `supabase-features.sql` v2). 2.271: "Who can see it" in the New wishlist
 form; a list made from + or Home opens. 2.272: one-page form, form sheets close only by X / pull tab. Not checkable: phone.
+
+### 20 November 2026: chat about a wish, Home swipe, notifications reviewed (2.266–2.267)
+Owner interviewed (`wish-cards.md`, `notifications.md`): "Chat about this wish" (friends, groups; not exchanges: would
+reveal the Santa), wish cards open the wish in its list, Home swipes anywhere under the divider, no notification dead
+ends (`NoteCheck`). Review fixed: push for a new profile, offline daily check, "in 1 days", shared price-drop taps.
+2.267: chat also in Two per row (owner found it missing); checks four at a time, no build for notes-only pushes.

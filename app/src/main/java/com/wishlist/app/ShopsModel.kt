@@ -28,10 +28,15 @@ import kotlin.coroutines.resume
 
 /** The shops page: which shop or search is open, removing, Add shop. */
 @Stable
-internal class ShopsModel(private val ctx: Context, private val scope: CoroutineScope, private val snack: SnackbarHostState) {
+internal class ShopsModel(
+    private val ctx: Context, private val scope: CoroutineScope, private val snack: SnackbarHostState,
+    private val online: () -> Boolean = { pretendOnline ?: isOnline(ctx) }
+) {
     var open by mutableStateOf<Shop?>(null)
-    // "Search in browser" (owner, 7 November 2026): what was searched, while its results are open.
+    // Search the shops (owner, 22 November 2026): what was searched, while its results are open.
     var searched by mutableStateOf<String?>(null)
+    // Search tapped while offline: "You're offline…" with Try again; your words stay in the box (owner).
+    var offline by mutableStateOf(false)
     var query by mutableStateOf("")
     var adding by mutableStateOf(false)
     var editing by mutableStateOf(false)
@@ -43,8 +48,19 @@ internal class ShopsModel(private val ctx: Context, private val scope: Coroutine
     /** A shop opened: it moves to the front on Home. */
     fun openShop(s: Shop) { open = s; Shops.opened(ctx, s) }
 
-    /** Search the whole web in the app's browser. */
-    fun search(q: String) { searched = q; open = Shop(tr("Search"), Shops.searchUrl(q)) }
+    /**
+     * Search the shops (owner, 22 November 2026): the first shop of the search row opens with its own results for
+     * [q]; the row in the browser switches to the others. Offline: a message with Try again instead.
+     */
+    fun search(q: String) {
+        val words = q.trim()
+        if (words.isEmpty()) return
+        if (!online()) { offline = true; return }
+        offline = false
+        searched = words
+        val first = Shops.searchShops.first()
+        open = Shop(first.shop.name, first.url(words))
+    }
 
     fun close() { open = null; searched = null }
 
@@ -96,6 +112,17 @@ private const val PICTURE_JS = """(function(){
   return JSON.stringify({img:best, ld:ld, ogurl:og?og.content:''});
 })()"""
 
+/** The checks' pretend connection (the test phone has no network); null on a real phone. */
+internal var pretendOnline: Boolean? = null
+
+/** True when the phone has a connection to the internet (wifi or mobile data). */
+internal fun isOnline(c: Context): Boolean = try {
+    val cm = c.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+    val n = cm.activeNetwork
+    // No network at all: offline. A network whose details are unknown: let the shop page say so.
+    n != null && (cm.getNetworkCapabilities(n)?.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) ?: true)
+} catch (e: Exception) { true }
+
 private fun decodeJsString(r: String?): String? {
     if (r == null || r == "null") return null
     return try { JSONTokener(r).nextValue() as? String } catch (e: Exception) { null }
@@ -123,6 +150,31 @@ internal class ShopBrowserState(private val ctx: Context, shop: Shop, search: St
     var addedNote by mutableStateOf<String?>(null)
     // Import (owner, 18 November 2026): no wishes were found on the list page on screen.
     var importHint by mutableStateOf(false)
+    // The search row (owner, 22 November 2026): which of Shops.searchShops shows on screen (-1: another site).
+    val searchAt: Int get() = Shops.searchShopAt(host)
+
+    /** A shop in the search row: its own results for the words in the search field. */
+    fun searchIn(i: Int) {
+        val words = q.trim().ifEmpty { return }
+        Shops.searchShops.getOrNull(i)?.let { web?.loadUrl(it.url(words)) }
+    }
+
+    /** The search field's Search key: the shop on screen again (Google when it is another site). */
+    fun searchAgain() = searchIn(searchAt.takeIf { it >= 0 } ?: Shops.searchShops.lastIndex)
+
+    /**
+     * "Open in Chrome" (owner, 22 November 2026: bol.com may refuse the app's browser; Chrome works): the page on
+     * screen in the phone's own browser. Only http(s) pages.
+     */
+    fun openOutside() {
+        val url = web?.url?.takeIf { it.startsWith("https://") || it.startsWith("http://") } ?: return
+        try {
+            ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(ctx, tr("No browser found on this phone."), android.widget.Toast.LENGTH_LONG).show()
+        }
+    }
 
     private suspend fun js(w: WebView, code: String): String? = withTimeoutOrNull(4000L) {
         suspendCancellableCoroutine<String?> { cont ->

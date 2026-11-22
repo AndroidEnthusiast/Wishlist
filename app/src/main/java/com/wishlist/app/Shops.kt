@@ -34,6 +34,11 @@ data class Shop(val name: String, val url: String) {
     val host: String get() = try { URI(url).host?.removePrefix("www.") ?: "" } catch (e: Exception) { "" }
 }
 
+/** A shop in the search row: [prefix] + the words you searched opens its own results page. */
+data class SearchShop(val shop: Shop, val prefix: String) {
+    fun url(q: String): String = prefix + java.net.URLEncoder.encode(q.trim(), "UTF-8")
+}
+
 object Shops {
     val starters = listOf(
         Shop("bol.com", "https://www.bol.com/nl/nl/"),
@@ -131,8 +136,27 @@ object Shops {
     /** True when a site with host [h] ("www." or not) is in your shops. */
     fun has(c: Context, h: String): Boolean = h.removePrefix("www.").let { x -> stored(c).any { it.host == x } }
 
-    /** The web search behind "Search in browser" (owner, 7 November 2026: Google). */
+    /** A Google search (owner, 7 November 2026), the last shop in the search row. */
     fun searchUrl(q: String): String = "https://www.google.com/search?q=" + java.net.URLEncoder.encode(q.trim(), "UTF-8")
+
+    /**
+     * Search once, see every shop (owner, 22 November 2026; `docs/decisions/shop-search.md`): the six
+     * big all-round shops, then Google for everything else. Always the same set, also when one was removed from My
+     * shops (owner). Each shop's own results page opens inside the app; no combined list (shops block it and it breaks).
+     * The search addresses could not be opened from where they were written: when a shop changes one, fix it here.
+     */
+    val searchShops: List<SearchShop> = listOf(
+        SearchShop(Shop("bol.com", "https://www.bol.com/nl/nl/"), "https://www.bol.com/nl/nl/s/?searchtext="),
+        SearchShop(Shop("Amazon", "https://www.amazon.nl/"), "https://www.amazon.nl/s?k="),
+        SearchShop(Shop("Coolblue", "https://www.coolblue.nl/"), "https://www.coolblue.nl/zoeken?query="),
+        SearchShop(Shop("Wehkamp", "https://www.wehkamp.nl/"), "https://www.wehkamp.nl/zoeken/?term="),
+        SearchShop(Shop("Zalando", "https://www.zalando.nl/"), "https://www.zalando.nl/catalogus/?q="),
+        SearchShop(Shop("de Bijenkorf", "https://www.debijenkorf.nl/"), "https://www.debijenkorf.nl/search?query="),
+        SearchShop(Shop("Google", "https://www.google.com/"), "https://www.google.com/search?q=")
+    )
+
+    /** Which search shop the page on [host] belongs to (-1: none, e.g. a site you went on to from Google). */
+    fun searchShopAt(host: String): Int = host.removePrefix("www.").let { h -> searchShops.indexOfFirst { it.shop.host == h } }
 
     /** A search engine's own pages are not offered as a shop. */
     fun isSearch(h: String): Boolean = h.removePrefix("www.").let { it.startsWith("google.") || it == "consent.google.com" || it.endsWith(".google.com") }

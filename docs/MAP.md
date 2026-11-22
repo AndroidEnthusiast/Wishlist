@@ -89,7 +89,7 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
   `AlertsPartsTest` (same text and place, channels kept, grouping and pace, schedule)
 - `PriceReport.kt` ("Price is wrong?" on a wish's price page: the shop's page as the phone reads it, saved to a file for the share sheet; a file the owner uploads goes into `tests/shared/same-answers.json` → `pages` with the fix in both readers)
 - `PriceWatch.kt` (when a price check believes what it read, 2.178: two readings that agree, a quiet first look, typed prices stay; its notes per wish are the database table `price_watch`)
-- `Shops.kt` (Find a gift: your shops and their icons; rebuilt in 2.241) + `ShopsScreen.kt` (My shops page, Add shop, `ShopIcon`) + `ShopBrowser.kt` (a shop inside the app with Add to wishlist) + state holders `ShopsModel.kt` (`ShopsModel`, `ShopBrowserState`); checks `ShopsModelTest`, screenshots `ShopsScreenshotTest`; `CONSENT_JS` refuses cookie questions
+- `Shops.kt` (Find a gift: your shops and their icons; rebuilt in 2.241) + `ShopsScreen.kt` (My shops page, Add shop, `ShopIcon`) + `ShopBrowser.kt` (a shop inside the app with Add to wishlist; in a search, the row of search shops, `Shops.searchShops`, 2.277) + state holders `ShopsModel.kt` (`ShopsModel`, `ShopBrowserState`); checks `ShopsModelTest`, screenshots `ShopsScreenshotTest`; `CONSENT_JS` refuses cookie questions
 
 ### Collab wishlists (gift lists in the code; on screen since 2.220 "wishlists for someone else", made from "New wishlist")
 - Shared wishlists' data (split in 2.258, the data rebuild; nothing on screen, on the server or in `web/` changed):

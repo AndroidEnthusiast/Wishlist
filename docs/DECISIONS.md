@@ -18,6 +18,7 @@ decided something. Every decision was moved word for word, nothing was dropped.
 - `docs/decisions/home-and-kinds.md`: Personal / Co-op ("shared" only means shared with someone), Home's tabs per kind, taking chosen wishes out (21 November 2026).
 - `docs/decisions/screenshots.md`: Screenshot to wish, a name for every wish, several screenshots at once (20 November 2026).
 - `docs/decisions/ideas.md`: Open ideas (not decided) (Open ideas).
+- `docs/decisions/shop-search.md`: Search the shops (2.277) and earning money (discussed, not decided).
 
 ## Notes tidy-up (owner, 12 November 2026)
 - **Notes stay small, automatically:** `CLAUDE.md` holds only the rules for every session (under 150 lines and
