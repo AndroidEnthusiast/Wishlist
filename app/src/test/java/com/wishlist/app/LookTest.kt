@@ -161,4 +161,11 @@ class LookTest {
         fresh(); Repo.load(c)
         assertEquals("berry", Repo.palette); assertEquals("berry", prefs.getString("palette", null))
     }
+
+    // Owner, 22 November 2026: Move and Copy looked like one block in dark mode (the line was 52,53,57 on 50,51,55).
+    // The line between rows in a group stays visible on the group in every style, theme and mode.
+    @Test fun theLineBetweenRowsShows() = every { st, m, look ->
+        val c = contrast(look.groupLine(), look.groupFill())
+        assertTrue("$st $m: line between rows only ${"%.2f".format(c)} : 1", c >= 1.25)
+    }
 }

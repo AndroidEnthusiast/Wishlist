@@ -148,6 +148,13 @@ internal fun hueOf(col: Color): Float {
 
 /** A group of rows inside a panel (a sheet's menu): a step lighter than the panel in the theme's own colour. */
 fun Look.groupFill(): Color = if (dark) lerp(raised, scheme.onSurface, 0.07f) else page
+
+/**
+ * The thin line between rows in a group (owner, 22 November 2026: Move and Copy looked like one block in dark mode,
+ * the old line was 52,53,57 on 50,51,55). Made from the group's own colour, so it shows in every theme; `LookTest`
+ * checks it stays visible.
+ */
+fun Look.groupLine(): Color = lerp(groupFill(), scheme.onSurface, if (dark) 0.16f else 0.13f)
 private fun mix(a: Color, b: Color, t: Float) = lerp(a, b, t)
 internal fun pick(id: Long, n: Int) = Math.floorMod(id, n.toLong()).toInt()
 /** Dark ink on light colours, white on dark ones. */

@@ -296,3 +296,10 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   - **Big titles everywhere, in both styles** (Gen Z chaos got the shrinking title too, so the Theme screen has it
     without the jump of 18 November).
   - **A chat message's long press is a sheet like the others** (Reply and Delete as icon rows, no Close).
+
+## Lines between rows (owner, 22 November 2026; built in 2.278)
+- Owner's screenshot: "Move or copy" in dark mode looked like one block, no divider. Cause: the line was there but
+  almost the block's own colour (52,53,57 on 50,51,55); the same in a wish's ⋮ sheet, and the other menus (a chat's,
+  a group's, a gift exchange's, a friend's ⋮) had no line at all. Owner chose **a thin line after the icon** (over a
+  full-width line or separate cards), the same everywhere, light and dark. Rule in `docs/STYLE.md`; checks: `LookTest`
+  (the line visible in every style, theme and mode).

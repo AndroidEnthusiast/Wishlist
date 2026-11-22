@@ -118,6 +118,9 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
 - Surfaces in Quiet use `Squircle(…)`, not `RoundedCornerShape`; buttons and chips stay fully round.
 - Dialogs: one rule in every style, see "Dialogs" above (21 November 2026; the earlier rule is in `docs/STYLE-ARCHIVE.md`).
 - Menus: rows in `SheetGroup`s, icons in their tinted tiles (`SheetRow`); every menu is a sheet (see "Dialogs" above).
+- **Rows in a group have a thin line between them** (owner, 22 November 2026, after Move and Copy looked like one
+  block in dark mode): starting after the icon tile, in the colour `look.groupLine()` (made from the group's own
+  colour, visible in every theme; `LookTest` checks it). `SheetGroup` and every menu (`RowLines`) draw it by themselves.
 - Vibration only at a few relevant moments (now: start selecting, reserving). Celebrations only on reserving and on
   a price drop.
 - Voice: a warm friend, short and kind, never silly or long ("Nothing here yet. Tap + to add the first thing you’d love.").

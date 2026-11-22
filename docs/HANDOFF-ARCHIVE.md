@@ -887,3 +887,7 @@ Owner interviewed (`wish-cards.md`, `notifications.md`): "Chat about this wish" 
 reveal the Santa), wish cards open the wish in its list, Home swipes anywhere under the divider, no notification dead
 ends (`NoteCheck`). Review fixed: push for a new profile, offline daily check, "in 1 days", shared price-drop taps.
 2.267: chat also in Two per row (owner found it missing); checks four at a time, no build for notes-only pushes.
+
+### Earlier wording of the 22 November 2026 summary (before 2.278 was added)
+Line replaced in HANDOFF.md: "check caught cut-off letters in small shop icons (fixed). Not checkable here: real shop pages, the phone."
+check caught cut-off letters in small shop icons (fixed). Not checkable here: real shop pages, the phone.

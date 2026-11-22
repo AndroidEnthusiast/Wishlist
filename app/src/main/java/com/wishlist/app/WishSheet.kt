@@ -245,9 +245,9 @@ fun SheetGroup(rows: List<@Composable () -> Unit>) {
     if (look.design != "quiet") { rows.forEach { it() }; return }
     val bg = look.groupFill()
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp).clip(Squircle(18.dp)).background(bg)) {
-        androidx.compose.runtime.CompositionLocalProvider(LocalInSheetGroup provides true) {
+        androidx.compose.runtime.CompositionLocalProvider(LocalInSheetGroup provides true, LocalRowLines provides null) {
             rows.forEachIndexed { i, row ->
-                if (i > 0) Box(Modifier.padding(start = 60.dp).fillMaxWidth().height(1.dp).background(look.line))
+                if (i > 0) Box(Modifier.padding(start = 60.dp).fillMaxWidth().height(1.dp).background(look.groupLine()))
                 row()
             }
         }

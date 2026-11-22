@@ -26,6 +26,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -57,11 +59,14 @@ fun DropdownMenu(
     ModalBottomSheet(onDismissRequest = onDismissRequest, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp).verticalScroll(scrollState)) {
             val look = LocalLook.current
+            // Quiet: a thin line between rows that touch, after the icon (owner, 22 November 2026; RowLines below).
+            val lines = androidx.compose.runtime.remember { RowLines() }
             Column(
                 Modifier.padding(horizontal = 16.dp, vertical = 6.dp).fillMaxWidth()
                     .clip(if (look.design == "quiet") Squircle(18.dp) else androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
                     .background(if (look.design == "quiet") look.groupFill() else androidx.compose.ui.graphics.Color.Transparent)
-            ) { content() }
+                    .then(if (look.design == "quiet") lines.drawn(look.groupLine()) else Modifier)
+            ) { CompositionLocalProvider(LocalRowLines provides lines) { content() } }
         }
     }
 }
@@ -83,8 +88,12 @@ fun DropdownMenuItem(
 ) {
     val cs = MaterialTheme.colorScheme
     val ink = if (danger) cs.error else cs.onSurface
+    val lines = LocalRowLines.current
+    val key = androidx.compose.runtime.remember { Any() }
+    androidx.compose.runtime.DisposableEffect(lines) { onDispose { lines?.rows?.remove(key) } }
     Row(
         modifier.fillMaxWidth().heightIn(min = 52.dp)
+            .then(if (lines != null) Modifier.onGloballyPositioned { lines.place(key, it, if (leadingIcon != null) 60.dp else 18.dp) } else Modifier)
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .semantics { if (selected) this.selected = true }
             .padding(horizontal = 14.dp, vertical = 6.dp).alpha(if (enabled) 1f else 0.45f),
@@ -109,3 +118,39 @@ fun DropdownMenuItem(
         else if (trailingIcon != null) trailingIcon()
     }
 }
+
+/**
+ * The thin lines between a menu's rows (owner, 22 November 2026: "Move or copy looks like one block"): every
+ * [DropdownMenuItem] says where it is; a line is drawn above each row that touches the one before it, starting after
+ * its icon tile (60 dp; 18 dp without an icon), like the rows of a [SheetGroup].
+ */
+class RowLines {
+    class Place(val row: androidx.compose.ui.layout.LayoutCoordinates, val inset: androidx.compose.ui.unit.Dp)
+    val rows = androidx.compose.runtime.mutableStateMapOf<Any, Place>()
+    private var box: androidx.compose.ui.layout.LayoutCoordinates? = null
+
+    fun place(key: Any, row: androidx.compose.ui.layout.LayoutCoordinates, inset: androidx.compose.ui.unit.Dp) {
+        val old = rows[key]
+        if (old == null || old.row !== row || old.inset != inset) rows[key] = Place(row, inset)
+    }
+
+    fun drawn(color: androidx.compose.ui.graphics.Color): Modifier =
+        Modifier.onGloballyPositioned { box = it }.drawWithContent {
+            drawContent()
+            val b = box?.takeIf { it.isAttached } ?: return@drawWithContent
+            // Where each row is in the menu now (top, bottom, inset), top to bottom.
+            val spans = rows.values.filter { it.row.isAttached }.map {
+                val top = b.localPositionOf(it.row, androidx.compose.ui.geometry.Offset.Zero).y
+                Triple(top, top + it.row.size.height, it.inset)
+            }.sortedBy { it.first }
+            spans.zipWithNext().forEach { (a, n) ->
+                if (kotlin.math.abs(n.first - a.second) < 2f) drawRect(
+                    color, topLeft = androidx.compose.ui.geometry.Offset(n.third.toPx(), n.first - 0.5.dp.toPx()),
+                    size = androidx.compose.ui.geometry.Size(size.width - n.third.toPx(), 1.dp.toPx())
+                )
+            }
+        }
+}
+
+/** The lines of the menu a row is in (null: none, e.g. inside a [SheetGroup], which draws its own). */
+val LocalRowLines = androidx.compose.runtime.staticCompositionLocalOf<RowLines?> { null }
