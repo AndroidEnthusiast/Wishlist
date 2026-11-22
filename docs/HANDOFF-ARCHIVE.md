@@ -901,3 +901,7 @@ check caught cut-off letters in small shop icons (fixed). Not checkable here: re
 
 ### Earlier wording of the 22 November 2026 summary (before 2.279 was added)
 almost invisible, some menus none): a thin line after the icon everywhere. Not checkable here: shop pages, the phone.
+
+### Earlier wording of the 2.281 "Next session" note (22 November 2026, before the owner dropped the preview)
+- **2.281 (22 November 2026).** New + menu lines (`home-and-kinds.md`, last section). Open: the personal link preview
+  can't come from Supabase (no web pages on its address): ask the owner which way (own domain later, or a Worker).
