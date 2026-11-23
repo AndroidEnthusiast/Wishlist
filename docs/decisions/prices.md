@@ -31,3 +31,18 @@ Index: `docs/DECISIONS.md`. Earlier price decisions: `screens.md` ("Prices"), `P
   rule 5 (that would need the server); a page whose price is read wrongly from the very first look (and the same way
   every time) still needs "Price is wrong?"; shops change their pages without warning, so 100% doesn't exist; the aim
   is no false alerts.
+
+## Sizes with their own price, two readings in one check, an old-price note (owner, 23 November 2026; planned, not built)
+- Found: Zalando perfumes (30/50/100 ml) whose link names no size: since 2.282 no "from" price is taken, so the check
+  read nothing and the old €79.95 stayed silently while the shop said "Vanaf €59,95" (the co-op list "Ola, Paulina,
+  Zuza": La Vie est Belle, Alien, My Way). Zalando's page lists every size with its own price (JSON-LD
+  `ProductGroup.hasVariant[].size` + `offers.price`, seen on the Barbour page).
+- **Owner's choices:** (1) **pick the size and track it**: when a link has sizes with different prices the wish asks
+  "Which size?" (each with its price), the size is remembered (the wish's existing `size` field) and every check reads
+  that size's price; a wish without a size shows "from €59.95" with a "Choose size" tap until someone picks one.
+  (2) **read twice within one check**: each check opens the page twice a few seconds apart and changes the price at once
+  when both agree (still two readings, Rule 8). (3) **a check that can't read a price** keeps the last price and, after
+  more than a day without a reading, shows a small grey "Price from 3 days ago" line.
+- Waiting for: the owner's "Price is wrong?" file of the La Vie est Belle page (Zalando can't be opened from Claude's
+  computer), to build and check against the real page. App (`Fetch*.kt`, `PriceWatch`, `SharedPrices`) and web
+  (`parse.js`, `edit.js`) together, with cases in `same-answers.json` and `PriceWatchTest`.

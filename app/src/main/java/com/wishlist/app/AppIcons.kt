@@ -29,6 +29,7 @@ object AppIcons {
     val Home: ImageVector @Composable get() = set.home
     val HomeFilled: ImageVector @Composable get() = set.homeFilled
     val Lock: ImageVector @Composable get() = set.lock
+    val LockOpen: ImageVector @Composable get() = set.lockOpen
     val ListIcon: ImageVector @Composable get() = set.list
     val Notifications: ImageVector @Composable get() = set.bell
     val MoreVert: ImageVector @Composable get() = set.more

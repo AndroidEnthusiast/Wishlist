@@ -65,6 +65,13 @@ class OwnIcons(private val stroke: Float) {
             line("M8.5,11V8a3.5,3.5 0 0,1 7,0v3"), line("M12,14.5v2")
         )
     }
+    // The open padlock of "Unreserve?" (owner, 23 November 2026): the same body, the shackle swung open.
+    val lockOpen by lazy {
+        icon(
+            "LockOpen", line("M6.5,11h11a1.5,1.5 0 0,1 1.5,1.5v6a1.5,1.5 0 0,1 -1.5,1.5h-11A1.5,1.5 0 0,1 5,18.5v-6A1.5,1.5 0 0,1 6.5,11z"),
+            line("M8.5,11V8a3.5,3.5 0 0,1 6.9,-0.8"), line("M12,14.5v2")
+        )
+    }
     val list by lazy {
         icon("List", line("M9.5,7h9.5"), line("M9.5,12h9.5"), line("M9.5,17h9.5"), line("M5,7h0.01"), line("M5,12h0.01"), line("M5,17h0.01"))
     }
@@ -169,7 +176,7 @@ class OwnIcons(private val stroke: Float) {
 
     /** Every icon, for the checks (all drawn, none empty). */
     val all: List<ImageVector> get() = listOf(
-        add, close, check, back, chevron, palette, dropDown, bin, edit, heart, heartFilled, home, homeFilled, lock, list, bell, more,
+        add, close, check, back, chevron, palette, dropDown, bin, edit, heart, heartFilled, home, homeFilled, lock, lockOpen, list, bell, more,
         person, personFilled, friends, friendsFilled, refresh, search, gear, share, group, gift, bag, swap, store, storeFilled, chat, chatFilled, eye, eyeOff, gallery,
         moveOut, copy, camera, flag, block, leave
     )

@@ -66,7 +66,9 @@ class ReserveAndNewsTest {
             assertTrue("$f: no Unreserve button any more", !s.contains("Text(tr(\"Unreserve\")"))
         }
         val parts = src("WishCardParts.kt")
-        assertTrue(parts.contains("tr(\"Unreserve “%s”?\", w.label)") && parts.contains("AppIcons.Lock"))
+        // "Unreserve?" with an open padlock on the button itself (owner, 23 November 2026), no pop-up.
+        assertTrue(parts.contains("tr(\"Unreserve?\")") && parts.contains("AppIcons.LockOpen") && !parts.contains("AlertDialog("))
+        assertTrue(src("MainActivity.kt").contains(".dismissReserveAsk()"))
         // Someone else's darkens the card in every view, and sinks on a friend's list.
         assertTrue(src("Friend.kt").contains("dim = w.got || rs == \"taken\"") && src("Friend.kt").contains("reservedLast("))
         assertTrue(src("CompactCard.kt").contains("reserveButton(w, reserve) == \"taken\""))
@@ -101,6 +103,11 @@ class ReserveAndNewsTest {
         st.refresh { remote(1, 2) }
         assertEquals(setOf(2L), st.fresh)
         assertEquals(emptySet<Long>(), FriendNews.newIds(ctx, "F2", remote(1, 2)))
+        // Leaving the list and opening it again: no ribbon any more (owner, 23 November 2026).
+        val again = FriendListState(ctx, Friend("CODE2", "Birthday"), SnackbarHostState(), kotlinx.coroutines.MainScope(), friendId = "F2")
+        again.fetchRes = { emptyMap() }
+        again.refresh { remote(1, 2) }
+        assertEquals(emptySet<Long>(), again.fresh)
     }
 
     @Test fun theFriendPageNoLongerClearsEverything() {
@@ -109,7 +116,8 @@ class ReserveAndNewsTest {
         assertTrue(src("HomeBlocks.kt").contains("NewCountBadge(item.fresh"))
         assertTrue("no red dot on the friend's row", !src("FriendsRows.kt").contains("RedDot()"))
         assertTrue(src("Friend.kt").contains("if (w.id in st.fresh) NewRibbon("))
-        assertEquals(androidx.compose.ui.graphics.Color(0xFF6A3FB5), NewRibbonColour)
+        // The ribbon and the count on the list are one colour (owner, 23 November 2026: red).
+        assertEquals(NewDot, NewRibbonColour)
     }
 
     @Test fun listPickersShowTheKind() {

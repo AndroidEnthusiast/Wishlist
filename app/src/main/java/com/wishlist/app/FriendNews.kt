@@ -82,12 +82,15 @@ object FriendNews {
     }
 }
 
-/** The royal purple of the "NEW" ribbon: the same in every theme, light and dark (owner, 23 November 2026). */
-val NewRibbonColour = Color(0xFF6A3FB5)
+/**
+ * The colour of the "NEW" ribbon: the red of the count on the list it belongs to (owner, 23 November 2026: "the ticker
+ * and ribbon should be the same colour as they are related"; it was royal purple first). The same in every theme.
+ */
+val NewRibbonColour = NewDot
 
 /**
  * The "NEW" ribbon across the top right corner of a new wish on a friend's list (owner, 23 November 2026: "a diagonal
- * ribbon, not too flashy but something that stands out, royal purple, suitable for every theme"). Goes over the card,
+ * ribbon, not too flashy but something that stands out, suitable for every theme"; red like the count since then). Goes over the card,
  * clipped to the card's [shape].
  */
 @Composable

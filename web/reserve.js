@@ -8,6 +8,10 @@
     var q = Math.floor(Number(w && w.qty));
     return q > 1 && q < 100 ? q : 1;
   }
+  // The "Unreserve?" waiting for a second tap; a tap anywhere else puts it back.
+  var armed = null;
+  function disarm() { if (armed) armed.wlDisarm(); }
+  document.addEventListener("pointerdown", function (e) { if (armed && !armed.contains(e.target)) disarm(); }, true);
   window.WLRes = {
     qty: qty,
     // The rows of wl_get_reservations: res[id] = true (yours) / false (taken), cnt[id] = {my, n, full}.
@@ -46,30 +50,38 @@
       var q = qty(w);
       return q > 1 && c && !c.my && !c.full && c.n > 0 ? T("{0} of {1} reserved", c.n, q) : "";
     },
-    // The one reservation button (owner, 23 November 2026). o: busy, set(true/false), ask() for someone else's
-    // reservation ("Is it still being bought?", together.js) or null. "Reserved by you" asks "Unreserve?" in the card
-    // first. Built with textContent only.
+    // The one reservation button (owner, 23 November 2026), the same as ReserveButton in the app. o: busy,
+    // set(true/false), ask() for someone else's reservation ("Is it still being bought?", together.js) or null.
+    // "Reserved by you": one tap turns it into "Unreserve?" with an open padlock, a second tap unreserves, a tap
+    // anywhere else puts it back. The padlocks are the app's own line icons. Built with textContent only.
     button: function (w, r, c, o) {
       var st = this.state(w, r, c);
       var box = document.createElement("span");
       box.className = "resbox";
       if (!st) return box;
-      function lock() {
+      function lock(open) {
         var ns = "http://www.w3.org/2000/svg";
         var svg = document.createElementNS(ns, "svg");
-        svg.setAttribute("viewBox", "0 0 24 24"); svg.setAttribute("aria-hidden", "true"); svg.setAttribute("class", "lock");
-        var p = document.createElementNS(ns, "path");
-        // Google's Material "lock" icon (Apache 2.0).
-        p.setAttribute("d", "M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z");
-        p.setAttribute("fill", "currentColor");
-        svg.appendChild(p);
+        svg.setAttribute("viewBox", "0 0 24 24"); svg.setAttribute("aria-hidden", "true");
+        svg.setAttribute("class", "lock" + (open ? " open" : ""));
+        ["M6.5,11h11a1.5,1.5 0 0,1 1.5,1.5v6a1.5,1.5 0 0,1 -1.5,1.5h-11A1.5,1.5 0 0,1 5,18.5v-6A1.5,1.5 0 0,1 6.5,11z",
+          open ? "M8.5,11V8a3.5,3.5 0 0,1 6.9,-0.8" : "M8.5,11V8a3.5,3.5 0 0,1 7,0v3", "M12,14.5v2"].forEach(function (d) {
+          var p = document.createElementNS(ns, "path");
+          p.setAttribute("d", d); p.setAttribute("fill", "none"); p.setAttribute("stroke", "currentColor");
+          p.setAttribute("stroke-width", "1.8"); p.setAttribute("stroke-linecap", "round"); p.setAttribute("stroke-linejoin", "round");
+          svg.appendChild(p);
+        });
         return svg;
+      }
+      function fill(b, text, withLock, open) {
+        b.textContent = "";
+        if (withLock) b.appendChild(lock(open));
+        b.appendChild(document.createTextNode(text));
       }
       function btn(cls, text, withLock, fn) {
         var b = document.createElement("button");
         b.type = "button"; b.className = "act small " + cls;
-        if (withLock) b.appendChild(lock());
-        b.appendChild(document.createTextNode(text));
+        fill(b, text, withLock, false);
         if (fn) b.addEventListener("click", fn); else b.setAttribute("aria-disabled", "true");
         return b;
       }
@@ -80,15 +92,11 @@
       } else if (st === "mine") {
         var text = qty(w) > 1 && c && c.my > 0 ? T("You reserved {0}", c.my) : T("Reserved by you");
         var mb = btn("outline", text, true, function () {
-          // "Unreserve?" inside the card, so a stray tap never frees it.
-          box.textContent = "";
-          box.classList.add("asking");
-          box.appendChild(document.createTextNode(T("Unreserve?")));
-          box.appendChild(btn("", T("Unreserve"), false, function () { o.set(false); }));
-          box.appendChild(btn("outline", T("Keep it"), false, function () {
-            box.classList.remove("asking"); box.textContent = ""; box.appendChild(mb);
-          }));
+          if (mb.classList.contains("asking")) { disarm(); o.set(false); return; }
+          if (armed && armed !== mb) armed.wlDisarm();
+          armed = mb; mb.classList.add("asking"); fill(mb, T("Unreserve?"), true, true);
         });
+        mb.wlDisarm = function () { mb.classList.remove("asking"); fill(mb, text, true, false); if (armed === mb) armed = null; };
         mb.disabled = !!o.busy;
         box.appendChild(mb);
       } else {

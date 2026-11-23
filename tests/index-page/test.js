@@ -169,9 +169,13 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   check("other visitor sees a greyed Reserved button", c1b.querySelector("button.act.taken").textContent === "Reserved" && !c1b.querySelector(".badge.status"));
   check("other visitor: reserved ones go below the free ones", [...d2.window.document.querySelectorAll(".card")].map(c => c.classList.contains("dim")).join() === "false,true,true,true" || [...d2.window.document.querySelectorAll(".card")].map(c => !!c.querySelector("button.act.taken")).indexOf(true) > [...d2.window.document.querySelectorAll(".card")].map(c => c.querySelector("button.act") && c.querySelector("button.act").textContent === "Reserve").lastIndexOf(true));
 
+  // One tap: "Unreserve?" with an open padlock, still reserved; a tap elsewhere puts it back; two taps unreserve.
   c1.querySelector("button.act").click();
-  check("Reserved by you asks first", /Unreserve\?/.test(c1.textContent) && !!store.reservations[1]);
-  [...c1.querySelectorAll("button.act")].find(b => b.textContent === "Unreserve").click();
+  check("Reserved by you asks first, with an open padlock", c1.querySelector("button.act").textContent === "Unreserve?" && !!c1.querySelector("button.act svg.lock.open") && !!store.reservations[1]);
+  d.window.document.body.dispatchEvent(new d.window.Event("pointerdown", { bubbles: true }));
+  check("a tap elsewhere puts it back", c1.querySelector("button.act").textContent === "Reserved by you" && !c1.querySelector("svg.lock.open"));
+  c1.querySelector("button.act").click();
+  c1.querySelector("button.act").click();
   await sleep(100);
   c1 = d.window.document.querySelectorAll(".card")[0];
   check("after Undo: Reserve again", c1.querySelector("button.act").textContent === "Reserve" && !store.reservations[1]);

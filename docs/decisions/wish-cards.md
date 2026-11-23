@@ -69,8 +69,9 @@ Moved here from `people.md` on 18 November 2026 (its size limit); newest at the 
 
 ## Reservations on the button, new wishes per list, list icons (owner, 23 November 2026, 2.284)
 - **The reservation is the button, no extra line** ("clicking reserve moves the button down… the cards get busy"):
-  Reserve → **"Reserved by you" with a lock** (a 2× wish: "You reserved 2"); tapping it asks **"Unreserve “…”?"**
-  (Unreserve / Keep it; a 2× wish opens "How many will you buy?" in the app). Someone else's: **the card is darkened
+  Reserve → **"Reserved by you" with a lock** (a 2× wish: "You reserved 2"); one tap turns the button into
+  **"Unreserve?" with an open padlock** (in the error colour), a second tap unreserves, a tap anywhere else puts it
+  back (owner, later the same day: no pop-up, it waits; `ReserveAsk`, `dismissReserveAsk` on the app's root). Someone else's: **the card is darkened
   and the button says "Reserved" with a lock**, greyed; tapping it still asks "Is it still being bought?". The line
   under the photo keeps only "Owned", "1 of 3 reserved" and "Over budget". One `ReserveButton` (`WishCardParts.kt`)
   in every view, on friends', group, gift exchange and Co-op lists; the web pages the same (`WLRes.button` in
@@ -80,9 +81,11 @@ Moved here from `people.md` on 18 November 2026 (its size limit); newest at the 
   ("Hide reserved" filter, a "Did you buy it?" nudge, chipping in together): build nothing from them.
 - **New wishes per list** ("clicking the friend with the dot doesn't show the wishes that are added"): a red badge with
   the number on each of a friend's wishlists; opening that list makes only its wishes seen; the new ones carry a
-  **royal purple diagonal "NEW" ribbon** in the card's top right corner until you leave the list (owner chose the
-  ribbon and the colour, the same in every theme). The friend's row keeps "3 new wishes" but **no red dot**.
+  **diagonal "NEW" ribbon** in the card's top right corner until you leave the list (owner chose the ribbon; first
+  royal purple, then **red like the count**: "the ticker and ribbon should be the same colour as they are related"). The friend's row keeps "3 new wishes" but **no red dot**.
   `FriendNews.kt`; the first time a friend is counted nothing is new (as before).
+- **"Your wishlist was viewed" stays gone** (owner asked again, 23 November 2026): removed from screen on 15 November;
+  the server's unused `wl_view` counter is kept only so very old apps don't break.
 - **One person / two people icons for the kind of wishlist in every list picker** (Save to, Move or copy, Which
   wishlist?, Add to my wishlist, Overview): `listKindIcon` in `FormParts.kt`, the same icons as the New wishlist chips.
 - Checks: `ReserveAndNewsTest`, `ReserveScreenshotTest`, web `index-page`, `e2e/t3.js`, group, exchange, together.

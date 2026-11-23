@@ -98,7 +98,8 @@ button.act svg.lock { width: 16px; height: 16px; vertical-align: -3px; margin-ri
 button.act.taken { color: var(--muted); border-color: var(--outline); opacity: .75; }
 button.act.taken[aria-disabled="true"] { cursor: default; }
 .resbox { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.resbox.asking { font-size: .9rem; }
+/* "Unreserve?" waiting for a second tap: the error colour, an open padlock. */
+button.act.outline.asking { color: var(--error); border-color: var(--error); }
 .card.compact .resbox { display: flex; width: 100%; }
 .card.compact .resbox > button.act { flex: 1; }
 .note { color: var(--muted); font-size: .8rem; text-align: center; padding: 28px 8px 0; }

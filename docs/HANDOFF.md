@@ -5,6 +5,10 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **Next build, owner's choice (23 November 2026, `prices.md` last section): sizes with their own price** (pick and
+  track the size, "from €…" + "Choose size" until picked), **two readings within one check**, a grey "Price from 3 days
+  ago" note. First ask the owner for the "Price is wrong?" file of the La Vie est Belle page if not sent yet.
+- **2.285 (23 November 2026).** "Unreserve?" with an open padlock on the button; red ribbon. Ask how the two taps feel.
 - **2.284 (23 November 2026), read first.** Reservations on the button, new wishes per list with the purple "NEW"
   ribbon, person icons in list pickers (`wish-cards.md`, last section). Ask how the ribbon and the darkened "Reserved"
   look in each theme, and whether the smaller "Reserved by you" on narrow cards reads well.
@@ -137,7 +141,8 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 Owner's screenshots: same icon for every list, a friend's red dot that led nowhere, a busy card after Reserve. Built:
 person icons in every list picker; a red count per friend list and a royal purple "NEW" ribbon (owner's pick); one
 Reserve button with a lock ("Unreserve?" first), others' darkened and below the free ones, app and all web pages.
-Screenshots caught "Reserved by" cut off on narrow cards (text now shrinks). Not checkable here: the phone.
+Screenshots caught "Reserved by" cut off on narrow cards (text now shrinks). 2.285: "Unreserve?" on the button, red ribbon;
+perfumes kept €79.95 (sizes, no "from" price): owner chose size tracking (next build). Not checkable here: the phone.
 
 ### 23 November 2026: a shorter Co-op form, friends picked at once (2.283)
 Owner: the Co-op form had too many options. "Gifts for someone?" and helper lines gone; an "Add friends" card invites

@@ -78,7 +78,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             WishTheme {
                 Box(
-                    Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
+                    // A tap anywhere puts a waiting "Unreserve?" back (owner, 23 November 2026; WishCardParts.kt).
+                    Modifier.fillMaxSize().dismissReserveAsk().background(MaterialTheme.colorScheme.background)
                         .windowInsetsPadding(WindowInsets.statusBars)
                 ) {
                     App(deep) { deep = null }
