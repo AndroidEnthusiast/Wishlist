@@ -18,7 +18,7 @@ import java.io.File
 @Config(sdk = [34])
 class DialogRulesTest {
     private val dir = File("src/main/java/com/wishlist/app")
-    private val wayOut = setOf("Cancel", "Close", "Not now", "Wait", "Back", "Keep it", "Stay", "No", "Keep going", "Keep editing", "Skip")
+    private val wayOut = setOf("Cancel", "Close", "Not now", "Wait", "Back", "Keep it", "No, keep it", "Stay", "No", "Keep going", "Keep editing", "Skip")
 
     /** Every dialog slot's code in the app: (file, slot name, its code). */
     private fun slots(): List<Triple<String, String, String>> = dir.listFiles()!!.filter { it.name.endsWith(".kt") }.flatMap { f ->

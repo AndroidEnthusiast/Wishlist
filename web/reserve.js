@@ -8,10 +8,50 @@
     var q = Math.floor(Number(w && w.qty));
     return q > 1 && q < 100 ? q : 1;
   }
-  // The "Unreserve?" waiting for a second tap; a tap anywhere else puts it back.
-  var armed = null;
-  function disarm() { if (armed) armed.wlDisarm(); }
-  document.addEventListener("pointerdown", function (e) { if (armed && !armed.contains(e.target)) disarm(); }, true);
+  // "Unreserve?" as a pop-up like the others (edit.css .wlt-box), with the padlock opening as it appears (owner,
+  // 23 November 2026; the same as UnreserveDialog in the app). Built with textContent only.
+  var NS = "http://www.w3.org/2000/svg";
+  var BODY = "M6.5,11h11a1.5,1.5 0 0,1 1.5,1.5v6a1.5,1.5 0 0,1 -1.5,1.5h-11A1.5,1.5 0 0,1 5,18.5v-6A1.5,1.5 0 0,1 6.5,11z";
+  function linePath(d, cls) {
+    var p = document.createElementNS(NS, "path");
+    p.setAttribute("d", d); p.setAttribute("fill", "none"); p.setAttribute("stroke", "currentColor");
+    p.setAttribute("stroke-width", "1.8"); p.setAttribute("stroke-linecap", "round"); p.setAttribute("stroke-linejoin", "round");
+    if (cls) p.setAttribute("class", cls);
+    return p;
+  }
+  function askUnreserve(w, yes) {
+    var back = document.createElement("div"); back.className = "wlt-back";
+    var box = document.createElement("div"); box.className = "wlt-box resdlg";
+    box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true");
+    var svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24"); svg.setAttribute("class", "unlock"); svg.setAttribute("aria-hidden", "true");
+    // The legs reach into the body (hidden there), so the left one stays in the lock when it opens.
+    var clip = document.createElementNS(NS, "clipPath"); clip.setAttribute("id", "wl-above-lock");
+    var cr = document.createElementNS(NS, "rect"); cr.setAttribute("x", "-10"); cr.setAttribute("y", "-10"); cr.setAttribute("width", "44"); cr.setAttribute("height", "21");
+    clip.appendChild(cr); svg.appendChild(clip);
+    var g = document.createElementNS(NS, "g"); g.setAttribute("clip-path", "url(#wl-above-lock)");
+    g.appendChild(linePath("M8.5,13.5V8a3.5,3.5 0 0,1 7,0v5.5", "shackle"));
+    svg.appendChild(g);
+    svg.appendChild(linePath(BODY)); svg.appendChild(linePath("M12,14.5v2"));
+    box.appendChild(svg);
+    var h = document.createElement("h2"); h.className = "wlt-h"; h.textContent = T("Unreserve?"); box.appendChild(h);
+    var p = document.createElement("p"); p.className = "wlt-p";
+    p.textContent = T("“{0}” becomes free again, so someone else can reserve it.", String(w.title || "").trim() || T("This gift"));
+    box.appendChild(p);
+    function close() { back.remove(); document.removeEventListener("keydown", onKey); }
+    function onKey(e) { if (e.key === "Escape") close(); }
+    var row = document.createElement("div"); row.className = "wlt-row";
+    var y = document.createElement("button"); y.type = "button"; y.className = "act"; y.textContent = T("Yes, unreserve");
+    y.addEventListener("click", function () { close(); yes(); });
+    var n = document.createElement("button"); n.type = "button"; n.className = "act plain"; n.textContent = T("No, keep it");
+    n.addEventListener("click", close);
+    row.appendChild(y); row.appendChild(n); box.appendChild(row);
+    back.appendChild(box);
+    back.addEventListener("click", function (e) { if (e.target === back) close(); });
+    document.addEventListener("keydown", onKey);
+    document.body.appendChild(back);
+    y.focus();
+  }
   window.WLRes = {
     qty: qty,
     // The rows of wl_get_reservations: res[id] = true (yours) / false (taken), cnt[id] = {my, n, full}.
@@ -52,8 +92,7 @@
     },
     // The one reservation button (owner, 23 November 2026), the same as ReserveButton in the app. o: busy,
     // set(true/false), ask() for someone else's reservation ("Is it still being bought?", together.js) or null.
-    // "Reserved by you": one tap turns it into "Unreserve?" with an open padlock, a second tap unreserves, a tap
-    // anywhere else puts it back. The padlocks are the app's own line icons. Built with textContent only.
+    // "Reserved by you": one tap opens the "Unreserve?" pop-up. The padlock is the app's own line icon.
     button: function (w, r, c, o) {
       var st = this.state(w, r, c);
       var box = document.createElement("span");
@@ -91,12 +130,7 @@
         box.appendChild(rb);
       } else if (st === "mine") {
         var text = qty(w) > 1 && c && c.my > 0 ? T("You reserved {0}", c.my) : T("Reserved by you");
-        var mb = btn("outline", text, true, function () {
-          if (mb.classList.contains("asking")) { disarm(); o.set(false); return; }
-          if (armed && armed !== mb) armed.wlDisarm();
-          armed = mb; mb.classList.add("asking"); fill(mb, T("Unreserve?"), true, true);
-        });
-        mb.wlDisarm = function () { mb.classList.remove("asking"); fill(mb, text, true, false); if (armed === mb) armed = null; };
+        var mb = btn("outline", text, true, function () { askUnreserve(w, function () { o.set(false); }); });
         mb.disabled = !!o.busy;
         box.appendChild(mb);
       } else {

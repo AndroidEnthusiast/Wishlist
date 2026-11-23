@@ -69,9 +69,13 @@ Moved here from `people.md` on 18 November 2026 (its size limit); newest at the 
 
 ## Reservations on the button, new wishes per list, list icons (owner, 23 November 2026, 2.284)
 - **The reservation is the button, no extra line** ("clicking reserve moves the button down… the cards get busy"):
-  Reserve → **"Reserved by you" with a lock** (a 2× wish: "You reserved 2"); one tap turns the button into
-  **"Unreserve?" with an open padlock** (in the error colour), a second tap unreserves, a tap anywhere else puts it
-  back (owner, later the same day: no pop-up, it waits; `ReserveAsk`, `dismissReserveAsk` on the app's root). Someone else's: **the card is darkened
+  Reserve → **"Reserved by you" with a lock** (a 2× wish: "You reserved 2"). Version 2.285 had a two-tap
+  "Unreserve?" on the button; **since 2.286 (owner: "I don't understand why I have to tap twice") one tap opens the
+  "Unreserve?" pop-up**, like every other pop-up: a padlock that opens as it appears (shackle lifts and swings open,
+  left leg stays in the lock; shown open at once with animations off), "“…” becomes free again, so someone else can
+  reserve it.", **"Yes, unreserve"** (filled) and **"No, keep it"** (the way out; owner asked yes/no, written as the
+  style guide's verbs). App `UnreserveDialog` / `OpeningPadlock`, web `askUnreserve` in `reserve.js`. The padlock and
+  the words on the button share one middle (owner: "not aligned"). Someone else's: **the card is darkened
   and the button says "Reserved" with a lock**, greyed; tapping it still asks "Is it still being bought?". The line
   under the photo keeps only "Owned", "1 of 3 reserved" and "Over budget". One `ReserveButton` (`WishCardParts.kt`)
   in every view, on friends', group, gift exchange and Co-op lists; the web pages the same (`WLRes.button` in

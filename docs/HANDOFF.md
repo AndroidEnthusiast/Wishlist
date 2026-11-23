@@ -8,7 +8,8 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 - **Next build, owner's choice (23 November 2026, `prices.md` last section): sizes with their own price** (pick and
   track the size, "from €…" + "Choose size" until picked), **two readings within one check**, a grey "Price from 3 days
   ago" note. First ask the owner for the "Price is wrong?" file of the La Vie est Belle page if not sent yet.
-- **2.285 (23 November 2026).** "Unreserve?" with an open padlock on the button; red ribbon. Ask how the two taps feel.
+- **2.285–2.286 (23 November 2026).** Red ribbon; one tap on "Reserved by you" opens the "Unreserve?" pop-up with an
+  opening padlock (2.286 replaced 2.285's two taps). Ask how the pop-up and its padlock feel.
 - **2.284 (23 November 2026), read first.** Reservations on the button, new wishes per list with the purple "NEW"
   ribbon, person icons in list pickers (`wish-cards.md`, last section). Ask how the ribbon and the darkened "Reserved"
   look in each theme, and whether the smaller "Reserved by you" on narrow cards reads well.

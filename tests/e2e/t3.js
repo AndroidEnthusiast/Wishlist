@@ -19,11 +19,11 @@ const settle = (t) => t.page.waitForFunction(() => window.__wl.pending() === 0);
     (await t.page.locator(".card[data-id='1002'] button.act svg.lock").count()) === 1);
   check("someone else's: a greyed Reserved button with a lock", (await t.page.locator(".card[data-id='1001'] button.act.taken svg.lock").count()) === 1);
   await t.page.locator(".card[data-id='1002']").getByRole("button", { name: "Reserved by you" }).click();
-  check("asks before unreserving, with an open padlock", !!t.fake.res[CODE][1002] && (await t.page.locator(".card[data-id='1002'] button.act.asking svg.lock.open").count()) === 1);
-  await t.page.locator("#view").click({ position: { x: 5, y: 5 } });
-  check("a tap elsewhere leaves it reserved", !!t.fake.res[CODE][1002] && /Reserved by you/.test(await t.page.locator(".card[data-id='1002']").innerText()));
+  check("asks before unreserving, in a pop-up with the padlock", !!t.fake.res[CODE][1002] && (await t.page.locator(".resdlg svg.unlock").count()) === 1);
+  await t.page.getByRole("button", { name: "No, keep it" }).click();
+  check("No, keep it leaves it reserved", !!t.fake.res[CODE][1002] && (await t.page.locator(".resdlg").count()) === 0);
   await t.page.locator(".card[data-id='1002']").getByRole("button", { name: "Reserved by you" }).click();
-  await t.page.locator(".card[data-id='1002']").getByRole("button", { name: "Unreserve?" }).click();
+  await t.page.getByRole("button", { name: "Yes, unreserve" }).click();
   await t.page.waitForFunction(() => !/Reserved/.test(document.querySelector(".card[data-id='1002']").innerText));
   check("undo reservation", !t.fake.res[CODE][1002]);
   // two givers at once: the second one is told

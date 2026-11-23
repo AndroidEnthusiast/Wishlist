@@ -169,13 +169,16 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   check("other visitor sees a greyed Reserved button", c1b.querySelector("button.act.taken").textContent === "Reserved" && !c1b.querySelector(".badge.status"));
   check("other visitor: reserved ones go below the free ones", [...d2.window.document.querySelectorAll(".card")].map(c => c.classList.contains("dim")).join() === "false,true,true,true" || [...d2.window.document.querySelectorAll(".card")].map(c => !!c.querySelector("button.act.taken")).indexOf(true) > [...d2.window.document.querySelectorAll(".card")].map(c => c.querySelector("button.act") && c.querySelector("button.act").textContent === "Reserve").lastIndexOf(true));
 
-  // One tap: "Unreserve?" with an open padlock, still reserved; a tap elsewhere puts it back; two taps unreserve.
+  // One tap: the "Unreserve?" pop-up with the opening padlock; "No, keep it" keeps it, "Yes, unreserve" frees it.
+  const pop = () => d.window.document.querySelector(".wlt-back .resdlg");
+  const popBtn = t => [...pop().querySelectorAll("button")].find(b => b.textContent === t);
   c1.querySelector("button.act").click();
-  check("Reserved by you asks first, with an open padlock", c1.querySelector("button.act").textContent === "Unreserve?" && !!c1.querySelector("button.act svg.lock.open") && !!store.reservations[1]);
-  d.window.document.body.dispatchEvent(new d.window.Event("pointerdown", { bubbles: true }));
-  check("a tap elsewhere puts it back", c1.querySelector("button.act").textContent === "Reserved by you" && !c1.querySelector("svg.lock.open"));
+  check("Reserved by you opens the Unreserve? pop-up, with the padlock", !!pop() && pop().querySelector("h2").textContent === "Unreserve?" && !!pop().querySelector("svg.unlock .shackle") && !!store.reservations[1]);
+  check("the pop-up names the gift as text, never as HTML", /“Headphones <b>X<\/b>” becomes free again/.test(pop().textContent) && !pop().querySelector("b"));
+  popBtn("No, keep it").click();
+  check("No, keep it: still reserved, pop-up gone", !pop() && !!store.reservations[1]);
   c1.querySelector("button.act").click();
-  c1.querySelector("button.act").click();
+  popBtn("Yes, unreserve").click();
   await sleep(100);
   c1 = d.window.document.querySelectorAll(".card")[0];
   check("after Undo: Reserve again", c1.querySelector("button.act").textContent === "Reserve" && !store.reservations[1]);

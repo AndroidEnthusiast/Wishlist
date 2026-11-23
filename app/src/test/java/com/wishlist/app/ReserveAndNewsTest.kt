@@ -66,9 +66,8 @@ class ReserveAndNewsTest {
             assertTrue("$f: no Unreserve button any more", !s.contains("Text(tr(\"Unreserve\")"))
         }
         val parts = src("WishCardParts.kt")
-        // "Unreserve?" with an open padlock on the button itself (owner, 23 November 2026), no pop-up.
-        assertTrue(parts.contains("tr(\"Unreserve?\")") && parts.contains("AppIcons.LockOpen") && !parts.contains("AlertDialog("))
-        assertTrue(src("MainActivity.kt").contains(".dismissReserveAsk()"))
+        // One tap opens the "Unreserve?" pop-up with the opening padlock (owner, 23 November 2026).
+        assertTrue(parts.contains("tr(\"Unreserve?\")") && parts.contains("OpeningPadlock(") && parts.contains("tr(\"Yes, unreserve\")") && parts.contains("tr(\"No, keep it\")"))
         // Someone else's darkens the card in every view, and sinks on a friend's list.
         assertTrue(src("Friend.kt").contains("dim = w.got || rs == \"taken\"") && src("Friend.kt").contains("reservedLast("))
         assertTrue(src("CompactCard.kt").contains("reserveButton(w, reserve) == \"taken\""))
