@@ -133,7 +133,9 @@ fun SwipeAway(key: Any, onGone: () -> Unit, trash: Boolean = false, content: @Co
 @Composable
 fun FitText(
     text: String, style: androidx.compose.ui.text.TextStyle, color: Color, modifier: Modifier = Modifier,
-    align: androidx.compose.ui.text.style.TextAlign = androidx.compose.ui.text.style.TextAlign.Center
+    align: androidx.compose.ui.text.style.TextAlign = androidx.compose.ui.text.style.TextAlign.Center,
+    // How small it may get (the reservation button goes to 50 %: "Reserved by you" on a narrow card with large text).
+    minScale: Float = 0.6f
 ) {
     // Measured once, in the space it gets, and drawn at once at the size that fits (the layout inspector, 20 November
     // 2026: the old way shrank in invisible steps, and an amount on Home stayed invisible when they didn't finish).
@@ -149,14 +151,14 @@ fun FitText(
         // fraction wider and ended in "…" ("Perso…") although it fitted.
         val room = maxW * 0.96f
         val s = if (full.size.width <= room || maxW == androidx.compose.ui.unit.Constraints.Infinity) 1f
-            else (room / full.size.width).coerceIn(0.6f, 1f)
+            else (room / full.size.width).coerceIn(minScale, 1f)
         return measurer.measure(
             text, style.copy(fontSize = style.fontSize * s, color = color, textAlign = align), maxLines = 1, softWrap = false,
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
             constraints = androidx.compose.ui.unit.Constraints(maxWidth = maxW), layoutDirection = dir
         )
     }
-    val policy = remember(text, style, color, align) {
+    val policy = remember(text, style, color, align, minScale) {
         object : androidx.compose.ui.layout.MeasurePolicy {
             override fun androidx.compose.ui.layout.MeasureScope.measure(
                 measurables: List<androidx.compose.ui.layout.Measurable>, constraints: androidx.compose.ui.unit.Constraints
@@ -169,7 +171,7 @@ fun FitText(
             override fun androidx.compose.ui.layout.IntrinsicMeasureScope.maxIntrinsicWidth(measurables: List<androidx.compose.ui.layout.IntrinsicMeasurable>, height: Int) =
                 measurer.measure(text, style, maxLines = 1, softWrap = false).size.width
             override fun androidx.compose.ui.layout.IntrinsicMeasureScope.minIntrinsicWidth(measurables: List<androidx.compose.ui.layout.IntrinsicMeasurable>, height: Int) =
-                (measurer.measure(text, style, maxLines = 1, softWrap = false).size.width * 0.6f).toInt()
+                (measurer.measure(text, style, maxLines = 1, softWrap = false).size.width * minScale).toInt()
             override fun androidx.compose.ui.layout.IntrinsicMeasureScope.maxIntrinsicHeight(measurables: List<androidx.compose.ui.layout.IntrinsicMeasurable>, width: Int) =
                 measurer.measure(text, style, maxLines = 1, softWrap = false).size.height
             override fun androidx.compose.ui.layout.IntrinsicMeasureScope.minIntrinsicHeight(measurables: List<androidx.compose.ui.layout.IntrinsicMeasurable>, width: Int) =

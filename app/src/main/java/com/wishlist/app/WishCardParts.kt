@@ -83,5 +83,6 @@ fun ReserveButton(
 @Composable
 private fun androidx.compose.foundation.layout.RowScope.FitWords(text: String) = FitText(
     text, androidx.compose.material3.LocalTextStyle.current, androidx.compose.material3.LocalContentColor.current,
-    Modifier.weight(1f, fill = false).align(androidx.compose.ui.Alignment.CenterVertically), androidx.compose.ui.text.style.TextAlign.Start
+    Modifier.weight(1f, fill = false).align(androidx.compose.ui.Alignment.CenterVertically), androidx.compose.ui.text.style.TextAlign.Start,
+    minScale = 0.5f
 )
