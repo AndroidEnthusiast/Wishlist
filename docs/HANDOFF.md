@@ -5,6 +5,8 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.282 (23 November 2026), read first.** The price tracker after bol.com's false "−20%" (`prices.md`): variants with
+  tracking bits, never "from"/lowest prices, rule 5 "same place on the page". Ask whether the pot shows €8.09 now.
 - **2.281 (22 November 2026).** New + menu lines (`home-and-kinds.md`, last section). The personal link preview
   is dropped (owner). Ask how the new + menu lines read on the phone.
 - **Ask first:** which numbers of the idea list (`ideas.md`, last section) the owner wants to plan; explain gladly.
@@ -126,6 +128,12 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 23 November 2026: the price tracker sharpened (2.282)
+Owner's bol.com pot showed "−20%" while its price rose. The owner's "Price is wrong?" file showed why: a family of 13
+sizes, a link with "?cid=…", no variant matched, and the family's cheapest "from" price (another product) was read
+twice. Fixed in the app and web together; never "from"/lowest prices; per-kilo prices skipped; rule 5 "same place on
+the page" (database step 2 → 3). Also: the daily server check failing = supabase-features.sql v2 not yet run.
+
 ### 22 November 2026: earning money, Search the shops, lines between rows, pickers as sheets (2.277–2.279)
 Owner asked how to earn money without ads, sponsored ideas or accounts: advice written down (affiliate links on what the
 user opens, later Plus on the Play Store), nothing decided. Built "Search the shops" after 8 questions: one search
@@ -138,9 +146,3 @@ almost invisible, some menus none): a thin line after the icon everywhere. 2.279
 2.270: big names in the title font; chat about a wish on co-op lists (owner runs `supabase-features.sql` v2). 2.271–2.272:
 Privacy in New wishlist, it opens; one page; form sheets close only by X / pull tab. 2.273: "Shared" → Co-op everywhere,
 Home's tabs per kind, chosen wishes can be taken out (a flaw Claude missed). Not checkable here: the real phone.
-
-### 20 November 2026: card labels, "I have it", the layout inspector (2.268)
-Owner's screenshots (labels overlapping, cut, prices broken) → labels redesigned (`CardLabels.kt`, owner chose the
-reservation under the photo), "I have it" straight to Received gifts, and a layout inspector (`LayoutGuard.kt`) on every
-screen picture that blocks publishing on GitHub (owner). It found 6 more problems, all fixed; on the old code it flags
-exactly the owner's screenshots. Not checkable here: how it feels on a phone.

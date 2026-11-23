@@ -172,22 +172,61 @@
     if (v && typeof v === "object") return [v].concat(v["@graph"] ? ldNodes(v["@graph"]).filter(function (x) { return x !== v; }) : []);
     return [];
   }
+  // Only a price that is certainly this product's (owner, 23 November 2026, after bol.com's "-20%" that was another
+  // product): offers with different prices, or an AggregateOffer whose lowest and highest price differ, give none.
+  // Same rules as ldPrice in FetchProduct.kt.
   function ldPrice(offers) {
     if (Array.isArray(offers)) {
-      for (var i = 0; i < offers.length; i++) { var r = ldPrice(offers[i]); if (r) return r; }
-      return null;
+      var all = offers.map(ldPrice).filter(function (x) { return x; });
+      if (!all.length) return null;
+      return all.every(function (x) { return Math.abs(x.price - all[0].price) <= 0.005; }) ? all[0] : null;
     }
     if (!offers || typeof offers !== "object") return null;
     var cur = String(offers.priceCurrency || "");
-    var keys = ["price", "lowPrice"];
-    for (var k = 0; k < keys.length; k++) {
-      var v = offers[keys[k]];
+    function num(k) {
+      var v = offers[k];
       var n = v === undefined || v === null || v === "" ? null : toNum(String(v));
-      if (n !== null && n > 0) return { price: n, currency: cur };
+      return n !== null && n > 0 ? n : null;
+    }
+    var p = num("price");
+    if (p !== null) return { price: p, currency: cur };
+    var low = num("lowPrice");
+    if (low !== null) {
+      var high = num("highPrice");
+      var count = parseInt(String(offers.offerCount === undefined ? "" : offers.offerCount), 10);
+      // Only one seller, or every seller asks the same: that is the price. Otherwise it is only "from".
+      var one = (high === null && (isNaN(count) || count <= 1)) || (high !== null && Math.abs(high - low) <= 0.005);
+      return one ? { price: low, currency: cur } : null;
     }
     var ps = ldPrice(offers.priceSpecification);
     if (ps) return { price: ps.price, currency: ps.currency || cur };
     return ldPrice(offers.offers);
+  }
+  // Tracking bits a shop or a share adds to a link; they never say which size or colour.
+  var TRACKING = /^(cid|utm_.*|gclid|fbclid|msclkid|ref|ref_|tag|srsltid|_ga|mc_.*|bltgh|promo.*|src|source|campaign)$/i;
+  function linkParts(u) {
+    var noHash = String(u || "").split("#")[0];
+    var path = noHash.split("?")[0].replace(/^[a-zA-Z]+:\/\/[^/]*/, "").replace(/\/+$/, "");
+    var qs = noHash.indexOf("?") >= 0 ? noHash.slice(noHash.indexOf("?") + 1) : "";
+    var q = qs.split("&").filter(function (x) { return x.trim() && !TRACKING.test(x.split("=")[0]); });
+    return { path: path, q: q };
+  }
+  // Which variant of a ProductGroup a page is (owner, 23 November 2026): same address, every detail of the variant's
+  // link also in the page's, tracking bits ignored; two equally good: none. Same rules as variantOf in FetchProduct.kt.
+  function variantOf(variants, url) {
+    var me = linkParts(url), fits = [];
+    variants.forEach(function (v) {
+      var u = String(v.url || "");
+      if (!u) return;
+      var vp = linkParts(u);
+      var same = vp.path === me.path || (vp.path && endsWith(me.path, vp.path)) || (me.path && endsWith(vp.path, me.path));
+      var all = vp.q.every(function (x) { return me.q.indexOf(x) >= 0; });
+      if (same && all) fits.push({ v: v, n: vp.q.length });
+    });
+    if (!fits.length) return null;
+    var best = Math.max.apply(null, fits.map(function (f) { return f.n; }));
+    var top = fits.filter(function (f) { return f.n === best; });
+    return top.length === 1 ? top[0].v : null;
   }
   function ldImage(v) {
     if (typeof v === "string") return v;
@@ -205,14 +244,12 @@
       var price = ldPrice(p.offers);
       var variants = Array.isArray(p.hasVariant) ? p.hasVariant.filter(function (x) { return x && typeof x === "object"; }) : null;
       if (variants) {
-        var path = String(url || "").replace(/^[a-z]+:\/\/[^/]*\//i, "");
-        var here = variants.filter(function (x) {
-          var u = String(x.url || "");
-          return u && (url === u || endsWith(String(url || ""), u) || endsWith(u, path));
-        })[0];
-        var hp = here ? ldPrice(here.offers) : null;
-        if (hp) price = hp;
-        else if (!price) for (var j = 0; j < variants.length && !price; j++) price = ldPrice(variants[j].offers);
+        // This page's own variant; else only a price every variant shares (never the family's "from" price).
+        var here = variantOf(variants, url);
+        var prices = variants.map(function (x) { return ldPrice(x.offers); }).filter(function (x) { return x; });
+        if (here) price = ldPrice(here.offers);
+        else if (prices.length && prices.length === variants.length && prices.every(function (x) { return Math.abs(x.price - prices[0].price) <= 0.005; })) price = prices[0];
+        else price = null;
       }
       var image = ldImage(p.image) || (variants && variants[0] ? ldImage(variants[0].image) : "");
       return { name: String(p.name || "").trim(), image: image, price: price ? price.price : null, currency: price ? price.currency : "" };
@@ -221,8 +258,9 @@
   }
 
   var SHOWN_PRICE = /([€$£])\s?([0-9][0-9.,]*)|([0-9][0-9.,]*)\s?(?:€|EUR|£|GBP|USD)/;
-  var OLD_PRICE = /old|was|strike|compare|before|previous|original|crossed|rrp|msrp|list-price|from-price/;
-  var NOT_A_PRICE = /verzend|bezorg|shipping|delivery|versand|livraison|vanaf|from|per maand|\/mnd|p\/m/;
+  var OLD_PRICE = /old|was|strike|compare|before|previous|original|crossed|rrp|msrp|list-price|from-price|unit-price|unitprice|price-per|priceper|base-price|baseprice|grundpreis/;
+  // Since 23 November 2026 also prices per unit ("€ 2,50 per kg"): never the product's own price.
+  var NOT_A_PRICE = /verzend|bezorg|shipping|delivery|versand|livraison|vanaf|from|per maand|\/mnd|p\/m|per kg|\/kg|per liter|per litre|\/l\b|\/ltr|per stuk|\/st\b|p\.st|per 100|\/100/;
   // Another product on the page (owner, 8 November 2026: Zalando's "Gesponsord" tile above the product gave a wish
   // its €159,95): an element inside a sponsored, "you might also like" or related block, or inside a link to another
   // page. Its price is never this product's price. Same rules as foreign() in Fetch.kt.
@@ -313,6 +351,8 @@
     // suggestions, so none is read. The name and picture are still read, as before. Same as Fetch.kt.
     var gone = status >= 400;
     var price = gone ? null : toNum(m("product:price:amount", "og:price:amount", "price"));
+    // Where the price was read (owner, 23 November 2026; same names as Meta.src in Fetch.kt).
+    var src = price !== null ? "tags" : "";
     var cur = m("product:price:currency", "og:price:currency", "priceCurrency");
     // Did the page name the currency itself (its product data, or a symbol next to the price)? See Meta.currencySure.
     var sure = !!cur;
@@ -321,18 +361,19 @@
         var pe = d.querySelector(AMAZON_PRICE[i]);
         var t = pe ? pe.textContent : "";
         var n = toNum(t);
-        if (n !== null && n > 0) { price = n; cur = currencyOf(t, host); sure = namesCurrency(t); break; }
+        if (n !== null && n > 0) { price = n; cur = currencyOf(t, host); sure = namesCurrency(t); src = "amazon"; break; }
       }
     }
     // The product's own data (2.145): its own price, not the first "price" anywhere in the page.
     if (price === null && ld && ld.price !== null && !gone) {
       price = ld.price;
+      src = "data";
       if (!cur) { cur = ld.currency; sure = !!cur; }
     }
     if (price === null && !gone) {
       var ips = d.querySelectorAll("[itemprop=price]");
       for (var q = 0; q < ips.length && price === null; q++) {
-        if (!foreign(ips[q], base)) price = toNum(ips[q].getAttribute("content") || ips[q].textContent);
+        if (!foreign(ips[q], base)) { price = toNum(ips[q].getAttribute("content") || ips[q].textContent); if (price !== null) src = "micro"; }
       }
     }
     if (price === null && !ld && !gone) {
@@ -341,6 +382,7 @@
         function (s) { return s.textContent; }).join(" ");
       var pm = /"price"\s*:\s*"?([0-9][0-9.,]*)/.exec(raw);
       price = pm ? toNum(pm[1]) : null;
+      if (price !== null) src = "rawdata";
       if (price !== null && !cur) {
         var cm = /"priceCurrency"\s*:\s*"([A-Z]{3})"/.exec(raw);
         cur = cm ? cm[1] : "";
@@ -350,7 +392,7 @@
     if (price === null && !gone) {
       // The price the page shows (2.145; the owner chose this last try knowing it can now and then pick a wrong one).
       var sp = shownPrice(d, host, base);
-      if (sp) { price = sp.price; if (!cur) { cur = sp.currency; sure = true; } }
+      if (sp) { price = sp.price; src = "shown"; if (!cur) { cur = sp.currency; sure = true; } }
     }
     if (price === null && d.body && !gone) {
       // Last resort for sites that only print the price as text.
@@ -360,12 +402,13 @@
       var hit = PRICE_WORD.exec(text);
       if (hit) {
         price = toNum(hit[3]);
+        if (price !== null) src = "text";
         if (price !== null) { cur = currencyOf(hit[2], host); sure = true; }
       } else if (String(host).indexOf("funda.") >= 0) {
         var e = EURO_THOUSANDS.exec(text);
         if (e) {
           price = toNum(e[1]);
-          if (price !== null) { cur = "EUR"; sure = true; }
+          if (price !== null) { cur = "EUR"; sure = true; src = "text"; }
         }
       }
     }
@@ -378,7 +421,7 @@
       title: cleanTitle(title, host).slice(0, 120),
       desc: m("og:description", "twitter:description", "description").slice(0, 200),
       image: secureImage(image), price: price, currency: cur || currencyOf("", host), blocked: false, product: product,
-      currencySure: sure && price !== null
+      currencySure: sure && price !== null, src: price !== null ? src : ""
     };
   }
 

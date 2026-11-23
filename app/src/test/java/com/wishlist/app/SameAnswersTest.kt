@@ -41,6 +41,8 @@ class SameAnswersTest {
             assertEquals("$name: price", if (pg.isNull("price")) null else pg.getDouble("price"), got?.price)
             if (pg.has("currency")) assertEquals("$name: currency", pg.getString("currency"), got?.currency)
             if (pg.has("sure")) assertEquals("$name: sure", pg.getBoolean("sure"), got?.currencySure)
+            // Where on the page the price was read (owner, 23 November 2026: "same place on the page").
+            if (pg.has("src")) assertEquals("$name: src", pg.getString("src"), got?.src)
             if (pg.has("product")) assertEquals("$name: product", pg.getBoolean("product"), got?.product)
             if (pg.has("image")) assertEquals("$name: image", pg.getString("image"), got?.image)
         }

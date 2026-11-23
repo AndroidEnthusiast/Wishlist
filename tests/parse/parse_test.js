@@ -134,7 +134,9 @@ const group = { "@type": "ProductGroup", name: "Jacket", hasVariant: [
   { "@type": "Product", url: "https://shop.example/jacket?size=m", offers: { price: "110.00" } }] };
 const gd = new dom.window.DOMParser().parseFromString(ldPage([group]), "text/html");
 check("ld: ProductGroup takes the variant of this page", P.parsePage(gd, "shop.example", 200, "https://shop.example/jacket?size=m").price === 110);
-check("ld: ProductGroup without a match takes the first variant", P.parsePage(gd, "shop.example", 200, "https://shop.example/jacket").price === 100);
+// Owner, 23 November 2026 (bol.com read another size's price): no match and different prices: no price, never the first.
+check("ld: ProductGroup without a match and different prices gives no price", P.parsePage(gd, "shop.example", 200, "https://shop.example/jacket").price === null);
+check("ld: ProductGroup ignores tracking bits in the link", P.parsePage(gd, "shop.example", 200, "https://shop.example/jacket?size=m&cid=123").price === 110);
 r = meta(ldPage([{ "@type": "Product", name: "Sold out thing" }]), "shop.example");
 check("a product without a price still counts", r.product === true && r.price === null);
 r = meta('<html><head><title>Bag</title><meta property="og:type" content="product"></head><body>Out of stock</body></html>', "shop.example");

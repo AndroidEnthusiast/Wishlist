@@ -63,6 +63,7 @@ internal fun parsePage(d: Document, host: String, status: Int): Meta? {
     // suggestions, so none is read. The name and picture are still read, as before.
     val gone = status >= 400
     var price = if (gone) null else m("product:price:amount", "og:price:amount", "price").toNum()
+    var src = if (price != null) "tags" else ""
     var cur = m("product:price:currency", "og:price:currency", "priceCurrency")
     // Did the page name the currency itself (see Meta.currencySure)?
     var sure = cur.isNotEmpty()
@@ -70,28 +71,31 @@ internal fun parsePage(d: Document, host: String, status: Int): Meta? {
         for (sel in AMAZON_PRICE) {
             val t = d.selectFirst(sel)?.text().orEmpty()
             val n = t.toNum()
-            if (n != null && n > 0) { price = n; cur = currencyOf(t, host); sure = namesCurrency(t); break }
+            if (n != null && n > 0) { price = n; cur = currencyOf(t, host); sure = namesCurrency(t); src = "amazon"; break }
         }
     }
     // The product's own data (2.145): its own price, not the first "price" anywhere in the page (that could be a
     // product under "you may also like").
     if (price == null && ld?.price != null && !gone) {
         price = ld.price
+        src = "data"
         if (cur.isEmpty()) { cur = ld.currency; sure = cur.isNotEmpty() }
     }
     if (price == null && !gone) {
         price = d.select("[itemprop=price]").firstOrNull { !foreign(it, d.location()) }?.let { it.attr("content").ifEmpty { it.text() } }?.toNum()
+        if (price != null) src = "micro"
     }
     if (price == null && ld == null && !gone) {
         // Product data that isn't valid JSON: the first "price" in it, as before 2.145.
         val raw = d.select("script[type=application/ld+json]").joinToString(" ") { it.data() }
         price = Regex("\"price\"\\s*:\\s*\"?([0-9][0-9.,]*)").find(raw)?.groupValues?.get(1)?.toNum()
+        if (price != null) src = "rawdata"
         if (price != null && cur.isEmpty()) { cur = Regex("\"priceCurrency\"\\s*:\\s*\"([A-Z]{3})\"").find(raw)?.groupValues?.get(1).orEmpty(); sure = cur.isNotEmpty() }
     }
     if (price == null && !gone) {
         // The price the page shows (2.145; the owner chose this last try knowing it can now and then pick a wrong one).
         // It always stands next to a currency symbol or code.
-        shownPrice(d, host)?.let { (n, c) -> price = n; if (cur.isEmpty()) { cur = c; sure = true } }
+        shownPrice(d, host)?.let { (n, c) -> price = n; src = "shown"; if (cur.isEmpty()) { cur = c; sure = true } }
     }
     if (price == null && !gone) {
         // Last resort for sites that only print the price as text.
@@ -99,12 +103,12 @@ internal fun parsePage(d: Document, host: String, status: Int): Meta? {
         val hit = PRICE_WORD.find(text)
         if (hit != null) {
             price = hit.groupValues[3].toNum()
-            if (price != null) { cur = currencyOf(hit.groupValues[2], host); sure = true }
+            if (price != null) { cur = currencyOf(hit.groupValues[2], host); sure = true; src = "text" }
         } else if (host.contains("funda.")) {
             val e = EURO_THOUSANDS.find(text)
             if (e != null) {
                 price = e.groupValues[1].toNum()
-                if (price != null) { cur = "EUR"; sure = true }
+                if (price != null) { cur = "EUR"; sure = true; src = "text" }
             }
         }
     }
@@ -116,6 +120,7 @@ internal fun parsePage(d: Document, host: String, status: Int): Meta? {
     else Meta(
         cleanTitle(title, host).take(120),
         m("og:description", "twitter:description", "description").take(200),
-        secureImage(image), price, cur.ifEmpty { currencyOf("", host) }, product = product, currencySure = sure && price != null
+        secureImage(image), price, cur.ifEmpty { currencyOf("", host) }, product = product, currencySure = sure && price != null,
+        src = if (price != null) src else ""
     )
 }

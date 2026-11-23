@@ -34,6 +34,8 @@ for (const pg of cases.pages) {
   if (got && pg.image !== undefined) check("page: " + pg.name + " image = " + pg.image + " (got " + got.image + ")", got.image === pg.image);
   if (got && pg.currency !== undefined) check("page: " + pg.name + " currency = " + pg.currency + " (got " + got.currency + ")", got.currency === pg.currency);
   if (got && pg.sure !== undefined) check("page: " + pg.name + " sure = " + pg.sure + " (got " + got.currencySure + ")", got.currencySure === pg.sure);
+  // Where on the page the price was read (owner, 23 November 2026: "same place on the page").
+  if (got && pg.src !== undefined) check("page: " + pg.name + " src = " + pg.src + " (got " + got.src + ")", got.src === pg.src);
   if (got && pg.product !== undefined) check("page: " + pg.name + " product = " + pg.product + " (got " + got.product + ")", got.product === pg.product);
 }
 console.log((fails ? fails + " of " : "all ") + n + " shared checks " + (fails ? "FAILED" : "passed"));

@@ -19,6 +19,7 @@ decided something. Every decision was moved word for word, nothing was dropped.
 - `docs/decisions/screenshots.md`: Screenshot to wish, a name for every wish, several screenshots at once (20 November 2026).
 - `docs/decisions/ideas.md`: Open ideas (not decided) (Open ideas).
 - `docs/decisions/shop-search.md`: Search the shops (2.277) and earning money (discussed, not decided).
+- `docs/decisions/prices.md`: the price tracker's accuracy (the bol.com false drop, "same place on the page", 2.282).
 
 ## Notes tidy-up (owner, 12 November 2026)
 - **Notes stay small, automatically:** `CLAUDE.md` holds only the rules for every session (under 150 lines and

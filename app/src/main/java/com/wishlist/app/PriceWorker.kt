@@ -98,6 +98,10 @@ object PriceCheck {
                         if (w.price == null) {
                             Targets.check(c, "m:$listId", w.copy(price = np))
                             History.record(c, id, np)
+                        } else if (j.row.src.isNotEmpty() && st != null && st.src.isEmpty() && st.read != null) {
+                            // A quiet correction of notes from before "same place on the page" (owner, 23 November
+                            // 2026): the history ends at the shop's real price, not at the wrong reading.
+                            History.record(c, id, np)
                         }
                     }
                     PriceWatch.Verdict.CHANGED -> {

@@ -905,3 +905,18 @@ almost invisible, some menus none): a thin line after the icon everywhere. Not c
 ### Earlier wording of the 2.281 "Next session" note (22 November 2026, before the owner dropped the preview)
 - **2.281 (22 November 2026).** New + menu lines (`home-and-kinds.md`, last section). Open: the personal link preview
   can't come from Supabase (no web pages on its address): ask the owner which way (own domain later, or a Worker).
+
+### TODO item done 23 November 2026 (built in 2.282), word for word
+- **Price tracker: a false "−20%" on bol.com (owner, 23 November 2026, Elho Vibes Fold Rond Mini 11: page shows €8.09,
+  the app read €6.01 twice, "drop" from €7.50).** Likely cause: the product data lists several sellers and the reading
+  takes the first or lowest one. Waiting for the owner's "Price is wrong?" file. Then build what the owner chose:
+  **same place on the page** (remember where the price was read; a reading from another place never alerts, it's checked
+  quietly) and **never the lowest seller** (several sellers or a "from" price: the main offer counts); owner: "learn from
+  it and upgrade the price tracker". Rules 2 and 8: `Fetch*.kt` + `web/parse.js` together, a `PriceWatchTest` case,
+  the page in `tests/shared/same-answers.json`; a new database column needs a step in `WishlistDb.MIGRATIONS` (Rule 9).
+
+### 20 November 2026: card labels, "I have it", the layout inspector (2.268)
+Owner's screenshots (labels overlapping, cut, prices broken) → labels redesigned (`CardLabels.kt`, owner chose the
+reservation under the photo), "I have it" straight to Received gifts, and a layout inspector (`LayoutGuard.kt`) on every
+screen picture that blocks publishing on GitHub (owner). It found 6 more problems, all fixed; on the old code it flags
+exactly the owner's screenshots. Not checkable here: how it feels on a phone.

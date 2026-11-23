@@ -23,7 +23,12 @@ data class Meta(
     val product: Boolean = false,
     // The page itself named the currency (its product data, or a symbol next to the price), so [currency] isn't a
     // guess from the web address or the phone's country (2.178): a price check never compares across currencies.
-    val currencySure: Boolean = false
+    val currencySure: Boolean = false,
+    // Where on the page the price was read (owner, 23 November 2026: "same place on the page"): "tags" (the page's
+    // price tags), "amazon", "data" (the shop's product data), "micro" (product microdata), "rawdata" (product data
+    // that isn't valid), "shown" (an element that shows a price), "text" (the price in words); "" without a price.
+    // A price check only believes a change read from the same place as before (PriceWatch).
+    val src: String = ""
 )
 
 private const val UA =

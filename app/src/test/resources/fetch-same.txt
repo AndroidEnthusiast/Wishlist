@@ -1,107 +1,135 @@
 ## the saved pages
 page 'price in the page's own tags, with its currency' https://shop.example/p/1 200
-  meta=Meta(title=Teapot, desc=, image=, price=34.95, currency=EUR, blocked=false, product=true, currencySure=true)
+  meta=Meta(title=Teapot, desc=, image=, price=34.95, currency=EUR, blocked=false, product=true, currencySure=true, src=tags)
   product=null shown=null
   foreign=0
 page 'product data with its currency, a related product is skipped' https://www.rituals.com/p/1 200
-  meta=Meta(title=Gift set, desc=, image=, price=39.9, currency=EUR, blocked=false, product=true, currencySure=true)
+  meta=Meta(title=Gift set, desc=, image=, price=39.9, currency=EUR, blocked=false, product=true, currencySure=true, src=data)
   product=LdProduct(name=Gift set, image=, price=39.9, currency=EUR) shown=null
   foreign=0
 page 'product data without a currency: the currency is a guess' https://shop.nl/p/1 200
-  meta=Meta(title=Mug, desc=, image=, price=12.5, currency=EUR, blocked=false, product=true, currencySure=false)
+  meta=Meta(title=Mug, desc=, image=, price=12.5, currency=EUR, blocked=false, product=true, currencySure=false, src=data)
   product=LdProduct(name=Mug, image=, price=12.5, currency=) shown=null
   foreign=0
 page 'a 'not found' page: the suggestions' prices are not this product's' https://shop.example/p/1 404
-  meta=Meta(title=Page not found, desc=, image=, price=null, currency=USD, blocked=false, product=false, currencySure=false)
+  meta=Meta(title=Page not found, desc=, image=, price=null, currency=USD, blocked=false, product=false, currencySure=false, src=)
   product=null shown=(19.99, EUR)
   foreign=0
 page 'a product that is gone (410) with product data left on the page' https://shop.example/p/1 410
-  meta=Meta(title=No longer available, desc=, image=, price=null, currency=USD, blocked=false, product=true, currencySure=false)
+  meta=Meta(title=No longer available, desc=, image=, price=null, currency=USD, blocked=false, product=true, currencySure=false, src=)
   product=LdProduct(name=Old, image=, price=59.0, currency=EUR) shown=null
   foreign=0
 page 'the price shown on the page, next to its symbol' https://shop.com/p/1 200
-  meta=Meta(title=Lamp, desc=, image=, price=39.9, currency=EUR, blocked=false, product=true, currencySure=true)
+  meta=Meta(title=Lamp, desc=, image=, price=39.9, currency=EUR, blocked=false, product=true, currencySure=true, src=shown)
   product=null shown=(39.9, EUR)
   foreign=0
 page 'an old (crossed-out) price is never the price' https://shop.com/p/1 200
-  meta=Meta(title=Lamp, desc=, image=, price=39.9, currency=EUR, blocked=false, product=true, currencySure=true)
+  meta=Meta(title=Lamp, desc=, image=, price=39.9, currency=EUR, blocked=false, product=true, currencySure=true, src=shown)
   product=null shown=(39.9, EUR)
   foreign=0
 page 'a sponsored tile above the product is skipped' https://www.zalando.nl/p/1 200
-  meta=Meta(title=Jacket, desc=, image=, price=89.95, currency=EUR, blocked=false, product=true, currencySure=true)
+  meta=Meta(title=Jacket, desc=, image=, price=89.95, currency=EUR, blocked=false, product=true, currencySure=true, src=shown)
   product=null shown=(89.95, EUR)
   foreign=1
 page 'a price inside a link to another product is skipped' https://shop.example/p/1 200
-  meta=Meta(title=Jacket, desc=, image=, price=20.0, currency=EUR, blocked=false, product=true, currencySure=true)
+  meta=Meta(title=Jacket, desc=, image=, price=20.0, currency=EUR, blocked=false, product=true, currencySure=true, src=shown)
   product=null shown=(20.0, EUR)
   foreign=1
 page 'Amazon: the price to pay, with its symbol' https://www.amazon.de/dp/B0ABCDEFGH 200
-  meta=Meta(title=Gadget, desc=, image=, price=1299.0, currency=EUR, blocked=false, product=true, currencySure=true)
+  meta=Meta(title=Gadget, desc=, image=, price=1299.0, currency=EUR, blocked=false, product=true, currencySure=true, src=amazon)
   product=null shown=(1499.0, EUR)
   foreign=0
 page 'sizes and colours: the variant of this page' https://shop.example/jacket?size=m 200
-  meta=Meta(title=Jacket, desc=, image=, price=110.0, currency=EUR, blocked=false, product=true, currencySure=true)
+  meta=Meta(title=Jacket, desc=, image=, price=110.0, currency=EUR, blocked=false, product=true, currencySure=true, src=data)
   product=LdProduct(name=Jacket, image=, price=110.0, currency=EUR) shown=null
   foreign=0
-page 'several sellers: the lowest price (AggregateOffer)' https://shop.co.uk/p/1 200
-  meta=Meta(title=Book, desc=, image=, price=12.5, currency=GBP, blocked=false, product=true, currencySure=true)
-  product=LdProduct(name=Book, image=, price=12.5, currency=GBP) shown=null
+page 'several sellers with different prices: no price, never the lowest (owner, 23 November 2026)' https://shop.co.uk/p/1 200
+  meta=Meta(title=Book, desc=, image=, price=null, currency=GBP, blocked=false, product=true, currencySure=false, src=)
+  product=LdProduct(name=Book, image=, price=null, currency=) shown=null
   foreign=0
 page 'a price in words with its symbol' https://shop.example/p/1 200
-  meta=Meta(title=Mug, desc=, image=, price=19.99, currency=USD, blocked=false, product=true, currencySure=true)
+  meta=Meta(title=Mug, desc=, image=, price=19.99, currency=USD, blocked=false, product=true, currencySure=true, src=text)
   product=null shown=null
   foreign=0
 page 'a page without any price' https://shop.example/p/1 200
-  meta=Meta(title=Mug, desc=, image=, price=null, currency=USD, blocked=false, product=false, currencySure=false)
+  meta=Meta(title=Mug, desc=, image=, price=null, currency=USD, blocked=false, product=false, currencySure=false, src=)
   product=null shown=null
   foreign=0
 page 'Shopify picture as http:// (Baracuta, 16 November 2026): the https one is used' https://www.baracuta.com/products/g9 200
-  meta=Meta(title=Mackinaw Wool G9, desc=, image=https://www.baracuta.com/cdn/shop/files/g9.jpg?v=1, price=470.0, currency=EUR, blocked=false, product=true, currencySure=true)
+  meta=Meta(title=Mackinaw Wool G9, desc=, image=https://www.baracuta.com/cdn/shop/files/g9.jpg?v=1, price=470.0, currency=EUR, blocked=false, product=true, currencySure=true, src=tags)
   product=null shown=null
   foreign=0
 page 'only an http:// picture: upgraded to https://' https://shop.example/lamp 200
-  meta=Meta(title=Lamp, desc=, image=https://cdn.shop.example/lamp.jpg, price=40.0, currency=EUR, blocked=false, product=true, currencySure=true)
+  meta=Meta(title=Lamp, desc=, image=https://cdn.shop.example/lamp.jpg, price=40.0, currency=EUR, blocked=false, product=true, currencySure=true, src=tags)
   product=null shown=null
+  foreign=0
+page 'bol.com, 23 November 2026: a family of 13 sizes and colours, the link ends in ?cid=…: this pot's own €8.09, not the family's cheapest €6.01 (another product)' https://www.bol.com/nl/nl/p/elho-vibes-fold-rond-mini-11-bloempot-voor-binnen-o-11-1-x-h-10-5-cm-groen-sorbet-groen/9300000113627674/?cid=1795290617564-8065686376035 200
+  meta=Meta(title=Elho Vibes Fold Rond Mini 11 - Bloempot voor Binnen, desc=, image=https://media.s-bol.com/wWAy94QWrgYz/Qng7y89/1128x1200.jpg, price=8.09, currency=EUR, blocked=false, product=true, currencySure=true, src=data)
+  product=LdProduct(name=Elho Vibes Fold Rond Mini - Bloempot voor Binnen - 100% Gerecycled Plastic - Ø H, image=https://media.s-bol.com/wWAy94QWrgYz/Qng7y89/1128x1200.jpg, price=8.09, currency=EUR) shown=null
+  foreign=0
+page 'one seller in an AggregateOffer (lowest = highest): that is the price' https://shop.co.uk/p/1 200
+  meta=Meta(title=Book, desc=, image=, price=12.5, currency=GBP, blocked=false, product=true, currencySure=true, src=data)
+  product=LdProduct(name=Book, image=, price=12.5, currency=GBP) shown=null
+  foreign=0
+page 'sizes and colours with a tracking bit in the link (?size=m&utm_source=x): still size m' https://shop.example/jacket?size=m&utm_source=newsletter 200
+  meta=Meta(title=Jacket, desc=, image=, price=110.0, currency=EUR, blocked=false, product=true, currencySure=true, src=data)
+  product=LdProduct(name=Jacket, image=, price=110.0, currency=EUR) shown=null
+  foreign=0
+page 'sizes and colours, the link names none of them and their prices differ: no price, never the first or cheapest' https://shop.example/jacket 200
+  meta=Meta(title=Jacket, desc=, image=, price=null, currency=USD, blocked=false, product=true, currencySure=false, src=)
+  product=LdProduct(name=Jacket, image=, price=null, currency=) shown=null
+  foreign=0
+page 'sizes and colours that all cost the same: that price, whichever the link' https://shop.example/mug 200
+  meta=Meta(title=Mug, desc=, image=, price=15.0, currency=EUR, blocked=false, product=true, currencySure=true, src=data)
+  product=LdProduct(name=Mug, image=, price=15.0, currency=EUR) shown=null
+  foreign=0
+page 'a price per kilo next to the price: the product's own price' https://shop.nl/p/1 200
+  meta=Meta(title=Coffee beans, desc=, image=, price=9.99, currency=EUR, blocked=false, product=true, currencySure=true, src=shown)
+  product=null shown=(9.99, EUR)
+  foreign=0
+page 'the price shown, with 'per kg' in its own words first: skipped' https://shop.nl/p/1 200
+  meta=Meta(title=Coffee beans, desc=, image=, price=9.99, currency=EUR, blocked=false, product=true, currencySure=true, src=shown)
+  product=null shown=(9.99, EUR)
   foreign=0
 ## extra pages
 page 'robot check' https://www.amazon.nl/dp/B01 200
-  meta=Meta(title=, desc=, image=, price=null, currency=USD, blocked=true, product=false, currencySure=false)
+  meta=Meta(title=, desc=, image=, price=null, currency=USD, blocked=true, product=false, currencySure=false, src=)
   product=null shown=null
   foreign=0
 page 'captcha with a price' https://shop.example/p 200
-  meta=Meta(title=, desc=, image=, price=null, currency=USD, blocked=true, product=false, currencySure=false)
+  meta=Meta(title=, desc=, image=, price=null, currency=USD, blocked=true, product=false, currencySure=false, src=)
   product=null shown=null
   foreign=0
 page 'not found' https://shop.example/x 404
-  meta=Meta(title=Page not found, desc=, image=, price=null, currency=USD, blocked=false, product=false, currencySure=false)
+  meta=Meta(title=Page not found, desc=, image=, price=null, currency=USD, blocked=false, product=false, currencySure=false, src=)
   product=null shown=null
   foreign=1
 page 'amazon deal' https://www.amazon.nl/dp/B0ABC12345 200
-  meta=Meta(title=Lamp, desc=, image=https://m.media-amazon.com/images/I/x.jpg, price=24.99, currency=EUR, blocked=false, product=true, currencySure=true)
+  meta=Meta(title=Lamp, desc=, image=https://m.media-amazon.com/images/I/x.jpg, price=24.99, currency=EUR, blocked=false, product=true, currencySure=true, src=amazon)
   product=null shown=(24.99, EUR)
   foreign=0
 page 'price in words' https://www.funda.nl/koop/x/ 200
-  meta=Meta(title=House, desc=, image=, price=725000.0, currency=EUR, blocked=false, product=true, currencySure=true)
+  meta=Meta(title=House, desc=, image=, price=725000.0, currency=EUR, blocked=false, product=true, currencySure=true, src=text)
   product=null shown=null
   foreign=0
 page 'euro thousands' https://www.funda.nl/koop/y/ 200
-  meta=Meta(title=Flat, desc=, image=, price=1250000.0, currency=EUR, blocked=false, product=true, currencySure=true)
+  meta=Meta(title=Flat, desc=, image=, price=1250000.0, currency=EUR, blocked=false, product=true, currencySure=true, src=text)
   product=null shown=null
   foreign=0
 page 'name with shop and number' https://link.marktplaats.nl/m2434550716 200
-  meta=Meta(title=Fiets, desc=, image=https://img.example/f.jpg, price=null, currency=EUR, blocked=false, product=false, currencySure=false)
+  meta=Meta(title=Fiets, desc=, image=https://img.example/f.jpg, price=null, currency=EUR, blocked=false, product=false, currencySure=false, src=)
   product=null shown=null
   foreign=0
 page 'bol name first' https://www.bol.com/nl/nl/p/lamp/1/ 200
-  meta=Meta(title=Mooie lamp, desc=, image=, price=39.0, currency=USD, blocked=false, product=true, currencySure=false)
+  meta=Meta(title=Mooie lamp, desc=, image=, price=39.0, currency=USD, blocked=false, product=true, currencySure=false, src=tags)
   product=null shown=null
   foreign=0
 page 'kronor' https://shop.se/p/1 200
-  meta=Meta(title=Ljus, desc=, image=, price=null, currency=USD, blocked=false, product=false, currencySure=false)
+  meta=Meta(title=Ljus, desc=, image=, price=null, currency=USD, blocked=false, product=false, currencySure=false, src=)
   product=null shown=null
   foreign=0
 page 'zloty' https://shop.pl/p/1 200
-  meta=Meta(title=Świeca, desc=, image=, price=null, currency=USD, blocked=false, product=false, currencySure=false)
+  meta=Meta(title=Świeca, desc=, image=, price=null, currency=USD, blocked=false, product=false, currencySure=false, src=)
   product=null shown=null
   foreign=0
 page 'empty' https://shop.example/empty 200

@@ -188,4 +188,44 @@ class PriceWatchTest {
         assertEquals("de,en;q=0.8", acceptLanguage(Locale("de")))
         assertEquals("en-US,en;q=0.9", acceptLanguage(Locale.ROOT))
     }
+
+    // ---- Rule 5, "same place on the page" (owner, 23 November 2026: bol.com read another size's €6.01 twice and told
+    // "−20%" while the pot itself went from €7.50 to €8.09) ----
+    private fun at(p: Double, src: String) = Reading(p, "EUR", true, src)
+    private fun settledAt(read: Double, src: String) = settled(read).copy(src = src)
+
+    @Test fun aDifferentPriceFromAnotherPlaceIsNeverAChange() {
+        // Believed €7.50 from the product data; the page now only yields €6.01 from somewhere else, twice.
+        val (v, st) = run(w(7.5), settledAt(7.5, "data"), at(6.01, "shown"), at(6.01, "shown"))
+        assertEquals(listOf(Verdict.UNREADABLE, Verdict.UNREADABLE), v)
+        assertEquals(7.5, st.read!!, 0.0)
+        assertEquals("data", st.src)
+    }
+
+    @Test fun aRealChangeFromTheSamePlaceIsStillTold() {
+        val (v, _) = run(w(7.5), settledAt(7.5, "data"), at(8.09, "data"), at(8.09, "data"))
+        assertEquals(listOf(Verdict.AGAIN, Verdict.CHANGED), v)
+    }
+
+    @Test fun anotherPlaceThatAgreesIsLearnt() {
+        val (v, st) = run(w(7.5), settledAt(7.5, "data"), at(7.5, "tags"))
+        assertEquals(listOf(Verdict.NOTHING), v)
+        assertEquals("tags", st.src)
+    }
+
+    @Test fun theFirstLookRemembersThePlace() {
+        val (_, st) = run(w(null), null, at(8.09, "data"), at(8.09, "data"))
+        assertEquals("data", st.src)
+    }
+
+    @Test fun notesFromBeforeTheRuleAreCorrectedQuietly() {
+        // The owner's wish: notes without a place hold the wrong €6.01; the fixed reading says €8.09: no alert.
+        val (v, st) = run(w(6.01), settled(6.01), at(8.09, "data"), at(8.09, "data"))
+        assertEquals(listOf(Verdict.AGAIN, Verdict.QUIET), v)
+        assertEquals(8.09, st.read!!, 0.0)
+        assertEquals("data", st.src)
+        // After that, the place is known and a real change is told again.
+        val (v2, _) = run(w(8.09), st, at(7.0, "data"), at(7.0, "data"))
+        assertEquals(listOf(Verdict.AGAIN, Verdict.CHANGED), v2)
+    }
 }

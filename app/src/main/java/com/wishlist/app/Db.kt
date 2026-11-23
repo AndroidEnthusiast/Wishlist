@@ -135,7 +135,12 @@ data class PriceWatchRow(
     /** When the shop's page was last read (milliseconds; 0 = never). */
     @ColumnInfo(name = "ok_at") val okAt: Long,
     /** Since when reading the page keeps failing (milliseconds; 0 = it works). */
-    @ColumnInfo(name = "fail_since") val failSince: Long
+    @ColumnInfo(name = "fail_since") val failSince: Long,
+    /**
+     * Where on the page [read] was found (Meta.src: "data", "tags", "shown", …; "" = not known yet, notes from before
+     * 2.282). Owner, 23 November 2026: a reading from another place never counts as a price change.
+     */
+    @ColumnInfo(name = "src", defaultValue = "") val src: String = ""
 )
 
 /** Small facts about the database itself, such as when the data was moved in and how much (S2.3). */
@@ -215,7 +220,7 @@ interface WishlistDao {
         ListRow::class, WishRow::class, BinRow::class, CategoryRow::class, PricePointRow::class,
         FriendListRow::class, NoteRow::class, MetaRow::class, PriceWatchRow::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class WishlistDb : RoomDatabase() {
@@ -248,6 +253,12 @@ abstract class WishlistDb : RoomDatabase() {
                             "`read` REAL, `cur` TEXT NOT NULL, `own` REAL, `typed` INTEGER NOT NULL, `cand` REAL, " +
                             "`ok_at` INTEGER NOT NULL, `fail_since` INTEGER NOT NULL, PRIMARY KEY(`wish_id`))"
                     )
+                }
+            },
+            // 3 (2.282, owner 23 November 2026): where on the page the believed price was read ("same place on the page").
+            object : androidx.room.migration.Migration(2, 3) {
+                override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    db.execSQL("ALTER TABLE `price_watch` ADD COLUMN `src` TEXT NOT NULL DEFAULT ''")
                 }
             }
         )

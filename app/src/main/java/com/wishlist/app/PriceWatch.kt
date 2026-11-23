@@ -22,6 +22,11 @@ import kotlin.math.abs
  * 3. **Same currency only.** A page that names another currency than last time is not a price change (see
  *    [Meta.currencySure]); it counts as "couldn't be read".
  * 4. **It shows.** When each wish was last read, and since when reading fails, is kept for the price page.
+ * 5. **Same place on the page** (owner, 23 November 2026, after bol.com read the price of another size twice and told
+ *    "−20%" while the price went up): the place a price was read from is remembered ([Reading.src], [PriceWatchRow.src]).
+ *    A reading from another place only counts when it agrees with the believed price (then that place is learnt);
+ *    otherwise it is "couldn't be read", never a change. Notes from before this rule have no place: their first
+ *    different price is taken quietly (the old notes may hold exactly such a wrong reading).
  *
  * The rules are plain logic ([judge], checked by PriceWatchTest); the notes per wish live in the database
  * ([PriceWatchRow], only on this phone). Collab wishlists share their prices online, so they only use rule 1 and 3
@@ -29,7 +34,7 @@ import kotlin.math.abs
  */
 object PriceWatch {
     /** What a shop's page said now. [sure]: the page named the currency itself. */
-    data class Reading(val price: Double, val cur: String, val sure: Boolean)
+    data class Reading(val price: Double, val cur: String, val sure: Boolean, val src: String = "")
 
     enum class Verdict {
         /** Nothing changes on the wish. */
@@ -70,14 +75,14 @@ object PriceWatch {
             // The first look. The wish already shows what the shop shows: done.
             val curFits = !r.sure || w.currency.isBlank() || w.currency == r.cur
             if (w.price != null && same(w.price, r.price) && curFits)
-                return Judged(Verdict.NOTHING, seen.copy(read = r.price, cur = readCur, cand = null))
+                return Judged(Verdict.NOTHING, seen.copy(read = r.price, cur = readCur, cand = null, src = r.src))
             // Otherwise two readings have to agree before anything is believed.
             if (!same(base.cand, r.price)) return Judged(Verdict.AGAIN, seen.copy(cand = r.price))
             // A price typed by hand stays; the shop's reading is only remembered, to notice when it changes.
             if (base.typed && w.price != null)
-                return Judged(Verdict.NOTHING, seen.copy(read = r.price, cur = readCur, cand = null))
+                return Judged(Verdict.NOTHING, seen.copy(read = r.price, cur = readCur, cand = null, src = r.src))
             return Judged(
-                Verdict.QUIET, seen.copy(read = r.price, cur = readCur, own = r.price, typed = false, cand = null),
+                Verdict.QUIET, seen.copy(read = r.price, cur = readCur, own = r.price, typed = false, cand = null, src = r.src),
                 r.price, if (r.sure) r.cur else w.currency
             )
         }
@@ -85,9 +90,15 @@ object PriceWatch {
         // Later looks: only a change of the shop's own reading counts, and only in the same currency.
         if (r.sure && base.cur.isNotEmpty() && r.cur != base.cur) return Judged(Verdict.UNREADABLE, base)
         val keepCur = base.cur.ifEmpty { readCur }
-        if (same(base.read, r.price)) return Judged(Verdict.NOTHING, seen.copy(cur = keepCur, cand = null))
+        // The same price: all is well, and the place it was read from is (re)learnt.
+        if (same(base.read, r.price)) return Judged(Verdict.NOTHING, seen.copy(cur = keepCur, cand = null, src = r.src.ifEmpty { base.src }))
+        // Rule 5: a different price from another place on the page is not this product's price change.
+        if (base.src.isNotEmpty() && r.src.isNotEmpty() && r.src != base.src) return Judged(Verdict.UNREADABLE, base)
         if (!same(base.cand, r.price)) return Judged(Verdict.AGAIN, seen.copy(cur = keepCur, cand = r.price))
-        val next = seen.copy(read = r.price, cur = keepCur, own = r.price, typed = false, cand = null)
+        val next = seen.copy(read = r.price, cur = keepCur, own = r.price, typed = false, cand = null, src = r.src)
+        // Notes from before rule 5 don't know their place, and may hold a wrong reading: taken quietly, no alert.
+        if (base.src.isEmpty() && r.src.isNotEmpty() && !same(w.price, r.price))
+            return Judged(Verdict.QUIET, next, r.price, w.currency)
         // The wish already shows the new price (it was typed in): nothing to tell.
         if (same(w.price, r.price)) return Judged(Verdict.NOTHING, next)
         return Judged(Verdict.CHANGED, next, r.price, w.currency)
@@ -105,7 +116,7 @@ object PriceWatch {
         val m = fetchMeta(url, c, browser) ?: return null
         if (m.blocked) return null
         val p = m.price ?: return null
-        return if (p > 0) Reading(p, m.currency, m.currencySure) else null
+        return if (p > 0) Reading(p, m.currency, m.currencySure, m.src) else null
     }
 
     // The notes in the database. A database that can't be used never stops a price check: the check then behaves as

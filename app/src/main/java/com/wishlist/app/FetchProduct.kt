@@ -1,5 +1,6 @@
 package com.wishlist.app
 
+import kotlin.math.abs
 import org.jsoup.nodes.Document
 
 // The shop's own product data and the price shown on its page, leaving out other products (a part of price reading
@@ -22,15 +23,28 @@ private fun ldNodes(v: Any?): List<org.json.JSONObject> = when (v) {
     else -> emptyList()
 }
 
-/** A price from schema.org offers: an Offer, a list of them, an AggregateOffer (lowPrice) or a priceSpecification. */
+/**
+ * A price from schema.org offers: an Offer, a list of them, an AggregateOffer or a priceSpecification. Only a price
+ * that is certainly this product's (owner, 23 November 2026, after bol.com's "−20%" that was another product): a list of
+ * offers with different prices, or an AggregateOffer whose lowest and highest price differ (several sellers, or the
+ * cheapest of a family of sizes and colours), gives no price. Same rules as ldPrice in web/parse.js.
+ */
 private fun ldPrice(offers: Any?): Pair<Double, String>? {
     when (offers) {
-        is org.json.JSONArray -> { for (i in 0 until offers.length()) ldPrice(offers.opt(i))?.let { return it }; return null }
+        is org.json.JSONArray -> {
+            val all = (0 until offers.length()).mapNotNull { ldPrice(offers.opt(it)) }
+            if (all.isEmpty()) return null
+            return if (all.all { abs(it.first - all[0].first) <= 0.005 }) all[0] else null
+        }
         is org.json.JSONObject -> {
             val cur = offers.optString("priceCurrency")
-            for (k in listOf("price", "lowPrice")) {
-                val n = offers.opt(k)?.toString()?.takeIf { it.isNotBlank() && it != "null" }?.toNum()
-                if (n != null && n > 0) return n to cur
+            fun num(k: String) = offers.opt(k)?.toString()?.takeIf { it.isNotBlank() && it != "null" }?.toNum()?.takeIf { it > 0 }
+            num("price")?.let { return it to cur }
+            num("lowPrice")?.let { low ->
+                val high = num("highPrice")
+                val count = offers.opt("offerCount")?.toString()?.toIntOrNull()
+                // Only one seller, or every seller asks the same: that is the price. Otherwise it is only "from".
+                return if ((high == null && (count == null || count <= 1)) || (high != null && abs(high - low) <= 0.005)) low to cur else null
             }
             ldPrice(offers.opt("priceSpecification"))?.let { (n, c) -> return n to c.ifEmpty { cur } }
             ldPrice(offers.opt("offers"))?.let { return it }
@@ -38,6 +52,35 @@ private fun ldPrice(offers: Any?): Pair<Double, String>? {
         }
         else -> return null
     }
+}
+
+/** Tracking bits a shop or a share adds to a link; they never say which size or colour. */
+private val TRACKING = Regex("^(cid|utm_.*|gclid|fbclid|msclkid|ref|ref_|tag|srsltid|_ga|mc_.*|bltgh|promo.*|src|source|campaign)$", RegexOption.IGNORE_CASE)
+
+/** A link split in what identifies a page: the address without the host (no trailing /) and its non-tracking details. */
+internal fun linkParts(u: String): Pair<String, Set<String>> {
+    val noHash = u.substringBefore('#')
+    val path = noHash.substringBefore('?').replace(Regex("^[a-zA-Z]+://[^/]*"), "").trimEnd('/')
+    val q = noHash.substringAfter('?', "").split('&').filter { it.isNotBlank() && !TRACKING.matches(it.substringBefore('=')) }.toSet()
+    return path to q
+}
+
+/**
+ * Which variant of a ProductGroup a page is (owner, 23 November 2026: bol.com's link ended in "?cid=…", no variant
+ * matched and the family's cheapest price was used): the variant whose address is the page's, with every detail of the
+ * variant's link (size=m) also in the page's link; tracking bits are ignored. Two variants matching equally well: none
+ * (unsure). Same rules as variantOf in web/parse.js.
+ */
+internal fun variantOf(variants: List<org.json.JSONObject>, url: String): org.json.JSONObject? {
+    val (path, q) = linkParts(url)
+    val fits = variants.mapNotNull { v ->
+        val u = v.optString("url").ifEmpty { return@mapNotNull null }
+        val (vp, vq) = linkParts(u)
+        if ((vp == path || (vp.isNotEmpty() && path.endsWith(vp)) || (path.isNotEmpty() && vp.endsWith(path))) && q.containsAll(vq)) v to vq.size else null
+    }
+    val best = fits.maxOfOrNull { it.second } ?: return null
+    val top = fits.filter { it.second == best }
+    return if (top.size == 1) top[0].first else null
 }
 
 private fun ldImage(v: Any?): String = when (v) {
@@ -60,8 +103,13 @@ internal fun ldProduct(d: Document, url: String): LdProduct? {
         val variants = p.optJSONArray("hasVariant")
         if (variants != null) {
             val list = (0 until variants.length()).mapNotNull { variants.optJSONObject(it) }
-            val here = list.firstOrNull { val u = it.optString("url"); u.isNotEmpty() && (url == u || url.endsWith(u) || u.endsWith(url.substringAfter("://").substringAfter('/'))) }
-            price = (here?.let { ldPrice(it.opt("offers")) }) ?: price ?: list.firstNotNullOfOrNull { ldPrice(it.opt("offers")) }
+            // This page's own variant; else only a price every variant shares. Never the family's "from" price or
+            // the first variant's (another size or colour).
+            val here = variantOf(list, url)
+            val prices = list.mapNotNull { ldPrice(it.opt("offers")) }
+            price = if (here != null) ldPrice(here.opt("offers"))
+            else if (prices.isNotEmpty() && prices.size == list.size && prices.all { abs(it.first - prices[0].first) <= 0.005 }) prices[0]
+            else null
         }
         val image = ldImage(p.opt("image")).ifEmpty { ldImage(variants?.optJSONObject(0)?.opt("image")) }
         return LdProduct(p.optString("name").trim(), image, price?.first, price?.second.orEmpty())
@@ -125,6 +173,7 @@ internal fun foreign(e: org.jsoup.nodes.Element, base: String): Boolean {
 /** "€ 39,90", "€39.90", "39,90 €", "£12", "$9.99", "12,50 EUR". */
 private val SHOWN_PRICE = Regex("([€\$£])\\s?([0-9][0-9.,]*)|([0-9][0-9.,]*)\\s?(?:€|EUR|£|GBP|USD)")
 /** Classes of old prices and price ranges that aren't this product's price now. */
-private val OLD_PRICE = Regex("old|was|strike|compare|before|previous|original|crossed|rrp|msrp|list-price|from-price")
+private val OLD_PRICE = Regex("old|was|strike|compare|before|previous|original|crossed|rrp|msrp|list-price|from-price|unit-price|unitprice|price-per|priceper|base-price|baseprice|grundpreis")
 /** Amounts that aren't the price: delivery, shipping, free shipping thresholds. */
-private val NOT_A_PRICE = Regex("verzend|bezorg|shipping|delivery|versand|livraison|vanaf|from|per maand|/mnd|p/m")
+// Since 23 November 2026 also prices per unit ("€ 2,50 per kg", "/l", "per stuk"): never the product's own price.
+private val NOT_A_PRICE = Regex("verzend|bezorg|shipping|delivery|versand|livraison|vanaf|from|per maand|/mnd|p/m|per kg|/kg|per liter|per litre|/l\\b|/ltr|per stuk|/st\\b|p\\.st|per 100|/100")
