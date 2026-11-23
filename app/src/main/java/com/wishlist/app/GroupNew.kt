@@ -68,23 +68,8 @@ fun NewGroupDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
                         supportingText = if (missing) ({ Text(tr("What is this group called?")) }) else null,
                         modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised
                     )
-                    // Friends to invite (owner, 2.125), like "Add wishes from your other lists". Hidden without friends:
-                    // the group page has "Invite friends" and the group link.
-                    if (friends.isNotEmpty()) Row(
-                        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { pickingFriends = true }
-                            .padding(vertical = 10.dp, horizontal = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(AppIcons.Add, null, tint = cs.primary, modifier = Modifier.size(20.dp))
-                        Column(Modifier.weight(1f).padding(start = 10.dp)) {
-                            Text(tr("Add friends"), style = MaterialTheme.typography.bodyMedium, color = cs.primary)
-                            val chosen = friends.filter { it.id in friendIds }.map { it.name.ifBlank { tr("Someone") } }
-                            if (chosen.isNotEmpty()) Text(
-                                chosen.joinToString(", "), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
-                                maxLines = 2, overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
+                    // Friends to invite (owner, 2.125): the same card as on every New … form (owner, 23 November 2026).
+                    FriendsCard(friends, friendIds, onRemove = { id -> friendIds = friendIds - id }) { pickingFriends = true }
                 }
             },
             confirmButton = {
@@ -115,6 +100,11 @@ fun PickFriendsDialog(
     note: String = tr("They get an invitation when the group is made.")
 ) {
     var picked by remember { mutableStateOf(start.toSet()) }
+    // No Friends (or no profile) yet: the card still opens, and says what to do instead (owner, 23 November 2026).
+    if (friends.isEmpty()) {
+        PickSheet(tr("Add friends"), onClose = onClose) { PickNote(noFriendsYet()) }
+        return
+    }
     // A bottom sheet like every picker (owner, 22 November 2026; PickSheet.kt): tick friends, then Done.
     PickSheet(
         tr("Add friends"), onClose = onClose, note = note,
@@ -131,3 +121,6 @@ fun PickFriendsDialog(
         })
     }
 }
+
+/** What "Add friends" says on a New … form when you have no Friends yet. */
+internal fun noFriendsYet(): String = tr("No Friends yet. After creating, you can send the invite link.")

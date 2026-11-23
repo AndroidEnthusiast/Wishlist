@@ -94,58 +94,6 @@ fun WhoIsItFor(someoneElse: Boolean, onChange: (Boolean) -> Unit) {
 }
 
 /**
- * "Add wishes from other wishlists" in the New wishlist form (owner, 21 November 2026: not a loose "+ Add" line): a
- * card like the settings rows, with how many are chosen and their photos.
- */
-@Composable
-internal fun CopyWishesCard(picked: List<Wish>, onRemove: (Wish) -> Unit = {}, onClick: () -> Unit) {
-    val look = LocalLook.current
-    val cs = MaterialTheme.colorScheme
-    val quiet = look.design == "quiet"
-    val fill = if (quiet) look.groupFill() else androidx.compose.ui.graphics.lerp(sheetColor(look, cs.surface), cs.onSurface, 0.08f)
-    val shape = if (quiet) Squircle(18.dp) else RoundedCornerShape(16.dp)
-    Column(Modifier.fillMaxWidth().clip(shape).background(fill)) {
-        Row(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(36.dp).clip(if (quiet) Squircle(10.dp) else RoundedCornerShape(10.dp)).background(cs.primaryContainer), contentAlignment = Alignment.Center) {
-                Icon(AppIcons.Gift, null, tint = cs.onPrimaryContainer, modifier = Modifier.size(20.dp))
-            }
-            Column(Modifier.padding(start = 12.dp).weight(1f)) {
-                Text(tr("Add wishes from other wishlists"), style = MaterialTheme.typography.bodyLarge, color = cs.onSurface)
-                Text(
-                    when (picked.size) { 0 -> tr("None chosen yet"); 1 -> tr("1 wish chosen"); else -> tr("%d wishes chosen", picked.size) },
-                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
-                )
-            }
-            Icon(AppIcons.Chevron, null, tint = cs.onSurfaceVariant, modifier = Modifier.size(20.dp))
-        }
-        // The chosen wishes, each with a ✕ to take it out again (owner, 21 November 2026). All of them, in one row
-        // that scrolls sideways, so the card never grows taller.
-        if (picked.isNotEmpty()) Row(
-            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(start = 10.dp, end = 10.dp, top = 2.dp, bottom = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            picked.forEach { w ->
-                // The ✕ sits inside the 52 dp tap area (it was clipped at the top in 2.273's first pictures).
-                Box(
-                    Modifier.size(52.dp).clip(RoundedCornerShape(12.dp))
-                        .clickable(onClickLabel = tr("Take out %s", w.label)) { onRemove(w) },
-                    contentAlignment = Alignment.BottomStart
-                ) {
-                    Box(Modifier.padding(bottom = 1.dp).size(44.dp).clip(RoundedCornerShape(10.dp)).background(look.photoSurface(w.id)), contentAlignment = Alignment.Center) {
-                        if (w.image.isNotBlank()) WishImage(w.image, Modifier.size(44.dp), ContentScale.Crop)
-                        else PlaceholderIcon("gift", 22.dp)
-                    }
-                    Box(
-                        Modifier.align(Alignment.TopEnd).padding(top = 1.dp, end = 1.dp).size(18.dp).clip(CircleShape).background(cs.inverseSurface),
-                        contentAlignment = Alignment.Center
-                    ) { Icon(AppIcons.Close, null, tint = cs.inverseOnSurface, modifier = Modifier.size(12.dp)) }
-                }
-            }
-        }
-    }
-}
-
-/**
  * "New wishlist" (owner, 17 November 2026): one full-width sheet with My own / With others at the top; the chips swap
  * the fields below without the sheet moving or changing height. [withOthers]: the choice it opens on.
  */
@@ -191,8 +139,8 @@ fun NewListDialog(onCreated: (String) -> Unit, onClose: () -> Unit, top: (@Compo
                 OutlinedTextField(
                     notes, { notes = it.take(ABOUT_MAX) },
                     // "Description" (owner, 2.125; it was "Note for friends", and "Notes" before 2.113).
-                    label = { Text(tr("Description")) },
-                    supportingText = { Text(tr("Shown at the top of your wishlist.")) },
+                    // No "Shown at the top of your wishlist." under it (owner, 23 November 2026: fewer words).
+                    label = { Text(tr("Description")) }, placeholder = { Text(tr("What is this wishlist for?")) },
                     maxLines = 4, modifier = Modifier.fillMaxWidth(), keyboardOptions = Capitalised)
                 // No occasion here (owner, 21 November 2026: everything on one page; it is in Wishlist settings).
                 // Wishes from other lists, above Privacy (owner, 21 November 2026).

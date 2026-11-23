@@ -78,7 +78,13 @@ class DialogButtonsScreenshotTest : NavigationBase() {
                     androidx.compose.foundation.layout.Column(
                         androidx.compose.ui.Modifier.fillMaxSize().background(androidx.compose.material3.MaterialTheme.colorScheme.surface).padding(24.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) { CopyWishesCard(emptyList()) {}; CopyWishesCard(ws, onRemove = {}) {}; WhoIsItFor(false) {}; WhoIsItFor(true) {} }
+                    ) {
+                        CopyWishesCard(emptyList()) {}; CopyWishesCard(ws, onRemove = {}) {}
+                        // "Add friends", the same card (owner, 23 November 2026): none, and three chosen.
+                        val fs = listOf("Anna", "Bas", "").mapIndexed { i, n -> Person("f$i", n, 0L) }
+                        FriendsCard(fs, emptyList(), {}) {}; FriendsCard(fs, fs.map { it.id }, {}) {}
+                        WhoIsItFor(false) {}; WhoIsItFor(true) {}
+                    }
                 }
             } }
             repeat(6) { compose.mainClock.advanceTimeBy(200); org.robolectric.shadows.ShadowLooper.idleMainLooper() }

@@ -14,12 +14,12 @@ import androidx.compose.ui.platform.LocalContext
 @Stable
 internal class SharedListModel(private val ctx: Context) {
     /**
-     * A new wishlist "With others": made online, then who it's for (kept on this phone, the surprise), its description
-     * and its occasion (both best effort: without the newest server script they can be added later). Its code.
+     * A new Co-op wishlist: made online, then its description and its occasion (both best effort: without the newest
+     * server script they can be added later). Its code. No "who it's for" since 23 November 2026 (owner); lists made
+     * before keep theirs ([Shared.forName]).
      */
-    suspend fun create(name: String, me: String, forWho: String, notes: String, occ: Occasion?): String {
+    suspend fun create(name: String, me: String, notes: String, occ: Occasion?): String {
         val l = Shared.create(ctx, name, me)
-        if (forWho.isNotBlank()) Shared.setForName(ctx, l.code, forWho)
         // The notes become the list's note for everyone on it.
         if (notes.isNotBlank()) {
             try {
@@ -35,6 +35,13 @@ internal class SharedListModel(private val ctx: Context) {
             }
         }
         return l.code
+    }
+
+    /** Invites Friends [ids] to the list just made ([code]); how many couldn't be invited (all of them offline). */
+    suspend fun inviteFriends(code: String, ids: List<String>): Int {
+        if (ids.isEmpty()) return 0
+        val l = Shared.lists.firstOrNull { it.code == code } ?: return ids.size
+        return try { GiftInvites.invite(ctx, l, ids) } catch (e: Exception) { ids.size }
     }
 
     /** The name of the list an invitation [key] leads to, or null when it doesn't work (any more). */

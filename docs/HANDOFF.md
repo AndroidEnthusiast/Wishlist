@@ -5,6 +5,8 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.283 (23 November 2026), read first.** The shorter Co-op form with "Add friends" (`home-and-kinds.md`, last
+  section). Ask how it feels, and whether any other screen still has a plain "+ …" line (owner's rule: none anywhere).
 - **2.282 (23 November 2026), read first.** The price tracker after bol.com's false "−20%" (`prices.md`): variants with
   tracking bits, never "from"/lowest prices, rule 5 "same place on the page". Ask whether the pot shows €8.09 now.
 - **2.281 (22 November 2026).** New + menu lines (`home-and-kinds.md`, last section). The personal link preview
@@ -128,6 +130,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 23 November 2026: a shorter Co-op form, friends picked at once (2.283)
+Owner: the Co-op form had too many options. "Gifts for someone?" and helper lines gone; an "Add friends" card invites
+friends the moment the list is made (failed sends told, with where to retry). Owner's new rule: no plain "+" lines
+anywhere, same elements look the same: New group and New gift exchange got the same card. Not checkable here: the phone.
+
 ### 23 November 2026: the price tracker sharpened (2.282)
 Owner's bol.com pot showed "−20%" while its price rose. The owner's "Price is wrong?" file showed why: a family of 13
 sizes, a link with "?cid=…", no variant matched, and the family's cheapest "from" price (another product) was read
@@ -140,9 +147,3 @@ user opens, later Plus on the Play Store), nothing decided. Built "Search the sh
 opens bol.com's own results with a row of the six big shops + Google, "Open in Chrome", an offline message. The layout
 check caught cut-off letters in small shop icons (fixed). 2.278: rows in dark menus looked like one block (line
 almost invisible, some menus none): a thin line after the icon everywhere. 2.279: every picker a bottom sheet. 2.280: the review.
-
-### 21 November 2026: fonts, link reading, chat on co-op lists, New wishlist, Home's tabs (2.269–2.273)
-(Earlier wordings of this summary are in HANDOFF-ARCHIVE.md.) 2.269: numbers in the text font; faster link reading.
-2.270: big names in the title font; chat about a wish on co-op lists (owner runs `supabase-features.sql` v2). 2.271–2.272:
-Privacy in New wishlist, it opens; one page; form sheets close only by X / pull tab. 2.273: "Shared" → Co-op everywhere,
-Home's tabs per kind, chosen wishes can be taken out (a flaw Claude missed). Not checkable here: the real phone.

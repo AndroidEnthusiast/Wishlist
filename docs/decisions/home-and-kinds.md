@@ -38,3 +38,19 @@
 - When a shop reads badly (message at the field, spotting logo photos, asking before saving €0): owner skipped the
   question, so nothing is built (ask again only if the owner brings it up). The real-people test: "not now".
 
+## The Co-op form and "Add friends" (owner, 23 November 2026, 2.283)
+- "The Co-op screen has too many options": **"Gifts for someone? (optional)" and its surprise line are removed.** New
+  Co-op lists no longer store who they're for; lists made before keep theirs (share screen warning, Invite Friends
+  leaves that person out).
+- **Description stays, without "Shown at the top of the list."** under it, on Personal too (both forms match; Personal got
+  the same placeholder "What is this wishlist for?").
+- **Friends are picked while making a Co-op list** ("instead of afterwards"): the "Add friends" card under Description;
+  the invitations go out the moment the list is made. If some can't be sent, the list opens anyway with "Couldn't send
+  2 invitations. Tap Share, then Invite Friends, to try again." (no automatic retrying).
+- **No Friends (or no profile) yet: the card still shows**; tapping it says "No Friends yet. After creating, you can send
+  the invite link." (also on New group and New gift exchange, which hid it before).
+- **Owner's rule: never plain "+ …" lines anywhere in the app; the same kind of element looks the same everywhere, no
+  differences between menus.** "Add friends" is one card (`FriendsCard`, `ChoiceCard.kt`) in New wishlist, New group and
+  New gift exchange, the same frame as "Add wishes from other wishlists". Claude did NOT add "Add wishes from other
+  wishlists" to the Co-op form (fewer options was the point). Check: `CoopFormTest`.
+

@@ -920,3 +920,9 @@ Owner's screenshots (labels overlapping, cut, prices broken) → labels redesign
 reservation under the photo), "I have it" straight to Received gifts, and a layout inspector (`LayoutGuard.kt`) on every
 screen picture that blocks publishing on GitHub (owner). It found 6 more problems, all fixed; on the old code it flags
 exactly the owner's screenshots. Not checkable here: how it feels on a phone.
+
+### 21 November 2026: fonts, link reading, chat on co-op lists, New wishlist, Home's tabs (2.269–2.273)
+(Earlier wordings of this summary are in HANDOFF-ARCHIVE.md.) 2.269: numbers in the text font; faster link reading.
+2.270: big names in the title font; chat about a wish on co-op lists (owner runs `supabase-features.sql` v2). 2.271–2.272:
+Privacy in New wishlist, it opens; one page; form sheets close only by X / pull tab. 2.273: "Shared" → Co-op everywhere,
+Home's tabs per kind, chosen wishes can be taken out (a flaw Claude missed). Not checkable here: the real phone.

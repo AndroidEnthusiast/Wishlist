@@ -189,20 +189,9 @@ fun NewExchangeDialog(onCreated: (String) -> Unit, onClose: () -> Unit) {
                         name, { name = it; if (it.isNotBlank()) missing = false }, missing, theme, { theme = it },
                         budget, { budget = it }, currency, day, { day = it }, message, { message = it }
                     )
-                    if (friends.isNotEmpty()) Row(
-                        Modifier.fillMaxWidth().padding(top = 8.dp).clip(RoundedCornerShape(12.dp)).clickable { pickingFriends = true }
-                            .padding(vertical = 10.dp, horizontal = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(AppIcons.Add, null, tint = cs.primary, modifier = Modifier.size(20.dp))
-                        Column(Modifier.weight(1f).padding(start = 10.dp)) {
-                            Text(tr("Add friends"), style = MaterialTheme.typography.bodyMedium, color = cs.primary)
-                            val chosen = friends.filter { it.id in friendIds }.map { it.name.ifBlank { tr("Someone") } }
-                            if (chosen.isNotEmpty()) Text(
-                                chosen.joinToString(", "), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
-                                maxLines = 2, overflow = TextOverflow.Ellipsis
-                            )
-                        }
+                    // The same "Add friends" card as on every New … form (owner, 23 November 2026).
+                    Box(Modifier.padding(top = 8.dp)) {
+                        FriendsCard(friends, friendIds, onRemove = { id -> friendIds = friendIds - id }) { pickingFriends = true }
                     }
                 }
             },
