@@ -173,7 +173,7 @@ jobs:
       cancel-in-progress: false
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.first.outputs.page_url || steps.second.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -220,9 +220,21 @@ jobs:
         with:
           path: web
       - name: Publish the web page
-        id: deployment
+        id: first
         if: steps.web.outputs.found == 'yes'
+        # 23 November 2026: four times in a row GitHub said "no artifacts named github-pages" right after a
+        # successful upload; a minute later it finds them. So a failed first try waits and tries once more.
+        continue-on-error: true
         uses: actions/deploy-pages@v4
         with:
           # GitHub sometimes needs more than the default 10 minutes to publish (4 November 2026: three timeouts).
+          timeout: 1800000
+      - name: Wait a minute before the second try
+        if: steps.web.outputs.found == 'yes' && steps.first.outcome == 'failure'
+        run: sleep 60
+      - name: Publish the web page (second try)
+        id: second
+        if: steps.web.outputs.found == 'yes' && steps.first.outcome == 'failure'
+        uses: actions/deploy-pages@v4
+        with:
           timeout: 1800000
