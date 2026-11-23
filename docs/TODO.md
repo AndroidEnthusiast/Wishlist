@@ -7,6 +7,15 @@ it**, grouped as below, with a recommendation. Add every new open item here the 
 Details of each item are in the doc named after it.
 
 ## Now
+- **Price tracker: a false "−20%" on bol.com (owner, 23 November 2026, Elho Vibes Fold Rond Mini 11: page shows €8.09,
+  the app read €6.01 twice, "drop" from €7.50).** Likely cause: the product data lists several sellers and the reading
+  takes the first or lowest one. Waiting for the owner's "Price is wrong?" file. Then build what the owner chose:
+  **same place on the page** (remember where the price was read; a reading from another place never alerts, it's checked
+  quietly) and **never the lowest seller** (several sellers or a "from" price: the main offer counts); owner: "learn from
+  it and upgrade the price tracker". Rules 2 and 8: `Fetch*.kt` + `web/parse.js` together, a `PriceWatchTest` case,
+  the page in `tests/shared/same-answers.json`; a new database column needs a step in `WishlistDb.MIGRATIONS` (Rule 9).
+- **Owner: run `supabase-features.sql` (version 2) in Supabase** (the daily server check failed on 22 and 23 November;
+  GitHub issue #3 "Server scripts to run").
 - **Try 2.280 on the phone:** Search in shops starts at Amazon, then at the shop you last tapped in the row; Gifts I
   reserved and Received gifts have the big title that shrinks; App settings, Profile and Import look as before.
 - **From the review of 22 November 2026, not chosen yet** (`docs/decisions/look.md`, last section): "Open in Chrome"
