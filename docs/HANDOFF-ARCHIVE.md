@@ -933,3 +933,5 @@ user opens, later Plus on the Play Store), nothing decided. Built "Search the sh
 opens bol.com's own results with a row of the six big shops + Google, "Open in Chrome", an offline message. The layout
 check caught cut-off letters in small shop icons (fixed). 2.278: rows in dark menus looked like one block (line
 almost invisible, some menus none): a thin line after the icon everywhere. 2.279: every picker a bottom sheet. 2.280: the review.
+
+(Earlier wording of the 2.284 summary.) Screenshots caught "Reserved by" cut off on narrow cards (text now shrinks). Not checkable here: the phone.
