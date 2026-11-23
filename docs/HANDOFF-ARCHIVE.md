@@ -935,3 +935,5 @@ check caught cut-off letters in small shop icons (fixed). 2.278: rows in dark me
 almost invisible, some menus none): a thin line after the icon everywhere. 2.279: every picker a bottom sheet. 2.280: the review.
 
 (Earlier wording of the 2.284 summary.) Screenshots caught "Reserved by" cut off on narrow cards (text now shrinks). Not checkable here: the phone.
+
+(Earlier Next-session line, replaced by 2.286.) - **2.285 (23 November 2026).** "Unreserve?" with an open padlock on the button; red ribbon. Ask how the two taps feel.
