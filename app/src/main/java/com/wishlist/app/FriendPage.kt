@@ -106,8 +106,9 @@ internal fun LoadFriendLists(f: Person) {
             }
         }
         FriendCache.loadedFor = f.id
-        // Opening their page counts as seeing their new wishes (owner, 2.139).
-        if (out.size == f.lists.size) FriendNews.markSeen(ctx, f.id, out.values)
+        // Only the first time: everything counts as seen then. After that a list's new wishes are seen when that list
+        // is opened (owner, 23 November 2026; FriendNews.kt).
+        if (out.size == f.lists.size) FriendNews.start(ctx, f.id, out.values)
     }
 }
 
@@ -172,7 +173,9 @@ internal fun FriendPage(f: Person, snack: SnackbarHostState) {
                     val ws = FriendCache.loaded[l.code]?.wishes.orEmpty().filter { it.bin == 0L && it.id != ABOUT_ITEM_ID }
                     // Their newest photos as a collage, as on your own Home (16 November 2026: friends showed one photo).
                     val pics = newestPics(ws)
-                    HubItem("f:" + l.code, l.name, if (FriendCache.loaded.containsKey(l.code)) ws.size else l.count, pics.firstOrNull(), false, "", pics) { places.friendList = l }
+                    // The red badge with how many are new on this list (owner, 23 November 2026).
+                    val fresh = FriendNews.seenTick.let { FriendCache.loaded[l.code]?.let { r -> FriendNews.newIds(ctx, f.id, r).size } ?: 0 }
+                    HubItem("f:" + l.code, l.name, if (FriendCache.loaded.containsKey(l.code)) ws.size else l.count, pics.firstOrNull(), false, "", pics, fresh = fresh) { places.friendList = l }
                 }
                 BlockGrid(items, onHome = false, actionsOf = { emptyList() }, onAddTo = {})
             }

@@ -776,7 +776,19 @@
     loadRes();
   }
 
-  function resLabel(w) { return WLRes.label(w, res[w.id], cnt[w.id], T("Reserved by you")); }
+  // The reservation is on the button now (owner, 23 November 2026); the label keeps "1 of 3 reserved".
+  function resLabel(w) { return WLRes.line(w, cnt[w.id]); }
+  // The one reservation button (reserve.js), as on the friends' page and in the app.
+  // A shared list has no "got it" (Rule 4): an old "got" from a copy never hides the button.
+  function noGot(w) { return w.got ? Object.assign({}, w, { got: false }) : w; }
+  function resButton(w) {
+    w = noGot(w);
+    var canAsk = window.WLT && WLT.canAsk(w, res[w.id], cnt[w.id]);
+    return WLRes.button(w, res[w.id], cnt[w.id], {
+      set: function (on) { reserve(w, on); },
+      ask: canAsk ? function () { WLT.ask(code, w, content && content.occ); } : null
+    });
+  }
 
   // ---------- drop-down menus (category, sort, the ⋮ on small cards) ----------
 
@@ -909,7 +921,7 @@
   }
 
   function card(w, compact, rows) {
-    var mine = res[w.id] === true, taken = res[w.id] === false;
+    var mine = res[w.id] === true, taken = WLRes.state(noGot(w), res[w.id], cnt[w.id]) === "taken";
     var c = el("div", "card" + (compact ? " compact" : "") + (rows ? " rowcard" : "") + (taken ? " dim" : ""));
     c.setAttribute("data-id", String(w.id));
     var pic = pictureOf(w);
@@ -920,7 +932,7 @@
     var bx = el("div", "badges");
     var rl = resLabel(w);
     // Someone else's reservation: tapping the label asks if it's still being bought (together.js).
-    if (rl) bx.appendChild(window.WLT && WLT.canAsk(w, res[w.id], cnt[w.id]) ? WLT.label(rl, code, w, content && content.occ) : el("span", "badge status", rl));
+    if (rl) bx.appendChild(el("span", "badge status", rl));
     if (bx.childNodes.length) pic.appendChild(bx);
     c.appendChild(pic);
 
@@ -950,6 +962,7 @@
       crow.appendChild(more);
       body.appendChild(crow);
       if (picking === w.id) body.appendChild(WLRes.picker(WLRes.free(w, cnt[w.id]), function (n) { reserveCount(w, n); }, function () { picking = null; render(); }));
+      else body.appendChild(resButton(w));
       c.appendChild(body);
       return c;
     }
@@ -976,8 +989,7 @@
     } else {
       var act = el("div", "actions");
       act.appendChild(iconBtn("edit", T("Edit"), function () { openWishForm(w); }));
-      if (mine) act.appendChild(textBtn(T("Unreserve"), "outline small", function () { reserve(w, false); }));
-      else if (!taken) act.appendChild(textBtn(T("Reserve"), "small", function () { reserve(w, true); }));
+      act.appendChild(resButton(w));
       act.appendChild(iconBtn("del", T("Delete"), function () { askDelete(w); }));
       row.appendChild(act);
     }

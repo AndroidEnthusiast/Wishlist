@@ -528,7 +528,9 @@ function renderViews() {
 function card(w, compact, rows) {
   var r = res[w.id];
   var got = !!w.got;
-  var dim = got || r === false;
+  // Someone else reserved it: darkened, with a greyed "Reserved" button (owner, 23 November 2026).
+  var rstate = WLRes.state(w, r, cnt[w.id]);
+  var dim = got || rstate === "taken";
   // rows: the picture on the left, the shop, name and price on the right, the button below them (2.126).
   var c = el("div", "card" + (compact ? " compact" : "") + (rows ? " rowcard" : "") + (dim ? " dim" : ""));
 
@@ -552,11 +554,12 @@ function card(w, compact, rows) {
   // Plus and minus, not arrows (it isn't a stock trade).
   if (drop) pic.appendChild(el("span", "badge drop", "−" + Math.round((1 - w.price / w.old) * 100) + "%"));
   else if (rise) pic.appendChild(el("span", "badge drop rise", "+" + Math.round((w.price / w.old - 1) * 100) + "%"));
-  var status = got ? T("Owned") : WLRes.label(w, r, cnt[w.id], T("Reserved by you"));
+  // The reservation is on the button now (owner, 23 November 2026); the label keeps "Owned" and "1 of 3 reserved".
+  var status = got ? T("Owned") : WLRes.line(w, cnt[w.id]);
   var bx = el("div", "badges");
   if (w.star && !got && !SHARED_LIST) bx.appendChild(starBadge());
   // Someone else's reservation: tapping the label asks if it's still being bought (together.js, 7 November 2026).
-  if (status) bx.appendChild(!got && window.WLT && WLT.canAsk(w, r, cnt[w.id]) ? WLT.label(status, code, w, list && list.occ) : el("span", "badge status", status));
+  if (status) bx.appendChild(el("span", "badge status", status));
   if (bx.childNodes.length) pic.appendChild(bx);
   c.appendChild(pic);
 
@@ -589,17 +592,12 @@ function card(w, compact, rows) {
   if (!got && picking === w.id) {
     row.appendChild(WLRes.picker(WLRes.free(w, cnt[w.id]), function (n) { reserveCount(w, n); }, function () { picking = null; render(); }));
   } else if (!got) {
-    if (r === undefined) {
-      var b = el("button", "act small", T("Reserve"));
-      b.type = "button"; b.disabled = busy;
-      b.addEventListener("click", function () { toggle(w, true); });
-      row.appendChild(b);
-    } else if (r === true) {
-      var u = el("button", "act outline small", T("Unreserve"));
-      u.type = "button"; u.disabled = busy;
-      u.addEventListener("click", function () { toggle(w, false); });
-      row.appendChild(u);
-    }
+    // One button for every state (reserve.js); tapping someone else's "Reserved" asks if it's still being bought.
+    var canAsk = window.WLT && WLT.canAsk(w, r, cnt[w.id]);
+    row.appendChild(WLRes.button(w, r, cnt[w.id], {
+      busy: busy, set: function (on) { toggle(w, on); },
+      ask: canAsk ? function () { WLT.ask(code, w, list && list.occ); } : null
+    }));
   }
   body.appendChild(row);
 
@@ -624,9 +622,11 @@ function visibleItems() {
   if (onlyAvail) items = items.filter(function (w) { return !w.got && res[w.id] !== false; });
   var rows = items.map(function (w, i) { return { w: w, i: i }; });
   var price = function (w) { return typeof w.price === "number" ? w.price : null; };
+  var sinkRank = function (w) { return w.got ? 2 : WLRes.state(w, res[w.id], cnt[w.id]) === "taken" ? 1 : 0; };
   rows.sort(function (a, b) {
-    // Owned wishes always go to the bottom (owner, 4 November 2026), so the ones still wanted come first.
-    var d = (a.w.got ? 1 : 0) - (b.w.got ? 1 : 0);
+    // Owned wishes always go to the bottom (owner, 4 November 2026), so the ones still wanted come first; gifts
+    // someone else reserved just above them (owner, 23 November 2026).
+    var d = sinkRank(a.w) - sinkRank(b.w);
     if (d) return d;
     if (sortBy === "star") {
       d = (a.w.star && !a.w.got ? 0 : 1) - (b.w.star && !b.w.got ? 0 : 1);

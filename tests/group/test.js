@@ -170,17 +170,18 @@ const A = "AAAAAAAAAAAAAAAAAAAA", AT = "tokA_tokA_tokA_tokA_", LINK = "LNKABCDEF
   await w.page.screenshot({ path: "s_group_member.png" });
   check("Anna’s list: no Owned by, its name already says whose it is", (await w.page.locator(".owner").count()) === 0);
   check("Anna's list: top wish first with its label", (await w.page.locator(".card").first().locator(".badge.star").count()) === 1 && (await w.page.locator(".card .title").first().innerText()) === "Poetry book");
-  await w.page.locator(".card").first().getByRole("button", { name: "Reserve" }).click();
-  await w.page.waitForSelector(".badge.status");
-  check("reserved by you", (await w.page.locator(".card").first().locator(".badge.status").innerText()) === "Reserved by you");
+  await w.page.locator(".card").first().getByRole("button", { name: "Reserve", exact: true }).click();
+  await w.page.waitForSelector("button.act svg.lock");
+  // The reservation is on the button, with a lock (owner, 23 November 2026).
+  check("reserved by you", (await w.page.locator(".card").first().locator("button.act").innerText()) === "Reserved by you");
   const dev = await w.page.evaluate(() => localStorage.getItem("wl_device"));
   check("the reservation is online with this browser's device", psql("select device from wl_reservations where list_code = 'ANNALIST' and item_id = 11") === dev);
   rpc("wl_reserve_item", { p_code: "ANNALIST", p_item: 12, p_device: "someone-else" });
   await w.page.locator("#backBtn").click();
   await w.page.locator(".gblock").nth(1).click();
-  await w.page.waitForSelector(".card .badge.status >> nth=1");
-  check("someone else's reservation shows as Reserved", (await w.page.locator(".card").nth(1).locator(".badge.status").innerText()) === "Reserved");
-  check("the Reserved label asks if it is still being bought (together.js)", (await w.page.locator(".card").nth(1).locator("button.badge.wlt-ask").count()) === 1);
+  await w.page.waitForSelector(".card button.act.taken");
+  check("someone else's reservation shows as Reserved", (await w.page.locator(".card").nth(1).locator("button.act.taken").innerText()) === "Reserved");
+  check("the Reserved button asks if it is still being bought (together.js)", (await w.page.locator(".card").nth(1).locator("button.act.taken[title]").count()) === 1);
   check("no Reserve button on a reserved gift", (await w.page.locator(".card").nth(1).getByRole("button", { name: "Reserve", exact: true }).count()) === 0);
   await w.page.locator("#backBtn").click();
 
@@ -247,8 +248,8 @@ const A = "AAAAAAAAAAAAAAAAAAAA", AT = "tokA_tokA_tokA_tokA_", LINK = "LNKABCDEF
   check("other device: recognised, in the group", (await w2.page.locator(".gblock .gname").first().innerText()) === "You");
   check("other device: the secret left the address bar", !/#me=/.test(w2.page.url()));
   await w2.page.locator(".gblock").nth(1).click();
-  await w2.page.waitForSelector(".card .badge.status");
-  check("other device: her reservation is hers there too", (await w2.page.locator(".card").first().locator(".badge.status").innerText()) === "Reserved by you");
+  await w2.page.waitForSelector(".card button.act svg.lock");
+  check("other device: her reservation is hers there too", (await w2.page.locator(".card").first().locator("button.act").innerText()) === "Reserved by you");
   await w2.page.locator("#backBtn").click();
 
   // ---- an organiser setting: members may invite (share box) ----

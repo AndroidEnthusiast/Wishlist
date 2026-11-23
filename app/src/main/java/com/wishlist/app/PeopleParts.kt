@@ -83,38 +83,6 @@ import kotlinx.coroutines.launch
  * birthday as words, and a section title.
  */
 
-/**
- * "3 new wishes" on a friend's row (owner, 2.139): wishes they added that you haven't seen yet. What you've seen is
- * what was on their lists the last time you opened their page (kept on this phone). The first time a friend is counted,
- * everything counts as seen, so nobody starts with a pile of "new" wishes.
- */
-object FriendNews {
-    var counts by mutableStateOf<Map<String, Int>>(emptyMap())
-        private set
-    private fun prefs(c: android.content.Context) = c.applicationContext.getSharedPreferences("wishlist", android.content.Context.MODE_PRIVATE)
-    private fun ids(lists: Collection<RemoteList>) =
-        lists.flatMap { it.wishes }.filter { it.bin == 0L && it.id != ABOUT_ITEM_ID && !it.got }.map { it.id.toString() }.toSet()
-
-    suspend fun refresh(c: android.content.Context, friends: List<Person>) {
-        val out = HashMap<String, Int>()
-        for (f in friends) {
-            val lists = f.lists.mapNotNull { l -> try { Friends.fetchList(c, f.id, l.code) } catch (e: Exception) { null } }
-            if (lists.size < f.lists.size && f.lists.isNotEmpty()) { counts[f.id]?.let { out[f.id] = it }; continue }
-            val now = ids(lists)
-            val seen = prefs(c).getStringSet("fseen_" + f.id, null)
-            if (seen == null) { prefs(c).edit().putStringSet("fseen_" + f.id, now).apply(); out[f.id] = 0 }
-            else out[f.id] = (now - seen).size
-        }
-        counts = out
-    }
-
-    /** Their page was opened and their lists loaded: everything on them is seen now. */
-    fun markSeen(c: android.content.Context, id: String, lists: Collection<RemoteList>) {
-        prefs(c).edit().putStringSet("fseen_$id", ids(lists)).apply()
-        counts = counts + (id to 0)
-    }
-}
-
 /** A round picture of a person: their photo, or their first letter on the theme's colour. */
 @Composable
 fun Avatar(photo: String?, name: String, size: Dp) {

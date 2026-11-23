@@ -94,7 +94,8 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   check("javascript: image not used", ![...doc.querySelectorAll("img")].some(i => i.src.startsWith("javascript")));
   const cards = [...doc.querySelectorAll(".card")];
   check("item1 Reserve button + 20% badge", cards[0].querySelector("button.act").textContent === "Reserve" && cards[0].querySelector(".badge.drop").textContent.includes("20%"));
-  check("item2 Reserved by someone else, no button", cards[1].querySelector(".badge.status").textContent === "Reserved" && !cards[1].querySelector("button.act"));
+  // The reservation is on the button, with a lock; someone else's is greyed and darkens the card (owner, 23 November 2026).
+  check("item2 Reserved by someone else: a greyed Reserved button with a lock, no line, darkened", !cards[1].querySelector(".badge.status") && cards[1].querySelector("button.act.taken").textContent === "Reserved" && !!cards[1].querySelector("button.act.taken svg.lock") && cards[1].classList.contains("dim"));
   check("item3 Owned, no button", cards[2].querySelector(".badge.status").textContent === "Owned" && !cards[2].querySelector("button.act"));
   const noLink = {id: 9, url: "", title: "Custom gift", desc: "", image: "", price: null, old: null, cur: "USD", cat: "Home", got: false};
   items.push(noLink);
@@ -118,7 +119,7 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   cards[0].querySelector("button.act").click();
   await sleep(100);
   let c1 = d.window.document.querySelectorAll(".card")[0];
-  check("after Reserve: Reserved by you + Unreserve", c1.querySelector(".badge.status").textContent === "Reserved by you" && c1.querySelector("button.act").textContent === "Unreserve");
+  check("after Reserve: the button says Reserved by you, with a lock, no extra line", !c1.querySelector(".badge.status") && c1.querySelector("button.act").textContent === "Reserved by you" && !!c1.querySelector("button.act svg.lock"));
   const myDevice = d.window.localStorage.getItem("wl_device");
   check("device id stored and used", !!myDevice && store.reservations[1] === myDevice);
 
@@ -165,9 +166,12 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
 
   const d2 = await load("?c=ABCD2345");
   const c1b = d2.window.document.querySelectorAll(".card")[0];
-  check("other visitor sees Reserved, no button", c1b.querySelector(".badge.status").textContent === "Reserved" && !c1b.querySelector("button.act"));
+  check("other visitor sees a greyed Reserved button", c1b.querySelector("button.act.taken").textContent === "Reserved" && !c1b.querySelector(".badge.status"));
+  check("other visitor: reserved ones go below the free ones", [...d2.window.document.querySelectorAll(".card")].map(c => c.classList.contains("dim")).join() === "false,true,true,true" || [...d2.window.document.querySelectorAll(".card")].map(c => !!c.querySelector("button.act.taken")).indexOf(true) > [...d2.window.document.querySelectorAll(".card")].map(c => c.querySelector("button.act") && c.querySelector("button.act").textContent === "Reserve").lastIndexOf(true));
 
   c1.querySelector("button.act").click();
+  check("Reserved by you asks first", /Unreserve\?/.test(c1.textContent) && !!store.reservations[1]);
+  [...c1.querySelectorAll("button.act")].find(b => b.textContent === "Unreserve").click();
   await sleep(100);
   c1 = d.window.document.querySelectorAll(".card")[0];
   check("after Undo: Reserve again", c1.querySelector("button.act").textContent === "Reserve" && !store.reservations[1]);
@@ -176,7 +180,7 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   d.window.document.querySelectorAll(".card")[0].querySelector("button.act").click();
   await sleep(100);
   check("race: toast shown", d.window.document.getElementById("toast").textContent.includes("Someone else"));
-  check("race: item now Reserved", d.window.document.querySelectorAll(".card")[0].querySelector(".badge.status").textContent === "Reserved");
+  check("race: item now Reserved", [...d.window.document.querySelectorAll(".card")].some(c => c.textContent.includes("Headphones") && c.querySelector("button.act.taken")));
 
   // Share a gift idea (7 November 2026): only for a safe shop link; copies the link without a share sheet.
   const cardsNow = d.window.document.querySelectorAll(".card");
@@ -211,12 +215,12 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   const cc = [...D(v).querySelectorAll(".card.compact")];
   check("compact: no desc, meta or store link", !D(v).querySelector(".card.compact .desc") && !D(v).querySelector(".card.compact .meta") && !D(v).querySelector(".card.compact .store"));
   check("compact: Reserve button, price and 20% badge kept", cc[0].querySelector("button.act").textContent === "Reserve" && cc[0].querySelector(".price").textContent.includes("80") && cc[0].querySelector(".badge.drop").textContent.includes("20%"));
-  check("compact: statuses kept", cc[1].querySelector(".badge.status").textContent === "Reserved" && cc[2].querySelector(".badge.status").textContent === "Owned");
+  check("compact: statuses kept", cc[1].querySelector("button.act.taken").textContent === "Reserved" && cc[2].querySelector(".badge.status").textContent === "Owned");
   check("compact: HTML still not injected", !D(v).querySelector(".title b"));
   check("choice saved in localStorage", v.window.localStorage.getItem("wl_view") === "grid");
   cc[0].querySelector("button.act").click();
   await sleep(100);
-  check("compact: Reserve works and view stays", D(v).querySelectorAll(".card.compact")[0].querySelector("button.act").textContent === "Unreserve" && !!D(v).querySelector(".grid.two"));
+  check("compact: Reserve works and view stays", D(v).querySelectorAll(".card.compact")[0].querySelector("button.act").textContent === "Reserved by you" && !!D(v).querySelector(".grid.two"));
   pickCat(D(v), "Books");
   check("compact: category filter keeps the view", D(v).querySelectorAll(".card.compact").length === 1 && !!D(v).querySelector(".grid.two"));
   pickCat(D(v), "All");
@@ -293,13 +297,15 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   let ms = await load("?c=ABCD2345");
   check("about item is not shown as a wish", D(ms).querySelectorAll(".card").length === 6 && !titles(ms).includes(""));
   check("note for friends shown with line breaks, as text", D(ms).getElementById("about").textContent === "Size M\nNo candles <b>please</b>" && !D(ms).getElementById("about").hidden && !D(ms).querySelector("#about b"));
-  check("default order: most wanted first, then as listed", titles(ms).join("|") === "Fancy watch|Book|Cheap mug|Mystery|Reserved lamp|Old star got");
-  const mc = [...D(ms).querySelectorAll(".card")];
+  // Gifts someone else reserved go below the free ones, owned last (owner, 23 November 2026).
+  check("default order: free first (most wanted first), then reserved, then owned", titles(ms).join("|") === "Book|Cheap mug|Mystery|Fancy watch|Reserved lamp|Old star got");
+  const byT = t => [...D(ms).querySelectorAll(".card")].find(c => c.querySelector(".title").textContent === t);
+  const mc = ["Fancy watch", "Book", "Cheap mug", "Reserved lamp", "Mystery", "Old star got"].map(byT);
   check("star badge on starred, not on others or on got ones", !!mc[0].querySelector(".badge.star") && !!mc[1].querySelector(".badge.star") && !mc[2].querySelector(".badge.star") && !mc[5].querySelector(".badge.star"));
   check("star label text: givers read \"Loves it\" without a name (16 November 2026)", mc[0].querySelector(".badge.star .lbl").textContent === "Loves it" && mc[0].querySelector(".badge.star").getAttribute("aria-label") === "Loves it");
-  check("star + reserved: both badges in one corner stack, star first", mc[0].querySelectorAll(".badges > .badge").length === 2 && mc[0].querySelector(".badges").firstChild.classList.contains("star") && mc[0].querySelector(".badge.status").textContent === "Reserved");
-  check("reserved without star: status badge only", mc[4].querySelectorAll(".badges > .badge").length === 1 && mc[4].querySelector(".badge.status").textContent === "Reserved");
-  check("no badges container when nothing to show", !mc[3].querySelector(".badges"));
+  check("star + reserved: the star on the photo, Reserved on the button", mc[0].querySelectorAll(".badges > .badge").length === 1 && mc[0].querySelector(".badges").firstChild.classList.contains("star") && mc[0].querySelector("button.act.taken").textContent === "Reserved");
+  check("reserved without star: no badge, the greyed button", !mc[3].querySelector(".badges") && mc[3].querySelector("button.act.taken").textContent === "Reserved");
+  check("no badges container when nothing to show", !mc[4].querySelector(".badges"));
   check("note shown on card", [...D(ms).querySelectorAll(".wnote")].some(n => n.textContent === "Note: blue one please"));
   check("note with html stays text", !D(ms).querySelector(".wnote b") && !D(ms).querySelector(".wnote img"));
 
@@ -310,12 +316,12 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
 
   const sel = D(ms).getElementById("sort");
   sel.value = "asis"; fire(ms, sel, "change");
-  check("sort: as listed", titles(ms).join("|") === "Cheap mug|Fancy watch|Book|Mystery|Reserved lamp|Old star got");
+  check("sort: as listed", titles(ms).join("|") === "Cheap mug|Book|Mystery|Fancy watch|Reserved lamp|Old star got");
   check("sort choice saved", ms.window.localStorage.getItem("wl_sort") === "asis" && !D(ms).getElementById("filterDot").hidden);
   sel.value = "low"; fire(ms, sel, "change");
-  check("sort: price low to high, no price last, owned at the bottom", titles(ms).join("|") === "Cheap mug|Book|Reserved lamp|Fancy watch|Mystery|Old star got");
+  check("sort: price low to high, no price last, owned at the bottom", titles(ms).join("|") === "Cheap mug|Book|Mystery|Reserved lamp|Fancy watch|Old star got");
   sel.value = "high"; fire(ms, sel, "change");
-  check("sort: price high to low, no price last, owned at the bottom", titles(ms).join("|") === "Fancy watch|Reserved lamp|Book|Cheap mug|Mystery|Old star got");
+  check("sort: price high to low, no price last, owned at the bottom", titles(ms).join("|") === "Book|Cheap mug|Mystery|Fancy watch|Reserved lamp|Old star got");
   sel.value = "star"; fire(ms, sel, "change");
 
   const mp = D(ms).getElementById("maxp");
@@ -341,7 +347,7 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   let sr = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_sort", "low"));
   check("remembered sort applies", D(sr).getElementById("sort").value === "low" && titles(sr)[0] === "Cheap mug");
   let sj = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_sort", "<x>"));
-  check("junk sort falls back to most wanted first", titles(sj)[0] === "Fancy watch");
+  check("junk sort falls back to most wanted first", titles(sj)[0] === "Book");
 
   // other views
   let cv = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_view", "grid"));
@@ -416,11 +422,11 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   store.resRows = dev => [{id: 21, mine: true, n: 3, my: 2, full: true}];
   q = await load("?c=ABCD2345");
   const sock3 = [...D(q).querySelectorAll(".card")].find(c => c.textContent.includes("Socks"));
-  check("You reserved 2, with Unreserve", sock3.querySelector(".badge.status").textContent === "You reserved 2" && sock3.querySelector("button.act").textContent === "Unreserve");
+  check("You reserved 2, on the button with a lock", !sock3.querySelector(".badge.status") && sock3.querySelector("button.act").textContent === "You reserved 2" && !!sock3.querySelector("button.act svg.lock"));
   store.resRows = dev => [{id: 21, mine: false, n: 3, my: 0, full: true}];
   q = await load("?c=ABCD2345");
   const sock4 = [...D(q).querySelectorAll(".card")].find(c => c.textContent.includes("Socks"));
-  check("all taken: Reserved, no button", sock4.querySelector(".badge.status").textContent === "Reserved" && !sock4.querySelector("button.act"));
+  check("all taken: a greyed Reserved button, darkened", sock4.querySelector("button.act.taken").textContent === "Reserved" && sock4.classList.contains("dim"));
   // the owner received a gift this browser reserved: a thank-you, not "pick another gift"
   store.owner = "Sam";
   q = await load("?c=ABCD2345", w => w.localStorage.setItem("wl_res_ABCD2345", JSON.stringify({21: "Socks"})));

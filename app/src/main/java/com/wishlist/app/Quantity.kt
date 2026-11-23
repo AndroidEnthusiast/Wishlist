@@ -46,3 +46,35 @@ fun reserveLabelOf(w: Wish, c: ResCount?, r: Boolean?): String? {
         else -> null
     }
 }
+
+/**
+ * What a card's reservation button shows (owner, 23 November 2026: the button says it, no extra line above it):
+ * "reserve" (free), "mine" ("Reserved by you" or "You reserved 2", with a lock), "taken" ("Reserved" with a lock, the
+ * card darkened), or null (owned: no button). [c]: the counts of a 2× wish, [r]: true = you, false = someone else.
+ */
+fun reserveState(w: Wish, c: ResCount?, r: Boolean?): String? = when {
+    w.got -> null
+    w.qty > 1 && c != null -> if (c.my > 0) "mine" else if (c.full) "taken" else "reserve"
+    r == true -> "mine"
+    r == false -> "taken"
+    else -> "reserve"
+}
+
+/** The words on the reservation button for [reserveState]. */
+fun reserveButtonText(w: Wish, c: ResCount?, state: String): String = when (state) {
+    "mine" -> if (w.qty > 1 && c != null && c.my > 0) tr("You reserved %d", c.my) else tr("Reserved by you")
+    "taken" -> tr("Reserved")
+    else -> tr("Reserve")
+}
+
+/**
+ * The line under the photo about reservations: only "1 of 3 reserved" while some of a 2× wish are still free and you
+ * have none (everything else is on the button, owner 23 November 2026).
+ */
+fun reserveLine(w: Wish, c: ResCount?): String? =
+    if (w.qty > 1 && c != null && c.my == 0 && !c.full && c.n > 0) tr("%1\$d of %2\$d reserved", c.n, w.qty) else null
+
+/** On a list where you reserve: wishes someone else reserved go to the bottom (owner, 23 November 2026), owned last. */
+fun reservedLast(ws: List<Wish>, state: (Wish) -> String?): List<Wish> =
+    ws.sortedBy { w -> when { w.got -> 2; state(w) == "taken" -> 1; else -> 0 } }
+

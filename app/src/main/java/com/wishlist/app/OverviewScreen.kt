@@ -205,7 +205,7 @@ private fun FromWhichListDialog(action: String, ids: Set<Long>, all: List<Placed
         note = if (chosen.size == 1) tr("This wish is on %1\$d of your wishlists: %2\$s.", lists.size, lists.joinToString(", ") { Repo.mineName(it) })
         else tr("These wishes are on %d of your wishlists.", lists.size)
     ) {
-        SheetGroup(lists.map { l -> { SheetRow({ Icon(AppIcons.ListIcon, null, tint = cs.onSurfaceVariant) }, Repo.mineName(l), { onPick(l) }) } })
+        SheetGroup(lists.map { l -> { SheetRow({ Icon(listKindIcon(false), null, tint = cs.onSurfaceVariant) }, Repo.mineName(l), { onPick(l) }) } })
         if (action == "delete") SheetGroup(listOf { SheetRow({ Icon(AppIcons.Delete, null, tint = cs.error) }, tr("All lists"), { onPick(null) }, danger = true) })
     }
 }

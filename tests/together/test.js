@@ -152,8 +152,9 @@ async function attach(ctx) {
 
   // ---- Sam wants the lamp that Ben reserved: ask ----
   const lamp = s.page.locator(".card", { hasText: "Lamp" });
-  check("Reserved is a button", (await lamp.locator("button.badge.wlt-ask").innerText()) === "Reserved");
-  await lamp.locator("button.badge.wlt-ask").click();
+  // The greyed "Reserved" button asks (owner, 23 November 2026: the reservation is on the button, not a label).
+  check("Reserved is a button", (await lamp.locator("button.act.taken").innerText()) === "Reserved");
+  await lamp.locator("button.act.taken").click();
   await s.page.waitForSelector(".wlt-box");
   check("asking explains the 2 days", (await s.page.locator(".wlt-box .wlt-p").innerText()).includes("2 days"));
   psql("delete from net.calls");
@@ -165,7 +166,7 @@ async function attach(ctx) {
 
   // A second visitor asks too: someone already asked.
   const t = await open();
-  await t.page.locator(".card", { hasText: "Lamp" }).locator("button.badge.wlt-ask").click();
+  await t.page.locator(".card", { hasText: "Lamp" }).locator("button.act.taken").click();
   await t.page.getByRole("button", { name: "Ask if it’s still being bought" }).click();
   await t.page.waitForFunction(() => document.getElementById("toast").className === "show");
   check("only the first ask counts", (await t.page.locator("#toast").innerText()).startsWith("Someone already asked"));
@@ -176,12 +177,12 @@ async function attach(ctx) {
   await s.page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
   await s.page.waitForSelector(".wlt-panel");
   check("Sam sees it's free again", (await s.page.locator(".wlt-panel").innerText()).includes("“Lamp <b>x</b>” is free again"));
-  check("and can reserve it", (await lamp.getByRole("button", { name: "Reserve" }).count()) === 1);
+  check("and can reserve it", (await lamp.getByRole("button", { name: "Reserve", exact: true }).count()) === 1);
   await s.page.locator(".wlt-panel button", { hasText: "OK" }).click();
   check("OK closes the note", (await s.page.locator(".wlt-panel").count()) === 0);
 
   // ---- Sam reserves; a browser reserver gets the question on the page and answers ----
-  await lamp.getByRole("button", { name: "Reserve" }).click();
+  await lamp.getByRole("button", { name: "Reserve", exact: true }).click();
   await sleep(400);
   rpc("wl_ask", { p_code: "ZQELSTW2", p_item: 1, p_device: "otherdevice1", p_id: "", p_token: "" });
   await s.page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
@@ -191,7 +192,7 @@ async function attach(ctx) {
   await s.page.getByRole("button", { name: "Yes, I’m buying it" }).click();
   await s.page.waitForFunction(() => document.getElementById("toast").className === "show");
   check("answered", (await s.page.locator("#toast").innerText()).startsWith("Thanks!"));
-  check("still reserved by Sam", (await lamp.getByRole("button", { name: "Unreserve" }).count()) === 1);
+  check("still reserved by Sam", (await lamp.getByRole("button", { name: "Reserved by you" }).count()) === 1);
   check("the asker hears it's still being bought", rpc("wl_news_web", { p_device: "otherdevice1", p_code: "ZQELSTW2" })[0].kind === "ask_yes");
 
   // ---- no answer within 2 days: the reservation ends; Sam sees it on the next visit ----

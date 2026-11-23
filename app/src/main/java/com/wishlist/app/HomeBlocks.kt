@@ -6,6 +6,9 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -83,6 +86,8 @@ internal class HubItem(
     val pics: List<String> = listOfNotNull(picture),
     // The line under the name: "3 wishes" (null), or e.g. "4 members" for a group.
     val sub: String? = null,
+    // How many wishes are new on a friend's list: a red badge on the block (owner, 23 November 2026; FriendNews.kt).
+    val fresh: Int = 0,
     val open: () -> Unit
 )
 
@@ -315,6 +320,7 @@ internal fun ListBlock(
                     PeopleCircles(code, ws, Modifier.align(Alignment.BottomEnd).padding(6.dp))
                 }
             }
+            if (item.fresh > 0 && !small) NewCountBadge(item.fresh, Modifier.align(Alignment.TopEnd).padding(8.dp))
         }
         Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f).padding(start = 2.dp, end = 2.dp)) {
@@ -354,3 +360,17 @@ internal fun Collage(pics: List<String>) {
 
 /** Lists in the order they were last opened, newest first; never-opened ones keep their own order after them. */
 internal fun byRecent(items: List<HubItem>): List<HubItem> = items.sortedByDescending { Repo.recent[it.key] ?: 0L }
+
+/** A red badge with how many wishes are new ("3"), on a friend's list block (owner, 23 November 2026). */
+@Composable
+internal fun NewCountBadge(n: Int, modifier: Modifier = Modifier) {
+    val label = if (n == 1) tr("1 new wish") else tr("%d new wishes", n)
+    Box(
+        modifier.defaultMinSize(minWidth = 24.dp, minHeight = 24.dp).clip(CircleShape).background(NewDot)
+            .border(2.dp, Color.White, CircleShape).padding(horizontal = 7.dp)
+            .semantics { contentDescription = label },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(if (n > 99) "99+" else n.toString(), color = Color.White, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+    }
+}

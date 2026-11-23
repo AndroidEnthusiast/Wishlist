@@ -92,6 +92,9 @@ internal fun androidx.compose.foundation.lazy.grid.LazyGridItemScope.ListWishIte
     w: Wish, r: Boolean?, view: String, inShared: Boolean, model: ListModel, drag: DragState, onHold: (Wish) -> Unit
 ) {
     val ctx = LocalContext.current
+    // A co-op list: the counts of a 2× wish, and what the reservation button shows (owner, 23 November 2026).
+    val c = if (inShared) ResCounts.of(Shared.active.orEmpty(), w.id) else null
+    val rs = if (inShared) reserveState(w, c, r) else null
     val look = LocalLook.current
     val dragged = w.id == drag.dragId && drag.dragArmed
     // Where each card is (for the drag), then the dragged one follows the finger, lifted a little.
@@ -117,7 +120,7 @@ internal fun androidx.compose.foundation.lazy.grid.LazyGridItemScope.ListWishIte
             // Two per row: the ⋮ holds everything; a long press starts selecting (every list).
             w, onLongPress = { onHold(w) },
             onStar = if (inShared) null else ({ model.toggleLove(w) }),
-            reserve = if (inShared) Reserving(r, reserveLabel(Shared.active.orEmpty(), w, r)) { on -> model.reserve(w, on) } else null,
+            reserve = if (inShared) Reserving(r, reserveLine(w, c), c) { on -> model.reserve(w, on) } else null,
             onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) }),
             onMove = { MoveFlow.ask(setOf(w.id)) },
             chatAbout = if (inShared) chatOnShared(w) else null,
@@ -134,15 +137,15 @@ internal fun androidx.compose.foundation.lazy.grid.LazyGridItemScope.ListWishIte
             CardButtons(
                 spread = view == "rows",
                 // Reserving takes the place of "got it" on a shared list.
-                reserve = if (!inShared || r == false) null else ({
-                    if (r == true) OutlinedButton(onClick = { model.reserve(w, false) }) { Text(tr("Unreserve"), maxLines = 1) }
-                    else Button(onClick = { model.reserve(w, true) }) { Text(tr("Reserve"), maxLines = 1) }
-                }),
+                // One button for every state (owner, 23 November 2026; ReserveButton).
+                reserve = rs?.let { state -> {
+                    ReserveButton(w, state, reserveButtonText(w, c, state), { on -> model.reserve(w, on) }, onTaken = LocalWishDeco.current?.onBadge?.let { b -> { b(w) } })
+                } },
                 icons = {
                     // Share as its own button too (owner, 12 November 2026: sharing a wish should be one tap).
                     // On a shared wishlist with Reserve showing, Reserve + share + bin + ⋮ don't fit:
                     // Share is then only in the ⋮ (owner, 18 November 2026).
-                    if (!(inShared && r != false)) IconButton(onClick = { shareItem(ctx, w, idea = inShared) }) {
+                    if (rs == null) IconButton(onClick = { shareItem(ctx, w, idea = inShared) }) {
                         Icon(AppIcons.CardShare, tr("Share"), tint = look.cardMuted(w.id), modifier = Modifier.size(ico))
                     }
                     IconButton(onClick = { DeleteFlow.request(ctx, w) }) {
@@ -155,7 +158,7 @@ internal fun androidx.compose.foundation.lazy.grid.LazyGridItemScope.ListWishIte
                 WishMoreButton(
                     w, look.cardMuted(w.id), ico,
                     if (inShared) WishActions(
-                        reserve = Reserving(r, reserveLabel(Shared.active.orEmpty(), w, r)) { on -> model.reserve(w, on) },
+                        reserve = Reserving(r, reserveLine(w, c), c) { on -> model.reserve(w, on) },
                         onEdit = { model.editing = w }, onMove = { MoveFlow.ask(setOf(w.id)) }, shareAsIdea = true,
                         chatAbout = chatOnShared(w)
                     ) else WishActions(
@@ -167,16 +170,16 @@ internal fun androidx.compose.foundation.lazy.grid.LazyGridItemScope.ListWishIte
         } }
         if (view == "rows") RowCard(
             w,
-            badge = if (inShared) reserveLabel(Shared.active.orEmpty(), w, r) else if (w.got) tr("Owned") else null,
-            dim = if (inShared) r == false else w.got,
+            badge = if (inShared) reserveLine(w, c) else if (w.got) tr("Owned") else null,
+            dim = if (inShared) rs == "taken" else w.got,
             onLongPress = { onHold(w) },
             onStar = if (inShared) null else ({ model.toggleLove(w) }),
             onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) }),
             actions = actions
         ) else WishCard(
             w,
-            badge = if (inShared) reserveLabel(Shared.active.orEmpty(), w, r) else if (w.got) tr("Owned") else null,
-            dim = if (inShared) r == false else w.got,
+            badge = if (inShared) reserveLine(w, c) else if (w.got) tr("Owned") else null,
+            dim = if (inShared) rs == "taken" else w.got,
             onLongPress = { onHold(w) },
             onStar = if (inShared) null else ({ model.toggleLove(w) }),
             onPrivate = if (inShared) null else ({ PrivateFlow.set(ctx, w, false) }),

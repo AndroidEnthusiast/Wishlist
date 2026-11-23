@@ -186,7 +186,7 @@ fun ReceivedScreen(onClose: () -> Unit) {
     }
         if (pickList) PickSheet(tr("Which wishlist?"), onClose = { pickList = false }) {
             SheetGroup(Repo.mineIds.map { id ->
-                { SheetRow({ androidx.compose.material3.Icon(AppIcons.ListIcon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }, Repo.mineName(id), { pickList = false; askList = id }) }
+                { SheetRow({ androidx.compose.material3.Icon(listKindIcon(false), null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }, Repo.mineName(id), { pickList = false; askList = id }) }
             })
         }
         askList?.let { id -> ReceivedDialog(id) { askList = null } }

@@ -35,8 +35,9 @@ class WishSheetTest {
 
     @Test fun reserveButtonOnTwoPerRow() {
         assertEquals("reserve", reserveButton(w, Reserving(null) {}))
-        assertEquals("unreserve", reserveButton(w, Reserving(true) {}))
-        assertEquals(null, reserveButton(w, Reserving(false) {}))
+        // One button for every state (owner, 23 November 2026): "Reserved by you" and someone else's "Reserved".
+        assertEquals("mine", reserveButton(w, Reserving(true) {}))
+        assertEquals("taken", reserveButton(w, Reserving(false) {}))
         assertEquals(null, reserveButton(w.copy(got = true), Reserving(null) {}))
         // Your own lists: no Reserve.
         assertEquals(null, reserveButton(w, null))

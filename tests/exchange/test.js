@@ -180,8 +180,9 @@ const TOK = { [A]: AT, [B]: BT, [C]: CT };
   check("a javascript: link isn't a link", (await w.page.locator("a[href^='javascript']").count()) === 0);
   check("over budget label", (await w.page.locator(".card", { hasText: "Watch" }).locator(".badge.status").innerText()) === "Over budget");
   check("within budget: no label", (await w.page.locator(".card", { hasText: "Scarf" }).locator(".badge.status").count()) === 0);
-  await w.page.locator(".card", { hasText: "Scarf" }).getByRole("button", { name: "Reserve" }).click();
-  await w.page.waitForSelector(".card .badge.status:has-text('Reserved by you')");
+  await w.page.locator(".card", { hasText: "Scarf" }).getByRole("button", { name: "Reserve", exact: true }).click();
+  // The reservation is on the button, with a lock (owner, 23 November 2026).
+  await w.page.waitForSelector(".card button.act:has-text('Reserved by you') svg.lock");
   const dev = await w.page.evaluate(() => localStorage.getItem("wl_device"));
   check("the reservation is online with this browser's device", psql("select device from wl_reservations where list_code = " + q(gcode) + " and item_id = 21") === dev);
   check("everyone else sees it as reserved (any friend's device)", rpc("wl_get_reservations", { p_code: gcode, p_device: "x" }).some(r => r.id === 21 && !r.mine));

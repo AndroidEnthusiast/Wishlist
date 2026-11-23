@@ -226,12 +226,11 @@ internal fun FriendRow(f: Person, onOpen: () -> Unit, onUnfriend: () -> Unit, on
                     "🎂 " + when (days) { 0 -> tr("Birthday today!"); 1 -> tr("Birthday tomorrow"); else -> tr("Birthday in %d days", days) },
                     style = MaterialTheme.typography.bodySmall, color = look.cardInk(id)
                 )
+                // No red dot here (owner, 23 November 2026): the red badges are on the lists that have the new wishes.
                 if (fresh > 0) Row(verticalAlignment = Alignment.CenterVertically) {
-                    RedDot()
                     Text(
                         if (fresh == 1) tr("1 new wish") else tr("%d new wishes", fresh),
-                        style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = look.cardInk(id),
-                        modifier = Modifier.padding(start = 6.dp)
+                        style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = look.cardInk(id)
                     )
                 }
                 if ((days == null || days > 60) && fresh == 0) Text(

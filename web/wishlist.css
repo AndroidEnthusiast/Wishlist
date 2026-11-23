@@ -93,6 +93,14 @@ button.act {
 }
 button.act.outline { background: transparent; color: var(--primary); border-color: var(--outline); }
 button.act:disabled { opacity: .5; cursor: default; }
+/* The reservation button (owner, 23 November 2026): a lock before "Reserved by you" and "Reserved". */
+button.act svg.lock { width: 16px; height: 16px; vertical-align: -3px; margin-right: 6px; }
+button.act.taken { color: var(--muted); border-color: var(--outline); opacity: .75; }
+button.act.taken[aria-disabled="true"] { cursor: default; }
+.resbox { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.resbox.asking { font-size: .9rem; }
+.card.compact .resbox { display: flex; width: 100%; }
+.card.compact .resbox > button.act { flex: 1; }
 .note { color: var(--muted); font-size: .8rem; text-align: center; padding: 28px 8px 0; }
 .center { text-align: center; padding: 56px 16px; color: var(--muted); }
 .center button { margin-top: 12px; }

@@ -27,18 +27,18 @@ internal fun host(url: String): String = try {
 }
 
 /** Reserving a wish on a shared list. [state]: true = reserved on this phone, false = by someone else, null = still free. */
-class Reserving(val state: Boolean?, val label: String? = null, val set: (Boolean) -> Unit)
+class Reserving(
+    val state: Boolean?, val label: String? = null,
+    // How many are reserved of a "2×" wish (null: one wanted, or not known yet).
+    val counts: ResCount? = null,
+    val set: (Boolean) -> Unit
+)
 
 /**
- * The Reserve button under a Two per row card (owner, 12 November 2026): "reserve" when it is free, "unreserve" when
- * you reserved it, null when it is owned, reserved by someone else, or not a list you reserve on.
+ * The Reserve button of a card (owner, 12 November 2026; since 23 November 2026 one button for every state):
+ * [reserveState], or null when it is owned or not a list you reserve on.
  */
-fun reserveButton(w: Wish, reserve: Reserving?): String? = when {
-    reserve == null || w.got -> null
-    reserve.state == null -> "reserve"
-    reserve.state == true -> "unreserve"
-    else -> null
-}
+fun reserveButton(w: Wish, reserve: Reserving?): String? = if (reserve == null) null else reserveState(w, reserve.counts, reserve.state)
 
 /**
  * "2×" (owner, 2.128), or "". "Exactly this" / "Similar is fine" is no longer shown anywhere (owner, 16 November

@@ -80,7 +80,7 @@ fun CompactCard(
 
     // The frame comes from the design (Design.kt): shape, colour, lines and shadow.
     Column(
-        Modifier.fillMaxWidth().alpha(if (w.got || reserve?.state == false) 0.6f else 1f).then(
+        Modifier.fillMaxWidth().alpha(if (w.got || reserveButton(w, reserve) == "taken") 0.6f else 1f).then(
             if (onLongPress != null) Modifier.pointerInput(w.id) { detectTapGestures(onLongPress = { onLongPress() }) }
             else Modifier
         ).lookCard(look, w.id, look.cardShape(w.id, small = true))
@@ -175,20 +175,18 @@ fun CompactCard(
             }
         }
         // Reserve as a button on the card, as in the other views (owner, 12 November 2026: it was only in the ⋮ here).
-        // Reserved by someone else: nothing (the badge says so); reserved by you: Unreserve.
-        // A compact pill (owner, 18 November 2026: the regular size was out of proportion with the card).
-        // The reservation or status, under the photo and above the button (owner, 20 November 2026).
-        val status = if (w.got) tr("Owned") else reserve?.label ?: reservedLabel(reserve?.state)
+        // A compact pill (owner, 18 November 2026). One button for every state (owner, 23 November 2026): Reserve,
+        // "Reserved by you" with a lock, or a greyed "Reserved" with a lock; no line above it about the reservation.
+        // The line under the photo keeps "Owned" and "1 of 3 reserved" (Reserving.label).
+        val status = if (w.got) tr("Owned") else reserve?.label
         if (status != null) StatusLine(w, status, Modifier.padding(start = 12.dp, end = 10.dp))
-        if (!inert) CompositionLocalProvider(LocalCardButton provides true) {
-            when (reserveButton(w, reserve)) {
-                "reserve" -> Button(onClick = { reserve?.set?.invoke(true) }, modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp)) {
-                    Text(tr("Reserve"), maxLines = 1)
-                }
-                "unreserve" -> OutlinedButton(onClick = { reserve?.set?.invoke(false) }, modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp)) {
-                    Text(tr("Unreserve"), maxLines = 1)
-                }
-            }
+        val rs = reserveButton(w, reserve)
+        if (!inert && rs != null && reserve != null) CompositionLocalProvider(LocalCardButton provides true) {
+            val onBadge = LocalWishDeco.current?.onBadge
+            ReserveButton(
+                w, rs, reserveButtonText(w, reserve.counts, rs), reserve.set, onTaken = onBadge?.let { b -> { b(w) } },
+                modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, bottom = 4.dp)
+            )
         }
         // Reactions under the name, as wide as the card, sized for it (owner, 7 November 2026): 2 at most, then "+N",
         // and "+ React" on lists where you react.

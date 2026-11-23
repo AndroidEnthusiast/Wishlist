@@ -85,12 +85,12 @@ fun MoveSheet(ids: Set<Long>, picking: Boolean, copy: Boolean, onChoose: (copy: 
             } else null
         ) {
             if (others.isNotEmpty()) SheetGroup(others.map { d ->
-                { SheetRow({ Icon(AppIcons.ListIcon, null, tint = cs.onSurfaceVariant) }, Repo.mineName(d.id), { onPick(d.id) }, detail = wishesLabel(d.wishes.size)) }
+                { SheetRow({ Icon(listKindIcon(false), null, tint = cs.onSurfaceVariant) }, Repo.mineName(d.id), { onPick(d.id) }, detail = wishesLabel(d.wishes.size)) }
             })
             if (collabs.isNotEmpty()) {
                 PickHeading(tr("Co-op wishlists"))
                 SheetGroup(collabs.map { l ->
-                    { SheetRow({ Icon(AppIcons.Group, null, tint = cs.onSurfaceVariant) }, l.name, { onPick(MoveAcross.collabKey(l.code)) }) }
+                    { SheetRow({ Icon(listKindIcon(true), null, tint = cs.onSurfaceVariant) }, l.name, { onPick(MoveAcross.collabKey(l.code)) }) }
                 })
             }
             // "+ New wishlist" last, in your colour (docs/STYLE.md "Picking from a list").

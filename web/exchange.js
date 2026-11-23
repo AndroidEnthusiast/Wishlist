@@ -516,7 +516,9 @@
     v.appendChild(el("p", "owner", T("Wishlist of {0}", x.me.giftee.name)));
     var ws = visible(other.items);
     if (!ws.length) { v.appendChild(el("div", "center", T("Nothing here yet. Ask them anonymously what they’d like."))); return; }
-    ws.sort(function (a, b) { return (a.got ? 1 : 0) - (b.got ? 1 : 0) || (b.star ? 1 : 0) - (a.star ? 1 : 0); });
+    // Gifts someone else reserved go just above the owned ones (owner, 23 November 2026).
+    var rank = function (w) { return w.got ? 2 : WLRes.state(w, other.res[w.id], (other.cnt || {})[w.id]) === "taken" ? 1 : 0; };
+    ws.sort(function (a, b) { return rank(a) - rank(b) || (b.star ? 1 : 0) - (a.star ? 1 : 0); });
     var grid = el("div", "grid");
     ws.forEach(function (w) { grid.appendChild(card(w, false)); });
     v.appendChild(grid);
@@ -544,7 +546,8 @@
   function card(w, own) {
     var r = own ? undefined : other.res[w.id];
     var got = !!w.got;
-    var c = el("div", "card" + ((got || r === false) ? " dim" : ""));
+    var rc = own ? undefined : (other.cnt || {})[w.id];
+    var c = el("div", "card" + ((got || (!own && WLRes.state(w, r, rc) === "taken")) ? " dim" : ""));
     var lnk = safeUrl(w.url);
     var img = safeUrl(w.image);
     var pic = el(lnk ? "a" : "div", "pic" + (img ? "" : " empty"));
@@ -553,7 +556,8 @@
       var im = el("img"); im.src = img; im.alt = w.title || ""; im.loading = "lazy"; im.referrerPolicy = "no-referrer";
       pic.appendChild(im);
     } else pic.appendChild(el("span", null, "🎁"));
-    var status = got ? T("Owned") : r === true ? T("Reserved by you") : r === false ? T("Reserved") : (!own && overBudget(w) ? T("Over budget") : "");
+    // The reservation is on the button (owner, 23 November 2026).
+    var status = got ? T("Owned") : (!own && WLRes.line(w, rc)) || (!own && overBudget(w) ? T("Over budget") : "");
     if (status || (w.star && !got)) {
       var bx = el("div", "badges");
       if (w.star && !got) { var s = el("span", "badge star"); s.appendChild(el("span", "ico", "♥")); s.appendChild(el("span", "lbl", own ? T("Love it") : T("Loves it"))); bx.appendChild(s); }
@@ -576,8 +580,8 @@
       acts.appendChild(btn(T("Delete"), "outline small", function () { removeWish(w); }));
       row.appendChild(acts);
     } else if (!got) {
-      if (r === undefined) row.appendChild(btn(T("Reserve"), "small", function () { toggle(w, true); }));
-      else if (r === true) row.appendChild(btn(T("Unreserve"), "outline small", function () { toggle(w, false); }));
+      // One button for every state (reserve.js), as in the app.
+      row.appendChild(WLRes.button(w, r, rc, { set: function (on) { toggle(w, on); }, ask: null }));
     }
     body.appendChild(row);
     c.appendChild(body);

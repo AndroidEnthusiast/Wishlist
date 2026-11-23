@@ -36,7 +36,8 @@ class FriendWishesTest {
     /** Owner, 18 November 2026: Reserve left, the ⋮ last on every card; on shared wishlists Share goes into the ⋮. */
     @Test fun cardButtonsInOneOrder() {
         for (f in listOf("ListWishItem.kt", "Friend.kt")) assertTrue(f, src(f).contains("CardButtons(") && src(f).contains("cardIcon("))
-        assertTrue(src("ListWishItem.kt").contains("if (!(inShared && r != false)) IconButton(onClick = { shareItem("))
+        // Share goes into the ⋮ whenever the reservation button shows (since 23 November 2026 also someone else's).
+        assertTrue(src("ListWishItem.kt").contains("if (rs == null) IconButton(onClick = { shareItem("))
         val cb = src("WishCardParts.kt")
         assertTrue(cb.indexOf("reserve()") < cb.indexOf("icons()") && cb.indexOf("icons()") < cb.indexOf("more()"))
     }

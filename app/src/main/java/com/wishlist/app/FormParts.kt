@@ -101,7 +101,9 @@ fun CategoryField(
 fun PickSheet(
     title: String, options: List<Pair<String, String>>, selected: String, onPick: (String) -> Unit,
     actions: List<Triple<androidx.compose.ui.graphics.vector.ImageVector, String, () -> Unit>> = emptyList(),
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    // The icon of each option ([listKindIcon] for wishlists: one person = Personal, two = Co-op).
+    icon: @Composable (String) -> androidx.compose.ui.graphics.vector.ImageVector = { AppIcons.ListIcon }
 ) {
     val cs = MaterialTheme.colorScheme
     ModalBottomSheet(onDismissRequest = onClose, sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
@@ -113,7 +115,7 @@ fun PickSheet(
             SheetGroup(options.map { (key, name) ->
                 @Composable {
                     SheetRow(
-                        { Icon(AppIcons.ListIcon, null, tint = cs.onSurfaceVariant) },
+                        { Icon(icon(key), null, tint = cs.onSurfaceVariant) },
                         name, { onPick(key) }, chosen = key == selected
                     )
                 }
@@ -131,3 +133,10 @@ fun currencySymbol(code: String): String = try {
 } catch (e: Exception) {
     code
 }
+
+/**
+ * The icon of a wishlist wherever lists are listed (owner, 23 November 2026: "use the single or double person icon to
+ * indicate what kind of wishlist it is"): one person = Personal, two people = Co-op. Same as the New wishlist chips.
+ */
+@Composable
+fun listKindIcon(coop: Boolean): androidx.compose.ui.graphics.vector.ImageVector = if (coop) AppIcons.Group else AppIcons.Person

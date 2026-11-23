@@ -15,7 +15,13 @@ import kotlinx.coroutines.launch
  * (FriendScreen in Friend.kt) only draws. [f]: the list; the owner never sees its reservations (Rule 4).
  */
 @Stable
-internal class FriendListState(private val ctx: Context, private val f: Friend, private val snack: SnackbarHostState, private val scope: CoroutineScope) {
+internal class FriendListState(
+    private val ctx: Context, private val f: Friend, private val snack: SnackbarHostState, private val scope: CoroutineScope,
+    // The friend whose list it is (their new wishes get the "NEW" ribbon); null for a list opened from a link.
+    private val friendId: String? = null
+) {
+    // Wishes that were new when you opened the list: the ribbon, until you leave it (owner, 23 November 2026).
+    var fresh by mutableStateOf<Set<Long>>(emptySet())
     var remote by mutableStateOf<RemoteList?>(null)
     var res by mutableStateOf<Map<Long, Boolean>>(emptyMap())
     // "loading", "ok", "gone" (the list isn't shared any more) or "offline".
@@ -54,6 +60,11 @@ internal class FriendListState(private val ctx: Context, private val f: Friend, 
             } else {
                 val m = fetchRes()
                 remote = r
+                // What's new on this list is seen now; it keeps its ribbon while you're here (FriendNews.kt).
+                if (friendId != null) {
+                    fresh = fresh + FriendNews.newIds(ctx, friendId, r)
+                    FriendNews.markListSeen(ctx, friendId, r)
+                }
                 // A tap still on its way keeps what it shows.
                 res = if (pending.isEmpty()) m else m.toMutableMap().apply { pending.forEach { id -> res[id]?.let { put(id, it) } ?: remove(id) } }
                 FriendWatch.check(ctx, f, r, m.filterValues { it }.keys, FriendWatch.movedFrom(ctx, f.code, r))

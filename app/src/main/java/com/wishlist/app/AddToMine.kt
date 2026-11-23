@@ -74,7 +74,7 @@ fun AddToMineHost(snack: SnackbarHostState) {
         PickSheet(tr("Add to my wishlist"), onClose = { AddToMine.asking = null }, top = { MovingWishes(setOf(w.id), listOf(w)) }) {
             SheetGroup(lists.map { id ->
                 {
-                    SheetRow({ androidx.compose.material3.Icon(AppIcons.ListIcon, null, tint = cs.onSurfaceVariant) }, Repo.mineName(id), {
+                    SheetRow({ androidx.compose.material3.Icon(listKindIcon(false), null, tint = cs.onSurfaceVariant) }, Repo.mineName(id), {
                         AddToMine.asking = null
                         AddToMine.done = id to AddToMine.add(ctx, id, w)
                     })

@@ -926,3 +926,10 @@ exactly the owner's screenshots. Not checkable here: how it feels on a phone.
 2.270: big names in the title font; chat about a wish on co-op lists (owner runs `supabase-features.sql` v2). 2.271–2.272:
 Privacy in New wishlist, it opens; one page; form sheets close only by X / pull tab. 2.273: "Shared" → Co-op everywhere,
 Home's tabs per kind, chosen wishes can be taken out (a flaw Claude missed). Not checkable here: the real phone.
+
+### 22 November 2026: earning money, Search the shops, lines between rows, pickers as sheets (2.277–2.279)
+Owner asked how to earn money without ads, sponsored ideas or accounts: advice written down (affiliate links on what the
+user opens, later Plus on the Play Store), nothing decided. Built "Search the shops" after 8 questions: one search
+opens bol.com's own results with a row of the six big shops + Google, "Open in Chrome", an offline message. The layout
+check caught cut-off letters in small shop icons (fixed). 2.278: rows in dark menus looked like one block (line
+almost invisible, some menus none): a thin line after the icon everywhere. 2.279: every picker a bottom sheet. 2.280: the review.

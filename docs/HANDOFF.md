@@ -5,6 +5,9 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.284 (23 November 2026), read first.** Reservations on the button, new wishes per list with the purple "NEW"
+  ribbon, person icons in list pickers (`wish-cards.md`, last section). Ask how the ribbon and the darkened "Reserved"
+  look in each theme, and whether the smaller "Reserved by you" on narrow cards reads well.
 - **2.283 (23 November 2026), read first.** The shorter Co-op form with "Add friends" (`home-and-kinds.md`, last
   section). Ask how it feels, and whether any other screen still has a plain "+ …" line (owner's rule: none anywhere).
 - **2.282 (23 November 2026), read first.** The price tracker after bol.com's false "−20%" (`prices.md`): variants with
@@ -130,6 +133,12 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 23 November 2026: reservations on the button, new wishes per list (2.284)
+Owner's screenshots: same icon for every list, a friend's red dot that led nowhere, a busy card after Reserve. Built:
+person icons in every list picker; a red count per friend list and a royal purple "NEW" ribbon (owner's pick); one
+Reserve button with a lock ("Unreserve?" first), others' darkened and below the free ones, app and all web pages.
+Screenshots caught "Reserved by" cut off on narrow cards (text now shrinks). Not checkable here: the phone.
+
 ### 23 November 2026: a shorter Co-op form, friends picked at once (2.283)
 Owner: the Co-op form had too many options. "Gifts for someone?" and helper lines gone; an "Add friends" card invites
 friends the moment the list is made (failed sends told, with where to retry). Owner's new rule: no plain "+" lines
@@ -140,10 +149,3 @@ Owner's bol.com pot showed "−20%" while its price rose. The owner's "Price is 
 sizes, a link with "?cid=…", no variant matched, and the family's cheapest "from" price (another product) was read
 twice. Fixed in the app and web together; never "from"/lowest prices; per-kilo prices skipped; rule 5 "same place on
 the page" (database step 2 → 3). Also: the daily server check failing = supabase-features.sql v2 not yet run.
-
-### 22 November 2026: earning money, Search the shops, lines between rows, pickers as sheets (2.277–2.279)
-Owner asked how to earn money without ads, sponsored ideas or accounts: advice written down (affiliate links on what the
-user opens, later Plus on the Play Store), nothing decided. Built "Search the shops" after 8 questions: one search
-opens bol.com's own results with a row of the six big shops + Google, "Open in Chrome", an offline message. The layout
-check caught cut-off letters in small shop icons (fixed). 2.278: rows in dark menus looked like one block (line
-almost invisible, some menus none): a thin line after the icon everywhere. 2.279: every picker a bottom sheet. 2.280: the review.

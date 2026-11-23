@@ -78,7 +78,7 @@ fun FriendScreen(
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     // The list, your reservations on it and what is open (FriendListState in FriendListModel.kt), one per list.
-    val st = remember(f.code) { FriendListState(ctx, f, snack, scope) }
+    val st = remember(f.code) { FriendListState(ctx, f, snack, scope, chatWith) }
     androidx.activity.compose.BackHandler(enabled = st.searching) { st.stopSearch() }
     ReactionsLoader(f.code)
     val deco = WishDeco(f.code, canReact = reactions, onBadge = { w ->
@@ -170,7 +170,10 @@ fun FriendScreen(
                     }
                     // Wishes in the owner's bin are not on the list.
                     // Owned wishes at the bottom (owner, 2.113): what's still wanted comes first.
-                    val shown = sortWishes(onList.filter { (st.cat == "All" || it.category == st.cat) && matchesQuery(it, st.query) }, Repo.sort)
+                    // Gifts someone else reserved go below the free ones (owner, 23 November 2026).
+                    val shown = reservedLast(sortWishes(onList.filter { (st.cat == "All" || it.category == st.cat) && matchesQuery(it, st.query) }, Repo.sort)) { w ->
+                        reserveState(w, ResCounts.of(f.code, w.id), st.res[w.id])
+                    }
                     if (shown.isEmpty()) {
                         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                             if (hasCover) cover(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp))
@@ -233,7 +236,11 @@ fun FriendScreen(
                             }
                             gridItems(shown, key = { it.id }) { w ->
                                 val r = st.res[w.id]
-                                val label = if (w.got) tr("Owned") else reserveLabel(f.code, w, r)
+                                val c = ResCounts.of(f.code, w.id)
+                                val rs = reserveState(w, c, r)
+                                // The reservation is on the button (owner, 23 November 2026); the line keeps "Owned",
+                                // "1 of 3 reserved" and "Over budget".
+                                val label = if (w.got) tr("Owned") else reserveLine(w, c)
                                     ?: if (overBudget?.invoke(w) == true) tr("Over budget") else null
                                 val ico = cardIcon(Repo.view)
                                 val actions: @Composable RowScope.() -> Unit = {
@@ -241,10 +248,9 @@ fun FriendScreen(
                                     CardButtons(
                                         spread = Repo.view == "rows",
                                         // "Unreserve" says exactly what it does (owner: "Undo" could be forgotten).
-                                        reserve = if (w.got || r == false) null else ({
-                                            if (r == true) OutlinedButton(onClick = { st.toggle(w, false) }) { Text(tr("Unreserve"), maxLines = 1) }
-                                            else Button(onClick = { st.toggle(w, true) }) { Text(tr("Reserve"), maxLines = 1) }
-                                        }),
+                                        reserve = rs?.let { state -> {
+                                            ReserveButton(w, state, reserveButtonText(w, c, state), { on -> st.toggle(w, on) }, onTaken = deco.onBadge?.let { b -> { b(w) } })
+                                        } },
                                         icons = {
                                             // Share as its own button too (owner, 12 November 2026).
                                             IconButton(onClick = { shareItem(ctx, w, idea = true) }) {
@@ -257,21 +263,25 @@ fun FriendScreen(
                                         WishMoreButton(
                                             w, LocalLook.current.cardMuted(w.id), ico,
                                             WishActions(
-                                                reserve = if (w.got) null else Reserving(r, label) { on -> st.toggle(w, on) }, shareAsIdea = true,
+                                                reserve = if (w.got) null else Reserving(r, label, c) { on -> st.toggle(w, on) }, shareAsIdea = true,
                                                 chatAbout = chatWith?.let { p -> { go(Deep.Chat(p, ChatWish.of(w, f.code))) } }
                                             )
                                         )
                                     }
                                 }
                                 GlowBox(w.id, small = Repo.view == "grid") {
+                                Box {
                                 when (Repo.view) {
                                     "grid" -> CompactCard(
                                         w, readOnly = true,
-                                        reserve = if (w.got) null else Reserving(r, label) { on -> st.toggle(w, on) },
+                                        reserve = if (w.got) null else Reserving(r, label, c) { on -> st.toggle(w, on) },
                                         chatAbout = chatWith?.let { p -> { go(Deep.Chat(p, ChatWish.of(w, f.code))) } }
                                     ) {}
-                                    "rows" -> RowCard(w, badge = label, dim = w.got || r == false, actions = actions)
-                                    else -> WishCard(w, badge = label, dim = w.got || r == false, actions = actions)
+                                    "rows" -> RowCard(w, badge = label, dim = w.got || rs == "taken", actions = actions)
+                                    else -> WishCard(w, badge = label, dim = w.got || rs == "taken", actions = actions)
+                                }
+                                // New since you last opened this list (owner, 23 November 2026).
+                                if (w.id in st.fresh) NewRibbon(LocalLook.current.cardShape(w.id, Repo.view == "grid"))
                                 }
                                 }
                             }

@@ -60,7 +60,8 @@ fun SaveToField(
             tr("Save to"), targets.map { it.key to it.name }, current.key,
             onPick = { open = false; onPick(it) },
             actions = if (onNew != null) listOf(Triple(AppIcons.Add, tr("New wishlist")) { open = false; onNew() }) else emptyList(),
-            onClose = { open = false }
+            onClose = { open = false },
+            icon = { k -> listKindIcon(targets.firstOrNull { it.key == k }?.code != null) }
         )
     }
 }
