@@ -955,3 +955,6 @@ person icons in every list picker; a red count per friend list and a royal purpl
 Reserve button with a lock ("Unreserve?" first), others' darkened and below the free ones, app and all web pages.
 Screenshots caught "Reserved by" cut off on narrow cards (text now shrinks). 2.285: "Unreserve?" on the button, red ribbon;
 perfumes kept €79.95 (sizes, no "from" price): owner chose size tracking (next build). Not checkable here: the phone.
+
+(Earlier Next-session line, replaced by 2.288.) - **Owner, 24 November 2026: ideas 7 and 11 next** (`ideas.md`, last section; `people.md`, last section): interview
+  first. Ask how the chat's + and the wishlist card feel on the phone (2.287).
