@@ -958,3 +958,15 @@ perfumes kept €79.95 (sizes, no "from" price): owner chose size tracking (next
 
 (Earlier Next-session line, replaced by 2.288.) - **Owner, 24 November 2026: ideas 7 and 11 next** (`ideas.md`, last section; `people.md`, last section): interview
   first. Ask how the chat's + and the wishlist card feel on the phone (2.287).
+
+### 24 November 2026: a + in the chat, a whole wishlist as a card (2.287)
+Owner disliked the gift button: a + (left) with "A wish from my wishlists", "Photo from gallery", "A whole wishlist";
+the camera inside the text box, straight to the camera. "Only me" lists ask to become visible first. Advised on chat
+extras and the idea list; owner wants 7 (wishes without a product) and 11 (gift ideas per person) next, after
+questions; 31 (export) already existed. Not checkable here: the phone, and a real send between two phones.
+
+### 24 November 2026: debt that can't grow (guards, no app change)
+Owner asked for an honest review, then for a way to stay on features with no more clean-ups. Added guards that read
+the code in about a second: silent catches (388 in 138 files) and objects holding app-wide changing data (68) may only
+go down (`CodeHealthTest`, `app/guard-baseline.txt`); web files under 400 lines, the 6 bigger ones only shrink
+(`tests/size/test.js`). Folders: owner asked, told they don't make the app smoother or builds quicker; files stay put.

@@ -97,32 +97,8 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   The saved copy in `themes/gen-z-chaos/` stays the backup of the 2.198 version.
 - **App only:** the friends' web pages don't follow the themes. **One update** with everything, no previews.
 
-## Six more themes (owner, 13 November 2026, built in 2.200)
-- **Added, from https://www.kittl.com/blogs/design-styles-name-stl/**: Conceptual sketch (doodle art), Farmhouse or
-  cottage-core, Japandi, Risograph, Synthwave, Anthropomorphic. Same rules as the six before (own colours, light and
-  dark equally good, every part themed, fonts fitting the theme, no moving effects, text on calm surfaces).
-- Built right away, before the owner had tried 2.199 (owner's choice; Claude advised waiting): problems found in 2.199
-  get fixed in all styles at once.
-- **Anthropomorphic's character: a gift box with a face** (the app's gift brought to life: eyes, a smile, little arms,
-  the bow on its head), drawn in our own code. It shows on **empty pages and wishes without a photo** and **peeks over
-  the top edge of cards** (Home's profile card and the list's header card; not on every wish card, to keep lists calm).
-  Not next to the wordmark and not as the spinner (owner skipped those).
-- **Lettering effects on big titles only**: Risograph's misaligned colour copy and Synthwave's neon glow go on the
-  Wishlist title, screen titles and section headings; wish names, prices, chat and settings stay plain.
-
-## Swiss, British Punk, colour sets and wild cards (owner, 13 November 2026, built in 2.201)
-- **Added from https://uiuxshowcase.com/blog/which-graphic-design-styles-every-designer-should-know/**: 3 Swiss Design
-  and 5 British Punk. Swiss: white, black and Swiss red (dark: black page, white type, the same red). Punk: **no Union
-  Jack** (punk colours: black-and-white photocopy, red, blue, safety-pin yellow, torn paper, ransom-note letters on
-  big titles only).
-- **Every style gets at least 3 colour sets to pick from** (owner: "so that picking a theme is not so much what you see
-  is what you get"); logical sets that fit the style (Claude picks them, named in the Themer). Quiet and Gen Z chaos
-  keep their accent colours (5 + any colour).
-- **Wild placement** ("like Gen Z chaos but not a one-on-one copy"): British Punk (strongest: cut-outs tilted and
-  nudged out of line, taped down), Grunge (more crooked), Doodle (loose sketches), Risograph (layers nudged sideways).
-  The owner's answer on skewing was "like Gen Z" (cards turn; no slanted text).
-- **Recheck every style** so its buttons, cards and other parts have something only that style has, not just colours
-  (owner: "whether the buttons, cards etc could be more themed or designed in a way that is unique to that style").
+- Moved word for word to `docs/decisions/look-ARCHIVE.md` (24 November 2026, size limit): "Six more themes" and
+  "Swiss, British Punk, colour sets and wild cards" (13 November 2026; replaced by Quiet and Gen Z chaos on the 14th).
 
 ## Deep themes, one at a time (owner, 13 November 2026, after 2.201)
 - Owner: the colour sets "only change a few accent colours"; expected "a theme within a theme"; themes felt like "the
@@ -330,3 +306,17 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
 - Not chosen now (to-do): "Open in Chrome" for every shop, the offline message when tapping a shop tile, whether the
   last pop-up pickers (How many?, Leave with "who takes over") should become sheets too.
 
+## The app's own "thing": little real objects (owner, 24 November 2026; built in 2.289)
+- Owner: "I want my app to live a bit more and have its own thing / style" (knowing animations shouldn't be
+  abundant). Offered: little real objects / motion only / light and colour. **Chosen: little real objects**: a small
+  family (at most about five) drawn the same way (materials gold, silver, paper, Berry ink; light from the top left;
+  the same springy settle), only at their moment (under a second, one vibration at most) and at rest on empty pages
+  that fit them. Fits identity.md (Apple's calm leading, Duolingo's small celebrations). `Padlock.kt`, `Objects.kt`.
+- **Built first (owner's pick):** the **price tag** (only on a wish's price page after a drop, swinging in with the
+  countdown; fixed deep green ink on the paper so it reads in dark mode); the **"Got it!" stamp** (Berry, words chosen
+  over "Received") on "I have it" (list cards in every view and All wishes) and on the ticked rows of "What did you
+  get?" when tapping Done (each row at once, one vibration), then the wish moves (750 ms; at once with Remove
+  animations); TalkBack says "Got it!". **Empty pages, only where an object fits:** Gifts I reserved (open padlock),
+  Price watch (tag), Received gifts (stamp), at a fixed size that doesn't grow with text size.
+- Not built (offered): envelope with a wax seal (sharing / invites), ribbon on the occasion day, objects on the other
+  empty pages. "I have it" for several selected wishes doesn't exist (selecting offers Move and Delete only).

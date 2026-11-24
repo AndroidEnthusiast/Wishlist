@@ -126,7 +126,9 @@ fun ReservedScreen(onClose: () -> Unit, onOpen: (ReservedGroup) -> Unit) {
                     EmptyState(
                         AppIcons.Gift,
                         tr("Nothing reserved yet. Open a friend’s wishlist, tap Reserve on a gift you’ll buy, and it shows here. They never see who reserved it."),
-                        tr("Go to Friends"), { onClose(); go(Deep.FriendsAsLeft) }
+                        tr("Go to Friends"), { onClose(); go(Deep.FriendsAsLeft) },
+                        // An open padlock: nothing locked yet (owner, 24 November 2026; Objects.kt).
+                        art = { RestingPadlock() }
                     )
                 }
                 groups.forEach { g ->

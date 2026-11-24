@@ -107,6 +107,9 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
 ## Motion
 - Animations are short and calm. When the phone's animations are switched off (Settings > Accessibility > Remove
   animations), nothing moves (see `Snow.kt`); information never depends on an animation.
+- **The app's little real objects** (owner, 24 November 2026; `Padlock.kt`, `Objects.kt`): the golden padlock, the
+  price tag and the "Got it!" stamp are the app's signature. A new moment that deserves a flourish gets one of these
+  (or a new object drawn the same way, asked first), never confetti or a generic animation; at most about five.
 - Screens move like Signal's (owner, 12 November 2026), always through `Motion.kt`, about 0.25 s: going deeper slides
   in a short way from the right while fading in, Back reverses it, the bottom bar's tabs fade through. A new route
   gets this by itself; a place inside a screen that switches without being a route (an open chat, a friend's page)

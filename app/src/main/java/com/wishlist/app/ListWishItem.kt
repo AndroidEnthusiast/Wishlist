@@ -189,6 +189,8 @@ internal fun androidx.compose.foundation.lazy.grid.LazyGridItemScope.ListWishIte
     }
     }
     }
+    // "I have it": the "Got it!" stamp for a moment before the wish leaves (owner, 24 November 2026; Objects.kt).
+    if (w.id in ReceivedFlow.stamping) StampOverlay(Modifier.matchParentSize().clip(look.cardShape(w.id, small = view == "grid")), big = view != "grid")
     }
 }
 

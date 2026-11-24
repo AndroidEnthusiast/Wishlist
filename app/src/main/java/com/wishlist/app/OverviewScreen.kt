@@ -222,6 +222,7 @@ private fun WishLine(p: Placed, onOpen: () -> Unit, onUnstar: (() -> Unit)?, onL
     val id = w.id
     var sheet by remember { mutableStateOf(false) }
     if (sheet) WishSheet(w, actions) { sheet = false }
+    Box(Modifier.fillMaxWidth()) {
     Row(
         Modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true))
             .combinedClickable(onClick = onOpen, onLongClick = onLongPress)
@@ -249,5 +250,8 @@ private fun WishLine(p: Placed, onOpen: () -> Unit, onUnstar: (() -> Unit)?, onL
             StarToggle(true, onUnstar, Modifier.padding(horizontal = 8.dp))
         }
         IconButton(onClick = { sheet = true }) { Icon(AppIcons.MoreVert, tr("More"), tint = look.cardMuted(id)) }
+    }
+    // "I have it": the "Got it!" stamp for a moment before the wish leaves (owner, 24 November 2026).
+    if (id in ReceivedFlow.stamping) StampOverlay(Modifier.matchParentSize().clip(look.cardShape(id, small = true)), big = false)
     }
 }

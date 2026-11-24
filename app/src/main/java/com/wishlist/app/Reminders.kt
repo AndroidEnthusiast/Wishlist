@@ -107,19 +107,32 @@ fun ReceivedDialog(listId: String, onClose: () -> Unit) {
         Repo.receive(ctx, listId, single.toSet())
         onClose()
     }
+    // Done stamps "Got it!" on every ticked row at once (one vibration), then they move (owner, 24 November 2026).
+    var stamped by remember { mutableStateOf(emptySet<Long>()) }
+    if (stamped.isNotEmpty()) androidx.compose.runtime.LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(ReceivedFlow.STAMP_MS)
+        receiveTicked()
+    }
     // A bottom sheet like every picker (owner, 22 November 2026; PickSheet.kt): tick, then Done.
     PickSheet(
         tr("What did you get?"), onClose = onClose,
         note = tr("Tick the wishes you have. They move to Received gifts, and whoever gave them gets a thank-you."),
-        action = tr("Done"), onAction = { if (picked.isEmpty()) onClose() else receiveTicked() }
+        action = tr("Done"), onAction = {
+            if (picked.isEmpty()) onClose()
+            else if (animationsOff(ctx)) receiveTicked()
+            else if (stamped.isEmpty()) stamped = picked
+        }
     ) {
         if (wishes.isEmpty()) PickNote(tr("This wishlist has no wishes."))
         else SheetGroup(wishes.map { w ->
             {
-                SheetRow(
-                    { PickWishPhoto(w) }, w.label, { picked = if (w.id in picked) picked - w.id else picked + w.id },
-                    chosen = w.id in picked, tile = false
-                )
+                androidx.compose.foundation.layout.Box {
+                    SheetRow(
+                        { PickWishPhoto(w) }, w.label, { if (stamped.isEmpty()) picked = if (w.id in picked) picked - w.id else picked + w.id },
+                        chosen = w.id in picked, tile = false
+                    )
+                    if (w.id in stamped) StampOverlay(Modifier.matchParentSize(), big = false, buzz = w.id == stamped.first())
+                }
             }
         })
     }
@@ -135,7 +148,8 @@ fun ReceivedList(modifier: Modifier = Modifier) {
         val back = androidx.activity.compose.LocalOnBackPressedDispatcherOwner.current
         if (items.isEmpty()) EmptyState(
             AppIcons.Gift, tr("No received gifts yet. After a wishlist’s occasion you can mark the wishes you got, and they show up here."),
-            tr("Back"), { back?.onBackPressedDispatcher?.onBackPressed() }
+            tr("Back"), { back?.onBackPressedDispatcher?.onBackPressed() },
+            art = { RestingStamp() }
         )
         items.forEach { w ->
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {

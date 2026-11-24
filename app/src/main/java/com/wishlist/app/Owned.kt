@@ -52,14 +52,30 @@ object ReceivedFlow {
     var moved by mutableStateOf<Long?>(null)
         private set
 
+    /**
+     * Wishes showing the "Got it!" stamp for a moment before they leave (owner, 24 November 2026; Objects.kt): the
+     * cards draw it on top. Only for that moment; with "Remove animations" on they leave at once.
+     */
+    var stamping by mutableStateOf<Set<Long>>(emptySet())
+        private set
+
+    private fun afterStamp(c: Context, id: Long, move: () -> Unit) {
+        if (animationsOff(c)) { move(); return }
+        stamping = stamping + id
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ stamping = stamping - id; move() }, STAMP_MS)
+    }
+
+    /** How long the stamp shows before the wish moves. */
+    const val STAMP_MS = 750L
+
     /** A wish of the list that is open. */
-    fun receive(c: Context, w: Wish) {
+    fun receive(c: Context, w: Wish) = afterStamp(c, w.id) {
         if (Repo.hasCopies(w.id)) Repo.receiveEverywhere(c, w.id) else Repo.receive(c, Repo.openMine, setOf(w.id))
         moved = w.id
     }
 
     /** A wish from All your wishes (on one or more lists). */
-    fun everywhere(c: Context, id: Long) {
+    fun everywhere(c: Context, id: Long) = afterStamp(c, id) {
         Repo.receiveEverywhere(c, id)
         moved = id
     }

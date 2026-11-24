@@ -25,14 +25,18 @@ import androidx.compose.ui.unit.dp
  * Try again, Add a wish, Back). Never a line alone. The button is as wide as its words, like every screen button.
  */
 @Composable
-fun EmptyState(icon: ImageVector, text: String, action: String, onAction: () -> Unit, modifier: Modifier = Modifier) {
+fun EmptyState(
+    icon: ImageVector, text: String, action: String, onAction: () -> Unit, modifier: Modifier = Modifier,
+    // One of the app's objects at rest instead of the icon, where one fits (owner, 24 November 2026; Objects.kt).
+    art: (@Composable () -> Unit)? = null
+) {
     val cs = MaterialTheme.colorScheme
     Column(
         modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Box(Modifier.size(80.dp).clip(CircleShape).background(cs.primaryContainer), contentAlignment = Alignment.Center) {
-            Icon(icon, null, tint = cs.onPrimaryContainer, modifier = Modifier.size(36.dp))
+            if (art != null) art() else Icon(icon, null, tint = cs.onPrimaryContainer, modifier = Modifier.size(36.dp))
         }
         Text(text, style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, textAlign = TextAlign.Center)
         Button(onClick = onAction) { Text(action) }

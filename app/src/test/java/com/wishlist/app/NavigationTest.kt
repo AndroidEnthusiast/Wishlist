@@ -424,7 +424,8 @@ class WishlistSheetTest : NavigationBase() {
 
 /**
  * "I have it" (owner, 12 November 2026: it replaces Owned and Received). Since 20 November 2026 (owner) it goes
- * straight to Received gifts with no question: off the list at once, the total down, "Moved to Received gifts" + Undo.
+ * straight to Received gifts with no question: the "Got it!" stamp for a moment (24 November 2026), then off the list,
+ * the total down, "Moved to Received gifts" + Undo.
  */
 class HaveItTest : NavigationBase() {
     @Test fun movesToReceivedGifts() {
@@ -444,6 +445,27 @@ class HaveItTest : NavigationBase() {
         org.junit.Assert.assertEquals(1, Repo.myWishes.size)
         org.junit.Assert.assertTrue(Repo.myBin.any { it.recv > 0L })
         org.junit.Assert.assertEquals("the total went down", 1, Repo.myWishes.count { it.price != null })
+        shows("Moved to Received gifts")
+    }
+
+    /** With animations on (owner, 24 November 2026): first the "Got it!" stamp on the card, the wish still there; then it moves. */
+    @Test fun stampsFirst() {
+        val app = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()
+        android.provider.Settings.Global.putFloat(app.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
+        compose.runOnUiThread { Repo.addMine(app, Wish(43, "https://example.com/l", "Lamp", "", "", 30.0, null, "EUR", "Home")) }
+        val before = Repo.myWishes.size
+        send(open(MainActivity.OPEN_NOTE, "m:" + Repo.mineIds.first()))
+        compose.waitForIdle()
+        compose.onAllNodes(hasContentDescription("More") and hasClickAction()).onFirst().performClick()
+        compose.waitForIdle()
+        tap("I have it")
+        compose.waitForIdle()
+        shows("Got it!")
+        org.junit.Assert.assertEquals("still on the list while stamped", before, Repo.myWishes.size)
+        org.robolectric.shadows.ShadowLooper.idleMainLooper(ReceivedFlow.STAMP_MS + 50, java.util.concurrent.TimeUnit.MILLISECONDS)
+        compose.waitForIdle()
+        org.junit.Assert.assertEquals(before - 1, Repo.myWishes.size)
+        org.junit.Assert.assertTrue(ReceivedFlow.stamping.isEmpty())
         shows("Moved to Received gifts")
     }
 }

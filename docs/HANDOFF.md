@@ -141,20 +141,14 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 24 November 2026: little real objects (2.289)
+Owner wanted the app to "live" with its own thing: chose little real objects. Built: a paper price tag swinging in on
+the price page after a drop; a Berry "Got it!" stamp on "I have it" and in "What did you get?", then the wish moves;
+objects at rest on three empty pages. Style guide: new flourishes use these objects. Not checkable here: the motion
+and the vibration on the phone (still frames only).
+
 ### 24 November 2026: the golden padlock (2.288)
 Owner wanted prettier, emoji-like animations. Our own golden padlock (silver shackle, shine) on "Reserved by you",
 grey on someone else's; it swings shut on the button right after Reserve (1.6×, then settles) and opens in
 "Unreserve?"; app and web pages, still with Remove animations. 18 dp keeps "Reserved by you" fitting (CardLayoutTest).
 Other 3D animations offered, none chosen. Not checkable here: the real motion on the phone (only frames were seen).
-
-### 24 November 2026: a + in the chat, a whole wishlist as a card (2.287)
-Owner disliked the gift button: a + (left) with "A wish from my wishlists", "Photo from gallery", "A whole wishlist";
-the camera inside the text box, straight to the camera. "Only me" lists ask to become visible first. Advised on chat
-extras and the idea list; owner wants 7 (wishes without a product) and 11 (gift ideas per person) next, after
-questions; 31 (export) already existed. Not checkable here: the phone, and a real send between two phones.
-
-### 24 November 2026: debt that can't grow (guards, no app change)
-Owner asked for an honest review, then for a way to stay on features with no more clean-ups. Added guards that read
-the code in about a second: silent catches (388 in 138 files) and objects holding app-wide changing data (68) may only
-go down (`CodeHealthTest`, `app/guard-baseline.txt`); web files under 400 lines, the 6 bigger ones only shrink
-(`tests/size/test.js`). Folders: owner asked, told they don't make the app smoother or builds quicker; files stay put.
