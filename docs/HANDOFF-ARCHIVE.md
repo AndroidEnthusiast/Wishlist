@@ -943,3 +943,8 @@ Owner's bol.com pot showed "−20%" while its price rose. The owner's "Price is 
 sizes, a link with "?cid=…", no variant matched, and the family's cheapest "from" price (another product) was read
 twice. Fixed in the app and web together; never "from"/lowest prices; per-kilo prices skipped; rule 5 "same place on
 the page" (database step 2 → 3). Also: the daily server check failing = supabase-features.sql v2 not yet run.
+
+### 23 November 2026: a shorter Co-op form, friends picked at once (2.283)
+Owner: the Co-op form had too many options. "Gifts for someone?" and helper lines gone; an "Add friends" card invites
+friends the moment the list is made (failed sends told, with where to retry). Owner's new rule: no plain "+" lines
+anywhere, same elements look the same: New group and New gift exchange got the same card. Not checkable here: the phone.

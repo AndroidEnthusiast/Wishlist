@@ -152,6 +152,12 @@ internal class AppState(
         }
         scope.launch {
             try {
+                // A list a friend made visible a moment ago (a wishlist card in chat, 24 November 2026): ask for your
+                // friends' lists once more before looking further.
+                if (Friends.hasProfile(ctx)) {
+                    Friends.refresh(ctx)
+                    if (places.openFriendList(code)) { closeAll(); nav.openTab(Route.FRIENDS); return@launch }
+                }
                 val r = Cloud.fetchList(code)
                 if (r == null) {
                     snack.showToast(tr("No list found for that code."))

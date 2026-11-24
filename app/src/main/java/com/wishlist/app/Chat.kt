@@ -33,7 +33,10 @@ data class ChatContent(
     // The wish a message is about (owner, 20 November 2026: "Chat about this wish"), sent with the text; and for a
     // wish card, which list it is on ([code], the list's friends' code) and its id, so a tap opens it in that list.
     // Older apps ignore both: they show the text, or open the shop.
-    val about: ChatWish? = null, val code: String = "", val wishId: Long = 0L
+    val about: ChatWish? = null, val code: String = "", val wishId: Long = 0L,
+    // A whole wishlist (owner, 24 November 2026, the chat's +): [text] is the list's friends' code, [title] its name,
+    // [img] its cover (or a wish's picture), [count] how many wishes. Older apps show the plain line "x".
+    val count: Int = 0
 )
 
 /** [react] / [reactTheirs]: the emoji you and your friend put on this message (owner, 2.128), or "". */
@@ -128,6 +131,9 @@ object Chat {
             .put("x", tr("Join my gift exchange “%1\$s”: %2\$s", content.title, content.url)).toString()
         else if (content.kind == "giftlist") JSONObject().put("t", "giftlist").put("code", content.text)
             .put("name", content.title).put("x", tr("I invited you to plan gifts together for “%s”. Update the app to join.", content.title)).toString()
+        else if (content.kind == "list") JSONObject().put("t", "list").put("code", content.text).put("name", content.title)
+            .put("img", content.img).put("n", content.count)
+            .put("x", tr("My wishlist “%s”: you’ll find it on my page under Friends.", content.title)).toString()
         else if (content.kind == "photo") JSONObject().put("t", "photo").put("f", content.text).put("k", content.img)
             .put("w", content.w).put("h", content.h).toString()
         else if (content.kind == "wish") JSONObject().put("t", "wish").put("title", content.title)
@@ -147,6 +153,9 @@ object Chat {
         else if (j.optString("t") == "exchange") ChatContent(true, "exchange", j.optString("gid"), j.optString("name"), url = j.optString("link"))
         // A gift list invitation (2.142): only the list's code and name (never its key); "x" is a line for older apps.
         else if (j.optString("t") == "giftlist") ChatContent(true, "giftlist", j.optString("code"), j.optString("name"))
+        else if (j.optString("t") == "list") ChatContent(
+            true, "list", j.optString("code"), j.optString("name"), img = ChatWish.safeLink(j.optString("img")), count = j.optInt("n")
+        )
         else if (j.optString("t") == "photo") ChatContent(true, "photo", j.optString("f"), img = j.optString("k"), w = j.optInt("w"), h = j.optInt("h"))
         else if (j.optString("t") == "wish") ChatContent(
             true, "wish", "", j.optString("title"), if (j.has("price") && !j.isNull("price")) j.optDouble("price") else null,
@@ -321,12 +330,13 @@ object Chat {
         }
     }
 
-    /** One line about a message: its text, "Wish: …", or that it can't be read here. */
+    /** One line about a message: its text, "Wish: …", "Wishlist: …", or that it can't be read here. */
     fun preview(m: ChatContent): String = when {
         !m.readable -> tr("This message can’t be read on this phone")
         m.kind == "wish" -> tr("Wish: %s", m.title)
         m.kind == "group" || m.kind == "exchange" || m.kind == "giftlist" -> tr("Invitation: %s", m.title)
         m.kind == "photo" -> "📷 " + tr("Photo")
+        m.kind == "list" -> tr("Wishlist: %s", m.title)
         else -> m.text
     }
 }

@@ -43,6 +43,13 @@ class PickSheetScreenshotTest : NavigationBase() {
 
     @Test fun sendAWish() { wishes(); each("sendwish") { WishPicker(onPick = { _, _ -> }, onClose = {}) } }
 
+    // The chat's + > A whole wishlist (owner, 24 November 2026): each list with its count; "Only me" lists say so.
+    @Test fun sendAWishlist() {
+        wishes()
+        compose.runOnUiThread { if (Repo.allMine(app).none { it.name.startsWith("Birthday") }) Repo.createMine(app, "Birthday list with a long name for the row", "") }
+        each("sendlist") { ListPicker(onPick = {}, onClose = {}) }
+    }
+
     @Test fun addFriends() {
         val friends = listOf(Person("f1", "Magdalena with a long name", 0L), Person("f2", "Sam", 0L), Person("f3", "", 0L))
         each("friends") { PickFriendsDialog(friends, start = listOf("f2"), onDone = {}, onClose = {}) }

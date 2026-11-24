@@ -141,15 +141,6 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
 - **Save to on every new wish** (the list you're on picked; editing doesn't move a wish), with **"+ New wishlist"** at the bottom of its menu (only own wishlists, not gift lists): the usual create form, then back in the wish form with the new list picked.
 - **Product recognition in the in-app shop** (owner, 7 November 2026, after Rituals said "No product recognised"; no shop-specific fix, a general one): look again when "Add wish" is tapped and keep checking while you're on a page; read the shop's product data properly (the product itself, variants, "from" prices); a product without a readable price still counts (price left empty); as a last try read the price shown on the page (owner accepted that it can now and then be wrong). **The first background price check after this update is quiet** (no notification, no crossed-out old price), so a better reading isn't mistaken for a price change.
 
-## Owner's review of 15 November 2026 (built in 2.209)
-- **Messages has no tabs**: only the conversations (Friends is in the bottom bar anyway). A **round button at the
-  bottom right with the chat icon** (no + and no words, the owner's choice over a wide "Start chat" button) opens your
-  friends to pick from; it shows once there is a chat, before that the empty page's "Start a chat" does the same. With
-  no friends the panel says "No friends yet" with "Add a friend". Friends come from the phone, so it opens offline.
-- **"Viewed 23 times" removed** ("that functionality shouldn't be there"): the app and the web pages no longer count
-  or show views; `wl_view` / `wl_view_count` stay on the server, unused (no script to run, old apps keep working).
-
-
 ## A friend's page, person first (owner, 16 November 2026, after comparing with Giftful and competitor reviews; 2.217)
 - Replaces the Home-like friend page of 2.95: the photo (112 dp) and name once, centred (no title in the top bar, no
   chat icon there); chips for the birthday ("1 April · in 136 days", in your colour within 2 weeks), sizes, "Loves 3
@@ -165,9 +156,19 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
 - Someone else's wishes (compact Reserve, Add to my wishlist, one reaction) and the buttons on a wish card (18 November
   2026): moved to `docs/decisions/wish-cards.md`.
 
-## Reactions: one tap on yours takes it away (owner, 20 November 2026)
-- The owner reacted on a friend's wish and tapped the reaction: "+ React" came back but the reaction stayed (since 18
-  November a first tap on your own reaction only brought "+ React" back; a second tap took it away). Owner: tapping
-  your reaction should remove it and then "+ React" reappears. Built in 2.264, in the app (`ReactionModel.kt`) and on
-  the friends' and group pages (`web/together.js`); checks `ReactionModelTest`, `FriendWishesTest`, `tests/together`.
+- Moved word for word to `docs/decisions/people-ARCHIVE.md` (24 November 2026, size limit): "Owner's review of 15
+  November 2026" and "Reactions: one tap on yours takes it away".
 
+## The chat's + (owner, 24 November 2026; built in 2.287)
+- **A + left of the text box replaces the gift button** (owner: "I don't like the gift icon button"; + on the left so
+  Send never moves). Its menu (a sheet): "A wish from my wishlists", "Photo from gallery", **"A whole wishlist"**.
+  Offered and not chosen: Ask for wishes, Ask for their sizes, Invite to a group or gift list, Search the shops.
+- **The camera sits inside the text box on the right, like Signal**, and opens the camera straight away (gallery via +).
+- **A whole wishlist:** only your own wishlists (co-op lists keep their "Add friends" invitation). The card shows the
+  cover (else a wish's picture, else a list icon), name, "12 wishes · Tap to open"; a tap opens it (your own for you).
+  A list only you can see asks "Make it visible to friends?" first (same as its settings: Only your friends). Older
+  apps get a plain line ("you'll find it on my page under Friends"). Nothing new on the server or web pages (chat is
+  in the app only). A tap on a list the phone doesn't know yet refreshes the friends' lists once first.
+- **Chat extras:** offered (birthday chip, shop links as wish cards, thank-you card, mute, polls, search); the owner
+  chose none, so nothing is built. Advised against: voice messages, "typing…", editing.
+- Ideas 7 (wishes without a product) and 11 (private gift ideas per person): owner likes both; interview before building.

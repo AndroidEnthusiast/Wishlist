@@ -52,11 +52,14 @@ import java.io.File
 
 /* Messages (see MessagesList.kt): the bar to type in, picking a wish to send, and photos full screen. */
 
-/** The bar to type in: a gift (send a wish), a camera (send a photo), the text field, and send. */
+/**
+ * The bar to type in (owner, 24 November 2026, like Signal): a + (a wish, a photo from the gallery, a whole wishlist:
+ * [onPlus]), the text field with the camera inside it on the right ([onCamera] opens it straight away), and send.
+ */
 @Composable
 internal fun InputBar(
-    text: String, onText: (String) -> Unit, sending: Boolean, onSend: () -> Unit, onWish: () -> Unit,
-    onGallery: () -> Unit, onCamera: () -> Unit,
+    text: String, onText: (String) -> Unit, sending: Boolean, onSend: () -> Unit, onPlus: () -> Unit,
+    onCamera: () -> Unit,
     // A wish is attached ("Chat about this wish"): it can be sent without words too.
     attached: Boolean = false
 ) {
@@ -64,29 +67,24 @@ internal fun InputBar(
     val ready = (text.isNotBlank() || attached) && !sending
     val cs = MaterialTheme.colorScheme
     Row(
-        Modifier.fillMaxWidth().navigationBarsPadding().padding(start = 8.dp, end = 8.dp, top = 6.dp, bottom = 8.dp),
+        Modifier.fillMaxWidth().navigationBarsPadding().padding(start = 4.dp, end = 8.dp, top = 6.dp, bottom = 8.dp),
         verticalAlignment = Alignment.Bottom
     ) {
-        // The gift and photo buttons each sit in a box exactly as tall as a one-line text box, so their middles line up
-        // with it and with each other in every style (owner, 2.128: they looked misaligned); bottom-aligned when the
-        // text box grows.
-        Box(Modifier.size(44.dp, 56.dp).clip(CircleShape).clickable(onClickLabel = tr("Send a wish"), onClick = onWish), contentAlignment = Alignment.Center) {
-            GiftIcon(cs.onSurfaceVariant)
-        }
-        var photoMenu by remember { mutableStateOf(false) }
-        Box(Modifier.size(44.dp, 56.dp), contentAlignment = Alignment.Center) {
-            Box(
-                Modifier.size(44.dp).clip(CircleShape).clickable(enabled = !sending, onClickLabel = tr("Send a photo")) { photoMenu = true },
-                contentAlignment = Alignment.Center
-            ) { PhotoIcon(cs.onSurfaceVariant) }
-            DropdownMenu(expanded = photoMenu, onDismissRequest = { photoMenu = false }) {
-                DropdownMenuItem(text = { Text(tr("Take a photo")) }, leadingIcon = { Icon(AppIcons.Camera, null) }, onClick = { photoMenu = false; onCamera() })
-                DropdownMenuItem(text = { Text(tr("Choose from gallery")) }, leadingIcon = { Icon(AppIcons.Gallery, null) }, onClick = { photoMenu = false; onGallery() })
-            }
-        }
+        // The + sits in a box exactly as tall as a one-line text box, so its middle lines up with it in every style
+        // (owner, 2.128); bottom-aligned when the text box grows.
+        Box(
+            Modifier.size(48.dp, 56.dp).clip(CircleShape).clickable(enabled = !sending, onClickLabel = tr("Send a wish, photo or wishlist"), onClick = onPlus),
+            contentAlignment = Alignment.Center
+        ) { Icon(AppIcons.Add, null, tint = cs.onSurfaceVariant, modifier = Modifier.size(28.dp)) }
         val shape = RoundedCornerShape(24.dp)
         TextField(
             text, onText, placeholder = { Text(tr("Message")) }, maxLines = 5,
+            trailingIcon = {
+                Box(
+                    Modifier.size(48.dp).clip(CircleShape).clickable(enabled = !sending, onClickLabel = tr("Take a photo"), onClick = onCamera),
+                    contentAlignment = Alignment.Center
+                ) { PhotoIcon(cs.onSurfaceVariant) }
+            },
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             shape = shape,
             colors = TextFieldDefaults.colors(
@@ -103,6 +101,36 @@ internal fun InputBar(
             if (sending) CircularProgressIndicator(Modifier.size(20.dp), color = look.onAccent, strokeWidth = 2.dp)
             else SendIcon(look.onAccent)
         }
+    }
+}
+
+/** The +'s menu (owner, 24 November 2026): a sheet like every menu, each row with its icon in a tile. */
+@Composable
+internal fun PlusMenu(onWish: () -> Unit, onGallery: () -> Unit, onList: () -> Unit, onClose: () -> Unit) {
+    DropdownMenu(expanded = true, onDismissRequest = onClose) {
+        DropdownMenuItem(text = { Text(tr("A wish from my wishlists")) }, leadingIcon = { Icon(AppIcons.Gift, null) }, onClick = { onClose(); onWish() })
+        DropdownMenuItem(text = { Text(tr("Photo from gallery")) }, leadingIcon = { Icon(AppIcons.Gallery, null) }, onClick = { onClose(); onGallery() })
+        DropdownMenuItem(text = { Text(tr("A whole wishlist")) }, leadingIcon = { Icon(AppIcons.ListIcon, null) }, onClick = { onClose(); onList() })
+    }
+}
+
+/** Pick one of your own wishlists to send as a card; a list only you can see says so (it asks first when picked). */
+@Composable
+internal fun ListPicker(onPick: (MineData) -> Unit, onClose: () -> Unit) {
+    val ctx = LocalContext.current
+    val lists = remember { Repo.allMine(ctx) }
+    PickSheet(tr("Send a wishlist"), onClose = onClose) {
+        SheetGroup(lists.map { d ->
+            {
+                val n = d.wishes.count { !it.priv && it.bin == 0L }
+                val hidden = d.code == null || ListVisibility.of(ctx, d.id) == Who.ME
+                val count = if (n == 0) tr("No wishes yet") else if (n == 1) tr("1 wish") else tr("%d wishes", n)
+                SheetRow(
+                    { Icon(listKindIcon(false), null) }, if (d.name == "My wishlist") tr(d.name) else d.name, { onPick(d) },
+                    detail = if (hidden) tr("%s · Only you can see it", count) else count
+                )
+            }
+        })
     }
 }
 

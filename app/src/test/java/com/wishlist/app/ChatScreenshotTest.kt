@@ -15,7 +15,7 @@ import java.util.Calendar
 /**
  * Pictures of Messages with pretend chats (added for the rebuild, 19 November 2026, so the before/after comparison
  * covers them): the conversations, a chat with text, a wish, a reply, reactions, an invitation and a photo, its ⋮
- * menu, the long-press menu, Delete, Send a wish, and a chat with someone who is no longer a friend; light and dark.
+ * menu, the long-press menu, Delete, the + and Send a wish, a wishlist card, and a chat with someone who is no longer a friend; light and dark.
  * Fixed dates, so the times on screen never change. Pictures in app/build/outputs/roborazzi/chat_*.png; only with
  * -Pwl.screens (the class name has "Screenshot").
  */
@@ -96,14 +96,33 @@ class ChatScreenshotTest : NavigationBase() {
         shot("delete")
     }
 
+    private fun tapLabel(label: String) =
+        compose.onAllNodes(hasClickAction() and androidx.compose.ui.test.SemanticsMatcher(label) {
+            (if (androidx.compose.ui.semantics.SemanticsActions.OnClick in it.config) it.config[androidx.compose.ui.semantics.SemanticsActions.OnClick].label else null) == label
+        }).onFirst().performClick()
+
+    // The + (owner, 24 November 2026): its menu, then "A wish from my wishlists".
     @Test fun chatSendWish() {
         compose.mainClock.autoAdvance = false
         pretend()
         open("p2")
-        compose.onAllNodes(hasClickAction() and androidx.compose.ui.test.SemanticsMatcher("send a wish") {
-            (if (androidx.compose.ui.semantics.SemanticsActions.OnClick in it.config) it.config[androidx.compose.ui.semantics.SemanticsActions.OnClick].label else null) == "Send a wish"
-        }).onFirst().performClick()
+        tapLabel("Send a wish, photo or wishlist")
+        shot("plus")
+        compose.onAllNodes(hasText("A wish from my wishlists") and hasClickAction()).onFirst().performClick()
         shot("wish")
+    }
+
+    // A whole wishlist as a card (owner, 24 November 2026): its picture or icon, name, count, "Tap to open".
+    @Test fun chatWishlistCard() {
+        compose.mainClock.autoAdvance = false
+        pretend()
+        compose.runOnUiThread {
+            Chat.opened["p2"] = Chat.opened["p2"].orEmpty() + listOf(
+                ChatMessage(11, false, ChatContent(true, "list", "FRIEND01", "Birthday wishes for my thirtieth, the big one", count = 12), at(6, 10, 0), true),
+                ChatMessage(12, true, ChatContent(true, "list", "MINE0001", "My wishlist", count = 1), at(6, 10, 5), true)
+            )
+        }
+        open("p2"); shot("listcard")
     }
 
     // "Chat about this wish" (owner, 20 November 2026): the wish above the text box, and a sent message about a wish.

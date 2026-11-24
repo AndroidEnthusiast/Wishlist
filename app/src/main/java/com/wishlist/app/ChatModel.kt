@@ -29,6 +29,11 @@ internal class ChatModel(
     var reporting by mutableStateOf(false)
     var blocking by mutableStateOf(false)
     var wishPick by mutableStateOf(false)
+    // The + next to the text box (owner, 24 November 2026): its menu, the wishlist picker, and an "Only me" list
+    // waiting for "Make it visible to friends?".
+    var plusMenu by mutableStateOf(false)
+    var listPick by mutableStateOf(false)
+    var askVisible by mutableStateOf<MineData?>(null)
     // Reactions and replies (owner, 2.128): the long-press menu, the message being answered, and the emoji per message.
     var menuFor by mutableStateOf<ChatMessage?>(null)
     var replying by mutableStateOf<ChatMessage?>(null)
@@ -161,6 +166,34 @@ internal class ChatModel(
             code = code.orEmpty(), wishId = if (code.isNullOrEmpty()) 0L else w.id
         ))
 
+    /**
+     * One of your own wishlists as a card (the +'s "A whole wishlist"). A list only you can see first asks to become
+     * visible to friends ([askVisible]), or your friend couldn't open it (owner, 24 November 2026).
+     */
+    fun sendList(d: MineData) {
+        if (d.code == null || ListVisibility.of(ctx, d.id) == Who.ME) { askVisible = d; return }
+        send(listCard(d, listCover(ctx, d)))
+    }
+
+    /** "Make visible and send": friends can see the list now (as in its settings), then the card goes. */
+    fun makeVisibleAndSend(d: MineData) {
+        askVisible = null
+        sending = true
+        scope.launch {
+            val now = try {
+                ListVisibility.set(ctx, d.id, Who.FRIENDS)
+                Repo.mine(ctx, d.id)
+            } catch (e: Exception) {
+                // Offline or the server said no: told below. A closed chat stops here.
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                null
+            }
+            sending = false
+            if (now?.code == null) snack.showToast(tr("Couldn’t make it visible. Check your connection and try again."))
+            else send(listCard(now, listCover(ctx, now)))
+        }
+    }
+
     /** Delete your own message for both of you. */
     fun delete(m: ChatMessage) {
         scope.launch {
@@ -173,4 +206,17 @@ internal class ChatModel(
             }
         }
     }
+}
+
+/** The card for your wishlist [d] (it must have its friends' code): its name, its picture [cover] and how many wishes. */
+internal fun listCard(d: MineData, cover: String) = ChatContent(
+    true, "list", d.code.orEmpty(), if (d.name == "My wishlist") tr(d.name) else d.name, img = cover,
+    count = d.wishes.count { !it.priv && it.bin == 0L }
+)
+
+/** The list's cover as friends see it online, else the first wish picture that is online; "" for none. */
+internal fun listCover(c: Context, d: MineData): String {
+    val cut = ListCovers.get(c, "m:${d.id}")?.cut?.takeIf { ImageStore.isLocal(it) }?.substringAfterLast('/')
+    if (d.code != null && cut != null && cut in d.photos) return Cloud.photoUrl(d.code, cut)
+    return d.wishes.firstOrNull { !it.priv && it.bin == 0L && ChatWish.safeLink(it.image).isNotEmpty() }?.image.orEmpty()
 }

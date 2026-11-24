@@ -232,8 +232,7 @@ internal fun ChatScreen(peer: String, snack: SnackbarHostState) {
             if (canSend) InputBar(
                 chat.text, { chat.text = it }, chat.sending, attached = chat.about != null,
                 onSend = { chat.sendText() },
-                onWish = { chat.wishPick = true },
-                onGallery = { pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                onPlus = { chat.plusMenu = true },
                 onCamera = { try { takePhoto.launch(cameraUriLazy.value) } catch (e: Exception) { } }
             ) else Text(
                 tr("You’re no longer friends, so you can’t send messages here."),
@@ -275,6 +274,23 @@ internal fun ChatScreen(peer: String, snack: SnackbarHostState) {
                 }) { Text(tr("Delete")) }
             },
             dismissButton = { TextButton(onClick = { chat.deleting = null }) { Text(tr("Cancel")) } }
+        )
+    }
+    // The + (owner, 24 November 2026): a wish, a photo from the gallery, or a whole wishlist.
+    if (chat.plusMenu) PlusMenu(
+        onWish = { chat.wishPick = true },
+        onGallery = { pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+        onList = { chat.listPick = true },
+        onClose = { chat.plusMenu = false }
+    )
+    if (chat.listPick) ListPicker(onPick = { d -> chat.listPick = false; chat.sendList(d) }, onClose = { chat.listPick = false })
+    chat.askVisible?.let { d ->
+        AlertDialog(
+            onDismissRequest = { chat.askVisible = null },
+            title = { Text(tr("Make it visible to friends?")) },
+            text = { Text(tr("Only you can see “%s”. To open it, your friends need to see it too. You can change this in the list’s settings.", if (d.name == "My wishlist") tr(d.name) else d.name)) },
+            confirmButton = { Button(onClick = { chat.makeVisibleAndSend(d) }) { Text(tr("Make visible and send")) } },
+            dismissButton = { TextButton(onClick = { chat.askVisible = null }) { Text(tr("Cancel")) } }
         )
     }
     if (chat.wishPick) WishPicker(onPick = { w, code ->

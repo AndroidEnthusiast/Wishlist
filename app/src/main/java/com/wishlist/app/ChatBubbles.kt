@@ -172,6 +172,8 @@ private fun Bubble(
                         if (m.content.kind == "exchange") go(Deep.Exchange(m.content.text, Exchanges.parseLink(m.content.url)))
                         // A gift list invitation (2.142): the invitation (or the list when you are on it already).
                         if (m.content.kind == "giftlist" && !m.mine) go(Deep.GiftInvite(m.content.text))
+                        // A whole wishlist (owner, 24 November 2026): your friend's list for them, your own for you.
+                        if (m.content.kind == "list" && m.content.text.isNotEmpty()) go(Deep.FriendList(m.content.text))
                         if (m.content.kind == "photo") {
                             if (photoState == "ok") photo?.let(onOpenPhoto)
                             else if (photoState == "offline") photoTry++
@@ -205,6 +207,24 @@ private fun Bubble(
                     else if (m.content.url.isNotBlank()) tr("View in shop") else null
                 )
                 m.content.kind == "giftlist" -> GiftListChatCard(m.content.title, m.mine, ink)
+                m.content.kind == "list" -> Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        Modifier.size(52.dp).clip(RoundedCornerShape(10.dp)).background(Color.White),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (m.content.img.isNotBlank()) WishImage(m.content.img, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                        else Icon(AppIcons.ListIcon, null, tint = Color(0xFF8A8A92), modifier = Modifier.size(28.dp))
+                    }
+                    Column(Modifier.padding(start = 10.dp).widthIn(max = 200.dp)) {
+                        Text(tr("Wishlist"), color = ink.copy(alpha = 0.8f), style = MaterialTheme.typography.labelMedium)
+                        Text(m.content.title, color = ink, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        val n = m.content.count
+                        Text(
+                            (if (n == 0) tr("No wishes yet") else if (n == 1) tr("1 wish") else tr("%d wishes", n)) + " · " + tr("Tap to open"),
+                            color = ink.copy(alpha = 0.8f), style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
                 m.content.kind == "group" || m.content.kind == "exchange" -> Row(verticalAlignment = Alignment.CenterVertically) {
                     val gx = m.content.kind == "exchange"
                     Box(

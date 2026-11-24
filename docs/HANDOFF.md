@@ -5,6 +5,8 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **Owner, 24 November 2026: ideas 7 and 11 next** (`ideas.md`, last section; `people.md`, last section): interview
+  first. Ask how the chat's + and the wishlist card feel on the phone (2.287).
 - **Next build, owner's choice (23 November 2026, `prices.md` last section): sizes with their own price** (pick and
   track the size, "from €…" + "Choose size" until picked), **two readings within one check**, a grey "Price from 3 days
   ago" note. First ask the owner for the "Price is wrong?" file of the La Vie est Belle page if not sent yet.
@@ -138,6 +140,12 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 24 November 2026: a + in the chat, a whole wishlist as a card (2.287)
+Owner disliked the gift button: a + (left) with "A wish from my wishlists", "Photo from gallery", "A whole wishlist";
+the camera inside the text box, straight to the camera. "Only me" lists ask to become visible first. Advised on chat
+extras and the idea list; owner wants 7 (wishes without a product) and 11 (gift ideas per person) next, after
+questions; 31 (export) already existed. Not checkable here: the phone, and a real send between two phones.
+
 ### 24 November 2026: debt that can't grow (guards, no app change)
 Owner asked for an honest review, then for a way to stay on features with no more clean-ups. Added guards that read
 the code in about a second: silent catches (388 in 138 files) and objects holding app-wide changing data (68) may only
@@ -150,8 +158,3 @@ person icons in every list picker; a red count per friend list and a royal purpl
 Reserve button with a lock ("Unreserve?" first), others' darkened and below the free ones, app and all web pages.
 Screenshots caught "Reserved by" cut off on narrow cards (text now shrinks). 2.285: "Unreserve?" on the button, red ribbon;
 perfumes kept €79.95 (sizes, no "from" price): owner chose size tracking (next build). Not checkable here: the phone.
-
-### 23 November 2026: a shorter Co-op form, friends picked at once (2.283)
-Owner: the Co-op form had too many options. "Gifts for someone?" and helper lines gone; an "Add friends" card invites
-friends the moment the list is made (failed sends told, with where to retry). Owner's new rule: no plain "+" lines
-anywhere, same elements look the same: New group and New gift exchange got the same card. Not checkable here: the phone.
