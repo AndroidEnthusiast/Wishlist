@@ -1,0 +1,213 @@
+# Baseline for CodeHealthTest (owner, 24 November 2026: "debt that can't grow"; docs/decisions/roadmap.md).
+# The numbers may only go down: when you remove some, lower them here (the test says which). Never raise one.
+
+# Silent catches per file: catch <file> <how many>. Total on 24 November 2026: 388.
+catch Account.kt 1
+catch AddFriend.kt 2
+catch Alerts.kt 1
+catch AlertsPrices.kt 1
+catch AppInfo.kt 4
+catch AppModel.kt 11
+catch Asks.kt 7
+catch Background.kt 3
+catch Backup.kt 2
+catch Bin.kt 18
+catch BinUi.kt 2
+catch Browse.kt 1
+catch Browser.kt 3
+catch Calls.kt 3
+catch Chat.kt 4
+catch ChatBubbles.kt 2
+catch ChatCrypto.kt 1
+catch ChatModel.kt 6
+catch ChatPeople.kt 1
+catch ChatPhotos.kt 4
+catch ChatScreen.kt 1
+catch CollabPeople.kt 3
+catch CompactCard.kt 2
+catch CoverModel.kt 1
+catch Covers.kt 2
+catch Crash.kt 2
+catch Data.kt 4
+catch DbMove.kt 4
+catch DeleteMe.kt 5
+catch Exchange.kt 2
+catch ExchangeChat.kt 2
+catch ExchangeDialogs.kt 2
+catch ExchangeMembership.kt 6
+catch ExchangeNew.kt 5
+catch ExchangeRows.kt 2
+catch ExchangeScreen.kt 1
+catch ExchangeSettings.kt 5
+catch ExchangesList.kt 1
+catch Feel.kt 1
+catch Fetch.kt 6
+catch FetchPage.kt 1
+catch FetchProduct.kt 2
+catch FormParts.kt 1
+catch FriendListModel.kt 5
+catch FriendNews.kt 1
+catch FriendPage.kt 1
+catch FriendWatch.kt 3
+catch Friends.kt 2
+catch FriendsAbout.kt 2
+catch FriendsLinks.kt 1
+catch FriendsPhotos.kt 3
+catch FriendsRows.kt 1
+catch FriendsTab.kt 3
+catch GiftInviteModel.kt 3
+catch GiftInvites.kt 4
+catch GroupJoin.kt 4
+catch GroupListPick.kt 1
+catch GroupMembers.kt 2
+catch GroupModel.kt 1
+catch GroupNew.kt 1
+catch GroupScreen.kt 2
+catch GroupSettings.kt 4
+catch Groups.kt 1
+catch GroupsLinks.kt 2
+catch GroupsMembership.kt 4
+catch GroupsParts.kt 1
+catch GroupsPhotos.kt 2
+catch HeroEdit.kt 3
+catch History.kt 1
+catch HomeModel.kt 2
+catch HomeShare.kt 1
+catch ImageStore.kt 6
+catch ImageViewer.kt 1
+catch Import.kt 6
+catch ImportFill.kt 3
+catch ImportReaders.kt 6
+catch ImportUi.kt 2
+catch Licences.kt 1
+catch ListSettings.kt 2
+catch ListSharing.kt 3
+catch ListStore.kt 2
+catch Live.kt 4
+catch MainActivity.kt 2
+catch Members.kt 3
+catch MessagesList.kt 1
+catch MineSync.kt 2
+catch Move.kt 1
+catch MoveAcross.kt 5
+catch MyLists.kt 2
+catch NameGate.kt 1
+catch Notifications.kt 1
+catch NotifyPace.kt 3
+catch Occasion.kt 2
+catch Opened.kt 2
+catch PeoplePhotos.kt 5
+catch PriceHistory.kt 2
+catch PriceReport.kt 8
+catch PriceWorker.kt 5
+catch Profile.kt 3
+catch ProfileEdit.kt 3
+catch Pulse.kt 2
+catch Push.kt 3
+catch Reactions.kt 5
+catch RecoveryKey.kt 2
+catch RepoLists.kt 1
+catch RepoPrefs.kt 1
+catch Rescue.kt 3
+catch Reserved.kt 3
+catch Restore.kt 7
+catch RowCard.kt 2
+catch SafeStore.kt 2
+catch Safety.kt 6
+catch Settings.kt 1
+catch SettingsPages.kt 1
+catch Share.kt 7
+catch ShareCard.kt 2
+catch Shared.kt 2
+catch SharedListModel.kt 3
+catch SharedManage.kt 4
+catch SharedPeople.kt 1
+catch SharedPrices.kt 4
+catch SharedReservations.kt 3
+catch SharedUi.kt 3
+catch SharedWishes.kt 4
+catch ShopBrowser.kt 2
+catch Shops.kt 2
+catch ShopsModel.kt 10
+catch ShopsScreen.kt 3
+catch ShotsModel.kt 1
+catch Sorting.kt 1
+catch StyledPhotos.kt 1
+catch Targets.kt 1
+catch Totals.kt 1
+catch Welcome.kt 1
+catch Wish.kt 1
+catch WishCard.kt 2
+catch WishCards.kt 1
+catch WishForm.kt 3
+
+# Objects keeping changing data app-wide (24 November 2026). A new one only if it is a data service that saves
+# its own data, with a comment saying so; screen state goes in the screen's state holder.
+state AddToMine
+state AppInfo
+state AppPrefs
+state Asks
+state Bin
+state Calls
+state Celebrate
+state Chat
+state ChatAboutFlow
+state ChatOnScreen
+state Cloud
+state CollabPeople
+state CurrencyChoice
+state DeleteFlow
+state ExchangePhotos
+state Exchanges
+state FriendAbout
+state FriendCache
+state FriendLists
+state FriendNews
+state FriendPhotos
+state FriendVisibility
+state Friends
+state GroupPhotos
+state Groups
+state GxChatNav
+state History
+state ImportFill
+state ListCovers
+state ListLink
+state ListOrder
+state ListStore
+state ListVisibility
+state Live
+state LoveTip
+state Members
+state MineSync
+state MoveFlow
+state Moved
+state NameGate
+state News
+state Notifications
+state Occasions
+state OwnBin
+state OwnCopies
+state OwnLists
+state OwnedFlow
+state PriceAlertQueue
+state PriceCheck
+state PriceRefresh
+state PrivateFlow
+state Reactions
+state ReceivedFlow
+state RecoveryKey
+state Repo
+state ResCounts
+state Safety
+state ServerNotice
+state Shared
+state SharedReservations
+state ShopIcons
+state Shops
+state Show
+state StillSpinners
+state Sync
+state Targets
+state WishFocus
+state WishlistDb.Companion

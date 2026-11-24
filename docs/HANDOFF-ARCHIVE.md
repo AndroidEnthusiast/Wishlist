@@ -937,3 +937,9 @@ almost invisible, some menus none): a thin line after the icon everywhere. 2.279
 (Earlier wording of the 2.284 summary.) Screenshots caught "Reserved by" cut off on narrow cards (text now shrinks). Not checkable here: the phone.
 
 (Earlier Next-session line, replaced by 2.286.) - **2.285 (23 November 2026).** "Unreserve?" with an open padlock on the button; red ribbon. Ask how the two taps feel.
+
+### 23 November 2026: the price tracker sharpened (2.282)
+Owner's bol.com pot showed "−20%" while its price rose. The owner's "Price is wrong?" file showed why: a family of 13
+sizes, a link with "?cid=…", no variant matched, and the family's cheapest "from" price (another product) was read
+twice. Fixed in the app and web together; never "from"/lowest prices; per-kilo prices skipped; rule 5 "same place on
+the page" (database step 2 → 3). Also: the daily server check failing = supabase-features.sql v2 not yet run.

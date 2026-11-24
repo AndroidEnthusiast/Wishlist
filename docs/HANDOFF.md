@@ -138,6 +138,12 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 24 November 2026: debt that can't grow (guards, no app change)
+Owner asked for an honest review, then for a way to stay on features with no more clean-ups. Added guards that read
+the code in about a second: silent catches (388 in 138 files) and objects holding app-wide changing data (68) may only
+go down (`CodeHealthTest`, `app/guard-baseline.txt`); web files under 400 lines, the 6 bigger ones only shrink
+(`tests/size/test.js`). Folders: owner asked, told they don't make the app smoother or builds quicker; files stay put.
+
 ### 23 November 2026: reservations on the button, new wishes per list (2.284)
 Owner's screenshots: same icon for every list, a friend's red dot that led nowhere, a busy card after Reserve. Built:
 person icons in every list picker; a red count per friend list and a royal purple "NEW" ribbon (owner's pick); one
@@ -149,9 +155,3 @@ perfumes kept €79.95 (sizes, no "from" price): owner chose size tracking (next
 Owner: the Co-op form had too many options. "Gifts for someone?" and helper lines gone; an "Add friends" card invites
 friends the moment the list is made (failed sends told, with where to retry). Owner's new rule: no plain "+" lines
 anywhere, same elements look the same: New group and New gift exchange got the same card. Not checkable here: the phone.
-
-### 23 November 2026: the price tracker sharpened (2.282)
-Owner's bol.com pot showed "−20%" while its price rose. The owner's "Price is wrong?" file showed why: a family of 13
-sizes, a link with "?cid=…", no variant matched, and the family's cheapest "from" price (another product) was read
-twice. Fixed in the app and web together; never "from"/lowest prices; per-kilo prices skipped; rule 5 "same place on
-the page" (database step 2 → 3). Also: the daily server check failing = supabase-features.sql v2 not yet run.

@@ -12,6 +12,7 @@ run "same answers as the app (shared/same-answers.json)" node shared/test.js
 run "fetch-page helper (real Deno)"  "$DENO" run --allow-read --allow-env=SUPABASE_URL --allow-net=none function/test.ts
 run "push helper (real Deno)"  "$DENO" run --allow-read --allow-env --allow-net=none function/push_test.ts
 run "web pages only run their own scripts" node csp/test.js
+run "web files stay small (only shrink)" node size/test.js
 run "index.html (friends page + invite page)" node index-page/test.js
 run "friend link page (web/friend/)" node friend/test.js
 # Needs PostgreSQL (WL_PG, see README.md); without it this one says SKIPPED.

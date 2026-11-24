@@ -284,3 +284,17 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
 - **Checks shared over 4 computers** (owner, 20 November 2026: "building takes too long … can't it be done in a minute
   or 2"): the app's checks and the layout inspector are split over 4 GitHub computers at once (free for a public
   project); nothing is skipped and a broken update is still never published. Not chosen: publishing before the checks.
+
+## Debt that can't grow (owner, 24 November 2026)
+- **Owner: "I want to focus on building features and not tech debt"**, after an honest review named silent catches,
+  app-wide changing data and big web files. Chosen (asked with options, recommended): **guards instead of another
+  clean-up**, in one version with no change on screen. Today's numbers stay; a session that adds to them fails the
+  build and fixes it before the owner gets an update; touching old code lowers them. Owner asked whether the guards slow
+  the build: no, they read the code as text (about a second).
+- **The three guards:** silent catches (`catch (e: Exception)` whose body never uses `e`) per file, and objects that keep
+  a `var` or a mutable collection app-wide (lost when Android closes the app, R9): `CodeHealthTest`, numbers in
+  `app/guard-baseline.txt` (only down; a new data service that saves its own data may be added with a comment). Web
+  files under 400 lines, the 6 bigger ones only shrink: `tests/size/test.js` (in `run-all.sh`).
+- **Folders for the 258 app files: not done.** Owner asked whether folders make the app smoother or builds quicker:
+  no to both (they only change how the code is organised; real build gains would need modules, a big job with little
+  gain on GitHub, which builds from scratch). Nothing chosen, so files stay where they are.

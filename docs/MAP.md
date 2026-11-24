@@ -183,6 +183,8 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - **Small files**, each about one thing, every file under 400 lines (`ArchitectureTest.everyFileStaysSmall`). Files
   that were bigger on 19 November 2026 are in `ArchitectureTest.ALLOWED` with their size then: they may only shrink,
   leave the list once under the limit, and nothing is ever added to it.
+- **Debt can't grow** (owner, 24 November 2026): silent catches and objects keeping app-wide changing data only go
+  down (`CodeHealthTest`, numbers in `app/guard-baseline.txt`); web files the same 400-line rule (`tests/size/test.js`).
 - **Proof it looks the same** when rebuilding: screenshots before and after (`-Pwl.screens`, Quiet and Gen Z chaos,
   light, dark, large text) compared pixel by pixel; all identical, or the difference is explained.
 - **A check-up every three months** (`.github/workflows/checkup.yml`): a GitHub issue with the biggest files and how
