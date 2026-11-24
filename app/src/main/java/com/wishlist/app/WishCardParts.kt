@@ -9,11 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.ui.graphics.drawscope.clipRect
-import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.getValue
@@ -56,15 +51,22 @@ fun ReserveButton(
     modifier: Modifier = Modifier
 ) {
     var asking by androidx.compose.runtime.saveable.rememberSaveable(w.id) { androidx.compose.runtime.mutableStateOf(false) }
-    val lock: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
-        androidx.compose.material3.Icon(AppIcons.Lock, null, Modifier.size(16.dp).align(androidx.compose.ui.Alignment.CenterVertically))
-        Spacer(Modifier.size(6.dp))
+    // Just tapped Reserve (owner, 24 November 2026): the golden padlock on "Reserved by you" swings shut once.
+    var justReserved by androidx.compose.runtime.saveable.rememberSaveable(w.id) { androidx.compose.runtime.mutableStateOf(false) }
+    val lock: @Composable androidx.compose.foundation.layout.RowScope.(Boolean) -> Unit = { grey ->
+        ClosingPadlock(
+            play = !grey && justReserved, grey = grey, onDone = { justReserved = false },
+            // 18 dp + 4 dp: the same room as the old 16 dp line icon + 6 dp, so "Reserved by you" still fits on the
+            // narrowest card with large text (CardLayoutTest).
+            modifier = Modifier.size(18.dp).align(androidx.compose.ui.Alignment.CenterVertically)
+        )
+        Spacer(Modifier.size(4.dp))
     }
     when (state) {
-        "reserve" -> Button(onClick = { set(true) }, modifier = modifier) { androidx.compose.material3.Text(text, maxLines = 1) }
-        "mine" -> OutlinedButton(onClick = { asking = true }, modifier = modifier) { lock(); FitWords(text) }
+        "reserve" -> Button(onClick = { justReserved = true; set(true) }, modifier = modifier) { androidx.compose.material3.Text(text, maxLines = 1) }
+        "mine" -> OutlinedButton(onClick = { asking = true }, modifier = modifier) { lock(false); FitWords(text) }
         "taken" -> Box(modifier, propagateMinConstraints = true) {
-            OutlinedButton(onClick = {}, enabled = false) { lock(); FitWords(text) }
+            OutlinedButton(onClick = {}, enabled = false) { lock(true); FitWords(text) }
             if (onTaken != null) Box(
                 Modifier.matchParentSize().clip(LocalLook.current.buttonShape)
                     .clickable(onClickLabel = tr("Is it still being bought?")) { onTaken() }
@@ -97,44 +99,6 @@ fun UnreserveDialog(w: Wish, onYes: () -> Unit, onNo: () -> Unit) = AlertDialog(
     confirmButton = { Button(onClick = onYes) { androidx.compose.material3.Text(tr("Yes, unreserve")) } },
     dismissButton = { TextButton(onClick = onNo) { androidx.compose.material3.Text(tr("No, keep it")) } }
 )
-
-/**
- * The padlock of "Unreserve?": drawn closed, then its shackle lifts and swings open (about half a second), in the
- * app's own line style ([OwnIcons] lock). With animations turned off on the phone it is shown open at once.
- */
-@Composable
-fun OpeningPadlock(modifier: Modifier = Modifier) {
-    val ctx = androidx.compose.ui.platform.LocalContext.current
-    val col = androidx.compose.material3.MaterialTheme.colorScheme.primary
-    val stroke = if (LocalLook.current.design == "chaos") 2.3f else 1.8f
-    val t = androidx.compose.runtime.remember { androidx.compose.animation.core.Animatable(if (animationsOff(ctx)) 1f else 0f) }
-    androidx.compose.runtime.LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(150)
-        t.animateTo(1f, androidx.compose.animation.core.tween(550, easing = androidx.compose.animation.core.FastOutSlowInEasing))
-    }
-    androidx.compose.foundation.Canvas(modifier.semantics { contentDescription = tr("Padlock opening") }) {
-        val u = size.minDimension / 24f
-        val st = androidx.compose.ui.graphics.drawscope.Stroke(width = stroke * u, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round)
-        // The body and the keyhole stay put.
-        drawRoundRect(col, androidx.compose.ui.geometry.Offset(5f * u, 11f * u), androidx.compose.ui.geometry.Size(14f * u, 9f * u), androidx.compose.ui.geometry.CornerRadius(1.5f * u), style = st)
-        drawLine(col, androidx.compose.ui.geometry.Offset(12f * u, 14.5f * u), androidx.compose.ui.geometry.Offset(12f * u, 16.5f * u), stroke * u, androidx.compose.ui.graphics.StrokeCap.Round)
-        // The shackle: lifts 2.5 units, then turns open around its left leg. Its legs reach down into the body, so
-        // the left one stays in the lock when it opens (a real padlock); the part inside the body is never drawn.
-        val p = t.value
-        val lift = (p * 2f).coerceAtMost(1f) * 2.5f * u
-        val turn = ((p - 0.4f) / 0.6f).coerceIn(0f, 1f) * -28f
-        val shackle = androidx.compose.ui.graphics.Path().apply {
-            moveTo(8.5f * u, 13.5f * u); lineTo(8.5f * u, 8f * u)
-            arcTo(androidx.compose.ui.geometry.Rect(8.5f * u, 4.5f * u, 15.5f * u, 11.5f * u), 180f, 180f, false)
-            lineTo(15.5f * u, 13.5f * u)
-        }
-        clipRect(bottom = 11f * u) {
-            translate(top = -lift) {
-                rotate(turn, androidx.compose.ui.geometry.Offset(8.5f * u, 13.5f * u)) { drawPath(shackle, col, style = st) }
-            }
-        }
-    }
-}
 
 /**
  * The words of a reservation button: a little smaller rather than cut off when the card is narrow (Two per row on a

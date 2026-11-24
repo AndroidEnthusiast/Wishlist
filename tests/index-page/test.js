@@ -96,6 +96,8 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   check("item1 Reserve button + 20% badge", cards[0].querySelector("button.act").textContent === "Reserve" && cards[0].querySelector(".badge.drop").textContent.includes("20%"));
   // The reservation is on the button, with a lock; someone else's is greyed and darkens the card (owner, 23 November 2026).
   check("item2 Reserved by someone else: a greyed Reserved button with a lock, no line, darkened", !cards[1].querySelector(".badge.status") && cards[1].querySelector("button.act.taken").textContent === "Reserved" && !!cards[1].querySelector("button.act.taken svg.lock") && cards[1].classList.contains("dim"));
+  // The golden padlock (owner, 24 November 2026): grey on someone else's reservation, never playing.
+  check("someone else's padlock is grey and still", cards[1].querySelector("button.act.taken svg.lock rect").getAttribute("fill") === "url(#wl-grey)" && !cards[1].querySelector("svg.lock.closing"));
   check("item3 Owned, no button", cards[2].querySelector(".badge.status").textContent === "Owned" && !cards[2].querySelector("button.act"));
   const noLink = {id: 9, url: "", title: "Custom gift", desc: "", image: "", price: null, old: null, cur: "USD", cat: "Home", got: false};
   items.push(noLink);
@@ -120,6 +122,9 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   await sleep(100);
   let c1 = d.window.document.querySelectorAll(".card")[0];
   check("after Reserve: the button says Reserved by you, with a lock, no extra line", !c1.querySelector(".badge.status") && c1.querySelector("button.act").textContent === "Reserved by you" && !!c1.querySelector("button.act svg.lock"));
+  check("just reserved: the golden padlock swings shut once", !!c1.querySelector("button.act svg.lock.closing .shackle") && c1.querySelector("svg.lock rect").getAttribute("fill") === "url(#wl-gold)" && !!d.window.document.getElementById("wl-gold"));
+  const css = fs.readFileSync(path.join(WEB, "wishlist.css"), "utf8");
+  check("with Remove animations on, the padlock doesn't move", /prefers-reduced-motion: reduce\) \{ button\.act svg\.lock\.closing, button\.act svg\.lock\.closing \.shackle \{ animation: none/.test(css));
   const myDevice = d.window.localStorage.getItem("wl_device");
   check("device id stored and used", !!myDevice && store.reservations[1] === myDevice);
 

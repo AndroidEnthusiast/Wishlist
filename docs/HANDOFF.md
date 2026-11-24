@@ -6,7 +6,8 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Next session
 - **Owner, 24 November 2026: ideas 7 and 11 next** (`ideas.md`, last section; `people.md`, last section): interview
-  first. Ask how the chat's + and the wishlist card feel on the phone (2.287).
+  first. Ask how the chat's + and the wishlist card feel on the phone (2.287), and how the padlock animation
+  feels (2.288).
 - **Next build, owner's choice (23 November 2026, `prices.md` last section): sizes with their own price** (pick and
   track the size, "from €…" + "Choose size" until picked), **two readings within one check**, a grey "Price from 3 days
   ago" note. First ask the owner for the "Price is wrong?" file of the La Vie est Belle page if not sent yet.
@@ -140,6 +141,12 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 24 November 2026: the golden padlock (2.288)
+Owner wanted prettier, emoji-like animations. Our own golden padlock (silver shackle, shine) on "Reserved by you",
+grey on someone else's; it swings shut on the button right after Reserve (1.6×, then settles) and opens in
+"Unreserve?"; app and web pages, still with Remove animations. 18 dp keeps "Reserved by you" fitting (CardLayoutTest).
+Other 3D animations offered, none chosen. Not checkable here: the real motion on the phone (only frames were seen).
+
 ### 24 November 2026: a + in the chat, a whole wishlist as a card (2.287)
 Owner disliked the gift button: a + (left) with "A wish from my wishlists", "Photo from gallery", "A whole wishlist";
 the camera inside the text box, straight to the camera. "Only me" lists ask to become visible first. Advised on chat
@@ -151,10 +158,3 @@ Owner asked for an honest review, then for a way to stay on features with no mor
 the code in about a second: silent catches (388 in 138 files) and objects holding app-wide changing data (68) may only
 go down (`CodeHealthTest`, `app/guard-baseline.txt`); web files under 400 lines, the 6 bigger ones only shrink
 (`tests/size/test.js`). Folders: owner asked, told they don't make the app smoother or builds quicker; files stay put.
-
-### 23 November 2026: reservations on the button, new wishes per list (2.284)
-Owner's screenshots: same icon for every list, a friend's red dot that led nowhere, a busy card after Reserve. Built:
-person icons in every list picker; a red count per friend list and a royal purple "NEW" ribbon (owner's pick); one
-Reserve button with a lock ("Unreserve?" first), others' darkened and below the free ones, app and all web pages.
-Screenshots caught "Reserved by" cut off on narrow cards (text now shrinks). 2.285: "Unreserve?" on the button, red ribbon;
-perfumes kept €79.95 (sizes, no "from" price): owner chose size tracking (next build). Not checkable here: the phone.

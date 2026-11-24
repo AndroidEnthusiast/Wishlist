@@ -11,28 +11,50 @@
   // "Unreserve?" as a pop-up like the others (edit.css .wlt-box), with the padlock opening as it appears (owner,
   // 23 November 2026; the same as UnreserveDialog in the app). Built with textContent only.
   var NS = "http://www.w3.org/2000/svg";
-  var BODY = "M6.5,11h11a1.5,1.5 0 0,1 1.5,1.5v6a1.5,1.5 0 0,1 -1.5,1.5h-11A1.5,1.5 0 0,1 5,18.5v-6A1.5,1.5 0 0,1 6.5,11z";
-  function linePath(d, cls) {
-    var p = document.createElementNS(NS, "path");
-    p.setAttribute("d", d); p.setAttribute("fill", "none"); p.setAttribute("stroke", "currentColor");
-    p.setAttribute("stroke-width", "1.8"); p.setAttribute("stroke-linecap", "round"); p.setAttribute("stroke-linejoin", "round");
-    if (cls) p.setAttribute("class", cls);
-    return p;
+  // The golden padlock (owner, 24 November 2026: "like the lock emoji", our own drawing; the same as Padlock.kt in the
+  // app): a gold body with a shine and a rim, a silver shackle drawn behind it (its legs vanish inside), a keyhole.
+  // "grey" for someone else's reservation. The gradients are defined once per page.
+  function el(name, attrs) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
   }
+  function defs() {
+    if (document.getElementById("wl-gold")) return;
+    var svg = el("svg", { width: "0", height: "0", "aria-hidden": "true" });
+    svg.style.position = "absolute";
+    var d = el("defs", {});
+    [["wl-gold", "#FFE07A", "#FFC21A", "#E69A00", true], ["wl-grey", "#E3E6EA", "#C3C8CE", "#9EA4AB", true],
+      ["wl-silver", "#F4F6F8", "#B9C0C8", "#8D96A0", false]].forEach(function (g) {
+      var lg = el("linearGradient", g[4] ? { id: g[0], x1: "0", y1: "0", x2: "0", y2: "1" } : { id: g[0], x1: "0", y1: "0", x2: "1", y2: "0" });
+      [["0", g[1]], ["0.5", g[2]], ["1", g[3]]].forEach(function (st) { lg.appendChild(el("stop", { offset: st[0], "stop-color": st[1] })); });
+      d.appendChild(lg);
+    });
+    svg.appendChild(d);
+    document.body.appendChild(svg);
+  }
+  function padlock(cls, grey) {
+    defs();
+    var svg = el("svg", { viewBox: "0 0 24 24", "class": cls, "aria-hidden": "true" });
+    var g = el("g", { "class": "shackle" });
+    var arc = "M8,15V8a4,4 0 0,1 8,0v7";
+    g.appendChild(el("path", { d: arc, fill: "none", stroke: "url(#wl-silver)", "stroke-width": "2.8", "stroke-linecap": "round" }));
+    g.appendChild(el("path", { d: arc, fill: "none", stroke: "#fff", "stroke-opacity": ".45", "stroke-width": ".7", "stroke-linecap": "round" }));
+    svg.appendChild(g);
+    svg.appendChild(el("rect", { x: "4.5", y: "10.5", width: "15", height: "10.5", rx: "2.6", fill: grey ? "url(#wl-grey)" : "url(#wl-gold)", stroke: grey ? "#80868D" : "#B87900", "stroke-width": ".8" }));
+    svg.appendChild(el("rect", { x: "6.2", y: "11.7", width: "11.6", height: "2", rx: "1", fill: "#fff", "fill-opacity": ".38" }));
+    var hole = grey ? "#4F555C" : "#6B4200";
+    svg.appendChild(el("circle", { cx: "12", cy: "15.4", r: "1.5", fill: hole }));
+    svg.appendChild(el("rect", { x: "11.35", y: "15.4", width: "1.3", height: "2.9", rx: ".5", fill: hole }));
+    return svg;
+  }
+  // Wishes reserved a moment ago on this page: their "Reserved by you" padlock swings shut once.
+  var justLocked = {};
   function askUnreserve(w, yes) {
     var back = document.createElement("div"); back.className = "wlt-back";
     var box = document.createElement("div"); box.className = "wlt-box resdlg";
     box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true");
-    var svg = document.createElementNS(NS, "svg");
-    svg.setAttribute("viewBox", "0 0 24 24"); svg.setAttribute("class", "unlock"); svg.setAttribute("aria-hidden", "true");
-    // The legs reach into the body (hidden there), so the left one stays in the lock when it opens.
-    var clip = document.createElementNS(NS, "clipPath"); clip.setAttribute("id", "wl-above-lock");
-    var cr = document.createElementNS(NS, "rect"); cr.setAttribute("x", "-10"); cr.setAttribute("y", "-10"); cr.setAttribute("width", "44"); cr.setAttribute("height", "21");
-    clip.appendChild(cr); svg.appendChild(clip);
-    var g = document.createElementNS(NS, "g"); g.setAttribute("clip-path", "url(#wl-above-lock)");
-    g.appendChild(linePath("M8.5,13.5V8a3.5,3.5 0 0,1 7,0v5.5", "shackle"));
-    svg.appendChild(g);
-    svg.appendChild(linePath(BODY)); svg.appendChild(linePath("M12,14.5v2"));
+    var svg = padlock("unlock", false);
     box.appendChild(svg);
     var h = document.createElement("h2"); h.className = "wlt-h"; h.textContent = T("Unreserve?"); box.appendChild(h);
     var p = document.createElement("p"); p.className = "wlt-p";
@@ -92,49 +114,42 @@
     },
     // The one reservation button (owner, 23 November 2026), the same as ReserveButton in the app. o: busy,
     // set(true/false), ask() for someone else's reservation ("Is it still being bought?", together.js) or null.
-    // "Reserved by you": one tap opens the "Unreserve?" pop-up. The padlock is the app's own line icon.
+    // "Reserved by you": one tap opens the "Unreserve?" pop-up. The padlock is the golden one (grey for others).
     button: function (w, r, c, o) {
       var st = this.state(w, r, c);
       var box = document.createElement("span");
       box.className = "resbox";
       if (!st) return box;
-      function lock(open) {
-        var ns = "http://www.w3.org/2000/svg";
-        var svg = document.createElementNS(ns, "svg");
-        svg.setAttribute("viewBox", "0 0 24 24"); svg.setAttribute("aria-hidden", "true");
-        svg.setAttribute("class", "lock" + (open ? " open" : ""));
-        ["M6.5,11h11a1.5,1.5 0 0,1 1.5,1.5v6a1.5,1.5 0 0,1 -1.5,1.5h-11A1.5,1.5 0 0,1 5,18.5v-6A1.5,1.5 0 0,1 6.5,11z",
-          open ? "M8.5,11V8a3.5,3.5 0 0,1 6.9,-0.8" : "M8.5,11V8a3.5,3.5 0 0,1 7,0v3", "M12,14.5v2"].forEach(function (d) {
-          var p = document.createElementNS(ns, "path");
-          p.setAttribute("d", d); p.setAttribute("fill", "none"); p.setAttribute("stroke", "currentColor");
-          p.setAttribute("stroke-width", "1.8"); p.setAttribute("stroke-linecap", "round"); p.setAttribute("stroke-linejoin", "round");
-          svg.appendChild(p);
-        });
-        return svg;
-      }
-      function fill(b, text, withLock, open) {
-        b.textContent = "";
-        if (withLock) b.appendChild(lock(open));
-        b.appendChild(document.createTextNode(text));
-      }
-      function btn(cls, text, withLock, fn) {
+      function btn(cls, text, lockCls, fn) {
         var b = document.createElement("button");
         b.type = "button"; b.className = "act small " + cls;
-        fill(b, text, withLock, false);
+        if (lockCls) b.appendChild(padlock(lockCls, lockCls.indexOf("grey") >= 0));
+        b.appendChild(document.createTextNode(text));
         if (fn) b.addEventListener("click", fn); else b.setAttribute("aria-disabled", "true");
         return b;
       }
       if (st === "reserve") {
-        var rb = btn("", T("Reserve"), false, function () { o.set(true); });
+        var rb = btn("", T("Reserve"), "", function () { justLocked[w.id] = { tap: Date.now(), start: 0 }; o.set(true); });
         rb.disabled = !!o.busy;
         box.appendChild(rb);
       } else if (st === "mine") {
         var text = qty(w) > 1 && c && c.my > 0 ? T("You reserved {0}", c.my) : T("Reserved by you");
-        var mb = btn("outline", text, true, function () { askUnreserve(w, function () { o.set(false); }); });
+        // Just reserved here: the padlock starts open and big, swings shut, then settles (once). A card drawn again
+        // while it plays (the server's answer) carries on where it was instead of starting over.
+        var jl = justLocked[w.id], now = Date.now(), ago = -1;
+        if (jl && now - jl.tap < 15000) { jl.start = jl.start || now; ago = now - jl.start; }
+        if (ago < 0 || ago >= 900) delete justLocked[w.id];
+        var playing = ago >= 0 && ago < 900;
+        var mb = btn("outline", text, playing ? "lock closing" : "lock", function () { askUnreserve(w, function () { o.set(false); }); });
+        if (playing && ago > 0) {
+          var sv = mb.querySelector("svg.lock");
+          sv.style.animationDelay = "-" + ago + "ms";
+          sv.querySelector(".shackle").style.animationDelay = "-" + ago + "ms";
+        }
         mb.disabled = !!o.busy;
         box.appendChild(mb);
       } else {
-        var tb = btn("outline taken", T("Reserved"), true, o.ask || null);
+        var tb = btn("outline taken", T("Reserved"), "lock grey", o.ask || null);
         if (o.ask) tb.title = T("Is it still being bought?");
         box.appendChild(tb);
       }

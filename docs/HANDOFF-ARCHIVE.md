@@ -948,3 +948,10 @@ the page" (database step 2 → 3). Also: the daily server check failing = supaba
 Owner: the Co-op form had too many options. "Gifts for someone?" and helper lines gone; an "Add friends" card invites
 friends the moment the list is made (failed sends told, with where to retry). Owner's new rule: no plain "+" lines
 anywhere, same elements look the same: New group and New gift exchange got the same card. Not checkable here: the phone.
+
+### 23 November 2026: reservations on the button, new wishes per list (2.284)
+Owner's screenshots: same icon for every list, a friend's red dot that led nowhere, a busy card after Reserve. Built:
+person icons in every list picker; a red count per friend list and a royal purple "NEW" ribbon (owner's pick); one
+Reserve button with a lock ("Unreserve?" first), others' darkened and below the free ones, app and all web pages.
+Screenshots caught "Reserved by" cut off on narrow cards (text now shrinks). 2.285: "Unreserve?" on the button, red ribbon;
+perfumes kept €79.95 (sizes, no "from" price): owner chose size tracking (next build). Not checkable here: the phone.

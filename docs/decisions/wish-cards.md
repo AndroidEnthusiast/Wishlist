@@ -93,3 +93,15 @@ Moved here from `people.md` on 18 November 2026 (its size limit); newest at the 
 - **One person / two people icons for the kind of wishlist in every list picker** (Save to, Move or copy, Which
   wishlist?, Add to my wishlist, Overview): `listKindIcon` in `FormParts.kt`, the same icons as the New wishlist chips.
 - Checks: `ReserveAndNewsTest`, `ReserveScreenshotTest`, web `index-page`, `e2e/t3.js`, group, exchange, together.
+
+## The golden padlock (owner, 24 November 2026, 2.288)
+- Owner: "prettier animations… an icon that looks in colour like the lock emoji 🔒"; on Reserve "the metal bar swings
+  into the padlock", on "Unreserve?" the padlock opens. Our own drawing (rule 7, not the emoji's art): gold body with a
+  shine and darker rim, silver shackle drawn behind it, keyhole (`Padlock.kt`; web `padlock()` in `reserve.js`).
+- **Where** (asked): in the animations and on "Reserved by you"; **someone else's "Reserved" is grey**. **Reserve:
+  on the button itself** (owner: "small but not so small it's not visible"): it starts open at 1.6× (1.9× poked out
+  of the small web button), swings shut and drops in (0.42 s), then settles with a small bounce. Only right after
+  your own tap (also when the web page draws the card again meanwhile: it carries on). **Unreserve?**: the same
+  padlock lifts and swings open. "Remove animations" / reduced motion: shown in its end state. **App and web pages.**
+- Other "3D" animations offered (gift exchange card flip, Most wanted star spin, price tag flip, gift box lid): the
+  owner chose none, so nothing is built. Advised: few, short (under half a second), never in the way.
