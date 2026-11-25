@@ -98,37 +98,8 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
 - **App only:** the friends' web pages don't follow the themes. **One update** with everything, no previews.
 
 - Moved word for word to `docs/decisions/look-ARCHIVE.md` (24 November 2026, size limit): "Six more themes" and
-  "Swiss, British Punk, colour sets and wild cards" (13 November 2026; replaced by Quiet and Gen Z chaos on the 14th).
-
-## Deep themes, one at a time (owner, 13 November 2026, after 2.201)
-- Owner: the colour sets "only change a few accent colours"; expected "a theme within a theme"; themes felt like "the
-  bare minimum" instead of "proper heavy feature-rich themes with options to personalise"; Doodle "isn't doodly
-  enough"; **scrolling lags in Doodle** ("worryingly slow"). Claude agreed: 16 themes got a thin layer each.
-- **Plan (owner's choice): Doodle first, then the others one or two per update** in the order the owner picks, each
-  rebuilt to the Doodle standard once the owner is happy with Doodle.
-- **A colour set is a theme within the theme**: it changes the page, cards and colours throughout, the shapes of cards
-  and buttons, and the drawings and textures (not the fonts).
-- **Options inside a theme** (Themer, under the sets): **amount of decoration** (Calm, Normal, Wild: drawings behind
-  the screens and how much cards tilt) and **card style** (e.g. Outlined, Filled, Sticker).
-- **Doodle**: **everything hand-drawn** (icons, tick boxes, switches, buttons, the bottom bar, dividers as marker
-  scribbles) and **sketchbook paper** (lined or graph paper, margins, tape and paper clips). Handwriting on all text
-  and doodles around content were not chosen.
-- **Speed first**: fix the lag in every style, and a check that keeps it fixed.
-- **Y2K is the second deep theme** (owner, 13 November 2026: "pick a theme"; Claude picked Y2K: three really different
-  sub-worlds, one of the thinnest, and the opposite of Doodle; Gen Z chaos waits for the partner's input). Sub-themes:
-  **Holographic**, **Liquid chrome**, **Bubbly (Frutiger Aero)**. Own parts: **glossy jelly buttons and switch**,
-  **star and sparkle icons**, **stickers on cards** (stars, hearts, planets; more at Wild). Card styles: **Glass**
-  (see-through frosted panels), **Glossy** (solid with a shine), **Sticker** (white, thick outline, holo shadow).
-  Not chosen: chrome lettering on titles, an early-web sub-theme.
-- **British Punk is the third deep theme** (owner: "next"; Claude picked Punk: the owner's own "wild" example).
-  Sub-themes: **Photocopy zine**, **Gig poster**, **Safety pin & tartan**. Own parts: **cut-out buttons** (paper strips
-  taped down, a little crooked) and **stamped chips**; **safety pins, staples and tape** holding cards (per sub-theme,
-  more at Wild); **ransom-note screen titles** (not only the Wishlist title). Card styles: **Cut-out**, **Taped flyer**,
-  **Badge**. Not chosen: punk icons (the icons stay), a spray-paint sub-theme.
-- **Retro vintage is the fourth deep theme** (owner: "next"; 14 November 2026). Sub-themes: **50s diner**, **70s
-  groovy**, **Vintage travel poster**. Own parts: **ticket and label buttons** (notched ends; chosen chips like a luggage
-  tag), **stamps and badges on cards** (per sub-theme, more at Wild), **retro icons** (thick, rounded sign-painter
-  style). Card styles: **Ticket**, **Postcard**, **Enamel sign**. Not chosen: neon-sign titles, an old-cinema sub-theme.
+  "Swiss, British Punk, colour sets and wild cards" (13 November 2026; replaced by Quiet and Gen Z chaos on the 14th),
+  and on 25 November 2026 "Deep themes, one at a time" (13 November 2026, replaced the same way).
 
 ## Back to Quiet and Gen Z chaos; design styles to a professional standard (owner, 14 November 2026)
 - Owner, after 2.205: "your implementation of the design styles has disappointed me". The Calm/Normal/Wild steps were
@@ -322,3 +293,20 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   badge again and Price watch's empty page its icon. The padlock and the stamp stay.
 - Not built (offered): envelope with a wax seal (sharing / invites), ribbon on the occasion day, objects on the other
   empty pages. "I have it" for several selected wishes doesn't exist (selecting offers Move and Delete only).
+
+## Animations that show what you did (owner, 25 November 2026; planned, not built yet)
+- Owner's test: an animation is valuable when it "shows clearly the user is doing something", like the padlock
+  (un)reserving; not "just possible". **"Similar effects should be the same"** (owner): one shared animation per family.
+- **Chosen (numbers from the suggestion list):** 1 delete into the bin (as in the storyboard: the bin's lid opens, the
+  card tips in, the lid shuts with a bump, "Moved to the bin · Undo"; Undo and Restore play it backwards; several at
+  once go into the selection bar's Delete), 2 move or copy, 3 a new wish drops in, 5 Private: the eye's lid closes,
+  6 most wanted heart fills (and the card slides to its place when sorted by most wanted), 8 reserved live by someone
+  else (a grey padlock drops in, the card darkens), 10 the old price struck through by a drawn line, 12 friends'
+  pictures meet, 14 a screenshot becomes the wish card, 16 add to my wishlist (**the same peel-off as copy**, owner),
+  17 view change reshapes the cards, 18 sort: cards slide to their new order, 20 import: wishes arrive one by one.
+- **Not chosen:** 4 put back rises, 7 link copied tick, 9 "Let someone else" unlocks, 11 exchange card flip, 13 message
+  rises, 15 visible-to icon morph, 19 selecting sink + tick, 21 leaving fades out.
+- **Families (one animation each):** leaves for somewhere (1, 2 move); a copy peels off (2 copy, 16); arrives (3, 14,
+  20); changes state (5, 6, 10); others did something (8, 12); rearranging (17, 18). Rules: under half a second, never
+  blocking, one vibration at most, end state with Remove animations, the web pages too where the action exists there.
+- Pop-ups hold 4 options: the owner wants to see every option, so long lists go as several questions of 4 at once.

@@ -5,6 +5,8 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **Owner, 25 November 2026: build the chosen animations family by family** (`look.md`, last section: 13 picks,
+  "similar effects should be the same"). Ask each family's questions first.
 - **Owner, 24 November 2026: ideas 7 and 11 next** (`ideas.md`, last section; `people.md`, last section): interview
   first. Ask how the chat's + and the wishlist card feel on the phone (2.287), and how the padlock animation
   feels (2.288).
