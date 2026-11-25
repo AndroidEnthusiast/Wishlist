@@ -80,7 +80,7 @@ fun CompactCard(
 
     // The frame comes from the design (Design.kt): shape, colour, lines and shadow.
     Column(
-        Modifier.fillMaxWidth().alpha(if (w.got || reserveButton(w, reserve) == "taken") 0.6f else 1f).then(
+        Modifier.fillMaxWidth().alpha(dimmed(w.got || reserveButton(w, reserve) == "taken")).then(
             if (onLongPress != null) Modifier.pointerInput(w.id) { detectTapGestures(onLongPress = { onLongPress() }) }
             else Modifier
         ).lookCard(look, w.id, look.cardShape(w.id, small = true))
@@ -117,7 +117,7 @@ fun CompactCard(
                 modifier = Modifier.align(Alignment.TopStart)
             )
             // Bottom left: the eye of a private wish (the price change has the top left to itself).
-            if (w.priv) PrivateBadge(Modifier.align(Alignment.BottomStart).padding(8.dp), size = 14.dp, onClick = onPrivate)
+            PrivateBadge(Modifier.align(Alignment.BottomStart).padding(8.dp), size = 14.dp, onClick = onPrivate, shown = w.priv)
         }
         if (look.pictureLine > 0.dp) Box(Modifier.fillMaxWidth().height(look.pictureLine).background(look.line))
         Row(Modifier.padding(start = 12.dp, bottom = 4.dp), verticalAlignment = Alignment.Top) {
@@ -169,7 +169,12 @@ fun CompactCard(
                     )
                 ) { menu = false }
             }
-            if (!readOnly) IconButton(onClick = { if (!inert) DeleteFlow.request(ctx, w) }) {
+            // The card tips into this bin (CardMotion.kt, owner 25 November 2026).
+            val motion = LocalCardMotion.current
+            if (!readOnly) IconButton(
+                onClick = { if (!inert) motion?.fly(listOf(w.id), "bin") { DeleteFlow.request(ctx, w) } ?: DeleteFlow.request(ctx, w) },
+                modifier = Modifier.motionBin(w.id)
+            ) {
                 Icon(AppIcons.CardDelete, tr("Delete"), tint = muted, modifier = Modifier.size(if (look.design == "quiet") 20.dp else 24.dp))
             }
             }

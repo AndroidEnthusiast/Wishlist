@@ -55,6 +55,42 @@
   }
   // Wishes reserved a moment ago on this page: their "Reserved by you" padlock swings shut once.
   var justLocked = {};
+  // What each wish's button showed last, and when someone else's reservation appeared while the page was open
+  // (owner, 25 November 2026): then their grey padlock drops in and the card darkens, like in the app.
+  var lastState = {}, takenAt = {};
+  // How far (ms) an animation that started at [at] has played, or -1 when it is over (a card drawn again carries on).
+  function playedFor(at, len) { var ago = Date.now() - at; return at && ago < len ? ago : -1; }
+
+  // The old price is crossed out by a line drawn across it, the first time this browser shows that change (owner,
+  // 25 November 2026; the app does the same). Remembered per wish name, old and new price; the last 400 are kept.
+  function seenChange(key) {
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem("wl_seen_changes") || "[]"); } catch (e) { list = []; }
+    if (list.indexOf(key) >= 0) return true;
+    list.push(key);
+    try { localStorage.setItem("wl_seen_changes", JSON.stringify(list.slice(-400))); } catch (e) { return true; }
+    return false;
+  }
+  function markOld(node) {
+    if (!node.classList || node.dataset.wlSeen) return;
+    node.dataset.wlSeen = "1";
+    var card = node.closest(".card");
+    var name = card && card.querySelector("h3, .title, .name");
+    var price = node.parentNode ? node.parentNode.firstChild : null;
+    var key = (name ? name.textContent : "") + "|" + node.textContent + "|" + (price && price.nodeType === 3 ? price.textContent : "");
+    if (!seenChange(key)) node.classList.add("draw");
+  }
+  if (window.MutationObserver && document.body) {
+    new MutationObserver(function (ms) {
+      ms.forEach(function (m) {
+        m.addedNodes.forEach(function (n) {
+          if (n.nodeType !== 1) return;
+          if (n.matches && n.matches("span.old")) markOld(n);
+          if (n.querySelectorAll) n.querySelectorAll("span.old").forEach(markOld);
+        });
+      });
+    }).observe(document.body, { childList: true, subtree: true });
+  }
   function askUnreserve(w, yes) {
     var back = document.createElement("div"); back.className = "wlt-back";
     var box = document.createElement("div"); box.className = "wlt-box resdlg";
@@ -133,6 +169,9 @@
     // "Reserved by you": one tap opens the "Unreserve?" pop-up. The padlock is the golden one (grey for others).
     button: function (w, r, c, o) {
       var st = this.state(w, r, c);
+      var before = lastState[w.id];
+      lastState[w.id] = st;
+      if (st !== "taken") delete takenAt[w.id];
       var box = document.createElement("span");
       box.className = "resbox";
       if (!st) return box;
@@ -165,7 +204,16 @@
         mb.disabled = !!o.busy;
         box.appendChild(mb);
       } else {
-        var tb = btn("outline taken", T("Reserved"), "lock grey", o.ask || null);
+        // Reserved by someone else just now, while this page was open: the grey padlock drops in, the card darkens.
+        if (before === "reserve" && !takenAt[w.id]) takenAt[w.id] = Date.now();
+        var played = playedFor(takenAt[w.id], 900);
+        var tb = btn("outline taken", T("Reserved"), played >= 0 ? "lock grey closing" : "lock grey", o.ask || null);
+        if (played >= 0) {
+          var gl = tb.querySelector("svg.lock");
+          if (played > 0) { gl.style.animationDelay = "-" + played + "ms"; gl.querySelector(".shackle").style.animationDelay = "-" + played + "ms"; }
+          var mark = function () { var c = tb.closest(".card"); if (c) { c.classList.add("taken-live"); c.style.setProperty("--wl-dim-delay", "-" + played + "ms"); } };
+          if (window.requestAnimationFrame) requestAnimationFrame(mark); else setTimeout(mark, 0);
+        }
         if (o.ask) tb.title = T("Is it still being bought?");
         box.appendChild(tb);
       }

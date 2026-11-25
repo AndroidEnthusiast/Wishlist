@@ -73,7 +73,8 @@ fun AppBottomBar(
     val look = LocalLook.current
     FloatingBar {
             // Icons only, a little bigger (owner, 7 November 2026); their names are read out by TalkBack.
-            BarItem(tr("Home"), current == "home", onHome) { Icon(if (current == "home") AppIcons.HomeFilled else AppIcons.Home, null, tint = it, modifier = Modifier.size(30.dp)) }
+            // Moved and copied wishes fly to the Home icon, which bounces as they land (CardMotion.kt).
+            BarItem(tr("Home"), current == "home", onHome) { Icon(if (current == "home") AppIcons.HomeFilled else AppIcons.Home, null, tint = it, modifier = Modifier.size(30.dp).motionHome().homeBounce()) }
             BarItem(tr("Messages"), current == "messages", onMessages, dot = messagesDot) { ChatIcon(it, 30.dp, filled = current == "messages") }
             // Add wish: only a + in the accent colour, no words. Its own wider slot (owner, 2.126: more breathing space,
             // "Price watch" seemed closer to the + than "Messages"): the same room on both sides.

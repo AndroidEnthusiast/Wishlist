@@ -64,7 +64,7 @@ fun RowCard(
     val rise = priceRose(w)
     val label = listOf(host(w.url), w.category.takeIf { it.isNotBlank() && it != "All" })
         .filter { !it.isNullOrBlank() }.joinToString(" · ")
-    val card = Modifier.fillMaxWidth().alpha(if (dim) 0.6f else 1f).then(
+    val card = Modifier.fillMaxWidth().alpha(dimmed(dim)).then(
         if (onLongPress != null) Modifier.pointerInput(w.id) { detectTapGestures(onLongPress = { onLongPress() }) }
         else Modifier
     ).lookCard(look, w.id, look.cardShape(w.id, small = true))
@@ -85,7 +85,7 @@ fun RowCard(
                 contentAlignment = Alignment.Center
             ) {
                 if (w.image.isNotEmpty()) PhotoStage(w.image, w.label, small = true) else PlaceholderIcon("gift", 32.dp, look.photoInk)
-                if (w.priv) PrivateBadge(Modifier.align(Alignment.BottomStart).padding(6.dp), size = 12.dp, onClick = onPrivate)
+                PrivateBadge(Modifier.align(Alignment.BottomStart).padding(6.dp), size = 12.dp, onClick = onPrivate, shown = w.priv)
                 // The Love label on the picture (owner, 16 November 2026: not in the words); the reservation is under the
                 // words now, above the buttons (owner, 20 November 2026: it didn't fit on the picture).
                 PictureTopRow(6.dp, left = null, right = { compact -> StarCorner(w, onStar, small = true, buttonSize = 28.dp, compact = compact) }, modifier = Modifier.align(Alignment.TopStart))

@@ -5,8 +5,7 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
-- **Owner, 25 November 2026: build the chosen animations family by family** (`look.md`, last section: 13 picks,
-  "similar effects should be the same"). Ask each family's questions first.
+- **2.292: ask how the animations feel on the phone** (`look.md`, last section). Then ideas 7 and 11 (interview first).
 - **Owner, 24 November 2026: ideas 7 and 11 next** (`ideas.md`, last section; `people.md`, last section): interview
   first. Ask how the chat's + and the wishlist card feel on the phone (2.287), and how the padlock animation
   feels (2.288).
@@ -143,14 +142,13 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 25 November 2026: animations that show what you did (2.292)
+13 owner-chosen animations in families (bin, move, copy peel, arrive, eye, heart, strike, live padlock, friends
+meet, view fade, sort glide), app and web (8, 10); each checked frame by frame and fixed (see look.md). View change
+became a fade-through (reshaping looked muddled; tell the owner). Not checkable here: real motion and vibration.
+
 ### 25 November 2026: the owner's phone review (2.290)
 Price tag removed again. Two-per-row cards side by side now always the same height (old price on its own line, kept
 empty when none). Received gifts show photos. "Unreserve?": padlock at the top, then the gift's photo and name and a
 short line (app and web). The open shackle's right leg is short (owner picked A). Not checkable here: the phone.
 2.291: Gifts I reserved (and the "Still buying" question and two pop-ups) show the gift's photo.
-
-### 24 November 2026: little real objects (2.289)
-Owner wanted the app to "live" with its own thing: chose little real objects. Built: a paper price tag swinging in on
-the price page after a drop; a Berry "Got it!" stamp on "I have it" and in "What did you get?", then the wish moves;
-objects at rest on three empty pages. Style guide: new flourishes use these objects. Not checkable here: the motion
-and the vibration on the phone (still frames only).

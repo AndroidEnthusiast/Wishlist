@@ -976,3 +976,12 @@ Owner wanted prettier, emoji-like animations. Our own golden padlock (silver sha
 grey on someone else's; it swings shut on the button right after Reserve (1.6×, then settles) and opens in
 "Unreserve?"; app and web pages, still with Remove animations. 18 dp keeps "Reserved by you" fitting (CardLayoutTest).
 Other 3D animations offered, none chosen. Not checkable here: the real motion on the phone (only frames were seen).
+
+### 24 November 2026: little real objects (2.289)
+Owner wanted the app to "live" with its own thing: chose little real objects. Built: a paper price tag swinging in on
+the price page after a drop; a Berry "Got it!" stamp on "I have it" and in "What did you get?", then the wish moves;
+objects at rest on three empty pages. Style guide: new flourishes use these objects. Not checkable here: the motion
+and the vibration on the phone (still frames only).
+
+(Earlier Next-session line, replaced by 2.292.) - **Owner, 25 November 2026: build the chosen animations family by family** (`look.md`, last section: 13 picks,
+  "similar effects should be the same"). Ask each family's questions first.

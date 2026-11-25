@@ -65,7 +65,7 @@ fun WishCard(
 
     // The frame comes from the design (Design.kt): shape, colour, lines and shadow.
     Column(
-        Modifier.fillMaxWidth().alpha(if (dim) 0.6f else 1f).then(
+        Modifier.fillMaxWidth().alpha(dimmed(dim)).then(
             if (onLongPress != null) Modifier.pointerInput(w.id) { detectTapGestures(onLongPress = { onLongPress() }) }
             else Modifier
         ).lookCard(look, w.id, look.cardShape(w.id, small = false))
@@ -101,7 +101,7 @@ fun WishCard(
                 modifier = Modifier.align(Alignment.TopStart)
             )
             // Bottom left: the eye of a private wish (the price change has the top left to itself).
-            if (w.priv) PrivateBadge(Modifier.align(Alignment.BottomStart).padding(12.dp), onClick = onPrivate)
+            PrivateBadge(Modifier.align(Alignment.BottomStart).padding(12.dp), onClick = onPrivate, shown = w.priv)
 
         }
         if (look.pictureLine > 0.dp) Box(Modifier.fillMaxWidth().height(look.pictureLine).background(look.line))

@@ -22,7 +22,8 @@ class ReviewNov25Test {
     @Test fun cardsSideBySideAreTheSameHeight() {
         assertTrue(src("CompactCard.kt").contains("stacked = true)"))
         val line = src("WishPriceLine.kt")
-        assertTrue(line.contains("was ?: \" \"") && line.contains("textDecoration = if (was != null) TextDecoration.LineThrough else null"))
+        // No old price: an empty line of the same height, no stray strike-through (since 2.292 the line is drawn by OldPrice).
+        assertTrue(line.contains("if (was != null) OldPrice(w, was, Modifier) else Text(\" \""))
     }
 
     @Test fun receivedGiftsShowTheirPhoto() = assertTrue(src("Reminders.kt").contains("WishThumb(w)"))

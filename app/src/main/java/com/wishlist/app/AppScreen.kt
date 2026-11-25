@@ -106,7 +106,10 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     // The bar shows on Home, a list and the tabs; an open conversation has a back arrow and no bar.
     val inChat = tab == Route.MESSAGES && places.chat != null
     val showBar = (onMain || tab != null || section != null) && !inChat && !imeOpen && !places.selecting
-    CompositionLocalProvider(LocalGo provides goStable, LocalPlaces provides places) {
+    // Cards that fly to where they go, and new ones that drop in (CardMotion.kt, owner 25 November 2026).
+    val cardMotion = rememberCardMotion()
+    CompositionLocalProvider(LocalGo provides goStable, LocalPlaces provides places, LocalCardMotion provides cardMotion) {
+    Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize()) {
     // With the bottom bar, the screens above it don't leave room for the phone's own navigation bar again.
     Box(Modifier.weight(1f).imePadding().then(if (showBar) Modifier.consumeWindowInsets(WindowInsets.navigationBars) else Modifier)) {
@@ -258,5 +261,8 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
     }
 
     AppPopups(a, snack, goStable)
+    // Above everything, never taking taps: the cards in flight.
+    FlightLayer(cardMotion)
+    }
     }
 }

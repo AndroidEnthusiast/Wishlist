@@ -98,6 +98,18 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   check("item2 Reserved by someone else: a greyed Reserved button with a lock, no line, darkened", !cards[1].querySelector(".badge.status") && cards[1].querySelector("button.act.taken").textContent === "Reserved" && !!cards[1].querySelector("button.act.taken svg.lock") && cards[1].classList.contains("dim"));
   // The golden padlock (owner, 24 November 2026): grey on someone else's reservation, never playing.
   check("someone else's padlock is grey and still", cards[1].querySelector("button.act.taken svg.lock rect").getAttribute("fill") === "url(#wl-grey)" && !cards[1].querySelector("svg.lock.closing"));
+  // The old price's line is drawn the first time this browser shows the change (owner, 25 November 2026).
+  await sleep(20);
+  check("a price change seen for the first time draws its line", !!cards[0].querySelector(".price span.old.draw"));
+  check("someone else's reservation already there when the page opens doesn't play", !cards[1].querySelector("svg.lock.closing") && !cards[1].classList.contains("taken-live"));
+  {
+    // Live: free when last drawn, someone else's now: the grey padlock drops in (owner, 25 November 2026).
+    const R = d.window.WLRes, lw = { id: 4242, title: "Live lamp", price: 10 };
+    R.button(lw, undefined, null, { set() {} });
+    const live = R.button(lw, false, null, { set() {} });
+    check("reserved by someone else while you look: the grey padlock drops in", !!live.querySelector("svg.lock.closing") && live.querySelector("svg.lock rect").getAttribute("fill") === "url(#wl-grey)");
+    check("drawn again a moment later it carries on, then rests", !!R.button(lw, false, null, { set() {} }).querySelector("svg.lock.closing"));
+  }
   check("item3 Owned, no button", cards[2].querySelector(".badge.status").textContent === "Owned" && !cards[2].querySelector("button.act"));
   const noLink = {id: 9, url: "", title: "Custom gift", desc: "", image: "", price: null, old: null, cur: "USD", cat: "Home", got: false};
   items.push(noLink);
@@ -124,7 +136,7 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   check("after Reserve: the button says Reserved by you, with a lock, no extra line", !c1.querySelector(".badge.status") && c1.querySelector("button.act").textContent === "Reserved by you" && !!c1.querySelector("button.act svg.lock"));
   check("just reserved: the golden padlock swings shut once", !!c1.querySelector("button.act svg.lock.closing .shackle") && c1.querySelector("svg.lock rect").getAttribute("fill") === "url(#wl-gold)" && !!d.window.document.getElementById("wl-gold"));
   const css = fs.readFileSync(path.join(WEB, "wishlist.css"), "utf8");
-  check("with Remove animations on, the padlock doesn't move", /prefers-reduced-motion: reduce\) \{ button\.act svg\.lock\.closing, button\.act svg\.lock\.closing \.shackle \{ animation: none/.test(css));
+  check("with Remove animations on, the padlock, the darkening and the price line don't move", /prefers-reduced-motion: reduce\) \{ button\.act svg\.lock\.closing, button\.act svg\.lock\.closing \.shackle, \.card\.dim\.taken-live \.body, \.card\.dim\.taken-live \.pic img, \.old\.draw::after \{ animation: none/.test(css));
   const myDevice = d.window.localStorage.getItem("wl_device");
   check("device id stored and used", !!myDevice && store.reservations[1] === myDevice);
 

@@ -163,7 +163,7 @@ fun WishSheet(w: Wish, a: WishActions, onClose: () -> Unit) {
                 "addmine" -> SheetRow({ Icon(AppIcons.Add, null, tint = cs.onSurfaceVariant) }, tr("Add to my wishlist"), then { AddToMine.ask(w) })
                 "chat" -> SheetRow({ Icon(AppIcons.Chat, null, tint = cs.onSurfaceVariant) }, tr("Chat about this wish"), then { a.chatAbout?.invoke() })
                 "private" -> SheetRow(
-                    { Icon(PrivateIcon, null, tint = cs.onSurfaceVariant) }, tr("Private"),
+                    { PrivacyEye(w.priv, cs.onSurfaceVariant, Modifier.size(24.dp)) }, tr("Private"),
                     keep("private") { a.everywhere?.setPrivate?.invoke(!w.priv) ?: togglePrivate(ctx, w) },
                     checked = w.priv
                 )

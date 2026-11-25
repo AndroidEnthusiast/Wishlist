@@ -181,6 +181,7 @@ internal fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpen
     LaunchedEffect(places.addCode) { if (places.addCode != null) adding = true }
 
     val people = rememberPeople()
+    var meeting by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
     fun act(done: String, block: suspend () -> Unit) {
         scope.launch {
             try {
@@ -230,11 +231,13 @@ internal fun FriendsHome(snack: SnackbarHostState, onProfile: () -> Unit, onOpen
             if (s != null && s.incoming.isNotEmpty()) {
                 item { FriendsTitle(tr("Waiting for your approval")) }
                 items(s.incoming, key = { "in" + it.id }) { r ->
-                    PersonRow(r, tr("wants to be your friend")) {
-                        TextButton(onClick = { act(tr("Request declined")) { people.answer(r.id, false) } }) { Text(tr("Decline")) }
-                        Button(onClick = {
-                            act(tr("You and %s are friends now", r.name)) { people.answer(r.id, true) }
-                        }) { Text(tr("Approve")) }
+                    // Approve: your two pictures meet first, then they become a friend (owner, 25 November 2026).
+                    PersonRow(r, tr("wants to be your friend"), meeting = if (meeting == r.id) ({
+                        meeting = null
+                        act(tr("You and %s are friends now", r.name)) { people.answer(r.id, true) }
+                    }) else null) {
+                        TextButton(enabled = meeting == null, onClick = { act(tr("Request declined")) { people.answer(r.id, false) } }) { Text(tr("Decline")) }
+                        Button(enabled = meeting == null, onClick = { meeting = r.id }) { Text(tr("Approve")) }
                     }
                 }
             }

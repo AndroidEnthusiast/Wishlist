@@ -53,9 +53,16 @@ fun ReserveButton(
     var asking by androidx.compose.runtime.saveable.rememberSaveable(w.id) { androidx.compose.runtime.mutableStateOf(false) }
     // Just tapped Reserve (owner, 24 November 2026): the golden padlock on "Reserved by you" swings shut once.
     var justReserved by androidx.compose.runtime.saveable.rememberSaveable(w.id) { androidx.compose.runtime.mutableStateOf(false) }
+    // Someone else reserved it while you look (owner, 25 November 2026): their grey padlock drops in and shuts, so you
+    // see live that it's taken. Not when the list opens with it already reserved, and not for your own tap.
+    val was = androidx.compose.runtime.remember(w.id) { arrayOf(state) }
+    val takenNow = state == "taken" && was[0] == "reserve" && !justReserved
+    var takenLive by androidx.compose.runtime.saveable.rememberSaveable(w.id) { androidx.compose.runtime.mutableStateOf(false) }
+    val playTaken = takenNow || takenLive
+    androidx.compose.runtime.SideEffect { if (takenNow) takenLive = true; was[0] = state }
     val lock: @Composable androidx.compose.foundation.layout.RowScope.(Boolean) -> Unit = { grey ->
         ClosingPadlock(
-            play = !grey && justReserved, grey = grey, onDone = { justReserved = false },
+            play = if (grey) playTaken else justReserved, grey = grey, onDone = { if (grey) takenLive = false else justReserved = false },
             // 18 dp + 4 dp: the same room as the old 16 dp line icon + 6 dp, so "Reserved by you" still fits on the
             // narrowest card with large text (CardLayoutTest).
             modifier = Modifier.size(18.dp).align(androidx.compose.ui.Alignment.CenterVertically)
@@ -130,3 +137,8 @@ private fun androidx.compose.foundation.layout.RowScope.FitWords(text: String) =
     Modifier.weight(1f, fill = false).align(androidx.compose.ui.Alignment.CenterVertically), androidx.compose.ui.text.style.TextAlign.Start,
     minScale = 0.5f
 )
+
+/** How see-through a card is: darkened when someone else reserved it or you have it, smoothly when it changes. */
+@Composable
+fun dimmed(dim: Boolean): Float =
+    androidx.compose.animation.core.animateFloatAsState(if (dim) 0.6f else 1f, androidx.compose.animation.core.tween(380), label = "dim").value

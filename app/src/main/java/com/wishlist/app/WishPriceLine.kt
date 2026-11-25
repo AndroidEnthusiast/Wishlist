@@ -7,7 +7,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
 /* A wish as a card (see WishCards.kt): the price line with its old price and the drop or rise. */
@@ -39,10 +41,7 @@ fun PriceLine(
             )
             val was = if ((drop || rise) && oldP != null) money(oldP, w.currency) else null
             // No old price: an empty line of the same height (no strike-through, or it drew a small dash).
-            Text(
-                was ?: " ", style = MaterialTheme.typography.bodySmall, maxLines = 1,
-                textDecoration = if (was != null) TextDecoration.LineThrough else null, color = look.cardMuted(w.id)
-            )
+            if (was != null) OldPrice(w, was, Modifier) else Text(" ", style = MaterialTheme.typography.bodySmall, maxLines = 1)
         }
         return
     }
@@ -53,10 +52,44 @@ fun PriceLine(
             color = if (drop) look.drop else if (rise) look.rise else ink,
             modifier = Modifier.alignByBaseline()
         )
-        if ((drop || rise) && oldP != null) Text(
-            money(oldP, w.currency), style = MaterialTheme.typography.bodySmall, maxLines = 1,
-            textDecoration = TextDecoration.LineThrough, color = look.cardMuted(w.id),
-            modifier = Modifier.alignByBaseline()
-        )
+        if ((drop || rise) && oldP != null) OldPrice(w, money(oldP, w.currency), Modifier.alignByBaseline())
+    }
+}
+
+/**
+ * The old price, crossed out. The first time you see a price change on a wish the line is drawn across it, left to
+ * right (owner, 25 November 2026: "only the first time you see that drop"); after that, and with Remove animations,
+ * it is simply crossed out.
+ */
+@Composable
+private fun OldPrice(w: Wish, text: String, modifier: Modifier) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val look = LocalLook.current
+    val key = "${w.id}:${w.oldPrice}:${w.price}"
+    val first = androidx.compose.runtime.remember(key) { SeenChanges.firstLook(ctx, key) && !animationsOff(ctx) }
+    val t = androidx.compose.runtime.remember(key) { androidx.compose.animation.core.Animatable(if (first) 0f else 1f) }
+    if (first) androidx.compose.runtime.LaunchedEffect(key) {
+        kotlinx.coroutines.delay(250)
+        t.animateTo(1f, androidx.compose.animation.core.tween(450, easing = androidx.compose.animation.core.FastOutSlowInEasing))
+    }
+    val ink = look.cardMuted(w.id)
+    Text(
+        text, style = MaterialTheme.typography.bodySmall, maxLines = 1, color = ink,
+        modifier = modifier.drawWithContent {
+            drawContent()
+            val y = size.height * 0.56f
+            drawLine(ink, androidx.compose.ui.geometry.Offset(0f, y), androidx.compose.ui.geometry.Offset(size.width * t.value, y), 1.2.dp.toPx())
+        }.semantics { contentDescription = tr("Was %s", text) }
+    )
+}
+
+/** Which price changes this phone has shown (the line is drawn the first time only); the last 400 are kept. */
+internal object SeenChanges {
+    fun firstLook(c: android.content.Context, key: String): Boolean {
+        val p = c.applicationContext.getSharedPreferences("wishlist", android.content.Context.MODE_PRIVATE)
+        val seen = p.getString("seen_changes", "").orEmpty().split('|').filter { it.isNotEmpty() }
+        if (key in seen) return false
+        p.edit().putString("seen_changes", (seen + key).takeLast(400).joinToString("|")).apply()
+        return true
     }
 }

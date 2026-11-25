@@ -92,6 +92,7 @@ fun HomeScreen(
     val go = LocalGo.current
     val places = LocalPlaces.current
     val ctx = LocalContext.current
+    val cardMotion = LocalCardMotion.current
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
     // What the screen shows besides the wishes, and what a tap changes (ListModel.kt, the rebuild of 19 November 2026).
@@ -261,7 +262,8 @@ fun HomeScreen(
                 onDelete = {
                     val ws = Repo.wishes.filter { it.id in model.picked }
                     model.picked = emptySet()
-                    DeleteFlow.requestMany(ctx, ws)
+                    // Each card goes into the bar's Delete (CardMotion.kt, owner 25 November 2026).
+                    cardMotion?.fly(ws.map { it.id }, "delete") { DeleteFlow.requestMany(ctx, ws) } ?: DeleteFlow.requestMany(ctx, ws)
                 }
             )
         },
@@ -358,7 +360,7 @@ fun HomeScreen(
                 LazyVerticalGrid(
                     state = gridState,
                     columns = if (view == "grid") GridCells.Fixed(2) else GridCells.Adaptive(300.dp),
-                    modifier = Modifier.onGloballyPositioned { drag.gridBox = it }
+                    modifier = Modifier.fadeThroughOn(view).onGloballyPositioned { drag.gridBox = it }
                         .reorderGesture(drag, arrayOf(listKey, view, selecting), !selecting, { list }, gridState, scope) { endHold(it) },
                     contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 24.dp), // no floating button to keep clear of any more (2.112)
                     horizontalArrangement = Arrangement.spacedBy(gap),

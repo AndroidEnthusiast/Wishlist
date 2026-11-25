@@ -206,6 +206,7 @@ object MoveFlow {
 @Composable
 fun MoveHost(snack: SnackbarHostState) {
     val ctx = LocalContext.current
+    val motion = LocalCardMotion.current
     val scope = rememberCoroutineScope()
     // Step 1: Move or Copy (MoveChoose.kt), step 2: which wishlist; the wish shows in both (owner, 21 November 2026).
     // One sheet for both steps (owner, 22 November 2026): it stays up while step 1 turns into step 2.
@@ -213,7 +214,12 @@ fun MoveHost(snack: SnackbarHostState) {
         MoveSheet(
             ids, picking = MoveFlow.choosing == null, copy = MoveFlow.copying,
             onChoose = { MoveFlow.choose(it) }, onBack = { MoveFlow.back() },
-            onPick = { to -> MoveFlow.start(ctx, to, ids, scope) },
+            // Moved: the cards fly to the Home icon; copied: a copy peels off and flies there (CardMotion.kt, owner
+            // 25 November 2026). The list underneath changes when the move is done.
+            onPick = { to ->
+                val copy = MoveFlow.copying
+                motion?.fly(ids, "home", peel = copy) { MoveFlow.start(ctx, to, ids, scope) } ?: MoveFlow.start(ctx, to, ids, scope)
+            },
             onClose = { MoveFlow.choosing = null; MoveFlow.picking = null }
         )
     }

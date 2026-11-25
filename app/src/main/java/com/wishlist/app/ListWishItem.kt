@@ -1,5 +1,6 @@
 package com.wishlist.app
 
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -100,7 +101,9 @@ internal fun androidx.compose.foundation.lazy.grid.LazyGridItemScope.ListWishIte
     // Where each card is (for the drag), then the dragged one follows the finger, lifted a little.
     Box(
         Modifier.zIndex(if (dragged) 1f else 0f)
-            .then(if (dragged) Modifier else Modifier.animateItem())
+            .then(if (dragged) Modifier else Modifier.animateItem(placementSpec = glideUnless(view)))
+            // It can fly to the bin or the Home icon, come back on Undo and drop in when new (CardMotion.kt).
+            .motionCard(w.id)
             .onGloballyPositioned { drag.cardBounds[w.id] = androidx.compose.ui.geometry.Rect(it.positionInRoot(), it.size.toSize()) }
             .graphicsLayer {
                 if (dragged) {
@@ -148,7 +151,9 @@ internal fun androidx.compose.foundation.lazy.grid.LazyGridItemScope.ListWishIte
                     if (rs == null) IconButton(onClick = { shareItem(ctx, w, idea = inShared) }) {
                         Icon(AppIcons.CardShare, tr("Share"), tint = look.cardMuted(w.id), modifier = Modifier.size(ico))
                     }
-                    IconButton(onClick = { DeleteFlow.request(ctx, w) }) {
+                    // The card tips into this bin (CardMotion.kt, owner 25 November 2026).
+                    val motion = LocalCardMotion.current
+                    IconButton(onClick = { motion?.fly(listOf(w.id), "bin") { DeleteFlow.request(ctx, w) } ?: DeleteFlow.request(ctx, w) }, modifier = Modifier.motionBin(w.id)) {
                         Icon(AppIcons.CardDelete, tr("Delete"), tint = look.cardMuted(w.id), modifier = Modifier.size(ico))
                     }
                 }

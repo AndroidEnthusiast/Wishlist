@@ -1,5 +1,6 @@
 package com.wishlist.app
 
+
 import androidx.compose.foundation.layout.size
 
 import androidx.compose.runtime.CompositionLocalProvider
@@ -225,6 +226,7 @@ fun FriendScreen(
                         ) {
                         LazyVerticalGrid(
                             state = gridState,
+                            modifier = Modifier.fadeThroughOn(Repo.view),
                             columns = if (Repo.view == "grid") GridCells.Fixed(2) else GridCells.Adaptive(300.dp),
                             contentPadding = PaddingValues(16.dp, if (pre == 0) 12.dp else 0.dp, 16.dp, 32.dp),
                             horizontalArrangement = Arrangement.spacedBy(if (Repo.view == "list") 16.dp else 12.dp),
@@ -269,8 +271,11 @@ fun FriendScreen(
                                         )
                                     }
                                 }
+                                // Glides to its new place when the order changes, like your own lists (owner, 25 November
+                                // 2026); "Add to my wishlist" peels a copy off it (CardMotion.kt).
+                                Box(Modifier.animateItem(placementSpec = glideUnless(Repo.view))) {
                                 GlowBox(w.id, small = Repo.view == "grid") {
-                                Box {
+                                Box(Modifier.motionCard(w.id)) {
                                 when (Repo.view) {
                                     "grid" -> CompactCard(
                                         w, readOnly = true,
@@ -282,6 +287,7 @@ fun FriendScreen(
                                 }
                                 // New since you last opened this list (owner, 23 November 2026).
                                 if (w.id in st.fresh) NewRibbon(LocalLook.current.cardShape(w.id, Repo.view == "grid"))
+                                }
                                 }
                                 }
                             }

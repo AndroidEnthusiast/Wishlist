@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -186,13 +187,17 @@ internal fun CodeDialog(code: String, onClose: () -> Unit) {
 
 /** Someone in a request: picture, name, a line, and the buttons. */
 @Composable
-internal fun PersonRow(p: Person, line: String, buttons: @Composable () -> Unit) {
+internal fun PersonRow(p: Person, line: String, meeting: (() -> Unit)? = null, buttons: @Composable () -> Unit) {
     val look = LocalLook.current
     val id = p.id.hashCode().toLong()
     Column(Modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true)).padding(12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Avatar(Friends.photos[p.id], p.name, 48.dp)
-            Column(Modifier.weight(1f).padding(start = 12.dp)) {
+            // Approve (owner, 25 November 2026): your picture slides in until it overlaps theirs, with a small bump,
+            // then [meeting] goes on (the request becomes a friend).
+            if (meeting != null) MeetingPictures(p, meeting) else Avatar(Friends.photos[p.id], p.name, 48.dp)
+            // The name steps aside while the pictures meet, so yours never slides over it.
+            val words by androidx.compose.animation.core.animateFloatAsState(if (meeting != null) 0f else 1f, androidx.compose.animation.core.tween(120), label = "words")
+            Column(Modifier.weight(1f).padding(start = 12.dp).graphicsLayer { alpha = words }) {
                 Text(p.name.ifBlank { tr("Someone") }, style = MaterialTheme.typography.titleMedium, color = look.cardInk(id), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(line, style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id))
             }
@@ -251,5 +256,32 @@ internal fun FriendRow(f: Person, onOpen: () -> Unit, onUnfriend: () -> Unit, on
                 DropdownMenuItem(text = { Text(tr("Report")) }, leadingIcon = { Icon(AppIcons.Flag, null) }, onClick = { menu = false; onReport() })
             }
         }
+    }
+}
+
+/** Their picture, and yours sliding in from the right until the two overlap; then [done]. */
+@Composable
+private fun MeetingPictures(p: Person, done: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val x = remember { androidx.compose.animation.core.Animatable(1f) }
+    val bump = remember { androidx.compose.animation.core.Animatable(1f) }
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        if (!animationsOff(ctx)) {
+            kotlinx.coroutines.delay(100)
+            x.animateTo(0f, androidx.compose.animation.core.tween(380, easing = androidx.compose.animation.core.FastOutSlowInEasing))
+            bump.snapTo(1.12f)
+            bump.animateTo(1f, androidx.compose.animation.core.spring(dampingRatio = 0.4f, stiffness = androidx.compose.animation.core.Spring.StiffnessMedium))
+            kotlinx.coroutines.delay(250)
+        }
+        done()
+    }
+    Box(Modifier.width(48.dp + 30.dp)) {
+        Box(Modifier.graphicsLayer { scaleX = bump.value; scaleY = bump.value }) { Avatar(Friends.photos[p.id], p.name, 48.dp) }
+        Box(
+            Modifier.offset { androidx.compose.ui.unit.IntOffset(((30.dp + 90.dp * x.value).toPx()).toInt(), 0) }
+                .graphicsLayer { alpha = ((1f - x.value) * 1.6f).coerceIn(0f, 1f); scaleX = bump.value; scaleY = bump.value }
+                // A ring in the card's colour sets your picture apart where the two overlap.
+                .border(3.dp, LocalLook.current.cardFill(p.id.hashCode().toLong()), androidx.compose.foundation.shape.CircleShape)
+        ) { Avatar(Friends.myPhoto, Shared.lastName, 48.dp) }
     }
 }

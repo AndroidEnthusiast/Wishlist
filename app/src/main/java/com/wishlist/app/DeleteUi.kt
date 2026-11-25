@@ -33,6 +33,7 @@ fun DeleteHost(snack: SnackbarHostState) {
         )
     }
 
+    val motion = LocalCardMotion.current
     val t = DeleteFlow.undoable
     LaunchedEffect(t) {
         if (t == null) return@LaunchedEffect
@@ -42,7 +43,9 @@ fun DeleteHost(snack: SnackbarHostState) {
             actionLabel = tr("Undo"),
             duration = SnackbarDuration.Short
         )
-        if (r == SnackbarResult.ActionPerformed) DeleteFlow.undo(ctx) else DeleteFlow.finish(t)
+        // Undo brings the card back out of the bin to its place (CardMotion.kt, owner 25 November 2026).
+        if (r == SnackbarResult.ActionPerformed) motion?.back(listOf(t.wish.id)) { DeleteFlow.undo(ctx) } ?: DeleteFlow.undo(ctx)
+        else DeleteFlow.finish(t)
     }
     val many = DeleteFlow.undoableMany
     LaunchedEffect(many) {
@@ -53,7 +56,8 @@ fun DeleteHost(snack: SnackbarHostState) {
             actionLabel = tr("Undo"),
             duration = SnackbarDuration.Short
         )
-        if (r == SnackbarResult.ActionPerformed) DeleteFlow.undoMany(ctx) else DeleteFlow.finishMany(many)
+        if (r == SnackbarResult.ActionPerformed) motion?.back(many.map { it.wish.id }) { DeleteFlow.undoMany(ctx) } ?: DeleteFlow.undoMany(ctx)
+        else DeleteFlow.finishMany(many)
     }
 }
 

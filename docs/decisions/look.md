@@ -294,7 +294,7 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
 - Not built (offered): envelope with a wax seal (sharing / invites), ribbon on the occasion day, objects on the other
   empty pages. "I have it" for several selected wishes doesn't exist (selecting offers Move and Delete only).
 
-## Animations that show what you did (owner, 25 November 2026; planned, not built yet)
+## Animations that show what you did (owner, 25 November 2026; built in 2.292)
 - Owner's test: an animation is valuable when it "shows clearly the user is doing something", like the padlock
   (un)reserving; not "just possible". **"Similar effects should be the same"** (owner): one shared animation per family.
 - **Chosen (numbers from the suggestion list):** 1 delete into the bin (as in the storyboard: the bin's lid opens, the
@@ -315,4 +315,14 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   quality animations; don't let me come back like with the padlock": every animation checked frame by frame (several
   moments, both styles, light and dark) before release. **10:** the line is drawn only the first time you see that
   drop. **12:** when you tap Accept. **Web:** split the big files first, then 8 and 10 on the web pages too.
-
+- **Built (2.292):** one motion layer for flying cards (`CardMotion.kt`: a picture of the card drawn above the screen,
+  `FlightLayer` in AppScreen, state in the app frame, not a global object), the list's motion (`ListMotion.kt`), the eye
+  (`Private.kt`), the heart (`MostWanted.kt`), the old price's line (`WishPriceLine.kt`, `SeenChanges`), the live grey
+  padlock (`WishCardParts.kt`), friends meeting (`FriendsRows.kt`), web 8 and 10 in `reserve.js` + `wishlist.css` (no big
+  web file needed splitting after all). Every animation checked frame by frame (`MotionFrames*ScreenshotTest`).
+- **Found in the frame check and fixed before release:** the card slid over the bin instead of into it (now cut off at
+  the rim, bin drawn on top); two bins at once (the card's own bin is left out of its picture); Undo drew the bin at
+  the card's place; the peel was too faint (lift + shadow); the heart filled too fast (420 ms); your picture slid over
+  the friend's name (the name fades aside first; a ring in the card's colour sets your picture apart).
+- **17 changed (told to the owner):** cards reshaping one by one looked muddled (old and new shapes overlapping), so
+  a view change fades the new layout in with every card already in place; only a change of order glides.

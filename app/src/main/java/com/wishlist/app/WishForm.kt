@@ -188,7 +188,8 @@ fun WishDialog(
                     FilterChip(
                         selected = st.priv, onClick = { st.priv = !st.priv },
                         label = { Text(tr("Private")) },
-                        leadingIcon = { Icon(PrivateIcon, null, modifier = Modifier.size(18.dp)) },
+                        // The eye shuts when it becomes private (owner, 25 November 2026; Private.kt).
+                        leadingIcon = { PrivacyEye(st.priv, androidx.compose.material3.LocalContentColor.current, Modifier.size(18.dp)) },
                         modifier = Modifier.semantics { stateDescription = if (st.priv) tr("Only you see it") else "" }
                     )
                 }

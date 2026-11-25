@@ -26,7 +26,9 @@ class PadlockTest {
     @Test fun reserveButtonPlaysItOnce() {
         val parts = File(src, "WishCardParts.kt").readText()
         assertTrue(parts.contains("\"reserve\" -> Button(onClick = { justReserved = true; set(true) }"))
-        assertTrue(parts.contains("play = !grey && justReserved, grey = grey, onDone = { justReserved = false }"))
+        // Your own: right after your tap. Someone else's (grey): only when it changed from free while you look (2.292).
+        assertTrue(parts.contains("play = if (grey) playTaken else justReserved, grey = grey"))
+        assertTrue(parts.contains("val takenNow = state == \"taken\" && was[0] == \"reserve\" && !justReserved"))
         assertTrue(parts.contains("lock(false); FitWords(text)") && parts.contains("lock(true); FitWords(text)"))
     }
 

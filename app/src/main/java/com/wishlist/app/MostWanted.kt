@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -67,6 +68,22 @@ fun LoveIcon(filled: Boolean, tint: Color, iconSize: Dp = 24.dp, modifier: Modif
     androidx.compose.material3.Icon(
         if (filled) QuietIcons.heartFilled else QuietIcons.heart, null, tint = tint, modifier = modifier.size(iconSize)
     )
+}
+
+/** The heart, filled as far as [fill] (0 an outline, 1 full): the filling grows from its middle. */
+@Composable
+fun FillingHeart(fill: Float, tint: Color, iconSize: Dp = 24.dp, modifier: Modifier = Modifier) {
+    Box(modifier.size(iconSize), contentAlignment = Alignment.Center) {
+        if (fill < 1f) androidx.compose.material3.Icon(QuietIcons.heart, null, tint = tint, modifier = Modifier.size(iconSize))
+        if (fill > 0f) androidx.compose.material3.Icon(
+            QuietIcons.heartFilled, null, tint = tint,
+            modifier = Modifier.size(iconSize).drawWithContent {
+                val r = size.maxDimension * 0.75f * fill
+                val circle = androidx.compose.ui.graphics.Path().apply { addOval(androidx.compose.ui.geometry.Rect(center, r)) }
+                clipPath(circle) { this@drawWithContent.drawContent() }
+            }
+        )
+    }
 }
 
 /**
@@ -263,15 +280,21 @@ fun StarToggle(starred: Boolean, onToggle: () -> Unit, modifier: Modifier = Modi
     val fx = rememberStarFx()
     // Quiet (2.207): a small white disc on the light photo surface instead of a dark one; a top wish stays gold.
     val quiet = LocalLook.current.design == "quiet"
+    // The heart fills from its middle as you tap, and the gold disc comes up behind it (owner, 25 November 2026);
+    // taking it off plays it backwards. A card that scrolls into view shows it as it is.
+    val fill by androidx.compose.animation.core.animateFloatAsState(if (starred) 1f else 0f, androidx.compose.animation.core.tween(420, easing = androidx.compose.animation.core.FastOutSlowInEasing), label = "heart")
+    val off = if (quiet) Color.White.copy(alpha = 0.92f) else Color.Black.copy(alpha = 0.45f)
+    val disc = androidx.compose.ui.graphics.lerp(off, StarGold, fill)
+    val ink = androidx.compose.ui.graphics.lerp(if (quiet) Color(0xFF6C6C74) else Color.White, StarInk, fill)
     Box(modifier.size(size).starSparkles(fx), contentAlignment = Alignment.Center) {
         Box(
             Modifier.fillMaxSize().starPulse(fx).then(if (quiet) Modifier.padding(2.dp).shadow(2.dp, CircleShape) else Modifier).clip(CircleShape)
-                .background(if (starred) StarGold else if (quiet) Color.White.copy(alpha = 0.92f) else Color.Black.copy(alpha = 0.45f))
+                .background(disc)
                 .semantics { contentDescription = if (starred) tr("Remove from wishes you love") else tr("Love this wish") }
                 .clickable(role = Role.Button) { if (!starred) fx.play(); onToggle() },
             contentAlignment = Alignment.Center
         ) {
-            LoveIcon(starred, if (starred) StarInk else if (quiet) Color(0xFF6C6C74) else Color.White, size * 0.59f)
+            FillingHeart(fill, ink, size * 0.59f)
         }
     }
 }

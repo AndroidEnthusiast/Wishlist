@@ -110,6 +110,9 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
 - **The app's little real objects** (owner, 24 November 2026; `Padlock.kt`, `Objects.kt`): the golden padlock and
   the "Got it!" stamp are the app's signature (the price tag was taken out again on 25 November 2026). A new moment that deserves a flourish gets one of these
   (or a new object drawn the same way, asked first), never confetti or a generic animation; at most about five.
+- **Animations show what you did** (owner, 25 November 2026; `CardMotion.kt`, `docs/decisions/look.md`): one per
+  family, the same everywhere: leaving (into the bin, to the Home icon), a copy peels off, arriving (drops in),
+  an icon acting out its change (eye, heart, padlock, the old price's line). Checked frame by frame before release.
 - Screens move like Signal's (owner, 12 November 2026), always through `Motion.kt`, about 0.25 s: going deeper slides
   in a short way from the right while fading in, Back reverses it, the bottom bar's tabs fade through. A new route
   gets this by itself; a place inside a screen that switches without being a route (an open chat, a friend's page)

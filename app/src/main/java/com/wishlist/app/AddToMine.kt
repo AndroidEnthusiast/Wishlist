@@ -67,6 +67,7 @@ object AddToMine {
 @Composable
 fun AddToMineHost(snack: SnackbarHostState) {
     val ctx = LocalContext.current
+    val motion = LocalCardMotion.current
     val cs = MaterialTheme.colorScheme
     AddToMine.asking?.let { w ->
         val lists = remember(Repo.mineIds, Repo.mineVersion) { Repo.mineIds }
@@ -76,7 +77,9 @@ fun AddToMineHost(snack: SnackbarHostState) {
                 {
                     SheetRow({ androidx.compose.material3.Icon(listKindIcon(false), null, tint = cs.onSurfaceVariant) }, Repo.mineName(id), {
                         AddToMine.asking = null
-                        AddToMine.done = id to AddToMine.add(ctx, id, w)
+                        // A copy peels off the friend's card and flies to the Home icon, like Copy (owner, 25 November 2026).
+                        val add = { AddToMine.done = id to AddToMine.add(ctx, id, w) }
+                        motion?.fly(listOf(w.id), "home", peel = true) { add() } ?: add()
                     })
                 }
             })
