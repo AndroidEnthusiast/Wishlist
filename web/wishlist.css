@@ -96,7 +96,7 @@ button.act:disabled { opacity: .5; cursor: default; }
 /* The reservation button (owner, 23 November 2026): a lock before "Reserved by you" and "Reserved". */
 /* The golden padlock (owner, 24 November 2026; Padlock.kt): just reserved, it starts big and open, swings shut, settles. */
 button.act svg.lock { width: 18px; height: 18px; vertical-align: middle; margin: -2px 4px 0 0; overflow: visible; flex: none; }
-button.act svg.lock .shackle, .resdlg svg.unlock .shackle { transform-box: view-box; transform-origin: 8px 15px; }
+button.act svg.lock .shackle, .resdlg svg.unlock .shackle { transform-box: view-box; transform-origin: 8px 14.5px; }
 button.act svg.lock.closing { animation: wl-lockpop .9s both; position: relative; z-index: 1; }
 button.act svg.lock.closing .shackle { animation: wl-lockshut .42s cubic-bezier(.4,0,.2,1) both; }
 @keyframes wl-lockshut { 0% { transform: translateY(-3px) rotate(-30deg); } 55% { transform: translateY(-3px) rotate(0); } 100% { transform: none; } }
@@ -108,11 +108,15 @@ button.act.taken[aria-disabled="true"] { cursor: default; }
 .resbox { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 /* The "Unreserve?" pop-up: the padlock opens as it appears; the buttons stacked, full width (docs/STYLE.md "Dialogs"). */
 .resdlg { text-align: center; }
-.resdlg svg.unlock { width: 56px; height: 56px; display: block; margin: 4px auto 8px; overflow: visible; }
+.resdlg svg.unlock { width: 72px; height: 72px; display: block; margin: 4px auto 8px; overflow: visible; }
 .resdlg svg.unlock .shackle { animation: wl-unlock .55s .15s cubic-bezier(.4,0,.2,1) both; }
 @keyframes wl-unlock { 0% { transform: none; } 45% { transform: translateY(-3px); } 100% { transform: translateY(-3px) rotate(-30deg); } }
 @media (prefers-reduced-motion: reduce) { .resdlg svg.unlock .shackle { animation: none; transform: translateY(-3px) rotate(-30deg); } }
 .resdlg .wlt-row { flex-direction: column; align-items: stretch; }
+.resdlg .resgift { display: flex; align-items: center; gap: 12px; text-align: left; margin: 4px 0 8px; }
+.resdlg .resgift-pic { flex: none; width: 64px; height: 64px; border-radius: 14px; background: var(--outline); overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+.resdlg .resgift-pic img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+.resdlg .resgift-name { font-weight: 600; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .resdlg button.act.plain { background: transparent; color: var(--primary); border-color: transparent; }
 .card.compact .resbox { display: flex; width: 100%; }
 .card.compact .resbox > button.act { flex: 1; }

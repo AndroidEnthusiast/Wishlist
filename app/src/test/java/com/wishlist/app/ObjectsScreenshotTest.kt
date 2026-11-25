@@ -12,8 +12,8 @@ import com.github.takahirom.roborazzi.captureScreenRoboImage
 import org.junit.Test
 
 /**
- * The app's little real objects (owner, 24 November 2026; Objects.kt): the empty pages with the open padlock, the
- * price tag and the stamp; the price page after a drop; a card with the "Got it!" stamp. Both styles, light, dark and
+ * The app's little real objects (owner, 24 November 2026; Objects.kt): the empty pages with the open padlock and the
+ * stamp; a card with the "Got it!" stamp (the price tag was taken out again on 25 November 2026). Both styles, light, dark and
  * large text, checked by the layout inspector. Pictures in app/build/outputs/roborazzi/objects_*.png; only with
  * -Pwl.screens (animations are off there, so each object is shown at rest).
  */
@@ -38,14 +38,7 @@ class ObjectsScreenshotTest : NavigationBase() {
 
     @Test fun emptyPages() = each("empty") {
         EmptyState(AppIcons.Gift, tr("Nothing reserved yet. Open a friend’s wishlist, tap Reserve on a gift you’ll buy, and it shows here. They never see who reserved it."), tr("Go to Friends"), {}, art = { RestingPadlock() })
-        EmptyState(AppIcons.Bag, tr("No prices yet. Wishes with a price show up here, with how much they changed since you added them."), tr("Back"), {}, art = { RestingTag() })
         EmptyState(AppIcons.Gift, tr("No received gifts yet. After a wishlist’s occasion you can mark the wishes you got, and they show up here."), tr("Back"), {}, art = { RestingStamp() })
-    }
-
-    @Test fun pricePageAfterADrop() {
-        val w = Wish(77, "https://example.com/p", "Perfume", "", "", 79.95, 99.95, "EUR", "")
-        val pts = listOf(PricePoint(1_700_000_000L, 99.95), PricePoint(1_700_500_000L, 89.95), PricePoint(1_701_000_000L, 79.95))
-        each("price") { Column(Modifier.padding(16.dp)) { HistoryBody(pts, "EUR", 1_701_100_000L, w = w) } }
     }
 
     @Test fun stampedCard() {
@@ -57,5 +50,22 @@ class ObjectsScreenshotTest : NavigationBase() {
                 StampOverlay(Modifier.matchParentSize().clip(look.cardShape(w.id, small = false)))
             }
         }
+    }
+
+    // "Unreserve?" (owner, 25 November 2026): the padlock prominent at the top, then the gift's photo and name.
+    @Test fun unreserveDialog() {
+        val w = Wish(79, "https://example.com/m", "Mugler Fragrances ALIEN - Eau de parfum with a long name", "", "", 89.0, null, "EUR", "")
+        each("unreserve") { UnreserveDialog(w, onYes = {}, onNo = {}) }
+    }
+
+    // Received gifts with the gifts' photos (owner, 25 November 2026: just text made it unclear).
+    @Test fun receivedWithPhotos() {
+        val app = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()
+        compose.runOnUiThread {
+            Repo.addMine(app, Wish(81, "https://example.com/j", "Mackinaw Wool G9", "", "", 470.0, null, "EUR", ""))
+            Repo.addMine(app, Wish(82, "https://example.com/s", "Barbour ICELOCH TAILORED TARTAN - Overhemd - forest mist", "", "", 99.0, null, "EUR", ""))
+            Repo.receive(app, Repo.openMine, setOf(81L, 82L))
+        }
+        each("received") { ReceivedList() }
     }
 }

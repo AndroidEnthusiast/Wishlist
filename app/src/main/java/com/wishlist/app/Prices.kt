@@ -82,8 +82,7 @@ fun PricesScreen(snack: SnackbarHostState, onBack: () -> Unit) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 EmptyState(
                     AppIcons.Bag, tr("No prices yet. Wishes with a price show up here, with how much they changed since you added them."),
-                    tr("Back"), { back?.onBackPressedDispatcher?.onBackPressed() },
-                    art = { RestingTag() }
+                    tr("Back"), { back?.onBackPressedDispatcher?.onBackPressed() }
                 )
             }
         } else {

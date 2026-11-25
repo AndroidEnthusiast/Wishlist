@@ -260,3 +260,19 @@ fun PhotoCard(url: String, description: String, small: Boolean, modifier: Modifi
         }
     }
 }
+
+/**
+ * A wish's photo as a small square (owner, 25 November 2026: "just text makes it unclear"): Received gifts and the
+ * "Unreserve?" pop-up. The gift placeholder when it has none.
+ */
+@Composable
+fun WishThumb(w: Wish, size: androidx.compose.ui.unit.Dp = 56.dp) {
+    val look = LocalLook.current
+    Box(
+        Modifier.size(size).clip(Squircle(12.dp)).background(look.pictureBg(w.id, w.image.isNotBlank())),
+        contentAlignment = Alignment.Center
+    ) {
+        if (w.image.isNotBlank()) WishImage(w.image, Modifier.fillMaxSize().padding(4.dp))
+        else PlaceholderIcon("gift", size * 0.42f)
+    }
+}

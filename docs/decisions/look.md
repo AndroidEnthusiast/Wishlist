@@ -318,5 +318,7 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   get?" when tapping Done (each row at once, one vibration), then the wish moves (750 ms; at once with Remove
   animations); TalkBack says "Got it!". **Empty pages, only where an object fits:** Gifts I reserved (open padlock),
   Price watch (tag), Received gifts (stamp), at a fixed size that doesn't grow with text size.
+- **The price tag was taken out again** (owner, 25 November 2026: "in hindsight I don't want it"): the price page has its
+  badge again and Price watch's empty page its icon. The padlock and the stamp stay.
 - Not built (offered): envelope with a wax seal (sharing / invites), ribbon on the occasion day, objects on the other
   empty pages. "I have it" for several selected wishes doesn't exist (selecting offers Move and Delete only).

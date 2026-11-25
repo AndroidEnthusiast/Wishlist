@@ -18,13 +18,34 @@ import androidx.compose.ui.unit.dp
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun PriceLine(w: Wish, style: androidx.compose.ui.text.TextStyle, modifier: Modifier = Modifier) {
+fun PriceLine(
+    w: Wish, style: androidx.compose.ui.text.TextStyle, modifier: Modifier = Modifier,
+    // Two per row (owner, 25 November 2026): the old price always on its own line under the price, and that line kept
+    // empty when there is none, so cards side by side are always the same height (it used to wrap only sometimes).
+    stacked: Boolean = false
+) {
     val look = LocalLook.current
     val ink = look.cardInk(w.id)
     val oldP = w.oldPrice
     val newP = w.price
     val drop = newP != null && oldP != null && oldP > newP
     val rise = priceRose(w)
+    if (stacked) {
+        androidx.compose.foundation.layout.Column(modifier) {
+            Text(
+                if (newP != null) money(newP, w.currency) else tr("No price"),
+                style = style, fontWeight = look.priceWeight, fontFamily = look.display, maxLines = 1,
+                color = if (drop) look.drop else if (rise) look.rise else ink
+            )
+            val was = if ((drop || rise) && oldP != null) money(oldP, w.currency) else null
+            // No old price: an empty line of the same height (no strike-through, or it drew a small dash).
+            Text(
+                was ?: " ", style = MaterialTheme.typography.bodySmall, maxLines = 1,
+                textDecoration = if (was != null) TextDecoration.LineThrough else null, color = look.cardMuted(w.id)
+            )
+        }
+        return
+    }
     FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.Center) {
         Text(
             if (newP != null) money(newP, w.currency) else tr("No price"),

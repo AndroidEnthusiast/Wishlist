@@ -18,12 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
@@ -38,60 +33,14 @@ import androidx.compose.ui.unit.sp
 /*
  * The app's little real objects (owner, 24 November 2026: the app's own "thing"; docs/decisions/look.md): a small
  * family drawn the same way, with the same light from the top left, shown only at their moment and at rest on the
- * empty pages that fit them. The golden padlock is in Padlock.kt; here the price tag and the "Got it!" stamp.
+ * empty pages that fit them. The golden padlock is in Padlock.kt; here the "Got it!" stamp. (A price tag was tried in
+ * 2.289 and taken out again by the owner on 25 November 2026.)
  * "Remove animations" shows each one at rest.
  */
 
 /** Berry, the app's own colour, as ink: lighter in dark mode so it reads on a dark card. */
 @Composable
 internal fun berryInk(): Color = if (LocalLook.current.dark) Color(0xFFF0739F) else Color(0xFFB0245A)
-
-private val PAPER = listOf(Color(0xFFFFFBF2), Color(0xFFF6EBD3))
-private val PAPER_RIM = Color(0xFFD9C7A3)
-
-/** Deep green ink for a drop on the tag: the paper is light in every theme, so the ink is fixed (4.5 : 1 on it). */
-internal val TAG_INK = Color(0xFF176B37)
-
-/**
- * A paper price tag on a Berry string, with [text] ("−20%") on it. The tag hangs from its hole on the left; [swing]
- * makes it swing in and settle (the price page, when the price has dropped). Text colour [ink].
- */
-@Composable
-fun PriceTag(text: String, ink: Color, modifier: Modifier = Modifier, swing: Boolean = false) {
-    val ctx = LocalContext.current
-    val berry = berryInk()
-    val go = swing && !animationsOff(ctx)
-    val turn = remember { Animatable(if (go) -38f else 0f) }
-    LaunchedEffect(go) {
-        if (go) turn.animateTo(0f, spring(dampingRatio = 0.28f, stiffness = Spring.StiffnessLow))
-    }
-    Box(
-        modifier
-            .graphicsLayer { rotationZ = turn.value; transformOrigin = TransformOrigin(0.12f, 0.5f) }
-            .drawBehind {
-                val h = size.height
-                val notch = h * 0.42f
-                // The tag: a card with a pointed left end, light paper with a soft rim.
-                val shape = Path().apply {
-                    moveTo(notch, 0f); lineTo(size.width - h * 0.18f, 0f)
-                    quadraticTo(size.width, 0f, size.width, h * 0.18f); lineTo(size.width, h * 0.82f)
-                    quadraticTo(size.width, h, size.width - h * 0.18f, h); lineTo(notch, h)
-                    lineTo(0f, h / 2f); close()
-                }
-                drawPath(shape, Brush.verticalGradient(PAPER))
-                drawPath(shape, PAPER_RIM, style = Stroke(1.dp.toPx()))
-                // The hole, and the string looping up from it.
-                val hole = Offset(h * 0.36f, h / 2f)
-                drawCircle(Color(0xFF8C7A55), h * 0.09f, hole)
-                drawLine(berry, hole, Offset(hole.x - h * 0.35f, -h * 0.35f), 1.6.dp.toPx(), StrokeCap.Round)
-            }
-            .padding(start = 22.dp, end = 10.dp, top = 4.dp, bottom = 4.dp)
-            .semantics { contentDescription = text },
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text, color = ink, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
-    }
-}
 
 /**
  * The "Got it!" stamp: Berry ink in a double frame, slightly turned. With [press] it comes down from above and lands
@@ -157,9 +106,6 @@ private fun AtRest(content: @Composable () -> Unit) {
 
 @Composable
 fun RestingPadlock() = Padlock(1f, Modifier.size(46.dp))
-
-@Composable
-fun RestingTag() = AtRest { PriceTag("−20%", TAG_INK) }
 
 @Composable
 fun RestingStamp() = AtRest { GotItStamp(big = false) }

@@ -153,7 +153,9 @@ fun ReceivedList(modifier: Modifier = Modifier) {
         )
         items.forEach { w ->
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
+                // The gift's photo first (owner, 25 November 2026: just text made it unclear).
+                WishThumb(w)
+                Column(Modifier.weight(1f).padding(start = 12.dp)) {
                     Text(w.label, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     val d = java.time.Instant.ofEpochMilli(w.recv).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
                     Text(

@@ -77,21 +77,36 @@ fun ReserveButton(
 }
 
 /**
- * "Unreserve?" (owner, 23 November 2026): a pop-up like every other (docs/STYLE.md "Dialogs"): a padlock that opens
- * as it appears, the question, then "Yes, unreserve" (the main action) and "No, keep it" (the way out).
+ * "Unreserve?" (owner, 23 November 2026): a pop-up like every other (docs/STYLE.md "Dialogs"). Since 25 November 2026
+ * (owner: "a picture of the gift instead of so much text"; the padlock "prominent at the top"): the golden padlock
+ * opening above the title, then the gift's photo and name and one short line, then "Yes, unreserve" (the main
+ * action) and "No, keep it" (the way out).
  */
 @Composable
 fun UnreserveDialog(w: Wish, onYes: () -> Unit, onNo: () -> Unit) = AlertDialog(
     onDismissRequest = onNo,
-    title = { androidx.compose.material3.Text(tr("Unreserve?")) },
-    text = {
+    title = {
         androidx.compose.foundation.layout.Column(
             Modifier.fillMaxWidth(), horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
-            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
         ) {
-            OpeningPadlock(Modifier.size(56.dp))
+            OpeningPadlock(Modifier.size(72.dp))
+            androidx.compose.material3.Text(tr("Unreserve?"))
+        }
+    },
+    text = {
+        androidx.compose.foundation.layout.Column(
+            Modifier.fillMaxWidth(), verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
+        ) {
+            androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                WishThumb(w, 64.dp)
+                androidx.compose.material3.Text(
+                    w.label, style = androidx.compose.material3.MaterialTheme.typography.titleSmall, maxLines = 2,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.padding(start = 12.dp)
+                )
+            }
             androidx.compose.material3.Text(
-                tr("“%s” becomes free again, so someone else can reserve it.", w.label),
+                tr("Someone else can reserve it again."),
                 style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
             )
         }

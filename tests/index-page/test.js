@@ -179,7 +179,8 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   const popBtn = t => [...pop().querySelectorAll("button")].find(b => b.textContent === t);
   c1.querySelector("button.act").click();
   check("Reserved by you opens the Unreserve? pop-up, with the padlock", !!pop() && pop().querySelector("h2").textContent === "Unreserve?" && !!pop().querySelector("svg.unlock .shackle") && !!store.reservations[1]);
-  check("the pop-up names the gift as text, never as HTML", /“Headphones <b>X<\/b>” becomes free again/.test(pop().textContent) && !pop().querySelector("b"));
+  check("the pop-up shows the gift (photo spot and name as text, never as HTML) and one short line", pop().querySelector(".resgift-name").textContent === "Headphones <b>X</b>" && !pop().querySelector("b") && !!pop().querySelector(".resgift-pic") && /Someone else can reserve it again\./.test(pop().textContent));
+  check("the pop-up shows only web pictures", [...pop().querySelectorAll(".resgift img")].every(i => /^https?:/.test(i.getAttribute("src"))));
   popBtn("No, keep it").click();
   check("No, keep it: still reserved, pop-up gone", !pop() && !!store.reservations[1]);
   c1.querySelector("button.act").click();

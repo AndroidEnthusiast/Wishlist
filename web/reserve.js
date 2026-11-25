@@ -37,7 +37,8 @@
     defs();
     var svg = el("svg", { viewBox: "0 0 24 24", "class": cls, "aria-hidden": "true" });
     var g = el("g", { "class": "shackle" });
-    var arc = "M8,15V8a4,4 0 0,1 8,0v7";
+    // A long left leg that stays in the body, a short right one that pops out (owner, 25 November 2026).
+    var arc = "M8,14.5V8a4,4 0 0,1 8,0v4";
     g.appendChild(el("path", { d: arc, fill: "none", stroke: "url(#wl-silver)", "stroke-width": "2.8", "stroke-linecap": "round" }));
     g.appendChild(el("path", { d: arc, fill: "none", stroke: "#fff", "stroke-opacity": ".45", "stroke-width": ".7", "stroke-linecap": "round" }));
     svg.appendChild(g);
@@ -48,6 +49,10 @@
     svg.appendChild(el("rect", { x: "11.35", y: "15.4", width: "1.3", height: "2.9", rx: ".5", fill: hole }));
     return svg;
   }
+  // Only http(s) pictures (a wish comes from another person).
+  function webOnly(u) {
+    try { var x = new URL(String(u || "")); return x.protocol === "http:" || x.protocol === "https:" ? x.href : ""; } catch (e) { return ""; }
+  }
   // Wishes reserved a moment ago on this page: their "Reserved by you" padlock swings shut once.
   var justLocked = {};
   function askUnreserve(w, yes) {
@@ -57,8 +62,19 @@
     var svg = padlock("unlock", false);
     box.appendChild(svg);
     var h = document.createElement("h2"); h.className = "wlt-h"; h.textContent = T("Unreserve?"); box.appendChild(h);
+    // The gift's photo and name, then one short line (owner, 25 November 2026: a picture instead of so much text).
+    var gift = document.createElement("div"); gift.className = "resgift";
+    var pic = document.createElement("span"); pic.className = "resgift-pic";
+    var src = webOnly(w.image);
+    if (src) { var im = document.createElement("img"); im.src = src; im.alt = ""; im.referrerPolicy = "no-referrer"; pic.appendChild(im); }
+    else pic.textContent = "🎁";
+    gift.appendChild(pic);
+    var nm = document.createElement("span"); nm.className = "resgift-name";
+    nm.textContent = String(w.title || "").trim() || T("This gift");
+    gift.appendChild(nm);
+    box.appendChild(gift);
     var p = document.createElement("p"); p.className = "wlt-p";
-    p.textContent = T("“{0}” becomes free again, so someone else can reserve it.", String(w.title || "").trim() || T("This gift"));
+    p.textContent = T("Someone else can reserve it again.");
     box.appendChild(p);
     function close() { back.remove(); document.removeEventListener("keydown", onKey); }
     function onKey(e) { if (e.key === "Escape") close(); }

@@ -141,14 +141,13 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 25 November 2026: the owner's phone review (2.290)
+Price tag removed again. Two-per-row cards side by side now always the same height (old price on its own line, kept
+empty when none). Received gifts show photos. "Unreserve?": padlock at the top, then the gift's photo and name and a
+short line (app and web). The open shackle's right leg is short (owner picked A). Not checkable here: the phone.
+
 ### 24 November 2026: little real objects (2.289)
 Owner wanted the app to "live" with its own thing: chose little real objects. Built: a paper price tag swinging in on
 the price page after a drop; a Berry "Got it!" stamp on "I have it" and in "What did you get?", then the wish moves;
 objects at rest on three empty pages. Style guide: new flourishes use these objects. Not checkable here: the motion
 and the vibration on the phone (still frames only).
-
-### 24 November 2026: the golden padlock (2.288)
-Owner wanted prettier, emoji-like animations. Our own golden padlock (silver shackle, shine) on "Reserved by you",
-grey on someone else's; it swings shut on the button right after Reserve (1.6×, then settles) and opens in
-"Unreserve?"; app and web pages, still with Remove animations. 18 dp keeps "Reserved by you" fitting (CardLayoutTest).
-Other 3D animations offered, none chosen. Not checkable here: the real motion on the phone (only frames were seen).

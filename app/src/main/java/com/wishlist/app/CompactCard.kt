@@ -140,7 +140,7 @@ fun CompactCard(
                         Text(t, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = ink)
                     }
                 // The old price crossed out next to it after a change (owner, 2.126).
-                PriceLine(w, MaterialTheme.typography.titleMedium, Modifier.padding(top = 2.dp, bottom = 6.dp))
+                PriceLine(w, MaterialTheme.typography.titleMedium, Modifier.padding(top = 2.dp, bottom = 6.dp), stacked = true)
                 // No "Added on" here (owner, 2.100): too busy on a list; it stays in Price watch.
             }
             // The ⋮ lines up with the first line of the name, the bin under it (owner, 7 November 2026: Delete left the

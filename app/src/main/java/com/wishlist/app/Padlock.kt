@@ -55,12 +55,14 @@ fun Padlock(open: Float, modifier: Modifier = Modifier, grey: Boolean = false, l
         val (lift, turn) = shackleAt(open)
         // The shackle: two legs and a round top, thick and silver with a light edge on the left.
         val shackle = Path().apply {
-            moveTo(8f * u, 15f * u); lineTo(8f * u, 8f * u)
+            // The left leg is long (it stays in the body when open), the right one short (it pops out), like a real
+            // padlock; with two long legs the open shackle looked far too long (owner, 25 November 2026).
+            moveTo(8f * u, 14.5f * u); lineTo(8f * u, 8f * u)
             arcTo(Rect(8f * u, 4f * u, 16f * u, 12f * u), 180f, 180f, false)
-            lineTo(16f * u, 15f * u)
+            lineTo(16f * u, 12f * u)
         }
         translate(top = -lift * u) {
-            rotate(turn, Offset(8f * u, 15f * u)) {
+            rotate(turn, Offset(8f * u, 14.5f * u)) {
                 drawPath(shackle, Brush.horizontalGradient(SILVER, 6.5f * u, 17.5f * u), style = Stroke(2.8f * u, cap = StrokeCap.Round))
                 drawPath(shackle, Color.White.copy(alpha = 0.45f), style = Stroke(0.7f * u, cap = StrokeCap.Round))
             }

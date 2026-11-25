@@ -105,3 +105,18 @@ Moved here from `people.md` on 18 November 2026 (its size limit); newest at the 
   padlock lifts and swings open. "Remove animations" / reduced motion: shown in its end state. **App and web pages.**
 - Other "3D" animations offered (gift exchange card flip, Most wanted star spin, price tag flip, gift box lid): the
   owner chose none, so nothing is built. Advised: few, short (under half a second), never in the way.
+
+## The owner's review of 25 November 2026 (2.290, phone screenshots)
+- **Price tag removed** (owner: "the price tag is missing… in hindsight I don't want it"). It only showed on a wish's
+  price page; the "−21%" on cards is the drop badge, which stays. See look.md (little real objects).
+- **Two per row: cards side by side the same height** (owner: the candle cards differed). The old price wrapped below
+  only when it didn't fit. Asked: **always on its own line, and that line kept empty when there is none** (chosen over
+  "no empty line"). `PriceLine(stacked = true)` in `CompactCard.kt`.
+- **Received gifts show the gift's photo** ("just text makes it unclear"; `WishThumb`).
+- **"Unreserve?"**: offered "photo + padlock on its corner" / "photo, no padlock"; owner: **"the padlock needs to be
+  prominent at the top indicating you're unlocking something."** Built: the padlock (72 dp) opening above the title,
+  then the gift's photo (64 dp) and name, then "Someone else can reserve it again." instead of the long sentence.
+  App and web pages (`askUnreserve`; a 🎁 when the wish has no usable picture).
+- **The open shackle looked too long** ("a bit silly"): both legs reached deep into the body, so lifting it showed
+  that part. Now a long left leg (stays inside) and a short right leg (pops out). Owner picked option A from a
+  picture (A swung open / B slightly / C straight up): the same swing as before.

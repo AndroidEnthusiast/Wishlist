@@ -970,3 +970,9 @@ Owner asked for an honest review, then for a way to stay on features with no mor
 the code in about a second: silent catches (388 in 138 files) and objects holding app-wide changing data (68) may only
 go down (`CodeHealthTest`, `app/guard-baseline.txt`); web files under 400 lines, the 6 bigger ones only shrink
 (`tests/size/test.js`). Folders: owner asked, told they don't make the app smoother or builds quicker; files stay put.
+
+### 24 November 2026: the golden padlock (2.288)
+Owner wanted prettier, emoji-like animations. Our own golden padlock (silver shackle, shine) on "Reserved by you",
+grey on someone else's; it swings shut on the button right after Reserve (1.6×, then settles) and opens in
+"Unreserve?"; app and web pages, still with Remove animations. 18 dp keeps "Reserved by you" fitting (CardLayoutTest).
+Other 3D animations offered, none chosen. Not checkable here: the real motion on the phone (only frames were seen).

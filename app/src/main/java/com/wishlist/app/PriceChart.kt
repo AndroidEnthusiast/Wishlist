@@ -65,10 +65,7 @@ internal fun HistoryBody(points: List<PricePoint>, currency: String, nowSec: Lon
             color = if (atTarget) gold!! else cs.onSurface
         )
         val ch = changeSince(points)
-        if (now && ch != null && ch.first < 0) {
-            // A drop: the paper price tag swings in while the price counts down (owner, 24 November 2026; Objects.kt).
-            PriceTag("−" + Math.round(abs(ch.second)) + "%", TAG_INK, Modifier.padding(start = 12.dp), swing = counting != null)
-        } else if (now && ch != null) {
+        if (now && ch != null) {
             val down = ch.first < 0
             val tint = if (down) look.drop else look.rise
             Text(
