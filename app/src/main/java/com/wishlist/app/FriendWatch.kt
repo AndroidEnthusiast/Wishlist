@@ -28,16 +28,36 @@ object FriendWatch {
         prefs(c).edit().putString(key(code), o.toString()).apply()
     }
 
+    /**
+     * The pictures of what this phone reserved (owner, 25 November 2026: "wishes are inherently visual"): wish id to
+     * picture, "fresi_<code>", next to the titles (whose format older versions read) and filled in by [check].
+     */
+    fun images(c: Context, code: String): Map<Long, String> = try {
+        val o = JSONObject(prefs(c).getString("fresi_$code", null) ?: "{}")
+        o.keys().asSequence().associate { it.toLong() to o.getString(it) }
+    } catch (e: Exception) {
+        if (e is org.json.JSONException) emptyMap() else throw e
+    }
+
+    private fun writeImages(c: Context, code: String, m: Map<Long, String>) {
+        val o = JSONObject()
+        m.filterValues { it.startsWith("https://") || it.startsWith("http://") }.forEach { (k, v) -> o.put(k.toString(), v) }
+        prefs(c).edit().putString("fresi_$code", o.toString()).apply()
+    }
+
     /** This phone reserved [w] on the friend's list [code]. */
     @Synchronized
-    fun reserved(c: Context, code: String, w: Wish) = write(c, code, read(c, code) + (w.id to w.title))
+    fun reserved(c: Context, code: String, w: Wish) {
+        write(c, code, read(c, code) + (w.id to w.title))
+        if (w.image.isNotBlank()) writeImages(c, code, images(c, code) + (w.id to w.image))
+    }
 
     /** This phone took its reservation away again. */
     @Synchronized
     fun unreserved(c: Context, code: String, id: Long) = write(c, code, read(c, code) - id)
 
     /** The friend's list was removed from this phone. */
-    fun forget(c: Context, code: String) = prefs(c).edit().remove(key(code)).remove("fresn_$code").apply()
+    fun forget(c: Context, code: String) = prefs(c).edit().remove(key(code)).remove("fresn_$code").remove("fresi_$code").apply()
 
     /** Every list this phone reserved on: code -> (wish id -> title), for "Gifts I reserved" (2.129). */
     fun all(c: Context): Map<String, Map<Long, String>> =
@@ -76,6 +96,10 @@ object FriendWatch {
         if (label.isNotBlank() && label != label(c, f.code)) prefs(c).edit().putString("fresn_${f.code}", label).apply()
         // (An owned wish is not taken in again: its old reservation stays online and would be told about every time.)
         for (id in mine) visible[id]?.takeIf { !it.got }?.let { if (id !in m) m = m + (id to it.label) }
+        // The pictures of what is reserved, as the list shows them now (also for reservations made before 2.291).
+        val pics = images(c, f.code)
+        val fresh = m.keys.mapNotNull { id -> visible[id]?.image?.takeIf { it.isNotBlank() }?.let { id to it } }.toMap()
+        if (fresh.any { (id, img) -> pics[id] != img }) writeImages(c, f.code, pics.filterKeys { it in m } + fresh)
         for ((id, title) in m) {
             val now = visible[id]
             // Still on the list and not owned: nothing to say.

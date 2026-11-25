@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.clickable
@@ -201,10 +202,17 @@ fun AskDialog(code: String, w: Wish, occ: Occasion?, onClose: () -> Unit, onSaid
         onDismissRequest = { if (!busy) onClose() },
         title = { Text(tr("Someone reserved this")) },
         text = {
+            // The gift itself first (docs/STYLE.md "Show what it's about"; owner, 25 November 2026).
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                WishThumb(w, 64.dp)
+                Text(w.label, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.padding(start = 12.dp))
+            }
             Text(
                 if (passed) tr("The occasion has passed, so you can’t ask about it any more.")
-                else tr("Want to buy “%s” too? Ask if it’s still being bought. They have 2 days to answer; without an answer it becomes free.", Asks.title(w.title))
+                else tr("Want to buy it too? Ask if it’s still being bought. They have 2 days to answer; without an answer it becomes free.")
             )
+            }
         },
         confirmButton = {
             if (!passed) TextButton(enabled = !busy, onClick = {
@@ -230,8 +238,17 @@ fun AskDialog(code: String, w: Wish, occ: Occasion?, onClose: () -> Unit, onSaid
 fun ReserveNowDialog(w: Wish, onReserve: () -> Unit, onClose: () -> Unit) {
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text(tr("Reserve “%s” now?", Asks.title(w.title))) },
-        text = { Text(tr("It’s free again. Reserve it before someone else does.")) },
+        title = { Text(tr("Reserve it now?")) },
+        text = {
+            // The gift itself, not its name in the question (owner, 25 November 2026).
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    WishThumb(w, 64.dp)
+                    Text(w.label, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.padding(start = 12.dp))
+                }
+                Text(tr("It’s free again. Reserve it before someone else does."))
+            }
+        },
         confirmButton = { TextButton(onClick = { onClose(); onReserve() }) { Text(tr("Reserve")) } },
         dismissButton = { TextButton(onClick = onClose) { Text(tr("Not now")) } }
     )
@@ -249,7 +266,20 @@ fun AskBlock(a: AskItem, onDone: (String) -> Unit) {
             .lookCard(look, a.ask, look.cardShape(a.ask, small = true)).padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Text(tr("Still buying “%s”?", Asks.title(a.title)), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = look.cardInk(a.ask))
+        // The gift's photo next to the question (owner, 25 November 2026: "wishes are inherently visual"); the phone
+        // remembers it from the reservation (FriendWatch) or the gift list's copy.
+        val ctx = androidx.compose.ui.platform.LocalContext.current
+        val img = remember(a.ask) {
+            if (a.gift) Shared.cachedWishes(ctx, a.code).firstOrNull { it.id == a.item }?.image.orEmpty()
+            else FriendWatch.images(ctx, a.code)[a.item].orEmpty()
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            WishThumb(Wish(a.item, "", a.title, "", img, null, null, "", ""), 56.dp)
+            Text(
+                tr("Still buying “%s”?", Asks.title(a.title)), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold,
+                color = look.cardInk(a.ask), modifier = Modifier.padding(start = 12.dp)
+            )
+        }
         Text(
             tr("Someone else would like to buy it, on %s.", Asks.place(a.list, a.owner, a.gift)) + " " + Asks.left(a.until),
             style = MaterialTheme.typography.bodySmall, color = look.cardMuted(a.ask)

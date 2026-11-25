@@ -44,13 +44,22 @@ import androidx.compose.ui.unit.dp
  */
 
 /** One list with your reservations on it. [gift]: a gift list (opens as one), otherwise a friend's list. */
-data class ReservedGroup(val code: String, val name: String, val gift: Boolean, val titles: List<String>)
+data class ReservedGroup(val code: String, val name: String, val gift: Boolean, val items: List<ReservedItem>)
+
+/** One reserved gift: its name and picture ("" when unknown), shown with its photo (owner, 25 November 2026). */
+data class ReservedItem(val id: Long, val title: String, val image: String)
 
 object ReservedGifts {
+    /** A friend's list's reserved gifts with the pictures this phone remembers. */
+    private fun items(c: android.content.Context, code: String, m: Map<Long, String>): List<ReservedItem> {
+        val pics = FriendWatch.images(c, code)
+        return m.map { (id, t) -> ReservedItem(id, t, pics[id].orEmpty()) }
+    }
+
     /** What the phone remembers, without asking the server. */
     fun remembered(c: android.content.Context): List<ReservedGroup> =
         FriendWatch.all(c).map { (code, m) ->
-            ReservedGroup(code, FriendWatch.label(c, code).ifBlank { Repo.friends.firstOrNull { it.code == code }?.name.orEmpty() }, false, m.values.toList())
+            ReservedGroup(code, FriendWatch.label(c, code).ifBlank { Repo.friends.firstOrNull { it.code == code }?.name.orEmpty() }, false, items(c, code, m))
         }
 
     /** Checked online: only what is still reserved by this phone. Lists that can't be reached keep what the phone remembers. */
@@ -62,9 +71,9 @@ object ReservedGifts {
             } catch (e: Exception) {
                 null
             }
-            val titles = if (mine == null) m.values.toList() else m.filterKeys { it in mine }.values.toList()
-            if (titles.isEmpty()) continue
-            out += ReservedGroup(code, FriendWatch.label(c, code).ifBlank { Repo.friends.firstOrNull { it.code == code }?.name.orEmpty() }, false, titles)
+            val items = items(c, code, if (mine == null) m else m.filterKeys { it in mine })
+            if (items.isEmpty()) continue
+            out += ReservedGroup(code, FriendWatch.label(c, code).ifBlank { Repo.friends.firstOrNull { it.code == code }?.name.orEmpty() }, false, items)
         }
         for (sl in Shared.lists) {
             val mine = try {
@@ -74,8 +83,8 @@ object ReservedGifts {
             }
             if (mine.isEmpty()) continue
             val wishes = Shared.cachedWishes(c, sl.code).associateBy { it.id }
-            val titles = mine.mapNotNull { id -> wishes[id]?.takeIf { it.bin == 0L }?.label }
-            if (titles.isNotEmpty()) out += ReservedGroup(sl.code, sl.name, true, titles)
+            val items = mine.mapNotNull { id -> wishes[id]?.takeIf { it.bin == 0L }?.let { ReservedItem(id, it.label, it.image) } }
+            if (items.isNotEmpty()) out += ReservedGroup(sl.code, sl.name, true, items)
         }
         return out
     }
@@ -145,8 +154,15 @@ fun ReservedScreen(onClose: () -> Unit, onOpen: (ReservedGroup) -> Unit) {
                                 fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis
                             )
                         }
-                        g.titles.forEach { t ->
-                            Text("• $t", style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 26.dp))
+                        // Each gift with its photo (owner, 25 November 2026: "people don't remember or read text").
+                        g.items.forEach { it ->
+                            Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                WishThumb(Wish(it.id, "", it.title, "", it.image, null, null, "", ""), 56.dp)
+                                Text(
+                                    it.title, style = MaterialTheme.typography.bodyLarge, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.padding(start = 12.dp)
+                                )
+                            }
                         }
                     }
                 }

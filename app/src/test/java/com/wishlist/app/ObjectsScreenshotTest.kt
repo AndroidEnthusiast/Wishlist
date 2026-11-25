@@ -68,4 +68,12 @@ class ObjectsScreenshotTest : NavigationBase() {
         }
         each("received") { ReceivedList() }
     }
+
+    // Gifts I reserved with each gift's photo (owner, 25 November 2026).
+    @Test fun reservedWithPhotos() {
+        val app = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()
+        FriendWatch.reserved(app, "FRIENDC1", Wish(91, "https://example.com/c", "Yankee Candle SIGNATURE Warm Cashmere large jar", "", "", 29.95, null, "EUR", ""))
+        FriendWatch.reserved(app, "FRIENDC1", Wish(92, "https://example.com/d", "Mugler Fragrances ALIEN", "", "", 89.0, null, "EUR", ""))
+        each("reserved") { ReservedScreen(onClose = {}, onOpen = {}) }
+    }
 }

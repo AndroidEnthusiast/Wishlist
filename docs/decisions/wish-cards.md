@@ -120,3 +120,9 @@ Moved here from `people.md` on 18 November 2026 (its size limit); newest at the 
 - **The open shackle looked too long** ("a bit silly"): both legs reached deep into the body, so lifting it showed
   that part. Now a long left leg (stays inside) and a short right leg (pops out). Owner picked option A from a
   picture (A swung open / B slightly / C straight up): the same swing as before.
+- **Gifts I reserved with photos** (owner, 25 November 2026: "people don't remember or read text. Wishes are inherently
+  visual"). The phone kept only titles; now also the picture ("fresi_<code>", next to the titles so older versions
+  still read them), saved on Reserve and filled in by FriendWatch.check for older reservations; gift lists use their
+  copy on the phone. Fixed for every place with the same gap: the "Still buying …?" questions, "Someone reserved
+  this" and "Reserve it now?" (the gift's photo and name instead of the name in the sentence). Not yet: the "Still
+  buying" question on the web pages (`together.js` may only shrink; it needs splitting first).
