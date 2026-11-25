@@ -310,3 +310,9 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   20); changes state (5, 6, 10); others did something (8, 12); rearranging (17, 18). Rules: under half a second, never
   blocking, one vibration at most, end state with Remove animations, the web pages too where the action exists there.
 - Pop-ups hold 4 options: the owner wants to see every option, so long lists go as several questions of 4 at once.
+- **Details (owner, 25 November 2026):** Move, copy and Add to my wishlist fly to **the Home icon in the bottom bar**
+  (it bounces; the message names the list). **All at once, one single update**, and "make sure all of them are proper
+  quality animations; don't let me come back like with the padlock": every animation checked frame by frame (several
+  moments, both styles, light and dark) before release. **10:** the line is drawn only the first time you see that
+  drop. **12:** when you tap Accept. **Web:** split the big files first, then 8 and 10 on the web pages too.
+
