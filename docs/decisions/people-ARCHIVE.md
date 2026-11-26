@@ -15,3 +15,18 @@ Older sections of `docs/decisions/people.md`, moved word for word. Only searched
   November a first tap on your own reaction only brought "+ React" back; a second tap took it away). Owner: tapping
   your reaction should remove it and then "+ React" reappears. Built in 2.264, in the app (`ReactionModel.kt`) and on
   the friends' and group pages (`web/together.js`); checks `ReactionModelTest`, `FriendWishesTest`, `tests/together`.
+
+## A friend's page, person first (owner, 16 November 2026, after comparing with Giftful and competitor reviews; 2.217)
+- Replaces the Home-like friend page of 2.95: the photo (112 dp) and name once, centred (no title in the top bar, no
+  chat icon there); chips for the birthday ("1 April · in 136 days", in your colour within 2 weeks), sizes, "Loves 3
+  wishes" (only when more than 0; opens their loved wishes) and each thing they like (split at commas and "and");
+  a "Message" button ("Send a message" when they have no visible list, with "… hasn't added a wishlist yet.").
+- No number tiles on friend pages (their wishes page is reached through the lists; Loved through its chip). On your own
+  Home the tiles stay as shortcuts.
+- Their lists as photo collages like your own (they showed one photo); a collage with 2 photos is side by side
+  everywhere (Home, friends, groups).
+- The private note: a small row under the lists ("Add a private note" or the note in 2 lines), written in a sheet.
+- Not chosen from the reviews: price comparison, bulk import, adding on the web, recommended products, public following.
+
+- Someone else's wishes (compact Reserve, Add to my wishlist, one reaction) and the buttons on a wish card (18 November
+  2026): moved to `docs/decisions/wish-cards.md`.

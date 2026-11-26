@@ -141,23 +141,8 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
 - **Save to on every new wish** (the list you're on picked; editing doesn't move a wish), with **"+ New wishlist"** at the bottom of its menu (only own wishlists, not gift lists): the usual create form, then back in the wish form with the new list picked.
 - **Product recognition in the in-app shop** (owner, 7 November 2026, after Rituals said "No product recognised"; no shop-specific fix, a general one): look again when "Add wish" is tapped and keep checking while you're on a page; read the shop's product data properly (the product itself, variants, "from" prices); a product without a readable price still counts (price left empty); as a last try read the price shown on the page (owner accepted that it can now and then be wrong). **The first background price check after this update is quiet** (no notification, no crossed-out old price), so a better reading isn't mistaken for a price change.
 
-## A friend's page, person first (owner, 16 November 2026, after comparing with Giftful and competitor reviews; 2.217)
-- Replaces the Home-like friend page of 2.95: the photo (112 dp) and name once, centred (no title in the top bar, no
-  chat icon there); chips for the birthday ("1 April · in 136 days", in your colour within 2 weeks), sizes, "Loves 3
-  wishes" (only when more than 0; opens their loved wishes) and each thing they like (split at commas and "and");
-  a "Message" button ("Send a message" when they have no visible list, with "… hasn't added a wishlist yet.").
-- No number tiles on friend pages (their wishes page is reached through the lists; Loved through its chip). On your own
-  Home the tiles stay as shortcuts.
-- Their lists as photo collages like your own (they showed one photo); a collage with 2 photos is side by side
-  everywhere (Home, friends, groups).
-- The private note: a small row under the lists ("Add a private note" or the note in 2 lines), written in a sheet.
-- Not chosen from the reviews: price comparison, bulk import, adding on the web, recommended products, public following.
-
-- Someone else's wishes (compact Reserve, Add to my wishlist, one reaction) and the buttons on a wish card (18 November
-  2026): moved to `docs/decisions/wish-cards.md`.
-
 - Moved word for word to `docs/decisions/people-ARCHIVE.md` (24 November 2026, size limit): "Owner's review of 15
-  November 2026" and "Reactions: one tap on yours takes it away".
+  November 2026" and "Reactions: one tap on yours takes it away"; on 26 November 2026 "A friend's page, person first".
 
 ## The chat's + (owner, 24 November 2026; built in 2.287)
 - **A + left of the text box replaces the gift button** (owner: "I don't like the gift icon button"; + on the left so
@@ -172,3 +157,15 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
 - **Chat extras:** offered (birthday chip, shop links as wish cards, thank-you card, mute, polls, search); the owner
   chose none, so nothing is built. Advised against: voice messages, "typing…", editing.
 - Ideas 7 (wishes without a product) and 11 (private gift ideas per person): owner likes both; interview before building.
+
+## Inviting people, neat and the same everywhere (owner, 26 November 2026, a screen recording)
+- Owner: after creating a Co-op list with Magdalena chosen, the "Share" pop-up didn't show her, showed a naked link,
+  had three ways to share ("Send invite", "Copy", "Invite Friends" leading to a greyed-out Invite); "messy and busy".
+  "Every menu needs to be neat and clean and easy to see what you're supposed to do."
+- **Chosen (from a sketch):** one sheet "“Name” is ready" (after creating) / "Share “Name”" (later): a line on what
+  people can do, **People** (everyone on it and invited, with their status), **"+ Add friends"** last, one filled
+  **"Share invite link"** (the phone's share menu), a short trust note, Done. **No link shown, no "Copy link"**
+  (owner's choice: the share menu copies too). The same screen everywhere for Co-op lists.
+- **Groups and gift exchanges:** the ⋮ menu's "Invite friends" + "Share … link" become **one "Invite people"** that
+  opens the same kind of screen.
+- **To sketch first, then build:** group settings, the cover photo buttons, the gift exchange before the draw, Import.
