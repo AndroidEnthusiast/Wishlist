@@ -222,7 +222,7 @@ internal fun GxPersonPick(label: String, value: String, people: List<GxMember>, 
     }
 }
 
-/** Invite friends who aren't in the exchange (or invited) yet. */
+/** "+ Add friends" from the exchange's share sheet: tick friends who aren't in it or invited yet. */
 @Composable
 internal fun GxInviteDialog(x: Exchange, snack: SnackbarHostState, onClose: () -> Unit) {
     val ctx = LocalContext.current
@@ -236,23 +236,19 @@ internal fun GxInviteDialog(x: Exchange, snack: SnackbarHostState, onClose: () -
     var busy by remember { mutableStateOf(false) }
     // A bottom sheet like every picker (owner, 22 November 2026; PickSheet.kt): tick friends, then Invite.
     PickSheet(
-        tr("Invite friends"), onClose = onClose, busy = busy,
-        action = if (friends.isEmpty()) tr("Share link") else tr("Invite"),
-        actionEnabled = friends.isEmpty() || picked.isNotEmpty(),
+        tr("Add friends"), onClose = onClose, busy = busy,
+        action = if (friends.isEmpty()) null else tr("Invite"), actionEnabled = picked.isNotEmpty(),
         onAction = {
-            if (friends.isEmpty()) { onClose(); Exchanges.share(ctx, x) }
-            else {
-                busy = true
-                scope.launch {
-                    val failed = ex.invite(x, friends.map { it.id }.filter { it in picked })
-                    busy = false
-                    onClose()
-                    snack.toastSoon(if (failed == 0) tr("Invitations sent") else tr("Couldn’t do that. Check your connection."))
-                }
+            busy = true
+            scope.launch {
+                val failed = ex.invite(x, friends.map { it.id }.filter { it in picked })
+                busy = false
+                onClose()
+                snack.toastSoon(if (failed == 0) tr("Invitations sent") else tr("Couldn’t do that. Check your connection."))
             }
         }
     ) {
-        if (friends.isEmpty()) PickNote(tr("All your friends are in already. Share the link to invite others."))
+        if (friends.isEmpty()) PickNote(tr("All your friends are in it or invited."))
         else SheetGroup(friends.map { f ->
             {
                 SheetRow(

@@ -169,3 +169,8 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
 - **Groups and gift exchanges:** the ⋮ menu's "Invite friends" + "Share … link" become **one "Invite people"** that
   opens the same kind of screen.
 - **To sketch first, then build:** group settings, the cover photo buttons, the gift exchange before the draw, Import.
+- **Built in 2.295:** `InvitePeople.kt` (`PeopleShareSheet`, Co-op / group / exchange versions). Co-op people come from
+  the server (`wl_sh_invited`: members, then invitations not taken up). "+ Add friends" opens the picker, now titled
+  "Add friends" and only showing friends who aren't in or invited (no greyed-out rows, no link row); closing it comes
+  back to the sheet with the new invitations. The group's "couldn't be sent" line says "Tap Invite people". Without a
+  profile the People block is left out (only the link). Check: `InvitePeopleTest`.

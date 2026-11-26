@@ -12,7 +12,7 @@ import org.junit.Test
 /**
  * Pictures of the wishlist group screens with pretend groups (added for the rebuild, 19 November 2026, so the
  * before/after comparison covers them): Home with an invitation and a group, a group as its organiser and as a member,
- * its ⋮ menu, Group settings, Leave (the organiser picks the next organiser), Invite friends and Change my wishlist.
+ * its ⋮ menu, Group settings, Leave (the organiser picks the next organiser), Invite people (and its "+ Add friends") and Change my wishlist.
  * Pictures in app/build/outputs/roborazzi/group_*.png; only with -Pwl.screens (the class name has "Screenshot").
  */
 class GroupScreenshotTest : NavigationBase() {
@@ -85,7 +85,8 @@ class GroupScreenshotTest : NavigationBase() {
     @Test fun groupInviteAndChange() {
         compose.mainClock.autoAdvance = false
         pretend()
-        open("g1"); menu(); press("Invite friends"); shot("invite")
+        open("g1"); menu(); press("Invite people"); shot("invite")
+        press("Add friends"); shot("invite_add")
     }
 
     @Test fun groupChangeList() {

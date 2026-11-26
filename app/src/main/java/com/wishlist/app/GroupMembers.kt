@@ -137,15 +137,13 @@ internal fun AddFriendButton(m: GroupMember, snack: SnackbarHostState) {
 
 // ---------- inviting ----------
 
-/** Pick friends to invite; they get a notification, a chat message and a card on Home. Or share the group link. */
+/** "+ Add friends" from the group's share sheet: tick friends who aren't in or invited yet; they get a notification, a chat message and a card on Home. */
 @Composable
 fun InviteFriendsDialog(g: Group, snack: SnackbarHostState, onClose: () -> Unit) {
-    val ctx = LocalContext.current
     val model = rememberGroup()
     val scope = rememberCoroutineScope()
-    val cs = MaterialTheme.colorScheme
-    val members = g.members.map { it.id }.toSet()
-    val friends = (Friends.state?.friends ?: emptyList()).filter { it.id !in members }
+    val taken = g.members.map { it.id }.toSet() + g.invited
+    val friends = (Friends.state?.friends ?: emptyList()).filter { it.id !in taken }
     var picked by remember { mutableStateOf(setOf<String>()) }
     var busy by remember { mutableStateOf(false) }
     fun invite() {
@@ -164,26 +162,18 @@ fun InviteFriendsDialog(g: Group, snack: SnackbarHostState, onClose: () -> Unit)
     }
     // A bottom sheet like every picker (owner, 22 November 2026; PickSheet.kt): tick friends, then Invite.
     PickSheet(
-        tr("Invite friends"), onClose = onClose, busy = busy,
+        tr("Add friends"), onClose = onClose, busy = busy,
         action = if (friends.isNotEmpty()) tr("Invite") else null, actionEnabled = picked.isNotEmpty(), onAction = { invite() }
     ) {
-        if (friends.isEmpty()) PickNote(tr("No friends to invite yet. Share the group link instead."))
+        if (friends.isEmpty()) PickNote(tr("All your friends are in it or invited."))
         else SheetGroup(friends.map { f ->
             {
-                val waiting = f.id in g.invited
                 SheetRow(
                     { Avatar(Friends.photos[f.id], f.name, 32.dp) }, f.name.ifBlank { tr("Someone") },
                     { picked = if (f.id in picked) picked - f.id else picked + f.id },
-                    detail = if (waiting) tr("Invited") else null,
-                    chosen = waiting || f.id in picked, tile = false, enabled = !waiting
+                    chosen = f.id in picked, tile = false
                 )
             }
-        })
-        SheetGroup(listOf {
-            SheetRow(
-                { androidx.compose.material3.Icon(AppIcons.Share, null, tint = cs.onSurfaceVariant) }, tr("Share group link"), { Groups.share(ctx, g) },
-                detail = tr("Anyone with the link can join, also without the app.")
-            )
         })
     }
 }

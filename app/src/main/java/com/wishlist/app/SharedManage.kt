@@ -1,7 +1,6 @@
 package com.wishlist.app
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,10 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
@@ -33,57 +29,13 @@ import kotlinx.coroutines.launch
  * and picking a new owner. */
 
 /**
- * The share screen of the open shared wishlist: the invite link, the only link of a shared list (since 2.35: whoever has
- * it can add wishes and reserve gifts). Managing the list is in its settings.
+ * Sharing a Co-op list: the open one, or [list] (shared from its ⋮ on Home, owner 7 November 2026). [justMade]: right
+ * after making it. Since 26 November 2026 one neat sheet everywhere (InvitePeople.kt).
  */
 @Composable
-fun SharedShareDialog(list: SharedList? = null, onClose: () -> Unit) {
-    val ctx = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val clip = LocalClipboardManager.current
-    val cs = MaterialTheme.colorScheme
-    // [list]: a collab wishlist shared from its ⋮ on Home (owner, 7 November 2026), else the open one.
+fun SharedShareDialog(list: SharedList? = null, justMade: Boolean = false, onClose: () -> Unit) {
     val l = list ?: Shared.current ?: return
-    val title = if (list != null) list.name else Repo.listName
-    val invite = inviteLink(l.key)
-    // Invite Friends in the app (owner, 7 November 2026): an invitation to accept, besides the link.
-    var inviting by remember { mutableStateOf(false) }
-    if (inviting) { GiftInviteFriendsDialog(l) { inviting = false }; return }
-
-    AlertDialog(
-        onDismissRequest = onClose,
-        title = { Text(tr("Share “%s”", title)) },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    tr("They can edit and reserve wishes. Only send it to people you trust."),
-                    style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant
-                )
-                // The surprise (owner, 17 November 2026): who it's for, when this phone made the list.
-                val forWho = remember(l.code) { Shared.forName(ctx, l.code) }
-                if (forWho.isNotBlank()) Text(
-                    tr("Don’t send it to %s: it’s a surprise.", forWho),
-                    style = MaterialTheme.typography.bodyMedium, color = cs.onSurface, fontWeight = FontWeight.SemiBold
-                )
-                Text(invite, style = MaterialTheme.typography.bodyMedium, color = cs.onSurface)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = { scope.launch { ShareCard.share(ctx, ShareCard.Kind.INVITE, title, invite) } }) { Text(tr("Send invite")) }
-                    OutlinedButton(onClick = {
-                        clip.setText(AnnotatedString(invite))
-                        toast(ctx, tr("Invite link copied"))
-                    }) { Text(tr("Copy")) }
-                }
-                if (Friends.hasProfile(ctx) && !Friends.state?.friends.isNullOrEmpty()) {
-                    Text(
-                        tr("Or invite your Friends in the app:"), style = MaterialTheme.typography.bodyMedium,
-                        color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp)
-                    )
-                    OutlinedButton(onClick = { inviting = true }) { Text(tr("Invite Friends")) }
-                }
-            }
-        },
-        confirmButton = { TextButton(onClick = onClose) { Text(tr("Done")) } }
-    )
+    InvitePeopleSheet(l, if (list != null) list.name else Repo.listName, justMade, onClose)
 }
 
 /**

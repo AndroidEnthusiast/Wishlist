@@ -64,10 +64,13 @@ fun GiftInviteFriendsDialog(l: SharedList, onClose: () -> Unit) {
     LaunchedEffect(st.attempt) { st.load() }
     // A bottom sheet like every picker (owner, 22 November 2026; PickSheet.kt): tick friends, then Invite.
     val t = st.taken
+    // Only friends who aren't on it or invited yet (owner, 26 November 2026: the greyed-out list was a dead end);
+    // who is on it shows on the share screen (InvitePeople.kt). "Add friends", the same words everywhere.
+    val left = if (t == null) friends else friends.filter { it.id !in t }
     PickSheet(
-        tr("Invite Friends"), onClose = onClose, busy = st.busy,
+        tr("Add friends"), onClose = onClose, busy = st.busy,
         note = tr("They get an invitation to join “%s”.", l.name.ifBlank { Repo.listName }),
-        action = if (t != null && friends.isNotEmpty() && st.err.isEmpty()) tr("Invite") else null,
+        action = if (t != null && left.isNotEmpty() && st.err.isEmpty()) tr("Invite") else null,
         actionEnabled = st.picked.isNotEmpty(), onAction = { st.send(onClose) }
     ) {
         // The surprise (owner, 17 November 2026): the person it's for is left out, or named as a reminder.
@@ -81,14 +84,14 @@ fun GiftInviteFriendsDialog(l: SharedList, onClose: () -> Unit) {
         } else if (t == null) {
             Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(Modifier.size(24.dp)) }
         } else if (friends.isEmpty()) {
-            PickNote(tr("No Friends yet. Add Friends on the Friends tab, or send the invite link."))
-        } else SheetGroup(friends.map { f ->
+            PickNote(tr("No friends yet. Add friends on the Friends tab, or share the invite link."))
+        } else if (left.isEmpty()) {
+            PickNote(tr("All your friends are on it or invited."))
+        } else SheetGroup(left.map { f ->
             {
-                val on = f.id in t
                 SheetRow(
                     { Avatar(Friends.photos[f.id], f.name, 32.dp) }, f.name.ifBlank { tr("Someone") }, { st.toggle(f.id) },
-                    detail = if (on) tr("On the list or invited") else null,
-                    chosen = on || f.id in st.picked, tile = false, enabled = !on && !st.busy
+                    chosen = f.id in st.picked, tile = false, enabled = !st.busy
                 )
             }
         })

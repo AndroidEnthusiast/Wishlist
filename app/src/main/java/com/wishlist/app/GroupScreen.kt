@@ -69,7 +69,7 @@ fun GroupScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, onOpe
     }
     // Made just now: the invite comes up so you can ask people in.
     LaunchedEffect(gid, places.inviteNow) {
-        if (places.inviteNow == gid) { places.inviteNow = null; st.inviting = true }
+        if (places.inviteNow == gid) { places.inviteNow = null; st.sharing = true }
     }
 
     // A wish card in a chat, or a notification, about a member's wish: that member's list opens (it then finds the wish).
@@ -104,8 +104,7 @@ fun GroupScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, onOpe
                         IconButton(onClick = { st.menu = true }) { Icon(AppIcons.MoreVert, tr("More")) }
                         DropdownMenu(expanded = st.menu, onDismissRequest = { st.menu = false }) {
                             if (Groups.canInvite(ctx, g)) {
-                                DropdownMenuItem(text = { Text(tr("Invite friends")) }, leadingIcon = { Icon(AppIcons.Friends, null) }, onClick = { st.menu = false; st.inviting = true })
-                                DropdownMenuItem(text = { Text(tr("Share group link")) }, leadingIcon = { Icon(AppIcons.Share, null) }, onClick = { st.menu = false; Groups.share(ctx, g) })
+                                DropdownMenuItem(text = { Text(tr("Invite people")) }, leadingIcon = { Icon(AppIcons.Friends, null) }, onClick = { st.menu = false; st.sharing = true })
                             }
                             DropdownMenuItem(text = { Text(tr("Change my wishlist")) }, leadingIcon = { Icon(AppIcons.Swap, null) }, onClick = { st.menu = false; st.changing = true })
                             if (Groups.isOrganiser(ctx, g)) {
@@ -175,22 +174,21 @@ fun GroupScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, onOpe
             // Invitations from the new-group form that couldn't be sent (owner, 2.125: only the organiser sees this).
             val unsent = Groups.unsent[g.id] ?: 0
             if (unsent > 0 && Groups.isOrganiser(ctx, g)) Text(
-                if (unsent == 1) tr("1 invitation couldn’t be sent. Tap Invite friends to try again.")
-                else tr("%d invitations couldn’t be sent. Tap Invite friends to try again.", unsent),
+                if (unsent == 1) tr("1 invitation couldn’t be sent. Tap Invite people to try again.")
+                else tr("%d invitations couldn’t be sent. Tap Invite people to try again.", unsent),
                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
             )
             if (Groups.canInvite(ctx, g)) {
-                Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = { st.inviting = true }) { Text(tr("Invite friends")) }
-                    OutlinedButton(onClick = { Groups.share(ctx, g) }) { Text(tr("Share group link")) }
-                }
+                Button(onClick = { st.sharing = true }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) { Text(tr("Invite people")) }
             }
         }
     }
 
     if (g == null) return
-    if (st.inviting) InviteFriendsDialog(g, snack) { st.inviting = false; model.clearUnsent(g.id) }
+    // One "Invite people" sheet (owner, 26 November 2026): who is in and invited, "+ Add friends", the group link.
+    if (st.sharing) GroupShareSheet(g, onAdd = { st.sharing = false; st.inviting = true }) { st.sharing = false; model.clearUnsent(g.id) }
+    if (st.inviting) InviteFriendsDialog(g, snack) { st.inviting = false; st.sharing = true; model.clearUnsent(g.id) }
     if (st.changing) ListPickDialog(
         title = tr("Change my wishlist"), confirm = tr("Save"), current = Groups.myListId(ctx, g), onClose = { st.changing = false }
     ) { id, fresh ->

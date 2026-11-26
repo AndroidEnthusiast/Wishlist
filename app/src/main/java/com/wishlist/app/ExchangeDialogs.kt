@@ -94,7 +94,9 @@ internal fun ExchangeScreenDialogs(
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val ex = rememberExchange()
-    if (st.inviting) GxInviteDialog(x, snack) { st.inviting = false }
+    // One "Invite people" sheet (owner, 26 November 2026): who is in and invited, "+ Add friends", the exchange link.
+    if (st.sharing) ExchangeShareSheet(x, onAdd = { st.sharing = false; st.inviting = true }) { st.sharing = false }
+    if (st.inviting) GxInviteDialog(x, snack) { st.inviting = false; st.sharing = true }
     if (st.changing) {
         val ask = remember { GxShowAsk() }
         ListPickDialog(

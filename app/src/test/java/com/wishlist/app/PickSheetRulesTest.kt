@@ -19,9 +19,10 @@ class PickSheetRulesTest {
         "AddToMine.kt" to listOf("Add to my wishlist"),
         "Reminders.kt" to listOf("What did you get?", "Which wishlist?"),
         "ChatParts.kt" to listOf("Send a wish", "Send a wishlist"),
-        "GiftInviteViews.kt" to listOf("Invite Friends"),
-        "GroupMembers.kt" to listOf("Invite friends"),
-        "ExchangeRows.kt" to listOf("Invite friends"),
+        "GiftInviteViews.kt" to listOf("Add friends"),
+        "GroupMembers.kt" to listOf("Add friends"),
+        "ExchangeRows.kt" to listOf("Add friends"),
+        "InvitePeople.kt" to listOf("People"),
         "GroupNew.kt" to listOf("Add friends")
     )
 

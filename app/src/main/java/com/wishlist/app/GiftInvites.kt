@@ -57,6 +57,15 @@ object GiftInvites {
     }
 
     /** Who of your Friends is on list [l] already, or invited: profile ids. Throws when offline. */
+    /** Friends on list [l] ([first]) and friends invited but not on it yet ([second]), as the server knows them. */
+    suspend fun who(c: Context, l: SharedList): Pair<List<String>, List<String>> {
+        val auth = Friends.auth(c) ?: return emptyList<String>() to emptyList()
+        val o = JSONObject(Cloud.rpc("wl_sh_invited", auth.put("p_key", l.key)))
+        fun ids(k: String) = o.optJSONArray(k)?.let { a -> (0 until a.length()).map { a.optString(it) } }.orEmpty()
+        val members = ids("members")
+        return members to ids("invited").filter { it !in members }
+    }
+
     suspend fun taken(c: Context, l: SharedList): Set<String> {
         val auth = Friends.auth(c) ?: return emptySet()
         val o = JSONObject(Cloud.rpc("wl_sh_invited", auth.put("p_key", l.key)))

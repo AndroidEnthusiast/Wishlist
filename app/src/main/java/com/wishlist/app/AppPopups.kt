@@ -108,7 +108,7 @@ internal fun AppPopups(a: AppState, snack: SnackbarHostState, goStable: (Deep) -
             onClose = { a.joinDlg = null }
         )
     }
-    if (a.inviteDlg) SharedShareDialog { a.inviteDlg = false }
+    if (a.inviteDlg) SharedShareDialog(justMade = a.inviteMade) { a.inviteDlg = false; a.inviteMade = false }
     // A gift list invitation from a Friend (2.142): a tapped notification or chat card.
     a.giftInvite?.let { code ->
         key(code) {

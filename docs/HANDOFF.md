@@ -5,6 +5,9 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.295 (26 November 2026):** one "Invite people" sheet everywhere and whole list names (`people.md`, `look.md`,
+  last sections). Ask how both feel. Then **sketch and ask** (owner chose all four): group settings, cover photo
+  buttons, the gift exchange before the draw, Import; build nothing before the owner picks a sketch.
 - **2.292: ask how the animations feel on the phone** (`look.md`, last section). Then ideas 7 and 11 (interview first).
 - **Owner, 24 November 2026: ideas 7 and 11 next** (`ideas.md`, last section; `people.md`, last section): interview
   first. Ask how the chat's + and the wishlist card feel on the phone (2.287), and how the padlock animation
@@ -142,6 +145,12 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 26 November 2026: inviting people, one neat sheet; whole list names (2.295)
+Owner's recording: the Co-op share pop-up was busy (naked link, three ways to share) and missed the friend just
+invited. Now one sheet (people with status, "+ Add friends", "Share invite link") for Co-op lists, groups and
+exchanges, one "Invite people" in menus and pages, pickers without invited friends. List titles shrink to fit the
+small bar. Not checkable here: the real phone and fonts (the test phone draws a plain font).
+
 ### 26 November 2026: reservations at once, buttons apart (2.293–2.294)
 Owner's recordings. 2.293: clear bin on a disc, delete waits for the bin, Undo lands without a jump, move fixed too.
 2.294: Co-op lists (app and browser editor) open with the last known reservations, no "Reserve" flash; buttons side
@@ -152,9 +161,3 @@ by side 8 dp apart (Friends, update banner, gift exchange), and the layout inspe
 meet, view fade, sort glide), app and web (8, 10); each checked frame by frame and fixed (see look.md). View change
 became a fade-through (reshaping looked muddled; tell the owner). Not checkable here: real motion and vibration.
 2.293 (recording): clear bin on a disc, delete waits for the bin, Undo lands without a jump, move fixed too.
-
-### 25 November 2026: the owner's phone review (2.290)
-Price tag removed again. Two-per-row cards side by side now always the same height (old price on its own line, kept
-empty when none). Received gifts show photos. "Unreserve?": padlock at the top, then the gift's photo and name and a
-short line (app and web). The open shackle's right leg is short (owner picked A). Not checkable here: the phone.
-2.291: Gifts I reserved (and the "Still buying" question and two pop-ups) show the gift's photo.

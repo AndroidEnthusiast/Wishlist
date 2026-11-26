@@ -985,3 +985,9 @@ and the vibration on the phone (still frames only).
 
 (Earlier Next-session line, replaced by 2.292.) - **Owner, 25 November 2026: build the chosen animations family by family** (`look.md`, last section: 13 picks,
   "similar effects should be the same"). Ask each family's questions first.
+
+### 25 November 2026: the owner's phone review (2.290)
+Price tag removed again. Two-per-row cards side by side now always the same height (old price on its own line, kept
+empty when none). Received gifts show photos. "Unreserve?": padlock at the top, then the gift's photo and name and a
+short line (app and web). The open shackle's right leg is short (owner picked A). Not checkable here: the phone.
+2.291: Gifts I reserved (and the "Still buying" question and two pop-ups) show the gift's photo.

@@ -80,6 +80,7 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
     var manage by remember { mutableStateOf<String?>(null) }
     var deleteMineDlg by remember { mutableStateOf(false) }
     var copyDlg by remember { mutableStateOf(false) }
+    var invitingHere by remember { mutableStateOf(false) }
     var visBusy by remember { mutableStateOf(false) }
     var nameSaved by remember { mutableStateOf(0) }
     var noteSaved by remember { mutableStateOf(0) }
@@ -171,20 +172,10 @@ fun ListSettingsScreen(snack: SnackbarHostState, onDeleted: (() -> Unit)? = null
 
             ReadingCard(heading = { GroupTitle(tr("Privacy")) }) {
             if (shared != null) {
-                val title = Repo.listName
-                val invite = inviteLink(shared.key)
                 SectionTitle(tr("Invite people"))
-                Text(
-                    tr("They can edit and reserve wishes. Only send it to people you trust."),
-                    style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = { scope.launch { ShareCard.share(ctx, ShareCard.Kind.INVITE, title, invite) } }) { Text(tr("Send invite")) }
-                    OutlinedButton(onClick = {
-                        clip.setText(AnnotatedString(invite))
-                        scope.launch { snack.showToast(tr("Invite link copied")) }
-                    }) { Text(tr("Copy link")) }
-                }
+                // One button to the same share sheet as everywhere (owner, 26 November 2026: neat, no naked link).
+                Button(onClick = { invitingHere = true }) { Text(tr("Invite people")) }
+                if (invitingHere) SharedShareDialog { invitingHere = false }
                 if (shared.owner.isNotEmpty()) {
                     TextButton(onClick = { manage = "reset" }) { Text(tr("Make a new invite link")) }
                 }

@@ -1,5 +1,8 @@
 package com.wishlist.app
 
+import androidx.compose.ui.graphics.takeOrElse
+import androidx.compose.ui.unit.isSpecified
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.border
@@ -163,19 +166,30 @@ fun ListTitle(name: String, @Suppress("UNUSED_PARAMETER") count: Int) {
     ScreenTitle(name)
 }
 
-/** A screen's title in the top bar: one line, the style's title weight, cut off with … when too long. */
+/**
+ * A screen's title in the top bar: one line in the style's title weight. A long name gets smaller until it fits (down
+ * to [TITLE_MIN]) and is only cut off with … when it's absurdly long (owner, 26 November 2026: "Clothing Magdal…" in
+ * the small bar after scrolling; the name should always be visible).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScreenTitle(text: String, big: Boolean = false) {
     // [big]: the main tabs (Messages, Friends, My shops), as large as Home's wordmark in Quiet (2.207: 28).
     val look = LocalLook.current
-    Text(
-        text, fontWeight = look.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis,
-        // Quiet's large top bar (2.210) gives every screen the 28 title, shrinking to 20 as you scroll; [big] is kept
-        // for a one-line bar.
-        style = if (big && look.design == "quiet" && !LocalInLargeBar.current) MaterialTheme.typography.headlineSmall else LocalTextStyle.current
+    // Quiet's large top bar (2.210) gives every screen the 28 title, shrinking to 20 as you scroll; [big] is kept
+    // for a one-line bar.
+    val style = (if (big && look.design == "quiet" && !LocalInLargeBar.current) MaterialTheme.typography.headlineSmall else LocalTextStyle.current)
+        .merge(androidx.compose.ui.text.TextStyle(fontWeight = look.titleWeight))
+    val color = style.color.takeOrElse { androidx.compose.material3.LocalContentColor.current }
+    val max = if (style.fontSize.isSpecified) style.fontSize else 22.sp
+    androidx.compose.foundation.text.BasicText(
+        text, style = style.copy(color = color), maxLines = 1, overflow = TextOverflow.Ellipsis,
+        autoSize = if (max > TITLE_MIN) androidx.compose.foundation.text.TextAutoSize.StepBased(TITLE_MIN, max, 1.sp) else null
     )
 }
+
+/** The smallest a screen's title gets to fit a long name in its bar (the size of a wish's title). */
+val TITLE_MIN = 16.sp
 
 /** The price change on a wish ("−20%", "+5%"; plus and minus, not arrows: it isn't a stock trade). */
 @Composable

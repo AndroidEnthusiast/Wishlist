@@ -105,7 +105,7 @@ fun ExchangeScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, on
         }
     }
     LaunchedEffect(gid, places.inviteNow) {
-        if (places.inviteNow == gid) { places.inviteNow = null; st.inviting = true }
+        if (places.inviteNow == gid) { places.inviteNow = null; st.sharing = true }
     }
 
     val giftee = x?.me?.giftee
@@ -162,8 +162,7 @@ fun ExchangeScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, on
                         DropdownMenu(expanded = st.menu, onDismissRequest = { st.menu = false }) {
                             val org = Exchanges.isOrganiser(ctx, x)
                             if (org) {
-                                DropdownMenuItem(text = { Text(tr("Invite friends")) }, leadingIcon = { Icon(AppIcons.Friends, null) }, onClick = { st.menu = false; st.inviting = true })
-                                DropdownMenuItem(text = { Text(tr("Share exchange link")) }, leadingIcon = { Icon(AppIcons.Share, null) }, onClick = { st.menu = false; Exchanges.share(ctx, x) })
+                                DropdownMenuItem(text = { Text(tr("Invite people")) }, leadingIcon = { Icon(AppIcons.Friends, null) }, onClick = { st.menu = false; st.sharing = true })
                             }
                             DropdownMenuItem(text = { Text(tr("Change my wishlist")) }, leadingIcon = { Icon(AppIcons.Swap, null) }, onClick = { st.menu = false; st.changing = true })
                             if (org) DropdownMenuItem(text = { Text(tr("Exchange settings")) }, leadingIcon = { Icon(AppIcons.Settings, null) }, onClick = { st.menu = false; st.settings = true })
@@ -223,10 +222,7 @@ fun ExchangeScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, on
                     )
                 }
                 if (org) {
-                    Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(onClick = { st.inviting = true }) { Text(tr("Invite friends")) }
-                        OutlinedButton(onClick = { Exchanges.share(ctx, x) }) { Text(tr("Share link")) }
-                    }
+                    OutlinedButton(onClick = { st.sharing = true }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) { Text(tr("Invite people")) }
                     GxTitle(tr("Rules"))
                     Text(
                         tr("Only you see the rules. Nobody ever draws themselves."),
@@ -332,10 +328,7 @@ fun ExchangeScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, on
                             }
                         })
                     }
-                    Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(onClick = { st.inviting = true }) { Text(tr("Invite friends")) }
-                        OutlinedButton(onClick = { Exchanges.share(ctx, x) }) { Text(tr("Share link")) }
-                    }
+                    OutlinedButton(onClick = { st.sharing = true }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) { Text(tr("Invite people")) }
                     val canReveal = x.day == null || !x.day.isAfter(LocalDate.now())
                     if (!x.revealed && canReveal) Button(onClick = { st.revealAsk = true }, modifier = Modifier.padding(horizontal = 16.dp)) {
                         Text(tr("Reveal who had whom"))

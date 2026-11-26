@@ -63,6 +63,8 @@ internal class AppState(
     // null: closed, "": open and empty, otherwise opened with an invite that was sent to the app.
     var joinDlg by mutableStateOf<String?>(null)
     var inviteDlg by mutableStateOf(false)
+    // Right after making a Co-op list: its share sheet says "“Name” is ready" (owner, 26 November 2026).
+    var inviteMade by mutableStateOf(false)
     // The background question comes once, after the notifications question has been answered (or wasn't needed).
     var askBackground by mutableStateOf(false)
     var takeover by mutableStateOf<Triple<String, String, String>?>(null)
@@ -318,7 +320,7 @@ internal class AppState(
     fun openList(key: String): Boolean = openListOf(ctx, key)
 
     /** A new shared wishlist was made: it opens, with its invitation. */
-    fun sharedMade(code: String) { plusNew = null; Shared.open(ctx, code); closeAll(); inviteDlg = true }
+    fun sharedMade(code: String) { plusNew = null; Shared.open(ctx, code); closeAll(); inviteMade = true; inviteDlg = true }
 
     /** "How many will you buy?" answered for a 2× wish on a gift list (2.128); null: closed without choosing. */
     fun reserveCount(w: Wish, n: Int?) { Shared.askCount = null; if (n != null) Shared.reserveCount(w, n) }

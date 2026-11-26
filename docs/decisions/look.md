@@ -315,3 +315,9 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   lid opens, card shrinks evenly and drops in, lid shuts with a bump, disc goes); Undo follows the card's live place.
   Same flaws fixed elsewhere: a move keeps its place until it reaches Home, moved and copied cards shrink evenly to
   the Home icon's size, several deleted wishes keep the selection bar until they are in. Check: `ReviewNov26Test`.
+
+## A list's name stays whole in the small top bar (owner, 26 November 2026; built in 2.295)
+- Owner (screenshots of "Clothing Magdal…" after scrolling): keep the big title that moves up and gets smaller, but
+  "the name should always be visible unless there's an absurdly long wishlist name".
+- Built: every screen title (`ScreenTitle`) shrinks step by step to fit its bar, down to 16 sp (a wish title's size),
+  and only then is cut off with …. Big and small bar alike. Check: `TitleFitsTest`.

@@ -59,6 +59,7 @@ internal fun rememberExchange(): ExchangeModel {
 @Stable
 internal class ExchangeScreenState {
     var menu by mutableStateOf(false)
+    var sharing by mutableStateOf(false)
     var inviting by mutableStateOf(false)
     var changing by mutableStateOf(false)
     var settings by mutableStateOf(false)

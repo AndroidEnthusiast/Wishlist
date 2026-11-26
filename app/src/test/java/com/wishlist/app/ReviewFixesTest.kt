@@ -340,10 +340,10 @@ class OneNewWishlistTest {
         assertTrue(app.contains("\"mine\", \"collab\" -> NewWishlistSheet("))
         val hub = File("src/main/java/com/wishlist/app").listFiles()!!.filter { it.name.startsWith("Home") && it.name.endsWith(".kt") || it.name == "NewWishlist.kt" }.sortedBy { it.name }.joinToString("\n") { it.readText() }
         assertTrue(hub.contains("FormSheetHost(onClose) {") && hub.contains("WhoIsItFor(others) { others = it }"))
-        val shared = listOf("SharedUi.kt", "SharedManage.kt", "SharedListModel.kt").joinToString("\n") { File("src/main/java/com/wishlist/app/$it").readText() }
+        val shared = listOf("SharedUi.kt", "SharedManage.kt", "SharedListModel.kt", "InvitePeople.kt").joinToString("\n") { File("src/main/java/com/wishlist/app/$it").readText() }
         // New Co-op lists no longer ask who they're for (owner, 23 November 2026); lists made before keep their warning.
         assertTrue(!shared.contains("Shared.setForName(") && !shared.contains("tr(\"Gifts for someone"))
-        assertTrue(shared.contains("tr(\"Don’t send it to %s: it’s a surprise.\", forWho)"))
+        assertTrue(shared.contains("tr(\"Don’t share it with %s: it’s a surprise.\", it)"))
         val inv = File("src/main/java/com/wishlist/app/GiftInviteViews.kt").readText()
         assertTrue(inv.contains("val friends = all.filterNot { Shared.isFor(forWho, it.name) }"))
     }
