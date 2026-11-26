@@ -174,6 +174,8 @@ object Shared {
     fun close() {
         active = null
         gone = false
+        // The reservations belong to the open list (owner, 26 November 2026: none left behind on screen).
+        SharedReservations.reserved = emptyMap()
     }
 
     fun clearNotice() {
@@ -197,6 +199,9 @@ object Shared {
         if (active != l.code || pending.get() > 0 || stamp.get() != s) return true
         if (r == null) {
             gone = true
+            // Deleted by someone else: its reservations mean nothing any more.
+            SharedReservations.reserved = emptyMap()
+            prefs(c).edit().remove("res_${l.code}").apply()
             return true
         }
         gone = false

@@ -32,7 +32,7 @@ internal fun Shared.saveReservations(c: android.content.Context, code: String) {
 /** The reservations last seen on [code], so the list opens with them; nothing when there are none yet. */
 internal fun Shared.cachedReservations(c: android.content.Context, code: String): Map<Long, Boolean> {
     val t = prefs(c).getString("res_$code", null) ?: return emptyMap()
-    return try { Cloud.parseReservations(code, t) } catch (e: org.json.JSONException) { emptyMap() }
+    return try { ResAnswers.parse(code, t) } catch (e: org.json.JSONException) { emptyMap() }
 }
 
 internal suspend fun Shared.loadReservations(code: String) {

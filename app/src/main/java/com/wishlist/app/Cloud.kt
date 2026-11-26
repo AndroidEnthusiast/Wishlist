@@ -358,7 +358,7 @@ object Cloud {
      */
     suspend fun fetchReservations(code: String, device: String): Map<Long, Boolean> {
         val t = rpc("wl_get_reservations", JSONObject().put("p_code", code).put("p_device", device))
-        val m = parseReservations(code, t)
+        val m = ResAnswers.parse(code, t)
         lastReservations[code] = t
         return m
     }
@@ -369,23 +369,6 @@ object Cloud {
      */
     internal val lastReservations = java.util.concurrent.ConcurrentHashMap<String, String>()
 
-    /** Reads an answer of wl_get_reservations: wish id -> true (yours) or false (someone else's); counts to [ResCounts]. */
-    internal fun parseReservations(code: String, t: String): Map<Long, Boolean> {
-        val a = JSONArray(t)
-        val m = HashMap<Long, Boolean>()
-        val counts = HashMap<Long, ResCount>()
-        for (i in 0 until a.length()) {
-            val o = a.getJSONObject(i)
-            val id = o.getLong("id")
-            val mine = o.getBoolean("mine")
-            // Before supabase-setup.sql of 6 November 2026 there are no numbers: one reservation takes the wish.
-            val c = ResCount(o.optInt("my", if (mine) 1 else 0), o.optInt("n", 1), o.optBoolean("full", true))
-            counts[id] = c
-            if (mine) m[id] = true else if (c.full) m[id] = false
-        }
-        ResCounts.put(code, counts)
-        return m
-    }
 
     /** Reserves [n] of a wish for this phone (0 takes it away). False when that many aren't free any more. */
     suspend fun reserveCount(code: String, item: Long, device: String, n: Int): Boolean =

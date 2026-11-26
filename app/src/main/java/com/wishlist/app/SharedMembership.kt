@@ -96,7 +96,8 @@ fun Shared.leave(c: Context, code: String) {
     if (active == code) close()
     lists = lists.filter { it.code != code }
     saveLists(c)
-    prefs(c).edit().remove(cacheKey(code)).remove("shp_$code").apply()
+    // Its saved copy, people and last known reservations go with it (owner, 26 November 2026).
+    prefs(c).edit().remove(cacheKey(code)).remove("shp_$code").remove("res_$code").apply()
     Bin.forget(c, code)
 }
 

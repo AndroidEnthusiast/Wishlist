@@ -138,3 +138,5 @@ Moved here from `people.md` on 18 November 2026 (its size limit); newest at the 
   (new-version banner), Add to the draw / Remove (gift exchange). The layout inspector now reports two buttons with
   words less than 6 dp apart in the same row (`LayoutGuard`, `LayoutGuardTest.catchesButtonsThatTouch`), so every
   screenshot check guards it; docs/STYLE.md Buttons says 8 dp.
+- Found by the GitHub check while building 2.294: leaving a Co-op list, closing it, or finding it deleted by someone
+  else now also clears its reservations, on screen and on the phone (they could linger on screen after a close).

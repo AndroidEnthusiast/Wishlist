@@ -383,7 +383,7 @@ lists=[SharedList(code=LISTAAAA, key=KEYA, name=Gifts for Mum!, owner=, me=Annie
 active=null gone=false busy=false notice='' me=Ann creator=false
 content name='Our wishlist' about='' cats=[] occ=null
   wish by=Ann,cat=,cur=EUR,desc=,got=false,id=401,image=,old=null,price=10.0,title=Kite,url=https://shop.example/p/401
-reserved={102=true, 104=false} ask=102
+reserved={} ask=102
 pref sh_for_LISTAAAA=Mum Smith
 pref sh_me=Ann
 pref shared=[{"code":"LISTAAAA","key":"KEYA","name":"Gifts for Mum!","owner":"","me":"Annie"},{"code":"LISTBBBB","key":"KEYB","name":"Dad","owner":"tokB","me":""}]
