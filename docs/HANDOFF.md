@@ -5,6 +5,9 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **Owner, 26 November 2026: four ideas chosen to plan** (`ideas.md`, last section): price drop for
+  givers, reservations run out, Shopping list by shop, Historic low. Interview on details and risks first, one at a
+  time; ask which to start with. Nothing is built yet.
 - **2.295 (26 November 2026):** one "Invite people" sheet everywhere and whole list names (`people.md`, `look.md`,
   last sections). Ask how both feel. Then **sketch and ask** (owner chose all four): group settings, cover photo
   buttons, the gift exchange before the draw, Import; build nothing before the owner picks a sketch.
@@ -145,6 +148,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 26 November 2026: interview on new ideas (notes only, no app change)
+Owner asked for groundbreaking ideas; 50 offered in pop-ups, the owner found many gimmicky. Chosen to plan: price
+drop for givers (opt-in), reservations run out, Shopping list by shop (own wishes, setting off by default), Historic
+low; "how many people added this" later (after Google Play). All answers: `ideas.md`, last section.
+
 ### 26 November 2026: inviting people, one neat sheet; whole list names (2.295)
 Owner's recording: the Co-op share pop-up was busy (naked link, three ways to share) and missed the friend just
 invited. Now one sheet (people with status, "+ Add friends", "Share invite link") for Co-op lists, groups and
@@ -155,9 +163,3 @@ small bar. Not checkable here: the real phone and fonts (the test phone draws a 
 Owner's recordings. 2.293: clear bin on a disc, delete waits for the bin, Undo lands without a jump, move fixed too.
 2.294: Co-op lists (app and browser editor) open with the last known reservations, no "Reserve" flash; buttons side
 by side 8 dp apart (Friends, update banner, gift exchange), and the layout inspector now fails touching buttons.
-
-### 25 November 2026: animations that show what you did (2.292)
-13 owner-chosen animations in families (bin, move, copy peel, arrive, eye, heart, strike, live padlock, friends
-meet, view fade, sort glide), app and web (8, 10); each checked frame by frame and fixed (see look.md). View change
-became a fade-through (reshaping looked muddled; tell the owner). Not checkable here: real motion and vibration.
-2.293 (recording): clear bin on a disc, delete waits for the bin, Undo lands without a jump, move fixed too.

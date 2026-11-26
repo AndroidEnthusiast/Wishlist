@@ -72,3 +72,27 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
   name), too many concepts for a newcomer (co-op wishlist vs wishlist group), a full chat is heavy upkeep next to
   WhatsApp, inconsistent copy ("Invite Friends" / "Invite friends", "No Friends yet. Add Friends on the Friends tab").
 
+
+## The "groundbreaking ideas" interview of 26 November 2026 (owner: "truly useful, not gimmicky")
+- Owner: many first ideas felt gimmicky; not sure people would use thank-yous or reminders. Round 1 (20 ideas), only
+  chosen: **price drop for givers**: every gift I reserved that drops in price gives me a notification, at any time
+  (not tied to a birthday), **only when the person turned it on** (a setting). Skipped (= none of these): Reveal day,
+  time-capsule message, QR gift tag, hint drop, "Still wanted" badge, doesn't-fit rescue, vote on co-op lists,
+  dead-link rescue, this-or-that poll, happy-with-it check, second life, gift memory, near-a-shop nudge, AI gift
+  helper, send to door without the address, occasion autopilot, mood-board wish, photo → find it, gift budget guard.
+- Round 2, chosen: **reservations run out** (a forgotten reservation frees the wish again after the giver is asked
+  "Still buying this?"; needs a server script). **Shopping list by shop**, own wishes only (not reserved gifts):
+  a "Shopping list" row on Home for all your lists plus a "By shop" view inside a list; one card per shop with
+  ticks and a total, "Order at …" opens the ticked products one by one ("Next (2 of 3)"; no shop lets an app fill
+  its basket), "Mark as ordered"; **an App settings switch, off by default** (owner). **Historic low**, only that:
+  the price is the lowest since the wish was added (label and/or alert wording: ask), no fake-deal warning.
+- **"How many people in the world added this wish": later, after Google Play** (owner): small numbers at first,
+  shop links would have to go online (opt-in, a hidden code, nothing below 5 people), a new server table.
+- Round 2, skipped: ask the wisher anonymously, reserve together, "I already have" list, open in the shop's app,
+  discount codes, fresh price at Buy, compare side by side, star rating, find it second-hand, only notable drops,
+  daily price summary, price in your currency, free-delivery helper.
+- Already in the app (not offered): target prices (`Targets.kt`), gift exchange exclusions, search, drag to order,
+  selecting several wishes after a long press.
+- Round 3 (14 ideas), all skipped (= none of these): gift-proof lock, who sees which wish, hide prices from givers,
+  who has looked, "always welcome" wish, gift card wish, bundle wish, wish for an occasion, list check-up, sizes per
+  brand, suggestions inbox, text-only shares, clean-up screen, warranty and receipts.

@@ -7,6 +7,9 @@ it**, grouped as below, with a recommendation. Add every new open item here the 
 Details of each item are in the doc named after it.
 
 ## Now
+- **Plan the four ideas chosen on 26 November 2026** (`docs/decisions/ideas.md`, last section): price drop for
+  givers (a setting, any reserved gift), reservations run out (server script), Shopping list by shop (own wishes,
+  App settings switch off by default), Historic low. Interview on details and risks first.
 - **Try 2.282 on the phone:** the Elho pot's price corrects itself to €8.09 at the next price check (quietly, no
   alert); keep sending "Price is wrong?" files for any price that's off (`docs/decisions/prices.md`).
 - **Owner: run `supabase-features.sql` (version 2) in Supabase** (the daily server check failed on 22 and 23 November;
@@ -75,6 +78,7 @@ Details of each item are in the doc named after it.
 - **R4, real shop pages:** whenever a price reads wrong, tap "Price is wrong?" and send the file (ongoing).
 
 ## Later (owner said "leave it for now")
+- **"How many people in the world added this wish"** (owner, 26 November 2026): after Google Play (`ideas.md`).
 - **Lists for your children** (owner, 22 November 2026: "build later, remember it"): a parent makes and manages a
   child's wishlist. Interview first. The full idea list of that day (35 ideas): `docs/decisions/ideas.md`, last section.
 - **Copy slips found 22 November 2026** (for the copy project): "Invite Friends" vs "Invite friends"; "No Friends yet.

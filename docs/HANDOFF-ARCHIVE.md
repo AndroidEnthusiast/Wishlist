@@ -991,3 +991,9 @@ Price tag removed again. Two-per-row cards side by side now always the same heig
 empty when none). Received gifts show photos. "Unreserve?": padlock at the top, then the gift's photo and name and a
 short line (app and web). The open shackle's right leg is short (owner picked A). Not checkable here: the phone.
 2.291: Gifts I reserved (and the "Still buying" question and two pop-ups) show the gift's photo.
+
+### 25 November 2026: animations that show what you did (2.292)
+13 owner-chosen animations in families (bin, move, copy peel, arrive, eye, heart, strike, live padlock, friends
+meet, view fade, sort glide), app and web (8, 10); each checked frame by frame and fixed (see look.md). View change
+became a fade-through (reshaping looked muddled; tell the owner). Not checkable here: real motion and vibration.
+2.293 (recording): clear bin on a disc, delete waits for the bin, Undo lands without a jump, move fixed too.
