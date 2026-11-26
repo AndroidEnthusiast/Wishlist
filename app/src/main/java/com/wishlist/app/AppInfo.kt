@@ -136,7 +136,7 @@ fun UpdateBar() {
             .lookSurface(LocalLook.current, MaterialTheme.shapes.medium, cs.secondaryContainer, depth = 4.dp).padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = 4.dp)
     ) {
         Text(tr("A new version of Wishlist is ready."), style = MaterialTheme.typography.bodyMedium, color = cs.onSecondaryContainer)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End), verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = { AppInfo.later(ctx) }) { Text(tr("Later")) }
             TextButton(onClick = { AppInfo.download(ctx) }) { Text(tr("Update")) }
         }

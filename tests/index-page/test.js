@@ -105,7 +105,12 @@ function check(name, cond) { console.log((cond ? "PASS " : "FAIL ") + name); if 
   {
     // Live: free when last drawn, someone else's now: the grey padlock drops in (owner, 25 November 2026).
     const R = d.window.WLRes, lw = { id: 4242, title: "Live lamp", price: 10 };
+    // A Co-op list opens with the reservations this browser saw last (owner, 26 November 2026).
+    R.keep("COOP1", [{ id: 7, mine: true }, { id: 8, mine: false }]);
+    const kept = R.kept("COOP1");
+    check("kept reservations come back: yours and someone else's", kept.res[7] === true && kept.res[8] === false && Object.keys(R.kept("NOPE").res).length === 0);
     R.button(lw, undefined, null, { set() {} });
+    await sleep(2100); // a change while the page is still loading isn't "live"
     const live = R.button(lw, false, null, { set() {} });
     check("reserved by someone else while you look: the grey padlock drops in", !!live.querySelector("svg.lock.closing") && live.querySelector("svg.lock rect").getAttribute("fill") === "url(#wl-grey)");
     check("drawn again a moment later it carries on, then rests", !!R.button(lw, false, null, { set() {} }).querySelector("svg.lock.closing"));

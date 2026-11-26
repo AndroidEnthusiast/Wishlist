@@ -24,6 +24,17 @@ internal object SharedReservations {
 }
 
 
+/** Keeps the server's last answer about [code]'s reservations on the phone (owner, 26 November 2026). */
+internal fun Shared.saveReservations(c: android.content.Context, code: String) {
+    Cloud.lastReservations[code]?.let { prefs(c).edit().putString("res_$code", it).apply() }
+}
+
+/** The reservations last seen on [code], so the list opens with them; nothing when there are none yet. */
+internal fun Shared.cachedReservations(c: android.content.Context, code: String): Map<Long, Boolean> {
+    val t = prefs(c).getString("res_$code", null) ?: return emptyMap()
+    return try { Cloud.parseReservations(code, t) } catch (e: org.json.JSONException) { emptyMap() }
+}
+
 internal suspend fun Shared.loadReservations(code: String) {
     if (SharedReservations.resBusy) return
     val m = try {

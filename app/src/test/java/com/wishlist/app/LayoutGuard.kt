@@ -15,7 +15,8 @@ import androidx.compose.ui.unit.sp
  *  - text that is cut off (narrower than it needs, without "…"), or cut at the bottom;
  *  - a word or a number broken over two lines ("€33.1 / 9", "Wishe / s", "Decathlo / n");
  *  - two texts on top of each other ("Reserved by you" over "+78%");
- *  - text sticking out past the left or right edge of the screen.
+ *  - text sticking out past the left or right edge of the screen;
+ *  - two buttons with words side by side less than 6 dp apart (26 November 2026).
  * Links and addresses may break anywhere (they have no spaces), messages that float over everything (a snackbar) may
  * cover text, and text inside something that scrolls sideways may be off screen. It can't judge taste (balance,
  * spacing): pictures are still looked at.
@@ -59,6 +60,24 @@ object LayoutGuard {
                 val x = ra.intersect(rb)
                 if (x.width > 2f && x.height > 2f) out += "“${short(at)}” overlaps “${short(bt)}”"
             }
+            // Two buttons with words side by side need room between them (owner, 26 November 2026: "Share" and "Add
+            // a friend" touched): at least 6 dp, or they read as one.
+            val px = try { root.layoutInfo.density.density } catch (e: Exception) { 1f }
+            val buttons = ArrayList<Pair<SemanticsNode, String>>()
+            walk(root, false, false) { n, _, _ ->
+                if (n.config.getOrNull(SemanticsProperties.Role) != androidx.compose.ui.semantics.Role.Button || !placed(n)) return@walk
+                val label = words(n)
+                if (label.isNotBlank()) buttons += n to label
+            }
+            for (i in buttons.indices) for (j in i + 1 until buttons.size) {
+                val (a, al) = buttons[i]
+                val (b, bl) = buttons[j]
+                val ra = a.boundsInRoot
+                val rb = b.boundsInRoot
+                val sameRow = minOf(ra.bottom, rb.bottom) - maxOf(ra.top, rb.top) > 0.6f * minOf(ra.height, rb.height)
+                val gap = if (ra.left < rb.left) rb.left - ra.right else ra.left - rb.right
+                if (sameRow && gap < 6f * px && gap > -ra.width / 2f) out += "the buttons “${short(al)}” and “${short(bl)}” touch"
+            }
         }
         return out.distinct()
     }
@@ -99,6 +118,12 @@ object LayoutGuard {
         val left = (0 until r.lineCount).minOf { r.getLineLeft(it) }.coerceAtLeast(0f)
         val right = (0 until r.lineCount).maxOf { r.getLineRight(it) }.coerceAtMost(r.size.width.toFloat())
         return Rect(box.left + left * sx, box.top + top * sy, box.left + right * sx, box.top + bottom * sy)
+    }
+
+    /** The words of a button: its own text or its children's. */
+    private fun words(n: SemanticsNode): String {
+        val own = n.config.getOrNull(SemanticsProperties.Text)?.joinToString(" ") { it.text }.orEmpty()
+        return if (own.isNotBlank()) own else n.children.joinToString(" ") { words(it) }.trim()
     }
 
     private fun placed(n: SemanticsNode): Boolean = try { n.layoutInfo.isPlaced && n.layoutInfo.coordinates.isAttached } catch (e: Exception) { true }

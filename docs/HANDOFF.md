@@ -142,6 +142,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 26 November 2026: reservations at once, buttons apart (2.293–2.294)
+Owner's recordings. 2.293: clear bin on a disc, delete waits for the bin, Undo lands without a jump, move fixed too.
+2.294: Co-op lists (app and browser editor) open with the last known reservations, no "Reserve" flash; buttons side
+by side 8 dp apart (Friends, update banner, gift exchange), and the layout inspector now fails touching buttons.
+
 ### 25 November 2026: animations that show what you did (2.292)
 13 owner-chosen animations in families (bin, move, copy peel, arrive, eye, heart, strike, live padlock, friends
 meet, view fade, sort glide), app and web (8, 10); each checked frame by frame and fixed (see look.md). View change

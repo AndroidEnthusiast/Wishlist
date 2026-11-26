@@ -358,6 +358,19 @@ object Cloud {
      */
     suspend fun fetchReservations(code: String, device: String): Map<Long, Boolean> {
         val t = rpc("wl_get_reservations", JSONObject().put("p_code", code).put("p_device", device))
+        val m = parseReservations(code, t)
+        lastReservations[code] = t
+        return m
+    }
+
+    /**
+     * The server's last answer about the reservations on each list, so a Co-op list can keep it on the phone and open
+     * with your reservations already showing (owner, 26 November 2026: it showed "Reserve" first).
+     */
+    internal val lastReservations = java.util.concurrent.ConcurrentHashMap<String, String>()
+
+    /** Reads an answer of wl_get_reservations: wish id -> true (yours) or false (someone else's); counts to [ResCounts]. */
+    internal fun parseReservations(code: String, t: String): Map<Long, Boolean> {
         val a = JSONArray(t)
         val m = HashMap<Long, Boolean>()
         val counts = HashMap<Long, ResCount>()

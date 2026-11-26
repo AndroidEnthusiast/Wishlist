@@ -57,7 +57,7 @@
   var justLocked = {};
   // What each wish's button showed last, and when someone else's reservation appeared while the page was open
   // (owner, 25 November 2026): then their grey padlock drops in and the card darkens, like in the app.
-  var lastState = {}, takenAt = {};
+  var lastState = {}, takenAt = {}, pageAt = Date.now();
   // How far (ms) an animation that started at [at] has played, or -1 when it is over (a card drawn again carries on).
   function playedFor(at, len) { var ago = Date.now() - at; return at && ago < len ? ago : -1; }
 
@@ -159,6 +159,12 @@
       if (qty(w) > 1 && c) return c.my > 0 ? "mine" : c.full ? "taken" : "reserve";
       return r === true ? "mine" : r === false ? "taken" : "reserve";
     },
+    // The last reservations this browser saw on a list, so a Co-op list opens with yours already showing (owner,
+    // 26 November 2026: it showed "Reserve" first); the server's answer replaces them a moment later.
+    keep: function (code, rows) { try { localStorage.setItem("wl_rescache_" + code, JSON.stringify(rows || [])); } catch (e) { /* private window */ } },
+    kept: function (code) {
+      try { return this.parse(JSON.parse(localStorage.getItem("wl_rescache_" + code) || "[]")); } catch (e) { return this.parse([]); }
+    },
     // The line about reservations: only "1 of 3 reserved" while some are still free (the rest is on the button).
     line: function (w, c) {
       var q = qty(w);
@@ -205,7 +211,8 @@
         box.appendChild(mb);
       } else {
         // Reserved by someone else just now, while this page was open: the grey padlock drops in, the card darkens.
-        if (before === "reserve" && !takenAt[w.id]) takenAt[w.id] = Date.now();
+        // Not while the page is still loading (a fresher answer than the one kept in the browser isn't "live").
+        if (before === "reserve" && !takenAt[w.id] && Date.now() - pageAt > 2000) takenAt[w.id] = Date.now();
         var played = playedFor(takenAt[w.id], 900);
         var tb = btn("outline taken", T("Reserved"), played >= 0 ? "lock grey closing" : "lock grey", o.ask || null);
         if (played >= 0) {

@@ -40,6 +40,8 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
   **Plain coloured words** (`LinkButton`) only for going somewhere ("All price changes ›", a licence's text, "I
   already have lists"), a way out outside a dialog (Close, Skip, Cancel) and in a top bar ("Select all", "Done").
   **Red** only for removing, leaving, blocking and deleting.
+- **Buttons side by side are 8 dp apart** (owner, 26 November 2026: "Share" and "Add a friend" touched): use
+  `Arrangement.spacedBy(8.dp)` or a `Spacer`; the layout inspector fails a screen where two are under 6 dp apart.
 
 ## Touch and spacing
 - Quiet's own rules (2.207, `docs/styles/quiet.md`): labels sit above text fields (the field wrappers do it, pass

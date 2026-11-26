@@ -126,3 +126,15 @@ Moved here from `people.md` on 18 November 2026 (its size limit); newest at the 
   copy on the phone. Fixed for every place with the same gap: the "Still buying …?" questions, "Someone reserved
   this" and "Reserve it now?" (the gift's photo and name instead of the name in the sentence). Not yet: the "Still
   buying" question on the web pages (`together.js` may only shrink; it needs splitting first).
+
+## Reservations show at once; buttons never touch (owner, 26 November 2026, a screen recording; 2.294)
+- **"A gift I reserved seems unreserved at first upon opening a wishlist, then changes to Reserved by you."** Only
+  Co-op lists did it (they show their saved copy first; friends', group and exchange lists load list and
+  reservations together). Fixed everywhere it happened: the app keeps the server's last answer per Co-op list
+  (`Shared.saveReservations` / `cachedReservations`, counts for 2× wishes included) and the browser editor too
+  (`WLRes.keep` / `kept` in reserve.js; edit.js may only shrink, so only existing lines changed). A change that only
+  arrives while a list is loading (the first 2 seconds) is not "reserved while you look" (app and web).
+- **"Share and Add a friend are touching"** (Friends tab). Fixed there and wherever else it happened: Later / Update
+  (new-version banner), Add to the draw / Remove (gift exchange). The layout inspector now reports two buttons with
+  words less than 6 dp apart in the same row (`LayoutGuard`, `LayoutGuardTest.catchesButtonsThatTouch`), so every
+  screenshot check guards it; docs/STYLE.md Buttons says 8 dp.

@@ -67,4 +67,16 @@ class LayoutGuardTest : NavigationBase() {
         val p = found { Row { Text("Sticks out", Modifier.offset(x = 400.dp)) } }
         assertTrue(p.toString(), p.any { it.contains("sticks out") })
     }
+
+    // "Share" and "Add a friend" touched (owner, 26 November 2026).
+    @Test fun catchesButtonsThatTouch() {
+        val p = found { Row { TextButton(onClick = {}) { Text("Share") }; TextButton(onClick = {}) { Text("Add a friend") } } }
+        assertTrue(p.toString(), p.any { it.contains("touch") })
+        val ok = found {
+            Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = {}) { Text("Share") }; TextButton(onClick = {}) { Text("Add a friend") }
+            }
+        }
+        assertTrue(ok.toString(), ok.none { it.contains("touch") })
+    }
 }

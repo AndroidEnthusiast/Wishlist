@@ -56,7 +56,9 @@ fun ReserveButton(
     // Someone else reserved it while you look (owner, 25 November 2026): their grey padlock drops in and shuts, so you
     // see live that it's taken. Not when the list opens with it already reserved, and not for your own tap.
     val was = androidx.compose.runtime.remember(w.id) { arrayOf(state) }
-    val takenNow = state == "taken" && was[0] == "reserve" && !justReserved
+    // Not while the list is still loading (a fresher answer than the one kept on the phone isn't "live").
+    val shownAt = androidx.compose.runtime.remember(w.id) { System.currentTimeMillis() }
+    val takenNow = state == "taken" && was[0] == "reserve" && !justReserved && System.currentTimeMillis() - shownAt > 2_000L
     var takenLive by androidx.compose.runtime.saveable.rememberSaveable(w.id) { androidx.compose.runtime.mutableStateOf(false) }
     val playTaken = takenNow || takenLive
     androidx.compose.runtime.SideEffect { if (takenNow) takenLive = true; was[0] = state }

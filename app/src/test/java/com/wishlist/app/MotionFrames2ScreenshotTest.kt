@@ -75,6 +75,9 @@ class MotionFrames2ScreenshotTest : NavigationBase() {
     @Test fun reservedWhileYouLook() {
         var state by mutableStateOf("reserve")
         show { Box(Modifier.width(220.dp)) { ReserveButton(old, state, if (state == "reserve") "Reserve" else "Reserved", {}) } }
+        // The list has settled (a change while it is loading isn't "live").
+        repeat(25) { compose.mainClock.advanceTimeBy(100); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
+        Thread.sleep(2100)
         frames("taken", listOf(0, 80, 180, 300, 420, 600, 900)) { state = "taken" }
     }
 

@@ -165,7 +165,8 @@ object Shared {
     fun open(c: Context, code: String) {
         val l = lists.firstOrNull { it.code == code } ?: return
         content = readCache(c, code) ?: SharedContent(name = l.name)
-        SharedReservations.reserved = emptyMap()
+        // Your reservations show at once, as last seen; the server's answer follows (owner, 26 November 2026).
+        SharedReservations.reserved = cachedReservations(c, code)
         gone = false
         active = code
     }
@@ -210,6 +211,7 @@ object Shared {
             saveLists(c)
         }
         loadReservations(l.code)
+        saveReservations(c, l.code)
         return true
     }
 

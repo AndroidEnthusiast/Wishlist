@@ -115,7 +115,9 @@ internal fun CodeCard(code: String, offline: Boolean, onAdd: () -> Unit, onRetry
                 Text(tr("Your code"), style = MaterialTheme.typography.labelSmall, color = look.cardMuted(id))
                 Text(Friends.pretty(code), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = look.cardInk(id), letterSpacing = 1.sp)
             }
+            // 8 dp between the two buttons (owner, 26 November 2026: they touched).
             TextButton(onClick = { Friends.shareCode(ctx, code) }) { Text(tr("Share")) }
+            Spacer(Modifier.width(8.dp))
             TextButton(onClick = onAdd) { Text(tr("Add a friend")) }
         }
         return

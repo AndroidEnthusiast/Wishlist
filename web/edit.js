@@ -721,7 +721,7 @@
     try {
       var rs = await rpc("wl_get_reservations", { p_code: code, p_device: deviceId() });
       if (resBusy) return;
-      var rr = WLRes.parse(rs);
+      var rr = WLRes.parse(rs); WLRes.keep(code, rs);
       var m = rr.res;
       var changed = JSON.stringify(m) !== JSON.stringify(res) || JSON.stringify(rr.cnt) !== JSON.stringify(cnt);
       res = m; cnt = rr.cnt;
@@ -1794,7 +1794,7 @@
       code = c.code || "";
       content = c.content;
       content.items = (content.items || []).map(normWish);
-      state = "ok";
+      state = "ok"; var kr = WLRes.kept(code); res = kr.res; cnt = kr.cnt;
     }
     render();
     refresh().then(function () {

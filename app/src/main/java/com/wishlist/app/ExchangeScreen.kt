@@ -326,7 +326,7 @@ fun ExchangeScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, on
                     }
                     x.members.filter { it.waiting }.forEach { m ->
                         GxPersonRow(m, isMe = false, organiser = false, trailing = {
-                            Row {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 TextButton(onClick = { st.adding = m }) { Text(tr("Add to the draw")) }
                                 TextButton(onClick = { st.removing = m }) { Text(tr("Remove")) }
                             }
