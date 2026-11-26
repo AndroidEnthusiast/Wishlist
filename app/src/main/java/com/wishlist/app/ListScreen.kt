@@ -261,9 +261,9 @@ fun HomeScreen(
                 onMove = { MoveFlow.ask(model.picked); model.picked = emptySet() },
                 onDelete = {
                     val ws = Repo.wishes.filter { it.id in model.picked }
-                    model.picked = emptySet()
-                    // Each card goes into the bar's Delete (CardMotion.kt, owner 25 November 2026).
-                    cardMotion?.fly(ws.map { it.id }, "delete") { DeleteFlow.requestMany(ctx, ws) } ?: DeleteFlow.requestMany(ctx, ws)
+                    // Each card goes into the bar's Delete; the bar stays until they are in (owner, 26 November 2026).
+                    val done = { model.picked = emptySet(); DeleteFlow.requestMany(ctx, ws) }
+                    cardMotion?.fly(ws.map { it.id }, "delete") { done() } ?: done()
                 }
             )
         },

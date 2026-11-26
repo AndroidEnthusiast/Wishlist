@@ -146,6 +146,7 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 13 owner-chosen animations in families (bin, move, copy peel, arrive, eye, heart, strike, live padlock, friends
 meet, view fade, sort glide), app and web (8, 10); each checked frame by frame and fixed (see look.md). View change
 became a fade-through (reshaping looked muddled; tell the owner). Not checkable here: real motion and vibration.
+2.293 (recording): clear bin on a disc, delete waits for the bin, Undo lands without a jump, move fixed too.
 
 ### 25 November 2026: the owner's phone review (2.290)
 Price tag removed again. Two-per-row cards side by side now always the same height (old price on its own line, kept

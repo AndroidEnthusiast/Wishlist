@@ -64,7 +64,9 @@ import kotlinx.coroutines.launch
 @Stable
 class Flight(
     val id: Long, val image: ImageBitmap, val from: Rect, val to: Rect,
-    val toBin: Boolean, val peel: Boolean, val back: Boolean = false, val home: Boolean = false
+    val toBin: Boolean, val peel: Boolean, val back: Boolean = false, val home: Boolean = false,
+    // What changes the data once the card is in the bin (a delete waits for it, so the list doesn't jump underneath).
+    val onLand: (() -> Unit)? = null
 )
 
 @Stable
@@ -120,11 +122,28 @@ class CardMotion(private val scope: CoroutineScope, private val off: () -> Boole
             // A move can take a moment online: the moving cards stay hidden while they fly (and a little after), so
             // they are never on screen twice; if the move fails they simply show again.
             if (kind == "home" && !peel) hidden = hidden + made.map { it.id }
-            then()
+            if (peel || made.isEmpty()) {
+                then()
+                binless = binless - ids.toSet()
+                if (made.isEmpty()) return@launch
+                flights = flights + made
+                return@launch
+            }
+            // Moved: like a delete, its place stays until it reaches the Home icon (no jump underneath).
+            if (kind == "home") {
+                var moved = false
+                val go = { if (!moved) { moved = true; then() } }
+                flights = flights + made.map { Flight(it.id, it.image, it.from, it.to, toBin = false, peel = false, home = true, onLand = go) }
+                return@launch
+            }
+            // Into the bin (owner, 26 November 2026: the list jumped underneath): the card leaves its place empty while
+            // it flies, and the wish is deleted when it is in the bin; then the list closes the gap.
+            hidden = hidden + made.map { it.id }
             binless = binless - ids.toSet()
-            if (made.isEmpty()) return@launch
-            if (kind != "home") lastDelete = made
-            flights = flights + made
+            lastDelete = made
+            var done = false
+            val once = { if (!done) { done = true; then() } }
+            flights = flights + made.map { Flight(it.id, it.image, it.from, it.to, toBin = true, peel = false, onLand = once) }
         }
     }
 
@@ -154,11 +173,12 @@ class CardMotion(private val scope: CoroutineScope, private val off: () -> Boole
 
     internal fun landed(f: Flight) {
         flights = flights - f
-        if (f.back) hidden = hidden - f.id
+        f.onLand?.invoke()
         if (f.home) {
             homeBounce++
+            // A move can take a moment online: the card stays hidden a little longer; if it failed, it shows again.
             if (!f.peel) scope.launch { delay(1500); hidden = hidden - f.id }
-        }
+        } else if (f.back || f.onLand != null) hidden = hidden - f.id
     }
 }
 
@@ -277,105 +297,35 @@ fun Modifier.homeBounce(): Modifier = composed {
 /** Above every screen: the cards in flight (they never take taps). */
 @Composable
 fun FlightLayer(m: CardMotion) {
-    val ink = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
-    m.flights.forEach { f -> key(f) { FlightView(f, ink) { m.landed(f) } } }
+    val cs = androidx.compose.material3.MaterialTheme.colorScheme
+    // Undo follows the card's place as the list settles, so it lands exactly where the card shows (no jump).
+    // The bin's disc stands out from the page in light and dark (dark: a lighter tone than the page).
+    val disc = if (LocalLook.current.dark) cs.surfaceContainerHighest else cs.surface
+    m.flights.forEach { f -> key(f) { FlightView(f, cs.onSurface, disc, { m.bounds[f.id] }) { m.landed(f) } } }
 }
 
 @Composable
-private fun FlightView(f: Flight, ink: Color, onDone: () -> Unit) {
+private fun FlightView(f: Flight, ink: Color, disc: Color, live: () -> Rect?, onDone: () -> Unit) {
     val t = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
-        t.animateTo(1f, tween(if (f.peel) 600 else if (f.toBin) 520 else 480, easing = FastOutSlowInEasing))
+        // The bin has several beats (disc, lid, card, lid, bump, disc), each with its own ease, so its clock runs evenly.
+        t.animateTo(1f, tween(if (f.toBin) 700 else if (f.peel) 680 else 560, easing = if (f.toBin) androidx.compose.animation.core.LinearEasing else FastOutSlowInEasing))
         onDone()
     }
     Canvas(Modifier.fillMaxSize()) {
         val p = if (f.back) 1f - t.value else t.value
         if (f.toBin) {
-            // Into the bin, not over it: the card is cut off at the bin's rim as it sinks in, and the bin is drawn on
-            // top (owner, 25 November 2026: proper quality).
-            val rim = binRim(f.to)
-            val go = p
-            if (go > 0.55f) clipRect(bottom = rim) { drawFlight(f, p) } else drawFlight(f, p)
-            drawBin(f.to, lidOpen(p), bump(p, f.back), ink)
+            // Into a clear bin (owner, 26 November 2026: "the trashcan animation isn't clear"): it pops up on its own disc
+            // where the card's bin button was, the lid opens, the card shrinks to the bin's opening and sinks in (cut off
+            // at the rim), the lid shuts with a bump, and the disc goes. Undo plays it backwards to where the card is now.
+            val bin = binAt(f.to)
+            val from = if (f.back) live() ?: f.from else f.from
+            drawDisc(bin, discScale(p), disc)
+            // The card travels from 10 % to 62 % of the time, easing in and out, so you see it go in.
+            val go = FastOutSlowInEasing.transform(((p - 0.1f) / 0.52f).coerceIn(0f, 1f))
+            val rim = bin.center.y - 3f * density
+            if (go > 0.6f) clipRect(bottom = rim) { drawIntoBin(f, from, bin, go) } else drawIntoBin(f, from, bin, go)
+            drawBin(bin, lidOpen(p), bump(p, f.back), ink)
         } else drawFlight(f, p)
-    }
-}
-
-/** How far the card has gone at [p]: a peeled copy lifts first (to 0.25), then flies. */
-private fun DrawScope.drawFlight(f: Flight, p: Float) {
-    val lift = if (f.peel) (p / 0.25f).coerceIn(0f, 1f) else 0f
-    val go = if (f.peel) ((p - 0.25f) / 0.75f).coerceIn(0f, 1f) else p
-    // The card's middle travels to the target's middle along a gentle curve; it shrinks to a sliver as it gets there.
-    val a = f.from.center
-    val b = f.to.center
-    val bend = Offset(0f, -minOf(f.from.height, 220f * density / 2.6f) * 0.35f)
-    val mid = Offset((a.x + b.x) / 2f, (a.y + b.y) / 2f) + bend
-    val q = 1f - go
-    val c = Offset(q * q * a.x + 2 * q * go * mid.x + go * go * b.x, q * q * a.y + 2 * q * go * mid.y + go * go * b.y) +
-        Offset(6f * density * lift * (1f - go), -18f * density * lift * (1f - go))
-    // It gets small early, so the bin or the Home icon stays in sight while it comes.
-    val shrink = 1f - (1f - go) * (1f - go)
-    val s = (1f - 0.94f * shrink) * (1f + 0.06f * lift * (1f - go))
-    val turn = 18f * go - 7f * lift * (1f - go)
-    val alpha = if (go < 0.85f) 1f else 1f - (go - 0.85f) / 0.15f
-    val w = f.from.width * s
-    val h = f.from.height * s
-    rotate(turn, c) {
-        // A peeled copy casts a soft shadow while it is lifted, so it reads as a copy coming off the card.
-        if (f.peel && go < 0.5f) {
-            val sh = lift * (1f - go * 2f)
-            for (k in 1..3) drawRoundRect(
-                Color.Black.copy(alpha = 0.06f * sh), Offset(c.x - w / 2f + k * 2f * density, c.y - h / 2f + k * 3f * density),
-                androidx.compose.ui.geometry.Size(w, h), androidx.compose.ui.geometry.CornerRadius(16f * density * s)
-            )
-        }
-        drawImage(
-            f.image, dstOffset = IntOffset((c.x - w / 2f).toInt(), (c.y - h / 2f).toInt()),
-            dstSize = IntSize(w.toInt().coerceAtLeast(1), h.toInt().coerceAtLeast(1)), alpha = alpha.coerceIn(0f, 1f)
-        )
-    }
-}
-
-/** The lid is open while the card goes in (or comes out). */
-private fun lidOpen(p: Float): Float {
-    val open = ((p - 0.05f) / 0.15f).coerceIn(0f, 1f)
-    val shut = ((p - 0.86f) / 0.12f).coerceIn(0f, 1f)
-    return open * (1f - shut)
-}
-
-/** The small bump as the lid shuts. */
-private fun bump(p: Float, back: Boolean): Float {
-    if (back) return 0f
-    val x = ((p - 0.9f) / 0.1f).coerceIn(0f, 1f)
-    return kotlin.math.sin(x * Math.PI).toFloat() * 0.18f
-}
-
-/** The bin's size at [r], in units of 24 (the same as [drawBin]). */
-private fun DrawScope.binUnit(r: Rect): Float = minOf(r.width, r.height).coerceAtLeast(24f * density) * 0.5f / 24f
-
-/** Where the bin's opening is: a card sinking in is cut off there. */
-private fun DrawScope.binRim(r: Rect): Float = r.center.y - 12f * binUnit(r) + 7f * binUnit(r)
-
-/** Our own bin (the CardDelete icon's shape) at [r], its lid turned open by [open] (0..1). */
-private fun DrawScope.drawBin(r: Rect, open: Float, bump: Float, ink: Color) {
-    val u = binUnit(r)
-    val o = Offset(r.center.x - 12f * u, r.center.y - 12f * u)
-    val st = Stroke(1.8f * u, cap = StrokeCap.Round, join = StrokeJoin.Round)
-    scale(1f + bump, r.center) {
-        // The can.
-        val can = Path().apply {
-            moveTo(o.x + 6f * u, o.y + 7f * u); lineTo(o.x + 7f * u, o.y + 19f * u)
-            lineTo(o.x + 17f * u, o.y + 19f * u); lineTo(o.x + 18f * u, o.y + 7f * u)
-        }
-        drawPath(can, ink, style = st)
-        // The lid with its handle, turning up around its left end.
-        rotate(-52f * open, Offset(o.x + 4f * u, o.y + 7f * u)) {
-            val lid = Path().apply {
-                moveTo(o.x + 4f * u, o.y + 7f * u); lineTo(o.x + 20f * u, o.y + 7f * u)
-                moveTo(o.x + 9f * u, o.y + 7f * u); lineTo(o.x + 9f * u, o.y + 5f * u)
-                lineTo(o.x + 15f * u, o.y + 5f * u); lineTo(o.x + 15f * u, o.y + 7f * u)
-            }
-            drawPath(lid, ink, style = st)
-        }
     }
 }

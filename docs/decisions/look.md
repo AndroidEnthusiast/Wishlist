@@ -77,29 +77,10 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   how to put it back); `tests/themes/check.sh` fails if that copy changes or disappears. Ask the owner before changing
   or removing Gen Z chaos in the app.
 
-## The new themes (owner, 13 November 2026)
-- **Removed: Cyberpunk, Neobrutalism, Neumorphism** ("poorly implemented: poppy in one area, bland in another").
-  People who had one move to **Quiet** (their light/dark stays). Gen Z chaos is the benchmark: a theme must change
-  absolutely every element of the app (buttons, fonts, text boxes, menus, tick boxes, sheets, message bars, spinners,
-  everything) without hurting accessibility, readability or good UI.
-- **Added, from https://www.magier.com/blog/graphic-design-styles** (numbers on that page): 5 Y2K Evolution, 6 Retro
-  Vintage, 9 Pop Futurism, 13 Grunge, 18 Flat design, 20 Bauhaus. Final list: Quiet (default for new installs, also
-  fully themed) + Gen Z chaos + those six.
-- **Colours:** each new theme has its own fixed palette; the 5 accents stay for Quiet and Gen Z chaos only (the accent
-  row is hidden for the others).
-- **Light and dark:** every theme gets both, designed per theme; "make absolutely sure each theme looks as good in
-  light mode as it does in dark mode and vice versa".
-- **Fonts:** Claude picks, "truly fitting the theme"; headings in the style's character, longer text in a clean font
-  that fits; picks listed in the changelog. Offline: a close fallback until the download finishes (no bundled fonts).
-- **Decoration:** full (backgrounds, empty pages, spinners, the wordmark), all drawn in our own code, never behind
-  text: text always sits on a calm, solid surface. **No moving effects.** Photos sit on a calm frame that fits the theme.
-- **Gen Z chaos:** finish it (the parts that were plain Android get chaos styling); nothing that was chaos changes.
-  The saved copy in `themes/gen-z-chaos/` stays the backup of the 2.198 version.
-- **App only:** the friends' web pages don't follow the themes. **One update** with everything, no previews.
-
 - Moved word for word to `docs/decisions/look-ARCHIVE.md` (24 November 2026, size limit): "Six more themes" and
   "Swiss, British Punk, colour sets and wild cards" (13 November 2026; replaced by Quiet and Gen Z chaos on the 14th),
-  and on 25 November 2026 "Deep themes, one at a time" (13 November 2026, replaced the same way).
+  and on 25 November 2026 "Deep themes, one at a time" (13 November 2026, replaced the same way); on 26 November
+  2026 "The new themes" (13 November 2026, replaced the same way).
 
 ## Back to Quiet and Gen Z chaos; design styles to a professional standard (owner, 14 November 2026)
 - Owner, after 2.205: "your implementation of the design styles has disappointed me". The Calm/Normal/Wild steps were
@@ -326,3 +307,11 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   the friend's name (the name fades aside first; a ring in the card's colour sets your picture apart).
 - **17 changed (told to the owner):** cards reshaping one by one looked muddled (old and new shapes overlapping), so
   a view change fades the new layout in with every card already in place; only a change of order glides.
+- **The owner's screen recording (26 November 2026, 2.293):** "the trashcan animation isn't clear, and the wish box
+  jumps up after putting it back; check the other animations for flaws". Found from the recording's frames: the list
+  emptied at once ("Nothing here yet" appeared under the flying card), the bin was the card's small grey icon drawn
+  over that text, and Undo landed where the card had been while the list was still making room. Built: the delete
+  waits until the card is in the bin; a 30 dp bin on its own disc (lighter tone in dark mode) with clear beats (disc,
+  lid opens, card shrinks evenly and drops in, lid shuts with a bump, disc goes); Undo follows the card's live place.
+  Same flaws fixed elsewhere: a move keeps its place until it reaches Home, moved and copied cards shrink evenly to
+  the Home icon's size, several deleted wishes keep the selection bar until they are in. Check: `ReviewNov26Test`.

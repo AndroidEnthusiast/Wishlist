@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
+import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -72,24 +73,55 @@ class MotionFramesScreenshotTest : NavigationBase() {
         }
     }
 
+    private val second = Wish(System.currentTimeMillis() - 70_000, "https://example.com/d", "Mugler Fragrances ALIEN", "", "", 89.0, null, "EUR", "")
+
+    /** A list of two cards with their bins, as on a phone: the first one is deleted, the second closes the gap. */
+    private fun listStage(items: () -> List<Wish>, mode: String = "light") = compose.runOnUiThread {
+        compose.activity.setContent {
+            LookTheme(lookFor("quiet", "blue", mode)) {
+                motion = rememberCardMotion()
+                androidx.compose.runtime.CompositionLocalProvider(LocalCardMotion provides motion) {
+                    androidx.compose.material3.Surface(Modifier.fillMaxSize()) {
+                        Box(Modifier.fillMaxSize()) {
+                            androidx.compose.foundation.lazy.LazyColumn(
+                                Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                items(items(), key = { it.id }) { w ->
+                                    Box(Modifier.animateItem(placementSpec = glideUnless("rows")).motionCard(w.id)) {
+                                        RowCard(w) {
+                                            androidx.compose.material3.IconButton(onClick = {}, modifier = Modifier.motionBin(w.id)) {
+                                                Icon(AppIcons.CardDelete, "Delete", Modifier.size(20.dp))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            FlightLayer(motion)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     @Test fun intoTheBin() {
-        var shown by androidx.compose.runtime.mutableStateOf(true)
-        stage({ shown })
-        frames("bin", listOf(0, 80, 160, 240, 320, 400, 470, 560)) { motion.fly(listOf(wish.id), "bin") { shown = false } }
+        var items by androidx.compose.runtime.mutableStateOf(listOf(wish, second))
+        listStage({ items })
+        frames("bin", listOf(0, 80, 160, 240, 320, 400, 480, 560, 640, 760, 950)) { motion.fly(listOf(wish.id), "bin") { items = listOf(second) } }
     }
 
     @Test fun backOutOfTheBin() {
-        var shown by androidx.compose.runtime.mutableStateOf(true)
-        stage({ shown }, "dark")
+        var items by androidx.compose.runtime.mutableStateOf(listOf(wish, second))
+        listStage({ items }, "dark")
         android.provider.Settings.Global.putFloat(app.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
         compose.mainClock.autoAdvance = false
         repeat(6) { compose.mainClock.advanceTimeBy(100); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
-        compose.runOnUiThread { motion.fly(listOf(wish.id), "bin") { shown = false } }
+        compose.runOnUiThread { motion.fly(listOf(wish.id), "bin") { items = listOf(second) } }
         // The test phone only draws when a picture is taken; a real phone draws on its own within a frame.
         repeat(3) { compose.mainClock.advanceTimeByFrame(); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
         captureScreenRoboImage("build/outputs/roborazzi/scratch_draw.png")
-        repeat(60) { compose.mainClock.advanceTimeByFrame(); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
-        frames("back", listOf(0, 120, 240, 360, 480)) { motion.back(listOf(wish.id)) { shown = true } }
+        repeat(80) { compose.mainClock.advanceTimeByFrame(); org.robolectric.shadows.ShadowLooper.idleMainLooper() }
+        frames("back", listOf(0, 100, 200, 300, 400, 500, 600, 720, 900)) { motion.back(listOf(wish.id)) { items = listOf(wish, second) } }
     }
 
     @Test fun movedToHome() {
