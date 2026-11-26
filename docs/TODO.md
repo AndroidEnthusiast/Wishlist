@@ -78,6 +78,7 @@ Details of each item are in the doc named after it.
 - **R4, real shop pages:** whenever a price reads wrong, tap "Price is wrong?" and send the file (ongoing).
 
 ## Later (owner said "leave it for now")
+- **An iPhone app** (owner, 26 November 2026): after Google Play (`ideas.md`, last section).
 - **"How many people in the world added this wish"** (owner, 26 November 2026): after Google Play (`ideas.md`).
 - **Lists for your children** (owner, 22 November 2026: "build later, remember it"): a parent makes and manages a
   child's wishlist. Interview first. The full idea list of that day (35 ideas): `docs/decisions/ideas.md`, last section.

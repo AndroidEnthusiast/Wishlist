@@ -96,3 +96,9 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
 - Round 3 (14 ideas), all skipped (= none of these): gift-proof lock, who sees which wish, hide prices from givers,
   who has looked, "always welcome" wish, gift card wish, bundle wish, wish for an occasion, list check-up, sizes per
   brand, suggestions inbox, text-only shares, clean-up screen, warranty and receipts.
+- **Competitors, looked at again (26 November 2026, GoWish, Giftful, Elfster, Giftster, Moonsift, Babylist, Zola,
+  Amazon):** praised features the app already has: easy sharing, secret reservations, price-drop alerts, any shop,
+  gift exchange with exclusions, favourites. Offered and skipped (= none of these): a questionnaire for givers
+  (Elfster), anonymous questions (Elfster, second time: don't offer again), a Chrome button (Moonsift, Giftful),
+  favour wishes (Babylist). Not offered on purpose: gift guides, brand shops and product suggestions (not wanted, see
+  above), cash funds and group gifts (= chip in, planned). **An iPhone app: later, after Google Play** (owner).
