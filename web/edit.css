@@ -277,6 +277,9 @@ button.act.plain { background: transparent; color: var(--fg); border-color: tran
 .wlt-cn { font-weight: 600; }
 .wlt-add[hidden] { display: none; }
 .wlt-add { background: transparent; color: var(--muted); border-color: color-mix(in srgb, var(--fg) 26%, transparent); }
+/* "+ React": a drawn plus, centred with the word (owner, 27 November 2026: the "+" character sat low) */
+.wlt-add::before { content: ""; width: .7em; height: .7em; margin-right: 3px; flex: none;
+  background: linear-gradient(currentColor, currentColor) center / 100% 1.5px no-repeat, linear-gradient(currentColor, currentColor) center / 1.5px 100% no-repeat; }
 .wlt-chip:focus-visible, .wlt-add:focus-visible, .wlt-e:focus-visible, .wlt-tab:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 button.badge.wlt-ask { border: 0; font: inherit; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
 .wlt-back {

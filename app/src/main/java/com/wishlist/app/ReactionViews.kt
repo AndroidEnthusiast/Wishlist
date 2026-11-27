@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -27,6 +29,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
@@ -136,7 +139,10 @@ fun ReactionBar(
                 .clickable(onClickLabel = tr("React")) { st.picking = true }.padding(horizontal = if (compact) 10.dp else 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("+ " + tr("React"), style = MaterialTheme.typography.labelMedium, color = ink.copy(alpha = 0.8f), maxLines = 1)
+            // A drawn plus, centred with the word (owner, 27 November 2026: the "+" character sat lower than "React").
+            Icon(AppIcons.Add, null, tint = ink.copy(alpha = 0.8f), modifier = Modifier.size(if (compact) 14.dp else 16.dp))
+            Spacer(Modifier.width(4.dp))
+            Text(tr("React"), style = MaterialTheme.typography.labelMedium, color = ink.copy(alpha = 0.8f), maxLines = 1)
         }
     }
     // Every reaction on this wish, with who (owner: the "+N" circle shows them all).

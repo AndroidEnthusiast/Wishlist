@@ -225,8 +225,14 @@ const A = "AAAAAAAAAAAAAAAAAAAA", AT = "tokA_tokA_tokA_tokA_", LINK = "LNKABCDEF
   const edited = JSON.parse(psql("select data from wl_items where id = " + saved.id));
   check("picture uploaded with the list's owner token", up && up.ok && up.size > 1000 && up.size < 200000, up);
   check("edited wish keeps id and star, gets the uploaded picture", edited.star === true && edited.title === "Blue teapot, large" && edited.image.indexOf("/storage/v1/object/public/wish-photos/" + up.path) > 0, edited);
-  // Delete and Undo
-  await w.page.getByRole("button", { name: "Delete" }).click();
+  // Delete: "Delete wish?" first (owner, 27 November 2026; no tickbox on this page), Cancel keeps it, then Undo
+  await w.page.locator(".card").getByRole("button", { name: "Delete" }).click();
+  check("asks first, with the name", (await w.page.locator(".dlg.delq h2").innerText()) === "Delete wish?" && (await w.page.locator(".dlg .delname").innerText()) === "Blue teapot, large");
+  check("no tickbox on the group page", (await w.page.locator(".dlg .deltick").count()) === 0);
+  await w.page.locator(".dlg").getByRole("button", { name: "Cancel" }).click();
+  check("Cancel keeps it", psql("select count(*) from wl_items where id = " + saved.id) === "1");
+  await w.page.locator(".card").getByRole("button", { name: "Delete" }).click();
+  await w.page.locator(".dlg").getByRole("button", { name: "Delete" }).click();
   await w.page.waitForSelector("#snack:not([hidden])");
   check("deleted online", psql("select count(*) from wl_items where id = " + saved.id) === "0");
   await w.page.locator("#snack .sbtn").click();

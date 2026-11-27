@@ -52,3 +52,10 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here.
   name or first name, so "Mum" can't be matched to a friend called Anneke: the invite screen then says
   "Don't invite Mum". **Naming** (owner): "collab" is gone; say just "wishlist", and where the kinds must be told
   apart "Wishlists for someone else" (Home, Move to…) or "wishlist you make with others".
+
+## Sharing a wish to Signal (owner, 27 November 2026)
+- Owner: WhatsApp shows the shop's picture for a shared wish, Signal only the text. The app shares text and the shop's
+  link; each messenger builds its own card from the shop's page, and Signal is stricter about the page's picture
+  (https, small file), so some shops (Baracuta) show none there. Sending the photo along was offered: the owner wants
+  no download wait. Our own wish link with our own card (the personal link preview dropped on 22 November) was offered
+  again because the owner asked: **owner chose to leave it as it is.** Don't bring it up again unless asked.

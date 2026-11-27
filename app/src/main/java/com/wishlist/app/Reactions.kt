@@ -42,6 +42,12 @@ val CHIP_HEIGHT = 28.dp
 
 object Reactions {
     internal val map = mutableStateMapOf<String, List<React>>()
+    /**
+     * Goes up when you react on a list (before and after saving): a load that started before that is older than what
+     * you see, so it is ignored (owner, 27 November 2026: a reaction sometimes showed late; the 30-second reload had
+     * put the list from before it back).
+     */
+    private val changes = HashMap<String, Int>()
     /** "missing" when Supabase doesn't have reactions yet (then nothing shows). */
     var missing by mutableStateOf(false)
         private set
@@ -70,7 +76,9 @@ object Reactions {
     /** Loads the reactions on list [code]. Quiet when offline. */
     suspend fun load(c: Context, code: String) {
         try {
-            map[code] = fetch(c, code)
+            val at = changes[code] ?: 0
+            val got = fetch(c, code)
+            if ((changes[code] ?: 0) == at) map[code] = got
             missing = false
         } catch (e: Exception) {
             if ((e.message ?: "").contains("wl_rx_get")) missing = true
@@ -79,12 +87,14 @@ object Reactions {
 
     /** Your reaction on wish [item] ('' takes it away). Shows at once; undone with a message when it can't be saved. */
     suspend fun set(c: Context, code: String, item: Long, emoji: String): String? {
+        changes[code] = (changes[code] ?: 0) + 1
         val before = map[code].orEmpty()
         val mineGone = before.filterNot { it.item == item && it.mine }
         map[code] = if (emoji.isEmpty()) mineGone else mineGone + React(item, emoji, Shared.lastName, true, System.currentTimeMillis())
         if (emoji.isNotEmpty()) addRecent(c, emoji)
         return try {
             val ok = Cloud.rpc("wl_rx_set", body(c, code).put("p_item", item).put("p_name", "").put("p_emoji", emoji)).trim() == "true"
+            changes[code] = (changes[code] ?: 0) + 1
             if (!ok) { map[code] = before; tr("Couldn’t react. Check your connection.") } else null
         } catch (e: Exception) {
             map[code] = before

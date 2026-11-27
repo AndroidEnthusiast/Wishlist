@@ -577,7 +577,7 @@
     if (own) {
       var acts = el("div", "actions");
       acts.appendChild(btn(T("Edit"), "outline small", function () { wishForm(w); }));
-      acts.appendChild(btn(T("Delete"), "outline small", function () { removeWish(w); }));
+      acts.appendChild(btn(T("Delete"), "outline small", function () { WLDeleteAsk.page(T, w, function () { removeWish(w); }); }));
       row.appendChild(acts);
     } else if (!got) {
       // One button for every state (reserve.js), as in the app.
@@ -626,7 +626,7 @@
   function removeWish(w) {
     var before = mine.items.slice();
     mine.items = mine.items.filter(function (y) { return y.id !== w.id; });
-    saveMine(before).then(function (ok) { if (ok) toast(T("Wish deleted")); });
+    saveMine(before).then(function (ok) { if (ok) WLDeleteAsk.undo(T, T("Wish deleted"), function () { var b2 = mine.items.slice(); mine.items = [w].concat(mine.items); saveMine(b2); }); });
   }
   function wishForm(edit) {
     var d = modal(edit ? T("Edit wish") : T("Add wish"));

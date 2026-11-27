@@ -148,6 +148,21 @@ const TOK = { [A]: AT, [B]: BT, [C]: CT };
   await w.page.waitForSelector(".card");
   const wl = psql("select web_list from wl_profiles where id = " + q(wendy));
   check("her wish is online", psql("select data->>'title' || '|' || (data->>'price') from wl_items where list_code = " + q(wl) + " and id <> 0") === "Teapot|12.5");
+  // Delete asks first and can be undone (owner, 27 November 2026: before, it was gone at once, with no Undo)
+  const teapots = () => psql("select count(*) from wl_items where list_code = " + q(wl) + " and id <> 0");
+  await w.page.locator(".card").getByRole("button", { name: "Delete" }).click();
+  check("delete asks first", (await w.page.locator(".dlg.delq h2").innerText()) === "Delete wish?" && (await w.page.locator(".dlg .deltick").count()) === 0);
+  await w.page.locator(".dlg").getByRole("button", { name: "Cancel" }).click();
+  check("Cancel keeps it", teapots() === "1" && (await w.page.locator(".card").count()) === 1);
+  await w.page.locator(".card").getByRole("button", { name: "Delete" }).click();
+  await w.page.locator(".dlg").getByRole("button", { name: "Delete" }).click();
+  await w.page.waitForSelector("#snack:not([hidden])");
+  await sleep(300);
+  check("deleted online", teapots() === "0");
+  await w.page.locator("#snack .sbtn").click();
+  await w.page.waitForSelector(".card");
+  await sleep(300);
+  check("Undo puts it back online", teapots() === "1");
   await w.page.locator("#backBtn").click();
   await w.page.waitForSelector(".xpeople");
 

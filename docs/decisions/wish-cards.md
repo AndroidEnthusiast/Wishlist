@@ -162,3 +162,14 @@ Moved here from `people.md` on 18 November 2026 (its size limit); newest at the 
   red button, in the app and on the web pages (added: delete a category, remove a friend's list, leave from Home,
   discard what you typed, "Delete all notifications?" Yes, Remove alert). Checks: `DeleteQuestionTest`,
   `DialogRulesTest.buttonsThatRemoveSomethingAreRed`, `ReviewNov26Test.deletingHasNoAnimation`, `tests/e2e/t3.js`.
+
+## Deleting on the group and gift exchange pages; "+ React" and late reactions (owner, 27 November 2026; 2.298)
+- **Group and gift exchange pages (browser):** the same "Delete wish?" pop-up (photo, name, red Delete, Cancel) but
+  **no tickbox** (owner: those pages have no Settings, so one-tap delete couldn't be switched off there). The exchange
+  page's delete was final; now "Wish deleted" has Undo, as on the group page. Shared code: `web/deleteask.js`
+  (`WLDeleteAsk.page`, `WLDeleteAsk.undo`). Checks: `tests/group/test.js`, `tests/exchange/test.js`.
+- **"+ React":** the "+" is drawn (app: the Add icon; web: a drawn plus in `edit.css`), centred with the word; the
+  typed "+" sat lower than "React" (owner's screenshot).
+- **A reaction sometimes showed late** (owner): the 30-second reload of a list's reactions could be on its way when
+  you reacted, and its older answer put the list from before back. Now a reload that started before your own
+  reaction is ignored (app `Reactions.load`, web `together.js`), like rule 3's refresh. Check: `ReactionModelTest`.

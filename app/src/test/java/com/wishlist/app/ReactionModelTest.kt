@@ -37,4 +37,28 @@ class ReactionModelTest {
             Reactions.map.remove("RXCODE")
         }
     }
+
+    /**
+     * Owner, 27 November 2026: a reaction sometimes showed late. The 30-second reload had started before you reacted
+     * and put the list from before it back; such an older answer is ignored now.
+     */
+    @Test fun aReloadFromBeforeYourReactionDoesNotHideIt() = kotlinx.coroutines.runBlocking {
+        Cloud.pretendServer = { fn, _ ->
+            if (fn == "wl_rx_get") {
+                // You react while the reload is on its way; its answer is from before that.
+                kotlinx.coroutines.runBlocking { Reactions.set(ctx, "RXRACE", 7, "🎉") }
+                "[]"
+            } else "true"
+        }
+        try {
+            Reactions.load(ctx, "RXRACE")
+            assertEquals("your reaction stays", listOf("🎉"), Reactions.of("RXRACE", 7).map { it.emoji })
+            Cloud.pretendServer = { _, _ -> "[{\"i\":7,\"e\":\"🎉\",\"n\":\"\",\"m\":true,\"at\":\"2026-11-27T19:00:00Z\"}]" }
+            Reactions.load(ctx, "RXRACE")
+            assertEquals("a later reload is used as usual", listOf("🎉"), Reactions.of("RXRACE", 7).map { it.emoji })
+        } finally {
+            Cloud.pretendServer = null
+            Reactions.map.remove("RXRACE")
+        }
+    }
 }

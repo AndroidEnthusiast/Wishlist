@@ -10,7 +10,7 @@
 (function () {
   "use strict";
   var cfg = null;
-  var reacts = {};   // list code -> [{i, e, n, m}]
+  var reacts = {}, edits = {};   // list code -> [{i, e, n, m}]; edits: your reactions there (setReact)
   var asks = {};     // list code -> questions waiting for this browser
   var news = {};     // list code -> [{kind, data}] still on screen
   var missing = false;
@@ -100,10 +100,9 @@
   function addRecent(e) {
     try { localStorage.setItem("wl_rx_recent", JSON.stringify([e].concat(recent().filter(function (x) { return x !== e; })).slice(0, 24))); } catch (x) { }
   }
-
-
+  // A load that started before your own reaction is older than what you see: ignored (owner, 27 November 2026).
   async function setReact(code, item, emoji) {
-    var before = reacts[code] || [];
+    edits[code] = (edits[code] || 0) + 1; var before = reacts[code] || [];
     var rest = before.filter(function (r) { return !(r.i === item && r.m); });
     var nm = cfg.name ? String(cfg.name() || "") : "";
     reacts[code] = emoji ? rest.concat([{ i: item, e: emoji, n: nm, m: true }]) : rest;
@@ -112,7 +111,7 @@
     try {
       var b = body(code);
       b.p_item = item; b.p_name = nm; b.p_emoji = emoji;
-      var ok = await cfg.rpc("wl_rx_set", b);
+      var ok = await cfg.rpc("wl_rx_set", b); edits[code]++;
       if (ok !== true) throw new Error("refused");
     } catch (e) {
       reacts[code] = before;
@@ -311,8 +310,8 @@
       if (!cfg || !code) return false;
       var before = JSON.stringify([reacts[code], asks[code], news[code], missing]);
       try {
-        reacts[code] = (await cfg.rpc("wl_rx_get", body(code))) || [];
-        missing = false;
+        var at = edits[code] || 0, got = (await cfg.rpc("wl_rx_get", body(code))) || [];
+        if ((edits[code] || 0) === at) reacts[code] = got; missing = false;
       } catch (e) {
         if (isMissing(e, "wl_rx_get")) missing = true;
       }
@@ -372,7 +371,7 @@
         bar.appendChild(more);
       }
       if (canReact) {
-        add = el("button", "wlt-add", "+ " + T_("React"));
+        add = el("button", "wlt-add", T_("React")); // the plus is drawn in edit.css
         add.type = "button";
         add.hidden = reacted;
         add.addEventListener("click", function () { withName(function () { picker(function (e) { setReact(code, w.id, e); }); }); });

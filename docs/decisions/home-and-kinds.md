@@ -54,3 +54,12 @@
   New gift exchange, the same frame as "Add wishes from other wishlists". Claude did NOT add "Add wishes from other
   wishlists" to the Co-op form (fewer options was the point). Check: `CoopFormTest`.
 
+
+## Value levels on Total value (owner, 27 November 2026; planned, not built)
+- Owner's idea: micro gamification on your own Total value. Claude's push-back: it rewards expensive wishes, and in a
+  gift app could feel greedy if others saw it. **Owner's choices:** levels by total value, **only you see them** (your
+  Home summary and your own lists' summary; never friends' pages, groups, Co-op lists or the web). **Gen Z names:**
+  Rising (€1,000) → Main character (€2,500) → Big wish energy (€5,000) → Iconic (€10,000, holographic). **App
+  settings › Display › "Value levels"**, on by default ("A sticker on Total value as your wishes add up.").
+- How it looks: three versions in a preview (https://claude.ai/artifact/1pBVEqa1i6htkWofk7JD87): A a sticker above
+  the amount, B the amount in the level's colour with the name under it, C a small badge. Waiting for the owner's pick.

@@ -5,6 +5,9 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **Value levels (owner, 27 November 2026; `home-and-kinds.md`, last section):** the owner is choosing A, B or C in the
+  preview https://claude.ai/artifact/1pBVEqa1i6htkWofk7JD87; build after the pick (app only, private, the Display switch).
+- **2.298:** ask whether reactions now always show at once and how "+ React" looks.
 - **2.297 (27 November 2026):** ask how "Delete wish?" feels (photo, tickbox, the one-time message) and whether the red
   buttons look right. Open risk told to the owner: the browser's gift exchange page deletes a wish without asking or Undo.
 - **2.296 (27 November 2026):** ask whether tapping a price summary now opens the right list (`prices.md`, last section).
@@ -151,6 +154,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 27 November 2026: deleting on every page, "+ React", late reactions, levels planned (2.298)
+Group and exchange pages ask "Delete wish?" (no tickbox; exchange gets Undo). "+ React" plus drawn. A reload from
+before your reaction no longer hides it (app and web). Signal: left as it is (owner). Value levels interviewed and a
+preview made; build after the owner picks A, B or C.
+
 ### 27 November 2026: "Delete wish?" with the photo, no bin animation, red buttons (2.297)
 Owner (GoWish example + a preview): the bin animation is gone; the bin asks "Delete wish?" with the photo, the name,
 "Turn on one-tap delete" and a red Delete (app and browser editor); App settings > One-tap delete. Every removing
@@ -159,8 +167,3 @@ pop-up is red. Long interview on the tickbox's words. `wish-cards.md`, last sect
 ### 27 November 2026: price summaries open the right list (2.296)
 Owner's recording: "2 wishes got cheaper" about Co-op wishes opened Price changes (own lists only). Now one
 notification per list; 2+ changes on one list open that list (own lists too, owner's choice). `prices.md`, last section.
-
-### 26 November 2026: interview on new ideas (notes only, no app change)
-Owner asked for groundbreaking ideas; 50 offered in pop-ups, the owner found many gimmicky. Chosen to plan: price
-drop for givers (opt-in), reservations run out, Shopping list by shop (own wishes, setting off by default), Historic
-low; "how many people added this" later (after Google Play). All answers: `ideas.md`, last section.
