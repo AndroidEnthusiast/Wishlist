@@ -190,7 +190,7 @@ private fun TargetDialog(w: Wish, onClose: () -> Unit) {
         },
         confirmButton = { TextButton(enabled = ok, onClick = { Targets.set(ctx, w, v); onClose() }) { Text(tr("Save")) } },
         // Remove is a choice (the outlined button), Cancel the way out (docs/STYLE.md "Dialogs", 21 November 2026).
-        secondButton = if (now != null) ({ TextButton(onClick = { Targets.set(ctx, w, null); onClose() }) { Text(tr("Remove alert")) } }) else null,
+        secondButton = if (now != null) ({ TextButton(danger = true, onClick = { Targets.set(ctx, w, null); onClose() }) { Text(tr("Remove alert")) } }) else null,
         dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
     )
 }

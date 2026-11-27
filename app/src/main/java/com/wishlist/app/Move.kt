@@ -218,7 +218,7 @@ fun MoveHost(snack: SnackbarHostState) {
             // 25 November 2026). The list underneath changes when the move is done.
             onPick = { to ->
                 val copy = MoveFlow.copying
-                motion?.fly(ids, "home", peel = copy) { MoveFlow.start(ctx, to, ids, scope) } ?: MoveFlow.start(ctx, to, ids, scope)
+                motion?.fly(ids, peel = copy) { MoveFlow.start(ctx, to, ids, scope) } ?: MoveFlow.start(ctx, to, ids, scope)
             },
             onClose = { MoveFlow.choosing = null; MoveFlow.picking = null }
         )

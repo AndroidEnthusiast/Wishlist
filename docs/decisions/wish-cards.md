@@ -140,3 +140,25 @@ Moved here from `people.md` on 18 November 2026 (its size limit); newest at the 
   screenshot check guards it; docs/STYLE.md Buttons says 8 dp.
 - Found by the GitHub check while building 2.294: leaving a Co-op list, closing it, or finding it deleted by someone
   else now also clears its reservations, on screen and on the phone (they could linger on screen after a close).
+
+## "Delete wish?" with the photo, no bin animation, red buttons (owner, 27 November 2026; built in 2.297)
+- Owner (with GoWish's pop-up as the example): "I don't like the animation of binning wishes. Remove it entirely.
+  Pressing the bin should ask you if you really want to delete the wish", less text than GoWish, the wish's image
+  centred at the top, a red button, and a way to stop being asked. Chosen from a preview
+  (https://claude.ai/artifact/2PFxq43yvBmtshVi9F5J9a).
+- **The question:** the photo centred on top (several selected: up to 3 photos fanned), **"Delete wish?"** ("Delete 5
+  wishes?"), the wish's name under it ("Teapot, Mug and 3 more"), nothing else. Buttons by the app's rule: a filled
+  red **Delete**, **Cancel** as plain words at the bottom. Cancel on several keeps the selection.
+- **The tickbox "Turn on one-tap delete"** (owner's wording after several rounds: "Don't ask again" was too vague;
+  "never" or "one-tap" make clear it lasts). A tickbox, not a switch (it only counts with Delete; Cancel ignores it),
+  above the buttons. No grey line in the pop-up: the first delete that turned it on says once "Wish moved to the bin /
+  One-tap delete is on: App settings" with Undo.
+- **App settings > "One-tap delete"** (a switch on the main page, off by default; it replaces the old "Instant delete
+  wishes", whose saved value isn't read, so everyone is asked again). Browser editor: the same pop-up and the same
+  tickbox; its Settings switch is called "One-tap delete" too, remembered in that browser only.
+- **No animation at all:** no flying card, no bin disc, Undo and Restore just put the card back (the move and copy
+  flights stay). Undo (about 4 s) and the bin (30 days) are unchanged.
+- **Red everywhere:** every "are you sure?" whose button deletes, removes, leaves, blocks or discards has the filled
+  red button, in the app and on the web pages (added: delete a category, remove a friend's list, leave from Home,
+  discard what you typed, "Delete all notifications?" Yes, Remove alert). Checks: `DeleteQuestionTest`,
+  `DialogRulesTest.buttonsThatRemoveSomethingAreRed`, `ReviewNov26Test.deletingHasNoAnimation`, `tests/e2e/t3.js`.

@@ -517,10 +517,12 @@
     $("snack").hidden = true;
   }
 
-  function showUndo(t) {
+  function showUndo(t, turnedOn) { // turnedOn: this delete turned one-tap delete on (said once)
     var s = $("snack");
     s.textContent = "";
-    s.appendChild(el("span", "stext", T("Wish moved to the bin")));
+    var msg = el("span", "stext", T("Wish moved to the bin"));
+    if (turnedOn) msg.appendChild(el("span", "ssub", T("One-tap delete is on: Settings")));
+    s.appendChild(msg);
     var u = el("button", "sbtn", T("Undo"));
     u.type = "button";
     u.addEventListener("click", function () {
@@ -535,12 +537,12 @@
   }
 
   // Moves the wish to the bin, then offers Undo for a few seconds.
-  function deleteWish(w) {
+  function deleteWish(w, turnedOn) {
     var t = trash(w.id);
     if (!t) return;
     trashed = t;
     render();
-    showUndo(t);
+    showUndo(t, turnedOn);
   }
 
   // ---- the bin (menu > Bin): restore only (owner, 4 November 2026) ----
@@ -591,15 +593,12 @@
     });
   }
 
+  // "Delete wish?" (deleteask.js, owner 27 November 2026), skipped while one-tap delete is on (Settings).
   function askDelete(w) {
     if (instant) { deleteWish(w); return; }
-    dialog({
-      title: T("Delete this wish?"),
-      body: function (b) { b.appendChild(el("p", null, T("“{0}” goes to the bin. After 30 days it’s gone for good.", w.title))); },
-      actions: [
-        { label: T("Cancel"), cls: "outline" },
-        { label: T("Delete"), cls: "danger", onClick: function () { deleteWish(w); } }
-      ]
+    window.WLDeleteAsk({ dialog: dialog, el: el, safeUrl: safeUrl, T: T }, w, function (on) {
+      if (on) { instant = true; lsSet("wl_instant", "1"); }
+      deleteWish(w, on);
     });
   }
 
@@ -1074,9 +1073,10 @@
   // spec: { title, body(container, api), actions: [{label, cls, onClick(api) -> false keeps it open, id}], cancelable }
   function dialog(spec) {
     var back = el("div", "backdrop dlg-back");
-    var d = el("div", "dlg");
+    var d = el("div", "dlg" + (spec.cls ? " " + spec.cls : ""));
     d.setAttribute("role", "dialog");
     d.setAttribute("aria-modal", "true");
+    if (spec.top) { var top = el("div", "dtop"); spec.top(top); d.appendChild(top); } // above the title (Delete wish?)
     var h = el("h2", null, spec.title);
     h.id = "dlgtitle" + (dialogs.length + 1);
     d.setAttribute("aria-labelledby", h.id);
@@ -1273,8 +1273,8 @@
         sw.checked = instant;
         row.appendChild(sw);
         var txt = el("span", "swtext");
-        txt.appendChild(el("strong", null, T("Instant delete")));
-        txt.appendChild(el("span", "hint", T("Delete without asking first. You can still undo for 10 seconds.")));
+        txt.appendChild(el("strong", null, T("One-tap delete")));
+        txt.appendChild(el("span", "hint", T("Delete wishes without asking first. Undo is still there.")));
         row.appendChild(txt);
         b.appendChild(row);
       },

@@ -55,7 +55,7 @@ All in `app/src/main/java/com/wishlist/app/` (each item as it was listed in `CLA
 - Home, the start screen (rebuilt in 2.233 from `Hub.kt`): `Home.kt` (layout only), `HomeModel.kt` (its state holder: list blocks, a list's ⋮ via `homeActions`, the open dialog, rename/delete/leave), `HomeHero.kt` (wordmark, you and your three numbers), `HomeBlocks.kt` (list blocks, grid, titles), `HomeMenus.kt` (a list's ⋮ sheet, Visibility, the dialogs), `HomeCards.kt` (gift exchange cards), `NewWishlist.kt`; checks `HomeModelTest` + `MyLists.kt` (several wishlists of your own: the open one lives in Repo's fields, the others are stored)
 - `ListSharing.kt` (who can see a list, `ListVisibility`)
 - `MostWanted.kt` ("Top wish": the star, its gold label and effect)
-- `Delete.kt` + `DeleteUi.kt` + `Trash.kt` (delete with Undo)
+- `Delete.kt` + `DeleteUi.kt` + `Trash.kt` ("Delete wish?" with the photo and One-tap delete, then Undo; no animation; web: `deleteask.js`)
 - `Bin.kt` + `BinUi.kt` (the bin, 30 days, and the "reserved gift moved to the bin" alert)
 - `Private.kt` (private wishes, the eye icon)
 - `Sorting.kt` + `Browse.kt` + `ListOrder.kt` (a sort per list and "My order": hold and move a wish to drag it, in `ListScreen.kt`)

@@ -6,13 +6,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
 /**
- * Deleting a wish. Every Delete button calls [request]: the wish goes to the bin at once (Bin.kt, 30 days) and a
- * short message with Undo takes it out again. No question first (owner, 2.95: the bin and Undo are the safety net;
- * the "Instant delete wishes" setting is gone).
+ * Deleting a wish. Every Delete button calls [request] (one wish) or [requestMany] / [requestFrom] (several): "Delete
+ * wish?" asks first, with the wish's photo (DeleteUi.kt), unless One-tap delete is on (owner, 27 November 2026; the
+ * question had been gone since 2.95). Then the wish goes to the bin at once (Bin.kt, 30 days) and a short message with
+ * Undo takes it out again. Ticking "Turn on one-tap delete" in the question turns the App settings switch on, only
+ * when Delete is tapped (Cancel changes nothing), and that one message says where to switch it off again.
  */
 object DeleteFlow {
-    /** The wish the person is being asked about, or null. */
-    var asking by mutableStateOf<Wish?>(null)
+    /** The question that is open: the wishes it is about (photos and names) and what Delete does. */
+    class Ask(val wishes: List<Wish>, internal val run: (Context) -> Unit)
+
+    /** The "Delete wish?" question that is open, or null. */
+    var asking by mutableStateOf<Ask?>(null)
         private set
 
     /** The latest delete that can still be undone from the message. */
@@ -23,23 +28,42 @@ object DeleteFlow {
     var undoableMany by mutableStateOf<List<Trashed>?>(null)
         private set
 
-    fun requestMany(c: Context, ws: List<Wish>) {
-        val done = ws.mapNotNull { Repo.trash(c, it.id) }
-        if (done.isEmpty()) return
-        undoable = null
-        undoableMany = done
+    /** True for the delete that just turned One-tap delete on: its message says where to switch it off. */
+    var justTurnedOn by mutableStateOf(false)
+        private set
+
+    /** One-tap delete (App settings): no question first. */
+    fun oneTap(c: Context): Boolean { Show.load(c); return Show[ONE_TAP] }
+
+    /** Turns One-tap delete on or off (App settings, and the question's tickbox). */
+    fun setOneTap(c: Context, on: Boolean) = Show.set(c, ONE_TAP, on)
+
+    /** Asks first, unless One-tap delete is on; [run] does the delete. */
+    private fun ask(c: Context, wishes: List<Wish>, run: (Context) -> Unit) {
+        if (wishes.isEmpty()) return
+        if (oneTap(c)) { justTurnedOn = false; run(c) } else asking = Ask(wishes, run)
+    }
+
+    /** Several wishes of the open list ([done]: after the delete, e.g. the selection ends; not on Cancel). */
+    fun requestMany(c: Context, ws: List<Wish>, done: () -> Unit = {}) = ask(c, ws) { ctx ->
+        done()
+        val gone = ws.mapNotNull { Repo.trash(ctx, it.id) }
+        if (gone.isNotEmpty()) { undoable = null; undoableMany = gone }
     }
 
     /**
      * Several wishes from All your wishes (owner, 12 November 2026): each from the list named for it, with one Undo.
      * Deleting a wish from the list that has its original takes its copies along (as always).
      */
-    fun requestFrom(c: Context, byList: Map<String, Set<Long>>) {
-        Shared.close()
-        val done = byList.flatMap { (l, ids) -> Repo.openMine(c, l); ids.mapNotNull { Repo.trash(c, it) } }
-        if (done.isEmpty()) return
-        undoable = null
-        undoableMany = done
+    fun requestFrom(c: Context, byList: Map<String, Set<Long>>, done: () -> Unit = {}) {
+        val ids = byList.values.flatten().toSet()
+        val ws = Repo.allMine(c).flatMap { it.wishes }.filter { it.id in ids }.distinctBy { it.id }
+        ask(c, ws) { ctx ->
+            done()
+            Shared.close()
+            val gone = byList.flatMap { (l, ids) -> Repo.openMine(ctx, l); ids.mapNotNull { Repo.trash(ctx, it) } }
+            if (gone.isNotEmpty()) { undoable = null; undoableMany = gone }
+        }
     }
 
     /** Puts the wishes deleted together back where they stood (the last one deleted first). */
@@ -53,18 +77,19 @@ object DeleteFlow {
         if (undoableMany === l) undoableMany = null
     }
 
-    fun request(c: Context, w: Wish) {
-        delete(c, w)
-    }
+    fun request(c: Context, w: Wish) = ask(c, listOf(w)) { delete(it, w) }
 
     fun cancel() {
         asking = null
     }
 
-    fun confirm(c: Context) {
-        val w = asking ?: return
+    /** Delete in the question; [oneTapFromNowOn]: its tickbox "Turn on one-tap delete" was ticked. */
+    fun confirm(c: Context, oneTapFromNowOn: Boolean = false) {
+        val a = asking ?: return
         asking = null
-        delete(c, w)
+        if (oneTapFromNowOn) setOneTap(c, true)
+        justTurnedOn = oneTapFromNowOn
+        a.run(c)
     }
 
     private fun delete(c: Context, w: Wish) {
@@ -83,4 +108,10 @@ object DeleteFlow {
     fun finish(t: Trashed) {
         if (undoable === t) undoable = null
     }
+
+    /** The message about One-tap delete has been shown (once). */
+    fun toldOneTap() { justTurnedOn = false }
+
+    /** Show's key for One-tap delete (off by default; the older "instant_delete" isn't read, so the question returns). */
+    const val ONE_TAP = "one_tap_delete"
 }

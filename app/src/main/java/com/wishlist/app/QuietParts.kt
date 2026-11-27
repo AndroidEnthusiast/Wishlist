@@ -84,7 +84,8 @@ fun QuietDialog(
     title: (@Composable () -> Unit)?,
     text: (@Composable () -> Unit)?,
     properties: DialogProperties,
-    secondButton: (@Composable () -> Unit)? = null
+    secondButton: (@Composable () -> Unit)? = null,
+    icon: (@Composable () -> Unit)? = null
 ) {
     val look = LocalLook.current
     val off = animationsOff(LocalContext.current)
@@ -109,6 +110,7 @@ fun QuietDialog(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            if (icon != null) Box(Modifier.fillMaxWidth().padding(bottom = 16.dp), contentAlignment = Alignment.Center) { icon() }
             if (title != null) ProvideTextStyle(MaterialTheme.typography.titleLarge.copy(textAlign = TextAlign.Center, color = look.scheme.onSurface)) {
                 Box(Modifier.fillMaxWidth().padding(bottom = 12.dp), contentAlignment = Alignment.Center) { title() }
             }

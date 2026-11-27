@@ -209,7 +209,7 @@ internal fun HomeListDialogs(model: HomeModel, snack: SnackbarHostState) {
             onDismissRequest = { model.leaving = null },
             title = { Text(tr("Leave “%s”?", item.name)) },
             text = { Text(tr("It disappears from your lists. It stays for everyone else, and you can join again with the invite link.")) },
-            confirmButton = { TextButton(onClick = { model.leaving = null; model.leave(item) }) { Text(tr("Leave")) } },
+            confirmButton = { TextButton(danger = true, onClick = { model.leaving = null; model.leave(item) }) { Text(tr("Leave")) } },
             dismissButton = { TextButton(onClick = { model.leaving = null }) { Text(tr("Cancel")) } }
         )
     }

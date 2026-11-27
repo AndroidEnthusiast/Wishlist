@@ -79,7 +79,7 @@ fun AddToMineHost(snack: SnackbarHostState) {
                         AddToMine.asking = null
                         // A copy peels off the friend's card and flies to the Home icon, like Copy (owner, 25 November 2026).
                         val add = { AddToMine.done = id to AddToMine.add(ctx, id, w) }
-                        motion?.fly(listOf(w.id), "home", peel = true) { add() } ?: add()
+                        motion?.fly(listOf(w.id), peel = true) { add() } ?: add()
                     })
                 }
             })

@@ -17,6 +17,8 @@ internal class SettingsModel(private val ctx: Context) {
     fun setShown(key: String, on: Boolean) = Show.set(ctx, key, on)
     fun setPriceDrops(on: Boolean) = Repo.setNotifyDrops(ctx, on)
     fun setPriceRises(on: Boolean) = Repo.setNotifyRises(ctx, on)
+    /** One-tap delete: wishes are deleted without "Delete wish?" first (owner, 27 November 2026). */
+    fun setOneTap(on: Boolean) = DeleteFlow.setOneTap(ctx, on)
     /** How often prices are checked: the background check is planned again at once. */
     fun setInterval(hours: Int) { Repo.setInterval(ctx, hours); Alerts.schedule(ctx, hours, true) }
     /** The currency for new wishes ("" = automatic). */

@@ -158,7 +158,7 @@ fun DeleteCategoryDialog(name: String, onDeleted: () -> Unit, onClose: () -> Uni
             )
         },
         confirmButton = {
-            TextButton(onClick = { Repo.removeCat(ctx, name); onDeleted(); onClose() }) { Text(tr("Delete")) }
+            TextButton(danger = true, onClick = { Repo.removeCat(ctx, name); onDeleted(); onClose() }) { Text(tr("Delete")) }
         },
         dismissButton = { TextButton(onClick = onClose) { Text(tr("Cancel")) } }
     )

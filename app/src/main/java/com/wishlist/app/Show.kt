@@ -26,7 +26,8 @@ object Show {
         "nt_bday" to false,      // friends' birthdays
         "nt_msg" to true,        // new messages
         "nt_group" to true,      // wishlist groups (2.108): invites, "No thanks", removed from a group
-        "nt_react" to true       // reactions on your wishes (2.142): one summary a day at most, in the evening
+        "nt_react" to true,      // reactions on your wishes (2.142): one summary a day at most, in the evening
+        "one_tap_delete" to false // App settings: delete wishes without "Delete wish?" first (owner, 27 November 2026)
     )
 
     private val state = HashMap<String, androidx.compose.runtime.MutableState<Boolean>>()

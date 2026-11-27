@@ -5,6 +5,8 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.297 (27 November 2026):** ask how "Delete wish?" feels (photo, tickbox, the one-time message) and whether the red
+  buttons look right. Open risk told to the owner: the browser's gift exchange page deletes a wish without asking or Undo.
 - **2.296 (27 November 2026):** ask whether tapping a price summary now opens the right list (`prices.md`, last section).
 - **Owner, 26 November 2026: four ideas chosen to plan** (`ideas.md`, last section): price drop for
   givers, reservations run out, Shopping list by shop, Historic low. Interview on details and risks first, one at a
@@ -149,6 +151,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 27 November 2026: "Delete wish?" with the photo, no bin animation, red buttons (2.297)
+Owner (GoWish example + a preview): the bin animation is gone; the bin asks "Delete wish?" with the photo, the name,
+"Turn on one-tap delete" and a red Delete (app and browser editor); App settings > One-tap delete. Every removing
+pop-up is red. Long interview on the tickbox's words. `wish-cards.md`, last section.
+
 ### 27 November 2026: price summaries open the right list (2.296)
 Owner's recording: "2 wishes got cheaper" about Co-op wishes opened Price changes (own lists only). Now one
 notification per list; 2+ changes on one list open that list (own lists too, owner's choice). `prices.md`, last section.
@@ -157,9 +164,3 @@ notification per list; 2+ changes on one list open that list (own lists too, own
 Owner asked for groundbreaking ideas; 50 offered in pop-ups, the owner found many gimmicky. Chosen to plan: price
 drop for givers (opt-in), reservations run out, Shopping list by shop (own wishes, setting off by default), Historic
 low; "how many people added this" later (after Google Play). All answers: `ideas.md`, last section.
-
-### 26 November 2026: inviting people, one neat sheet; whole list names (2.295)
-Owner's recording: the Co-op share pop-up was busy (naked link, three ways to share) and missed the friend just
-invited. Now one sheet (people with status, "+ Add friends", "Share invite link") for Co-op lists, groups and
-exchanges, one "Invite people" in menus and pages, pickers without invited friends. List titles shrink to fit the
-small bar. Not checkable here: the real phone and fonts (the test phone draws a plain font).

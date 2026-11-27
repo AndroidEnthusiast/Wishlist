@@ -1002,3 +1002,9 @@ became a fade-through (reshaping looked muddled; tell the owner). Not checkable 
 Owner's recordings. 2.293: clear bin on a disc, delete waits for the bin, Undo lands without a jump, move fixed too.
 2.294: Co-op lists (app and browser editor) open with the last known reservations, no "Reserve" flash; buttons side
 by side 8 dp apart (Friends, update banner, gift exchange), and the layout inspector now fails touching buttons.
+
+### 26 November 2026: inviting people, one neat sheet; whole list names (2.295)
+Owner's recording: the Co-op share pop-up was busy (naked link, three ways to share) and missed the friend just
+invited. Now one sheet (people with status, "+ Add friends", "Share invite link") for Co-op lists, groups and
+exchanges, one "Invite people" in menus and pages, pickers without invited friends. List titles shrink to fit the
+small bar. Not checkable here: the real phone and fonts (the test phone draws a plain font).

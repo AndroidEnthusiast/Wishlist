@@ -57,14 +57,16 @@ fun AlertDialog(
     text: (@Composable () -> Unit)? = null,
     properties: DialogProperties = DialogProperties(),
     // A second choice next to the main one ("Keep both", …): the outlined button under it (docs/STYLE.md "Dialogs").
-    secondButton: (@Composable () -> Unit)? = null
+    secondButton: (@Composable () -> Unit)? = null,
+    // What the question is about, centred above the title: the wish's photo in "Delete wish?" (owner, 27 November 2026).
+    icon: (@Composable () -> Unit)? = null
 ) {
     // Buttons inside the dialog's text are the compact size (LocalInDialog, docs/STYLE.md).
     val body: (@Composable () -> Unit)? = if (text == null) null else inDialog(text)
     // One layout in every style (owner, 21 November 2026: "uniformity for buttons and clicks"): the buttons stacked and
     // full width, the main one filled, a second choice outlined, Cancel / Close plain words at the bottom. Before,
     // Gen Z chaos had words in a row and two buttons in one slot made the second invisible in Quiet (Move or copy).
-    QuietDialog(onDismissRequest, confirmButton, modifier, dismissButton, title, body, properties, secondButton)
+    QuietDialog(onDismissRequest, confirmButton, modifier, dismissButton, title, body, properties, secondButton, icon)
 }
 
 /** True inside a top bar: Quiet's icon buttons there sit in soft round buttons (2.210). */

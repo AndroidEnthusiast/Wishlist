@@ -48,24 +48,23 @@ import kotlinx.coroutines.launch
 /*
  * Wish cards that move to where they go (owner, 25 November 2026: "animations that show clearly the user is doing
  * something", and "similar effects should be the same"; docs/decisions/look.md, last section). One family each:
- *  - leaving: the card shrinks and tips into where it goes: the bin (its own bin button, or the selection bar's
- *    Delete) when deleted, the Home icon in the bottom bar when moved to another list;
+ *  - leaving: the card shrinks and flies to the Home icon in the bottom bar when moved to another list;
  *  - a copy peels off: Copy and Add to my wishlist lift a copy off the card, which flies to the Home icon (the
  *    original stays);
- *  - backwards: Undo of a delete brings the card out of the bin again;
  *  - arriving: a new wish (saved, imported, made from a screenshot, added from a friend's list, copied) drops into
  *    its place in the list.
  * A card is drawn into its own layer ([motionCard]), so the flight shows a real picture of it, drawn above the
  * screen ([FlightLayer]) while the list underneath has already changed. Kept in the app frame's state holder
  * ([LocalCardMotion], AppScreen.kt), not in a global object. "Remove animations": nothing flies, it just happens.
+ * Deleting has no animation (owner, 27 November 2026: "I don't like the animation of binning wishes. Remove it
+ * entirely"): "Delete wish?" asks first (DeleteUi.kt) and the card is simply gone.
  */
 
-/** One card in flight. [toBin]: draw the bin at [to] (its lid opens and shuts). [peel]: lift first. [back]: reversed. */
+/** One card in flight to the Home icon. [peel]: a copy lifts first. */
 @Stable
 class Flight(
-    val id: Long, val image: ImageBitmap, val from: Rect, val to: Rect,
-    val toBin: Boolean, val peel: Boolean, val back: Boolean = false, val home: Boolean = false,
-    // What changes the data once the card is in the bin (a delete waits for it, so the list doesn't jump underneath).
+    val id: Long, val image: ImageBitmap, val from: Rect, val to: Rect, val peel: Boolean,
+    // What changes the data once the card is at Home (a move waits for it, so the list doesn't jump underneath).
     val onLand: (() -> Unit)? = null
 )
 
@@ -73,9 +72,7 @@ class Flight(
 class CardMotion(private val scope: CoroutineScope, private val off: () -> Boolean) {
     internal val layers = HashMap<Long, Snapper>()
     internal val bounds = HashMap<Long, Rect>()
-    internal val bins = HashMap<Long, Rect>()
     internal var homeAt: Rect? = null
-    internal var deleteAt: Rect? = null
 
     var flights by mutableStateOf(listOf<Flight>())
         private set
@@ -86,76 +83,42 @@ class CardMotion(private val scope: CoroutineScope, private val off: () -> Boole
     private val seen = HashSet<Long>()
     private var batchAt = 0L
     private var batchN = 0
-    /** Cards kept invisible while their picture flies back to them (Undo). */
+    /** Cards kept invisible while they fly to Home (a move). */
     var hidden by mutableStateOf(setOf<Long>())
         private set
-    /** Cards whose own bin button is left out while their picture is taken (the real bin is drawn in its place). */
-    var binless by mutableStateOf(setOf<Long>())
-        private set
-    private var lastDelete: List<Flight> = emptyList()
-
-    private fun target(kind: String, id: Long): Rect? = when (kind) {
-        "bin" -> bins[id]
-        "delete" -> deleteAt
-        else -> homeAt
-    }
 
     /**
-     * The cards [ids] go to [kind] ("bin": their own bin button; "delete": the selection bar's Delete; "home": the
-     * Home icon); [peel]: a copy lifts off and the card stays. [then] changes the data at once (the flight covers it).
+     * The cards [ids] fly to the Home icon; [peel]: a copy lifts off and the card stays. A copy changes the data at
+     * once ([then]); a move when the card reaches Home.
      */
-    fun fly(ids: Collection<Long>, kind: String, peel: Boolean = false, then: () -> Unit) {
+    fun fly(ids: Collection<Long>, peel: Boolean = false, then: () -> Unit) {
         if (off()) { then(); return }
         scope.launch {
-            if (kind == "bin") binless = binless + ids
             val made = ids.mapNotNull { id ->
                 val layer = layers[id] ?: return@mapNotNull null
                 val from = bounds[id] ?: return@mapNotNull null
-                val to = target(kind, id) ?: return@mapNotNull null
+                val to = homeAt ?: return@mapNotNull null
                 val image = try { layer.snap() } catch (e: Exception) {
                     // No picture (a card off screen, a phone that can't): it simply happens without a flight.
                     if (e is kotlinx.coroutines.CancellationException) throw e
                     null
                 } ?: return@mapNotNull null
-                Flight(id, image, from, to, toBin = kind != "home", peel = peel, home = kind == "home")
+                Flight(id, image, from, to, peel = peel)
             }
-            // A move can take a moment online: the moving cards stay hidden while they fly (and a little after), so
-            // they are never on screen twice; if the move fails they simply show again.
-            if (kind == "home" && !peel) hidden = hidden + made.map { it.id }
             if (peel || made.isEmpty()) {
                 then()
-                binless = binless - ids.toSet()
                 if (made.isEmpty()) return@launch
                 flights = flights + made
                 return@launch
             }
-            // Moved: like a delete, its place stays until it reaches the Home icon (no jump underneath).
-            if (kind == "home") {
-                var moved = false
-                val go = { if (!moved) { moved = true; then() } }
-                flights = flights + made.map { Flight(it.id, it.image, it.from, it.to, toBin = false, peel = false, home = true, onLand = go) }
-                return@launch
-            }
-            // Into the bin (owner, 26 November 2026: the list jumped underneath): the card leaves its place empty while
-            // it flies, and the wish is deleted when it is in the bin; then the list closes the gap.
+            // Moved: its place stays until it reaches the Home icon (no jump underneath). A move can take a moment
+            // online: the moving cards stay hidden while they fly (and a little after), so they are never on screen
+            // twice; if the move fails they simply show again.
             hidden = hidden + made.map { it.id }
-            binless = binless - ids.toSet()
-            lastDelete = made
-            var done = false
-            val once = { if (!done) { done = true; then() } }
-            flights = flights + made.map { Flight(it.id, it.image, it.from, it.to, toBin = true, peel = false, onLand = once) }
+            var moved = false
+            val go = { if (!moved) { moved = true; then() } }
+            flights = flights + made.map { Flight(it.id, it.image, it.from, it.to, peel = false, onLand = go) }
         }
-    }
-
-    /** Undo of a delete: the cards come back out of the bin to where they were. */
-    fun back(ids: Collection<Long>, then: () -> Unit) {
-        val l = lastDelete.filter { it.id in ids }
-        lastDelete = emptyList()
-        if (off() || l.isEmpty()) { then(); return }
-        hidden = hidden + l.map { it.id }
-        then()
-        // The same path played backwards (the bin stays at its place).
-        flights = flights + l.map { Flight(it.id, it.image, it.from, it.to, toBin = true, peel = false, back = true) }
     }
 
     /**
@@ -174,11 +137,9 @@ class CardMotion(private val scope: CoroutineScope, private val off: () -> Boole
     internal fun landed(f: Flight) {
         flights = flights - f
         f.onLand?.invoke()
-        if (f.home) {
-            homeBounce++
-            // A move can take a moment online: the card stays hidden a little longer; if it failed, it shows again.
-            if (!f.peel) scope.launch { delay(1500); hidden = hidden - f.id }
-        } else if (f.back || f.onLand != null) hidden = hidden - f.id
+        homeBounce++
+        // A move can take a moment online: the card stays hidden a little longer; if it failed, it shows again.
+        if (!f.peel) scope.launch { delay(1500); hidden = hidden - f.id }
     }
 }
 
@@ -193,7 +154,7 @@ fun rememberCardMotion(): CardMotion {
 
 /**
  * A wish card that can fly and arrive: it is drawn into its own layer (for the picture in flight), says where it is,
- * hides while its picture flies back to it, and drops into its place when it is new.
+ * hides while it is being moved, and drops into its place when it is new.
  */
 fun Modifier.motionCard(id: Long): Modifier = composed {
     val m = LocalCardMotion.current ?: return@composed this
@@ -262,23 +223,10 @@ internal class Snapper {
     }
 }
 
-/** Where a card's own bin button is (its picture flies into it). */
-fun Modifier.motionBin(id: Long): Modifier = composed {
-    val m = LocalCardMotion.current ?: return@composed this
-    val off = id in m.binless
-    onGloballyPositioned { m.bins[id] = it.boundsInRoot() }.graphicsLayer { alpha = if (off) 0f else 1f }
-}
-
 /** Where the Home icon of the bottom bar is (moved and copied wishes fly to it). */
 fun Modifier.motionHome(): Modifier = composed {
     val m = LocalCardMotion.current ?: return@composed this
     onGloballyPositioned { m.homeAt = it.boundsInRoot() }
-}
-
-/** Where the selection bar's Delete is (several deleted wishes fly into it). */
-fun Modifier.motionDelete(): Modifier = composed {
-    val m = LocalCardMotion.current ?: return@composed this
-    onGloballyPositioned { m.deleteAt = it.boundsInRoot() }
 }
 
 /** The Home icon's small bounce when something lands on it. */
@@ -297,35 +245,15 @@ fun Modifier.homeBounce(): Modifier = composed {
 /** Above every screen: the cards in flight (they never take taps). */
 @Composable
 fun FlightLayer(m: CardMotion) {
-    val cs = androidx.compose.material3.MaterialTheme.colorScheme
-    // Undo follows the card's place as the list settles, so it lands exactly where the card shows (no jump).
-    // The bin's disc stands out from the page in light and dark (dark: a lighter tone than the page).
-    val disc = if (LocalLook.current.dark) cs.surfaceContainerHighest else cs.surface
-    m.flights.forEach { f -> key(f) { FlightView(f, cs.onSurface, disc, { m.bounds[f.id] }) { m.landed(f) } } }
+    m.flights.forEach { f -> key(f) { FlightView(f) { m.landed(f) } } }
 }
 
 @Composable
-private fun FlightView(f: Flight, ink: Color, disc: Color, live: () -> Rect?, onDone: () -> Unit) {
+private fun FlightView(f: Flight, onDone: () -> Unit) {
     val t = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
-        // The bin has several beats (disc, lid, card, lid, bump, disc), each with its own ease, so its clock runs evenly.
-        t.animateTo(1f, tween(if (f.toBin) 700 else if (f.peel) 680 else 560, easing = if (f.toBin) androidx.compose.animation.core.LinearEasing else FastOutSlowInEasing))
+        t.animateTo(1f, tween(if (f.peel) 680 else 560, easing = FastOutSlowInEasing))
         onDone()
     }
-    Canvas(Modifier.fillMaxSize()) {
-        val p = if (f.back) 1f - t.value else t.value
-        if (f.toBin) {
-            // Into a clear bin (owner, 26 November 2026: "the trashcan animation isn't clear"): it pops up on its own disc
-            // where the card's bin button was, the lid opens, the card shrinks to the bin's opening and sinks in (cut off
-            // at the rim), the lid shuts with a bump, and the disc goes. Undo plays it backwards to where the card is now.
-            val bin = binAt(f.to)
-            val from = if (f.back) live() ?: f.from else f.from
-            drawDisc(bin, discScale(p), disc)
-            // The card travels from 10 % to 62 % of the time, easing in and out, so you see it go in.
-            val go = FastOutSlowInEasing.transform(((p - 0.1f) / 0.52f).coerceIn(0f, 1f))
-            val rim = bin.center.y - 3f * density
-            if (go > 0.6f) clipRect(bottom = rim) { drawIntoBin(f, from, bin, go) } else drawIntoBin(f, from, bin, go)
-            drawBin(bin, lidOpen(p), bump(p, f.back), ink)
-        } else drawFlight(f, p)
-    }
+    Canvas(Modifier.fillMaxSize()) { drawFlight(f, t.value) }
 }

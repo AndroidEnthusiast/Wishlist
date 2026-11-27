@@ -341,7 +341,7 @@ fun FriendScreen(
             title = { Text(tr("Remove this list?")) },
             text = { Text(tr("It disappears from your menu. Your reservations stay reserved. You can add it again with its code.")) },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(danger = true, onClick = {
                     st.removeList()
                     onRemoved()
                 }) { Text(tr("Remove")) }

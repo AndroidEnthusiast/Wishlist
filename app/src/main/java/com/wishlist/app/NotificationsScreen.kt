@@ -67,7 +67,7 @@ fun NotificationsScreen(snack: SnackbarHostState, onOpen: (String) -> Unit) {
             onDismissRequest = { askClear = false },
             title = { Text(tr("Delete all notifications?")) },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(danger = true, onClick = {
                     askClear = false
                     val gone = Notifications.clear(ctx)
                     scope.launch {

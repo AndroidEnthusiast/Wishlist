@@ -45,51 +45,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/* How the cards in flight and the bin are drawn (CardMotion.kt; owner, 25 and 26 November 2026). */
+/* How the cards in flight are drawn (CardMotion.kt; owner, 25 and 26 November 2026; the bin's drawing went with the
+ * delete animation, owner 27 November 2026). */
 
 internal val LinearOutSlowIn = androidx.compose.animation.core.CubicBezierEasing(0.2f, 0f, 0.2f, 1f)
-
-/** The bin drawn during a delete: 30 dp, centred on the card's bin button (or the selection bar's Delete). */
-internal fun DrawScope.binAt(r: Rect): Rect {
-    val half = 15f * density
-    return Rect(r.center.x - half, r.center.y - half, r.center.x + half, r.center.y + half)
-}
-
-/** The disc under the bin: it pops up first and goes last. */
-internal fun discScale(p: Float): Float {
-    val inP = (p / 0.12f).coerceIn(0f, 1f)
-    val outP = ((p - 0.84f) / 0.16f).coerceIn(0f, 1f)
-    val e = 1f - (1f - inP) * (1f - inP)
-    return e * (1f - outP * outP)
-}
-
-internal fun DrawScope.drawDisc(bin: Rect, s: Float, fill: Color) {
-    if (s <= 0f) return
-    val r = 28f * density * s
-    // A soft shadow, then the disc: the bin reads as an object above whatever is behind it.
-    for (k in 1..4) drawCircle(Color.Black.copy(alpha = 0.05f * s), r + k * 1.5f * density, bin.center + Offset(0f, 2f * density))
-    drawCircle(fill, r, bin.center)
-}
-
-/** The card going into the bin at [go]: along a curve, shrinking to the bin's opening, turning a little. */
-internal fun DrawScope.drawIntoBin(f: Flight, from: Rect, bin: Rect, go: Float) {
-    val a = from.center
-    val b = Offset(bin.center.x, bin.center.y - 2f * density)
-    val mid = Offset((a.x + b.x) / 2f, minOf(a.y, b.y) - 24f * density)
-    val q = 1f - go
-    val c = Offset(q * q * a.x + 2 * q * go * mid.x + go * go * b.x, q * q * a.y + 2 * q * go * mid.y + go * go * b.y)
-    val end = (20f * density / from.width).coerceAtMost(1f)
-    // It shrinks evenly along the way, so it is still a card when it reaches the bin, then sinks in.
-    val s = 1f - (1f - end) * go
-    val w = from.width * s
-    val h = from.height * s
-    rotate(14f * go, c) {
-        drawImage(
-            f.image, dstOffset = IntOffset((c.x - w / 2f).toInt(), (c.y - h / 2f).toInt()),
-            dstSize = IntSize(w.toInt().coerceAtLeast(1), h.toInt().coerceAtLeast(1))
-        )
-    }
-}
 
 /** How far the card has gone at [p]: a peeled copy lifts first (to 0.25), then flies. */
 internal fun DrawScope.drawFlight(f: Flight, p: Float) {
@@ -123,46 +82,5 @@ internal fun DrawScope.drawFlight(f: Flight, p: Float) {
             f.image, dstOffset = IntOffset((c.x - w / 2f).toInt(), (c.y - h / 2f).toInt()),
             dstSize = IntSize(w.toInt().coerceAtLeast(1), h.toInt().coerceAtLeast(1)), alpha = alpha.coerceIn(0f, 1f)
         )
-    }
-}
-
-/** The lid opens just after the disc is up and shuts once the card is in. */
-internal fun lidOpen(p: Float): Float {
-    val open = ((p - 0.08f) / 0.12f).coerceIn(0f, 1f)
-    val shut = ((p - 0.6f) / 0.1f).coerceIn(0f, 1f)
-    return open * (1f - shut)
-}
-
-/** The small bump as the lid shuts. */
-internal fun bump(p: Float, back: Boolean): Float {
-    if (back) return 0f
-    val x = ((p - 0.68f) / 0.1f).coerceIn(0f, 1f)
-    return kotlin.math.sin(x * Math.PI).toFloat() * 0.16f
-}
-
-/** The bin's size at [r], in units of 24 (the same as [drawBin]). */
-internal fun DrawScope.binUnit(r: Rect): Float = minOf(r.width, r.height) / 24f
-
-/** Our own bin (the CardDelete icon's shape) at [r], its lid turned open by [open] (0..1). */
-internal fun DrawScope.drawBin(r: Rect, open: Float, bump: Float, ink: Color) {
-    val u = binUnit(r)
-    val o = Offset(r.center.x - 12f * u, r.center.y - 12f * u)
-    val st = Stroke(2f * u, cap = StrokeCap.Round, join = StrokeJoin.Round)
-    scale(1f + bump, r.center) {
-        // The can.
-        val can = Path().apply {
-            moveTo(o.x + 6f * u, o.y + 7f * u); lineTo(o.x + 7f * u, o.y + 19f * u)
-            lineTo(o.x + 17f * u, o.y + 19f * u); lineTo(o.x + 18f * u, o.y + 7f * u)
-        }
-        drawPath(can, ink, style = st)
-        // The lid with its handle, turning up around its left end.
-        rotate(-52f * open, Offset(o.x + 4f * u, o.y + 7f * u)) {
-            val lid = Path().apply {
-                moveTo(o.x + 4f * u, o.y + 7f * u); lineTo(o.x + 20f * u, o.y + 7f * u)
-                moveTo(o.x + 9f * u, o.y + 7f * u); lineTo(o.x + 9f * u, o.y + 5f * u)
-                lineTo(o.x + 15f * u, o.y + 5f * u); lineTo(o.x + 15f * u, o.y + 7f * u)
-            }
-            drawPath(lid, ink, style = st)
-        }
     }
 }

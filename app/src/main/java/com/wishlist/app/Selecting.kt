@@ -46,18 +46,18 @@ fun SelectingFlag(selecting: Boolean) {
 fun SelectionBar(onMove: (() -> Unit)?, onDelete: () -> Unit) {
     FloatingBar {
         if (onMove != null) SelectionAction(AppIcons.Swap, tr("Move or copy…"), onMove)
-        SelectionAction(AppIcons.Delete, tr("Delete"), onDelete, Modifier.motionDelete())
+        SelectionAction(AppIcons.Delete, tr("Delete"), onDelete)
     }
 }
 
 @Composable
-private fun RowScope.SelectionAction(icon: ImageVector, label: String, onClick: () -> Unit, iconMod: Modifier = Modifier) {
+private fun RowScope.SelectionAction(icon: ImageVector, label: String, onClick: () -> Unit) {
     val ink = MaterialTheme.colorScheme.onSurface
     Column(
         Modifier.weight(1f).fillMaxHeight().padding(vertical = 4.dp).clip(RoundedCornerShape(20.dp)).clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
     ) {
-        Icon(icon, null, tint = ink, modifier = Modifier.size(24.dp).then(iconMod))
+        Icon(icon, null, tint = ink, modifier = Modifier.size(24.dp))
         Text(
             label, style = MaterialTheme.typography.labelMedium, color = ink, maxLines = 1, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = 2.dp)

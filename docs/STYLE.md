@@ -39,7 +39,8 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
   one), two side by side when they belong together; full width only for a dialog's or form's own bottom buttons.
   **Plain coloured words** (`LinkButton`) only for going somewhere ("All price changes ›", a licence's text, "I
   already have lists"), a way out outside a dialog (Close, Skip, Cancel) and in a top bar ("Select all", "Done").
-  **Red** only for removing, leaving, blocking and deleting.
+  **Red** only for removing, leaving, blocking and deleting; the button of every "are you sure?" that does one of
+  those is the filled red one (`danger = true`; owner, 27 November 2026; `DialogRulesTest`).
 - **Buttons side by side are 8 dp apart** (owner, 26 November 2026: "Share" and "Add a friend" touched): use
   `Arrangement.spacedBy(8.dp)` or a `Spacer`; the layout inspector fails a screen where two are under 6 dp apart.
 
@@ -81,7 +82,8 @@ new screen, dialog and feature follows this guide; when a rule here doesn't fit,
   word, and one line on what it does; tap = choose. One that isn't possible stays, greyed, its line saying why.
 - **Picking from a list** (a wishlist, a person): plain rows, tap = pick; "+ New …" last, in your colour.
 - **Show what it's about:** a dialog or picker that acts on a wish shows it on top (photo, name, price; several: their
-  photos and "3 wishes").
+  photos and "3 wishes"). A centred pop-up puts the photo in `AlertDialog(icon = …)`, above the title
+  ("Delete wish?").
 - **Every menu is a bottom sheet** (owner, 21 November 2026; `MenuSheet.kt`, `StyleRulesTest`): every ⋮ (a wish, a
   list, a chat, a group, a gift exchange, a friend), the + menu, a chat message's long press, a photo's "Take a photo /
   Choose a photo". Rows in one group, each with its icon in a tinted tile (`DropdownMenuItem(leadingIcon = …)`), red

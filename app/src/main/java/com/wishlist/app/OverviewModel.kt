@@ -39,7 +39,8 @@ internal class OverviewState(private val ctx: Context) {
         } else if (action == "delete") {
             val byList = if (list != null) mapOf(list to ids)
             else ids.groupBy { Repo.originalOf(ctx, it) ?: Repo.openMine }.mapValues { it.value.toSet() }
-            DeleteFlow.requestFrom(ctx, byList)
+            // The selection ends once deleted; Cancel keeps it (owner, 27 November 2026).
+            DeleteFlow.requestFrom(ctx, byList) { picked = emptySet() }
         }
     }
 

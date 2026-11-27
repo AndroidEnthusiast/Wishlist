@@ -30,6 +30,20 @@ class DialogRulesTest {
         }.toList()
     }
 
+    /**
+     * Every "are you sure?" whose main button (or second choice) deletes, removes, leaves, blocks or discards has the
+     * filled red button (owner, 27 November 2026: "buttons that remove or delete something should have a red color").
+     */
+    @Test fun buttonsThatRemoveSomethingAreRed() {
+        val removing = Regex("""tr\("(Delete|Remove|Leave|Block|Empty|Unfriend|Discard)[^"]*"\)""")
+        val missing = slots().filter { (_, slot, code) -> slot != "dismissButton" && removing.containsMatchIn(code) && !code.contains("danger = true") }
+            .map { "${it.first} ${it.second}" }
+        assertEquals("not red: $missing", emptyList<String>(), missing)
+        val price = File(dir, "Prices.kt").readText()
+        assertTrue("Remove alert", price.contains("TextButton(danger = true, onClick = { Targets.set(ctx, w, null); onClose() }) { Text(tr(\"Remove alert\")) }"))
+        assertTrue("Delete all notifications: Yes", File(dir, "NotificationsScreen.kt").readText().contains("TextButton(danger = true, onClick = {\n                    askClear = false"))
+    }
+
     @Test fun neverSeveralButtonsInOneSpot() {
         // Two buttons side by side in one spot made Move invisible (21 November 2026).
         val bad = slots().filter { (_, _, code) -> Regex("""\b(Row|Column)\s*[({]""").containsMatchIn(code) }

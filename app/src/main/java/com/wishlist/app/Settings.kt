@@ -131,6 +131,12 @@ private fun SettingsMain(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                 ValueRow(icon = { Icon(AppIcons.ListIcon, null) }, label = tr("Display"), value = null) { onOpen("display") }
                 ValueRow(icon = { Icon(AppIcons.Gift, null) }, label = tr("About"), value = appVersion(ctx)) { onOpen("about") }
             }
+            // One-tap delete (owner, 27 November 2026): also turned on from "Delete wish?", whose message points here.
+            val model = rememberSettings()
+            Show.load(ctx)
+            SettingsGroup("") {
+                SettingSwitch(tr("One-tap delete"), tr("Delete wishes without asking first. Undo is still there."), Show[DeleteFlow.ONE_TAP]) { model.setOneTap(it) }
+            }
         }
     }
 }

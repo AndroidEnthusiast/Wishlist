@@ -92,7 +92,6 @@ fun HomeScreen(
     val go = LocalGo.current
     val places = LocalPlaces.current
     val ctx = LocalContext.current
-    val cardMotion = LocalCardMotion.current
     val scope = rememberCoroutineScope()
     val cs = MaterialTheme.colorScheme
     // What the screen shows besides the wishes, and what a tap changes (ListModel.kt, the rebuild of 19 November 2026).
@@ -260,10 +259,8 @@ fun HomeScreen(
             if (selecting) SelectionBar(
                 onMove = { MoveFlow.ask(model.picked); model.picked = emptySet() },
                 onDelete = {
-                    val ws = Repo.wishes.filter { it.id in model.picked }
-                    // Each card goes into the bar's Delete; the bar stays until they are in (owner, 26 November 2026).
-                    val done = { model.picked = emptySet(); DeleteFlow.requestMany(ctx, ws) }
-                    cardMotion?.fly(ws.map { it.id }, "delete") { done() } ?: done()
+                    // "Delete 3 wishes?" first; the selection stays if you cancel (owner, 27 November 2026).
+                    DeleteFlow.requestMany(ctx, Repo.wishes.filter { it.id in model.picked }) { model.picked = emptySet() }
                 }
             )
         },

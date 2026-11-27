@@ -315,6 +315,8 @@ Moved here word for word from `docs/decisions/screens.md` on 12 November 2026 (i
   lid opens, card shrinks evenly and drops in, lid shuts with a bump, disc goes); Undo follows the card's live place.
   Same flaws fixed elsewhere: a move keeps its place until it reaches Home, moved and copied cards shrink evenly to
   the Home icon's size, several deleted wishes keep the selection bar until they are in. Check: `ReviewNov26Test`.
+- **Changed (owner, 27 November 2026, 2.297):** the delete animation (1, and Undo playing it backwards) is removed
+  entirely; deleting asks "Delete wish?" first. `wish-cards.md`, last section.
 
 ## A list's name stays whole in the small top bar (owner, 26 November 2026; built in 2.295)
 - Owner (screenshots of "Clothing Magdal…" after scrolling): keep the big title that moves up and gets smaller, but

@@ -235,7 +235,7 @@ fun FormSheetHost(
     if (asking) AlertDialog(
         onDismissRequest = { asking = false },
         title = { Text(tr("Discard what you typed?")) },
-        confirmButton = { TextButton(onClick = { asking = false; host.close() }) { Text(tr("Discard")) } },
+        confirmButton = { TextButton(danger = true, onClick = { asking = false; host.close() }) { Text(tr("Discard")) } },
         dismissButton = { TextButton(onClick = { asking = false }) { Text(tr("Keep editing")) } }
     )
 }

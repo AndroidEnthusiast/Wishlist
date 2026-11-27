@@ -89,7 +89,7 @@ fun OverviewScreen(
         bottomBar = {
             if (selecting) SelectionBar(
                 onMove = { start("move", st.picked); st.picked = emptySet() },
-                onDelete = { start("delete", st.picked); st.picked = emptySet() }
+                onDelete = { start("delete", st.picked) }
             )
         },
         snackbarHost = { AppSnackbarHost(snack) }

@@ -38,7 +38,7 @@ const delayPuts = (fake, ms) => { fake.hooks.wl_sh_put_item = async () => { awai
   await a.page.getByRole("button", { name: "Save", exact: true }).click();
   // B turns on instant delete and deletes the novel
   await drawerItem(b, "#meBtn");
-  await dlg(b).getByLabel("Instant delete").check();
+  await dlg(b).getByLabel("One-tap delete").check();
   await b.page.getByRole("button", { name: "Save", exact: true }).click();
   await card(b, 1001).getByLabel("Delete", { exact: true }).click();
   await settle(a); await settle(b);
@@ -149,7 +149,7 @@ const delayPuts = (fake, ms) => { fake.hooks.wl_sh_put_item = async () => { awai
   check("cancel: nothing uploaded", t.fake.log.filter(x => x.fn === "POST").length === before);
   // delete the wish with the picture: picture goes at the end
   await drawerItem(t, "#meBtn");
-  await dlg(t).getByLabel("Instant delete").check();
+  await dlg(t).getByLabel("One-tap delete").check();
   await t.page.getByRole("button", { name: "Save", exact: true }).click();
   await t.page.locator(".card", { hasText: "Poster" }).getByLabel("Delete", { exact: true }).click();
   check("picture kept during undo time", Object.keys(t.fake.photos).length === 1);

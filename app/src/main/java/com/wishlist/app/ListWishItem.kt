@@ -151,9 +151,8 @@ internal fun androidx.compose.foundation.lazy.grid.LazyGridItemScope.ListWishIte
                     if (rs == null) IconButton(onClick = { shareItem(ctx, w, idea = inShared) }) {
                         Icon(AppIcons.CardShare, tr("Share"), tint = look.cardMuted(w.id), modifier = Modifier.size(ico))
                     }
-                    // The card tips into this bin (CardMotion.kt, owner 25 November 2026).
-                    val motion = LocalCardMotion.current
-                    IconButton(onClick = { motion?.fly(listOf(w.id), "bin") { DeleteFlow.request(ctx, w) } ?: DeleteFlow.request(ctx, w) }, modifier = Modifier.motionBin(w.id)) {
+                    // "Delete wish?" first, unless One-tap delete is on (DeleteUi.kt, owner 27 November 2026).
+                    IconButton(onClick = { DeleteFlow.request(ctx, w) }) {
                         Icon(AppIcons.CardDelete, tr("Delete"), tint = look.cardMuted(w.id), modifier = Modifier.size(ico))
                     }
                 }
