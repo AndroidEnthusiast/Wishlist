@@ -125,8 +125,10 @@ internal fun HomeHero(onProfile: () -> Unit) {
                 Box(Modifier.width(1.dp).fillMaxHeight(0.6f).background(line))
                 HomeStat(mine.size.toString(), if (mine.size == 1) tr("Wishlist") else tr("Wishlists"), Modifier.weight(1f)) { places.homePage = "lists" }
                 Box(Modifier.width(1.dp).fillMaxHeight(0.6f).background(line))
-                // Total value can't be tapped (owner).
-                HomeStat(homeTotal(all), tr("Total value"), Modifier.weight(1.4f), null)
+                // Total value can't be tapped (owner). Its level (owner, 27 November 2026; ValueLevels.kt): only here and
+                // on your own lists, off in App settings > Display.
+                val level = if (Show[ValueLevels.SHOW]) ValueLevels.ofHome(all) else null
+                HomeStat(homeTotal(all), tr("Total value"), Modifier.weight(1.4f), level, null)
             }
         }
         // A person's big name in the title font, like a wishlist's name (owner, 21 November 2026).
@@ -144,15 +146,16 @@ internal fun HomeHero(onProfile: () -> Unit) {
 
 /** One of the three blocks next to your photo: the number (never cut off: it shrinks, FitText) and its name. */
 @Composable
-private fun HomeStat(value: String, label: String, modifier: Modifier, onClick: (() -> Unit)?) {
+private fun HomeStat(value: String, label: String, modifier: Modifier, level: ValueLevel? = null, onClick: (() -> Unit)?) {
     val look = LocalLook.current
     Column(
         modifier.clip(RoundedCornerShape(10.dp)).then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(horizontal = 4.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        if (level != null) ValueLevelTag(level, small = true, modifier = Modifier.padding(bottom = 2.dp))
         // The card's own ink (dark on the bright cards of Gen Z chaos).
-        FitText(value, MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontFamily = look.display), look.cardInk(5L))
+        FitText(value, MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontFamily = look.display), look.cardInk(5L), Modifier.levelLine(level, 64.dp))
         // With large phone text the word shrinks a little to fit, like the number (the review of 20 November 2026:
         // it crowded the next block; two lines broke words in half).
         FitText(label, MaterialTheme.typography.bodySmall, look.cardMuted(5L))

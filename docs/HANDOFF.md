@@ -5,8 +5,8 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
-- **Value levels (owner, 27 November 2026; `home-and-kinds.md`, last section):** the owner is choosing A, B or C in the
-  preview https://claude.ai/artifact/1pBVEqa1i6htkWofk7JD87; build after the pick (app only, private, the Display switch).
+- **2.299 (27 November 2026):** ask how the value levels look on the phone (label, icon, the line's glide) in the owner's
+  style, and whether the Home card got too tall (`home-and-kinds.md`, last section).
 - **2.298:** ask whether reactions now always show at once and how "+ React" looks.
 - **2.297 (27 November 2026):** ask how "Delete wish?" feels (photo, tickbox, the one-time message) and whether the red
   buttons look right. Open risk told to the owner: the browser's gift exchange page deletes a wish without asking or Undo.
@@ -154,6 +154,11 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 27 November 2026: value levels built (2.299)
+Two more previews: gradients (no green/red), drawn icons on top (sun, star, bolt, crown), Iconic holographic, a line
+under the amount gliding three times. Only your own Home and list totals; Display > Value levels. 2.298's first
+build stopped on the web size rule (together.js shrank: limit lowered), rebuilt fine.
+
 ### 27 November 2026: deleting on every page, "+ React", late reactions, levels planned (2.298)
 Group and exchange pages ask "Delete wish?" (no tickbox; exchange gets Undo). "+ React" plus drawn. A reload from
 before your reaction no longer hides it (app and web). Signal: left as it is (owner). Value levels interviewed and a
@@ -163,7 +168,3 @@ preview made; build after the owner picks A, B or C.
 Owner (GoWish example + a preview): the bin animation is gone; the bin asks "Delete wish?" with the photo, the name,
 "Turn on one-tap delete" and a red Delete (app and browser editor); App settings > One-tap delete. Every removing
 pop-up is red. Long interview on the tickbox's words. `wish-cards.md`, last section.
-
-### 27 November 2026: price summaries open the right list (2.296)
-Owner's recording: "2 wishes got cheaper" about Co-op wishes opened Price changes (own lists only). Now one
-notification per list; 2+ changes on one list open that list (own lists too, owner's choice). `prices.md`, last section.

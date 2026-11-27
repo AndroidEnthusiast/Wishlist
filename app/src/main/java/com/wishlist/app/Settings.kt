@@ -188,6 +188,8 @@ private fun SettingsPage(page: String, snack: SnackbarHostState, onBack: () -> U
                     // Home (owner, 18 November 2026): the three blocks next to your photo, and the tabs (Personal | Co-op | Groups | Exchanges since 21 November 2026).
                     SettingSwitch(tr("Home summary"), tr("Wishes, wishlists and total value next to your photo."), Show["home_summary"]) { model.setShown("home_summary", it) }
                     SettingSwitch(tr("Tabs on Home"), tr("Personal, Co-op, Groups and Exchanges: swipe between them."), Show["home_swipe"]) { model.setShown("home_swipe", it) }
+                    // Value levels (owner, 27 November 2026): only on your own Total value; on at first.
+                    SettingSwitch(tr("Value levels"), tr("A sticker on Total value as your wishes add up."), Show[ValueLevels.SHOW]) { model.setShown(ValueLevels.SHOW, it) }
                 }
                 else -> AboutPage(snack)
             }

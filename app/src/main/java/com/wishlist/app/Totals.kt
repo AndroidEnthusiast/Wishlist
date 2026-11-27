@@ -8,8 +8,7 @@ package com.wishlist.app
  * up per currency ("€120.00 + $30.00"). Null when no wish has a price.
  */
 fun totalValue(wishes: List<Wish>): String? {
-    val sums = wishes.filter { it.price != null }.groupBy { it.currency }
-        .map { (cur, ws) -> cur to ws.sumOf { it.price ?: 0.0 } }
+    val sums = listSums(wishes)
     if (sums.isEmpty()) return null
     return sums.sortedByDescending { it.second }.joinToString(" + ") { (cur, sum) -> money(sum, cur) }
 }
@@ -21,9 +20,7 @@ fun totalValue(wishes: List<Wish>): String? {
  * others. No prices at all: 0 in your currency.
  */
 internal fun homeTotal(ws: List<Wish>): String {
-    val sums = ws.filter { !it.got && it.bin == 0L && it.price != null }.groupBy { it.currency }
-        .map { (cur, l) -> cur to l.sumOf { (it.price ?: 0.0) * it.qty.coerceAtLeast(1) } }
-        .sortedByDescending { it.second }
+    val sums = homeSums(ws)
     // With cents (owner, 7 November 2026).
     if (sums.isEmpty()) return money(0.0, localCurrency())
     return money(sums[0].second, sums[0].first) + if (sums.size > 1) "+" else ""
@@ -37,3 +34,12 @@ internal fun wholeMoney(p: Double, cur: String): String = try {
 } catch (e: Exception) {
     Math.round(p).toString()
 }
+
+/** A list's total per currency, as its summary adds it up (every wish with a price). */
+internal fun listSums(wishes: List<Wish>): List<Pair<String, Double>> = wishes.filter { it.price != null }.groupBy { it.currency }
+    .map { (cur, ws) -> cur to ws.sumOf { it.price ?: 0.0 } }
+
+/** Home's total per currency, biggest first: still wished for, a 2× wish twice (see [homeTotal]). */
+internal fun homeSums(ws: List<Wish>): List<Pair<String, Double>> = ws.filter { !it.got && it.bin == 0L && it.price != null }
+    .groupBy { it.currency }.map { (cur, l) -> cur to l.sumOf { (it.price ?: 0.0) * it.qty.coerceAtLeast(1) } }
+    .sortedByDescending { it.second }

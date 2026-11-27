@@ -68,10 +68,12 @@ fun ListCoverPicture(cover: ListCover, modifier: Modifier = Modifier) {
  * [counts] false (gift lists, or the summary switched off) the card shows only that line.
  */
 @Composable
-fun ListSummaryCard(wishes: List<Wish>, modifier: Modifier = Modifier, occasion: String? = null, counts: Boolean = true) {
+fun ListSummaryCard(wishes: List<Wish>, modifier: Modifier = Modifier, occasion: String? = null, counts: Boolean = true, levels: Boolean = false) {
     val look = LocalLook.current
     val id = 11L
     val total = totalValue(wishes)
+    // The level of your own list's total ([levels]: your own list, and App settings > Display > Value levels on).
+    val level = if (levels && counts) ValueLevels.ofList(wishes) else null
     val count = wishes.size
     val pulse = remember { Animatable(1f) }
     var last by remember { mutableIntStateOf(count) }
@@ -98,8 +100,9 @@ fun ListSummaryCard(wishes: List<Wish>, modifier: Modifier = Modifier, occasion:
             }
             Box(Modifier.width(1.dp).height(32.dp).background(look.cardMuted(id).copy(alpha = 0.3f)))
             Column(Modifier.weight(0.62f), horizontalAlignment = Alignment.CenterHorizontally) {
+                if (level != null) ValueLevelTag(level, small = false, modifier = Modifier.padding(bottom = 2.dp))
                 // Never cut off (2.209): a little smaller instead.
-                FitText(total ?: "–", MaterialTheme.typography.titleLarge.number(look).copy(fontWeight = FontWeight.Bold), look.cardInk(id), Modifier.fillMaxWidth())
+                FitText(total ?: "–", MaterialTheme.typography.titleLarge.number(look).copy(fontWeight = FontWeight.Bold), look.cardInk(id), Modifier.fillMaxWidth().levelLine(level, 96.dp))
                 Text(tr("Total value"), style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id))
             }
         }
@@ -252,7 +255,7 @@ fun CoverPreview(img: String, edit: HeroEdit, onClose: () -> Unit) {
                 // The photo exactly as in the frame now (worked out from the edit, as on the list).
                 HeroPicture(img, edit, Modifier.fillMaxWidth().height(150.dp).clip(RoundedCornerShape(24.dp)))
                 val occ = remember(Occasions.version) { Occasions.line(Occasions.ofOpen(ctx)) }
-                ListSummaryCard(wishes, occasion = occ, counts = Shared.active == null)
+                ListSummaryCard(wishes, occasion = occ, counts = Shared.active == null, levels = Shared.active == null && Show[ValueLevels.SHOW])
                 wishes.take(4).forEach { w ->
                     val id = w.id
                     Row(

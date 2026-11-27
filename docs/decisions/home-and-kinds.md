@@ -55,7 +55,7 @@
   wishlists" to the Co-op form (fewer options was the point). Check: `CoopFormTest`.
 
 
-## Value levels on Total value (owner, 27 November 2026; planned, not built)
+## Value levels on Total value (owner, 27 November 2026; built in 2.299)
 - Owner's idea: micro gamification on your own Total value. Claude's push-back: it rewards expensive wishes, and in a
   gift app could feel greedy if others saw it. **Owner's choices:** levels by total value, **only you see them** (your
   Home summary and your own lists' summary; never friends' pages, groups, Co-op lists or the web). **Gen Z names:**
@@ -63,3 +63,13 @@
   settings › Display › "Value levels"**, on by default ("A sticker on Total value as your wishes add up.").
 - How it looks: three versions in a preview (https://claude.ai/artifact/1pBVEqa1i6htkWofk7JD87): A a sticker above
   the amount, B the amount in the level's colour with the name under it, C a small badge. Waiting for the owner's pick.
+- **Chosen after two more previews (built in 2.299):** the green and red of the first sketch looked like price drops
+  and rises, so every level is a **gradient** (Rising sky blue, Main character gold, Big wish energy purple, Iconic
+  holographic with a slow shimmer, which the owner loved: "keep that the way it is"). Each has a **drawn icon on top
+  in the middle** of its label (rising sun, star, lightning bolt; Iconic a bigger crown), no arrows (they read as
+  price changes). **A thin line under the amount** in the level's colours, its light gliding along it **three
+  times when the screen opens**, then resting (owner's pick over a moving edge, a sheen and a glow; still with Remove
+  animations). Other currencies: the same numbers close to the euro, converted at fixed rates for far-off ones
+  (yen, kroner, złoty…; an unknown currency gets no level). Gen Z chaos gives the label and icon its outline and hard
+  shadow. Code: `ValueLevels.kt`, `ValueLevelViews.kt`; checks `ValueLevelsTest`, `ValueLevelScreenshotTest`.
+

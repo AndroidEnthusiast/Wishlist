@@ -320,7 +320,7 @@ fun HomeScreen(
                     // switched off, the card shows only the occasion.
                     val occ = Occasions.line(Occasions.ofOpen(ctx))
                     val counts = !inShared && Show["show_summary"]
-                    if (counts || occ != null) ListSummaryCard(Repo.wishes, occasion = occ, counts = counts)
+                    if (counts || occ != null) ListSummaryCard(Repo.wishes, occasion = occ, counts = counts, levels = Show[ValueLevels.SHOW])
                     filters(live)
                 }
             }
