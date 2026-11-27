@@ -101,7 +101,9 @@ fun ListSummaryCard(wishes: List<Wish>, modifier: Modifier = Modifier, occasion:
             Box(Modifier.width(1.dp).height(32.dp).background(look.cardMuted(id).copy(alpha = 0.3f)))
             val go = LocalGo.current
             Column(
-                Modifier.weight(0.62f).then(if (level != null) Modifier.clip(RoundedCornerShape(12.dp)).clickable(onClickLabel = tr(level.label)) { go(Deep.Levels) } else Modifier),
+                // A tap opens the levels page, also before the first level (owner: serendipity, no hint); [levels] is off
+                // on other lists and with Value levels switched off.
+                Modifier.weight(0.62f).then(if (levels && counts) Modifier.clip(RoundedCornerShape(12.dp)).clickable(onClickLabel = tr("Value levels")) { go(Deep.Levels) } else Modifier),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 if (level != null) ValueLevelTag(level, small = false, modifier = Modifier.padding(bottom = 2.dp))

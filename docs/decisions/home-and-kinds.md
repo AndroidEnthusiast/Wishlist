@@ -106,4 +106,7 @@
   whose); a Co-op list's people only when they are also friends. On the web: glowing reactions on every page and the
   holo edge or band on the friends' page; no rings on the web (it shows no profile photos). Server: three columns on
   wl_profiles and `wl_pf_iconic`, `wl_ic_people`, `wl_ic_list` in `supabase-together.sql` (version 2).
+- **Always tappable (owner, 27 November 2026, 2.301: "lean on serendipity"):** the Total value tile opens the levels
+  page also before the first level, with no hint; below €1,000 the page says "Your journey starts here". With Value
+  levels switched off nothing happens on a tap.
 

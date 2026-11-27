@@ -34,7 +34,7 @@ internal class LevelsState(val amount: Double, val cur: String, val total: Strin
 
 /** The big line at the top of the page. */
 internal fun levelHeadline(l: ValueLevel?): String = when (l) {
-    null -> tr("Your first level is close")
+    null -> tr("Your journey starts here")
     ValueLevel.RISING -> tr("You’re rising")
     ValueLevel.MAIN -> tr("You’re the main character")
     ValueLevel.ENERGY -> tr("Big wish energy")

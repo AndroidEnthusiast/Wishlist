@@ -132,8 +132,9 @@ internal fun HomeHero(onProfile: () -> Unit) {
                 androidx.compose.runtime.LaunchedEffect(reached) { Iconic.seen(ctx, reached, homeSums(all).firstOrNull()?.first.orEmpty()) }
                 val level = if (Show[ValueLevels.SHOW]) reached else null
                 val go = LocalGo.current
-                // With a level, a tap opens the levels page (owner, 27 November 2026).
-                HomeStat(homeTotal(all), tr("Total value"), Modifier.weight(1.4f), level, if (level != null) ({ go(Deep.Levels) }) else null)
+                // A tap opens the levels page, also before the first level, without a hint (owner, 27 November 2026:
+                // "lean on serendipity"); not with Value levels switched off.
+                HomeStat(homeTotal(all), tr("Total value"), Modifier.weight(1.4f), level, if (Show[ValueLevels.SHOW]) ({ go(Deep.Levels) }) else null)
             }
         }
         // A person's big name in the title font, like a wishlist's name (owner, 21 November 2026).
