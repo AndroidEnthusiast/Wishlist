@@ -88,6 +88,10 @@ class IconicTest {
         val page = File("src/main/java/com/wishlist/app/LevelsScreen.kt").readText()
         assertTrue(page.contains("tr(\"Something special unlocks here\")"))
         assertFalse("no prize names before Iconic", page.contains("Holo ring"))
+        // Owner, 27 November 2026 ("mine looks flat"): no "Only you can see this", "Your level" instead of "You're here",
+        // a tick on passed levels instead of "Reached", locked levels all grey (Iconic too), the golden padlock.
+        assertFalse(page.contains("Only you can see this")); assertFalse(page.contains("tr(\"Reached\")) {"))
+        assertTrue(page.contains("LevelChip(tr(\"Your level\")") && page.contains("passed = reached") && page.contains("Padlock(0f"))
         val settings = File("src/main/java/com/wishlist/app/Settings.kt").readText()
         assertTrue("App settings › Iconic only once reached", settings.contains("if (Iconic.reached) ValueRow"))
     }

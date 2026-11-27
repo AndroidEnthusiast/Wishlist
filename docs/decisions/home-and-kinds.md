@@ -109,4 +109,13 @@
 - **Always tappable (owner, 27 November 2026, 2.301: "lean on serendipity"):** the Total value tile opens the levels
   page also before the first level, with no hint; below €1,000 the page says "Your journey starts here". With Value
   levels switched off nothing happens on a tap.
+- **Livelier, like the preview (owner, 27 November 2026, 2.302: "mine looks flat"):** solid pastel icon circles
+  (were see-through and muddy on dark); the progress bar in your own level's colours; "€2,020" in bold with the next
+  level's icon after it; locked levels all grey, Iconic's crown too (it looked unlocked); the headline in the
+  style's title font (Quiet: Fraunces, the page had forced the text font); no "Only you can see this"; **"Your level"**
+  on your level's card (was "You're here"); **a tick on the icon** of passed levels (was "Reached"); the golden padlock
+  of a reserved gift, bigger, at "Something special unlocks here". **Open:** an icon at the top before the first
+  level: owner turned down a flag (maybe), seedling, sparkle, footsteps, paper plane, gift, wishing star, dawn,
+  ticket, egg, rocket, spark, a filling heart or star, a gift being wrapped, a list with ticks; wants a "starter level"
+  icon that shows some progress. Ask again with new ideas.
 

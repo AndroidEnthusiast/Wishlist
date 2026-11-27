@@ -116,11 +116,16 @@ fun ValueLevelTag(level: ValueLevel, small: Boolean, modifier: Modifier = Modifi
 
 /** The level's own icon, drawn here (docs: icons only from Material or our own code). */
 @Composable
-internal fun LevelIcon(level: ValueLevel, size: Dp) {
+internal fun LevelIcon(level: ValueLevel, size: Dp, grey: Color? = null) {
     val path = remember(level) { PathParser().parsePathString(ICONS.getValue(level)).toPath() }
     Canvas(Modifier.size(size)) {
         val u = this.size.width / 24f
         val p = Path().apply { addPath(path); transform(androidx.compose.ui.graphics.Matrix().apply { scale(u, u) }) }
+        // [grey]: a level not reached yet (the levels page), all in one grey.
+        if (grey != null) {
+            if (level == ValueLevel.RISING) drawPath(p, grey, style = Stroke(2.4f * u, cap = StrokeCap.Round)) else drawPath(p, grey)
+            return@Canvas
+        }
         when (level) {
             ValueLevel.RISING -> drawPath(p, Color(0xFF2A8BE8), style = Stroke(2.4f * u, cap = StrokeCap.Round))
             ValueLevel.MAIN -> drawPath(p, Color(0xFFF2A91F))

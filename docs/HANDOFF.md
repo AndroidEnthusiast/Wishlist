@@ -5,6 +5,8 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **Levels page starter icon (open):** before the first level the page has no top icon; owner wants a "starter level" icon
+  that shows some progress and turned down many ideas (`home-and-kinds.md`, last section). Ask with new ideas.
 - **2.301:** Total value always opens the levels page (serendipity, owner). Ask if it feels right below €1,000.
 - **2.300 (27 November 2026):** did the owner run `supabase-together.sql` (version 2)? Ask how the levels page, the "You're
   Iconic" pop-up and the three prizes feel (`home-and-kinds.md`, last section: tell what Claude decided while building).

@@ -65,12 +65,13 @@ fun LevelsScreen(onBack: () -> Unit, onPrizes: () -> Unit) {
             // Your level, big.
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 st.level?.let { LevelDisc(it, 72.dp) }
+                // The style's own title font (Quiet: Fraunces, like your profile name).
                 Text(
-                    levelHeadline(st.level), style = MaterialTheme.typography.headlineSmall, fontWeight = look.titleWeight,
-                    fontFamily = look.display, textAlign = TextAlign.Center, color = cs.onBackground
+                    levelHeadline(st.level), style = MaterialTheme.typography.headlineMedium, fontWeight = look.titleWeight,
+                    textAlign = TextAlign.Center, color = cs.onBackground
                 )
                 Text(
-                    tr("Every wish you add moves you up a level. Only you can see this."), style = MaterialTheme.typography.bodyMedium,
+                    tr("Every wish you add moves you up a level."), style = MaterialTheme.typography.bodyMedium,
                     color = cs.onSurfaceVariant, textAlign = TextAlign.Center
                 )
             }
@@ -83,16 +84,27 @@ fun LevelsScreen(onBack: () -> Unit, onPrizes: () -> Unit) {
                     Text(tr("Your wishes are worth"), style = MaterialTheme.typography.bodyMedium, color = look.cardMuted(21L), modifier = Modifier.weight(1f))
                     Text(st.total, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = look.cardInk(21L))
                 }
-                val colours = (st.next ?: ValueLevel.ICONIC).colours()
+                // In your own level's colours (the first level's before you reach it), as in the preview.
+                val colours = (st.level ?: ValueLevel.RISING).colours()
                 Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(look.cardMuted(21L).copy(alpha = 0.15f))) {
                     Box(Modifier.fillMaxWidth(st.progress).height(8.dp).clip(RoundedCornerShape(4.dp)).drawBehind { drawRect(Brush.horizontalGradient(colours)) })
                 }
                 val n = st.next
-                Text(
-                    if (n == null || st.toGo == null) tr("You’ve reached the top.")
-                    else tr("%1\$s to go until %2\$s", wholeMoney(st.toGo, st.cur), tr(n.label)),
-                    style = MaterialTheme.typography.bodyMedium, color = look.cardInk(21L)
-                )
+                if (n == null || st.toGo == null) Text(tr("You’ve reached the top."), style = MaterialTheme.typography.bodyMedium, color = look.cardInk(21L))
+                else Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    // The amount in bold and the next level's icon after it (owner: as lively as the preview).
+                    val amount = wholeMoney(st.toGo, st.cur)
+                    val line = tr("%1\$s to go until %2\$s", amount, tr(n.label))
+                    Text(
+                        androidx.compose.ui.text.buildAnnotatedString {
+                            val at = line.indexOf(amount)
+                            append(line)
+                            if (at >= 0) addStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Bold), at, at + amount.length)
+                        },
+                        style = MaterialTheme.typography.bodyMedium, color = look.cardInk(21L), modifier = Modifier.weight(1f, fill = false)
+                    )
+                    LevelIcon(n, 18.dp)
+                }
             }
             // The four levels.
             ValueLevel.entries.forEach { l -> LevelRow(l, st, onPrizes) }
@@ -100,14 +112,28 @@ fun LevelsScreen(onBack: () -> Unit, onPrizes: () -> Unit) {
     }
 }
 
-/** The level's icon on a soft disc in its colours. */
+/**
+ * The level's icon on a solid pastel disc (owner, 27 November 2026: the see-through discs looked muddy on dark).
+ * [locked]: not reached yet, all grey (Iconic too). [passed]: a level below yours, with a tick.
+ */
 @Composable
-internal fun LevelDisc(l: ValueLevel, size: androidx.compose.ui.unit.Dp) {
-    val c = l.colours()
-    Box(
-        Modifier.size(size).clip(CircleShape).drawBehind { drawRect(Brush.linearGradient(c.map { it.copy(alpha = 0.22f) })) },
-        contentAlignment = Alignment.Center
-    ) { LevelIcon(l, size * 0.5f) }
+internal fun LevelDisc(l: ValueLevel, size: androidx.compose.ui.unit.Dp, locked: Boolean = false, passed: Boolean = false) {
+    val cs = MaterialTheme.colorScheme
+    val pastel = l.colours().map { androidx.compose.ui.graphics.lerp(it, androidx.compose.ui.graphics.Color.White, if (l == ValueLevel.ICONIC) 0.55f else 0.82f) }
+    Box(Modifier.size(size)) {
+        Box(
+            Modifier.size(size).clip(CircleShape)
+                .drawBehind { if (locked) drawRect(cs.onSurface.copy(alpha = 0.09f)) else drawRect(Brush.linearGradient(pastel + pastel.first())) },
+            contentAlignment = Alignment.Center
+        ) {
+            if (l == ValueLevel.ICONIC && !locked) IconicCrown(size * 0.62f)
+            else LevelIcon(l, size * 0.5f, grey = if (locked) cs.onSurfaceVariant.copy(alpha = 0.55f) else null)
+        }
+        if (passed) Box(
+            Modifier.align(Alignment.BottomEnd).size(size * 0.38f).clip(CircleShape).background(l.colours().first()),
+            contentAlignment = Alignment.Center
+        ) { Icon(AppIcons.Check, tr("Reached"), tint = androidx.compose.ui.graphics.Color.White, modifier = Modifier.size(size * 0.26f)) }
+    }
 }
 
 @Composable
@@ -118,16 +144,19 @@ private fun LevelRow(l: ValueLevel, st: LevelsState, onPrizes: () -> Unit) {
     val locked = !here && !reached
     Column(
         Modifier.fillMaxWidth().lookCard(look, 22L + l.ordinal, look.cardShape(22L, small = true))
+            // Iconic's card has a soft holographic tint, also before it's reached (as in the preview).
+            .then(if (l == ValueLevel.ICONIC) Modifier.clip(look.cardShape(22L, small = true))
+                .drawBehind { drawRect(Brush.linearGradient(HoloColours.map { it.copy(alpha = 0.12f) })) } else Modifier)
             .then(if (here) Modifier.border(2.dp, l.colours().first(), look.cardShape(22L, small = true)) else Modifier)
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Box(Modifier.alpha(if (locked && l != ValueLevel.ICONIC) 0.45f else 1f)) { LevelDisc(l, 52.dp) }
+            LevelDisc(l, 52.dp, locked = locked, passed = reached)
             Column(Modifier.weight(1f).alpha(if (locked) 0.7f else 1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(tr(l.label), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.ExtraBold, color = look.cardInk(22L))
-                    if (here) LevelChip(tr("You’re here"), strong = true) else if (reached) LevelChip(tr("Reached"), strong = false)
+                    if (here) LevelChip(tr("Your level"), strong = true)
                 }
                 Text(tr("From %s", wholeMoney(st.startOf(l), st.cur)), style = MaterialTheme.typography.bodySmall, color = look.cardMuted(22L))
                 Text(levelLine(l), style = MaterialTheme.typography.bodyMedium, color = look.cardInk(22L))
@@ -140,7 +169,8 @@ private fun LevelRow(l: ValueLevel, st: LevelsState, onPrizes: () -> Unit) {
                 Modifier.fillMaxWidth().border(1.5.dp, look.cardMuted(22L).copy(alpha = 0.35f), RoundedCornerShape(14.dp)).padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Icon(AppIcons.Lock, null, tint = look.cardMuted(22L), modifier = Modifier.size(18.dp))
+                // The golden padlock of a reserved gift, a bit bigger (owner, 27 November 2026).
+                Padlock(0f, Modifier.size(26.dp))
                 Text(tr("Something special unlocks here"), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = look.cardInk(22L))
             }
         }
