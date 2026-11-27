@@ -5,6 +5,8 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **Levels page + Iconic prize** (owner, 27 November 2026; `home-and-kinds.md`, last section): preview
+  https://claude.ai/artifact/8NADXG5DPKVKqS1BN9qh5n waiting for approval; then build all at once (Supabase script too).
 - **2.299 (27 November 2026):** ask how the value levels look on the phone (label, icon, the line's glide) in the owner's
   style, and whether the Home card got too tall (`home-and-kinds.md`, last section).
 - **2.298:** ask whether reactions now always show at once and how "+ React" looks.

@@ -73,3 +73,23 @@
   (yen, kroner, złoty…; an unknown currency gets no level). Gen Z chaos gives the label and icon its outline and hard
   shadow. Code: `ValueLevels.kt`, `ValueLevelViews.kt`; checks `ValueLevelsTest`, `ValueLevelScreenshotTest`.
 
+## The levels page and the Iconic prize (owner, 27 November 2026; planned, preview, not built)
+- **Tapping your badge** (Home or a list) opens a page (preview https://claude.ai/artifact/8NADXG5DPKVKqS1BN9qh5n):
+  your level's icon and "You're the main character", the line "Every wish you add moves you up a level. Only you can
+  see this.", your total with a progress bar and "€2,020 to go until Big wish energy", then the four levels with
+  their amount and one-liner: Rising "Your wishlist is officially taking off." · Main character "All eyes on your
+  wishlist." · Big wish energy "Dreaming big looks good on you." · Iconic "Legendary taste, unlocked." with a lock
+  and "Something special unlocks here" (**the prizes stay a secret** until you reach Iconic; no "tap to see").
+- **The badge follows your total** (owner chose this over "reached is yours to keep"), but **the Iconic prize, once
+  reached, stays yours** even when the total drops.
+- **The Iconic prize, three things in one** (owner): a **holo ring round your profile photo** (seen by everyone who
+  sees your photo: friends, groups, chats), a **holographic share card** when sharing a wishlist, and **glowing
+  reactions** (your reactions on friends' wishes glow). No holo app theme. Claude's warnings, accepted: the ring tells
+  friends your list is worth €10,000+; the server can't check the mark (the total is worked out on the phone), so it
+  could be faked: decoration only. Ring and glow need the mark online (a Supabase script, app and web pages).
+- **Reaching Iconic:** a pop-up "You're Iconic" ("Your wishlist just hit €10,000. Legendary taste deserves a little
+  shine:"), the three prizes each with a picture and a line, "Love it", "Choose what's on", and "You can change
+  these any time in App settings › Iconic."
+- **App settings › Iconic** (only once you're Iconic): a switch per prize, each with a **Preview** button that shows
+  the prize before you turn it on. **Build everything at once** (owner), after the preview is approved.
+
