@@ -86,6 +86,11 @@ async function attach(ctx) {
   rpc("wl_push_set", { p_id: "BBBBBBBBBBBBBBBBBBBB", p_token: "tokB_tokB_tokB_tokB_", p_push: "pushB" });
   rpc("wl_reserve_item", { p_code: "ZQELSTW2", p_item: 1, p_device: "benphone1" });
   rpc("wl_rx_set", { p_code: "ZQELSTW2", p_item: 2, p_id: "BBBBBBBBBBBBBBBBBBBB", p_token: "tokB_tokB_tokB_tokB_", p_device: "", p_name: "", p_emoji: "😍" });
+  // The Iconic prize (owner, 27 November 2026): Ben's reactions glow; Zoe (the list's owner) shows the holo edge.
+  rpc("wl_pf_iconic", { p_id: "BBBBBBBBBBBBBBBBBBBB", p_token: "tokB_tokB_tokB_tokB_", p_ring: false, p_glow: true, p_list: false });
+  rpc("wl_pf_save", { p_id: "ZZZZZZZZZZZZZZZZZZZZ", p_token: "tokZ_tokZ_tokZ_tokZ_", p_name: "Zoe" });
+  rpc("wl_pf_lists", { p_id: "ZZZZZZZZZZZZZZZZZZZZ", p_token: "tokZ_tokZ_tokZ_tokZ_", p_lists: [{ code: "ZQELSTW2", token: "ownerZ_ownerZ_ownerZ" }] });
+  rpc("wl_pf_iconic", { p_id: "ZZZZZZZZZZZZZZZZZZZZ", p_token: "tokZ_tokZ_tokZ_tokZ_", p_ring: false, p_glow: false, p_list: true });
 
   const browser = await chromium.launch();
   const web = await serveWeb(path.join(ROOT, "web"));
@@ -107,6 +112,9 @@ async function attach(ctx) {
   const scarf = s.page.locator(".card", { hasText: "Scarf" });
   check("Ben's reaction shows as 😍 1", (await scarf.locator(".wlt-chip").innerText()).replace(/\s+/g, "") === "😍1");
   check("+ react pill", (await scarf.locator(".wlt-add").count()) === 1);
+  check("an Iconic member's reaction glows", await scarf.locator(".wlt-chip").evaluate(b => b.classList.contains("glow")));
+  await s.page.waitForSelector(".holoband", { timeout: 4000 }).catch(() => {});
+  check("an Iconic member's list: the holo band (no cover)", await s.page.locator(".holoband").isVisible());
   check("the title stays text", (await s.page.locator(".card", { hasText: "Lamp <b>x</b>" }).count()) === 1);
   // React: a first name is asked once.
   await scarf.locator(".wlt-add").click();

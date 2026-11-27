@@ -105,7 +105,7 @@ internal fun GxNote(t: String, extra: (@Composable () -> Unit)? = null) {
 internal fun GxPersonRow(m: GxMember, isMe: Boolean, organiser: Boolean, trailing: (@Composable () -> Unit)?) {
     val cs = MaterialTheme.colorScheme
     Row(Modifier.padding(horizontal = 16.dp, vertical = 4.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Avatar(if (isMe) Friends.myPhoto else Friends.photos[m.id], m.name, 36.dp)
+        Avatar(if (isMe) Friends.myPhoto else Friends.photos[m.id], m.name, 36.dp, ring = Iconic.ringFor(if (isMe) null else m.id))
         Column(Modifier.weight(1f).padding(start = 10.dp)) {
             Text(if (isMe) tr("You") else m.name.ifBlank { tr("Someone") }, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
             val bits = listOfNotNull(if (organiser) tr("Organiser") else null, if (m.waiting) tr("Waiting for the draw") else null)
@@ -252,7 +252,7 @@ internal fun GxInviteDialog(x: Exchange, snack: SnackbarHostState, onClose: () -
         else SheetGroup(friends.map { f ->
             {
                 SheetRow(
-                    { Avatar(Friends.photos[f.id], f.name, 32.dp) }, f.name.ifBlank { tr("Someone") },
+                    { Avatar(Friends.photos[f.id], f.name, 32.dp, ring = Iconic.ringFor(f.id)) }, f.name.ifBlank { tr("Someone") },
                     { picked = if (f.id in picked) picked - f.id else picked + f.id },
                     chosen = f.id in picked, tile = false
                 )

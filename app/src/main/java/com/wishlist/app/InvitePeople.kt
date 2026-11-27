@@ -120,7 +120,7 @@ fun PeopleShareSheet(
                 val rows = people.map<CoopPerson, @Composable () -> Unit> { p ->
                     {
                         SheetRow(
-                            { Avatar(Friends.photos[p.id], p.name, 32.dp) }, p.name.ifBlank { tr("Someone") }, {},
+                            { Avatar(Friends.photos[p.id], p.name, 32.dp, ring = Iconic.ringFor(p.id)) }, p.name.ifBlank { tr("Someone") }, {},
                             detail = if (p.joined) tr("On the list") else tr("Invited"), tile = false
                         )
                     }

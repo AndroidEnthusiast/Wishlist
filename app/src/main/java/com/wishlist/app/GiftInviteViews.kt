@@ -90,7 +90,7 @@ fun GiftInviteFriendsDialog(l: SharedList, onClose: () -> Unit) {
         } else SheetGroup(left.map { f ->
             {
                 SheetRow(
-                    { Avatar(Friends.photos[f.id], f.name, 32.dp) }, f.name.ifBlank { tr("Someone") }, { st.toggle(f.id) },
+                    { Avatar(Friends.photos[f.id], f.name, 32.dp, ring = Iconic.ringFor(f.id)) }, f.name.ifBlank { tr("Someone") }, { st.toggle(f.id) },
                     chosen = f.id in st.picked, tile = false, enabled = !st.busy
                 )
             }

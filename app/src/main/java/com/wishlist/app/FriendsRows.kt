@@ -196,7 +196,7 @@ internal fun PersonRow(p: Person, line: String, meeting: (() -> Unit)? = null, b
         Row(verticalAlignment = Alignment.CenterVertically) {
             // Approve (owner, 25 November 2026): your picture slides in until it overlaps theirs, with a small bump,
             // then [meeting] goes on (the request becomes a friend).
-            if (meeting != null) MeetingPictures(p, meeting) else Avatar(Friends.photos[p.id], p.name, 48.dp)
+            if (meeting != null) MeetingPictures(p, meeting) else Avatar(Friends.photos[p.id], p.name, 48.dp, ring = Iconic.ringFor(p.id))
             // The name steps aside while the pictures meet, so yours never slides over it.
             val words by androidx.compose.animation.core.animateFloatAsState(if (meeting != null) 0f else 1f, androidx.compose.animation.core.tween(120), label = "words")
             Column(Modifier.weight(1f).padding(start = 12.dp).graphicsLayer { alpha = words }) {
@@ -223,7 +223,7 @@ internal fun FriendRow(f: Person, onOpen: () -> Unit, onUnfriend: () -> Unit, on
                 .padding(start = 12.dp, top = 12.dp, bottom = 12.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Avatar(Friends.photos[f.id], f.name, 52.dp)
+            Avatar(Friends.photos[f.id], f.name, 52.dp, ring = Iconic.ringFor(f.id))
             Column(Modifier.weight(1f).padding(start = 12.dp)) {
                 Text(f.name.ifBlank { tr("Someone") }, style = MaterialTheme.typography.titleMedium, color = look.cardInk(id), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 // Their birthday when it's within 60 days, and wishes they added since you last looked (owner, 2.139).
@@ -278,12 +278,12 @@ private fun MeetingPictures(p: Person, done: () -> Unit) {
         done()
     }
     Box(Modifier.width(48.dp + 30.dp)) {
-        Box(Modifier.graphicsLayer { scaleX = bump.value; scaleY = bump.value }) { Avatar(Friends.photos[p.id], p.name, 48.dp) }
+        Box(Modifier.graphicsLayer { scaleX = bump.value; scaleY = bump.value }) { Avatar(Friends.photos[p.id], p.name, 48.dp, ring = Iconic.ringFor(p.id)) }
         Box(
             Modifier.offset { androidx.compose.ui.unit.IntOffset(((30.dp + 90.dp * x.value).toPx()).toInt(), 0) }
                 .graphicsLayer { alpha = ((1f - x.value) * 1.6f).coerceIn(0f, 1f); scaleX = bump.value; scaleY = bump.value }
                 // A ring in the card's colour sets your picture apart where the two overlap.
                 .border(3.dp, LocalLook.current.cardFill(p.id.hashCode().toLong()), androidx.compose.foundation.shape.CircleShape)
-        ) { Avatar(Friends.myPhoto, Shared.lastName, 48.dp) }
+        ) { Avatar(Friends.myPhoto, Shared.lastName, 48.dp, ring = Iconic.myRing) }
     }
 }

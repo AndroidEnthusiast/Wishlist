@@ -155,7 +155,7 @@ internal fun ChatScreen(peer: String, snack: SnackbarHostState) {
                             } else Modifier
                         ).padding(end = 8.dp)
                     ) {
-                        Avatar(Friends.photos[peer], name, 36.dp)
+                        Avatar(Friends.photos[peer], name, 36.dp, ring = Iconic.ringFor(peer))
                         Text(
                             name, fontWeight = look.titleWeight, maxLines = 1, overflow = TextOverflow.Ellipsis,
                             style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(start = 10.dp)

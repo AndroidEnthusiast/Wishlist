@@ -42,6 +42,9 @@ internal class FriendListState(
     // "Is it still being bought?" about someone else's reservation (2.142), and "Reserve it now?" after "X is free".
     var askBought by mutableStateOf<Wish?>(null)
     var reserveNow by mutableStateOf<Wish?>(null)
+    /** The list belongs to an Iconic member who shows the holo edge (asked once per opening; Iconic.kt). */
+    var holo by mutableStateOf(false)
+    private var holoAsked = false
 
     /** Your reservations on this list (the checks give pretend ones; the app asks the server). */
     internal var fetchRes: suspend () -> Map<Long, Boolean> = { Cloud.fetchReservations(f.code, Repo.deviceId) }
@@ -69,6 +72,7 @@ internal class FriendListState(
                 res = if (pending.isEmpty()) m else m.toMutableMap().apply { pending.forEach { id -> res[id]?.let { put(id, it) } ?: remove(id) } }
                 FriendWatch.check(ctx, f, r, m.filterValues { it }.keys, FriendWatch.movedFrom(ctx, f.code, r))
                 state = "ok"
+                if (!holoAsked) { holoAsked = true; holo = Iconic.listHolo(f.code) }
                 if (fetch == null && r.name != f.name) Repo.renameFriend(ctx, f.code, r.name)
             }
         } catch (e: Exception) {

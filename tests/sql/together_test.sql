@@ -97,6 +97,20 @@ select pg_temp.ok((select count(*) from jsonb_array_elements(wl_rx_get('RXLIST01
 select pg_temp.ok((select e->>'n' from jsonb_array_elements(wl_rx_get('RXLIST01', '', '', 'webdev_webdev')) e where (e->>'m')::boolean) = 'Sam', 'mine marked for the browser');
 select pg_temp.ok(exists (select 1 from jsonb_array_elements(wl_rx_get('RXLIST01', '', '', '')) e where e->>'n' = 'Ben' and e->>'e' = '🔥'), 'app names are the profile name');
 select pg_temp.ok(wl_rx_get('RXLIST01', '', '', '')::text not like '%BBBBBBBB%' and wl_rx_get('RXLIST01', '', '', '')::text not like '%webdev%', 'no ids or devices given away');
+-- The Iconic prize (owner, 27 November 2026): Ben's reactions glow once he turns it on; a ring for friends only
+select pg_temp.ok(not exists (select 1 from jsonb_array_elements(wl_rx_get('RXLIST01', '', '', '')) e where (e->>'g')::boolean), 'nobody glows at first');
+select pg_temp.ok(wl_pf_iconic(:B, :TB, true, true, false), 'Ben turns his prizes on');
+select pg_temp.ok((select (e->>'g')::boolean from jsonb_array_elements(wl_rx_get('RXLIST01', '', '', '')) e where e->>'n' = 'Ben'), 'Ben''s reaction glows');
+select pg_temp.ok(not (select (e->>'g')::boolean from jsonb_array_elements(wl_rx_get('RXLIST01', '', '', '')) e where e->>'n' = 'Sam'), 'a browser visitor never glows');
+select pg_temp.ok(wl_ic_people(:A, :TA) = '["BBBBBBBBBBBBBBBBBBBB"]'::jsonb, 'Anna (a friend) sees Ben''s ring');
+select pg_temp.ok(wl_ic_people(:C, :TC) = '[]'::jsonb, 'Cleo (not a friend) doesn''t');
+select pg_temp.ok(not wl_ic_list('RXLIST01'), 'Anna''s list has no holo edge');
+select wl_pf_iconic(:A, :TA, false, false, true);
+select pg_temp.ok(wl_ic_list('RXLIST01') and not wl_ic_list('NOSUCHLIST'), 'until Anna turns it on');
+do $$ begin perform wl_pf_iconic('AAAAAAAAAAAAAAAAAAAA', 'wrong_wrong_wrong_wr', true, true, true); raise exception 'FAIL Iconic set with a wrong token';
+exception when others then if sqlerrm like 'FAIL%' then raise; end if; end $$;
+select wl_pf_iconic(:A, :TA, false, false, false);
+select wl_pf_iconic(:B, :TB, false, false, false);
 select wl_rx_set('RXLIST01', 1, :B, :TB, '', '', '');
 select pg_temp.ok(jsonb_array_length(wl_rx_get('RXLIST01', '', '', '')) = 2, 'tap yours to remove');
 do $$ begin perform 1 from wl_reacts; raise exception 'FAIL reactions table readable';

@@ -113,7 +113,7 @@ fun PickFriendsDialog(
         SheetGroup(friends.map { f ->
             {
                 SheetRow(
-                    { Avatar(Friends.photos[f.id], f.name, 32.dp) }, f.name.ifBlank { tr("Someone") },
+                    { Avatar(Friends.photos[f.id], f.name, 32.dp, ring = Iconic.ringFor(f.id)) }, f.name.ifBlank { tr("Someone") },
                     { picked = if (f.id in picked) picked - f.id else picked + f.id },
                     chosen = f.id in picked, tile = false
                 )

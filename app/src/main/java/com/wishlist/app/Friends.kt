@@ -162,6 +162,8 @@ object Friends {
         prefs(c).edit().putString("fr_state", t).apply()
         loadPhotos(c, s)
         notifyNews(c, s, onScreen = true)
+        // The Iconic prize (Iconic.kt): your switches online, and whose photo gets the ring.
+        Iconic.sync(c); Iconic.loadRings(c)
     }
 
     /** The background check: notifications for new requests and for requests that were approved. */
@@ -176,6 +178,7 @@ object Friends {
             loadPhotos(c, s)
             notifyNews(c, s, onScreen = false)
             birthdays(c, s)
+            Iconic.sync(c); Iconic.loadRings(c)
         }
     }
 

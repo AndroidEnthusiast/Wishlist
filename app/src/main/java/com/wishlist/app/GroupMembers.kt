@@ -82,7 +82,7 @@ internal fun MemberBlock(g: Group, m: GroupMember, isMe: Boolean, modifier: Modi
                 Box(
                     Modifier.align(Alignment.BottomStart).padding(14.dp).size(44.dp).clip(CircleShape)
                         .border(2.dp, Color.White, CircleShape)
-                ) { Avatar(Groups.faceOf(ctx, m), m.name, 44.dp) }
+                ) { Avatar(Groups.faceOf(ctx, m), m.name, 44.dp, ring = Iconic.ringFor(m.id)) }
                 // The number of wishes, top right (like the list blocks).
                 val count = m.list?.count
                 if (count != null) Box(
@@ -169,7 +169,7 @@ fun InviteFriendsDialog(g: Group, snack: SnackbarHostState, onClose: () -> Unit)
         else SheetGroup(friends.map { f ->
             {
                 SheetRow(
-                    { Avatar(Friends.photos[f.id], f.name, 32.dp) }, f.name.ifBlank { tr("Someone") },
+                    { Avatar(Friends.photos[f.id], f.name, 32.dp, ring = Iconic.ringFor(f.id)) }, f.name.ifBlank { tr("Someone") },
                     { picked = if (f.id in picked) picked - f.id else picked + f.id },
                     chosen = f.id in picked, tile = false
                 )

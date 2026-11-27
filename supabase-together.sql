@@ -244,7 +244,9 @@ begin
   select coalesce(jsonb_agg(jsonb_build_object(
       'i', r.item_id, 'e', r.emoji,
       'n', case when r.who like 'p:%' then coalesce(p.name, '') else r.name end,
-      'm', r.who = v_me, 'at', r.created_at) order by r.created_at), '[]'::jsonb)
+      'm', r.who = v_me, 'at', r.created_at,
+      -- An Iconic member's reaction glows (owner, 27 November 2026; wl_pf_iconic below).
+      'g', coalesce(p.ic_glow, false)) order by r.created_at), '[]'::jsonb)
     into v
     from wl_reacts r left join wl_profiles p on r.who like 'p:%' and p.id = substr(r.who, 3)
     where r.list_code = p_code;
@@ -489,6 +491,48 @@ select cron.schedule('wl-ask-expire', '*/10 * * * *', 'select public.wl_ask_expi
 
 revoke execute on function wl_news_add(text, text, text, text, jsonb), wl_news_push(), wl_ask_unreserved() from public, anon;
 
+-- ---------- The Iconic prize (owner, 27 November 2026; docs/decisions/home-and-kinds.md) ----------
+-- Reaching the Iconic value level in the app unlocks three things others can see: a holo ring round your photo,
+-- your reactions glowing, and a holo edge at the top of your lists for friends. The level is worked out on the phone
+-- (private wishes never leave it), so the server can't check it: it is decoration only, set by your own signed-in
+-- account. Columns on wl_profiles (row level security already on, no policies); read only through the functions here.
+alter table wl_profiles add column if not exists ic_ring boolean not null default false;
+alter table wl_profiles add column if not exists ic_glow boolean not null default false;
+alter table wl_profiles add column if not exists ic_list boolean not null default false;
+
+-- Your own prize switches (all false: off, e.g. switched off in App settings > Iconic).
+create or replace function wl_pf_iconic(p_id text, p_token text, p_ring boolean, p_glow boolean, p_list boolean)
+returns boolean language plpgsql security definer set search_path = public as $$
+begin
+  perform wl_pf_check(p_id, p_token);
+  update wl_profiles set ic_ring = coalesce(p_ring, false), ic_glow = coalesce(p_glow, false), ic_list = coalesce(p_list, false)
+    where id = p_id;
+  return true;
+end $$;
+
+-- Whose photo gets the ring: only your friends and the people in a group with you (ids, nothing else).
+create or replace function wl_ic_people(p_id text, p_token text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+begin
+  perform wl_pf_check(p_id, p_token);
+  return coalesce((select jsonb_agg(p.id) from wl_profiles p
+    where p.ic_ring and p.id <> p_id and (
+      exists (select 1 from wl_friends f where f.accepted and ((f.a = p_id and f.b = p.id) or (f.b = p_id and f.a = p.id)))
+      or exists (select 1 from wl_group_members m1 join wl_group_members m2 on m2.group_id = m1.group_id
+                 where m1.profile = p_id and m2.profile = p.id))), '[]'::jsonb);
+end $$;
+
+-- Whether list [p_code] belongs to an Iconic member who shows the holo edge (friends' page and app). Only a yes or
+-- no for a list code you already have.
+create or replace function wl_ic_list(p_code text)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from wl_profiles p where p.ic_list and (
+    exists (select 1 from wl_profile_lists pl where pl.profile = p.id and pl.list_code = p_code)
+    or exists (select 1 from wl_group_members m where m.profile = p.id and m.list_code = p_code)))
+$$;
+
+grant execute on function wl_pf_iconic(text, text, boolean, boolean, boolean), wl_ic_people(text, text), wl_ic_list(text) to anon;
+
 grant execute on function
   wl_dev_link(text, text, text),
   wl_news_get(text, text, text),
@@ -518,5 +562,5 @@ create or replace function public.wl_script_versions() returns jsonb
   language sql stable security definer set search_path = public
   as $$ select coalesce(jsonb_object_agg(script, version), '{}'::jsonb) from public.wl_versions $$;
 grant execute on function public.wl_script_versions() to anon;
-insert into public.wl_versions (script, version, run_at) values ('supabase-together.sql', 1, now())
+insert into public.wl_versions (script, version, run_at) values ('supabase-together.sql', 2, now())
   on conflict (script) do update set version = excluded.version, run_at = now();

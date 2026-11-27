@@ -102,7 +102,7 @@ internal fun HomeHero(onProfile: () -> Unit) {
     val name = Shared.lastName.ifBlank { tr("Add your name") }
     // App settings > Display > Home summary off: you in the middle, as friends see you (owner, 18 November 2026).
     if (!Show["home_summary"]) {
-        PersonHero(Friends.myPhoto, name, Friends.myBirthday, Friends.myBio, onPhoto = onProfile)
+        PersonHero(Friends.myPhoto, name, Friends.myBirthday, Friends.myBio, onPhoto = onProfile, ring = Iconic.myRing)
         return
     }
     // Your photo on the left, three blocks on its right (owner, 18 November 2026): your own lists only.
@@ -113,7 +113,7 @@ internal fun HomeHero(onProfile: () -> Unit) {
     val all = remember(mine) { mine.flatMap { it.wishes }.filter { it.bin == 0L && it.recv == 0L }.distinctBy { it.id } }
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.clip(CircleShape).clickable(onClickLabel = tr("Profile"), onClick = onProfile)) { Avatar(Friends.myPhoto, name, 88.dp) }
+            Box(Modifier.clip(CircleShape).clickable(onClickLabel = tr("Profile"), onClick = onProfile)) { Avatar(Friends.myPhoto, name, 88.dp, ring = Iconic.myRing) }
             // On a card in the style's own look (owner, 18 November 2026: "it looks too flat"; Gen Z chaos had a white one).
             Row(
                 Modifier.weight(1f).padding(start = 12.dp).lookCard(look, 5L, look.cardShape(5L, small = true))
@@ -127,8 +127,13 @@ internal fun HomeHero(onProfile: () -> Unit) {
                 Box(Modifier.width(1.dp).fillMaxHeight(0.6f).background(line))
                 // Total value can't be tapped (owner). Its level (owner, 27 November 2026; ValueLevels.kt): only here and
                 // on your own lists, off in App settings > Display.
-                val level = if (Show[ValueLevels.SHOW]) ValueLevels.ofHome(all) else null
-                HomeStat(homeTotal(all), tr("Total value"), Modifier.weight(1.4f), level, null)
+                val reached = ValueLevels.ofHome(all)
+                // Reaching Iconic unlocks its prize, also with the levels switched off (Iconic.kt).
+                androidx.compose.runtime.LaunchedEffect(reached) { Iconic.seen(ctx, reached, homeSums(all).firstOrNull()?.first.orEmpty()) }
+                val level = if (Show[ValueLevels.SHOW]) reached else null
+                val go = LocalGo.current
+                // With a level, a tap opens the levels page (owner, 27 November 2026).
+                HomeStat(homeTotal(all), tr("Total value"), Modifier.weight(1.4f), level, if (level != null) ({ go(Deep.Levels) }) else null)
             }
         }
         // A person's big name in the title font, like a wishlist's name (owner, 21 November 2026).

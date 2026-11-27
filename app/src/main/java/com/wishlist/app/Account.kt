@@ -68,7 +68,7 @@ fun AccountSheet(
                     Modifier.fillMaxWidth().clip(shape).background(tile).clickable(onClick = onProfile).padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Avatar(Friends.myPhoto, Shared.lastName, 56.dp)
+                    Avatar(Friends.myPhoto, Shared.lastName, 56.dp, ring = Iconic.myRing)
                     Column(Modifier.padding(start = 14.dp).weight(1f)) {
                         Text(
                             Shared.lastName.ifBlank { tr("Add your name") }, style = MaterialTheme.typography.titleLarge,

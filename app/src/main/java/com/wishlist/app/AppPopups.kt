@@ -31,6 +31,8 @@ internal fun AppPopups(a: AppState, snack: SnackbarHostState, goStable: (Deep) -
     // Joining asks for your name first when it's missing (owner, 2.135).
     val needName = (a.joinDlg != null || a.joinGroupLink != null || a.joinGroupId != null || a.joinExchangeLink != null || a.joinExchangeId != null) && !NameGate.hasName()
     LaunchedEffect(needName) { if (needName) NameGate.ensure {} }
+    // "You're Iconic" (owner, 27 November 2026; Iconic.kt): once when Home's total first reaches Iconic.
+    if (Iconic.celebrate) IconicDialog(onClose = { Iconic.celebrated() }, onChoose = { Iconic.celebrated(); goStable(Deep.IconicSettings) })
     if (a.account) AccountSheet(
         onClose = { a.account = false },
         // Back from these returns to the screen the sheet was opened on (ROADMAP Stage 1).

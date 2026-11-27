@@ -273,7 +273,7 @@ fun ExchangeScreen(gid: String, snack: SnackbarHostState, onBack: () -> Unit, on
                         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(tr("You’re buying for"), style = MaterialTheme.typography.titleSmall, color = look.cardMuted(3L))
-                        Avatar(if (giftee.id == me) Friends.myPhoto else Friends.photos[giftee.id], giftee.name, 72.dp)
+                        Avatar(if (giftee.id == me) Friends.myPhoto else Friends.photos[giftee.id], giftee.name, 72.dp, ring = Iconic.ringFor(if (giftee.id == me) null else giftee.id))
                         Text(giftee.name.ifBlank { tr("Someone") }, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = look.cardInk(3L))
                         Exchanges.budgetText(x)?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = look.cardInk(3L)) }
                         Button(onClick = { st.showList = true }) { Text(tr("See their wishlist")) }

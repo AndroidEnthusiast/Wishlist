@@ -27,7 +27,8 @@ import org.json.JSONObject
  *    settings > Notifications.
  */
 
-data class React(val item: Long, val emoji: String, val name: String, val mine: Boolean, val at: Long)
+/** One reaction; [glow]: by an Iconic member who shows glowing reactions (Iconic.kt). */
+data class React(val item: Long, val emoji: String, val name: String, val mine: Boolean, val at: Long, val glow: Boolean = false)
 
 /**
  * What the cards on a list need from it ([LocalWishDeco]): the list's code for reactions, whether you may react, and
@@ -69,7 +70,7 @@ object Reactions {
     private suspend fun fetch(c: Context, code: String): List<React> {
         val a = JSONArray(Cloud.rpc("wl_rx_get", body(c, code)))
         return (0 until a.length()).map { a.getJSONObject(it) }.map {
-            React(it.optLong("i"), it.optString("e"), it.optString("n"), it.optBoolean("m"), time(it.optString("at")))
+            React(it.optLong("i"), it.optString("e"), it.optString("n"), it.optBoolean("m"), time(it.optString("at")), it.optBoolean("g"))
         }
     }
 
@@ -90,7 +91,7 @@ object Reactions {
         changes[code] = (changes[code] ?: 0) + 1
         val before = map[code].orEmpty()
         val mineGone = before.filterNot { it.item == item && it.mine }
-        map[code] = if (emoji.isEmpty()) mineGone else mineGone + React(item, emoji, Shared.lastName, true, System.currentTimeMillis())
+        map[code] = if (emoji.isEmpty()) mineGone else mineGone + React(item, emoji, Shared.lastName, true, System.currentTimeMillis(), Iconic.myGlow)
         if (emoji.isNotEmpty()) addRecent(c, emoji)
         return try {
             val ok = Cloud.rpc("wl_rx_set", body(c, code).put("p_item", item).put("p_name", "").put("p_emoji", emoji)).trim() == "true"
@@ -104,6 +105,9 @@ object Reactions {
     }
 
     // ---- recently used ----
+
+    /** The emoji you used last, or 😍 (the Iconic previews). */
+    fun recentFirst(c: Context): String = recent(c).firstOrNull() ?: "😍"
 
     fun recent(c: Context): List<String> = prefs(c).getString("rx_recent", "").orEmpty().split("\n").filter { it.isNotBlank() }
 

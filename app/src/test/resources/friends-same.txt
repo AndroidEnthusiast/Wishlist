@@ -16,6 +16,7 @@ sent wl_pf_about p_bio=Hi there,p_birthday=01-02,p_id=<ID>,p_token=<TOKEN>
 sent wl_pf_sizes p_id=<ID>,p_sizes=,p_token=<TOKEN>
 sent wl_fr_state p_id=<ID>,p_token=<TOKEN>
 sent wl_fr_photo p_id=<ID>,p_other=f1,p_token=<TOKEN>
+sent wl_ic_people p_id=<ID>,p_token=<TOKEN>
 state=FriendsState(code=K7Q4MZ, friends=[Person(id=f1, name=Sam, pv=2, hidden=false, lists=[FriendList(code=SAMLIST1, name=Sam's list, count=3)], birthday=<in 10 days>, bio=bio of Sam)], incoming=[], outgoing=[Person(id=o1, name=Kim, pv=0, hidden=false, lists=[], birthday=, bio=bio of Kim)])
 waiting=0 visible=[main] photos={f1=file://<FILES>/friends/f1_2.jpg}
 me photo= src= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) birthday=01-02 bio=Hi there
@@ -35,6 +36,7 @@ own photo files=[]
 ## background check: a request, an approval, a birthday
 sent wl_fr_state p_id=<ID>,p_token=<TOKEN>
 sent wl_fr_photo p_id=<ID>,p_other=o1,p_token=<TOKEN>
+sent wl_ic_people p_id=<ID>,p_token=<TOKEN>
 state=FriendsState(code=K7Q4MZ, friends=[Person(id=f1, name=Sam, pv=2, hidden=false, lists=[FriendList(code=SAMLIST1, name=Sam's list, count=3)], birthday=<in 10 days>, bio=bio of Sam), Person(id=o1, name=Kim, pv=1, hidden=false, lists=[], birthday=, bio=bio of Kim)], incoming=[Person(id=r1, name=Robin, pv=0, hidden=false, lists=[], birthday=, bio=bio of Robin)], outgoing=[])
 waiting=1 visible=[main] photos={f1=file://<FILES>/friends/f1_2.jpg, o1=file://<FILES>/friends/o1_1.jpg}
 me photo= src= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) birthday=01-02 bio=Hi there
@@ -58,6 +60,7 @@ friend photos on the phone=[f1_2.jpg, o1_1.jpg]
 own photo files=[]
 ## background check again: nothing told twice
 sent wl_fr_state p_id=<ID>,p_token=<TOKEN>
+sent wl_ic_people p_id=<ID>,p_token=<TOKEN>
 state=FriendsState(code=K7Q4MZ, friends=[Person(id=f1, name=Sam, pv=2, hidden=false, lists=[FriendList(code=SAMLIST1, name=Sam's list, count=3)], birthday=<in 10 days>, bio=bio of Sam), Person(id=o1, name=Kim, pv=1, hidden=false, lists=[], birthday=, bio=bio of Kim)], incoming=[Person(id=r1, name=Robin, pv=0, hidden=false, lists=[], birthday=, bio=bio of Robin)], outgoing=[])
 waiting=1 visible=[main] photos={f1=file://<FILES>/friends/f1_2.jpg, o1=file://<FILES>/friends/o1_1.jpg}
 me photo= src= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) birthday=01-02 bio=Hi there
@@ -85,17 +88,21 @@ list=null
 sent wl_fr_answer p_id=<ID>,p_other=r1,p_token=<TOKEN>,p_yes=true
 sent wl_pf_save p_id=<ID>,p_name=,p_token=<TOKEN>
 sent wl_fr_state p_id=<ID>,p_token=<TOKEN>
+sent wl_ic_people p_id=<ID>,p_token=<TOKEN>
 sent wl_pf_save p_id=<ID>,p_name=,p_token=<TOKEN>
 sent wl_fr_add p_code=ABCDEF,p_id=<ID>,p_token=<TOKEN>
 sent wl_pf_save p_id=<ID>,p_name=,p_token=<TOKEN>
 sent wl_fr_state p_id=<ID>,p_token=<TOKEN>
+sent wl_ic_people p_id=<ID>,p_token=<TOKEN>
 sent wl_fr_remove p_id=<ID>,p_other=n1,p_token=<TOKEN>
 sent wl_pf_save p_id=<ID>,p_name=,p_token=<TOKEN>
 sent wl_fr_state p_id=<ID>,p_token=<TOKEN>
+sent wl_ic_people p_id=<ID>,p_token=<TOKEN>
 sent wl_pf_save p_id=<ID>,p_name=,p_token=<TOKEN>
 sent wl_pf_new_code p_id=<ID>,p_token=<TOKEN>
 sent wl_pf_save p_id=<ID>,p_name=,p_token=<TOKEN>
 sent wl_fr_state p_id=<ID>,p_token=<TOKEN>
+sent wl_ic_people p_id=<ID>,p_token=<TOKEN>
 sent wl_pf_save p_id=<ID>,p_name=,p_token=<TOKEN>
 sent wl_fr_list p_code=SAMLIST1,p_id=<ID>,p_other=f1,p_token=<TOKEN>
 state=FriendsState(code=K7Q4MZ, friends=[Person(id=f1, name=Sam, pv=2, hidden=false, lists=[FriendList(code=SAMLIST1, name=Sam's list, count=3)], birthday=<in 10 days>, bio=bio of Sam), Person(id=o1, name=Kim, pv=1, hidden=false, lists=[], birthday=, bio=bio of Kim), Person(id=r1, name=Robin, pv=0, hidden=false, lists=[], birthday=, bio=bio of Robin)], incoming=[], outgoing=[Person(id=n1, name=Lee, pv=0, hidden=false, lists=[], birthday=, bio=bio of Lee)])
@@ -150,6 +157,7 @@ own photo files=[]
 sent wl_pf_save p_id=<ID>,p_name=,p_token=<TOKEN>
 sent wl_pf_about p_bio=Later,p_birthday=05-06,p_id=<ID>,p_token=<TOKEN>
 sent wl_fr_state p_id=<ID>,p_token=<TOKEN>
+sent wl_ic_people p_id=<ID>,p_token=<TOKEN>
 state=FriendsState(code=K7Q4MZ, friends=[Person(id=f1, name=Sam, pv=2, hidden=false, lists=[FriendList(code=SAMLIST1, name=Sam's list, count=3)], birthday=<in 10 days>, bio=bio of Sam), Person(id=o1, name=Kim, pv=1, hidden=false, lists=[], birthday=, bio=bio of Kim), Person(id=r1, name=Robin, pv=0, hidden=false, lists=[], birthday=, bio=bio of Robin)], incoming=[], outgoing=[Person(id=n1, name=Lee, pv=0, hidden=false, lists=[], birthday=, bio=bio of Lee)])
 waiting=0 visible=[main] photos={f1=file://<FILES>/friends/f1_2.jpg, o1=file://<FILES>/friends/o1_1.jpg}
 me photo= src= edit=HeroEdit(scale=1.0, x=0.0, y=0.0, text=, tx=0.5, ty=0.75, rotation=0, bright=0.0, color=4294967295, box=false, textSize=0.16, cropL=-1.0, cropT=-1.0, cropW=-1.0, cropH=-1.0) birthday=05-06 bio=Later

@@ -83,21 +83,27 @@ import kotlinx.coroutines.launch
  * birthday as words, and a section title.
  */
 
-/** A round picture of a person: their photo, or their first letter on the theme's colour. */
+/**
+ * A round picture of a person: their photo, or their first letter on the theme's colour. [ring]: the holo ring of
+ * the Iconic prize (Iconic.ringFor), drawn inside the same size so nothing around it moves.
+ */
 @Composable
-fun Avatar(photo: String?, name: String, size: Dp) {
+fun Avatar(photo: String?, name: String, size: Dp, ring: Boolean = false) {
     val look = LocalLook.current
-    if (!photo.isNullOrEmpty()) {
-        AsyncImage(
-            model = photo, contentDescription = null, contentScale = ContentScale.Crop,
-            modifier = Modifier.size(size).clip(CircleShape)
-        )
-    } else {
-        Box(Modifier.size(size).clip(CircleShape).background(look.accent), contentAlignment = Alignment.Center) {
-            Text(
-                name.trim().take(1).uppercase().ifEmpty { "🙂" }, color = look.onAccent,
-                fontSize = (size.value * 0.42f).sp, fontWeight = FontWeight.SemiBold
+    val inner = if (ring) size - ringGap(size) * 2 else size
+    Box(Modifier.size(size).holoRing(ring, size), contentAlignment = Alignment.Center) {
+        if (!photo.isNullOrEmpty()) {
+            AsyncImage(
+                model = photo, contentDescription = null, contentScale = ContentScale.Crop,
+                modifier = Modifier.size(inner).clip(CircleShape)
             )
+        } else {
+            Box(Modifier.size(inner).clip(CircleShape).background(look.accent), contentAlignment = Alignment.Center) {
+                Text(
+                    name.trim().take(1).uppercase().ifEmpty { "🙂" }, color = look.onAccent,
+                    fontSize = (inner.value * 0.42f).sp, fontWeight = FontWeight.SemiBold
+                )
+            }
         }
     }
 }
@@ -123,7 +129,7 @@ fun ProfileButton(onProfile: () -> Unit) {
     // Your picture fills the whole round button (owner, 15 November 2026: no ring around it), as big as the other
     // round buttons next to it.
     IconButton(onClick = { go(Deep.Account) }, round = false) {
-        Box(Modifier.semantics { contentDescription = tr("Profile and settings") }) { Avatar(Friends.myPhoto, Shared.lastName, 40.dp) }
+        Box(Modifier.semantics { contentDescription = tr("Profile and settings") }) { Avatar(Friends.myPhoto, Shared.lastName, 40.dp, ring = Iconic.myRing) }
     }
 }
 
@@ -136,13 +142,13 @@ fun ProfileButton(onProfile: () -> Unit) {
 @Composable
 internal fun PersonHero(
     photo: String?, name: String, birthday: String, bio: String, birthdaySoon: Boolean = false,
-    onPhoto: (() -> Unit)? = null, below: @Composable () -> Unit = {}
+    onPhoto: (() -> Unit)? = null, ring: Boolean = false, below: @Composable () -> Unit = {}
 ) {
     val cs = MaterialTheme.colorScheme
     val look = LocalLook.current
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(Modifier.clip(CircleShape).then(if (onPhoto != null) Modifier.clickable(onClickLabel = tr("Profile"), onClick = onPhoto) else Modifier)) {
-            Avatar(photo, name, 112.dp)
+            Avatar(photo, name, 112.dp, ring = ring)
         }
         // A person's big name in the title font, like a wishlist's name (owner, 21 November 2026).
         Text(

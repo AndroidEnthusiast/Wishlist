@@ -28,7 +28,10 @@ object Show {
         "nt_group" to true,      // wishlist groups (2.108): invites, "No thanks", removed from a group
         "nt_react" to true,      // reactions on your wishes (2.142): one summary a day at most, in the evening
         "one_tap_delete" to false, // App settings: delete wishes without "Delete wish?" first (owner, 27 November 2026)
-        "value_levels" to true   // App settings > Display: the level on your own Total value (owner, 27 November 2026)
+        "value_levels" to true,  // App settings > Display: the level on your own Total value (owner, 27 November 2026)
+        "ic_ring" to true,       // App settings > Iconic: the holo ring round your photo (Iconic.kt)
+        "ic_card" to true,       // App settings > Iconic: the holo share card and your lists' holo edge for friends
+        "ic_glow" to true        // App settings > Iconic: your reactions glow
     )
 
     private val state = HashMap<String, androidx.compose.runtime.MutableState<Boolean>>()

@@ -14,6 +14,10 @@ sealed interface Deep {
     object Notes : Deep
     /** Several price changes of your own wishes: Price changes. */
     object Prices : Deep
+    /** The levels page (tapping your Total value with its level, owner 27 November 2026). */
+    object Levels : Deep
+    /** App settings › Iconic ("Choose what's on" in the "You're Iconic" pop-up). */
+    object IconicSettings : Deep
     /** One price change (or a target price) of your own wish: its price page. */
     data class History(val wishId: Long) : Deep
     /** A new message: Messages, at that conversation ([about]: "Chat about this wish", the wish attached to what you type). */

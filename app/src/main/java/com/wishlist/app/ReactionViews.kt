@@ -111,7 +111,9 @@ fun ReactionBar(
         shown.forEach { (e, l) ->
             val mine = l.any { it.mine }
             Row(
-                Modifier.minimumInteractiveComponentSize().heightIn(min = CHIP_HEIGHT).clip(CircleShape)
+                Modifier.minimumInteractiveComponentSize().heightIn(min = CHIP_HEIGHT)
+                    // An Iconic member's reaction glows (owner, 27 November 2026; Iconic.kt).
+                    .holoGlow(l.any { it.glow }).clip(CircleShape)
                     .background(if (mine) look.accent.copy(alpha = 0.18f) else ink.copy(alpha = 0.07f))
                     .border(1.dp, if (mine) look.textAccent else ink.copy(alpha = 0.12f), CircleShape)
                     .combinedClickable(

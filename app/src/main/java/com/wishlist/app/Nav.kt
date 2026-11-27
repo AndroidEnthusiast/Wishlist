@@ -30,6 +30,8 @@ object Route {
     const val RECEIVED = "received"
     const val RESERVED = "reserved"
     const val PRICES = "prices"
+    /** The value levels page (LevelsScreen.kt). */
+    const val LEVELS = "levels"
     /** The settings of the list open on [MAIN] (its ⚙). */
     const val LIST_SETTINGS = "list-settings"
 

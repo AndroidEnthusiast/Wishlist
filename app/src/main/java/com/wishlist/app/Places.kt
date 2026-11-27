@@ -41,6 +41,8 @@ class Places {
 
     /** Wishes are being selected (2.209): the app's bottom bar makes way for the action bar (Selecting.kt). */
     var selecting by mutableStateOf(false)
+    /** A page of App settings to open on ("iconic" from the "You're Iconic" pop-up); taken by SettingsScreen. */
+    var settingsPage by mutableStateOf<String?>(null)
 
     /** Which page of Home is open: null (Home itself), "lists", "wishes" or "top". */
     var homePage by mutableStateOf<String?>(null)

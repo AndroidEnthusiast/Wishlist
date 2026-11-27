@@ -5,8 +5,8 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
-- **Levels page + Iconic prize** (owner, 27 November 2026; `home-and-kinds.md`, last section): preview
-  https://claude.ai/artifact/8NADXG5DPKVKqS1BN9qh5n waiting for approval; then build all at once (Supabase script too).
+- **2.300 (27 November 2026):** did the owner run `supabase-together.sql` (version 2)? Ask how the levels page, the "You're
+  Iconic" pop-up and the three prizes feel (`home-and-kinds.md`, last section: tell what Claude decided while building).
 - **2.299 (27 November 2026):** ask how the value levels look on the phone (label, icon, the line's glide) in the owner's
   style, and whether the Home card got too tall (`home-and-kinds.md`, last section).
 - **2.298:** ask whether reactions now always show at once and how "+ React" looks.
@@ -156,17 +156,12 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 27 November 2026: the levels page and the Iconic prize (2.300)
+Badge tap opens the levels page; "You're Iconic" once with three prizes (ring, glowing reactions, holo share card),
+App settings › Iconic with personal previews. Server: `supabase-together.sql` v2 (owner runs it). Web: glow on every
+page, holo edge on the friends' page. Not checkable here: the real phone, two real phones seeing each other's ring.
+
 ### 27 November 2026: value levels built (2.299)
 Two more previews: gradients (no green/red), drawn icons on top (sun, star, bolt, crown), Iconic holographic, a line
 under the amount gliding three times. Only your own Home and list totals; Display > Value levels. 2.298's first
 build stopped on the web size rule (together.js shrank: limit lowered), rebuilt fine.
-
-### 27 November 2026: deleting on every page, "+ React", late reactions, levels planned (2.298)
-Group and exchange pages ask "Delete wish?" (no tickbox; exchange gets Undo). "+ React" plus drawn. A reload from
-before your reaction no longer hides it (app and web). Signal: left as it is (owner). Value levels interviewed and a
-preview made; build after the owner picks A, B or C.
-
-### 27 November 2026: "Delete wish?" with the photo, no bin animation, red buttons (2.297)
-Owner (GoWish example + a preview): the bin animation is gone; the bin asks "Delete wish?" with the photo, the name,
-"Turn on one-tap delete" and a red Delete (app and browser editor); App settings > One-tap delete. Every removing
-pop-up is red. Long interview on the tickbox's words. `wish-cards.md`, last section.

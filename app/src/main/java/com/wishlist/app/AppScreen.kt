@@ -208,6 +208,7 @@ fun App(deep: Deep?, onDeepUsed: () -> Unit) {
             else RouteBox { key(code) { FriendScreen(fr, snack, onRemoved = { nav.popBackStack() }, chatWith = Friends.state?.friends?.firstOrNull { p -> p.lists.any { it.code == code } }?.id) } }
         }
         composable(Route.PRICES) { RouteBox { PricesScreen(snack, onBack = { nav.popBackStack() }) } }
+        composable(Route.LEVELS) { RouteBox { LevelsScreen(onBack = { nav.popBackStack() }, onPrizes = { Iconic.showPrizes() }) } }
         // The list open on the main route underneath (Shared.active or Repo.openMine). After Android closed the app in
         // the background only this screen is rebuilt, not the list under it, so that list is opened again from its
         // route first (ROADMAP R9, 2.183): otherwise the settings of another list would show.

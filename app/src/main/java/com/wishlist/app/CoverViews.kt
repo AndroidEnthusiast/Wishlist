@@ -99,7 +99,11 @@ fun ListSummaryCard(wishes: List<Wish>, modifier: Modifier = Modifier, occasion:
                 Text(if (count == 1) tr("Wish") else tr("Wishes"), style = MaterialTheme.typography.bodySmall, color = look.cardMuted(id))
             }
             Box(Modifier.width(1.dp).height(32.dp).background(look.cardMuted(id).copy(alpha = 0.3f)))
-            Column(Modifier.weight(0.62f), horizontalAlignment = Alignment.CenterHorizontally) {
+            val go = LocalGo.current
+            Column(
+                Modifier.weight(0.62f).then(if (level != null) Modifier.clip(RoundedCornerShape(12.dp)).clickable(onClickLabel = tr(level.label)) { go(Deep.Levels) } else Modifier),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 if (level != null) ValueLevelTag(level, small = false, modifier = Modifier.padding(bottom = 2.dp))
                 // Never cut off (2.209): a little smaller instead.
                 FitText(total ?: "–", MaterialTheme.typography.titleLarge.number(look).copy(fontWeight = FontWeight.Bold), look.cardInk(id), Modifier.fillMaxWidth().levelLine(level, 96.dp))

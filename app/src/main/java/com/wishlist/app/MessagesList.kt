@@ -234,7 +234,7 @@ private fun FriendPicker(onPick: (String) -> Unit, onClose: () -> Unit) {
                         Modifier.fillMaxWidth().heightIn(min = 64.dp).clickable { onPick(f.id) }.padding(horizontal = 24.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Avatar(Friends.photos[f.id], f.name, 44.dp)
+                        Avatar(Friends.photos[f.id], f.name, 44.dp, ring = Iconic.ringFor(f.id))
                         Text(
                             f.name.ifBlank { tr("Someone") }, style = MaterialTheme.typography.titleSmall,
                             maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).padding(start = 16.dp)
@@ -279,7 +279,7 @@ private fun ConversationRow(cv: Conversation, onOpen: () -> Unit) {
         Modifier.fillMaxWidth().lookCard(look, id, look.cardShape(id, small = true)).clickable(onClick = onOpen).padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Avatar(Friends.photos[cv.id], cv.name, 50.dp)
+        Avatar(Friends.photos[cv.id], cv.name, 50.dp, ring = Iconic.ringFor(cv.id))
         Column(Modifier.weight(1f).padding(start = 12.dp, end = 8.dp)) {
             Text(
                 cv.name.ifBlank { tr("Someone") }, style = MaterialTheme.typography.titleMedium, color = look.cardInk(id),

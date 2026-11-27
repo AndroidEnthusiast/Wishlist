@@ -96,6 +96,9 @@ fun ReadingCard(
 @Composable
 fun SettingsScreen(snack: SnackbarHostState) {
     var page by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
+    // Opened on a page ("Choose what's on" in the "You're Iconic" pop-up).
+    val places = LocalPlaces.current
+    androidx.compose.runtime.LaunchedEffect(places.settingsPage) { places.settingsPage?.let { page = it; places.settingsPage = null } }
     Moving(page, depth = { if (it.isEmpty()) 0 else 1 }) { p ->
         if (p.isEmpty()) SettingsMain(snack) { page = it }
         else SettingsPage(p, snack) { page = "" }
@@ -129,6 +132,8 @@ private fun SettingsMain(snack: SnackbarHostState, onOpen: (String) -> Unit) {
                 ValueRow(icon = { Icon(AppIcons.Bag, null) }, label = tr("Prices"), value = intervalLabel(Repo.intervalHours) + " · " + currencySymbol(CurrencyChoice.chosen.ifEmpty { countryCurrency() })) { onOpen("prices") }
                 if (Config.enabled) ValueRow(icon = { Icon(AppIcons.Lock, null) }, label = tr("New wishlists"), value = whoLabel(ListVisibility.newDefault)) { onOpen("lists") }
                 ValueRow(icon = { Icon(AppIcons.ListIcon, null) }, label = tr("Display"), value = null) { onOpen("display") }
+                // The Iconic prize's switches, once you're Iconic (owner, 27 November 2026).
+                if (Iconic.reached) ValueRow(icon = { IconicCrown(24.dp) }, label = tr("Iconic"), value = null) { onOpen("iconic") }
                 ValueRow(icon = { Icon(AppIcons.Gift, null) }, label = tr("About"), value = appVersion(ctx)) { onOpen("about") }
             }
             // One-tap delete (owner, 27 November 2026): also turned on from "Delete wish?", whose message points here.
@@ -160,7 +165,7 @@ private fun SettingsPage(page: String, snack: SnackbarHostState, onBack: () -> U
     androidx.activity.compose.BackHandler(onBack = onBack)
     val title = when (page) {
         "notes" -> tr("Notifications"); "prices" -> tr("Prices"); "lists" -> tr("New wishlists")
-        "display" -> tr("Display"); else -> tr("About")
+        "display" -> tr("Display"); "iconic" -> tr("Iconic"); else -> tr("About")
     }
     Scaffold(
         containerColor = cs.background,
@@ -191,6 +196,7 @@ private fun SettingsPage(page: String, snack: SnackbarHostState, onBack: () -> U
                     // Value levels (owner, 27 November 2026): only on your own Total value; on at first.
                     SettingSwitch(tr("Value levels"), tr("A sticker on Total value as your wishes add up."), Show[ValueLevels.SHOW]) { model.setShown(ValueLevels.SHOW, it) }
                 }
+                "iconic" -> IconicSettingsPage()
                 else -> AboutPage(snack)
             }
         }

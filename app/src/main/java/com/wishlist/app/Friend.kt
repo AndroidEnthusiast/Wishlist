@@ -148,12 +148,15 @@ fun FriendScreen(
                     val onList = r0.wishes.filter { it.bin == 0L }
                     val usedCats = r0.cats.filter { c -> onList.any { it.category == c } }
                     if (st.cat != "All" && st.cat !in usedCats) st.cat = "All"
-                    val hasCover = r0.cover.isNotEmpty()
+                    // An Iconic member's list has a holo edge round its cover, or a holo band without one (owner, 27 November
+                    // 2026; Iconic.kt).
+                    val hasCover = r0.cover.isNotEmpty() || st.holo
                     // The cover scrolls away with the wishes; the categories stay pinned at the top (owner, 7 November 2026).
                     val cover: @Composable (Modifier) -> Unit = { m ->
-                        HeroPicture(
+                        if (r0.cover.isEmpty()) HoloBand(m)
+                        else HeroPicture(
                             r0.cover, HeroEdit.fromJson(r0.coverEdit),
-                            m.fillMaxWidth().height(150.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp)),
+                            m.fillMaxWidth().height(150.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp)).holoEdge(st.holo, 24.dp),
                             cut = r0.cover
                         )
                     }

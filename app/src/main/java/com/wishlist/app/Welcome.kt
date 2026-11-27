@@ -127,7 +127,7 @@ fun WelcomeFlow(onDone: () -> Unit) {
                                 Modifier.clip(CircleShape).clickable {
                                     pick.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                                 }
-                            ) { Avatar(Friends.myPhoto, name, 96.dp) }
+                            ) { Avatar(Friends.myPhoto, name, 96.dp, ring = Iconic.myRing) }
                             TextButton(onClick = { pick.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) {
                                 Text(if (Friends.myPhoto.isEmpty()) tr("Add a photo (optional)") else tr("Change photo"))
                             }

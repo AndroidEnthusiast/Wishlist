@@ -158,7 +158,7 @@ internal fun ProfileMain(snack: SnackbarHostState, onSafe: () -> Unit) {
             // The photo, with a pencil: choose a photo, or remove it.
             Box(Modifier.fillMaxWidth().padding(top = 8.dp), contentAlignment = Alignment.Center) {
                 Box {
-                    Box(Modifier.clip(CircleShape).clickable { photoMenu = true }) { Avatar(Friends.myPhoto, me, 120.dp) }
+                    Box(Modifier.clip(CircleShape).clickable { photoMenu = true }) { Avatar(Friends.myPhoto, me, 120.dp, ring = Iconic.myRing) }
                     if (busy) CircularProgressIndicator(Modifier.size(120.dp))
                     Box(
                         Modifier.align(Alignment.BottomEnd).offset((-4).dp, (-4).dp).size(36.dp)

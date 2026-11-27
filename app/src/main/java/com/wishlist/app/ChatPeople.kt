@@ -173,7 +173,7 @@ private fun PersonRow(p: ListPerson, requested: Boolean, onChat: () -> Unit, onA
             .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(Modifier.alpha(if (p.isFriend) 1f else 0.6f)) { Avatar(Friends.photos[p.id], p.name, 40.dp) }
+        Column(Modifier.alpha(if (p.isFriend) 1f else 0.6f)) { Avatar(Friends.photos[p.id], p.name, 40.dp, ring = Iconic.ringFor(p.id)) }
         Column(Modifier.padding(start = 14.dp).weight(1f)) {
             Text(p.name.ifBlank { tr("Someone") }, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 color = if (p.isFriend) cs.onSurface else cs.onSurfaceVariant)

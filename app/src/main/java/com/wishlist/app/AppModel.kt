@@ -277,6 +277,8 @@ internal class AppState(
             is Deep.ShareCard -> shareCard = d.listId
             Deep.Notes -> nav.openOnTop(Route.NOTES)
             Deep.Prices -> nav.openOnTop(Route.PRICES)
+            Deep.Levels -> nav.openOnTop(Route.LEVELS)
+            Deep.IconicSettings -> { places.settingsPage = "iconic"; nav.openOnTop(Route.SETTINGS) }
             // The price page is a pop-up over whatever is on screen.
             is Deep.History -> if (stillThere("", d.wishId, kind = "target")) history = d.wishId
             is Deep.WishIn -> openWishIn(d.code, d.id)

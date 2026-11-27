@@ -149,7 +149,7 @@ fun ProfileSummary(onProfile: () -> Unit, onFriends: () -> Unit = {}, onAddWish:
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.clip(androidx.compose.foundation.shape.CircleShape).clickable(onClickLabel = tr("Profile"), onClick = onProfile)) {
-                    Avatar(Friends.myPhoto, Shared.lastName, 56.dp)
+                    Avatar(Friends.myPhoto, Shared.lastName, 56.dp, ring = Iconic.myRing)
                 }
                 Text(
                     Shared.lastName.ifBlank { tr("Add your name") }, style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp, lineHeight = 28.sp),
@@ -181,7 +181,7 @@ fun ProfileSummary(onProfile: () -> Unit, onFriends: () -> Unit = {}, onAddWish:
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.clip(androidx.compose.foundation.shape.CircleShape).clickable(onClickLabel = tr("Profile"), onClick = onProfile)) {
-                Avatar(Friends.myPhoto, Shared.lastName, 56.dp)
+                Avatar(Friends.myPhoto, Shared.lastName, 56.dp, ring = Iconic.myRing)
             }
             Text(
                 Shared.lastName.ifBlank { tr("Add your name") }, style = MaterialTheme.typography.titleLarge,

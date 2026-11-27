@@ -15,8 +15,8 @@ android {
         applicationId = "com.wishlist.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 300
-        versionName = "2.299"
+        versionCode = 301
+        versionName = "2.300"
         // Crash reports (Crash.kt): Crashlytics wants a build id, which its Gradle plugin would normally add. The app
         // isn't shrunk or renamed (isMinifyEnabled = false), so there is no mapping file to upload; one id per version.
         resValue("string", "com.google.firebase.crashlytics.mapping_file_id", "wishlist-$versionCode")

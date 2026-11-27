@@ -175,7 +175,7 @@ fun PeopleCircles(code: String, wishes: List<Wish>, modifier: Modifier = Modifie
     ) {
         shown.forEach { p ->
             Box(Modifier.size(size).clip(CircleShape).background(Color.White).border(2.dp, Color.White, CircleShape), contentAlignment = Alignment.Center) {
-                Avatar(p.photo, p.name, size - 4.dp)
+                Avatar(p.photo, p.name, size - 4.dp, ring = if (p.key == "me") Iconic.myRing else Iconic.ringFor(p.key))
             }
         }
         if (more > 0) Box(

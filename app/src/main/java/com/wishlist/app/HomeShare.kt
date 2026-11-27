@@ -97,7 +97,8 @@ fun ListShareDialog(id: String, onClose: () -> Unit) {
                 // The list itself.
                 val pid = id.hashCode().toLong()
                 Box(
-                    Modifier.size(140.dp).clip(RoundedCornerShape(20.dp)).background(look.pictureBg(pid, pics.isNotEmpty())),
+                    Modifier.size(140.dp).clip(RoundedCornerShape(20.dp)).background(look.pictureBg(pid, pics.isNotEmpty()))
+                        .holoEdge(Iconic.myCard, 20.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     when {
@@ -152,7 +153,11 @@ fun ListShareDialog(id: String, onClose: () -> Unit) {
                     else -> {
                         ShareButtons(
                             shareLink(code), copied,
-                            onShare = { shareText(ctx, tr("Share wishlist"), inviteText(code)) },
+                            // With the Iconic prize's holo share card on, the link goes with a holo picture (IconicCard.kt).
+                            onShare = {
+                                if (Iconic.myCard) scope.launch { IconicCard.share(ctx, name, shown.size, inviteText(code)) }
+                                else shareText(ctx, tr("Share wishlist"), inviteText(code))
+                            },
                             onCopy = {
                                 clip.setText(AnnotatedString(shareLink(code)))
                                 // Android 13 and newer say "Copied" themselves.

@@ -116,7 +116,7 @@ fun ValueLevelTag(level: ValueLevel, small: Boolean, modifier: Modifier = Modifi
 
 /** The level's own icon, drawn here (docs: icons only from Material or our own code). */
 @Composable
-private fun LevelIcon(level: ValueLevel, size: Dp) {
+internal fun LevelIcon(level: ValueLevel, size: Dp) {
     val path = remember(level) { PathParser().parsePathString(ICONS.getValue(level)).toPath() }
     Canvas(Modifier.size(size)) {
         val u = this.size.width / 24f

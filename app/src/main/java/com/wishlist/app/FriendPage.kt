@@ -152,7 +152,7 @@ internal fun FriendPage(f: Person, snack: SnackbarHostState) {
         Column(
             Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 32.dp)
         ) {
-            PersonHero(Friends.photos[f.id], f.name, f.birthday, f.bio, birthdaySoon = true) {
+            PersonHero(Friends.photos[f.id], f.name, f.birthday, f.bio, birthdaySoon = true, ring = Iconic.ringFor(f.id)) {
                 if (f.lists.isEmpty()) Text(
                     tr("%s hasn’t added a wishlist yet.", f.name), style = MaterialTheme.typography.bodyMedium,
                     color = cs.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 16.dp)

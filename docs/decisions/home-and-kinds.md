@@ -73,7 +73,7 @@
   (yen, kroner, złoty…; an unknown currency gets no level). Gen Z chaos gives the label and icon its outline and hard
   shadow. Code: `ValueLevels.kt`, `ValueLevelViews.kt`; checks `ValueLevelsTest`, `ValueLevelScreenshotTest`.
 
-## The levels page and the Iconic prize (owner, 27 November 2026; planned, preview, not built)
+## The levels page and the Iconic prize (owner, 27 November 2026; built in 2.300)
 - **Tapping your badge** (Home or a list) opens a page (preview https://claude.ai/artifact/8NADXG5DPKVKqS1BN9qh5n):
   your level's icon and "You're the main character", the line "Every wish you add moves you up a level. Only you can
   see this.", your total with a progress bar and "€2,020 to go until Big wish energy", then the four levels with
@@ -97,4 +97,13 @@
   then "Turn on" / "Not now". **Friends see it:** the holo share picture, your ring, your glowing reactions, and
   **a holo edge at the top of an Iconic member's list** (app and friends' web page). Old app versions simply show
   nothing new. Preview updated; waiting for "go".
+- **Built (2.300), and what Claude decided while building (tell the owner):** the page opens by tapping the Total
+  value tile with its level (Home or a list; the whole tile, for a big enough tap). "You're Iconic" opens once, the
+  first time Home's total reaches Iconic (also with Value levels switched off); "See your prizes" on the page shows it
+  again. Your own lists are shared as a link only, so the holo share card is **a picture sent with the link** (like
+  the Co-op invite card): list name, number of wishes, a crown, never an amount; the card switch also controls the
+  holo edge friends see on your list. The ring shows for **friends and group mates** (the server tells your phone
+  whose); a Co-op list's people only when they are also friends. On the web: glowing reactions on every page and the
+  holo edge or band on the friends' page; no rings on the web (it shows no profile photos). Server: three columns on
+  wl_profiles and `wl_pf_iconic`, `wl_ic_people`, `wl_ic_list` in `supabase-together.sql` (version 2).
 

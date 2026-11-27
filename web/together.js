@@ -343,7 +343,7 @@
       var keys = Object.keys(by).sort(function (a, b) { return by[b].length - by[a].length; });
       keys.slice(0, max).forEach(function (e) {
         var mine = by[e].some(function (r) { return r.m; });
-        var chip = el("button", "wlt-chip" + (mine ? " mine" : ""));
+        var chip = el("button", "wlt-chip" + (mine ? " mine" : "") + (by[e].some(function (r) { return r.g; }) ? " glow" : "")); // g: Iconic (2.300)
         chip.type = "button";
         chip.appendChild(el("span", "wlt-ce", e));
         chip.appendChild(el("span", "wlt-cn", String(by[e].length)));

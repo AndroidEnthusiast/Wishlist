@@ -170,6 +170,8 @@ state GroupPhotos
 state Groups
 state GxChatNav
 state History
+# Iconic (27 November 2026): a data service for the Iconic prize; saves its own data (reached, rings) in the phone's settings.
+state Iconic
 state ImportFill
 state ListCovers
 state ListLink

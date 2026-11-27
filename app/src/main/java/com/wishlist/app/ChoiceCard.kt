@@ -106,7 +106,7 @@ internal fun FriendsCard(friends: List<Person>, picked: List<String>, onRemove: 
     ChoiceCard(
         AppIcons.Friends, tr("Add friends"),
         when (chosen.size) { 0 -> tr("None chosen yet"); 1 -> tr("1 friend chosen"); else -> tr("%d friends chosen", chosen.size) },
-        chosen.map { f -> Chosen(f.name.ifBlank { tr("Someone") }, { onRemove(f.id) }) { Avatar(Friends.photos[f.id], f.name, 44.dp) } },
+        chosen.map { f -> Chosen(f.name.ifBlank { tr("Someone") }, { onRemove(f.id) }) { Avatar(Friends.photos[f.id], f.name, 44.dp, ring = Iconic.ringFor(f.id)) } },
         onClick
     )
 }
