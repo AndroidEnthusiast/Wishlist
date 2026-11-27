@@ -11,7 +11,7 @@ const ALLOWED = {
   'group.js': 963,
   'friends.js': 922,
   'exchange.js': 777,
-  'together.js': 457,
+  'together.js': 456,
   'parse.js': 443,
 };
 
