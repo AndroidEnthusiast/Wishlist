@@ -118,4 +118,8 @@
   level: owner turned down a flag (maybe), seedling, sparkle, footsteps, paper plane, gift, wishing star, dawn,
   ticket, egg, rocket, spark, a filling heart or star, a gift being wrapped, a list with ticks; wants a "starter level"
   icon that shows some progress. Ask again with new ideas.
+- **The starter icon (owner, 27 November 2026, 2.303):** after 30 ideas in pop-ups the owner picked **a twinkle ✦**
+  (a four-point star) in **soft lilac on a pastel circle**, at the top of the page before the first level: simple,
+  and its own colour, so it reads as "before the levels". (Turned down: badges, moving things, nature, playful
+  icons, a dot in a ring, a plus, a 0, a tick, a bow, a map pin, a seed and more.)
 

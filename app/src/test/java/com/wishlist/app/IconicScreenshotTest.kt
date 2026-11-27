@@ -23,6 +23,12 @@ class IconicScreenshotTest : NavigationBase() {
         captureScreenRoboImage("build/outputs/roborazzi/iconic_$name.png")
     }
 
+    @Test fun levelsPageBeforeTheFirstLevel() {
+        Repo.myWishes.map { it.id }.forEach { Repo.trash(app, it) }
+        Repo.addMine(app, Wish(1_700_000_000_002, "", "Jacket", "", "", 470.0, null, "EUR", ""))
+        show("levels_start", mode = "dark") { LevelsScreen(onBack = {}, onPrizes = {}) }
+    }
+
     @Test fun levelsPage() {
         Repo.addMine(app, Wish(1_700_000_000_001, "", "Jacket", "", "", 2980.0, null, "EUR", ""))
         show("levels") { LevelsScreen(onBack = {}, onPrizes = {}) }

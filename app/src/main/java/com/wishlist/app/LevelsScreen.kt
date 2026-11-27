@@ -64,7 +64,7 @@ fun LevelsScreen(onBack: () -> Unit, onPrizes: () -> Unit) {
         ) {
             // Your level, big.
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                st.level?.let { LevelDisc(it, 72.dp) }
+                st.level?.let { LevelDisc(it, 72.dp) } ?: StarterDisc(72.dp)
                 // The style's own title font (Quiet: Fraunces, like your profile name).
                 Text(
                     levelHeadline(st.level), style = MaterialTheme.typography.headlineMedium, fontWeight = look.titleWeight,
@@ -186,3 +186,27 @@ private fun LevelChip(text: String, strong: Boolean) {
         modifier = Modifier.clip(RoundedCornerShape(50)).background(if (strong) cs.onSurface else cs.surfaceVariant).padding(horizontal = 8.dp, vertical = 2.dp)
     )
 }
+
+/**
+ * Before the first level: a twinkle in soft lilac on a pastel circle (owner, 27 November 2026, picked from 30 ideas:
+ * simple, and its own colour, so it reads as "before the levels").
+ */
+@Composable
+private fun StarterDisc(size: androidx.compose.ui.unit.Dp) {
+    val lilac = androidx.compose.ui.graphics.Color(0xFFA48BE0)
+    val twinkle = remember { androidx.compose.ui.graphics.vector.PathParser().parsePathString(TWINKLE).toPath() }
+    Box(
+        Modifier.size(size).clip(CircleShape).background(androidx.compose.ui.graphics.lerp(lilac, androidx.compose.ui.graphics.Color.White, 0.84f)),
+        contentAlignment = Alignment.Center
+    ) {
+        androidx.compose.foundation.Canvas(Modifier.size(size * 0.5f)) {
+            val u = this.size.width / 24f
+            val p = androidx.compose.ui.graphics.Path().apply { addPath(twinkle); transform(androidx.compose.ui.graphics.Matrix().apply { scale(u, u) }) }
+            drawPath(p, lilac)
+        }
+    }
+}
+
+/** A four-point twinkle in a 24 x 24 box. */
+private const val TWINKLE = "M12 2c.6 5.4 4.6 9.4 10 10-5.4.6-9.4 4.6-10 10-.6-5.4-4.6-9.4-10-10 5.4-.6 9.4-4.6 10-10z"
+
