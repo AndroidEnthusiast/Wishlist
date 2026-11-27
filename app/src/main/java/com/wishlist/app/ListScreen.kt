@@ -110,14 +110,12 @@ fun HomeScreen(
         model.picked = setOf(w.id)
     }
     val selecting = model.selecting
-    // Drag to reorder (owner, 16 November 2026; ListDrag.kt): hold a wish and move your finger to drag it, or hold and
-    // let go to select it as before.
+    val selectingNow = androidx.compose.runtime.rememberUpdatedState(selecting) // read by the drag gesture at each touch
+    // Drag to reorder (16 November 2026; ListDrag.kt): the hold ticks the wish at once (owner, 27 November 2026: it
+    // only got ticked when the finger was lifted); moving the finger then drags it and takes the tick away.
     val drag = remember { DragState() }
     LaunchedEffect(Repo.openMine, Shared.active) { drag.dragIds = null }
-    val holdSelect: (Wish) -> Unit = { w ->
-        if (selecting) startSelect(w)
-        else { haptic.performHapticFeedback(HapticFeedbackType.LongPress); drag.holding = w }
-    }
+    val holdSelect: (Wish) -> Unit = { w -> if (!selecting) drag.holding = w; drag.heldTick = w.id; startSelect(w) }
     BackHandler(enabled = selecting) { model.picked = emptySet() }
     SelectingFlag(selecting)
     // A collab wishlist updates live while it is open (ROADMAP S3.2, Live.kt): someone else's change shows within a
@@ -173,6 +171,7 @@ fun HomeScreen(
         val byId = sorted.associateBy { it.id }
         ids.mapNotNull { byId[it] } + sorted.filter { it.id !in ids }
     } ?: sorted
+    val listNow = androidx.compose.runtime.rememberUpdatedState(list) // read by the drag gesture, which lives on
     val view = Repo.view
     val look = LocalLook.current
     // A wish tapped on "All your wishes" or "Top wishes": scroll to it (showing every category if it was hidden by
@@ -345,20 +344,25 @@ fun HomeScreen(
             } else {
                 val gap = if (view == "list") 16.dp else 12.dp
                 androidx.compose.runtime.CompositionLocalProvider(LocalWishDeco provides listDeco) {
-                // The end of a hold: moved = the new order is kept (the list becomes "My order"), else the wish is
-                // selected as before. The whole list order is saved, so wishes hidden by a category keep their place.
+                // The end of a hold: moved = the new order is kept (the list becomes "My order"); not moved = the wish
+                // stays selected (it was ticked when the hold began). The whole list order is saved, so wishes hidden by
+                // a category keep their place.
                 fun endHold(moved: Boolean) {
                     val ids = drag.dragIds
                     if (moved && drag.dragArmed && ids != null) {
                         ListOrder.save(ctx, listKey, keptOrder(ids, sorted.map { it.id }, sortWishes(source, sortMode).map { it.id }))
-                    } else drag.holding?.let { startSelect(it) }
+                    }
                     drag.reset()
                 }
                 LazyVerticalGrid(
                     state = gridState,
                     columns = if (view == "grid") GridCells.Fixed(2) else GridCells.Adaptive(300.dp),
                     modifier = Modifier.fadeThroughOn(view).onGloballyPositioned { drag.gridBox = it }
-                        .reorderGesture(drag, arrayOf(listKey, view, selecting), !selecting, { list }, gridState, scope) { endHold(it) },
+                        .reorderGesture(
+                            drag, arrayOf(listKey, view), { !selectingNow.value }, { listNow.value }, gridState, scope,
+                            // A drag starts: the tick of the hold goes away again.
+                            onArm = { if (drag.holding != null) model.picked = emptySet() }
+                        ) { endHold(it) },
                     contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 24.dp), // no floating button to keep clear of any more (2.112)
                     horizontalArrangement = Arrangement.spacedBy(gap),
                     verticalArrangement = Arrangement.spacedBy(gap)

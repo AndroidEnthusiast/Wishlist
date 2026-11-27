@@ -34,6 +34,8 @@ internal class DragState {
     var dragArmed by mutableStateOf(false)
     var dragPointer by mutableStateOf(Offset.Zero)
     var dragGrab by mutableStateOf(Offset.Zero)
+    /** The wish ticked by a hold: lifting that same finger isn't a tap that unticks it (cleared at the next touch). */
+    var heldTick: Long? = null
     /** Where each card is on screen (in the root), for finding the card under the finger. */
     val cardBounds = mutableStateMapOf<Long, Rect>()
     /** The list's grid, for scrolling along near its edges. */
@@ -49,12 +51,15 @@ internal class DragState {
  * true when the finger was lifted (moved = keep the new order; not moved = select the wish).
  */
 internal fun Modifier.reorderGesture(
-    d: DragState, keys: Array<Any?>, enabled: Boolean, list: () -> List<Wish>,
-    gridState: LazyGridState, scope: CoroutineScope, onEnd: (Boolean) -> Unit
+    d: DragState, keys: Array<Any?>, enabled: () -> Boolean, list: () -> List<Wish>,
+    gridState: LazyGridState, scope: CoroutineScope, onArm: () -> Unit = {}, onEnd: (Boolean) -> Unit
 ): Modifier = pointerInput(*keys) {
-    if (!enabled) return@pointerInput
     awaitEachGesture {
         val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+        d.heldTick = null
+        // Asked at each new touch (owner, 27 November 2026): the hold selects the wish at once, and this touch must go
+        // on to a drag if the finger moves, so selecting may not restart the gesture.
+        if (!enabled()) return@awaitEachGesture
         val early = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
             var ended = false
             while (!ended) {
@@ -77,7 +82,7 @@ internal fun Modifier.reorderGesture(
             d.dragPointer += c.position - c.previousPosition
             val id = hit.key
             // A real move, not a trembling finger: from now on it is a drag, not a selection.
-            if (!d.dragArmed && (d.dragPointer - root).getDistance() > 12.dp.toPx()) d.dragArmed = true
+            if (!d.dragArmed && (d.dragPointer - root).getDistance() > 12.dp.toPx()) { d.dragArmed = true; onArm() }
             if (!d.dragArmed) continue
             c.consume()
             val size = d.cardBounds[id]?.size ?: continue

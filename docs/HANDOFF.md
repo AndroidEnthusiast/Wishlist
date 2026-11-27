@@ -5,6 +5,7 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.304:** ask whether holding a wish now feels right (ticked at once; moving drags). `wish-cards.md`, last section.
 - **2.302–2.303:** ask how the livelier levels page and the lilac twinkle look on the phone (`home-and-kinds.md`, last section).
 - **2.301:** Total value always opens the levels page (serendipity, owner). Ask if it feels right below €1,000.
 - **2.300 (27 November 2026):** did the owner run `supabase-together.sql` (version 2)? Ask how the levels page, the "You're

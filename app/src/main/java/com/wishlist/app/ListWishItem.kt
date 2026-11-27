@@ -117,7 +117,7 @@ internal fun androidx.compose.foundation.lazy.grid.LazyGridItemScope.ListWishIte
     ) {
     // A wish opened from "All your wishes" glows softly twice (WishFocus).
     GlowBox(w.id, small = view == "grid") {
-    Selectable(model.selecting, w.id in model.picked, { model.toggle(w) }) {
+    Selectable(model.selecting, w.id in model.picked, { if (drag.heldTick == w.id) drag.heldTick = null else model.toggle(w) }) {
     when (view) {
         "grid" -> CompactCard(
             // Two per row: the ⋮ holds everything; a long press starts selecting (every list).

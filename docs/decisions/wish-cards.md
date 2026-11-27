@@ -173,3 +173,12 @@ Moved here from `people.md` on 18 November 2026 (its size limit); newest at the 
 - **A reaction sometimes showed late** (owner): the 30-second reload of a list's reactions could be on its way when
   you reacted, and its older answer put the list from before back. Now a reload that started before your own
   reaction is ignored (app `Reactions.load`, web `together.js`), like rule 3's refresh. Check: `ReactionModelTest`.
+
+## Holding a wish selects it at once (owner, 27 November 2026; built in 2.304)
+- Owner: "when I long press a wish it only gets selected when I lift my finger". It waited to see whether you would
+  drag (16 November 2026: hold and move = drag, hold and let go = select). **Owner's choice:** as in Google Photos and
+  Keep, the hold ticks the wish straight away (with the buzz) and the selection bar appears; moving the finger then
+  switches to dragging that wish and takes the tick away. Lifting the same finger doesn't untick it. Check:
+  `WishPressTest.theHoldTicksAtOnceAndMovingDrags`. (Found while checking: on the small test phone a long press on a
+  card partly under the bottom bar doesn't select; also before this change. Not seen on a real phone yet.)
+

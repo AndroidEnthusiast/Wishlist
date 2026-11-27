@@ -343,6 +343,34 @@ class ScrollTest : NavigationBase() {
 
 /** A long press on a wish starts selecting; ⋮ opens the wish's sheet (owner, 12 November 2026). */
 class WishPressTest : NavigationBase() {
+    /**
+     * Owner, 27 November 2026: "a wish only gets selected when I lift my finger". The hold ticks it at once, while the
+     * finger is still down; moving the finger afterwards drags it and takes the tick away.
+     */
+    @Test fun theHoldTicksAtOnceAndMovingDrags() {
+        val app = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()
+        compose.runOnUiThread {
+            Repo.addMine(app, Wish(101, "https://example.com/a", "Glass teapot", "", "", 20.0, null, "EUR", "Home"))
+            Repo.addMine(app, Wish(102, "https://example.com/b", "Wool jacket", "", "", 80.0, null, "EUR", "Home"))
+        }
+        send(open(MainActivity.OPEN_NOTE, "m:" + Repo.mineIds.first()))
+        compose.waitForIdle()
+        val card = compose.onAllNodes(hasText("Glass teapot", substring = true)).onFirst()
+        card.performTouchInput { down(center) }
+        // The finger stays down past the long-press time.
+        compose.mainClock.advanceTimeBy(1200)
+        compose.waitForIdle()
+        shows("1 selected")
+        card.performTouchInput { moveBy(androidx.compose.ui.geometry.Offset(0f, 200f)); moveBy(androidx.compose.ui.geometry.Offset(0f, 200f)) }
+        compose.waitForIdle()
+        compose.onAllNodes(hasText("1 selected")).assertCountEquals(0)
+        card.performTouchInput { up() }
+        compose.waitForIdle()
+        compose.onAllNodes(hasText("1 selected")).assertCountEquals(0)
+        // The other checks here start with their own wishes only.
+        compose.runOnUiThread { listOf(101L, 102L).forEach { Repo.trash(app, it) } }
+    }
+
     @Test fun longPressSelectsAndMoreOpensTheSheet() {
         val app = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()
         compose.runOnUiThread {

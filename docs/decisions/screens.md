@@ -168,6 +168,7 @@ decisions: `docs/DECISIONS.md`. Add new decisions on this topic here. Look and f
   then switches to **"My order"** (a new sort). Each list remembers its own sort (a list never sorted follows your last
   choice). New wishes go on top. Only on this phone (in Export and the recovery key's copy); friends keep their own
   sort. Gift lists too, each person their own order. (`ListOrder.kt`, `ListScreen.kt`)
+  **Changed (owner, 27 November 2026, 2.304):** the hold ticks the wish at once; `wish-cards.md`, last section.
 - **"Move or copy…"** replaces "Move to…" (⋮ sheet and selection bar): pick a list, then Copy (the same wish on both,
   like "Add wishes from your other lists") or Move; Copy has Undo.
 - **Chat:** opens at its end without scrolling through the conversation, and shows a chat opened before at once
