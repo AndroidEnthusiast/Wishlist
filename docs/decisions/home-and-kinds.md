@@ -92,4 +92,9 @@
   these any time in App settings › Iconic."
 - **App settings › Iconic** (only once you're Iconic): a switch per prize, each with a **Preview** button that shows
   the prize before you turn it on. **Build everything at once** (owner), after the preview is approved.
+- **More choices (owner, 27 November 2026):** all three prizes **on at first** when reached; each **Preview** is
+  personal (your own photo with the ring, your own list's share card, a sample wish with your reaction glowing),
+  then "Turn on" / "Not now". **Friends see it:** the holo share picture, your ring, your glowing reactions, and
+  **a holo edge at the top of an Iconic member's list** (app and friends' web page). Old app versions simply show
+  nothing new. Preview updated; waiting for "go".
 
