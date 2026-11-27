@@ -71,6 +71,31 @@ class AlertsPartsTest {
         assertEquals("only the first of a burst buzzes", 1, nm.activeNotifications.count { it.id != 7_000_099 && it.notification.groupAlertBehavior != NotificationCompatSilent })
     }
 
+    /**
+     * Owner, 27 November 2026 (a screen recording): a summary of Co-op price drops opened Price changes, which only
+     * shows your own lists. Now each list gets its own notification, and a summary opens that list.
+     */
+    @Test fun priceSummariesComeOnePerListAndOpenThatList() = runBlocking {
+        Alerts.collectPrices(c) {
+            Alerts.notifyDrop(c, 51, "Polo", 90.0, 60.0, "EUR", "Price drop on Mum", 501, "s:COOP1")
+            Alerts.notifyDrop(c, 52, "Sweat", 120.0, 80.0, "EUR", "Price drop on Mum", 502, "s:COOP1")
+            Alerts.notifyDrop(c, 53, "Jacket", 470.0, 400.0, "EUR", wishId = 503, listKey = "m:L1")
+            Alerts.notifyDrop(c, 54, "Scarf", 40.0, 30.0, "EUR", wishId = 504, listKey = "m:L2")
+            Alerts.notifyDrop(c, 55, "Hat", 30.0, 20.0, "EUR", wishId = 505, listKey = "m:L2")
+        }
+        val coop = summaryId(true, "s:COOP1")
+        assertEquals("2 wishes got cheaper", shown(coop).extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+        assertEquals("the Co-op list opens", "s:COOP1", tap(coop).getStringExtra(MainActivity.OPEN_NOTE))
+        assertTrue("not Price changes", !tap(coop).getBooleanExtra(MainActivity.OPEN_PRICES, false))
+        val own = summaryId(true, "m:L2")
+        assertEquals("your own list opens too", "m:L2", tap(own).getStringExtra(MainActivity.OPEN_NOTE))
+        assertTrue("not Price changes", !tap(own).getBooleanExtra(MainActivity.OPEN_PRICES, false))
+        assertTrue("one per list", coop != own)
+        assertEquals("one drop on a list is its own notification: the price page", 503L, tap(53).getLongExtra(MainActivity.HISTORY_ID, 0))
+        assertTrue("not told one by one", nm.activeNotifications.none { it.id in listOf(51, 52, 54, 55) })
+        assertTrue("no summary of everything", nm.activeNotifications.none { it.id == 7_000_001 })
+    }
+
     @Test fun theBackgroundCheckKeepsYourChoiceAndNeverRunsTwice() {
         Alerts.schedule(c, 6, false)
         Alerts.schedule(c, 12, true)

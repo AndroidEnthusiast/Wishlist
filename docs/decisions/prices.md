@@ -46,3 +46,12 @@ Index: `docs/DECISIONS.md`. Earlier price decisions: `screens.md` ("Prices"), `P
 - Waiting for: the owner's "Price is wrong?" file of the La Vie est Belle page (Zalando can't be opened from Claude's
   computer), to build and check against the real page. App (`Fetch*.kt`, `PriceWatch`, `SharedPrices`) and web
   (`parse.js`, `edit.js`) together, with cases in `same-answers.json` and `PriceWatchTest`.
+
+## Tapping a notification about several price changes (owner, 27 November 2026, 2.296)
+- Found (owner's screen recording): "2 wishes got cheaper" about two Co-op wishes opened Price changes, which only
+  shows your own lists, so only an unrelated wish of your own was there.
+- **Owner's choices:** (1) **one notification per list**: drops on a Co-op list and on your own list in the same check
+  are separate notifications (the list's name sits next to the app's name at the top). (2) **2 or more changes on the
+  same list open that list**, for Co-op lists **and** your own lists (before: Price changes). One change still opens
+  as before: your own wish its price page, a Co-op wish its list on that wish. Check: `AlertsPartsTest`
+  (`priceSummariesComeOnePerListAndOpenThatList`).

@@ -119,10 +119,10 @@ object PriceCheck {
                         // Kept for the Notifications page (drops and rises as switched on in App settings).
                         Notifications.priceChanged(c, "m:$listId", w, cur, np)
                         if (np < cur - 0.005) {
-                            if (Repo.notifyDrops) Alerts.notifyDrop(c, id.toInt(), w.label, cur, np, w.currency, wishId = id)
+                            if (Repo.notifyDrops) Alerts.notifyDrop(c, id.toInt(), w.label, cur, np, w.currency, wishId = id, listKey = "m:$listId")
                             dropped++
                         } else if (np > cur + 0.005) {
-                            if (Repo.notifyRises) Alerts.notifyRise(c, id.toInt(), w.label, cur, np, w.currency, wishId = id)
+                            if (Repo.notifyRises) Alerts.notifyRise(c, id.toInt(), w.label, cur, np, w.currency, wishId = id, listKey = "m:$listId")
                         }
                     }
                 }

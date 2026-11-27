@@ -5,6 +5,7 @@ The current plan and the last 3 sessions. Everything older (the history since Oc
 and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest to the archive when adding one.
 
 ## Next session
+- **2.296 (27 November 2026):** ask whether tapping a price summary now opens the right list (`prices.md`, last section).
 - **Owner, 26 November 2026: four ideas chosen to plan** (`ideas.md`, last section): price drop for
   givers, reservations run out, Shopping list by shop, Historic low. Interview on details and risks first, one at a
   time; ask which to start with. Nothing is built yet.
@@ -148,6 +149,10 @@ and "Last sessions"; at most 3 sessions, each at most 5 lines; move the oldest t
 
 ## Last sessions
 
+### 27 November 2026: price summaries open the right list (2.296)
+Owner's recording: "2 wishes got cheaper" about Co-op wishes opened Price changes (own lists only). Now one
+notification per list; 2+ changes on one list open that list (own lists too, owner's choice). `prices.md`, last section.
+
 ### 26 November 2026: interview on new ideas (notes only, no app change)
 Owner asked for groundbreaking ideas; 50 offered in pop-ups, the owner found many gimmicky. Chosen to plan: price
 drop for givers (opt-in), reservations run out, Shopping list by shop (own wishes, setting off by default), Historic
@@ -158,8 +163,3 @@ Owner's recording: the Co-op share pop-up was busy (naked link, three ways to sh
 invited. Now one sheet (people with status, "+ Add friends", "Share invite link") for Co-op lists, groups and
 exchanges, one "Invite people" in menus and pages, pickers without invited friends. List titles shrink to fit the
 small bar. Not checkable here: the real phone and fonts (the test phone draws a plain font).
-
-### 26 November 2026: reservations at once, buttons apart (2.293–2.294)
-Owner's recordings. 2.293: clear bin on a disc, delete waits for the bin, Undo lands without a jump, move fixed too.
-2.294: Co-op lists (app and browser editor) open with the last known reservations, no "Reserve" flash; buttons side
-by side 8 dp apart (Friends, update banner, gift exchange), and the layout inspector now fails touching buttons.

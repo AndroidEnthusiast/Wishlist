@@ -19,6 +19,8 @@ internal object PriceAlertQueue {
 /**
  * Runs a price check and tells its price changes afterwards (owner, 2.122): one change is one notification as
  * before; several drops become one "3 wishes got cheaper" (and several rises one "… more expensive"), listing them.
+ * One summary per list (owner, 27 November 2026, after a Co-op summary opened Price changes, which only shows your
+ * own lists): drops on a Co-op list and on your own list are two notifications, and each opens its own list.
  */
 suspend fun <T> Alerts.collectPrices(c: Context, check: suspend () -> T): T {
     synchronized(PriceAlertQueue.pending) { PriceAlertQueue.collecting++ }
@@ -30,8 +32,7 @@ suspend fun <T> Alerts.collectPrices(c: Context, check: suspend () -> T): T {
             if (PriceAlertQueue.collecting > 0) emptyList() else PriceAlertQueue.pending.toList().also { PriceAlertQueue.pending.clear() }
         }
         try {
-            for (drop in listOf(true, false)) {
-                val l = now.filter { it.drop == drop }
+            for (drop in listOf(true, false)) for (l in now.filter { it.drop == drop }.groupBy { it.listKey }.values) {
                 when {
                     l.size == 1 -> l[0].let { if (drop) postDrop(c, it.id, it.item, it.old, it.now, it.currency, it.heading, it.wishId, it.listKey) else postRise(c, it.id, it.item, it.old, it.now, it.currency, it.heading, it.wishId, it.listKey) }
                     l.size > 1 -> postSummary(c, drop, l)
@@ -52,10 +53,13 @@ internal fun Alerts.postSummary(c: Context, drop: Boolean, l: List<PriceAlertQue
     val style = NotificationCompat.InboxStyle()
     lines.take(6).forEach { style.addLine(it) }
     if (lines.size > 6) style.setSummaryText(tr("and %d more", lines.size - 6))
-    val id = if (drop) 7_000_001 else 7_000_002
-    // Several of your own wishes: "Price changes" (owner, 7 November 2026); gift lists' prices just open the app.
-    val open = Intent(c, MainActivity::class.java).note("price")
-    if (l.any { it.wishId != 0L }) open.putExtra(MainActivity.OPEN_PRICES, true)
+    // All of one list ([collectPrices]): that list opens (owner, 27 November 2026), also one of your own lists.
+    // Without a list (older callers): "Price changes", as since 7 November 2026.
+    val key = l[0].listKey
+    val id = summaryId(drop, key)
+    val open = if (key.startsWith("m:") || key.startsWith("s:"))
+        Intent(c, MainActivity::class.java).note("price", key).putExtra(MainActivity.OPEN_NOTE, key)
+    else Intent(c, MainActivity::class.java).note("price").also { if (l.any { it.wishId != 0L }) it.putExtra(MainActivity.OPEN_PRICES, true) }
     val pi = PendingIntent.getActivity(c, id, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
     val n = NotificationCompat.Builder(c, CHANNEL)
         .setSmallIcon(R.drawable.ic_stat)
@@ -65,8 +69,24 @@ internal fun Alerts.postSummary(c: Context, drop: Boolean, l: List<PriceAlertQue
         .setPriority(NotificationCompat.PRIORITY_HIGH)
         .setContentIntent(pi)
         .setAutoCancel(true)
+    // Which list, next to the app's name at the top of the notification.
+    summaryListName(c, key)?.let { n.setSubText(it) }
     NotifyPace.post(c, id, n)
 }
+
+/** The summary's notification: one per list and kind, so a second list's summary doesn't replace the first. */
+internal fun summaryId(drop: Boolean, listKey: String): Int =
+    if (listKey.isEmpty()) (if (drop) 7_000_001 else 7_000_002)
+    else 7_100_000 + (listKey.hashCode() and 0x3FFFF) * 2 + (if (drop) 0 else 1)
+
+/** The name of the list [listKey] ("m:<id>" one of yours, "s:<code>" a Co-op list), or null when unknown. */
+private fun summaryListName(c: Context, listKey: String): String? =
+    when {
+        listKey.startsWith("m:") -> Repo.allMine(c).firstOrNull { it.id == listKey.removePrefix("m:") }?.name
+            ?.let { if (it == "My wishlist") tr(it) else it }
+        listKey.startsWith("s:") -> Shared.lists.firstOrNull { it.code == listKey.removePrefix("s:") }?.name
+        else -> null
+    }?.takeIf { it.isNotBlank() }
 
 /** Title says a price dropped, the text says which item and by how much. During a check: told afterwards. */
 fun Alerts.notifyDrop(c: Context, id: Int, item: String, old: Double, now: Double, currency: String, heading: String = tr("Price drop on your wishlist"), wishId: Long = 0L, listKey: String = "") {

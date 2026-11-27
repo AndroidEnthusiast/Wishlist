@@ -997,3 +997,8 @@ short line (app and web). The open shackle's right leg is short (owner picked A)
 meet, view fade, sort glide), app and web (8, 10); each checked frame by frame and fixed (see look.md). View change
 became a fade-through (reshaping looked muddled; tell the owner). Not checkable here: real motion and vibration.
 2.293 (recording): clear bin on a disc, delete waits for the bin, Undo lands without a jump, move fixed too.
+
+### 26 November 2026: reservations at once, buttons apart (2.293–2.294)
+Owner's recordings. 2.293: clear bin on a disc, delete waits for the bin, Undo lands without a jump, move fixed too.
+2.294: Co-op lists (app and browser editor) open with the last known reservations, no "Reserve" flash; buttons side
+by side 8 dp apart (Friends, update banner, gift exchange), and the layout inspector now fails touching buttons.
