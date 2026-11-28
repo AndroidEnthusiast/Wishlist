@@ -125,4 +125,7 @@
 - **One screen (owner, 28 November 2026, 2.305):** the page scrolled with empty space at the top; now the small top
   bar (no big-title room), a 64 dp icon, 48 dp level icons and tighter spacing, so it fits a usual phone (with very
   large phone text it still scrolls rather than cut anything off).
+- **Room to breathe (owner, 28 November 2026, 2.306: "a bit cramped"):** the amount moved onto the level's name line,
+  on the right in grey (no "From …" line), so each card is a line shorter; that space went back into the gaps and
+  padding (14 dp between cards, 14–16 dp inside). Still one screen.
 

@@ -63,10 +63,10 @@ fun LevelsScreen(onBack: () -> Unit, onPrizes: () -> Unit) {
         Column(
             Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
             // Everything fits on one screen on a usual phone (owner, 28 November 2026: it scrolled).
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             // Your level, big.
-            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 st.level?.let { LevelDisc(it, 64.dp) } ?: StarterDisc(64.dp)
                 // The style's own title font (Quiet: Fraunces, like your profile name).
                 Text(
@@ -80,7 +80,7 @@ fun LevelsScreen(onBack: () -> Unit, onPrizes: () -> Unit) {
             }
             // Your total and how far to the next level.
             Column(
-                Modifier.fillMaxWidth().lookCard(look, 21L, look.cardShape(21L, small = true)).padding(horizontal = 16.dp, vertical = 12.dp),
+                Modifier.fillMaxWidth().lookCard(look, 21L, look.cardShape(21L, small = true)).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -151,18 +151,21 @@ private fun LevelRow(l: ValueLevel, st: LevelsState, onPrizes: () -> Unit) {
             .then(if (l == ValueLevel.ICONIC) Modifier.clip(look.cardShape(22L, small = true))
                 .drawBehind { drawRect(Brush.linearGradient(HoloColours.map { it.copy(alpha = 0.12f) })) } else Modifier)
             .then(if (here) Modifier.border(2.dp, l.colours().first(), look.cardShape(22L, small = true)) else Modifier)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .padding(horizontal = 14.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             LevelDisc(l, 48.dp, locked = locked, passed = reached)
             Column(Modifier.weight(1f).alpha(if (locked) 0.7f else 1f)) {
+                // The amount on the name's line, on the right (owner, 28 November 2026: one line less per card, so the
+                // page breathes and still fits on one screen).
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(tr(l.label), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.ExtraBold, color = look.cardInk(22L))
                     if (here) LevelChip(tr("Your level"), strong = true)
+                    Box(Modifier.weight(1f))
+                    Text(wholeMoney(st.startOf(l), st.cur), style = MaterialTheme.typography.bodySmall, color = look.cardMuted(22L), maxLines = 1)
                 }
-                Text(tr("From %s", wholeMoney(st.startOf(l), st.cur)), style = MaterialTheme.typography.bodySmall, color = look.cardMuted(22L))
-                Text(levelLine(l), style = MaterialTheme.typography.bodyMedium, color = look.cardInk(22L))
+                Text(levelLine(l), style = MaterialTheme.typography.bodyMedium, color = look.cardInk(22L), modifier = Modifier.padding(top = 2.dp))
             }
         }
         // Iconic's prizes: a secret until reached (owner), then they can be seen again.

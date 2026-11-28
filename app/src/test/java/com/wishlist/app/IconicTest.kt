@@ -93,6 +93,7 @@ class IconicTest {
         assertFalse(page.contains("Only you can see this")); assertFalse(page.contains("tr(\"Reached\")) {"))
         assertTrue("the twinkle before the first level", page.contains("?: StarterDisc(64.dp)"))
         assertTrue("one screen: the small top bar (owner, 28 November 2026)", page.contains("large = false"))
+        assertFalse("the amount sits on the name's line, no \"From …\" line (owner, 28 November 2026)", page.contains("tr(\"From %s\""))
         assertTrue(page.contains("LevelChip(tr(\"Your level\")") && page.contains("passed = reached") && page.contains("Padlock(0f"))
         val settings = File("src/main/java/com/wishlist/app/Settings.kt").readText()
         assertTrue("App settings › Iconic only once reached", settings.contains("if (Iconic.reached) ValueRow"))
