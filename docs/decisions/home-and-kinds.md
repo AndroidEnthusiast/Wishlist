@@ -122,4 +122,7 @@
   (a four-point star) in **soft lilac on a pastel circle**, at the top of the page before the first level: simple,
   and its own colour, so it reads as "before the levels". (Turned down: badges, moving things, nature, playful
   icons, a dot in a ring, a plus, a 0, a tick, a bow, a map pin, a seed and more.)
+- **One screen (owner, 28 November 2026, 2.305):** the page scrolled with empty space at the top; now the small top
+  bar (no big-title room), a 64 dp icon, 48 dp level icons and tighter spacing, so it fits a usual phone (with very
+  large phone text it still scrolls rather than cut anything off).
 
